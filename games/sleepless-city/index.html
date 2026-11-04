@@ -77,8 +77,9 @@ body.land .side { display: flex; }
 #frame.scr-gems .beams, #frame.scr-eight .beams, #frame.scr-mary .beams { opacity: .35; }
 
 /* ---------- 跑馬燈泡 ---------- */
-.bulbs { position: absolute; pointer-events: none; overflow: visible; filter: drop-shadow(0 0 4px rgba(255, 214, 102, .95)); }
-.bulbs circle { fill: #fff3c4; }
+.bulbs { position: absolute; pointer-events: none; overflow: visible; }
+/* glow drawn as a soft halo ring on each bulb (a drop-shadow filter over the whole blinking SVG was very heavy on phones) */
+.bulbs circle { fill: #fff3c4; stroke: rgba(255, 214, 102, .42); stroke-width: 5px; paint-order: stroke; }
 .bulbs .b0 { animation: bulbA 1s steps(1) infinite; }
 .bulbs .b1 { animation: bulbA 1s steps(1) infinite -.5s; }
 @keyframes bulbA { 0% { fill: #fffbe6; } 50% { fill: #8a5a12; } }
@@ -100,7 +101,10 @@ body.land .side { display: flex; }
 /* ---------- 標題 ---------- */
 .title-scr { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .t-floaters { position: absolute; inset: 0; pointer-events: none; }
-.t-fl { position: absolute; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .6)) drop-shadow(0 0 18px rgba(255, 220, 140, .45)); animation: tfl 6s ease-in-out infinite; }
+.t-fl { position: absolute; z-index: 0; animation: tfl 6s ease-in-out infinite; }
+.t-fl::before, .t-fl::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; }
+.t-fl::before { inset: -14%; background: radial-gradient(closest-side, rgba(255, 220, 140, .38), rgba(255, 220, 140, .14) 45%, transparent); }
+.t-fl::after { left: 14%; right: 14%; bottom: -9%; height: 18%; background: radial-gradient(closest-side, rgba(0, 0, 0, .55), transparent); }
 .t-fl .sym { width: 100%; height: 100%; }
 @keyframes tfl { 0%, 100% { transform: translateY(0) rotate(var(--r)); } 50% { transform: translateY(-22px) rotate(calc(var(--r) * -1)); } }
 .t-mid { position: relative; display: flex; flex-direction: column; align-items: center; gap: 30px; transform: translateY(-30px); }
@@ -195,7 +199,10 @@ body.land .side { display: flex; }
 .mcard.mary { --accent: #b8ffd6; --glow: #19d97a; border-color: #7dffb5; background: radial-gradient(110% 140% at 85% 25%, #22e08a 0%, #0b6a42 42%, #03190f 100%); }
 .mcard.mary .mc-bg { background-image: radial-gradient(rgba(255, 211, 77, .32) 2px, transparent 3px); background-size: 26px 26px; }
 .mc-art { position: absolute; right: 22px; top: 50%; width: 262px; height: 184px; transform: translateY(-50%); }
-.mc-art i { position: absolute; display: block; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .6)) drop-shadow(0 0 14px rgba(255, 255, 255, .35)); }
+.mc-art i { position: absolute; display: block; z-index: 0; }
+.mc-art i::before, .mc-art i::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; }
+.mc-art i::before { inset: -14%; background: radial-gradient(closest-side, rgba(255, 255, 255, .26), rgba(255, 255, 255, .1) 45%, transparent); }
+.mc-art i::after { left: 14%; right: 14%; bottom: -9%; height: 18%; background: radial-gradient(closest-side, rgba(0, 0, 0, .55), transparent); }
 .mc-art .sym { width: 100%; height: 100%; }
 .mc-art .a0 { width: 148px; height: 148px; left: 58px; top: 18px; z-index: 2; animation: bob 3.2s ease-in-out infinite; }
 .mc-art .a1 { width: 100px; height: 100px; left: -8px; top: 72px; transform: rotate(-12deg); }
@@ -749,7 +756,10 @@ body.phone-land:not(.rot-ok) .rotate-hint { display: flex; }
 .lg-sign b { font-size: clamp(34px, 21cqh, 66px); white-space: nowrap; }
 .m-logo.mary .lg-sign b { font-size: clamp(30px, 17cqh, 54px); letter-spacing: 4px; }
 .lg-sign small { font-size: clamp(12px, 6.5cqh, 18px); }
-.lg-art { flex: none; display: block; width: min(150px, 58cqh); height: min(150px, 58cqh); filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .6)) drop-shadow(0 0 14px rgba(255, 255, 255, .3)); animation: bob 3.2s ease-in-out infinite; }
+.lg-art { flex: none; display: block; width: min(150px, 58cqh); height: min(150px, 58cqh); animation: bob 3.2s ease-in-out infinite; }
+.lg-art::before, .lg-art::after { content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; }
+.lg-art::before { inset: -14%; background: radial-gradient(closest-side, rgba(255, 255, 255, .22), rgba(255, 255, 255, .08) 45%, transparent); }
+.lg-art::after { left: 14%; right: 14%; bottom: -9%; height: 18%; background: radial-gradient(closest-side, rgba(0, 0, 0, .55), transparent); }
 .lg-art.r { animation-delay: -1.6s; }
 .lg-art .sym { width: 100%; height: 100%; }
 .m-logo.eight { --lg-panel: radial-gradient(120% 120% at 50% 0%, #a3200f 0%, #3d0806 60%, #170402 100%); --lg-neon: #ff7a2e; --lg-glow: rgba(255, 106, 0, .45); }
@@ -4868,4 +4878,4 @@ BYC.ui.App = class App {
 
 </script>
 
-</body></html>
+<script src="../../hub.js?v=037e0d20" data-game="sleepless-city" data-build="sleepless-city" defer></script></body></html>
