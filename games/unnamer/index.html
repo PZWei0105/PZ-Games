@@ -5602,7 +5602,7 @@ class Game {
     FX.clear();
     const W = new World(id, this);
     this.world = W; this.boss = null;
-    this.save.map = id;
+    if (!opts.noSave) this.save.map = id;
     // player
     let sp = null;
     if (spawnKey && spawnKey.x !== undefined) sp = spawnKey;
@@ -5660,7 +5660,7 @@ class Game {
     this.darkMul = 1; this.vignette = null;
     if (def.onLoad && !opts.silent) this.runScript(def.onLoad);
     this.hud.refresh();
-    this.writeSave();
+    if (!opts.noSave) this.writeSave();
   }
   addEnemy(e, kid) { e.kid = kid; this.world.enemies.push(e); return e; }
   addProj(p) { this.world.projectiles.push(p); }
@@ -6443,7 +6443,7 @@ const Menus = {
     g.state = 'title'; g.ui.show(false); g.ui.hideHint(); g.ui.closeDialog(); $('sub').classList.remove('on'); g.ui.bossBar(null);
     $('vig').classList.remove('on'); $('card').classList.remove('on'); $('endcard').classList.remove('on');
     g.scripts = [];
-    g.loadMap('prologue', null, { silent: true, newPlayer: true });
+    g.loadMap('prologue', null, { silent: true, newPlayer: true, noSave: true });
     for (const n of g.world.npcs) n.alpha = 0, n.visible = false;
     const p = g.player; p.setPos(25.5 * T, g.player.y); p.face = -1;
     g.cam.focus = { x: 24 * T, y: p.y - 60 }; g.cam.snap(g.world, p);
