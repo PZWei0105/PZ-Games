@@ -4876,6 +4876,58 @@ const City = (() => {
   let CENTER = CENTER_H;
   let host = null, restored = {}, drained = false, svgEl = null, scene = 'harbor', cstate = {};
 
+  // The colour bleeds back in through a soft, ragged blot: one small picture drawn once and scaled
+  // up inside the mask. (A turbulence filter redrawn every frame did the same job, but on phones it
+  // crawled at a few frames per second and ate hundreds of megabytes, enough to crash the page.)
+  let BLOT = null;
+  function blot() {
+    if (BLOT !== null) return BLOT;
+    BLOT = '';
+    try {
+      // a circle whose rim is pushed in and out by fractal noise: the same torn-paper edge the old
+      // filter made, frozen into a 512px picture
+      const N = 512, c = document.createElement('canvas'); c.width = c.height = N;
+      const x = c.getContext('2d'), img = x.createImageData(N, N), d = img.data;
+      let sd = 20240611; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+      const G = 64, lat = new Float32Array(G * G); for (let k = 0; k < G * G; k++) lat[k] = rnd();
+      const sm = (t) => t * t * (3 - 2 * t);
+      const vn = (u, v) => {
+        const i0 = Math.floor(u), j0 = Math.floor(v), fu = sm(u - i0), fv = sm(v - j0);
+        const i = ((i0 % G) + G) % G, j = ((j0 % G) + G) % G, i1 = (i + 1) % G, j1 = (j + 1) % G;
+        const a = lat[j * G + i], b = lat[j * G + i1], e = lat[j1 * G + i], f = lat[j1 * G + i1];
+        return a + (b - a) * fu + (e - a) * fv + (a - b - e + f) * fu * fv;
+      };
+      for (let py = 0; py < N; py++) for (let px = 0; px < N; px++) {
+        const u = px / N * 2 - 1, v = py / N * 2 - 1, dist = Math.hypot(u, v);
+        let a = 1;
+        if (dist > 0.6) {
+          const n = 0.55 * vn(u * 6 + 17, v * 6 + 5) + 0.3 * vn(u * 13 + 3, v * 13 + 41) + 0.15 * vn(u * 27 + 29, v * 27 + 11) - 0.5;
+          a = Math.max(0, Math.min(1, (0.8 + n * 0.22 - dist) / 0.01 + 0.5));
+        }
+        const o = (py * N + px) * 4;
+        d[o] = d[o + 1] = d[o + 2] = 255; d[o + 3] = a * 255;
+      }
+      x.putImageData(img, 0, 0);
+      BLOT = c.toDataURL('image/png');
+      // if this page may not show data: pictures, fall back to plain circles from the next redraw on
+      const t = new Image(); t.onerror = () => { BLOT = ''; }; t.src = BLOT;
+    } catch (e) { BLOT = ''; }
+    return BLOT;
+  }
+  // the blot picture lives once in <defs>; each mask shows it through a <use> that grows
+  function blotDef() { const b = blot(); return b ? `<image id="cb-blot" x="0" y="0" width="512" height="512" preserveAspectRatio="none" href="${b}" xlink:href="${b}"/>` : ''; }
+  // a mask "hole" centred on (cx, cy): the blot, or a plain circle if it could not be drawn
+  function hole(id, cx, cy) {
+    return blot() ? `<use id="${id}" data-cx="${cx}" data-cy="${cy}" href="#cb-blot" xlink:href="#cb-blot" transform="translate(${cx} ${cy}) scale(0)"/>`
+      : `<circle id="${id}" cx="${cx}" cy="${cy}" r="0" fill="#fff"/>`;
+  }
+  // grow a hole to radius r (in map units)
+  function setR(el, r) {
+    if (el.tagName.toLowerCase() === 'circle') { el.setAttribute('r', String(r)); return; }
+    const cx = +el.getAttribute('data-cx'), cy = +el.getAttribute('data-cy'), h = r * 1.25;
+    el.setAttribute('transform', `translate(${(cx - h).toFixed(1)} ${(cy - h).toFixed(1)}) scale(${(h / 256).toFixed(4)})`);
+  }
+
   // ---------- color utils ----------
   function hx(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
   function toHex(r, g, b) { return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join(''); }
@@ -5533,7 +5585,6 @@ const City = (() => {
     }
     // grey sky is flat & foggy
     m = m.replace(/<linearGradient id="g-sky-g"[\s\S]*?<\/linearGradient>/, lin('g-sky-g', 0, 0, 0, 1, [[0, '#8f979e'], [0.6, '#b9bcbb'], [1, '#cfccc4']]));
-    m += `<filter id="bleed" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="4"/><feDisplacementMap in="SourceGraphic" scale="70" xChannelSelector="R" yChannelSelector="G"/></filter>`;
     m += `<linearGradient id="g-mtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a5560"/><stop offset=".45" stop-color="#55606a" stop-opacity=".7"/><stop offset="1" stop-color="#606a72" stop-opacity="0"/></linearGradient>`;
     m += `<linearGradient id="g-haze" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7e4dc" stop-opacity="0"/><stop offset=".35" stop-color="#e7e4dc" stop-opacity=".55"/><stop offset=".5" stop-color="#e7e4dc" stop-opacity=".2"/><stop offset="1" stop-color="#e7e4dc" stop-opacity="0"/></linearGradient>`;
     return m;
@@ -5578,17 +5629,17 @@ const City = (() => {
       }
     }
     let md = '';
-    for (const g of masks) { const [cx, cy] = CENTER[g] || [450, 800]; md += `<mask id="m-${g}" maskUnits="userSpaceOnUse" x="0" y="0" width="${VW}" height="1800"><circle id="mc-${g}" cx="${cx}" cy="${cy}" r="0" fill="#fff" filter="url(#bleed)"/></mask>`; }
+    for (const g of masks) { const [cx, cy] = CENTER[g] || [450, 800]; md += `<mask id="m-${g}" maskUnits="userSpaceOnUse" x="0" y="0" width="${VW}" height="1800">${hole('mc-' + g, cx, cy)}</mask>`; }
     let extra = '';
     if (scene === 'harbor') {
-      md += `<mask id="m-${drained ? 'refill' : 'drain'}" maskUnits="userSpaceOnUse" x="0" y="0" width="${VW}" height="1800"><circle id="mc-${drained ? 'refill' : 'drain'}" cx="${CENTER.sea[0]}" cy="${CENTER.sea[1]}" r="0" fill="#fff" filter="url(#bleed)"/></mask>`;
+      md += `<mask id="m-${drained ? 'refill' : 'drain'}" maskUnits="userSpaceOnUse" x="0" y="0" width="${VW}" height="1800">${hole('mc-' + (drained ? 'refill' : 'drain'), CENTER.sea[0], CENTER.sea[1])}</mask>`;
       const n = Object.keys(restored).filter(k => k.indexOf('gift-') !== 0).length;
       const haze = Math.max(0, 0.75 - n * 0.06);
       const beam = restored.lighthouse ? `<g class="beam"><path d="M792 497L1500 440L1500 556z" fill="url(#g-beam)"/></g><circle cx="792" cy="497" r="40" fill="url(#g-glow)"/>` : '';
       extra = `${beam}<rect x="0" y="420" width="${VW}" height="700" fill="url(#g-haze)" opacity="${haze}" id="haze"/>`;
     }
     const beamDefs = `<linearGradient id="g-beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff2c0" stop-opacity=".9"/><stop offset="1" stop-color="#fff2c0" stop-opacity="0"/></linearGradient>`;
-    const svg = `<svg viewBox="0 84 ${VW} ${VH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-label="${{ voyage: '往灰島的海圖', isle: '灰島', river: '往上游的河', station: '沙漏驛站', snowline: '雪線', source: '河的源頭' }[scene] || '晴灣港城'}"><style>${CSS}</style><defs>${defs()}${md}${beamDefs}</defs>${body}${extra}</svg>`;
+    const svg = `<svg viewBox="0 84 ${VW} ${VH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-label="${{ voyage: '往灰島的海圖', isle: '灰島', river: '往上游的河', station: '沙漏驛站', snowline: '雪線', source: '河的源頭' }[scene] || '晴灣港城'}"><style>${CSS}</style><defs>${defs()}${md ? blotDef() : ''}${md}${beamDefs}</defs>${body}${extra}</svg>`;
     host.innerHTML = svg;
     svgEl = host.firstChild;
   }
@@ -5606,7 +5657,7 @@ const City = (() => {
       const step = t => {
         const p = Math.max(0, Math.min(1, (t - t0) / D));
         const e = 1 - Math.pow(1 - p, 2.2);
-        c.setAttribute('r', String(e * 1900));
+        setR(c, e * 1900);
         if (p < 1) requestAnimationFrame(step); else res();
       };
       requestAnimationFrame(step);
@@ -5621,7 +5672,7 @@ const City = (() => {
       const t0 = performance.now(), D = dur || 3200;
       const step = t => {
         const p = Math.max(0, Math.min(1, (t - t0) / D));
-        c.setAttribute('r', String((1 - Math.pow(1 - p, 2)) * 520));
+        setR(c, (1 - Math.pow(1 - p, 2)) * 520);
         if (p < 1) requestAnimationFrame(step); else res();
       };
       requestAnimationFrame(step);
@@ -5636,7 +5687,7 @@ const City = (() => {
       const t0 = performance.now();
       const step = t => {
         const p = Math.max(0, Math.min(1, (t - t0) / dur));
-        c.setAttribute('r', String((ease ? ease(p) : 1 - Math.pow(1 - p, 2)) * maxR));
+        setR(c, (ease ? ease(p) : 1 - Math.pow(1 - p, 2)) * maxR);
         if (p < 1) requestAnimationFrame(step); else res();
       };
       requestAnimationFrame(step);
@@ -6762,4 +6813,4 @@ const App = (() => {
 
 </script>
 
-</body></html>
+<script src="../../hub.js?v=037e0d20" data-game="clear-bay" data-build="clear-bay" defer></script></body></html>
