@@ -9,13 +9,19 @@
 | `data/catalog_base.json` | 手寫的總表：類型（genres）、遊戲（games）、未上架作品（archive）、專屬 App（apps） |
 | `data/overrides.json` | 個別遊戲的畫面微調：主視覺用哪張截圖（heroShot）、封面取景（coverFocus）、截圖說明（captions）等 |
 | `meta/<遊戲 id>.json` | 每款遊戲實際玩過後寫的遊玩說明：目標、操作、核心玩法、新手提示、遊玩時間、存檔方式、截圖說明 |
-| `src/` | App 本體原始碼：`index.html`、`app.css`、`app.js`（純 JavaScript，沒有框架） |
+| `src/` | App 本體原始碼：`index.html`、`app.css`、`app.js`（純 JavaScript，沒有框架）；`hub.js` 是遊戲裡的浮動圓鈕 |
 | `tools/build.py` | 把上面全部組成網站（輸出到 repo 根目錄） |
 | `tools/shoot.py` | 用 Playwright 開遊戲、照步驟操作、截圖 |
 | `tools/lint_meta.py` | 檢查遊玩說明有沒有寫錯字體、太長、提到開發內部用語 |
 | `tools/preview_media.py` | 預覽封面／主視覺／橫幅會怎麼裁切 |
 
 截圖原檔（`shots/`）太大沒有放進來；網站用的是 `media/` 裡壓縮過的 WebP。重新 build 時，沒有截圖原檔的遊戲會直接沿用上一版 `catalog.json` 裡的圖片設定，不會壞掉。
+
+## 遊戲怎麼開（重要）
+
+- 收藏庫按「開始遊戲」會播完點火動畫後**整頁切到** `games/<build>/index.html`，不是開在 iframe 裡：收藏庫整頁讓出記憶體，iPhone 上才不會因為「收藏庫＋遊戲」太吃記憶體被系統砍掉（2026-11-05 修正過一大串閃退）。
+- build 時會自動在每款遊戲頁 `</body>` 前插入 `<script src="../../hub.js" data-game=… data-build=…>`：遊戲裡那顆可拖動的圓鈕（回收藏庫、怎麼玩、重新載入、全螢幕），也負責記錄遊玩時間。不用手動加，也不要拿掉。
+- 新遊戲本身也要顧記憶體：避免對大面積或一直在動的元素用 `filter: drop-shadow/blur`、整頁的 SVG 濾鏡（feTurbulence 之類）每格重算、畫布解析度別超過 devicePixelRatio 2。
 
 ## 加一款新遊戲
 
