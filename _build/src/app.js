@@ -594,7 +594,24 @@ function renderHome() {
 function heroGo(i, user = true) {
   if (!Hero.list.length || !Hero.el) return;
   Hero.ix = (i + Hero.list.length) % Hero.list.length;
-  $$('.slide', Hero.el).forEach((s, k) => s.classList.toggle('on', k === Hero.ix));
+  // only the slide on screen, and the one fading out, are drawn; the rest stay off the page so
+  // their big pictures and layers don't sit in memory
+  const slides = $$('.slide', Hero.el), any = slides.some((s) => s.classList.contains('on'));
+  slides.forEach((s, k) => {
+    if (k === Hero.ix) {
+      if (s.classList.contains('on')) return;
+      clearTimeout(s._out); s.classList.remove('out');
+      if (any) { s.classList.add('pre'); void s.offsetWidth; }
+      s.classList.add('on'); s.classList.remove('pre');
+    } else if (s.classList.contains('on')) {
+      s.classList.remove('on'); s.classList.add('out');
+      clearTimeout(s._out); s._out = setTimeout(() => s.classList.remove('out'), 1000);
+    } else s.classList.remove('pre');
+  });
+  clearTimeout(Hero.warm);
+  if (!Hero.paused) Hero.warm = setTimeout(heroWarm, Math.max(0, Hero.dur - 1500));
+  const nx = Hero.list[(Hero.ix + 1) % Hero.list.length], nsrc = nx && nx.g.media && nx.g.media.hero;
+  if (nsrc && nsrc !== Hero.pre) { Hero.pre = nsrc; const im = new Image(); im.decoding = 'async'; im.src = nsrc; }
   $$('.slide.on .dots button', Hero.el).forEach((d, k) => {
     d.classList.toggle('on', k === Hero.ix); d.classList.toggle('done', k < Hero.ix);
     d.style.setProperty('--dur', Hero.dur + 'ms');
@@ -604,11 +621,19 @@ function heroGo(i, user = true) {
   clearTimeout(Hero.timer);
   if (!Hero.paused) Hero.timer = setTimeout(() => heroGo(Hero.ix + 1, false), Hero.dur);
 }
+// the next slide is put on the page (still invisible) a moment before it fades in, so its picture
+// is decoded and drawn by then and the crossfade doesn't stutter
+function heroWarm() {
+  if (!Hero.el || Hero.paused) return;
+  const n = $$('.slide', Hero.el)[(Hero.ix + 1) % Hero.list.length];
+  if (n && !n.classList.contains('on')) n.classList.add('pre');
+}
 function heroPause(p) {
   Hero.paused = p; if (!Hero.el) return;
   Hero.el.classList.toggle('paused', p);
-  clearTimeout(Hero.timer);
-  if (!p) Hero.timer = setTimeout(() => heroGo(Hero.ix + 1, false), Hero.dur * 0.6);
+  clearTimeout(Hero.timer); clearTimeout(Hero.warm);
+  if (p) $$('.slide.pre', Hero.el).forEach((s) => s.classList.remove('pre'));
+  if (!p) { Hero.timer = setTimeout(() => heroGo(Hero.ix + 1, false), Hero.dur * 0.6); Hero.warm = setTimeout(heroWarm, Math.max(0, Hero.dur * 0.6 - 1500)); }
 }
 function bindHeroGestures() {
   const el = Hero.el; if (!el) return;
@@ -885,8 +910,92 @@ function launch(id, from) {
   const b = buildOf(g); if (!b) return;
   if (MODE === 'claude') return;
   Sound.unlock();
-  S.pushedPlay = true;
-  location.hash = 'play-' + b.id;
+  // offline: only go if this game is already saved on the device, otherwise say so instead of a browser error page
+  if (navigator.onLine === false && window.caches) {
+    caches.match(new URL(gameUrl(b), location.href).href)
+      .then((hit) => { if (hit) ignite(g, b); else { Sound.play.err(); toast('現在沒有網路，這款還沒存進這台裝置；連上網再開就好'); } })
+      .catch(() => ignite(g, b));
+    return;
+  }
+  ignite(g, b);
+}
+/* A game is opened as its own page, not inside the collection: the collection (its covers, blurs
+   and animations) is left behind entirely, so the game gets the phone's whole memory, exactly as
+   if it had been opened on its own. The launch animation plays first, then the page switches.
+   Inside the game a small button (hub.js) leads back here. */
+function ignite(g, b) {
+  if (S.igniting) return;
+  const el = $('#launcher');
+  closeShot(); closeSheet(); closeSearch();
+  const m = g.media || {}, h = g.how || {};
+  let hint = '';
+  const portraitScreen = innerHeight > innerWidth;
+  if (h.orientation === 'landscape' && portraitScreen && isTouch) hint = `<div class="hint">${I.rotate}這款請把手機橫過來玩</div>`;
+  else if (h.device === 'desktop' && isTouch) hint = `<div class="hint">${I.laptop}這款建議用電腦玩</div>`;
+  el.style.cssText = cssVars(g);
+  el.innerHTML = `<div class="ign"><div class="art" style="background-image:url('${esc(m.hero || m.blur || '')}')"></div><div class="rays"></div><div class="burst"></div><div class="ring"></div>
+      <div class="ttl"><b>${esc(g.title)}</b>${g.en ? `<small>${esc(g.en)}</small>` : ''}</div>${hint}
+      <div class="load"><div class="bar"><i></i></div><span>遊戲載入中</span></div></div>`;
+  el.classList.remove('ready', 'failed', 'full', 'settled'); el.classList.add('on');
+  void el.offsetWidth; el.classList.add('go');
+  Sound.stopMusic(0.5);
+  Sound.play.launch(Sound.root);
+  Motes.stop();
+  heroPause(true);
+  try {
+    sessionStorage.setItem('pzgc.from', b.id);
+    sessionStorage.setItem('pzgc.ms0', JSON.stringify({ id: g.id, ms: statOf(g.id).ms || 0 }));
+  } catch (e) { /* ignore */ }
+  const url = gameUrl(b);
+  S.igniting = setTimeout(() => {
+    shed();
+    location.assign(url);
+    // if the page is somehow still here much later (the switch was blocked), put the collection back
+    clearTimeout(S.igniteWatch);
+    S.igniteWatch = setTimeout(() => { if (!S.left && !document.hidden) { settleAfterGame(); toast('遊戲沒有打開，再按一次「開始遊戲」試試'); } }, 25000);
+  }, hint ? 1700 : 1150);
+}
+// The collection we leave behind may sit in the browser's page cache while the game runs; it keeps
+// as little as possible there (no pages full of covers). settleAfterGame() draws it again on return.
+function shed() {
+  S.shedGp = $('#gamepage').scrollTop;
+  S.shedViews = $$('.view').map((v) => v.scrollTop);
+  $$('.view').forEach((v) => { v.innerHTML = ''; });
+  $('#gamepage').innerHTML = '';
+  clearTimeout(Hero.timer); clearTimeout(Hero.warm); Hero.el = null;
+  S.shed = true;
+}
+// back from a game through the browser's page cache: tidy the launch screen and pick up the new play time
+// back from a game: say how long this session was (the game's button records the time)
+function welcomeBack(sound) {
+  let m0 = null;
+  try { m0 = JSON.parse(sessionStorage.getItem('pzgc.ms0') || 'null'); sessionStorage.removeItem('pzgc.ms0'); } catch (e) { /* ignore */ }
+  if (!m0 || !S.byId[m0.id]) return;
+  const d = (statOf(m0.id).ms || 0) - (m0.ms || 0);
+  if (sound) Sound.play.back();
+  if (d >= 60000) setTimeout(() => toast(`《${S.byId[m0.id].title}》這次玩了 ${fmtDur(d)}`), 500);
+}
+function settleAfterGame() {
+  clearTimeout(S.igniting); S.igniting = 0; clearTimeout(S.igniteWatch); S.left = false;
+  const el = $('#launcher');
+  if (el.classList.contains('on') && !L.frame) { el.classList.remove('on', 'go', 'ready', 'failed', 'full', 'settled'); el.innerHTML = ''; }
+  S.stats = Store.get('stats', {});
+  if (S.shed) {
+    S.shed = false;
+    const v = $('#view-' + S.base);
+    setBase(S.base);
+    if (v) v.scrollTop = (S.shedViews || [])[$$('.view').indexOf(v)] || 0;
+    if (S.current) { renderGame(S.current); $('#gamepage').scrollTop = S.shedGp || 0; S.dirtyBase = true; }
+  } else {
+    S.dirtyBase = true;
+    if (S.current) { const gp = $('#gamepage'), sc = gp.scrollTop; renderGame(S.current); gp.scrollTop = sc; } else refreshBase();
+  }
+  if (!L.item) {
+    Motes.start();
+    if (S.base === 'home' && !S.current) heroPause(false);
+    Sound.resume(); if (S.settings.music) Sound.startMusic();
+  }
+  welcomeBack(true);
 }
 function openLauncher(item, url, kind) {
   const el = $('#launcher');
@@ -920,7 +1029,11 @@ function openLauncher(item, url, kind) {
       L.loaded = true;
       el.classList.remove('failed');
       const wait = Math.max(0, 1650 - (performance.now() - t0));
-      setTimeout(() => { el.classList.add('ready'); try { fr.focus(); fr.contentWindow.focus(); } catch (e) { /* cross-origin */ } showHandle(); }, wait);
+      setTimeout(() => {
+        el.classList.add('ready'); try { fr.focus(); fr.contentWindow.focus(); } catch (e) { /* cross-origin */ } showHandle();
+        // once the intro has faded, the collection behind the game goes to sleep
+        setTimeout(() => { if (L.frame === fr && el.classList.contains('ready')) shellSleep(true); }, 700);
+      }, wait);
     });
     fr.src = url;
     el.appendChild(fr);
@@ -935,6 +1048,22 @@ function openLauncher(item, url, kind) {
     S.stats[item.id] = st; save.stats();
   }
   L.t0 = Date.now(); L.acc = 0; L.visT = Date.now();
+  try { sessionStorage.setItem('pzgc.playing', item.id); } catch (e) { /* ignore */ }
+}
+/* While a game runs, everything behind it is taken off the page (display:none). Its pictures,
+   blurs and layers would otherwise stay in memory, and on a phone the game plus the collection can
+   be more than the browser allows: the page crashes and reloads. Scroll positions are kept. */
+const ZZ = { on: false, gp: 0, views: [] };
+function shellSleep(on) {
+  if (on === ZZ.on) return;
+  const root = document.documentElement;
+  if (on) {
+    ZZ.gp = $('#gamepage').scrollTop; ZZ.views = $$('.view').map((v) => v.scrollTop);
+    ZZ.on = true; root.classList.add('in-game'); $('#launcher').classList.add('settled');
+  } else {
+    ZZ.on = false; root.classList.remove('in-game'); $('#launcher').classList.remove('settled');
+    $('#gamepage').scrollTop = ZZ.gp; $$('.view').forEach((v, k) => { v.scrollTop = ZZ.views[k] || 0; });
+  }
 }
 function closeLauncher(viaHistory = true) {
   if (viaHistory && S.pushedPlay && history.length === L.histLen) { S.pushedPlay = false; history.back(); return; }
@@ -946,6 +1075,8 @@ function closeLauncher(viaHistory = true) {
 function endLauncher() {
   const el = $('#launcher');
   if (!el.classList.contains('on')) return;
+  shellSleep(false);
+  try { sessionStorage.removeItem('pzgc.playing'); } catch (e) { /* ignore */ }
   if (L.item && L.kind === 'game') {
     const now = Date.now();
     if (!document.hidden && L.visT) L.acc += now - L.visT;
@@ -1341,7 +1472,7 @@ function closeTrailer(instant) {
 }
 let toastT = 0;
 function toast(msg, ms = 3200) {
-  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  const t = $('#toast'); t.textContent = msg; t.classList.toggle('long', [...msg].length > 22); t.classList.add('on');
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms);
 }
 
@@ -1395,8 +1526,9 @@ function applyRoute() {
     } else {
       const ref = S.byBuild[play];
       if (ref && MODE === 'web') {
-        if (!S.current || S.current.id !== ref.game.id) { openGame(ref.game.id, false); }
-        if (!L.item) openLauncher(ref.game, gameUrl(ref.build), 'game');
+        if ($('#launcher').classList.contains('on')) endLauncher();
+        if (!S.current || S.current.id !== ref.game.id) openGame(ref.game.id, false);
+        setHash('game-' + ref.game.id, true);
         return;
       }
     }
@@ -1503,7 +1635,7 @@ function onClick(e) {
     case 'l-close': closeSheet(true); closeLauncher(); break;
     case 'l-retry': {
       closeSheet(true);
-      const el = $('#launcher'); el.classList.remove('failed', 'ready');
+      const el = $('#launcher'); el.classList.remove('failed', 'ready', 'settled');
       if (L.frame) {
         L.loaded = false;
         try { L.frame.contentWindow.location.reload(); } catch (er) { const src = L.frame.src; const nf = L.frame.cloneNode(); L.frame.replaceWith(nf); L.frame = nf; nf.src = src; }
@@ -1602,7 +1734,7 @@ function shell() {
     }, { passive: true });
   }
   document.addEventListener('load', (e) => { if (e.target && e.target.tagName === 'IMG') e.target.classList.add('ld'); }, true);
-  const wake = () => { Sound.unlock(); if (S.settings.music && !L.item && !$('#boot')) Sound.startMusic(); };
+  const wake = () => { Sound.unlock(); if (S.settings.music && !L.item && !S.igniting && !$('#boot')) Sound.startMusic(); };
   document.addEventListener('pointerup', wake, { passive: true });
   document.addEventListener('keydown', wake);
   document.addEventListener('visibilitychange', () => {
@@ -1610,6 +1742,12 @@ function shell() {
     else { Sound.resume(); if (!L.item) Motes.start(); if (L.item) L.visT = Date.now(); }
   });
   addEventListener('hashchange', applyRoute);
+  // leaving for a game: stop the lobby's animation and music; coming back from the page cache: settle down again
+  addEventListener('pagehide', () => { S.left = true; Motes.stop(); Sound.stopMusic(0.1); });
+  // An unload listener keeps the browser from parking this page in its page cache while a game runs:
+  // the collection is let go completely, so the game has the memory to itself. Coming back reloads it.
+  addEventListener('unload', () => {});
+  addEventListener('pageshow', (e) => { if (e.persisted) settleAfterGame(); });
   addEventListener('popstate', () => {});
   addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installEvt = e; });
   setInterval(() => { $$('img:not(.ld)').forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add('ld'); }); }, 700);
@@ -1675,9 +1813,26 @@ async function start() {
     $('#view-home').classList.add('on'); return;
   }
   prep(cat);
+  // A page that opens on #play-… has usually just been reloaded, often because the phone ran out
+  // of memory mid-game. Going straight back into the game can crash it again and again, so land on
+  // the game's page instead and let the player press play.
+  let wasPlaying = null, back = null;
+  try { wasPlaying = sessionStorage.getItem('pzgc.playing'); sessionStorage.removeItem('pzgc.playing'); } catch (e) { /* ignore */ }
+  const h0 = decodeURIComponent(location.hash.replace(/^#/, ''));
+  if (h0.startsWith('play-')) {
+    const ref = S.byBuild[h0.slice(5)]; back = ref ? ref.game : null;
+    history.replaceState(null, '', back ? '#game-' + back.id : location.pathname + location.search);
+  } else if (h0.startsWith('app-')) {
+    back = S.byId[h0.slice(4)] || null;
+    history.replaceState(null, '', '#apps');
+  }
   // the hero starts from its first slide the moment the boot screen is dismissed
   boot((tapped) => { if (tapped && Hero.el && S.base === 'home' && !S.current) heroGo(0, false); });
   applyRoute();
+  if (!back) welcomeBack(false);
+  if (back && wasPlaying) {
+    setTimeout(() => toast(back.kind === 'app' ? `《${back.title}》剛剛被重新載入了，先回到 App 頁；點它就能再打開` : `《${back.title}》剛剛被重新載入了，先停在遊戲頁；按「開始遊戲」就能接著玩`, 6000), 900);
+  }
   Motes.start();
   checkNew();
   if (MODE === 'web' && 'serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {

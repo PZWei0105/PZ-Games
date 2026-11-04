@@ -302,10 +302,29 @@ def build_icons(out):
         br.close()
 
 
+HUB_SRC = os.path.join(ROOT, 'src', 'hub.js')
+HUB_V = hashlib.sha1(open(HUB_SRC, 'rb').read()).hexdigest()[:8] if os.path.exists(HUB_SRC) else '0'
+HUB_TAG = '<script src="../../hub.js?v=%s" data-game="%s" data-build="%s" defer></script>'
+
+
+def inject_hub(path, gid, bid):
+    """Give a game page the collection's floating button (back to the collection, how to play, reload).
+    The tag goes right before the last </body> (or at the very end when there is none)."""
+    if not os.path.exists(path):
+        return
+    html = open(path, encoding='utf-8').read()
+    if 'hub.js?v=' in html and 'data-game=' in html:
+        html = re.sub(r'<script src="\.\./\.\./hub\.js\?v=[^"]*"[^>]*></script>', '', html)
+    tag = HUB_TAG % (HUB_V, gid, bid)
+    i = html.lower().rfind('</body>')
+    html = html[:i] + tag + html[i:] if i >= 0 else html + tag
+    open(path, 'w', encoding='utf-8').write(html)
+
+
 SW_JS = r"""/* PZ 遊戲收藏 service worker — version __VERSION__ */
 const V = '__VERSION__';
 const SHELL = 'pzgc-shell-' + V, MEDIA = 'pzgc-media-v1', GAMES = 'pzgc-games-v1', FONTS = 'pzgc-fonts-v1';
-const SHELL_FILES = ['./', 'index.html', 'app.css?v=__VERSION__', 'app.js?v=__VERSION__', 'catalog.json', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/favicon.svg'];
+const SHELL_FILES = ['./', 'index.html', 'app.css?v=__VERSION__', 'app.js?v=__VERSION__', 'hub.js?v=__HUBV__', 'catalog.json', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/favicon.svg'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(SHELL).then((c) => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
 });
@@ -332,6 +351,20 @@ const cacheFirst = async (req, cacheName) => {
   if (r && (r.ok || r.type === 'opaque')) c.put(req, r.clone());
   return r;
 };
+// game pages: the newest version if the network answers quickly, otherwise the saved copy right away
+// (a slow phone connection shouldn't keep a game you have played before from starting); the download
+// still finishes in the background so the next launch has it
+const netQuick = (e, req, cacheName, ms) => {
+  const work = (async () => {
+    const c = await caches.open(cacheName);
+    const hit = await c.match(req, { ignoreSearch: true });
+    const net = fetch(req).then((r) => { if (r && r.ok) return c.put(req, r.clone()).then(() => r); return r; });
+    e.waitUntil(net.catch(() => {}));
+    if (!hit) return net;
+    return Promise.race([net.then((r) => (r && r.ok ? r : hit)).catch(() => hit), new Promise((res) => setTimeout(() => res(hit), ms))]);
+  })();
+  return work;
+};
 const swr = async (req, cacheName) => {
   const c = await caches.open(cacheName);
   const hit = await c.match(req);
@@ -348,8 +381,8 @@ self.addEventListener('fetch', (e) => {
     const rel = url.pathname.slice(scope.length);
     if (/\.(mp4|mp3|m4a|ogg|wav|webm)$/i.test(rel)) return;
     if (rel.startsWith('media/')) return e.respondWith(cacheFirst(req, MEDIA));
-    // game pages: always try for the newest version (a cheap 304 when unchanged), fall back to the cached copy offline
-    if (rel.startsWith('games/')) return e.respondWith(/(\.html?|\/)$/i.test(rel) ? netFirst(req, GAMES) : swr(req, GAMES));
+    // game pages: newest version when the network is quick, the saved copy when it is slow or offline
+    if (rel.startsWith('games/')) return e.respondWith(/(\.html?|\/)$/i.test(rel) ? netQuick(e, req, GAMES, 2500) : swr(req, GAMES));
     return e.respondWith(netFirst(req, SHELL));
   }
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' || url.hostname === 'cdn.jsdelivr.net') {
@@ -372,7 +405,8 @@ README = """# PZ 遊戲收藏
 
 - `index.html`、`app.css`、`app.js`：收藏庫本體（首頁、全部遊戲、專屬 App、遊戲介紹、預告、命運轉盤、遊戲啟動器）
 - `catalog.json`：每款遊戲的資料（簡介、怎麼玩、截圖、版本）
-- `games/<遊戲>/`：每款遊戲的獨立網頁版，收藏庫直接在 App 裡全螢幕開啟
+- `games/<遊戲>/`：每款遊戲的獨立網頁版；按「開始遊戲」會直接切到遊戲本身（收藏庫完全讓出記憶體），遊戲裡的浮動圓鈕可以回收藏庫、看玩法、重新載入
+- `hub.js`：遊戲裡那顆浮動圓鈕（建置時自動加進每款遊戲頁）
 - `media/<遊戲>/`：截圖、封面、主視覺
 - `sw.js`、`manifest.webmanifest`、`icons/`：讓它能加到主畫面、玩過的遊戲離線也能開
 - `_build/`：製作工具與原始資料（給 Claude 用的，見 `_build/README.md`）
@@ -465,6 +499,7 @@ def main():
                     if os.path.isdir(dst):
                         shutil.rmtree(dst)
                     shutil.copytree(src, dst)
+                    inject_hub(os.path.join(dst, 'index.html'), g['id'], b['id'])
         games.append(g)
         log('game', g['id'], 'media' if g.get('media') else 'NO MEDIA', 'how' if g['how'] else 'NO HOW')
     pal = {
@@ -506,7 +541,8 @@ def main():
     open(os.path.join(out, 'app.css'), 'w', encoding='utf-8').write(css)
     open(os.path.join(out, 'app.js'), 'w', encoding='utf-8').write(js)
     if a.mode == 'web':
-        open(os.path.join(out, 'sw.js'), 'w', encoding='utf-8').write(SW_JS.replace('__VERSION__', shell_v))
+        open(os.path.join(out, 'sw.js'), 'w', encoding='utf-8').write(SW_JS.replace('__VERSION__', shell_v + HUB_V[:4]).replace('__HUBV__', HUB_V))
+        shutil.copy2(HUB_SRC, os.path.join(out, 'hub.js'))
         manifest = {
             'name': 'PZ 遊戲收藏', 'short_name': '遊戲收藏', 'description': '痞子葳和 Claude 一起做的所有遊戲，點開就能玩。',
             'lang': 'zh-Hant-TW', 'start_url': './', 'scope': './', 'display': 'standalone', 'orientation': 'any',
