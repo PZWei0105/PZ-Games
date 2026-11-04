@@ -82,6 +82,42 @@
    "chat": "https://claude.ai/chat/77cab720-8953-471a-bf36-6c7a24195e63"
   },
   {
+   "id": "southbound",
+   "title": "末班列車",
+   "en": "SOUTHBOUND",
+   "genre": "card",
+   "status": "shipped",
+   "featured": true,
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "tagline": "月台上有三百個人，長明號只能再載六個。",
+   "summary": "灰日之下的列車指揮 Roguelike。太陽灰了二十七年，司爐魏子葳在最後一晚成了長明號的列車長：從月台挑人上車，往南開向唯一還有熱的暖城。爐火吃煤，熱從機車頭往後送，越後面越冷；乘客會受凍、挨餓、崩潰，也會在車頂替你擋下狼群、鐵鉤幫和灰日教團。每晚的暖城廣播都在倒數位子——那個聲音，到底是誰？",
+   "highlights": [
+    "從月台挑 6 個人上車",
+    "爐火、煤、糧與車廂供暖",
+    "看意圖出手的車頂回合戰",
+    "3 段路線・3 個頭目",
+    "10 段真相・7 種結局"
+   ],
+   "inspired": "FTL・Frostpunk・暗黑地牢",
+   "verdict": "",
+   "next": "先跑完一趟南行，告訴我哪一段太難、哪裡節奏拖。",
+   "palette": [
+    "#2a3550",
+    "#070b14",
+    "#ff9a3c"
+   ],
+   "builds": [
+    {
+     "id": "southbound",
+     "label": "完整版",
+     "note": "",
+     "artifact": "https://claude.ai/artifact/RLA174rdsh3dj5Qz358ZqG"
+    }
+   ],
+   "chat": ""
+  },
+  {
    "id": "off-script",
    "title": "脫稿",
    "en": "OFF SCRIPT",
