@@ -1,1 +1,24 @@
-# PZ-Games
+# PZ 遊戲收藏
+
+痞子葳和 Claude 一起做的遊戲收藏庫：49 款遊戲、11 個專屬 App，像 Steam 一樣一鍵開玩。
+
+**網址：https://pzwei0105.github.io/PZ-Games/**
+
+- iPhone：用 Safari 打開 →「分享」→「加入主畫面」，之後從主畫面點開就是獨立 App。
+- Android：用 Chrome 打開 → 右上角選單 →「加到主畫面」或「安裝應用程式」。
+- 電腦：Chrome／Edge 網址列右側的「安裝」圖示，可以裝成桌面 App。
+
+## 裡面有什麼
+
+- `index.html`、`app.css`、`app.js`：收藏庫本體（首頁、全部遊戲、專屬 App、遊戲介紹、預告、命運轉盤、遊戲啟動器）
+- `catalog.json`：每款遊戲的資料（簡介、怎麼玩、截圖、版本）
+- `games/<遊戲>/`：每款遊戲的獨立網頁版，收藏庫直接在 App 裡全螢幕開啟
+- `media/<遊戲>/`：截圖、封面、主視覺
+- `sw.js`、`manifest.webmanifest`、`icons/`：讓它能加到主畫面、玩過的遊戲離線也能開
+- `_build/`：製作工具與原始資料（給 Claude 用的，見 `_build/README.md`）
+
+## 新遊戲怎麼入庫
+
+做好新遊戲後，跟 Claude 說「把《遊戲名》放進 PZ 遊戲收藏」。Claude 會照 `_build/README.md` 的步驟：實際玩過、拍預覽、寫遊玩說明、重新組好網站再推上來。重新打開收藏庫就會跳出「新遊戲入庫」。
+
+最後更新：2026-11-04 14:25
