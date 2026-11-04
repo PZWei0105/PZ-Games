@@ -31,6 +31,7 @@ function fmtDur(ms) {
   const h = Math.floor(m / 60), r = m % 60;
   return h + ' 小時' + (r ? ' ' + r + ' 分' : '');
 }
+const spacedDur = (ms) => (Math.round((ms || 0) / 6e4) >= 1 ? ' ' : '') + fmtDur(ms);
 function fmtDurShort(ms) {
   const m = Math.round((ms || 0) / 6e4);
   if (m < 60) return m + '<small>分</small>';
@@ -437,7 +438,7 @@ function shelf(title, items, opts = {}) {
   if (!items.length) return '';
   const more = opts.more ? `<button class="more" data-act="${opts.more.act}" data-arg="${esc(opts.more.arg || '')}">全部${I.chev}</button>` : '';
   const body = items.map((g) => (opts.cont ? contCard(g) : card(g, opts.sub ? opts.sub(g) : undefined))).join('');
-  return `<section class="shelf"><div class="shelf-h"><h2>${esc(title)}</h2><span class="n">${items.length}</span>${more}${opts.desc ? `<p>${esc(opts.desc)}</p>` : ''}</div><div class="row">${body}</div></section>`;
+  return `<section class="shelf"><div class="shelf-h"><h2>${esc(title)}</h2>${opts.more ? '' : `<span class="n">${items.length}</span>`}${more}${opts.desc ? `<p>${esc(opts.desc)}</p>` : ''}</div><div class="row">${body}</div></section>`;
 }
 function splitChars(t) {
   return [...t].map((ch, i) => `<span class="ch" style="animation-delay:${(0.08 + i * 0.07).toFixed(2)}s">${esc(ch)}</span>`).join('');
@@ -583,19 +584,35 @@ function renderLibrary() {
       <div class="filters">${gchips}</div><div class="filters">${schips}</div>
     </div>
     <div id="lib-grid"></div>
-    <div class="sec-title"><h2>還沒上架的作品</h2><p>早期在對話裡做的、或還在構想中的，先收在這裡。</p></div>
-    <div class="grid">${S.archive.map((a) => card(a, STATUS[a.status] || '')).join('')}</div>`;
+    <div id="lib-arch"><div class="sec-title"><h2>還沒上架的作品</h2><p>早期在對話裡做的、或還在構想中的，先收在這裡。</p></div>
+    <div class="grid">${S.archive.map((a) => card(a, STATUS[a.status] || '')).join('')}</div></div>`;
   renderLibGrid();
   const inp = $('#lib-q');
   inp.addEventListener('input', () => { L.q = inp.value.trim(); renderLibGrid(); });
+  // keep the selected chip in view (a chip far to the right would otherwise hide that a filter is on)
+  requestAnimationFrame(() => $$('.lib-tools .filters', v).forEach((row) => {
+    const on = $('.fchip.on', row);
+    if (on && (on.offsetLeft + on.offsetWidth > row.clientWidth + row.scrollLeft || on.offsetLeft < row.scrollLeft)) row.scrollLeft = on.offsetLeft - 18;
+  }));
+}
+const libFiltering = () => S.lib.fav || S.lib.genre !== 'all' || S.lib.status !== 'all';
+function searchScore(g, q) {
+  const t = g.title.toLowerCase();
+  if (t.startsWith(q)) return 4;
+  if (t.includes(q)) return 3;
+  if ((g.en || '').toLowerCase().includes(q) || ((S.genres[g.genre] || {}).label || '').toLowerCase().includes(q)) return 2;
+  return searchText(g).includes(q) ? 1 : 0;
 }
 function libFiltered() {
   const L = S.lib, q = L.q.toLowerCase();
   let list = visible();
+  if (q) {
+    // a search looks through every game, whatever filter is selected; title matches come first
+    return list.map((g) => [g, searchScore(g, q)]).filter(([, sc]) => sc).sort((a, b) => b[1] - a[1] || (b[0].created || '').localeCompare(a[0].created || '')).map(([g]) => g);
+  }
   if (L.fav) list = list.filter((g) => S.favs.has(g.id));
   if (L.genre !== 'all') list = list.filter((g) => g.genre === L.genre);
   if (L.status !== 'all') list = list.filter((g) => g.status === L.status);
-  if (q) list = list.filter((g) => searchText(g).includes(q));
   const by = {
     new: (a, b) => (b.created || '').localeCompare(a.created || ''),
     recent: (a, b) => statOf(b.id).last - statOf(a.id).last || (b.created || '').localeCompare(a.created || ''),
@@ -611,8 +628,11 @@ function renderLibGrid() {
     if (S.lib.sort === 'time' && statOf(g.id).ms) return fmtDur(statOf(g.id).ms);
     return g.status !== 'shipped' ? STATUS[g.status] : (S.genres[g.genre] || {}).label;
   };
-  $('#lib-grid').innerHTML = list.length ? `<div class="grid">${list.map((g) => card(g, sub(g))).join('')}</div>`
-    : `<div class="empty"><b>沒有符合的遊戲</b>換個關鍵字，或把篩選條件放寬一點。</div>`;
+  const q = S.lib.q;
+  const head = q ? `<div class="lib-note">搜尋「${esc(q)}」：${list.length ? `找到 ${list.length} 款` : '沒有找到'}${libFiltering() ? '（搜尋時不套用上面的篩選）' : ''}</div>` : '';
+  $('#lib-grid').innerHTML = head + (list.length ? `<div class="grid">${list.map((g) => card(g, sub(g))).join('')}</div>`
+    : `<div class="empty"><b>沒有符合的遊戲</b>${q ? '換個關鍵字試試，例如遊戲名稱的其中一個字。' : '把篩選條件放寬一點試試。'}</div>`);
+  const arch = $('#lib-arch'); if (arch) arch.hidden = !!q || libFiltering();
 }
 function searchText(g) {
   if (!g._st) g._st = [g.title, g.en, g.tagline, g.summary, (S.genres[g.genre] || {}).label, STATUS[g.status], (g.highlights || []).join(' '), g.inspired].join(' ').toLowerCase();
@@ -665,7 +685,7 @@ function actionChips(s, input) {
 function noteFor(g) {
   const h = g.how || {};
   const out = [];
-  if (h.orientation === 'landscape') out.push([I.rotate, '這款要把手機橫過來玩，在電腦上玩也很順。']);
+  if (h.orientation === 'landscape' && h.device !== 'desktop') out.push([I.rotate, '這款要把手機橫過來玩，在電腦上玩也很順。']);
   if (h.device === 'desktop') out.push([I.laptop, '這款是為電腦設計的，建議用筆電接鍵盤滑鼠或手把來玩。']);
   if (g.status === 'failed') out.push([I.info, '這是沒有成功的試作版，留著當紀錄。']);
   return out.map(([ic, t]) => `<div class="gp-note">${ic}<span>${esc(t)}</span></div>`).join('');
@@ -712,7 +732,9 @@ function renderGame(g) {
   const like = visible().filter((x) => x.id !== g.id && x.genre === g.genre && x.status !== 'failed')
     .sort((x, y) => (y.pick ? 1 : 0) - (x.pick ? 1 : 0) || (y.created || '').localeCompare(x.created || '')).slice(0, 10);
   const likeHtml = like.length ? `<div class="sec more-like"><h2>同類型的遊戲<span class="n">${esc(genre)}</span></h2><div class="row">${like.map((x) => card(x)).join('')}</div></div>` : '';
-  const reel = m.hero ? [m.hero, ...shots.map((x) => x.src).filter((x) => x !== m.hero)].slice(0, 5) : [];
+  // the page already shows the title, so the hero reel skips the title-screen shot
+  const reelPool = shots.length >= 3 ? shots.slice(1) : shots;
+  const reel = m.hero ? [m.hero, ...reelPool.map((x) => x.src).filter((x) => x !== m.hero)].slice(0, 5) : [];
   const ss = (cls) => `<div class="ss ${cls}">${reel.map((src, i) => `<img class="${i ? '' : 'on'}" src="${esc(src)}" alt="" ${i ? 'loading="lazy"' : ''} decoding="async" style="object-position:${i ? '50% 38%' : f[0] + '% ' + f[1] + '%'}">`).join('')}</div>`;
   const heroImg = m.hero ? ss('bg') : `<div class="glyph">${esc(g.title.slice(0, 1))}</div>`;
   const trBtn = shots.length >= 2 ? `<button class="tr-btn" data-act="trailer" aria-label="觀看預告"><span class="ring"></span><span class="core">${I.play}</span><small>看預告</small></button>` : '';
@@ -720,7 +742,7 @@ function renderGame(g) {
   p.innerHTML = `<div class="gp-bg"><div style="background-image:url('${esc(m.blur || '')}')"></div></div>
     <div class="gp-top" id="gp-top"><button class="ibtn" data-act="close-game" aria-label="返回">${I.back}</button><div class="ttl">${esc(g.title)}</div>
       <button class="ibtn fav${S.favs.has(g.id) ? ' on' : ''}" data-act="fav" data-id="${esc(g.id)}" aria-label="加入最愛">${I.star}</button></div>
-    <div class="gp-hero${m.orient === 'p' ? ' portrait' : ''}${m.orient === 'l' || m.orient === 'd' ? ' landscape' : ''}"><div class="art">${heroImg}</div>${trBtn ? trBtn.replace('tr-btn', 'tr-btn o') : ''}${m.hero && m.orient === 'p' ? `<div class="stage">${ss('')}${trBtn ? trBtn.replace('tr-btn', 'tr-btn in') : ''}</div>` : ''}${m.hero && (m.orient === 'l' || m.orient === 'd') ? `<div class="stage-l">${ss('')}</div>` : ''}
+    <div class="gp-hero${m.orient === 'p' ? ' portrait' : ''}${m.orient === 'l' || m.orient === 'd' ? ' landscape' : ''}"><div class="art">${heroImg}</div>${trBtn ? trBtn.replace('tr-btn', 'tr-btn o') : ''}${m.hero && m.orient === 'p' ? `<div class="stage">${ss('')}${trBtn ? trBtn.replace('tr-btn', 'tr-btn in') : ''}</div>` : ''}${m.hero && (m.orient === 'l' || m.orient === 'd') ? `<div class="stage-l">${ss('')}${trBtn ? trBtn.replace('tr-btn', 'tr-btn in') : ''}</div>` : ''}
       <div class="info"><div class="kicker" style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div><h1>${esc(g.title)}</h1>${g.en ? `<div class="en">${esc(g.en)}</div>` : ''}</div></div>
     <div class="gp-body"><div class="gp-cols"><div class="main">
       ${g.tagline ? `<p class="gp-tagline">${esc(g.tagline)}</p>` : ''}
@@ -925,7 +947,7 @@ function openPlayMenu() {
   const it = L.item; if (!it) return;
   const canFull = !!(document.documentElement.requestFullscreen) && !isTouch;
   const elapsed = L.kind === 'game' ? Math.max(0, L.acc + (L.visT ? Date.now() - L.visT : 0)) : 0;
-  openSheet(`<h3>${esc(it.title)}</h3><p class="sub">${L.kind === 'game' ? '這次已經玩了 ' + esc(fmtDur(elapsed)) : '專屬 App'}</p>
+  openSheet(`<h3>${esc(it.title)}</h3><p class="sub">${L.kind === 'game' ? '這次玩了' + esc(spacedDur(elapsed)) : '專屬 App'}</p>
     <div class="menu-list">
       <button class="pri" data-act="l-close">${I.home}回到收藏庫</button>
       <button data-act="sheet-close">${I.play.replace('<svg', '<svg style="fill:currentColor;stroke:none"')}繼續${L.kind === 'game' ? '玩' : '使用'}</button>
@@ -962,7 +984,7 @@ function openSettings() {
     <div class="opt"><div><b>開機動畫</b><span>每次打開收藏庫時播放</span></div><button class="sw${st.boot ? ' on' : ''}" data-act="set" data-arg="boot" aria-label="開機動畫"></button></div>
     <div class="opt" style="display:block"><b>隱藏的遊戲</b><span>${hidden.length ? '點一下就會回到收藏庫' : '目前沒有隱藏任何遊戲'}</span>
       ${hidden.length ? `<div class="hidden-list">${hidden.map((g) => `<button data-act="unhide" data-id="${esc(g.id)}">${esc(g.title)}<em>取消隱藏</em></button>`).join('')}</div>` : ''}</div>
-    <div class="opt"><div><b>遊玩紀錄</b><span>總共 ${esc(fmtDur(totalMs))}，只存在這台裝置</span></div><button class="ghost sm" data-act="clear-stats">清除</button></div>
+    <div class="opt"><div><b>遊玩紀錄</b><span>${totalMs ? `總共玩了${esc(spacedDur(totalMs))}，只記在這台裝置` : '還沒有遊玩紀錄，只會記在這台裝置'}</span></div><button class="ghost sm" data-act="clear-stats">清除</button></div>
     ${MODE === 'web' && !standalone ? `<div class="add-home">${isIOS ? '<b>加到主畫面：</b>用 Safari 打開這頁，點下方的「分享」按鈕，選「加入主畫面」。之後就能像 App 一樣從主畫面打開。' : (S.installEvt ? '<b>安裝成 App：</b><button class="ghost sm" data-act="install" style="margin-top:8px">安裝到這台裝置</button>' : '<b>加到主畫面：</b>在瀏覽器選單裡選「加到主畫面」或「安裝應用程式」。')}</div>` : ''}
     <div class="about">PZ 遊戲收藏　版本 ${esc(S.cat.version || '')}<br>${S.games.length} 款遊戲、${S.apps.length} 個 App，資料更新於 ${esc(fmtDate(S.cat.updated))}。${MODE === 'web' ? '<br>新遊戲做好後會直接放上來，重新打開收藏庫就會看到。' : ''}</div>`);
   const vol = $('#vol');
@@ -987,8 +1009,8 @@ function openSearch() {
   const run = () => {
     const t = q.value.trim().toLowerCase();
     const all = [...visible(), ...S.apps, ...S.archive];
-    let res = t ? all.filter((g) => searchText(g).includes(t)) : visible().filter((g) => statOf(g.id).last).sort((a, b) => statOf(b.id).last - statOf(a.id).last).slice(0, 6);
-    res.sort((a, b) => (b.title.toLowerCase().startsWith(t) ? 1 : 0) - (a.title.toLowerCase().startsWith(t) ? 1 : 0));
+    let res = t ? all.map((g) => [g, searchScore(g, t)]).filter(([, sc]) => sc).sort((a, b) => b[1] - a[1]).map(([g]) => g)
+      : visible().filter((g) => statOf(g.id).last).sort((a, b) => statOf(b.id).last - statOf(a.id).last).slice(0, 6);
     $('#sres').innerHTML = (t ? '' : `<div class="sr-hint">${res.length ? '最近玩過' : '輸入遊戲名稱、類型或關鍵字，例如「卡牌」「颱風」「魏子葳」。'}</div>`)
       + res.slice(0, 40).map((g) => {
         const m = g.media || {};
@@ -1190,7 +1212,7 @@ function openTrailer(g) {
 }
 function trFit(sh) {
   const va = innerWidth / innerHeight, ia = (sh.w || 1) / (sh.h || 1);
-  return (va < 1) === (ia < 1) && Math.abs(Math.log(va / ia)) < 0.45 ? 'cover' : 'contain';
+  return (va < 1) === (ia < 1) && Math.abs(Math.log(va / ia)) < 0.2 ? 'cover' : 'contain';
 }
 function trLayer(html, cls) {
   const st = $('.tr-stage', TR.el);
