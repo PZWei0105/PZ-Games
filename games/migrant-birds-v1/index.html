@@ -645,7 +645,7 @@ function nextToast() {
 }
 
 /* ---------- overlay ---------- */
-function openOv(html, cls) { const ov = $('#ov'); ov.className = cls || ''; ov.innerHTML = html; ov.hidden = false; ov.scrollTop = 0; return ov; }
+function openOv(html, cls) { const old = $('#ov'), ov = old.cloneNode(false); old.replaceWith(ov); ov.className = cls || ''; ov.innerHTML = html; ov.hidden = false; ov.scrollTop = 0; return ov; }
 function closeOv() { const ov = $('#ov'); ov.hidden = true; ov.innerHTML = ''; ov.className = ''; R.keyOnce = null; }
 const ovOpen = () => !$('#ov').hidden;
 
