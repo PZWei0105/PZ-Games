@@ -36,6 +36,8 @@ html, body { height: 100%; -webkit-text-size-adjust: 100%; text-size-adjust: 100
 body { margin: 0; background: var(--night); color: var(--ivory); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; overscroll-behavior: none; touch-action: manipulation; }
 #app { position: fixed; top: env(safe-area-inset-top, 0px); right: env(safe-area-inset-right, 0px); bottom: env(safe-area-inset-bottom, 0px); left: env(safe-area-inset-left, 0px); overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #1a1f2b 0%, var(--night) 60%); }
 #stage { position: absolute; left: 50%; top: 50%; transform-origin: center center; overflow: hidden; background: var(--night); box-shadow: 0 0 0 1px rgba(201,163,90,.12), 0 30px 80px rgba(0,0,0,.6); }
+/* phones and tablets: the stage fills the screen, so its big drop shadow is never seen but costs a lot of memory */
+@media (max-width: 1100px), (max-height: 700px) { #stage { box-shadow: 0 0 0 1px rgba(201,163,90,.12); } }
 button { font-family: var(--body); cursor: pointer; color: inherit; }
 button:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
 [hidden] { display: none !important; }
