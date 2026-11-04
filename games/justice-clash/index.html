@@ -1,0 +1,1222 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>正義對決</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+:root{
+  --void:#070A12; --deep:#0E1421; --steel:#19223A; --edge:#2C3850;
+  --ink:#EAF0FA; --mute:#8395B2; --faint:#5A6C8C;
+  --gold:#F2C744; --gold-d:#8A6F16;
+  --win:#45E0A8; --lose:#FF6B6B;
+  --dsp:'Anton','Noto Sans TC',system-ui,sans-serif;
+  --ui:'Noto Sans TC',system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0; background:var(--void); color:var(--ink);
+  font-family:var(--ui); font-size:15px; overscroll-behavior:none;
+}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0;text-align:left}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.dsp{font-family:var(--dsp);letter-spacing:.03em;font-weight:400}
+.num{font-family:var(--dsp);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+
+#app{height:100%;max-width:760px;margin:0 auto;position:relative}
+.scr{height:100%;display:flex;flex-direction:column;padding-inline:16px}
+.sc::-webkit-scrollbar{width:5px;height:5px}
+.sc::-webkit-scrollbar-thumb{background:var(--edge);border-radius:5px}
+.sc{scrollbar-width:thin;scrollbar-color:var(--edge) transparent}
+
+/* ---------- 質感 ---------- */
+.halftone{
+  background-image:radial-gradient(circle at 1px 1px, rgba(140,180,255,.07) 1px, transparent 0);
+  background-size:5px 5px;
+}
+
+/* ---------- 大廳 ---------- */
+.home{overflow-y:auto;padding-block:26px 40px;display:block}
+.logo-wrap{position:relative;padding:6px 0 18px}
+.eyebrow{font-size:11px;letter-spacing:.34em;color:var(--faint);font-weight:700}
+.logo{
+  font-family:var(--dsp);font-size:clamp(54px,15vw,86px);line-height:.86;
+  letter-spacing:.02em;margin:10px 0 0;
+  background:linear-gradient(176deg,#FFFFFF 0%,#BBD3FF 38%,#4FA8FF 68%,#1B4F96 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 0 rgba(7,10,18,.9)) drop-shadow(0 4px 16px rgba(79,168,255,.4));
+}
+.logo-sub{font-family:var(--dsp);font-size:clamp(13px,3.4vw,17px);letter-spacing:.42em;color:var(--gold);margin-top:8px}
+.blurb{font-size:14px;line-height:1.95;color:var(--mute);margin-top:16px;max-width:44ch}
+.blurb b{color:var(--ink);font-weight:700}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0 26px}
+.stat{background:var(--deep);border:1px solid var(--edge);border-radius:12px;padding:13px 15px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;top:0;right:0;width:46px;height:46px;
+  background:linear-gradient(225deg,rgba(242,199,68,.16),transparent 62%)}
+.stat-k{font-size:11px;letter-spacing:.18em;color:var(--faint);font-weight:700}
+.stat-v{font-family:var(--dsp);font-size:36px;line-height:1.05;margin-top:2px}
+.stat-n{font-size:12px;color:var(--mute);margin-top:1px}
+
+.sec{font-size:11px;letter-spacing:.24em;color:var(--faint);font-weight:700;margin:0 0 10px}
+.diff{display:flex;gap:8px;margin-bottom:26px}
+.diff button{flex:1;padding:13px 0;border-radius:11px;text-align:center;font-size:15px;font-weight:700;
+  border:1px solid var(--edge);color:var(--mute);background:var(--deep);transition:.15s}
+.diff button[data-on]{border-color:var(--gold);color:var(--gold);background:rgba(242,199,68,.1);
+  box-shadow:inset 0 0 22px rgba(242,199,68,.1)}
+
+.deckrow{display:flex;gap:11px;overflow-x:auto;padding-bottom:10px;margin-bottom:24px}
+.deckcard{flex:0 0 auto;width:225px;border-radius:14px;padding:15px 16px 16px;position:relative;overflow:hidden;
+  border:1px solid var(--edge);background:var(--deep);transition:.15s}
+.deckcard[data-on]{border-color:var(--fc);background:linear-gradient(158deg,var(--fg) 0%,var(--deep) 66%)}
+.deckcard::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(150deg,var(--fc) 0%,var(--fc) 3.5px,transparent 3.6px);opacity:.85}
+.dk-f{font-family:var(--dsp);font-size:10.5px;letter-spacing:.24em;color:var(--fc)}
+.dk-n{font-size:20px;font-weight:900;margin:5px 0 7px;line-height:1.2}
+.dk-d{font-size:12.5px;line-height:1.65;color:var(--mute)}
+
+.bigbtn{width:100%;padding:18px;border-radius:14px;text-align:center;font-size:19px;font-weight:900;
+  font-family:var(--dsp);letter-spacing:.14em;
+  background:linear-gradient(180deg,#FFDA6B,#D9A821);color:#120E02;
+  box-shadow:0 6px 0 #8A6F16, 0 10px 26px rgba(242,199,68,.28)}
+.bigbtn:active{transform:translateY(3px);box-shadow:0 3px 0 #8A6F16}
+.bigbtn[disabled]{background:var(--steel);color:var(--faint);box-shadow:none;cursor:not-allowed}
+.ghost{width:100%;padding:14px;border-radius:12px;text-align:center;font-size:15px;font-weight:700;
+  border:1px solid var(--edge);color:var(--mute);background:var(--deep);margin-top:11px}
+.rules{margin-top:22px}
+.rules summary{font-size:14px;color:var(--mute);cursor:pointer;list-style:none;font-weight:700}
+.rules summary::-webkit-details-marker{display:none}
+.rules summary::before{content:'▸ ';color:var(--gold)}
+.rules[open] summary::before{content:'▾ '}
+.rules p{font-size:13px;line-height:2.05;color:var(--mute);margin:12px 0 0}
+.rules b{color:var(--gold)}
+</style>
+<style>
+/* ---------- 對局 ---------- */
+.gm{background:radial-gradient(128% 62% at 50% -6%,#17233F 0%,var(--void) 60%)}
+.topbar{display:flex;align-items:center;gap:11px;padding:9px 0 8px;border-bottom:1px solid var(--edge);flex:0 0 auto}
+.tb-turn{font-family:var(--dsp);font-size:17px;color:var(--gold);letter-spacing:.05em}
+.tb-prio{font-size:12px;color:var(--mute)}
+.stake{margin-left:auto;display:flex;align-items:baseline;gap:6px}
+.stake-k{font-size:11px;letter-spacing:.16em;color:var(--faint);font-weight:700}
+.stake-v{font-family:var(--dsp);font-size:26px;color:var(--gold);line-height:1;
+  text-shadow:0 0 18px rgba(242,199,68,.5)}
+.stake-v[data-hot]{animation:stakePop .45s ease-out}
+@keyframes stakePop{0%{transform:scale(1)}40%{transform:scale(1.42)}100%{transform:scale(1)}}
+
+.foeline{display:flex;gap:12px;padding:7px 0 5px;font-size:12px;color:var(--faint);flex:0 0 auto}
+.foeline b{color:var(--mute);font-weight:700}
+.snapped{color:var(--lose);font-weight:900;letter-spacing:.08em}
+
+.field{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr auto 1fr;
+  gap:5px 8px;flex:1 1 auto;min-height:0;padding-top:3px}
+.slots{display:flex;flex-wrap:wrap;justify-content:center;align-content:flex-start;
+  gap:4px;min-height:64px;min-width:0}
+.slots.mine{align-content:flex-end}
+
+/* 戰區 */
+.zone{border-radius:10px;padding:7px 6px 8px;text-align:center;border:1px solid var(--edge);
+  background:rgba(255,255,255,.028);transition:.15s;position:relative;overflow:hidden}
+.zone[data-drop]{border-color:var(--gold);background:rgba(242,199,68,.13);
+  box-shadow:0 0 0 1px rgba(242,199,68,.4),0 0 22px rgba(242,199,68,.22) inset}
+.zone[data-move]{border-color:var(--win);background:rgba(69,224,168,.12);
+  box-shadow:0 0 0 1px rgba(69,224,168,.4)}
+.zscore{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;padding:0 1px}
+.zs{font-family:var(--dsp);font-size:23px;line-height:1;color:var(--faint);transition:color .2s}
+.zs[data-lead="o"]{color:var(--lose);text-shadow:0 0 14px rgba(255,107,107,.45)}
+.zs[data-lead="p"]{color:var(--win);text-shadow:0 0 14px rgba(69,224,168,.45)}
+.zname{font-size:13.5px;font-weight:900;color:var(--gold);line-height:1.2}
+.zname[data-shut]{color:var(--faint)}
+.ztext{font-size:10.5px;color:var(--mute);line-height:1.4;margin-top:3px;min-height:29px}
+
+/* 場上卡 */
+.bc{position:relative;width:calc(50% - 2px);max-width:88px;aspect-ratio:5/7;border-radius:7px;overflow:hidden;
+  border:1px solid var(--fc);padding:4px 4px 3px;display:flex;flex-direction:column;justify-content:space-between;
+  background:linear-gradient(158deg,var(--fg) 0%,#0B111D 64%)}
+.bc::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(148deg,var(--fc) 0%,var(--fc) 3px,transparent 3.1px);opacity:.9}
+.bc[data-hidden]{opacity:.5;border-color:var(--edge);border-style:dashed}
+.bc[data-pick]{border-color:var(--win);box-shadow:0 0 0 2px rgba(69,224,168,.5),0 0 16px rgba(69,224,168,.3)}
+.bc-nm{font-size:11px;line-height:1.22;font-weight:700;text-shadow:0 1px 3px #000;
+  max-height:2.5em;overflow:hidden;position:relative;z-index:1}
+.bc-mv{color:var(--win);font-weight:900}
+.bc-ft{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1}
+.bc-c{font-style:normal;font-size:9.5px;font-weight:900;color:#080C16;background:var(--fc);
+  border-radius:3px;padding:0 4px;line-height:1.45}
+.bc-p{font-family:var(--dsp);font-size:21px;line-height:.9;text-shadow:0 2px 5px #000}
+.bc-p[data-d="up"]{color:var(--win)} .bc-p[data-d="dn"]{color:var(--lose)}
+.bc[data-flip]{animation:flipin .42s cubic-bezier(.2,.9,.3,1.25) both}
+@keyframes flipin{
+  0%{transform:rotateY(94deg) scale(.82);opacity:0}
+  62%{transform:rotateY(-9deg) scale(1.07);opacity:1}
+  100%{transform:none;opacity:1}}
+.bc[data-flip]::after{content:'';position:absolute;inset:-40%;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,255,255,.85) 0 12%,rgba(242,199,68,.5) 22%,transparent 58%);
+  animation:crackle .5s ease-out both}
+@keyframes crackle{0%{transform:scale(.2);opacity:.95}100%{transform:scale(1.5);opacity:0}}
+
+/* 能量 / 資訊 */
+.myline{display:flex;align-items:center;gap:10px;padding:9px 0 4px;flex:0 0 auto}
+.pips{display:flex;gap:4px}
+.pip{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--gold-d);background:transparent}
+.pip[data-on]{background:var(--gold);box-shadow:0 0 9px rgba(242,199,68,.75)}
+.enr{font-family:var(--dsp);font-size:19px;color:var(--gold);line-height:1}
+.enr small{font-family:var(--ui);font-size:11px;color:var(--faint);font-weight:700;letter-spacing:.1em}
+.myinfo{margin-left:auto;font-size:12px;color:var(--faint)}
+.logbtn{font-size:12.5px;color:var(--gold);font-weight:700;padding:3px 7px;border-radius:7px;border:1px solid var(--gold-d)}
+.hint{margin:4px 0 0;padding:7px 11px;border-radius:9px;font-size:12.5px;font-weight:700;
+  background:rgba(69,224,168,.1);border:1px solid #2D6E58;color:var(--win);flex:0 0 auto}
+.logbox{margin:4px 0 0;max-height:92px;overflow-y:auto;font-size:12px;color:var(--mute);line-height:1.7;
+  background:var(--deep);border:1px solid var(--edge);border-radius:9px;padding:8px 11px;flex:0 0 auto}
+
+/* 手牌 */
+.hand{display:flex;gap:8px;overflow-x:auto;padding:9px 0 10px;flex:1 1 auto;align-items:flex-start;min-height:0}
+.hc{position:relative;flex:0 0 auto;width:112px;height:152px;border-radius:11px;overflow:hidden;
+  border:1.5px solid var(--fc);padding:11px 9px 8px;display:flex;flex-direction:column;justify-content:space-between;
+  background:linear-gradient(162deg,var(--fg) 0%,#0A101B 70%);transition:transform .14s;
+  box-shadow:0 3px 9px rgba(0,0,0,.55)}
+.hc::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(146deg,var(--fc) 0%,var(--fc) 4px,transparent 4.1px);opacity:.9}
+.hc[data-sel]{transform:translateY(-11px);border-color:var(--gold);
+  box-shadow:0 10px 26px rgba(242,199,68,.4),0 0 0 1px var(--gold)}
+.hc[data-no]{opacity:.42}
+.hc-cost{position:absolute;top:-7px;left:-7px;width:26px;height:26px;border-radius:50%;z-index:2;
+  display:flex;align-items:center;justify-content:center;font-style:normal;
+  font-family:var(--dsp);font-size:15px;background:var(--void);color:var(--gold);border:2px solid var(--gold)}
+.hc-cost[data-cut]{background:var(--gold);color:var(--void)}
+.hc-nm{font-size:15px;font-weight:900;line-height:1.22;position:relative;z-index:1}
+.hc-fac{font-family:var(--dsp);font-size:9px;letter-spacing:.2em;color:var(--fc);margin-top:3px}
+.hc-txt{font-size:10.5px;color:#B9C8DE;line-height:1.42;max-height:4.3em;overflow:hidden;position:relative;z-index:1}
+.hc-pow{font-family:var(--dsp);font-size:30px;line-height:.9;text-align:right;position:relative;z-index:1}
+.hc-pow[data-up]{color:var(--win)}
+.empty{font-size:13.5px;color:var(--faint);padding:44px 2px}
+
+/* 操作列 */
+.acts{display:flex;gap:8px;padding:9px 0 10px;border-top:1px solid var(--edge);flex:0 0 auto}
+.act{padding:15px 15px;border-radius:12px;font-size:15px;font-weight:900;text-align:center;flex:0 0 auto}
+.act-r{border:1px solid #5A3340;color:#E09AA6;background:#1B1016}
+.act-s{border:1.5px solid var(--gold);color:var(--gold);background:rgba(242,199,68,.1);letter-spacing:.06em}
+.act-s[disabled]{border-color:var(--edge);color:var(--faint);background:var(--deep)}
+.act-e{flex:1 1 auto;font-family:var(--dsp);font-size:19px;letter-spacing:.16em;
+  background:linear-gradient(180deg,#FFDA6B,#D9A821);color:#120E02;box-shadow:0 5px 0 #8A6F16}
+.act-e:active{transform:translateY(2px);box-shadow:0 3px 0 #8A6F16}
+.act-e[disabled]{background:var(--steel);color:var(--faint);box-shadow:none}
+</style>
+<style>
+/* ---------- 覆蓋層 ---------- */
+.toast{position:absolute;top:34%;left:0;right:0;text-align:center;z-index:60;pointer-events:none}
+.toast span{display:inline-block;font-family:var(--dsp);font-size:19px;letter-spacing:.16em;
+  background:var(--void);border:2px solid var(--gold);color:var(--gold);padding:12px 26px;border-radius:40px;
+  box-shadow:0 0 34px rgba(242,199,68,.5);animation:toastIn .32s ease-out both}
+@keyframes toastIn{from{transform:translateY(16px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+
+.modal{position:absolute;inset:0;background:rgba(4,7,14,.9);z-index:70;
+  display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(3px)}
+.sheet{width:100%;max-width:330px;border-radius:18px;padding:22px;
+  border:1.5px solid var(--fc,var(--edge));background:linear-gradient(166deg,var(--fg,#1A2438) 0%,#0A111C 66%);
+  animation:toastIn .26s ease-out both;max-height:82%;overflow-y:auto}
+.sh-f{font-family:var(--dsp);font-size:11px;letter-spacing:.26em;color:var(--fc,var(--gold))}
+.sh-n{font-size:27px;font-weight:900;line-height:1.15;margin-top:6px}
+.sh-e{font-size:13px;color:var(--mute);margin-top:2px}
+.sh-stats{display:flex;gap:22px;margin:16px 0}
+.sh-k{font-size:11px;letter-spacing:.15em;color:var(--faint);font-weight:700}
+.sh-v{font-family:var(--dsp);font-size:32px;line-height:1.05}
+.sh-t{font-size:15px;line-height:1.8;color:#D6E1F2}
+
+.rs-h{font-family:var(--dsp);font-size:52px;line-height:.95;letter-spacing:.06em}
+.rs-s{font-size:13.5px;color:var(--mute);margin:6px 0 18px;line-height:1.6}
+.rs-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:9px 0;
+  border-bottom:1px solid var(--edge)}
+.rs-row span{color:var(--mute)}
+.rs-row b{font-family:var(--dsp);font-size:21px}
+.rs-cube{font-family:var(--dsp);font-size:30px;margin:18px 0;letter-spacing:.04em}
+
+.mid{flex:1 1 auto;overflow-y:auto;min-height:0;display:flex;flex-direction:column}
+.hand{flex:0 0 auto}
+@media (min-width:620px){.hand{padding-bottom:14px}}
+
+/* ---------- 構築 ---------- */
+.bd-head{padding:13px 0 10px;border-bottom:1px solid var(--edge);flex:0 0 auto}
+.bd-top{display:flex;align-items:center;gap:12px}
+.bd-back{font-size:14px;color:var(--mute);font-weight:700}
+.bd-ttl{font-family:var(--dsp);font-size:17px;color:var(--gold);letter-spacing:.14em}
+.bd-cnt{margin-left:auto;font-family:var(--dsp);font-size:24px;color:var(--gold)}
+.bd-cnt[data-full]{color:var(--win)}
+.curve{display:flex;gap:4px;align-items:flex-end;margin-top:11px}
+.cv{flex:1;text-align:center}
+.cv-b{background:var(--edge);border-radius:3px 3px 0 0;transition:height .2s}
+.cv-b[data-v]{background:linear-gradient(180deg,var(--gold),var(--gold-d))}
+.cv-l{font-size:10px;color:var(--faint);margin-top:3px;font-weight:700}
+.cv-a{padding-left:10px;font-size:12px;color:var(--mute);white-space:nowrap;align-self:center;font-weight:700}
+.fils{display:flex;gap:6px;overflow-x:auto;padding:10px 0;flex:0 0 auto}
+.fil{flex:0 0 auto;padding:7px 13px;border-radius:22px;font-size:13px;white-space:nowrap;font-weight:700;
+  border:1px solid var(--edge);color:var(--mute);background:var(--deep)}
+.fil[data-on]{border-color:var(--fc);color:var(--fc);background:color-mix(in srgb,var(--fc) 12%,transparent)}
+.pool{flex:1 1 auto;overflow-y:auto;padding-bottom:18px;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;
+  align-content:start;grid-auto-rows:min-content}
+.pc{border-radius:11px;padding:11px 12px;position:relative;overflow:hidden;min-height:96px;
+  display:flex;flex-direction:column;align-items:stretch;
+  border:1px solid var(--edge);background:var(--deep)}
+.pc[data-on]{border-color:var(--fc);background:linear-gradient(158deg,var(--fg),#0B111D 72%)}
+.pc[data-lock]{opacity:.42}
+.pc::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(148deg,var(--fc) 0%,var(--fc) 3px,transparent 3.1px);opacity:.85}
+.pc-h{display:flex;align-items:baseline;gap:7px;position:relative;z-index:1}
+.pc-c{font-family:var(--dsp);font-size:14px;color:var(--gold)}
+.pc-n{font-size:14.5px;font-weight:900;line-height:1.2}
+.pc-p{margin-left:auto;font-family:var(--dsp);font-size:20px}
+.pc-f{font-family:var(--dsp);font-size:9px;letter-spacing:.18em;color:var(--fc);margin:3px 0 5px}
+.pc-t{font-size:11.5px;color:var(--mute);line-height:1.5;position:relative;z-index:1}
+
+@media (min-width:620px){
+  body{font-size:16px}
+  .bc-nm{font-size:13px} .bc-p{font-size:26px} .bc-c{font-size:11px}
+  .zname{font-size:16px} .ztext{font-size:12px;min-height:34px} .zs{font-size:28px}
+  .hc{width:132px;height:176px} .hc-nm{font-size:17px} .hc-pow{font-size:35px} .hc-txt{font-size:12px}
+  .slots{min-height:76px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .bc[data-flip]::after{display:none}
+}
+</style>
+<div id="app"></div>
+<script>
+const FAC = {
+  N: { n: "自由行動者", s: "FREELANCE",  c: "#A8BCCB", g: "#3E5163" },
+  A: { n: "天啟星",    s: "APOKOLIPS",  c: "#FF5E2E", g: "#7E2A12" },
+  T: { n: "神速力",    s: "SPEED FORCE",c: "#FFC93C", g: "#7E5810" },
+  B: { n: "黑燈軍團",  s: "BLACK LANTERN", c: "#A98CF0", g: "#3A2C6B" },
+  S: { n: "正義聯盟",  s: "JUSTICE LEAGUE", c: "#4FA8FF", g: "#123C72" },
+  W: { n: "亞特蘭提斯", s: "ATLANTIS",   c: "#2ED6C4", g: "#0C5751" },
+  D: { n: "不義同盟",  s: "INJUSTICE",  c: "#F252A8", g: "#6E1B52" },
+};
+
+/* ---------------- 卡牌 ----------------
+   c=費用 p=力量 f=派系 t=文字
+   onReveal(self,x) / ongoing(self,x) / onDestroy / onDiscard / onMove / endTurn
+--------------------------------------- */
+const CARDS = {
+  /* ---- 自由行動者 ---- */
+  ashwalker:{n:"吉米·歐森",e:"Jimmy Olsen",c:1,p:1,f:"N",t:"揭示：抽一張牌。",
+    onReveal:(s,x)=>x.draw(s.owner)},
+  brokenblade:{n:"羅波",e:"Lobo",c:2,p:5,f:"N",t:"持續：若此區有其他我方卡，-3 力。",
+    ongoing:(s,x)=>{ if(x.allies(s).length) x.buff(s,-3) }},
+  oathstone:{n:"紅色旋風",e:"Red Tornado",c:3,p:5,f:"N",t:"持續：此卡不會被摧毀、移動或被減少力量。",prot:true,
+    ongoing:()=>{}},
+  corehawker:{n:"亞曼達·華勒",e:"Amanda Waller",c:2,p:2,f:"N",t:"揭示：下回合 +1 能量。",
+    onReveal:(s,x)=>{x.S.bonus[s.owner]+=1}},
+  ironsworn:{n:"綠箭俠",e:"Green Arrow",c:4,p:5,f:"N",t:"持續：若你在此區落後，+5 力。",ph:2,
+    ongoing:(s,x)=>{ if(x.laneDiff(s.lane,s.owner)<0) x.buff(s,5) }},
+  titanbone:{n:"班恩",e:"Bane",c:6,p:14,f:"N",t:"揭示：棄掉你手上所有牌。",
+    onReveal:(s,x)=>{ [...x.S.hand[s.owner]].forEach(k=>x.discard(s.owner,k)) }},
+  arbiter:{n:"蝙蝠俠",e:"Batman",c:4,p:5,f:"N",t:"揭示：對方在此區力量最高的卡 -4 力。",
+    onReveal:(s,x)=>{ const t=x.top(x.foes(s)); if(t) x.buff(t,-4,true) }},
+  silencering:{n:"札坦娜",e:"Zatanna",c:1,p:2,f:"N",t:"持續：此區之後的「揭示」效果全部失效。",blockReveal:true,
+    ongoing:()=>{}},
+  culler:{n:"喪鐘",e:"Deathstroke",c:3,p:3,f:"N",t:"揭示：摧毀場上所有費用 1 的卡（雙方）。",
+    onReveal:(s,x)=>{ x.board().filter(k=>k.rev&&CARDS[k.id].c===1).forEach(k=>x.destroy(k)) }},
+  mindthief:{n:"謎語人",e:"Riddler",c:2,p:3,f:"N",t:"揭示：對方手上費用最低的一張牌 +2 費。",
+    onReveal:(s,x)=>{ const h=x.S.hand[x.foe(s.owner)]; if(!h.length)return;
+      const t=h.reduce((a,b)=>x.cost(b)<=x.cost(a)?b:a); t.cm=(t.cm||0)+2 }},
+
+  /* ---- 天啟星 · 摧毀 ---- */
+  kindler:{n:"天啟星兵",e:"Parademon",c:1,p:2,f:"A",t:"揭示：摧毀我方此區另一張卡，然後 +4 力。",
+    onReveal:(s,x)=>{ const t=x.low(x.allies(s)); if(t){x.destroy(t);x.buff(s,4,true)} }},
+  cinderling:{n:"卡里巴克",e:"Kalibak",c:1,p:2,f:"A",t:"被摧毀：在同區重生，力量 +2。",
+    onDestroy:(s,x)=>{ x.summon("cinderling",s.owner,s.lane,(s.pm||0)+2) }},
+  emberfang:{n:"逆閃電",e:"Reverse-Flash",c:2,p:4,f:"A",t:"被摧毀：回到手牌，費用 -1、力量 +2。",
+    onDestroy:(s,x)=>{ x.toHand(s.owner,"emberfang",(s.cm||0)-1,(s.pm||0)+2) }},
+  ashpriest:{n:"德薩德",e:"DeSaad",c:2,p:3,f:"A",t:"揭示：摧毀我方此區力量最低的另一張卡。",
+    onReveal:(s,x)=>{ const t=x.low(x.allies(s)); if(t)x.destroy(t) }},
+  ashfiend:{n:"古德妮絲嬤嬤",e:"Granny Goodness",c:3,p:2,f:"A",t:"持續：我方每有一張卡被摧毀，+3 力。",
+    ongoing:(s,x)=>x.buff(s,3*x.S.dead[s.owner])},
+  charbeast:{n:"荒原狼",e:"Steppenwolf",c:4,p:5,f:"A",t:"揭示：摧毀我方此區其他所有卡，每張 +4 力。",
+    onReveal:(s,x)=>{ const a=x.allies(s); a.forEach(k=>x.destroy(k)); x.buff(s,4*a.length,true) }},
+  pyre:{n:"歐米茄熔爐",e:"Omega Furnace",c:3,p:6,f:"A",t:"回合結束：摧毀我方此區另一張卡。",
+    endTurn:(s,x)=>{ const t=x.low(x.allies(s)); if(t)x.destroy(t) }},
+  martyr:{n:"拉希娜",e:"Lashina",c:1,p:1,f:"A",t:"被摧毀：我方此區所有卡 +2 力。",
+    onDestroy:(s,x)=>{ x.S.lanes[s.lane].cards.filter(k=>k.owner===s.owner&&k.rev).forEach(k=>x.buff(k,2,true)) }},
+  ashenking:{n:"達克賽德",e:"Darkseid",c:6,p:8,f:"A",t:"持續：我方每有一張卡被摧毀，+3 力。",
+    ongoing:(s,x)=>x.buff(s,3*x.S.dead[s.owner])},
+
+  /* ---- 神速力 · 移動 ---- */
+  tidestep:{n:"閃電小子",e:"Kid Flash",c:1,p:2,f:"T",t:"可移動。移動後：+2 力。",mv:true,
+    onMove:(s,x)=>x.buff(s,2,true)},
+  wayfinder:{n:"傑·蓋瑞克",e:"Jay Garrick",c:2,p:3,f:"T",t:"揭示：將我方另一區的一張卡移到此區。",
+    onReveal:(s,x)=>{ const c=x.board().filter(k=>k.owner===s.owner&&k.rev&&k.lane!==s.lane&&x.canMove(k,s.lane));
+      const t=x.top(c); if(t)x.move(t,s.lane) }},
+  riptide:{n:"閃電俠",e:"The Flash",c:3,p:3,f:"T",t:"可移動。移動後：+5 力。",mv:true,
+    onMove:(s,x)=>x.buff(s,5,true)},
+  currentweaver:{n:"馬克斯·墨丘利",e:"Max Mercury",c:4,p:4,f:"T",t:"回合結束：將我方此區另一張卡移到相鄰區域。",
+    endTurn:(s,x)=>{ const t=x.top(x.allies(s).filter(k=>x.canMove(k,(s.lane+1)%3)));
+      if(t)x.move(t,(s.lane+1)%3) }},
+  undertow:{n:"極速",e:"Zoom",c:3,p:2,f:"T",t:"揭示：將對方在此區力量最高的卡移到別區。",
+    onReveal:(s,x)=>{ const t=x.top(x.foes(s).filter(k=>x.canMove(k,(s.lane+1)%3))); if(t)x.move(t,(s.lane+1)%3) }},
+  driftshell:{n:"衝動",e:"Impulse",c:1,p:2,f:"T",t:"可移動。移動後：抽一張牌。",mv:true,
+    onMove:(s,x)=>x.draw(s.owner)},
+  anchor:{n:"靜止力",e:"Still Force",c:2,p:5,f:"T",t:"持續：對方在此區的卡無法移動。",lockFoeMove:true,
+    ongoing:()=>{}},
+  tidelord:{n:"神速使",e:"Godspeed",c:5,p:7,f:"T",t:"持續：我方每發生一次移動，+2 力。",
+    ongoing:(s,x)=>x.buff(s,2*x.S.moves[s.owner])},
+
+  /* ---- 黑燈軍團 · 棄牌與棄牌區 ---- */
+  bonepicker:{n:"黑手",e:"Black Hand",c:1,p:2,f:"B",t:"揭示：棄掉手上一張牌，然後抽一張牌。",
+    onReveal:(s,x)=>{ const h=x.S.hand[s.owner]; if(h.length)x.discard(s.owner,h[h.length-1]); x.draw(s.owner) }},
+  gravecrow:{n:"死靈偵探",e:"Deadman",c:2,p:5,f:"B",t:"被棄掉：召喚到你力量最低的區域。",
+    onDiscard:(s,x,ow)=>{ let best=0,bv=1e9; for(let i=0;i<3;i++){const v=x.side(i,ow);if(v<bv&&x.space(i,ow)){bv=v;best=i}} x.summon("gravecrow",ow,best,0) }},
+  bonespeaker:{n:"所羅門·葛蘭迪",e:"Solomon Grundy",c:2,p:3,f:"B",t:"持續：你的棄牌區每有一張牌，+1 力。",
+    ongoing:(s,x)=>x.buff(s,x.S.grave[s.owner].length)},
+  gravedigger:{n:"艾崔根",e:"Etrigan",c:3,p:4,f:"B",t:"揭示：從棄牌區取回一張牌到手上，費用 -1。",
+    onReveal:(s,x)=>{ const g=x.S.grave[s.owner]; if(!g.length)return; const t=g.pop(); x.toHand(s.owner,t.id,(t.cm||0)-1,t.pm||0) }},
+  corpsecantor:{n:"幽靈",e:"The Spectre",c:3,p:3,f:"B",t:"揭示：棄掉手上兩張牌，+7 力。",
+    onReveal:(s,x)=>{ const h=x.S.hand[s.owner]; let n=0; for(let i=0;i<2;i++){ if(h.length){x.discard(s.owner,h[h.length-1]);n++} } if(n)x.buff(s,7,true) }},
+  lastwords:{n:"黑燈戒",e:"Black Lantern Ring",c:2,p:1,f:"B",t:"被棄掉：抽兩張牌。",
+    onDiscard:(s,x,ow)=>{ x.draw(ow); x.draw(ow) }},
+  rotoracle:{n:"安東·阿卡尼",e:"Anton Arcane",c:2,p:5,f:"B",t:"回合結束：棄掉手上費用最高的一張牌。",
+    endTurn:(s,x)=>{ const h=x.S.hand[s.owner]; if(!h.length)return; const t=h.reduce((a,b)=>x.cost(b)>x.cost(a)?b:a); x.discard(s.owner,t) }},
+  boneking:{n:"奈克隆",e:"Nekron",c:5,p:7,f:"B",t:"揭示：從棄牌區打出一張費用 ≤4 的角色到此區。",
+    onReveal:(s,x)=>{ const g=x.S.grave[s.owner].filter(k=>CARDS[k.id].c<=4); if(!g.length)return;
+      const t=g.reduce((a,b)=>CARDS[b.id].p>CARDS[a.id].p?b:a);
+      x.S.grave[s.owner]=x.S.grave[s.owner].filter(k=>k!==t); x.summon(t.id,s.owner,s.lane,t.pm||0) }},
+
+  /* ---- 正義聯盟 · 持續增益 ---- */
+  stargazer:{n:"鷹女",e:"Hawkgirl",c:1,p:1,f:"S",t:"持續：我方此區其他卡 +1 力。",
+    ongoing:(s,x)=>x.allies(s).forEach(k=>x.buff(k,1))},
+  cartographer:{n:"火星獵人",e:"Martian Manhunter",c:2,p:2,f:"S",t:"持續：我方在其他區的卡各 +1 力。",
+    ongoing:(s,x)=>x.board().filter(k=>k.owner===s.owner&&k.rev&&k.lane!==s.lane).forEach(k=>x.buff(k,1))},
+  radiantguard:{n:"鋼骨",e:"Cyborg",c:3,p:1,f:"S",t:"持續：我方此區每有一張卡，+2 力。",
+    ongoing:(s,x)=>x.buff(s,2*(x.allies(s).length+1))},
+  mote:{n:"藍甲蟲",e:"Blue Beetle",c:1,p:2,f:"S",t:"持續：若我方此區有 4 張卡，+5 力。",
+    ongoing:(s,x)=>{ if(x.allies(s).length>=3)x.buff(s,5) }},
+  luminary:{n:"綠燈俠",e:"Green Lantern",c:3,p:3,f:"S",t:"揭示：我方此區其他卡各永久 +2 力。",
+    onReveal:(s,x)=>x.allies(s).forEach(k=>x.buff(k,2,true))},
+  nexus:{n:"瞭望塔",e:"Watchtower",c:4,p:1,f:"S",t:"持續：我方所有正義聯盟卡 +2 力。",
+    ongoing:(s,x)=>x.board().filter(k=>k.owner===s.owner&&k.rev&&CARDS[k.id].f==="S").forEach(k=>x.buff(k,2))},
+  starjudge:{n:"神力女超人",e:"Wonder Woman",c:5,p:5,f:"S",t:"持續：我方力量最高的卡 +5 力。",ph:2,
+    ongoing:(s,x)=>{ const t=x.topBase(x.board().filter(k=>k.owner===s.owner&&k.rev)); if(t)x.buff(t,5) }},
+  dawncall:{n:"超人",e:"Superman",c:6,p:8,f:"S",t:"持續：你每領先一個區域，+3 力。",ph:2,
+    ongoing:(s,x)=>{ let n=0; for(let i=0;i<3;i++) if(x.laneDiff(i,s.owner)>0)n++; x.buff(s,3*n) }},
+
+  /* ---- 亞特蘭提斯 · 加速與巨獸 ---- */
+  mossback:{n:"海溝獸",e:"Trench Creature",c:1,p:1,f:"W",t:"揭示：下回合 +1 能量。",
+    onReveal:(s,x)=>{x.S.bonus[s.owner]+=1}},
+  beastmaster:{n:"湄拉",e:"Mera",c:2,p:2,f:"W",t:"揭示：手上費用最高的一張牌 -3 費。",
+    onReveal:(s,x)=>{ const h=x.S.hand[s.owner]; if(!h.length)return; const t=h.reduce((a,b)=>x.cost(b)>x.cost(a)?b:a); t.cm=(t.cm||0)-3 }},
+  broodmother:{n:"海溝母巢",e:"Trench Queen",c:3,p:3,f:"W",t:"揭示：在其他每個區域各召喚一隻 1/2 海溝幼體。",
+    onReveal:(s,x)=>{ for(let i=0;i<3;i++) if(i!==s.lane&&x.space(i,s.owner)) x.summon("whelp",s.owner,i,0) }},
+  whelp:{n:"海溝幼體",e:"Trench Spawn",c:1,p:2,f:"W",t:"由海溝母巢召喚。",token:true},
+  stoneheart:{n:"黑蝠鱝",e:"Black Manta",c:4,p:8,f:"W",t:"揭示：跳過你的下一次抽牌。",
+    onReveal:(s,x)=>{x.S.skip[s.owner]=true}},
+  thunderhorn:{n:"海洋領主",e:"Ocean Master",c:5,p:9,f:"W",t:"揭示：對方在此區所有卡 -1 力。",
+    onReveal:(s,x)=>x.foes(s).forEach(k=>x.buff(k,-1,true))},
+  slumberer:{n:"卡拉森",e:"Karathen",c:6,p:15,f:"W",t:"持續：若我方此區有其他卡，-9 力。",
+    ongoing:(s,x)=>{ if(x.allies(s).length)x.buff(s,-9) }},
+  wildcall:{n:"水行俠",e:"Aquaman",c:5,p:7,f:"W",t:"揭示：從牌庫打出一張費用 ≤3 的卡到此區。",
+    onReveal:(s,x)=>{ const d=x.S.deck[s.owner].filter(k=>x.cost(k)<=3); if(!d.length||!x.space(s.lane,s.owner))return;
+      const t=d[0]; x.S.deck[s.owner]=x.S.deck[s.owner].filter(k=>k!==t); x.summon(t.id,s.owner,s.lane,t.pm||0) }},
+
+  /* ---- 不義同盟 · 干擾與竊取 ---- */
+  phantasm:{n:"黏土臉",e:"Clayface",c:1,p:2,f:"D",t:"揭示：獲得等同對方在此區力量最低卡的力量。",
+    onReveal:(s,x)=>{ const t=x.low(x.foes(s)); if(t)x.buff(s,Math.max(0,x.pow(t)),true) }},
+  dreamling:{n:"阿瑪佐",e:"Amazo",c:2,p:2,f:"D",t:"揭示：複製我方此區另一張卡的持續效果。",
+    onReveal:(s,x)=>{ const t=x.allies(s).find(k=>CARDS[k.id].ongoing); if(t)s.copy=t.id }},
+  nightcreep:{n:"毒藤女",e:"Poison Ivy",c:3,p:3,f:"D",t:"揭示：對方在此區所有卡 -2 力。",
+    onReveal:(s,x)=>x.foes(s).forEach(k=>x.buff(k,-2,true))},
+  echo:{n:"鏡子大師",e:"Mirror Master",c:3,p:2,f:"D",t:"揭示：將我方此區力量最高的卡複製到另一區（力量 -3）。",
+    onReveal:(s,x)=>{ const t=x.top(x.allies(s)); if(!t)return; const to=(s.lane+1)%3;
+      if(x.space(to,s.owner)) x.summon(t.id,s.owner,to,(t.pm||0)-3) }},
+  soulbroker:{n:"小丑",e:"The Joker",c:4,p:2,f:"D",t:"揭示：奪取對方在此區力量最低的一張卡。",
+    onReveal:(s,x)=>{ const t=x.low(x.foes(s)); if(t&&x.space(s.lane,s.owner)&&!CARDS[t.id].prot) t.owner=s.owner }},
+  mistveil:{n:"西尼斯托",e:"Sinestro",c:4,p:2,f:"D",t:"持續：此區雙方都無法再打出卡。",lockLane:true,
+    ongoing:()=>{}},
+  warp:{n:"布萊尼亞克",e:"Brainiac",c:5,p:6,f:"D",t:"揭示：對方在此區力量最高的卡 -5 力。",
+    onReveal:(s,x)=>{ const t=x.top(x.foes(s)); if(t) x.buff(t,-5,true) }},
+  falsemind:{n:"雷克斯·路瑟",e:"Lex Luthor",c:6,p:7,f:"D",t:"揭示：對方所有卡 -2 力。",
+    onReveal:(s,x)=>x.board().filter(k=>k.owner!==s.owner&&k.rev).forEach(k=>x.buff(k,-2,true))},
+};
+
+/* ---------------- 戰區 ---------------- */
+const LOCS = {
+  wastes:{n:"中央城",t:"沒有任何異常。"},
+  crater:{n:"史密斯維爾",t:"在此打出的卡 +2 力。",onPlay:(c,x)=>x.buff(c,2,true)},
+  temple:{n:"幽冥區",t:"此區的「揭示」效果失效。",noReveal:true},
+  binding:{n:"氪石礦坑",t:"此區的「持續」效果失效。",noOngoing:true},
+  ashpit:{n:"天啟星火坑",t:"回合結束：摧毀此區力量最低的卡。",
+    endTurn:(i,x)=>{ const c=x.S.lanes[i].cards.filter(k=>k.rev); if(!c.length)return; x.destroy(x.low(c)) }},
+  rift:{n:"阿卡漢禁閉室",t:"雙方在此區最多各放 2 張卡。",cap:2},
+  bounty:{n:"正義聯盟大廳",t:"揭示時：雙方下回合 +1 能量。",
+    onOpen:(i,x)=>{x.S.bonus.p+=1;x.S.bonus.o+=1}},
+  forge:{n:"蝙蝠洞",t:"在此打出的卡費用 -1。",discount:1},
+  mistmarsh:{n:"屠戮沼澤",t:"此區的卡無法移動。",noMove:true},
+  deadwalk:{n:"拉撒路池",t:"回合結束：從你的棄牌區打出一張費用 ≤2 的卡到此區。",
+    endTurn:(i,x)=>{ ["p","o"].forEach(o=>{ const g=x.S.grave[o].filter(k=>CARDS[k.id].c<=2);
+      if(!g.length||!x.space(i,o))return; const t=g[g.length-1];
+      x.S.grave[o]=x.S.grave[o].filter(k=>k!==t); x.summon(t.id,o,i,t.pm||0) }) }},
+  observ:{n:"天堂島",t:"此區力量最高的卡 +5 力。",ph:2,
+    flat:(i,x)=>{ const t=x.topBase(x.S.lanes[i].cards.filter(k=>k.rev)); if(t)x.buff(t,5) }},
+  stormeye:{n:"神速力跑道",t:"回合結束：此區雙方力量最低的卡各移到下一區。",
+    endTurn:(i,x)=>{ ["p","o"].forEach(o=>{ const c=x.S.lanes[i].cards.filter(k=>k.rev&&k.owner===o);
+      if(!c.length)return; const t=x.low(c); if(x.canMove(t,(i+1)%3))x.move(t,(i+1)%3) }) }},
+  bonefield:{n:"阿卡漢瘋人院",t:"在此打出卡時，棄掉手上一張牌。",
+    onPlay:(c,x)=>{ const h=x.S.hand[c.owner]; if(h.length)x.discard(c.owner,h[h.length-1]) }},
+  barrens:{n:"王牌化工廠",t:"此區的所有卡 -2 力。",flat:(i,x)=>x.S.lanes[i].cards.filter(k=>k.rev).forEach(k=>x.buff(k,-2))},
+  mirrorpool:{n:"鏡界",t:"每方在此打出的第一張卡會被複製（力量 -2）。",
+    onPlay:(c,x)=>{ const k=x.S.lanes[c.lane]; k.mirrored=k.mirrored||{};
+      if(k.mirrored[c.owner])return; k.mirrored[c.owner]=true;
+      if(x.space(c.lane,c.owner)) x.summon(c.id,c.owner,c.lane,(c.pm||0)-2) }},
+};
+
+/* ============================================================
+   引擎
+   ============================================================ */
+const OWN = { p: "你", o: "對手" };
+const other = (o) => (o === "p" ? "o" : "p");
+const rnd = (n) => Math.floor(Math.random() * n);
+const shuffle = (a) => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=rnd(i+1);[b[i],b[j]]=[b[j],b[i]]} return b; };
+const cardCost = (k) => Math.max(0, CARDS[k.id].c + (k.cm || 0));
+const cardBase = (k) => CARDS[k.id].p + (k.pm || 0);
+const ongBlocked = (S, c) => LOCS[S.lanes[c.lane].loc].noOngoing && S.lanes[c.lane].open;
+
+function computePowers(S) {
+  const cards = S.lanes.flatMap(l => l.cards);
+  const map = {};
+  cards.forEach(c => { map[c.uid] = cardBase(c) + (c.mods || []).reduce((a, b) => a + b, 0); });
+  const mk = (snap) => ({
+    S, map,
+    buff: (c, n) => { if (n < 0 && CARDS[c.id].prot) return; map[c.uid] = (map[c.uid] || 0) + n; },
+    pow: (c) => map[c.uid] || 0,
+    board: () => cards,
+    allies: (s) => cards.filter(k => k.owner === s.owner && k.lane === s.lane && k.uid !== s.uid && k.rev),
+    foes: (s) => cards.filter(k => k.owner !== s.owner && k.lane === s.lane && k.rev),
+    top: (l) => l.length ? l.reduce((a, b) => (map[b.uid] || 0) > (map[a.uid] || 0) ? b : a) : null,
+    low: (l) => l.length ? l.reduce((a, b) => (map[b.uid] || 0) < (map[a.uid] || 0) ? b : a) : null,
+    topBase: (l) => l.length ? l.reduce((a, b) => (snap[b.uid] || 0) > (snap[a.uid] || 0) ? b : a) : null,
+    laneDiff: (i, o) => { let m = 0, t = 0; cards.forEach(k => { if (k.lane !== i || !k.rev) return; if (k.owner === o) m += snap[k.uid] || 0; else t += snap[k.uid] || 0; }); return m - t; },
+  });
+  const x1 = mk(map);
+  S.lanes.forEach((l, i) => { const L = LOCS[l.loc]; if (l.open && L.flat && L.ph !== 2) L.flat(i, x1); });
+  cards.forEach(c => {
+    if (!c.rev || ongBlocked(S, c)) return;
+    const def = c.copy ? CARDS[c.copy] : CARDS[c.id];
+    if (def.ongoing && (def.ph || 1) === 1) def.ongoing(c, x1);
+  });
+  const snap = { ...map };
+  const x2 = mk(snap);
+  cards.forEach(c => {
+    if (!c.rev || ongBlocked(S, c)) return;
+    const def = c.copy ? CARDS[c.copy] : CARDS[c.id];
+    if (def.ongoing && (def.ph || 1) === 2) def.ongoing(c, x2);
+  });
+  S.lanes.forEach((l, i) => { const L = LOCS[l.loc]; if (l.open && L.flat && L.ph === 2) L.flat(i, x2); });
+  return map;
+}
+
+const laneCap = (S, i) => (S.lanes[i].open ? (LOCS[S.lanes[i].loc].cap || 4) : 4);
+const sideCount = (S, i, o) => S.lanes[i].cards.filter(c => c.owner === o).length;
+const laneSum = (S, i, o, m) => S.lanes[i].cards.reduce((a, c) => a + (c.rev && c.owner === o ? (m[c.uid] || 0) : 0), 0);
+
+function fx(S) {
+  const X = {
+    S,
+    board: () => S.lanes.flatMap(l => l.cards),
+    foe: other,
+    cost: cardCost,
+    pow: (c) => computePowers(S)[c.uid] || 0,
+    space: (i, o) => sideCount(S, i, o) < laneCap(S, i),
+    side: (i, o) => { const m = computePowers(S); return laneSum(S, i, o, m); },
+    allies: (s) => S.lanes[s.lane].cards.filter(k => k.owner === s.owner && k.uid !== s.uid && k.rev),
+    foes: (s) => S.lanes[s.lane].cards.filter(k => k.owner !== s.owner && k.rev),
+    top: (l) => { if (!l.length) return null; const m = computePowers(S); return l.reduce((a, b) => (m[b.uid] || 0) > (m[a.uid] || 0) ? b : a); },
+    low: (l) => { if (!l.length) return null; const m = computePowers(S); return l.reduce((a, b) => (m[b.uid] || 0) < (m[a.uid] || 0) ? b : a); },
+    topBase: (l) => X.top(l),
+    laneDiff: (i, o) => { const m = computePowers(S); return laneSum(S, i, o, m) - laneSum(S, i, other(o), m); },
+    buff: (c, n) => { if (n < 0 && CARDS[c.id].prot) return; c.mods.push(n); },
+    log: (t) => { S.log.push(t); if (S.log.length > 60) S.log.shift(); },
+    draw: (o) => {
+      if (S.skip[o]) { S.skip[o] = false; return; }
+      if (S.hand[o].length >= 7 || !S.deck[o].length) return;
+      S.hand[o].push(S.deck[o].shift());
+    },
+    toHand: (o, id, cm, pm) => { if (S.hand[o].length >= 7) return; S.hand[o].push({ uid: S.uid++, id, cm: cm || 0, pm: pm || 0 }); },
+    discard: (o, k) => {
+      if (!S.hand[o].includes(k)) return;
+      S.hand[o] = S.hand[o].filter(h => h !== k);
+      S.grave[o].push(k);
+      X.log(`${OWN[o]}棄掉 ${CARDS[k.id].n}`);
+      const d = CARDS[k.id].onDiscard; if (d) d(k, X, o);
+    },
+    destroy: (c) => {
+      if (!c || CARDS[c.id].prot) return;
+      const l = S.lanes[c.lane]; const i = l.cards.indexOf(c); if (i < 0) return;
+      l.cards.splice(i, 1);
+      S.dead[c.owner]++;
+      if (!CARDS[c.id].token) S.grave[c.owner].push({ uid: S.uid++, id: c.id, cm: c.cm || 0, pm: c.pm || 0 });
+      X.log(`${CARDS[c.id].n} 被摧毀`);
+      const d = CARDS[c.id].onDestroy; if (d) d(c, X);
+    },
+    canMove: (c, to) => {
+      if (!c || CARDS[c.id].prot || c.lane === to || !c.rev) return false;
+      if (!X.space(to, c.owner)) return false;
+      const from = S.lanes[c.lane], dest = S.lanes[to];
+      if (LOCS[from.loc].noMove || LOCS[dest.loc].noMove) return false;
+      if (from.cards.some(k => k.owner !== c.owner && k.rev && CARDS[k.id].lockFoeMove)) return false;
+      if (dest.cards.some(k => k.rev && CARDS[k.id].lockLane)) return false;
+      return true;
+    },
+    move: (c, to) => {
+      if (!X.canMove(c, to)) return;
+      const l = S.lanes[c.lane]; l.cards = l.cards.filter(k => k !== c);
+      c.lane = to; S.lanes[to].cards.push(c); S.moves[c.owner]++;
+      X.log(`${CARDS[c.id].n} 移動到第 ${to + 1} 區`);
+      const m = CARDS[c.id].onMove; if (m) m(c, X);
+    },
+    summon: (id, o, ln, pm) => {
+      if (!X.space(ln, o)) return null;
+      const c = { uid: S.uid++, id, owner: o, lane: ln, pm: pm || 0, mods: [], rev: true };
+      S.lanes[ln].cards.push(c);
+      X.log(`${OWN[o]}的 ${CARDS[id].n} 現身於第 ${ln + 1} 區`);
+      return c;
+    },
+  };
+  return X;
+}
+
+/* ---------------- 建立對局 ---------------- */
+function newGame(pDeck, oDeck, locPool) {
+  const pick = shuffle(locPool || Object.keys(LOCS)).slice(0, 3);
+  const S = {
+    gid: Math.random().toString(36).slice(2), turn: 0, uid: 1, over: false, result: null,
+    lanes: pick.map(loc => ({ loc, open: false, cards: [], mirrored: {} })),
+    hand: { p: [], o: [] }, deck: { p: [], o: [] }, grave: { p: [], o: [] },
+    dead: { p: 0, o: 0 }, moves: { p: 0, o: 0 }, bonus: { p: 0, o: 0 }, skip: { p: false, o: false },
+    emax: { p: 0, o: 0 }, eleft: { p: 0, o: 0 },
+    moved: { p: [], o: [] },
+    prio: Math.random() < 0.5 ? "p" : "o",
+    stake: 1, snapped: { p: false, o: false }, log: [], lastReveal: [],
+  };
+  let uid = 1000;
+  S.deck.p = shuffle(pDeck).map(id => ({ uid: uid++, id, cm: 0, pm: 0 }));
+  S.deck.o = shuffle(oDeck).map(id => ({ uid: uid++, id, cm: 0, pm: 0 }));
+  for (let i = 0; i < 3; i++) { S.hand.p.push(S.deck.p.shift()); S.hand.o.push(S.deck.o.shift()); }
+  startTurn(S);
+  return S;
+}
+
+function startTurn(S) {
+  S.turn += 1;
+  const X = fx(S);
+  if (S.turn <= 3) {
+    const l = S.lanes[S.turn - 1]; l.open = true;
+    const L = LOCS[l.loc]; if (L.onOpen) L.onOpen(S.turn - 1, X);
+    X.log(`第 ${S.turn} 區顯現：${L.n}`);
+  }
+  S.moved = { p: [], o: [] };
+  ["p", "o"].forEach(o => {
+    S.emax[o] = S.turn + S.bonus[o]; S.eleft[o] = S.emax[o]; S.bonus[o] = 0;
+    if (S.turn > 1) X.draw(o);
+  });
+}
+
+function canSelfMove(S, c) {
+  if (!c || !c.rev || !CARDS[c.id].mv) return false;
+  if ((S.moved[c.owner] || []).includes(c.uid)) return false;
+  return [0, 1, 2].some(i => S.lanes[i].open && fx(S).canMove(c, i));
+}
+function doMove(S, c, to) {
+  if (!canSelfMove(S, c) || !S.lanes[to].open) return false;
+  const X = fx(S); if (!X.canMove(c, to)) return false;
+  X.move(c, to); S.moved[c.owner].push(c.uid); return true;
+}
+const canMoveTo = (S, c, i) => !!c && S.lanes[i].open && canSelfMove(S, c) && fx(S).canMove(c, i);
+function canPlay(S, o, k, i) {
+  if (!S.lanes[i].open) return false;
+  if (sideCount(S, i, o) >= laneCap(S, i)) return false;
+  if (S.lanes[i].cards.some(c => c.rev && CARDS[c.id].lockLane)) return false;
+  return costIn(S, k, i) <= S.eleft[o];
+}
+const costIn = (S, k, i) => Math.max(0, cardCost(k) - (S.lanes[i].open ? (LOCS[S.lanes[i].loc].discount || 0) : 0));
+
+function playCard(S, o, k, i) {
+  if (!canPlay(S, o, k, i)) return false;
+  S.eleft[o] -= costIn(S, k, i);
+  S.hand[o] = S.hand[o].filter(h => h !== k);
+  S.lanes[i].cards.push({ uid: k.uid, id: k.id, owner: o, lane: i, pm: k.pm || 0, cm: k.cm || 0, mods: [], rev: false, paid: costIn(S, k, i) });
+  return true;
+}
+
+function recall(S, o, c) {
+  if (c.rev || c.owner !== o) return;
+  const l = S.lanes[c.lane]; l.cards = l.cards.filter(k => k !== c);
+  S.eleft[o] += c.paid || 0;
+  S.hand[o].push({ uid: c.uid, id: c.id, cm: c.cm || 0, pm: c.pm || 0 });
+}
+
+const revealBlocked = (S, ln, self) =>
+  (S.lanes[ln].open && LOCS[S.lanes[ln].loc].noReveal) ||
+  S.lanes[ln].cards.some(k => k.rev && k.uid !== self.uid && CARDS[k.id].blockReveal);
+
+function resolve(S) {
+  const X = fx(S);
+  const order = [S.prio, other(S.prio)];
+  S.lastReveal = [];
+  order.forEach(o => {
+    const staged = S.lanes.flatMap(l => l.cards).filter(c => c.owner === o && !c.rev);
+    staged.forEach(c => {
+      c.rev = true; S.lastReveal.push(c.uid);
+      const L = LOCS[S.lanes[c.lane].loc];
+      if (L.onPlay) L.onPlay(c, X);
+      const def = CARDS[c.id];
+      if (def.onReveal && !revealBlocked(S, c.lane, c)) def.onReveal(c, X);
+    });
+  });
+  for (let i = 0; i < 3; i++) {
+    const L = LOCS[S.lanes[i].loc];
+    if (S.lanes[i].open && L.endTurn) L.endTurn(i, X);
+    order.forEach(o => {
+      [...S.lanes[i].cards].forEach(c => {
+        if (c.owner !== o || !c.rev) return;
+        const d = CARDS[c.id].endTurn; if (d) d(c, X);
+      });
+    });
+  }
+  const m = computePowers(S);
+  let pw = 0, ow = 0, pt = 0, ot = 0;
+  for (let i = 0; i < 3; i++) {
+    const a = laneSum(S, i, "p", m), b = laneSum(S, i, "o", m);
+    pt += a; ot += b; if (a > b) pw++; else if (b > a) ow++;
+  }
+  S.prio = pw > ow ? "p" : ow > pw ? "o" : (pt > ot ? "p" : ot > pt ? "o" : S.prio);
+  if (S.turn >= 6) { finish(S); return; }
+  startTurn(S);
+}
+
+function score(S) {
+  const m = computePowers(S);
+  const out = { lanes: [], pw: 0, ow: 0, pt: 0, ot: 0 };
+  for (let i = 0; i < 3; i++) {
+    const a = laneSum(S, i, "p", m), b = laneSum(S, i, "o", m);
+    out.lanes.push([a, b]); out.pt += a; out.ot += b;
+    if (a > b) out.pw++; else if (b > a) out.ow++;
+  }
+  return out;
+}
+
+function finish(S) {
+  S.over = true;
+  const s = score(S);
+  S.stake *= 2;
+  const win = s.pw > s.ow ? "p" : s.ow > s.pw ? "o" : (s.pt > s.ot ? "p" : s.ot > s.pt ? "o" : null);
+  S.result = { win, ...s, cubes: S.stake };
+}
+
+/* ============================================================
+   AI
+   ============================================================ */
+const clone = (S) => JSON.parse(JSON.stringify(S));
+
+function aiEval(S, me, turn) {
+  const m = computePowers(S);
+  let sc = 0, won = 0, mine = 0;
+  const lw = turn >= 5 ? 1.5 : 0.75;
+  for (let i = 0; i < 3; i++) {
+    if (!S.lanes[i].open) continue;
+    const a = laneSum(S, i, me, m), b = laneSum(S, i, other(me), m);
+    sc += Math.tanh((a - b) / 9) * 12 * lw;
+    mine += a;
+    if (a > b) won++;
+  }
+  sc += mine * 0.13;
+  if (won >= 2) sc += turn >= 5 ? 9 : 4;
+  return sc;
+}
+
+function aiTurn(S, level) {
+  const me = "o";
+  const hand = S.hand[me];
+  const energy = S.eleft[me];
+  const maxN = level === 0 ? 2 : 3;
+  const combos = [];
+  const rec = (start, chosen, cost) => {
+    if (chosen.length) combos.push([...chosen]);
+    if (chosen.length >= maxN) return;
+    for (let i = start; i < hand.length; i++) {
+      const c = cardCost(hand[i]);
+      if (cost + c <= energy) rec(i + 1, [...chosen, i], cost + c);
+    }
+  };
+  rec(0, [], 0);
+  const open = [0, 1, 2].filter(i => S.lanes[i].open);
+  const cands = [{ plays: [] }];
+  combos.forEach(cb => {
+    const assign = (k, acc) => {
+      if (k === cb.length) { cands.push({ plays: acc.map((ln, j) => ({ hi: cb[j], lane: ln })) }); return; }
+      open.forEach(ln => assign(k + 1, [...acc, ln]));
+    };
+    assign(0, []);
+  });
+  const pool = cands.length > 1400 ? shuffle(cands).slice(0, 1400) : cands;
+  let best = null, bestScore = -1e9;
+  pool.forEach(cd => {
+    const T = clone(S);
+    let ok = true, used = 0;
+    const picks = cd.plays.map(pl => ({ k: T.hand[me][pl.hi], lane: pl.lane }));
+    picks.forEach(pk => {
+      if (!pk.k || !canPlay(T, me, pk.k, pk.lane)) { ok = false; return; }
+      used += costIn(T, pk.k, pk.lane);
+      playCard(T, me, pk.k, pk.lane);
+    });
+    if (!ok) return;
+    const X = fx(T);
+    T.lanes.flatMap(l => l.cards).filter(c => c.owner === me && !c.rev).forEach(c => {
+      c.rev = true;
+      const L = LOCS[T.lanes[c.lane].loc]; if (L.onPlay) L.onPlay(c, X);
+      const def = CARDS[c.id]; if (def.onReveal && !revealBlocked(T, c.lane, c)) def.onReveal(c, X);
+    });
+    let sc = aiEval(T, me, S.turn) - (energy - used) * 1.5;
+    if (level === 0) sc += (Math.random() - 0.5) * 26;
+    else if (level === 1) sc += (Math.random() - 0.5) * 5;
+    if (sc > bestScore) { bestScore = sc; best = cd; }
+  });
+  if (best) {
+    const picks = best.plays.map(pl => ({ k: S.hand[me][pl.hi], lane: pl.lane }));
+    picks.forEach(pk => { if (pk.k && canPlay(S, me, pk.k, pk.lane)) playCard(S, me, pk.k, pk.lane); });
+  }
+  const moveIters = level === 0 ? 0 : level === 1 ? 1 : 3;
+  for (let it = 0; it < moveIters; it++) {
+    const cur = aiEval(S, me, S.turn);
+    let bm = null, bv = -1e9;
+    S.lanes.flatMap(l => l.cards).filter(c => c.owner === me && canSelfMove(S, c)).forEach(c => {
+      [0, 1, 2].forEach(to => {
+        if (to === c.lane || !S.lanes[to].open) return;
+        const T = clone(S);
+        const tc = T.lanes.flatMap(l => l.cards).find(k => k.uid === c.uid);
+        if (!doMove(T, tc, to)) return;
+        const v = aiEval(T, me, T.turn);
+        if (v > bv) { bv = v; bm = { uid: c.uid, to }; }
+      });
+    });
+    if (!bm || bv < cur + 0.6) break;
+    const c = S.lanes.flatMap(l => l.cards).find(k => k.uid === bm.uid);
+    doMove(S, c, bm.to);
+  }
+}
+
+function aiSnapDecision(S, level) {
+  if (S.snapped.o || S.turn < 3 || S.turn > 6) return false;
+  const m = computePowers(S);
+  let edge = 0, won = 0;
+  for (let i = 0; i < 3; i++) {
+    if (!S.lanes[i].open) continue;
+    const a = laneSum(S, i, "o", m), b = laneSum(S, i, "p", m);
+    edge += Math.tanh((a - b) / 8); if (a > b) won++;
+  }
+  const thr = level === 2 ? 0.9 : level === 1 ? 1.1 : 1.4;
+  return won >= 2 && edge > thr;
+}
+
+function aiRetreatDecision(S, level) {
+  if (level === 0 || S.stake < 2 || S.turn < 5) return false;
+  const m = computePowers(S);
+  let edge = 0, won = 0;
+  for (let i = 0; i < 3; i++) {
+    if (!S.lanes[i].open) continue;
+    const a = laneSum(S, i, "o", m), b = laneSum(S, i, "p", m);
+    edge += Math.tanh((a - b) / 8); if (a > b) won++;
+  }
+  return won < 2 && edge < -1.2;
+}
+
+/* ============================================================
+   預設牌組
+   ============================================================ */
+const PRESETS = [
+  { id:"a", n:"天啟星·熔爐", f:"A", d:"把自己的部隊丟進火坑當燃料。死得越多，嬤嬤和達克賽德長得越可怕。",
+    cards:["kindler","cinderling","martyr","emberfang","ashpriest","ashfiend","pyre","charbeast","ashenking","silencering","arbiter","culler"] },
+  { id:"t", n:"神速力·殘影", f:"T", d:"在三個戰區之間來回撕扯。每一次殘影都是力量，也是位置的騙局。",
+    cards:["tidestep","driftshell","wayfinder","anchor","riptide","undertow","currentweaver","tidelord","ashwalker","corehawker","arbiter","oathstone"] },
+  { id:"b", n:"黑燈·亡者歸來", f:"B", d:"棄牌不是損失，是把戰力存進棄牌區，最後由奈克隆一次領回。",
+    cards:["bonepicker","lastwords","gravecrow","bonespeaker","rotoracle","gravedigger","corpsecantor","boneking","titanbone","ashwalker","culler","oathstone"] },
+  { id:"s", n:"正義聯盟·集結", f:"S", d:"鋪場、互相加乘、一起變強。怕氪石礦坑，也怕對手的解場。",
+    cards:["stargazer","mote","cartographer","radiantguard","luminary","nexus","starjudge","dawncall","ashwalker","corehawker","silencering","oathstone"] },
+  { id:"w", n:"亞特蘭提斯·深淵", f:"W", d:"提前灌能量，把深海巨獸提早砸到對手臉上。",
+    cards:["mossback","corehawker","beastmaster","broodmother","stoneheart","thunderhorn","wildcall","slumberer","oathstone","ironsworn","arbiter","brokenblade"] },
+  { id:"d", n:"不義同盟·傾覆", f:"D", d:"不靠自己長大，靠讓對手縮小。整副都是答案。",
+    cards:["phantasm","dreamling","mindthief","nightcreep","echo","soulbroker","mistveil","warp","falsemind","culler","silencering","arbiter"] },
+];
+
+const RANKS = ["市民","義警","英雄","傳奇","聯盟核心","無限"];
+const rankOf = (c) => RANKS[Math.max(0, Math.min(5, Math.floor(Math.max(0,c) / 20)))];
+
+/* ============================================================
+   介面
+   ============================================================ */
+const app = document.getElementById("app");
+const esc = (t) => String(t).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const KEY = "justice-clash-v1";
+
+const ST = {
+  screen: "home", deck: [...PRESETS[0].cards], level: 1, fil: "*",
+  cubes: 0, rec: { w: 0, l: 0 }, S: null,
+  g: { sel: null, mv: null, busy: false, flip: new Set(), detail: null, toast: null, log: false, done: false },
+};
+
+try {
+  const j = JSON.parse(localStorage.getItem(KEY) || "null");
+  if (j && Array.isArray(j.deck)) {
+    ST.deck = j.deck.filter(id => CARDS[id] && !CARDS[id].token).slice(0, 12);
+    if (ST.deck.length !== 12) ST.deck = [...PRESETS[0].cards];
+    ST.cubes = Number(j.cubes) || 0;
+    ST.rec = { w: Number(j.rec && j.rec.w) || 0, l: Number(j.rec && j.rec.l) || 0 };
+    if (j.level === 0 || j.level === 1 || j.level === 2) ST.level = j.level;
+  }
+} catch (e) {}
+const persist = () => {
+  try { localStorage.setItem(KEY, JSON.stringify({ deck: ST.deck, cubes: ST.cubes, rec: ST.rec, level: ST.level })); }
+  catch (e) {}
+};
+
+const facVars = (f) => `--fc:${FAC[f].c};--fg:${FAC[f].g}`;
+
+/* ---------------- 大廳 ---------------- */
+function viewHome() {
+  const ok = ST.deck.length === 12;
+  const decks = PRESETS.map(p => {
+    const on = ST.deck.length === 12 && p.cards.every(c => ST.deck.includes(c));
+    return `<button class="deckcard" data-act="preset" data-i="${p.id}" style="${facVars(p.f)}" ${on ? "data-on" : ""}>
+      <div class="dk-f">${esc(FAC[p.f].s)}</div>
+      <div class="dk-n">${esc(p.n)}</div>
+      <div class="dk-d">${esc(p.d)}</div></button>`;
+  }).join("");
+  const diff = ["新手", "老手", "無限"].map((n, i) =>
+    `<button data-act="level" data-i="${i}" ${ST.level === i ? "data-on" : ""}>${n}</button>`).join("");
+
+  return `<div class="scr home halftone">
+    <div class="logo-wrap">
+      <div class="eyebrow">DC · 三戰區 · 六回合</div>
+      <h1 class="logo">正義對決</h1>
+      <div class="logo-sub">JUSTICE CLASH</div>
+      <p class="blurb">七個陣營為了<b>正義結晶</b>在三個戰區開戰。六個回合，能量隨回合遞增，雙方同時下牌、同時揭示。<br>拿下兩個戰區就贏——但真正的賭注，是你敢不敢<b>加注</b>。</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-k">正義結晶</div>
+        <div class="stat-v num" style="color:var(--gold)">${ST.cubes}</div>
+        <div class="stat-n">${esc(rankOf(ST.cubes))}</div></div>
+      <div class="stat"><div class="stat-k">戰績</div>
+        <div class="stat-v num">${ST.rec.w}<span style="font-size:20px;color:var(--faint)"> / ${ST.rec.l}</span></div>
+        <div class="stat-n">勝 / 敗</div></div>
+    </div>
+    <div class="sec">對手強度</div>
+    <div class="diff">${diff}</div>
+    <div class="sec" style="display:flex;align-items:center">你的牌組
+      <button data-act="build" style="margin-left:auto;font-size:13px;color:var(--gold);letter-spacing:0">自訂構築 →</button></div>
+    <div class="deckrow sc">${decks}</div>
+    <button class="bigbtn" data-act="start" ${ok ? "" : "disabled"}>${ok ? "進入戰區" : `牌組還差 ${12 - ST.deck.length} 張`}</button>
+    <button class="ghost" data-act="build">打開卡牌圖鑑（${Object.keys(CARDS).filter(i => !CARDS[i].token).length} 張）</button>
+    <details class="rules"><summary>規則</summary>
+      <p>能量等於回合數。三個戰區在第 1、2、3 回合依序開啟，每個戰區都有自己的規則。每區每方最多 4 張卡。<br>
+      誰在<b>兩個以上</b>戰區力量較高就獲勝；戰區數相同時比總力量。<br>
+      雙方同時下牌然後翻開——<b>上一回合領先的一方先揭示</b>，也就是先被對手看到。<br>
+      <b>加注</b>把這局的結晶翻倍；覺得要輸就<b>撤退</b>，只賠加注前的量。撐到第六回合會自動再翻一倍。<br>
+      帶 <b>↔</b> 記號的卡每回合可以自己移動一次：先點卡，再點目標戰區。</p></details>
+  </div>`;
+}
+
+/* ---------------- 構築 ---------------- */
+function viewBuild() {
+  const ids = Object.keys(CARDS).filter(id => !CARDS[id].token);
+  const list = ids.filter(id => ST.fil === "*" || CARDS[id].f === ST.fil)
+    .sort((a, b) => CARDS[a].c - CARDS[b].c || CARDS[b].p - CARDS[a].p);
+  const curve = Array.from({ length: 7 }, (_, i) => ST.deck.filter(id => CARDS[id].c === i).length);
+  const peak = Math.max(1, ...curve);
+  const avg = ST.deck.length ? (ST.deck.reduce((a, id) => a + CARDS[id].c, 0) / ST.deck.length).toFixed(2) : "0.00";
+  const full = ST.deck.length === 12;
+
+  const fils = ["*", ...Object.keys(FAC)].map(f =>
+    `<button class="fil" data-act="fil" data-f="${f}" ${ST.fil === f ? "data-on" : ""}
+      style="--fc:${f === "*" ? "var(--gold)" : FAC[f].c}">${f === "*" ? "全部" : esc(FAC[f].n)}</button>`).join("");
+
+  const pool = list.map(id => {
+    const d = CARDS[id], on = ST.deck.includes(id);
+    return `<button class="pc" data-act="toggle" data-id="${id}" style="${facVars(d.f)}"
+      ${on ? "data-on" : ""} ${!on && full ? "data-lock" : ""}>
+      <div class="pc-h"><span class="pc-c num">${d.c}</span><span class="pc-n">${esc(d.n)}</span>
+        <span class="pc-p num">${d.p}</span></div>
+      <div class="pc-f">${esc(d.e)}</div>
+      <div class="pc-t">${esc(d.t)}</div></button>`;
+  }).join("");
+
+  return `<div class="scr">
+    <div class="bd-head">
+      <div class="bd-top"><button class="bd-back" data-act="home">← 返回</button>
+        <span class="bd-ttl">構築</span>
+        <span class="bd-cnt num" ${full ? "data-full" : ""}>${ST.deck.length}<span style="font-size:15px;color:var(--faint)">/12</span></span></div>
+      <div class="curve">${curve.map((v, i) =>
+        `<div class="cv"><div class="cv-b" ${v ? "data-v" : ""} style="height:${Math.round(6 + v / peak * 30)}px"></div>
+          <div class="cv-l">${i}</div></div>`).join("")}
+        <div class="cv-a">均費 ${avg}</div></div>
+    </div>
+    <div class="fils sc">${fils}</div>
+    <div class="pool sc">${pool}</div>
+  </div>`;
+}
+
+/* ---------------- 對局 ---------------- */
+function boardCard(c, m, S) {
+  const d = CARDS[c.id], pw = m[c.uid] || 0, delta = pw - cardBase(c);
+  const mv = c.owner === "p" && c.rev && canSelfMove(S, c);
+  const dir = delta > 0 ? "up" : delta < 0 ? "dn" : "";
+  return `<button class="bc" data-act="bc" data-uid="${c.uid}" style="${facVars(d.f)}"
+    ${c.rev ? "" : "data-hidden"} ${ST.g.flip.has(c.uid) ? "data-flip" : ""} ${ST.g.mv === c.uid ? "data-pick" : ""}>
+    <span class="bc-nm">${esc(d.n)}${mv ? '<span class="bc-mv"> ↔</span>' : ""}</span>
+    <span class="bc-ft"><i class="bc-c">${d.c}</i>
+      <b class="bc-p num" ${dir ? `data-d="${dir}"` : ""}>${c.rev ? pw : "?"}</b></span></button>`;
+}
+
+function viewGame() {
+  const S = ST.S, G = ST.g, m = computePowers(S);
+  const sel = G.sel ? S.hand.p.find(k => k.uid === G.sel) : null;
+  const mv = G.mv ? S.lanes.flatMap(l => l.cards).find(c => c.uid === G.mv) : null;
+
+  const idx = [0, 1, 2];
+  const slotsOf = (i, own) =>
+    `<div class="slots ${own === "p" ? "mine" : "foe"}">` +
+    S.lanes[i].cards.filter(c => c.owner === own).map(c => boardCard(c, m, S)).join("") + `</div>`;
+  const zoneOf = (i) => {
+    const L = LOCS[S.lanes[i].loc], open = S.lanes[i].open;
+    const a = laneSum(S, i, "p", m), b = laneSum(S, i, "o", m);
+    const lead = a > b ? "p" : b > a ? "o" : "";
+    const drop = sel && canPlay(S, "p", sel, i);
+    const mvOk = !sel && mv && canMoveTo(S, mv, i);
+    return `<button class="zone" data-act="zone" data-i="${i}" ${drop ? "data-drop" : ""} ${mvOk ? "data-move" : ""}>
+      <div class="zscore">
+        <span class="zs num" ${lead === "o" ? 'data-lead="o"' : ""}>${b}</span>
+        <span class="zs num" ${lead === "p" ? 'data-lead="p"' : ""}>${a}</span></div>
+      <div class="zname" ${open ? "" : "data-shut"}>${open ? esc(L.n) : "？？？"}</div>
+      <div class="ztext">${open ? esc(L.t) : `第 ${i + 1} 回合開啟`}</div></button>`;
+  };
+  const lanes = idx.map(i => slotsOf(i, "o")).join("")
+    + idx.map(zoneOf).join("")
+    + idx.map(i => slotsOf(i, "p")).join("");
+
+  const hand = S.hand.p.length ? S.hand.p.map(k => {
+    const d = CARDS[k.id], cst = Math.max(0, d.c + (k.cm || 0)), pw = d.p + (k.pm || 0);
+    const ok = [0, 1, 2].some(i => canPlay(S, "p", k, i));
+    return `<button class="hc" data-act="hc" data-uid="${k.uid}" style="${facVars(d.f)}"
+      ${G.sel === k.uid ? "data-sel" : ""} ${ok ? "" : "data-no"}>
+      <i class="hc-cost num" ${(k.cm || 0) < 0 ? "data-cut" : ""}>${cst}</i>
+      <div><div class="hc-nm">${esc(d.n)}</div><div class="hc-fac">${esc(FAC[d.f].s)}</div></div>
+      <div class="hc-txt">${esc(d.t)}</div>
+      <div class="hc-pow num" ${(k.pm || 0) > 0 ? "data-up" : ""}>${pw}</div></button>`;
+  }).join("") : `<div class="empty">手牌已空。</div>`;
+
+  const pips = Array.from({ length: Math.min(9, S.emax.p) },
+    (_, i) => `<span class="pip" ${i < S.eleft.p ? "data-on" : ""}></span>`).join("");
+
+  return `<div class="scr gm halftone">
+    <div class="topbar">
+      <button data-act="exit" style="font-size:13px;color:var(--mute);font-weight:700">離開</button>
+      <span class="tb-turn">${Math.min(S.turn, 6)} / 6</span>
+      <span class="tb-prio">${S.prio === "p" ? "你先揭示" : "對手先揭示"}</span>
+      <span class="stake"><span class="stake-k">結晶</span>
+        <span class="stake-v num" ${S.stake > 1 ? "data-hot" : ""}>×${S.stake}</span></span>
+    </div>
+    <div class="mid sc">
+      <div class="foeline">對手 · 手牌 <b>${S.hand.o.length}</b> · 牌庫 <b>${S.deck.o.length}</b> · 棄牌 <b>${S.grave.o.length}</b>
+        ${S.snapped.o ? '<span class="snapped">已加注</span>' : ""}</div>
+      <div class="field">${lanes}</div>
+      <div class="myline">
+        <span class="enr num">${S.eleft.p}<small> / ${S.emax.p} 能量</small></span>
+        <span class="pips">${pips}</span>
+        <span class="myinfo">牌庫 ${S.deck.p.length} · 棄牌 ${S.grave.p.length}</span>
+        <button class="logbtn" data-act="log">紀錄</button></div>
+      ${mv && !sel ? `<div class="hint">移動 ${esc(CARDS[mv.id].n)} — 點選目標戰區（再點一次卡片取消）</div>` : ""}
+      ${G.log ? `<div class="logbox sc">${[...S.log].reverse().map(l => `<div>${esc(l)}</div>`).join("") || "尚無紀錄。"}</div>` : ""}
+    </div>
+    <div class="hand sc">${hand}</div>
+    <div class="acts">
+      <button class="act act-r" data-act="retreat">撤退</button>
+      <button class="act act-s" data-act="snap" ${S.snapped.p ? "disabled" : ""}>${S.snapped.p ? "已加注" : "加注 ×2"}</button>
+      <button class="act act-e" data-act="end" ${G.busy ? "disabled" : ""}>${G.busy ? "揭示中" : "結束回合"}</button>
+    </div>
+  </div>`;
+}
+
+/* ---------------- 覆蓋層 ---------------- */
+function viewDetail() {
+  const id = ST.g.detail; if (!id) return "";
+  const d = CARDS[id];
+  return `<div class="modal" data-act="closeDetail">
+    <div class="sheet" style="${facVars(d.f)}">
+      <div class="sh-f">${esc(FAC[d.f].n)} · ${esc(FAC[d.f].s)}</div>
+      <div class="sh-n">${esc(d.n)}</div>
+      <div class="sh-e">${esc(d.e)}</div>
+      <div class="sh-stats">
+        <div><div class="sh-k">費用</div><div class="sh-v num" style="color:var(--gold)">${d.c}</div></div>
+        <div><div class="sh-k">力量</div><div class="sh-v num">${d.p}</div></div></div>
+      <div class="sh-t">${esc(d.t)}</div></div></div>`;
+}
+
+function viewResult() {
+  const S = ST.S; if (!S || !S.over || !S.result) return "";
+  const R = S.result;
+  const col = R.win === "p" ? "var(--win)" : R.win === "o" ? "var(--lose)" : "var(--gold)";
+  const head = R.win === "p" ? "勝利" : R.win === "o" ? "落敗" : "平手";
+  const why = R.retreat === "o" ? "對手撤退了。" : R.retreat === "p" ? "你撤退，保住了加注前的結晶。" : "六個回合結束，結晶自動翻倍結算。";
+  const rows = [0, 1, 2].map(i => `<div class="rs-row"><span>${esc(LOCS[S.lanes[i].loc].n)}</span>
+    <span><b class="num" style="color:${R.lanes[i][1] > R.lanes[i][0] ? "var(--lose)" : "var(--faint)"}">${R.lanes[i][1]}</b>
+    <span style="color:var(--faint);font-size:13px"> : </span>
+    <b class="num" style="color:${R.lanes[i][0] > R.lanes[i][1] ? "var(--win)" : "var(--faint)"}">${R.lanes[i][0]}</b></span></div>`).join("");
+  return `<div class="modal"><div class="sheet" style="--fc:${col};--fg:#131C2E">
+    <div class="rs-h dsp" style="color:${col}">${head}</div>
+    <div class="rs-s">${esc(why)}</div>${rows}
+    <div class="rs-cube" style="color:${col}">${R.win === "p" ? "+" : R.win === "o" ? "−" : "±"}${R.cubes} 正義結晶</div>
+    <button class="bigbtn" data-act="exit">回到大廳</button></div></div>`;
+}
+
+const viewToast = () => ST.g.toast ? `<div class="toast"><span>${esc(ST.g.toast)}</span></div>` : "";
+
+/* ---------------- 繪製 ---------------- */
+let toastTimer = null;
+function render() {
+  let html;
+  if (ST.screen === "home") html = viewHome();
+  else if (ST.screen === "build") html = viewBuild();
+  else html = viewGame() + viewResult() + viewToast();
+  html += viewDetail();
+  app.innerHTML = html;
+}
+function flash(msg) {
+  ST.g.toast = msg; render();
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { ST.g.toast = null; render(); }, 1600);
+}
+
+/* ---------------- 互動 ---------------- */
+function startGame() {
+  const opp = PRESETS[rnd(PRESETS.length)];
+  ST.S = newGame([...ST.deck], [...opp.cards], Object.keys(LOCS));
+  ST.g = { sel: null, mv: null, busy: false, flip: new Set(), detail: null, toast: null, log: false, done: false };
+  ST.screen = "game"; render();
+}
+
+function settle() {
+  const S = ST.S; if (!S.result || ST.g.done) return;
+  ST.g.done = true;
+  const R = S.result;
+  ST.cubes += R.win === "p" ? R.cubes : R.win === "o" ? -R.cubes : 0;
+  if (R.win === "p") ST.rec.w++; else if (R.win === "o") ST.rec.l++;
+  persist();
+}
+
+function endTurn() {
+  const S = ST.S, G = ST.g;
+  if (S.over || G.busy) return;
+  G.busy = true; G.sel = null; G.mv = null;
+  render();
+
+  setTimeout(() => {
+    aiTurn(S, ST.level);
+    if (aiRetreatDecision(S, ST.level)) {
+      S.over = true; S.result = { win: "p", retreat: "o", cubes: S.stake, ...score(S) };
+      G.busy = false; settle(); render(); return;
+    }
+    if (aiSnapDecision(S, ST.level)) {
+      S.snapped.o = true; S.stake *= 2;
+      G.toast = "對手加注 ×" + S.stake;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { G.toast = null; render(); }, 1600);
+    }
+    resolve(S);
+    G.flip = new Set(S.lastReveal);
+    render();
+    setTimeout(() => {
+      G.flip.clear(); G.busy = false;
+      if (S.over) settle();
+      render();
+    }, 620);
+  }, 30);
+}
+
+app.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act, S = ST.S, G = ST.g;
+
+  switch (act) {
+    case "preset": {
+      const p = PRESETS.find(x => x.id === el.dataset.i);
+      if (p) { ST.deck = [...p.cards]; persist(); render(); }
+      return;
+    }
+    case "level": ST.level = Number(el.dataset.i); persist(); render(); return;
+    case "build": ST.screen = "build"; render(); return;
+    case "home": ST.screen = "home"; render(); return;
+    case "start": if (ST.deck.length === 12) startGame(); return;
+    case "fil": ST.fil = el.dataset.f; render(); return;
+    case "toggle": {
+      const id = el.dataset.id;
+      if (ST.deck.includes(id)) ST.deck = ST.deck.filter(x => x !== id);
+      else if (ST.deck.length < 12) ST.deck = [...ST.deck, id];
+      else { G.detail = id; render(); return; }
+      persist(); render(); return;
+    }
+    case "closeDetail": G.detail = null; render(); return;
+    case "log": G.log = !G.log; render(); return;
+    case "exit": ST.S = null; ST.screen = "home"; render(); return;
+  }
+
+  if (!S || S.over) return;
+
+  if (act === "zone") {
+    const i = Number(el.dataset.i);
+    if (G.sel) {
+      const k = S.hand.p.find(h => h.uid === G.sel);
+      if (k && playCard(S, "p", k, i)) { G.sel = null; render(); }
+      return;
+    }
+    if (G.mv) {
+      const c = S.lanes.flatMap(l => l.cards).find(x => x.uid === G.mv);
+      if (c && doMove(S, c, i)) { G.mv = null; render(); }
+      return;
+    }
+    return;
+  }
+
+  if (act === "hc") {
+    if (G.busy) return;
+    const uid = Number(el.dataset.uid), k = S.hand.p.find(h => h.uid === uid);
+    if (!k) return;
+    G.mv = null;
+    if (G.sel === uid) { G.sel = null; render(); return; }
+    if ([0, 1, 2].some(i => canPlay(S, "p", k, i))) G.sel = uid;
+    else G.detail = k.id;
+    render(); return;
+  }
+
+  if (act === "bc") {
+    const uid = Number(el.dataset.uid);
+    const c = S.lanes.flatMap(l => l.cards).find(x => x.uid === uid);
+    if (!c) return;
+    if (G.busy) { G.detail = c.id; render(); return; }
+    if (c.owner === "p" && !c.rev) { recall(S, "p", c); G.mv = null; render(); return; }
+    if (c.owner === "p" && canSelfMove(S, c)) { G.sel = null; G.mv = G.mv === uid ? null : uid; render(); return; }
+    G.detail = c.id; render(); return;
+  }
+
+  if (act === "snap") {
+    if (S.snapped.p || G.busy) return;
+    S.snapped.p = true; S.stake *= 2; flash("加注 ×" + S.stake); return;
+  }
+  if (act === "retreat") {
+    if (G.busy) return;
+    S.over = true; S.result = { win: "o", retreat: "p", cubes: S.stake, ...score(S) };
+    settle(); render(); return;
+  }
+  if (act === "end") endTurn();
+});
+
+render();
+</script>
+
+</body></html>
