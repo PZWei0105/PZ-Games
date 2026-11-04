@@ -82,6 +82,42 @@
    "chat": "https://claude.ai/chat/77cab720-8953-471a-bf36-6c7a24195e63"
   },
   {
+   "id": "tenant",
+   "title": "借殼",
+   "en": "TENANT",
+   "genre": "story",
+   "status": "shipped",
+   "featured": true,
+   "created": "2026-11-04",
+   "updated": "2026-11-04",
+   "tagline": "雨夜的城市裡，你能借用別人的身體。",
+   "summary": "受 Playdead《Limbo》《Inside》啟發的橫向解謎冒險。全城的人都把身體租給「長眠租賃」換錢，夜裡走動的工人、警衛、獵犬，都是被派遣的「殼」。一個從眠艙逃出來的孩子，脖子上亮著城裡唯一的暖色訊號：他能附身到範圍內的人、狗、維修機和監視器身上，借他們的身體開門、扛東西、引開追兵。每一具殼都有名字和一段記憶，他們能不能平安回家，取決於你怎麼用他們。五章十一個場景、三種結局。",
+   "highlights": [
+    "五章十一個場景・三種結局",
+    "附身工人、警衛、獵犬、維修機、監視器",
+    "每道難關都有好幾種解法，也都有代價",
+    "每具殼都有名字與記憶碎片",
+    "光影潛行，狗聞得到你的訊號"
+   ],
+   "inspired": "Playdead《Limbo》《Inside》",
+   "verdict": "",
+   "next": "先玩一輪，把手感、難度和卡關的地方告訴我；之後可以再加新的章節與新的殼。",
+   "palette": [
+    "#2a434c",
+    "#070b0d",
+    "#ffb547"
+   ],
+   "builds": [
+    {
+     "id": "tenant",
+     "label": "完整版",
+     "note": "",
+     "artifact": "https://claude.ai/artifact/C9Ti1Pp22jrpfLvvHEaNdx"
+    }
+   ],
+   "chat": ""
+  },
+  {
    "id": "southbound",
    "title": "末班列車",
    "en": "SOUTHBOUND",
