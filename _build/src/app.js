@@ -127,7 +127,7 @@ const FEATURED = ['tideline', 'off-script', 'counterspin', 'whalefall-2', 'dead-
 /* ───────────── sound ───────────── */
 const Sound = (() => {
   let ctx = null, master, sfx, mus, verb, comp;
-  let pad = null, sparkleT = 0, chordT = 0, root = 57, unlocked = false;
+  let root = 57, unlocked = false;
   const N = (m) => 440 * Math.pow(2, (m - 69) / 12);
   function init() {
     if (ctx) return ctx;
@@ -263,64 +263,122 @@ const Sound = (() => {
       [12, 19, 24, 28, 31, 36].forEach((s, i) => tone({ t: 1.0 + i * 0.09, f: N(57 + s), d: 1.2, g: 0.04, type: 'sine', wet: 0.8 }));
     },
   };
-  /* generative ambient pad: the room's music follows the colour of the game in focus */
-  const PROG = [[0, 7, 16, 23], [-3, 4, 12, 19], [-7, 0, 9, 16], [-5, 2, 11, 14]];
-  let chordIx = 0;
-  function startMusic() {
-    if (!ctx || !unlocked || !S.settings.music || pad) return;
-    const nodes = [];
-    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 820; lp.Q.value = 0.5;
-    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.07; const lg = ctx.createGain(); lg.gain.value = 360; lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
-    const pg = ctx.createGain(); pg.gain.value = 0.0; lp.connect(pg); pg.connect(mus);
-    const send = ctx.createGain(); send.gain.value = 0.7; pg.connect(send); send.connect(verb);
-    const voices = PROG[chordIx].map((s) => {
-      const v = [];
-      for (const det of [-7, 6]) {
-        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.detune.value = det; o.frequency.value = N(root - 12 + s);
-        const g = ctx.createGain(); g.gain.value = 0.05; o.connect(g); g.connect(lp); o.start(); v.push(o); nodes.push(o);
+  /* lobby music: a bright, bouncy chiptune-pop loop (major key, 112 BPM, light swing).
+     Section A carries the tune, section B lets an arpeggio breathe; the key follows the game in focus,
+     changing only at phrase boundaries so it never lurches mid-bar. */
+  const BPM = 112, STEP = 60 / BPM / 4, SWING = 0.1;
+  const PROG = [0, 7, 9, 5, 0, 7, 5, 7];                      // I V vi IV | I V IV V
+  const TRI = { 0: [0, 4, 7], 7: [7, 11, 14], 9: [9, 12, 16], 5: [5, 9, 12] };
+  const MEL = [                                                // per bar: [16th step, semitone above key, length]
+    [[0, 4, 2], [2, 7, 2], [4, 9, 2], [6, 7, 2], [8, 4, 2], [10, 0, 2], [12, 2, 4]],
+    [[0, 2, 2], [2, 7, 2], [4, 11, 2], [6, 14, 2], [8, 12, 4], [12, 11, 4]],
+    [[0, 9, 2], [2, 12, 2], [4, 16, 2], [6, 14, 2], [8, 12, 2], [10, 9, 2], [12, 7, 4]],
+    [[0, 5, 2], [2, 9, 2], [4, 12, 4], [8, 9, 2], [10, 7, 2], [12, 4, 2], [14, 2, 2]],
+    [[0, 4, 2], [2, 7, 2], [4, 9, 2], [6, 12, 2], [8, 16, 4], [12, 14, 2], [14, 12, 2]],
+    [[0, 14, 4], [4, 11, 2], [6, 7, 2], [8, 11, 2], [10, 14, 2], [12, 19, 4]],
+    [[0, 17, 2], [2, 16, 2], [4, 12, 2], [6, 9, 2], [8, 12, 2], [10, 14, 2], [12, 16, 4]],
+    [[0, 14, 2], [2, 12, 2], [4, 11, 2], [6, 7, 2], [8, 7, 2], [10, 11, 2], [12, 14, 4]],
+  ];
+  const ARP = [0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 2, 1, 0, 1];
+  const MUS_LEVEL = 0.5;
+  let mOn = false, mTimer = 0, mStep = 0, mNext = 0, mKey = 60, mPendingKey = null, mBus = null, mDucked = false;
+  function mVoice(type, f, t, d, g, o = {}) {
+    const a = o.a || 0.006, rel = o.rel || 0.07;
+    const osc = ctx.createOscillator(); osc.type = type; osc.frequency.setValueAtTime(f, t); if (o.det) osc.detune.value = o.det;
+    const gn = ctx.createGain();
+    gn.gain.setValueAtTime(0.0001, t);
+    gn.gain.exponentialRampToValueAtTime(g, t + a);
+    gn.gain.setTargetAtTime(g * (o.sus || 0.6), t + a, Math.max(0.02, d * 0.35));
+    gn.gain.setTargetAtTime(0.0001, t + d, rel / 3);
+    let n = osc;
+    if (o.lp) { const fl = ctx.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = o.lp; fl.Q.value = 0.5; osc.connect(fl); n = fl; }
+    n.connect(gn); gn.connect(mBus);
+    osc.start(t); osc.stop(t + d + rel + 0.12);
+  }
+  function mNoise(t, d, g, f, type = 'highpass', q = 0.7) {
+    if (!nbuf) { nbuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const dd = nbuf.getChannelData(0); for (let i = 0; i < dd.length; i++) dd[i] = Math.random() * 2 - 1; }
+    const src = ctx.createBufferSource(); src.buffer = nbuf;
+    const fl = ctx.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+    const gn = ctx.createGain(); gn.gain.setValueAtTime(g, t); gn.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    src.connect(fl); fl.connect(gn); gn.connect(mBus);
+    src.start(t, Math.random() * 1.5); src.stop(t + d + 0.02);
+  }
+  function mKick(t) {
+    const o = ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(46, t + 0.11);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+    o.connect(g); g.connect(mBus); o.start(t); o.stop(t + 0.24);
+  }
+  function mPlay(s, t) {
+    const sec = s >= 128 ? 1 : 0, bar = Math.floor((s % 128) / 16), st = s % 16;
+    if (st === 0 && bar % 4 === 0 && mPendingKey != null) { mKey = mPendingKey; mPendingKey = null; }
+    const K = mKey, R = PROG[bar], tri = TRI[R];
+    // drums
+    if (st === 0 || st === 8 || (st === 14 && bar % 2 === 1)) mKick(t);
+    if (st === 4 || st === 12) { mNoise(t, 0.11, 0.07, 1700, 'bandpass', 0.9); mNoise(t + 0.012, 0.09, 0.05, 2200, 'bandpass', 0.9); }
+    if (st % 2 === 0) mNoise(t, 0.03, st % 4 === 2 ? 0.04 : 0.022, 7800);
+    if (st === 14 && bar % 4 === 3) mNoise(t, 0.18, 0.03, 6800);
+    // bass: octave bounce on the eighths
+    if (st % 2 === 0) mVoice('triangle', N(K - 24 + R + (st % 4 === 2 ? 12 : 0)), t, STEP * 1.5, 0.12, { lp: 1100, sus: 0.5 });
+    // offbeat chord stabs give it the skip
+    if (st === 2 || st === 6 || st === 10 || st === 14) tri.forEach((x, i) => mVoice('triangle', N(K - 12 + x), t, STEP * 1.1, 0.028, { det: i * 3, sus: 0.4 }));
+    if (!sec) {
+      // section A: the tune — a soft square lead doubled by a triangle an octave down for body
+      for (const [ms, n, len] of MEL[bar]) {
+        if (ms !== st) continue;
+        mVoice('square', N(K + n), t, STEP * len * 0.9, 0.045, { lp: 3000, sus: 0.65 });
+        mVoice('triangle', N(K + n - 12), t, STEP * len * 0.9, 0.04, { sus: 0.6 });
       }
-      return v;
-    });
-    pad = { nodes, voices, lfo, pg, lp };
-    const now = ctx.currentTime;
-    pg.gain.setTargetAtTime(0.55, now, 2.2);
-    mus.gain.cancelScheduledValues(now); mus.gain.setTargetAtTime(0.5, now, 1.2);
-    clearInterval(chordT); chordT = setInterval(nextChord, 9000);
-    clearTimeout(sparkleT); sparkle();
-  }
-  function retune(glide = 2.5) {
-    if (!pad) return;
-    const now = ctx.currentTime;
-    PROG[chordIx].forEach((s, i) => pad.voices[i].forEach((o) => o.frequency.setTargetAtTime(N(root - 12 + s), now, glide)));
-  }
-  function nextChord() { chordIx = (chordIx + 1) % PROG.length; retune(1.8); }
-  function sparkle() {
-    if (!pad) return;
-    if (!document.hidden) {
-      const pent = [0, 2, 4, 7, 9, 12, 14, 16];
-      const s = pent[(Math.random() * pent.length) | 0];
-      tone({ f: N(root + 24 + s), d: 1.6, g: 0.014 + Math.random() * 0.01, type: 'sine', a: 0.02, wet: 0.9, dest: mus });
+    } else {
+      // section B: a bell arpeggio over the same changes
+      mVoice('sine', N(K + 12 + tri[ARP[st]] + (st >= 8 && bar % 2 ? 12 : 0)), t, STEP * 0.9, 0.03, { sus: 0.3, rel: 0.12 });
     }
-    sparkleT = setTimeout(sparkle, 2600 + Math.random() * 4200);
+    // a little chime opens every phrase
+    if (st === 0 && bar % 4 === 0) { mVoice('sine', N(K + 24), t, 0.5, 0.025, { sus: 0.2, rel: 0.4 }); mVoice('sine', N(K + 31), t + 0.07, 0.5, 0.018, { sus: 0.2, rel: 0.4 }); }
   }
-  function stopMusic(fade = 1.2) {
-    if (!pad || !ctx) return;
-    const p = pad; pad = null;
-    clearInterval(chordT); clearTimeout(sparkleT);
+  function mTick() {
+    if (!mOn || !ctx) return;
+    while (mNext < ctx.currentTime + 0.15) {
+      mPlay(mStep, mNext + (mStep % 2 ? STEP * SWING : 0));
+      mNext += STEP; mStep = (mStep + 1) % 256;
+    }
+  }
+  function musGain(v, sec) {
     const now = ctx.currentTime;
-    p.pg.gain.cancelScheduledValues(now); p.pg.gain.setTargetAtTime(0, now, fade / 3);
-    setTimeout(() => { p.nodes.forEach((o) => { try { o.stop(); } catch (e) { /* stopped */ } }); try { p.lfo.stop(); } catch (e) { /* stopped */ } }, fade * 1000 + 400);
+    mus.gain.cancelScheduledValues(now); mus.gain.setValueAtTime(Math.max(0.0001, mus.gain.value), now);
+    mus.gain.linearRampToValueAtTime(v, now + sec);
   }
-  function setRoot(hex) {
-    const h = hueOf(hexRgb(hex));
-    const semi = Math.round(h / 30) % 12;
-    const nr = 52 + ((semi * 7) % 12);
-    if (nr !== root) { root = nr; retune(); }
+  function startMusic() {
+    if (!ctx || !unlocked || !S.settings.music || mOn) return;
+    if (!mBus) {
+      mBus = ctx.createGain(); mBus.gain.value = 1;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 38;
+      mBus.connect(hp); hp.connect(mus);
+      const send = ctx.createGain(); send.gain.value = 0.12; mBus.connect(send); send.connect(verb);
+    }
+    if (mPendingKey != null) { mKey = mPendingKey; mPendingKey = null; }
+    mOn = true; mStep = 0; mNext = ctx.currentTime + 0.12;
+    musGain(mDucked ? 0.08 : MUS_LEVEL, 1.4);
+    clearInterval(mTimer); mTimer = setInterval(mTick, 25); mTick();
+  }
+  function stopMusic(fade = 1.0) {
+    if (!mOn || !ctx) return;
+    mOn = false; clearInterval(mTimer);
+    musGain(0.0001, fade);
+  }
+  function duck(on) { mDucked = on; if (ctx && mOn) musGain(on ? 0.08 : MUS_LEVEL, 0.6); }
+  function setRoot(hex) {                          // UI sounds follow the colour in focus at once
+    const semi = Math.round(hueOf(hexRgb(hex)) / 30) % 12;
+    root = 52 + ((semi * 7) % 12);
+  }
+  function musicKey(hex) {                         // on a game's page the music moves to that game's key (at the next phrase)
+    const k = hex ? 57 + (((Math.round(hueOf(hexRgb(hex)) / 30) % 12) * 7) % 12) % 8 : 60;
+    if (k !== mKey) mPendingKey = k; else mPendingKey = null;
   }
   function setVol(v) { if (master) master.gain.setTargetAtTime(v, ctx.currentTime, 0.05); }
   function suspend() { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); }
   function resume() { if (ctx && unlocked && ctx.state !== 'running') ctx.resume().catch(() => {}); }
-  return { unlock, play, startMusic, stopMusic, setRoot, setVol, suspend, resume, get unlocked() { return unlocked; }, get root() { return root; } };
+  return { unlock, play, startMusic, stopMusic, duck, setRoot, musicKey, setVol, suspend, resume, get unlocked() { return unlocked; }, get root() { return root; } };
 })();
 
 /* ───────────── ambient light ───────────── */
@@ -783,6 +841,7 @@ function openGame(id, push = true) {
   $('#gamepage').classList.add('on');
   $('#tabbar').classList.add('hide');
   Ambient.set(g);
+  Sound.musicKey(g.accent);
   heroPause(true);
 }
 function closeGame(viaHistory = true) {
@@ -798,6 +857,7 @@ function hideGame() {
   clearInterval(reelT);
   $('#tabbar').classList.remove('hide');
   S.current = null;
+  Sound.musicKey(null);
   if (S.dirtyBase) { S.dirtyBase = false; refreshBase(); }
   if (S.base === 'home' && Hero.list[Hero.ix]) Ambient.set(Hero.list[Hero.ix].g);
   heroPause(false);
@@ -979,7 +1039,7 @@ function openSettings() {
   const totalMs = Object.values(S.stats).reduce((a, s) => a + (s.ms || 0), 0);
   openSheet(`<h3>設定</h3><p class="sub">聲音、開機動畫和收藏庫的整理。</p>
     <div class="opt"><div><b>音效</b><span>點按、切換、啟動遊戲的聲音</span></div><button class="sw${st.sfx ? ' on' : ''}" data-act="set" data-arg="sfx" aria-label="音效"></button></div>
-    <div class="opt"><div><b>背景音樂</b><span>收藏庫裡的環境音樂，會跟著遊戲的顏色變調</span></div><button class="sw${st.music ? ' on' : ''}" data-act="set" data-arg="music" aria-label="背景音樂"></button></div>
+    <div class="opt"><div><b>背景音樂</b><span>輕快的大廳配樂，調性會跟著你正在看的遊戲變換</span></div><button class="sw${st.music ? ' on' : ''}" data-act="set" data-arg="music" aria-label="背景音樂"></button></div>
     <div class="opt"><div><b>音量</b></div><input class="range" type="range" min="0" max="1" step="0.05" value="${st.vol}" id="vol"></div>
     <div class="opt"><div><b>開機動畫</b><span>每次打開收藏庫時播放</span></div><button class="sw${st.boot ? ' on' : ''}" data-act="set" data-arg="boot" aria-label="開機動畫"></button></div>
     <div class="opt" style="display:block"><b>隱藏的遊戲</b><span>${hidden.length ? '點一下就會回到收藏庫' : '目前沒有隱藏任何遊戲'}</span>
@@ -1206,6 +1266,7 @@ function openTrailer(g) {
   TR.el = el;
   requestAnimationFrame(() => el.classList.add('on'));
   heroPause(true);
+  Sound.duck(true);
   trGo(0);
   TR.last = performance.now();
   TR.raf = requestAnimationFrame(trTick);
@@ -1274,6 +1335,7 @@ function closeTrailer(instant) {
   cancelAnimationFrame(TR.raf);
   const el = TR.el; TR.el = null;
   el.classList.remove('on');
+  Sound.duck(false);
   if (!S.current) heroPause(false);
   setTimeout(() => el.remove(), instant ? 0 : 420);
 }
@@ -1622,6 +1684,6 @@ async function start() {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 }
-window.__pz = { S, Hero, heroGo, heroPause, openGame, renderHome, setBase, launch, openSettings, openSearch, toast };
+window.__pz = { S, Sound, Hero, heroGo, heroPause, openGame, renderHome, setBase, launch, openSettings, openSearch, toast };
 start();
 })();
