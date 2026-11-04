@@ -217,6 +217,9 @@ def build_media(g, out, ov):
     hero_src = shots[hero_ix]['src'] if hero_ix < len(shots) else shots[0]['src']
     hero_aspect = 0.6 if orient == 'p' else 1.75
     hero_focus = object_position(hero_img, hero_aspect, ov.get('heroFocus'))
+    if orient == 'p' and not ov.get('heroFocus'):
+        # phone screenshots carry the game's HUD along the top edge: sit the crop a little low so it slides under the app's own bar
+        hero_focus = [50, 60]
     # cover: 2:3 window of the cover shot
     cov_name = ov.get('coverShot') or os.path.basename(files[0])
     cov_img = Image.open(os.path.join(sdir, cov_name) if os.path.exists(os.path.join(sdir, cov_name)) else files[0]).convert('RGB')
