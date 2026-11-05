@@ -48,6 +48,20 @@
    ```
 6. **推上 GitHub**：`REPO=.. bash tools/deploy.sh "Add 《遊戲名》"`（會把遊戲、圖片、外殼分批 commit 再 push；commit 訊息結尾要附上當次對話規定的署名行）。一兩分鐘後 https://pzwei0105.github.io/PZ-Games/ 就會更新；使用者重新打開收藏庫會跳出「新遊戲入庫」提示。
 
+## 放在這個網站裡的專屬 App（`apps/`）
+
+有些專屬 App 沒有自己的 GitHub repo，就直接放在這個網站的 `apps/<App>/` 底下，網址是 `https://pzwei0105.github.io/PZ-Games/apps/<App>/`。它們有自己的 manifest 和 service worker（scope 只到自己的資料夾），所以可以單獨加到主畫面；`tools/build.py` 不會動到 `apps/`。
+
+- 原始碼放 `_build/apps/<App>/`，各自有 `build.py`，輸出到 repo 根目錄的 `apps/<App>/`。
+- 收藏庫的「專屬 App」分頁照常在 `data/catalog_base.json` 的 `apps` 加一筆（`kind: "web"`、`url` 指向上面的網址）；`claude` 欄位記 Claude 版網址（收藏庫不讀它，只是備忘）。
+- 同一個網域（pzwei0105.github.io）的 App 共用瀏覽器儲存空間，localStorage 一律加自己的前綴（例如本機道場用 `pzdojo.v1`）。
+
+目前有：
+
+| App | 原始碼 | 組建 |
+|---|---|---|
+| 本機道場 LOCAL DOJO（本機 AI 修煉課） | `_build/apps/local-dojo/src/`（課程內容在 `data1.js`、`data2.js`） | `python3 _build/apps/local-dojo/build.py --claude-out /tmp/dojo-claude`：網頁版輸出到 `apps/local-dojo/`，Claude 版（雲端同步進度）另外輸出，發布到 https://claude.ai/artifact/T6XN5fhrpMU4YM5rJsQ6Tj |
+
 ## App 怎麼運作（改程式前先看）
 
 - 單頁 App，網址用 `#` 分頁：`#library`、`#library-<類型>`、`#apps`、`#game-<id>`、`#play-<build>`。

@@ -2084,6 +2084,22 @@
    "glyph": "買"
   },
   {
+   "id": "local-dojo",
+   "title": "本機道場",
+   "en": "LOCAL DOJO",
+   "kind": "web",
+   "url": "https://pzwei0105.github.io/PZ-Games/apps/local-dojo/",
+   "tagline": "六條腰帶，把 5090 筆電練成本機 AI 工作室。",
+   "summary": "給 RTX 5090 筆電的本機 AI 修煉課：六關 24 課，從看懂模型、離線 AI、出圖出影片、知識庫、微調到 Agent 流水線。每課有白話卡片、互動模擬、給 Claude Code 的實作指令和測驗，還有複習卡、錯題本、顯存計算機。",
+   "palette": [
+    "#3a2e10",
+    "#0a0906",
+    "#ffd23f"
+   ],
+   "glyph": "道",
+   "claude": "https://claude.ai/artifact/T6XN5fhrpMU4YM5rJsQ6Tj"
+  },
+  {
    "id": "pz-host",
    "title": "PZ 主機",
    "en": "PZ HOST",

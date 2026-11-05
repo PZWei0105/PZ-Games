@@ -1,0 +1,30 @@
+{
+ "name": "本機道場 LOCAL DOJO",
+ "short_name": "本機道場",
+ "description": "給 RTX 5090 筆電的本機 AI 修煉課：六關六條腰帶。",
+ "lang": "zh-Hant-TW",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#05060c",
+ "theme_color": "#05060c",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
