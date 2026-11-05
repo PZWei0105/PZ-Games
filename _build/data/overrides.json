@@ -281,5 +281,16 @@
    50,
    50
   ]
+ },
+ "everlight": {
+  "heroShot": "02.png",
+  "heroFocus": [
+   50,
+   18
+  ],
+  "coverFocus": [
+   50,
+   30
+  ]
  }
 }

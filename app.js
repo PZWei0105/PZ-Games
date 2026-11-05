@@ -121,7 +121,7 @@ const save = {
   builds: () => Store.set('builds', S.builds),
 };
 const STATUS = { shipped: '已完成', dev: '製作中', failed: '試作失敗', paused: '停工', idea: '構想中', archived: '未上架' };
-const GENRE_ORDER = ['survivor', 'card', 'tactics', 'action', 'sim', 'party', 'duel', 'story', 'arcade'];
+const GENRE_ORDER = ['survivor', 'card', 'rpg', 'tactics', 'action', 'sim', 'party', 'duel', 'story', 'arcade'];
 const FEATURED = ['tideline', 'off-script', 'counterspin', 'whalefall-2', 'dead-mens-wares', 'night-for-ages', 'echoline'];
 
 /* ───────────── sound ───────────── */

@@ -48,6 +48,14 @@
    ```
 6. **推上 GitHub**：`REPO=.. bash tools/deploy.sh "Add 《遊戲名》"`（會把遊戲、圖片、外殼分批 commit 再 push；commit 訊息結尾要附上當次對話規定的署名行）。一兩分鐘後 https://pzwei0105.github.io/PZ-Games/ 就會更新；使用者重新打開收藏庫會跳出「新遊戲入庫」提示。
 
+## 遊戲原始碼（`sources/`）
+
+多數遊戲只留打包後的單檔版本；需要長期續作的遊戲，原始碼放在 `sources/<遊戲 id>/`，裡面的 README 寫了怎麼組建。
+
+| 遊戲 | 原始碼 |
+|---|---|
+| 長明 EVERLIGHT（HD-2D JRPG，第一章） | `_build/sources/everlight/`：`node tools/build.mjs` 產生 Claude 版與獨立網頁版 |
+
 ## 放在這個網站裡的專屬 App（`apps/`）
 
 有些專屬 App 沒有自己的 GitHub repo，就直接放在這個網站的 `apps/<App>/` 底下，網址是 `https://pzwei0105.github.io/PZ-Games/apps/<App>/`。它們有自己的 manifest 和 service worker（scope 只到自己的資料夾），所以可以單獨加到主畫面；`tools/build.py` 不會動到 `apps/`。
