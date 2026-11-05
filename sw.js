@@ -1,7 +1,7 @@
-/* PZ 遊戲收藏 service worker — version b4843f0b037e */
-const V = 'b4843f0b037e';
+/* PZ 遊戲收藏 service worker — version a932f9d4037e */
+const V = 'a932f9d4037e';
 const SHELL = 'pzgc-shell-' + V, MEDIA = 'pzgc-media-v1', GAMES = 'pzgc-games-v1', FONTS = 'pzgc-fonts-v1';
-const SHELL_FILES = ['./', 'index.html', 'app.css?v=b4843f0b037e', 'app.js?v=b4843f0b037e', 'hub.js?v=037e0d20', 'catalog.json', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/favicon.svg'];
+const SHELL_FILES = ['./', 'index.html', 'app.css?v=a932f9d4037e', 'app.js?v=a932f9d4037e', 'hub.js?v=037e0d20', 'catalog.json', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png', 'icons/favicon.svg'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(SHELL).then((c) => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
 });
