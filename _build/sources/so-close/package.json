@@ -1,0 +1,11 @@
+{
+  "name": "so-close",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.12.0",
+    "esbuild": "^0.28.2",
+    "three": "^0.187.0"
+  }
+}
