@@ -431,8 +431,9 @@ def export_pipeline(out):
             shutil.rmtree(d)
         shutil.copytree(os.path.join(ROOT, sub), d)
     os.makedirs(os.path.join(dst, 'tools'), exist_ok=True)
-    for f in ('build.py', 'shoot.py', 'lint_meta.py', 'preview_media.py', 'deploy.sh'):
-        shutil.copy2(os.path.join(ROOT, 'tools', f), os.path.join(dst, 'tools', f))
+    for f in ('build.py', 'shoot.py', 'lint_meta.py', 'preview_media.py', 'deploy.sh', 'smoke.py', 'memory.py'):
+        if os.path.exists(os.path.join(ROOT, 'tools', f)):
+            shutil.copy2(os.path.join(ROOT, 'tools', f), os.path.join(dst, 'tools', f))
     if os.path.exists(os.path.join(ROOT, 'BUILD_README.md')):
         shutil.copy2(os.path.join(ROOT, 'BUILD_README.md'), os.path.join(dst, 'README.md'))
     open(os.path.join(dst, '.gitignore'), 'w').write('shots/\nraw/\nwork/\ntools/fonts/\ntools/vendor/\n__pycache__/\n')
@@ -494,7 +495,11 @@ def main():
                 dst = os.path.join(out, 'games', b['id'])
                 if a.mode == 'web':
                     if not os.path.isdir(src):
-                        if not os.path.exists(os.path.join(dst, 'index.html')):
+                        # raw/ is not in the repo, so a fresh clone keeps the published game as it is,
+                        # but its button tag still has to point at the current hub.js (offline cache, updates)
+                        if os.path.exists(os.path.join(dst, 'index.html')):
+                            inject_hub(os.path.join(dst, 'index.html'), g['id'], b['id'])
+                        else:
                             log('!! missing build', b['id'])
                         continue
                     if os.path.isdir(dst):

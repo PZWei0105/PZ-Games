@@ -14,8 +14,13 @@
 | `tools/shoot.py` | 用 Playwright 開遊戲、照步驟操作、截圖 |
 | `tools/lint_meta.py` | 檢查遊玩說明有沒有寫錯字體、太長、提到開發內部用語 |
 | `tools/preview_media.py` | 預覽封面／主視覺／橫幅會怎麼裁切 |
+| `tools/smoke.py` | 上線前檢查：檔案、收藏庫本身（手機／電腦／離線）、逐款「開始遊戲 → PZ 圓鈕 → 回收藏庫」（見下面「上線前檢查」） |
+| `tools/memory.py` | 用 WebKit（iPhone Safari 的引擎）量遊戲或收藏庫吃多少記憶體，查閃退用 |
+| `ROADMAP.md` | 待辦、已知問題、已完成（定期維護時先看、做完記下來） |
 
 截圖原檔（`shots/`）太大沒有放進來；網站用的是 `media/` 裡壓縮過的 WebP。重新 build 時，沒有截圖原檔的遊戲會直接沿用上一版 `catalog.json` 裡的圖片設定，不會壞掉。
+
+遊戲原檔（`raw/`）也沒有放進來：從 GitHub 重新 clone 時，`games/<build>/` 裡的就是目前上架的版本，build 會原封不動保留它（只把 PZ 圓鈕的標籤更新成最新版）。要改一款已上架的遊戲：先把 `games/<build>/` 整個資料夾複製成 `_build/raw/<build>/`，在 raw 裡改，再 build（圓鈕那行 build 會重新插，不用手動處理）。有 `sources/<遊戲 id>/` 的遊戲（長明、差一點）改原始碼、照它的 README 組建，不要直接改打包好的檔。Claude 上的版本（`builds[].artifact`）是另一份，能一起更新就一起更新，不能就記在 ROADMAP 的「已知問題」。
 
 ## 遊戲怎麼開（重要）
 
@@ -46,7 +51,31 @@
    python3 tools/build.py --out ..            # 網頁版（GitHub Pages）
    python3 tools/build.py --out /tmp/claude-version --mode claude --skip-games   # Claude 版（截圖內嵌、按鈕連到 Claude 上的遊戲）
    ```
-6. **推上 GitHub**：`REPO=.. bash tools/deploy.sh "Add 《遊戲名》"`（會把遊戲、圖片、外殼分批 commit 再 push；commit 訊息結尾要附上當次對話規定的署名行）。一兩分鐘後 https://pzwei0105.github.io/PZ-Games/ 就會更新；使用者重新打開收藏庫會跳出「新遊戲入庫」提示。
+6. **檢查**：`python3 tools/smoke.py --only <遊戲 id>` 和 `python3 tools/smoke.py --shell` 都要沒有 BAD（見下面「上線前檢查」）。
+7. **推上 GitHub**：`REPO=.. bash tools/deploy.sh "Add 《遊戲名》"`（會把遊戲、圖片、外殼分批 commit 再 push；commit 訊息結尾要附上當次對話規定的署名行）。一兩分鐘後 https://pzwei0105.github.io/PZ-Games/ 就會更新；使用者重新打開收藏庫會跳出「新遊戲入庫」提示。
+
+## 上線前檢查（每次推之前）
+
+```bash
+cd _build
+python3 tools/smoke.py --shell               # 檔案＋收藏庫本身，約 2 分鐘
+python3 tools/smoke.py                       # 再逐款開遊戲，約 10～15 分鐘
+python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
+```
+
+- 需要 Playwright（`pip install playwright`；雲端沙盒已經裝好 Chromium，不要執行 `playwright install`）。它自己在本機開一個網站，用 Chromium 照 PZ 的用法點一遍：
+  - **檔案**：每款遊戲頁都在、PZ 圓鈕標籤是最新版、`catalog.json` 指到的圖片都在、`sw.js` 快取的是目前的 `hub.js`、每款都有遊玩說明和封面。
+  - **收藏庫**（390 手機、1440 電腦）：開機畫面、首頁、遊戲庫、專屬 App、每一款的遊戲頁（有開始鈕、沒破圖）、舊的 `#play-` 連結停在遊戲頁不會自己開遊戲、專屬 App 開得了也關得掉；最後把伺服器關掉（離線）再開一次收藏庫。
+  - **每款遊戲**（用它該用的畫面：手機直拿、橫拿或電腦）：按開始遊戲 → 遊戲頁載入 → PZ 圓鈕在畫面內、沒被蓋住 → 選單打得開 → 「回到收藏庫」回到這款的遊戲頁。
+- `BAD` 一定要修好才能推；`WARN` 要看（遊戲裡的程式錯誤、找不到的檔案）。截圖和 `report.json`（每款每一步花了幾秒）在 `/tmp/pzgc-smoke`，要打開來親眼看。
+- 外部網站（Google 字型、CDN）在檢查時一律擋掉、另外列出，不算錯：雲端沙盒本來就連不到。《劍渡雲海》的 three.js 來自 cdn.jsdelivr.net，所以在這裡停在「雲海翻湧中」是正常的。
+- 雲端電腦用 CPU 畫 3D：很重的遊戲（夜市三十六計、差一點、墨守…）一款要 1 分鐘上下。卡住的步驟會自動單獨重跑一次、時間放寬，重跑過了只記 WARN。
+- 這個檢查用的是 Chromium，量不出 iPhone 的記憶體問題；PZ 說某款「閃退」或出現「重複發生問題」時，用 `tools/memory.py`（WebKit，iPhone Safari 的引擎）量，改之前、改之後各量一次比較：
+  ```bash
+  apt-get install -y xvfb gir1.2-webkit2-4.1 python3-gi   # 第一次
+  python3 tools/memory.py --game <遊戲 id>                 # 從收藏庫按開始遊戲，在遊戲裡停 20 秒
+  python3 tools/memory.py --game <遊戲 id> --steps s.json  # 進遊戲後照步驟操作（格式見檔案開頭說明）
+  ```
 
 ## 遊戲原始碼（`sources/`）
 
