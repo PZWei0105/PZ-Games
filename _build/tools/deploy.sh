@@ -2,7 +2,8 @@
 # Push the built site in /home/claude/pz-games to GitHub in size-limited commits:
 # games first (so every shell version only points at games that are already up), then media, then the shell.
 set -e
-REPO=${REPO:-/home/claude/pz-games}
+# 轉成絕對路徑：`REPO=.. bash tools/deploy.sh` 這種相對路徑在 cd 之後會失效
+REPO=$(cd "${REPO:-/home/claude/pz-games}" && pwd)
 # attribution lines appended to every commit message (set MSG_TAIL to the current session's lines)
 MSG_TAIL=${MSG_TAIL-$'\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_018zoa3VfF3vwAG6nb16azfH'}
 cd "$REPO"

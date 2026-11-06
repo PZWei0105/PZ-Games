@@ -13,6 +13,10 @@ python3 tools/icon.py dist/web   # 圖示
 把 `dist/web/*` 複製到 `_build/raw/everlight/`，再照 `_build/README.md` 的流程組收藏庫。
 Claude 版：用 artifact 工具發布 `dist/index.html`（作品：https://claude.ai/artifact/JpjSqpmxbcSjsTppKoRt4J，宣告了 `db`、`user` 能力做雲端存檔）。
 
+## 美術升級（2026-11 起）
+
+`art/` 是第一章美術升級的藍圖、美術聖經、素材清單、進度與授權紀錄，由筆電上的 Claude Code 照著做。換進遊戲的最終素材放 `assets/`（程式有素材就用，沒有就退回原本的程式繪圖）。原始生成圖、資料集、LoRA、母圖、參考圖都不進 GitHub。
+
 ## 結構
 
 | 路徑 | 內容 |

@@ -54,7 +54,7 @@
 
 | 遊戲 | 原始碼 |
 |---|---|
-| 長明 EVERLIGHT（HD-2D JRPG，第一章） | `_build/sources/everlight/`：`node tools/build.mjs` 產生 Claude 版與獨立網頁版 |
+| 長明 EVERLIGHT（HD-2D JRPG，第一章） | `_build/sources/everlight/`：`node tools/build.mjs` 產生 Claude 版與獨立網頁版；美術升級藍圖在 `art/` |
 | 差一點 SO CLOSE（3D 夾娃娃機） | `_build/sources/so-close/`：`node tools/build.mjs` 產生 Claude 版與獨立網頁版；`tools/simtest.mjs` 調爪力 |
 
 ## 放在這個網站裡的專屬 App（`apps/`）
