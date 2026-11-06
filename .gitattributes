@@ -1,0 +1,2 @@
+# Windows 上用 Git Bash 執行的腳本必須保持 LF 換行
+*.sh text eol=lf
