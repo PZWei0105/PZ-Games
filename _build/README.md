@@ -73,8 +73,8 @@
 
 ## App 怎麼運作（改程式前先看）
 
-- 單頁 App，網址用 `#` 分頁：`#library`、`#library-<類型>`、`#apps`、`#game-<id>`、`#play-<build>`。
-- 遊戲在 App 裡用全螢幕 iframe 開（`games/<build>/index.html`），右上角浮動的 PZ 圓鈕可以回收藏庫、重新載入、全螢幕。
+- 單頁 App，網址用 `#` 分頁：`#library`、`#library-<類型>`、`#apps`、`#game-<id>`、`#app-<id>`。舊的 `#play-<build>` 網址只會被改回 `#game-<id>`、停在遊戲頁，**不會自動重開遊戲**（記憶體不夠被重新載入時，自動重開會變成一直閃退的迴圈）。
+- 遊戲是**整頁切過去**開（`games/<build>/index.html`，見上面「遊戲怎麼開」），不是 iframe；遊戲頁裡右上角的 PZ 圓鈕是組建時自動插入的 `hub.js`：回收藏庫、看玩法與存檔說明、重新載入、全螢幕（iPhone 沒有全螢幕），也記遊玩時間。專屬 App 比較輕，仍在收藏庫裡用全螢幕 iframe 開。
 - 遊玩紀錄、最愛、設定都存在使用者瀏覽器的 localStorage（前綴 `pzgc.v1.`）。
 - 音效與背景音樂全部用 Web Audio 即時合成，背景音樂的調性跟著目前選中遊戲的顏色走。
-- `sw.js` 讓 App 能離線開啟：外殼走 network-first，圖片 cache-first，遊戲 stale-while-revalidate。
+- `sw.js` 讓 App 能離線開啟：外殼走 network-first，圖片 cache-first；遊戲頁面網路 2.5 秒內有回應就用最新版，不然先用存好的那份（新版照樣在背景下載），遊戲其他檔案 stale-while-revalidate。
