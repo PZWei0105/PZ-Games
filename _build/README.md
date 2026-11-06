@@ -98,7 +98,7 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 
 | App | 原始碼 | 組建 |
 |---|---|---|
-| 本機道場 LOCAL DOJO（本機 AI 修煉課） | `_build/apps/local-dojo/src/`（課程內容在 `data1.js`、`data2.js`） | `python3 _build/apps/local-dojo/build.py --claude-out /tmp/dojo-claude`：網頁版輸出到 `apps/local-dojo/`，Claude 版（雲端同步進度）另外輸出，發布到 https://claude.ai/artifact/T6XN5fhrpMU4YM5rJsQ6Tj |
+| 本機道場 LOCAL DOJO（本機 AI 修煉課） | `_build/apps/local-dojo/src/`（課程內容在 `data1.js`、`data2.js`） | `python3 _build/apps/local-dojo/build.py --claude-out /tmp/dojo-claude`：網頁版輸出到 `apps/local-dojo/`，Claude 版（雲端同步進度）另外輸出，發布到 https://claude.ai/artifact/T6XN5fhrpMU4YM5rJsQ6Tj；檢查 `python3 _build/apps/local-dojo/check.py --claude /tmp/dojo-claude`；維護規矩見 `_build/apps/local-dojo/README.md`、`ROADMAP.md` |
 
 ## App 怎麼運作（改程式前先看）
 
