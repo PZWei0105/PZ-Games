@@ -1,0 +1,41 @@
+<!DOCTYPE html><html><body style="margin:0;background:#000"><canvas id="c" width="512" height="512"></canvas><script>
+const c=document.getElementById('c'),g=c.getContext('2d');
+const bg=g.createRadialGradient(330,150,20,256,256,420);bg.addColorStop(0,'#3a2a6a');bg.addColorStop(.45,'#171236');bg.addColorStop(1,'#06070f');
+g.fillStyle=bg;g.fillRect(0,0,512,512);
+// stars
+for(let i=0;i<70;i++){g.fillStyle=`rgba(220,235,255,${Math.random()*.7})`;g.fillRect(Math.random()*512,Math.random()*300,1.6,1.6);}
+// moons
+const moon=(x,y,r,col)=>{const h=g.createRadialGradient(x,y,r*.3,x,y,r*3);h.addColorStop(0,col+'66');h.addColorStop(1,col+'00');g.fillStyle=h;g.beginPath();g.arc(x,y,r*3,0,7);g.fill();const m=g.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);m.addColorStop(0,'#fff');m.addColorStop(1,col);g.fillStyle=m;g.beginPath();g.arc(x,y,r,0,7);g.fill();};
+moon(360,128,58,'#e6dcff');moon(430,92,26,'#ffc8ea');
+// falling star streak
+const s=g.createLinearGradient(70,60,250,250);s.addColorStop(0,'rgba(127,227,255,0)');s.addColorStop(1,'rgba(220,250,255,1)');
+g.strokeStyle=s;g.lineWidth=7;g.lineCap='round';g.beginPath();g.moveTo(70,60);g.lineTo(240,238);g.stroke();
+const sg=g.createRadialGradient(244,242,0,244,242,40);sg.addColorStop(0,'#ffffff');sg.addColorStop(.3,'rgba(127,227,255,.8)');sg.addColorStop(1,'rgba(127,227,255,0)');g.fillStyle=sg;g.beginPath();g.arc(244,242,40,0,7);g.fill();
+// ground
+const gr=g.createLinearGradient(0,330,0,512);gr.addColorStop(0,'#3b2d5a');gr.addColorStop(1,'#120c22');
+g.fillStyle=gr;g.beginPath();g.moveTo(0,370);g.quadraticCurveTo(256,300,512,360);g.lineTo(512,512);g.lineTo(0,512);g.fill();
+// fungus trees
+const tree=(x,y,h,w,col)=>{g.fillStyle='#d9cdf0';g.beginPath();g.moveTo(x-5,y);g.lineTo(x-2,y-h);g.lineTo(x+2,y-h);g.lineTo(x+5,y);g.fill();
+ const cg=g.createRadialGradient(x-w*.3,y-h-w*.3,2,x,y-h,w);cg.addColorStop(0,'#ff9be0');cg.addColorStop(.6,col);cg.addColorStop(1,'#3a1a5a');g.fillStyle=cg;g.beginPath();g.ellipse(x,y-h,w,w*.55,0,Math.PI,0);g.ellipse(x,y-h,w,w*.22,0,0,Math.PI);g.fill();
+ const gl=g.createRadialGradient(x,y-h+6,0,x,y-h+6,w*1.2);gl.addColorStop(0,'rgba(88,240,255,.55)');gl.addColorStop(1,'rgba(88,240,255,0)');g.fillStyle=gl;g.beginPath();g.arc(x,y-h+6,w*1.2,0,7);g.fill();};
+tree(70,400,80,44,'#b04bd6');tree(452,392,64,36,'#8a4ae0');
+// hull (iso box lying)
+const hull=()=>{const L=[150,404],B=[300,452],Rr=[404,398],T=[254,350],H=58;
+ const up=p=>[p[0],p[1]-H];
+ const poly=(pts,col)=>{g.fillStyle=col;g.beginPath();g.moveTo(...pts[0]);for(const p of pts.slice(1))g.lineTo(...p);g.closePath();g.fill();};
+ g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(285,440,150,32,0,0,7);g.fill();
+ poly([L,B,up(B),up(L)],'#aebccc');poly([B,Rr,up(Rr),up(B)],'#7d8b9e');
+ const tg=g.createLinearGradient(up(T)[0],up(T)[1],up(B)[0],up(B)[1]);tg.addColorStop(0,'#8d9aab');tg.addColorStop(.45,'#f4f8fb');tg.addColorStop(1,'#b2bfcd');poly([up(T),up(Rr),up(B),up(L)],tg);
+ // windows
+ for(let i=0;i<7;i++){const t=.14+i*.11;const x=L[0]+(B[0]-L[0])*t,y=L[1]+(B[1]-L[1])*t-H*.66;g.fillStyle='#9ff7ff';g.beginPath();g.moveTo(x,y);g.lineTo(x+9,y+3);g.lineTo(x+9,y-6);g.lineTo(x,y-9);g.fill();const wg=g.createRadialGradient(x+4,y-3,0,x+4,y-3,16);wg.addColorStop(0,'rgba(127,240,255,.6)');wg.addColorStop(1,'rgba(127,240,255,0)');g.fillStyle=wg;g.beginPath();g.arc(x+4,y-3,16,0,7);g.fill();}
+ // engines
+ for(const [u,v,r] of [[.32,.45,15],[.7,.45,15]]){const x=B[0]+(Rr[0]-B[0])*u,y=B[1]+(Rr[1]-B[1])*u-H*v;g.fillStyle='#2a2f3a';g.beginPath();g.ellipse(x,y,r,r*1.15,-.45,0,7);g.fill();g.strokeStyle='#5c6575';g.lineWidth=3;g.stroke();g.fillStyle='rgba(255,140,70,.45)';g.beginPath();g.ellipse(x,y,r*.45,r*.5,0,0,7);g.fill();}
+ // hazard
+ for(let k=0;k<4;k++){const t=.03+k*.022;const x=L[0]+(B[0]-L[0])*t,y=L[1]+(B[1]-L[1])*t;g.fillStyle=k%2?'#1d1f26':'#f2a03a';g.beginPath();g.moveTo(x,y-H*.1);g.lineTo(x+3.3,y-H*.1+1);g.lineTo(x+3.3,y-H*.5+1);g.lineTo(x,y-H*.5);g.fill();}
+ // smoke
+ for(let i=0;i<6;i++){g.fillStyle=`rgba(200,195,215,${.16-i*.02})`;g.beginPath();g.arc(160-i*6,330-i*26,22+i*7,0,7);g.fill();}
+};
+hull();
+// moss glows
+for(let i=0;i<26;i++){const x=Math.random()*512,y=420+Math.random()*90;const m=g.createRadialGradient(x,y,0,x,y,9);m.addColorStop(0,'rgba(88,240,255,.8)');m.addColorStop(1,'rgba(88,240,255,0)');g.fillStyle=m;g.beginPath();g.arc(x,y,9,0,7);g.fill();}
+</script></body></html>
