@@ -1792,11 +1792,17 @@ function boot(done) {
 }
 function checkNew() {
   const ids = S.games.map((g) => g.id);
-  if (!S.seen) { Store.set('seen', ids); return; }
+  if (!S.seen) { Store.set('seen', ids); const n0 = (S.cat.changelog || [])[0]; if (n0) Store.set('noteSeen', n0.id); return; }
   const fresh = S.games.filter((g) => !S.seen.includes(g.id));
   if (fresh.length) {
     setTimeout(() => toast(fresh.length === 1 ? '新遊戲入庫：《' + fresh[0].title + '》' : fresh.length + ' 款新遊戲入庫：《' + fresh[0].title + '》等'), 1800);
     Store.set('seen', ids);
+  }
+  // the newest update note, shown once in the same bubble (after the new-games one, if any)
+  const note = (S.cat.changelog || [])[0];
+  if (note && !S.quietNote && Store.get('noteSeen', '') !== note.id) {
+    Store.set('noteSeen', note.id);
+    setTimeout(() => toast(note.text, 6000), fresh.length ? 5400 : 3900);
   }
 }
 async function loadCatalog() {
@@ -1834,6 +1840,7 @@ async function start() {
     setTimeout(() => toast(back.kind === 'app' ? `《${back.title}》剛剛被重新載入了，先回到 App 頁；點它就能再打開` : `《${back.title}》剛剛被重新載入了，先停在遊戲頁；按「開始遊戲」就能接著玩`, 6000), 900);
   }
   Motes.start();
+  S.quietNote = !!(back && wasPlaying); // the reload notice gets the bubble this time
   checkNew();
   if (MODE === 'web' && 'serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {
     navigator.serviceWorker.register('sw.js').catch(() => {});

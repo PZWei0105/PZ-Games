@@ -2,7 +2,7 @@
 """Check meta/<id>.json write-ups for problems before they go into the library."""
 import json, glob, os, re, sys
 
-ROOT = '/home/claude/pzgc'
+ROOT = os.environ.get('PZ_ROOT') or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BAD = [r'claude', r'artifact', r'localstorage', r'console', r'debug', r'iframe', r'webgl', r'javascript', r'\bjs\b', r'\bapi\b',
        r'開發者', r'程式碼', r'原始碼', r'設計者', r'內部', r'headless', r'playwright', r'swiftshader', r'雲端存檔']
 SIMPLIFIED = '这们说话还进没为会时对过发现后样经关点开问题间实学种样达给让这'
@@ -46,11 +46,14 @@ def main():
                 probs.append('missing ' + k)
         shots = sorted(glob.glob(os.path.join(ROOT, 'shots', gid, '[0-9][0-9].png')))
         listed = [s.get('file') for s in m.get('shots') or []]
-        if len(shots) < 3:
-            probs.append('only %d shots' % len(shots))
-        for f in listed:
-            if not os.path.exists(os.path.join(ROOT, 'shots', gid, f)):
-                probs.append('listed shot missing ' + f)
+        # Raw screenshots (shots/) are not kept in the repo; after a fresh clone the build reuses the
+        # published images, so only check them when this game's shots folder is actually here.
+        if os.path.isdir(os.path.join(ROOT, 'shots', gid)):
+            if len(shots) < 3:
+                probs.append('only %d shots' % len(shots))
+            for f in listed:
+                if not os.path.exists(os.path.join(ROOT, 'shots', gid, f)):
+                    probs.append('listed shot missing ' + f)
         for k, t in texts(m):
             low = t.lower()
             for b in BAD:

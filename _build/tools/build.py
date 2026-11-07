@@ -524,6 +524,10 @@ def main():
     now = datetime.now(TZ)
     ver = now.strftime('%Y.%m.%d-%H%M')
     cat = {'version': ver, 'updated': now.strftime('%Y-%m-%d'), 'genres': base['genres'], 'games': games, 'archive': archive, 'apps': apps}
+    # update notes (newest first): the app shows the newest one once in its toast bubble
+    clp = os.path.join(ROOT, 'data/changelog.json')
+    if os.path.exists(clp):
+        cat['changelog'] = json.load(open(clp, encoding='utf-8'))
     cat_json = json.dumps(cat, ensure_ascii=False, separators=(',', ':'))
     if a.mode == 'claude':
         # artifact files are served by plain relative path: drop cache-busting queries
