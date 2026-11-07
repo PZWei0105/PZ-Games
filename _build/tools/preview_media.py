@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, os.path.dirname(__file__))
 import build  # noqa: E402
 
-ROOT = '/home/claude/pzgc'
+ROOT = os.environ.get('PZ_ROOT') or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FONT = None
 for p in glob.glob(ROOT + '/tools/fonts/node_modules/@fontsource/noto-sans-tc/files/*chinese-traditional-700-normal.woff*'):
     pass

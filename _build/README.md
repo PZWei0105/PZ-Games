@@ -7,6 +7,7 @@
 | 路徑 | 用途 |
 |---|---|
 | `data/catalog_base.json` | 手寫的總表：類型（genres）、遊戲（games）、未上架作品（archive）、專屬 App（apps） |
+| `data/changelog.json` | 更新紀錄（最新的放最前面，白話）：build 帶進 `catalog.json`，App 打開時用提示泡泡顯示最新一筆、只顯示一次；第一次打開收藏庫的人不會看到 |
 | `data/overrides.json` | 個別遊戲的畫面微調：主視覺用哪張截圖（heroShot）、封面取景（coverFocus）、截圖說明（captions）等 |
 | `meta/<遊戲 id>.json` | 每款遊戲實際玩過後寫的遊玩說明：目標、操作、核心玩法、新手提示、遊玩時間、存檔方式、截圖說明 |
 | `src/` | App 本體原始碼：`index.html`、`app.css`、`app.js`（純 JavaScript，沒有框架）；`hub.js` 是遊戲裡的浮動圓鈕 |
