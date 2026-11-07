@@ -1,0 +1,145 @@
+
+/* ====== 試玩關（橫版）追加樣式 ====== */
+#stick{position:absolute;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;pointer-events:none;z-index:5;
+  background:radial-gradient(circle,rgba(83,240,214,.08),rgba(83,240,214,.02) 60%,transparent 70%);border:1.5px solid rgba(220,230,255,.22)}
+#stick i{position:absolute;left:50%;top:50%;width:50px;height:50px;border-radius:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle at 40% 35%,rgba(240,250,255,.55),rgba(120,140,190,.35));border:1.5px solid rgba(255,255,255,.4);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+#hp .nm{display:flex;justify-content:space-between}
+#hp{width:112px}
+#wake{left:calc(var(--sal) + 136px);right:calc(var(--sar) + 58px);width:auto;transform:none}
+@media (min-width:600px){#wake{left:50%;right:auto;width:min(46vw,360px);transform:translateX(-50%)}}
+#toast{top:calc(var(--sat) + 33%)}
+#hp.low .fill{background:linear-gradient(90deg,#e8473d,#ff8a6a)}
+#hp.low .num{color:#ff9a8a}
+#res{position:absolute;left:calc(var(--sal) + 12px);top:calc(var(--sat) + 56px);display:flex;gap:9px;align-items:center;font-size:12.5px;
+  color:#efeaff;text-shadow:0 1px 3px #000;white-space:nowrap}
+#res span{display:inline-flex;align-items:center;gap:4px}
+#res i{font-style:normal;font-family:var(--serif);font-size:10.5px;font-weight:700;width:17px;height:17px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;color:#1a1222}
+#res .rk i{background:#ffe39a} #res .rp i{background:#c9a35b} #res .rp.ok{color:#ffe39a} #res .rv i{background:#ffc6d6}
+#bag{bottom:auto;top:calc(var(--sat) + 80px);padding:5px 8px;min-width:0;flex-direction:row;align-items:center;gap:8px}
+#bag .t{flex-direction:column;gap:0;font-size:11px;line-height:1.25;letter-spacing:.08em}
+#bag .t .c{color:#efeaff}
+#bag .pips{flex-wrap:nowrap;max-width:none;gap:2px;align-items:center}
+#bag .pips i{width:8px;height:13px}
+#bag .pips i.pk{outline:1.5px solid #53f0d6;outline-offset:1px}
+#bag .pips b{width:5px}
+#tools{position:absolute;right:calc(var(--sar) + 10px);top:calc(var(--sat) + 144px);display:flex;gap:6px}
+#tools .tl{position:relative;width:38px;height:38px;border-radius:6px;border:1.5px solid var(--tc,#888);background:radial-gradient(circle at 50% 30%,rgba(50,46,70,.9),rgba(12,10,20,.92));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(0,0,0,.4),inset 0 0 8px color-mix(in srgb,var(--tc,#888) 30%,transparent)}
+#tools .tl b{position:relative;font-family:var(--serif);font-size:17px;line-height:1;color:var(--tc,#ddd);text-shadow:0 0 8px var(--tc,#000)}
+#tools .tl .lv{position:relative;font-size:6px;letter-spacing:-.5px;color:var(--tc,#ddd);margin-top:3px;opacity:.9}
+#tools .tl .cd{position:absolute;inset:0;border-radius:5px;pointer-events:none;background:conic-gradient(var(--cdc,rgba(0,0,0,.35)) calc(var(--p,0) * 1%),transparent 0)}
+#tools .tl.empty{border:1.5px dashed rgba(255,255,255,.16);background:rgba(10,8,16,.4);box-shadow:none}
+#wake .lbl{display:flex;justify-content:center;gap:10px;letter-spacing:.12em;font-size:12.5px}
+#wake .lbl .st{color:#cfc8ec} #wake .lbl .wv{color:#ffe0b0;font-family:var(--sans);letter-spacing:.06em}
+#wake.hot .fill{animation:pulse .6s infinite alternate}
+#hold{position:absolute;left:calc(var(--sal) + 12px);top:calc(var(--sat) + 124px);display:flex;align-items:center;gap:10px;pointer-events:none}
+#hold .n{font-family:var(--serif);font-size:42px;font-weight:700;line-height:1;color:#ffe39a;text-shadow:0 0 22px rgba(255,200,90,.8),0 2px 6px #000;min-width:1.2em}
+#hold .t{font-size:13px;letter-spacing:.22em;color:#ffe9c0;text-shadow:0 1px 4px #000;line-height:1.5}
+#hold.off .n{color:#ff8a80;text-shadow:0 0 22px rgba(255,80,80,.8),0 2px 6px #000}
+#hold.off .t{color:#ffb0a8;animation:pulse .4s infinite alternate}
+#bossbar{position:absolute;left:calc(var(--sal) + 12px);top:calc(var(--sat) + 128px);width:min(56vw,250px);pointer-events:none}
+#bossbar .nm{font-family:var(--serif);letter-spacing:.4em;font-size:13px;color:#ffb3ba;text-shadow:0 1px 4px #000;margin-bottom:3px}
+#bossbar .bar{height:8px;background:rgba(0,0,0,.6);border:1px solid rgba(255,120,130,.55);border-radius:4px;overflow:hidden}
+#bossbar .f{height:100%;width:100%;background:linear-gradient(90deg,#c41e3a,#ff6a7a);box-shadow:0 0 10px #ff4d5e;transition:width .12s}
+#mini{width:100px;height:82px;top:calc(var(--sat) + 54px)}
+#bWake{position:absolute;right:calc(var(--sar) + 10px);top:calc(var(--sat) + 192px);padding:7px 14px;border-radius:16px;font-family:var(--serif);font-size:14px;letter-spacing:.3em;
+  color:#fff1c8;background:linear-gradient(180deg,rgba(110,80,30,.92),rgba(50,32,10,.94));border:1px solid rgba(255,201,74,.85);animation:glow 1s infinite alternate}
+#radio{top:calc(var(--sat) + 178px);left:calc(var(--sal) + 12px);right:calc(var(--sar) + 100px);width:auto;transform:none}
+#btns{width:178px;height:226px}
+#bDash .k{font-size:16px}
+#bCandy{right:12px;bottom:92px;width:52px;height:52px}
+#bCandy .k{font-size:14px}
+#bCandy.off{opacity:.42}
+#bUp,#bDown{right:88px;width:62px;height:62px;border-color:rgba(83,240,214,.55)}
+#bUp{bottom:72px} #bDown{bottom:4px}
+#bUp .ar,#bDown .ar{position:relative;font-size:12px;color:#7ff5de;line-height:1}
+#bUp .k,#bDown .k{font-size:13px}
+#bAct{right:66px;bottom:144px;width:80px;height:80px}
+#bAct .k{font-size:17px}
+#bAct.sealed{border-color:rgba(255,90,100,.8);background:radial-gradient(circle at 50% 35%,rgba(90,24,32,.9),rgba(30,8,12,.92));animation:none}
+#lvl{bottom:calc(var(--sab) + 10px)}
+#hint{bottom:calc(var(--sab) + 250px);white-space:normal;text-align:center;max-width:86vw}
+
+/* 標題 */
+#title .logo .pitch{margin-top:16px;font-size:min(3.7vw,15px);line-height:1.8;letter-spacing:.14em;color:#c9c0e6;text-shadow:0 2px 8px #000}
+#title .menu .row2{display:flex;gap:8px;width:100%}
+#title .menu .row2 .btn{flex:1;min-width:0;padding:0 .4em}
+
+/* 怎麼玩 */
+.howlist{display:flex;flex-direction:column;gap:9px}
+.how{display:flex;gap:12px;align-items:flex-start;font-size:13px;line-height:1.65;color:#d6d0ea}
+.how b{flex:0 0 3.2em;font-family:var(--serif);font-weight:600;color:var(--gold2);letter-spacing:.12em;padding-top:1px}
+.how i{font-style:normal;font-weight:700}
+
+/* 靈光三選一 */
+#lvup .wrap{position:relative;display:flex;flex-direction:column;align-items:center}
+#lvup .t.q1{color:#fff3c8;text-shadow:0 0 18px rgba(255,201,74,.8)}
+#lvup .t.q2{color:#ffd4d8;text-shadow:0 0 18px rgba(255,77,94,.8)}
+.card .ic{background:linear-gradient(135deg,color-mix(in srgb,var(--cc,#3fd7b8) 70%,#fff),var(--cc,#3fd7b8));color:#141018}
+.card.up .ic{background:linear-gradient(135deg,#fff1c2,#c89b4a)}
+.card .tx{flex:1;min-width:0}
+.card .d .own{display:inline-block;margin-left:6px;font-size:11px;color:#9fd8cc}
+.card.gold{border-color:rgba(255,201,74,.85);box-shadow:0 0 22px rgba(255,201,74,.25),0 8px 24px rgba(0,0,0,.45)}
+.card.gold .lv{color:#ffe39a}
+.card.picked{filter:brightness(1.4);transform:scale(1.03)!important}
+
+/* 背包、結算 */
+.itemrow .fl{font-size:11.5px;color:#a9a3c2;line-height:1.5;margin-top:2px}
+.itemrow .acts{display:flex;flex-direction:column;gap:5px}
+.itemrow{align-items:flex-start}
+.itemrow .orb{margin-top:2px}
+.contract.total{margin-top:8px;font-size:15px;border-style:solid;border-color:rgba(216,180,106,.5)}
+.contract.total .money{font-size:18px}
+
+@media (min-width:700px){
+  #radio{left:50%;right:auto;width:min(60vw,520px);transform:translateX(-50%)}
+  #title .logo{right:38%}
+}
+@media (min-width:1000px) and (min-height:640px){ #hud{zoom:1.3} #stick{transform:scale(1.2)} }
+@media (min-width:1500px) and (min-height:860px){ #hud{zoom:1.5} }
+#title .logo .tl,#title .logo .pitch{text-shadow:0 0 14px #000,0 0 6px #000,0 2px 8px #000}
+.rb .kb{position:relative;font-size:9.5px;color:#9a94b8;font-family:var(--sans);letter-spacing:.05em;margin-top:1px}
+@media (orientation:landscape) and (max-height:520px){
+  #radio{top:calc(var(--sat) + 52px);left:50%;right:auto;width:min(46vw,420px);transform:translateX(-50%)}
+  #hint{bottom:calc(var(--sab) + 14px);max-width:44vw}
+  #tools{top:calc(var(--sat) + 134px)}
+  #btns{transform:scale(.86)}
+  #mini{width:92px;height:74px}
+  #bWake{top:calc(var(--sat) + 180px)}
+  #hold{top:calc(var(--sat) + 122px)}
+  #bossbar{top:calc(var(--sat) + 124px)}
+}
+<!--BODY-->
+<div id="app">
+  <canvas id="cv"></canvas>
+  <div id="stick" class="hidden"><i></i></div>
+  <div id="hud" class="hidden">
+    <div id="hp"><div class="nm"><span>魏子葳</span></div><div class="bar"><div class="lag"></div><div class="fill"></div></div><div class="num"></div></div>
+    <div id="res"></div>
+    <div id="bag" class="pe"><div class="t"><span>背包</span><span class="c">0/10</span></div><div class="pips"></div></div>
+    <div id="tools"></div>
+    <div id="wake"><div class="row">
+      <svg viewBox="0 0 30 20"><path id="eyeLid" d="M1 10 Q15 10 29 10 Q15 10 1 10Z" fill="#120d1d" stroke="#d8ccff" stroke-width="1.6"/><circle id="eyePup" cx="15" cy="10" r="0" fill="#ff6a7a"/></svg>
+      <div class="bar"><div class="fill"></div><i class="tick" style="left:25%"></i><i class="tick" style="left:50%"></i><i class="tick" style="left:75%"></i></div>
+    </div><div class="lbl"></div></div>
+    <div id="hold" class="hidden"></div>
+    <button id="pauseBtn" class="pe" aria-label="暫停"><i></i><i></i></button>
+    <canvas id="mini"></canvas>
+    <button id="bWake" class="pe hidden">醒來</button>
+    <div id="radio"></div>
+    <div id="banner"><div class="a"></div><div class="b"></div></div>
+    <div id="hint"></div>
+    <div id="lvl">靈光 Lv 1</div>
+    <div id="btns">
+      <button id="bDash" class="rb pe"><i class="cd"></i><span class="k">閃身</span></button>
+      <button id="bCandy" class="rb pe"><span class="k">糖</span><span class="s">2</span></button>
+      <button id="bUp" class="rb pe hidden"><span class="ar">▲</span><span class="k">上樓</span></button>
+      <button id="bDown" class="rb pe hidden"><span class="k">下樓</span><span class="ar">▼</span></button>
+      <button id="bAct" class="rb pe hidden"><span class="k">敲鐘</span></button>
+    </div>
+    <div id="xp"><div class="fill"></div></div>
+  </div>
+  <div id="ui"></div>
+  <div id="toast"></div>
+</div>
