@@ -12622,7 +12622,7 @@ WF.AI.storyBid = function (E, p, d) {
       (save ? '<button class="btn btn-sun btn-big" data-a="resume"><span>繼續上一局</span><span class="r">' + esc(saveLabel(save)) + '</span></button>' : '') +
       '<button class="btn ' + (save ? '' : 'btn-sun ') + 'btn-big" data-a="story"><span>故事模式</span><span class="r">' + storyProgress() + '</span></button>' +
       '<button class="btn btn-big" data-a="free"><span>自由對戰</span><span class="r">七頭鯨・同機多人</span></button>' +
-      '<button class="btn btn-big" data-a="online"><span>連線對戰</span><span class="r">' + (WF.NET && WF.NET.available() ? '開房間找朋友' : '網頁版才能連線') + '</span></button>' +
+      '<button class="btn btn-big" data-a="online"><span>連線對戰</span><span class="r">' + (WF.NET && WF.NET.available() ? '開房間找朋友' : '這個版本不能連線') + '</span></button>' +
       '<div class="menu-row"><button class="btn" data-a="daily"><span class="stack"><span>今日鯨歌</span><small>' + dailyLabel() + '</small></span></button>' +
       '<button class="btn" data-a="chal"><span class="stack"><span>挑戰關卡</span><small>★ ' + st + ' / 90</small></span></button></div>' +
       '<div class="menu-row three"><button class="btn" data-a="cos">' + ART.I.flag + '收藏</button><button class="btn" data-a="codex">' + ART.I.book + '圖鑑</button><button class="btn" data-a="settings">' + ART.I.gear + '設定</button></div>' +
@@ -13277,7 +13277,7 @@ WF.AI.storyBid = function (E, p, d) {
     var N = WF.NET, st = P().settings;
     if (!N || !N.available()) {
       var s0 = screen('dim', '<div class="wrap">' + head('連線對戰') +
-        '<div class="panel"><h4>這個版本不能連線</h4><p class="muted">Claude 裡的版本不能連到外部伺服器，所以連線對戰要用網頁版。把網頁版放上 Cloudflare 之後，用手機打開那個網址、加到主畫面，就能開房間找朋友一起玩。</p>' +
+        '<div class="panel"><h4>這個版本不能連線</h4><p class="muted">沒有連線伺服器，開不了房間找朋友對戰。</p>' +
         '<p class="muted mt">同一支手機輪流玩，可以到「自由對戰」把對手改成「玩家」。</p></div>' +
         '<button class="btn btn-big" data-free>去自由對戰</button></div>', 'online');
       bindBack(s0, S.title);
