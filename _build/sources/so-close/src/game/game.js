@@ -42,7 +42,7 @@ export class Game {
   async init() {
     try { await RAPIER.init(); }
     catch (e) {
-      this.ui.fatal('這個環境沒辦法啟動物理引擎。<br>請改用獨立網頁版：<br><a style="color:#3fe0ff" href="https://pzwei0105.github.io/PZ-Games/games/so-close/index.html">pzwei0105.github.io/PZ-Games</a>');
+      this.ui.fatal(typeof __CLOUD__ !== 'undefined' && __CLOUD__ ? '這個環境沒辦法啟動物理引擎。<br>請改用獨立網頁版：<br><a style="color:#3fe0ff" href="https://pzwei0105.github.io/PZ-Games/games/so-close/index.html">pzwei0105.github.io/PZ-Games</a>' : '這個瀏覽器沒辦法啟動物理引擎。<br>請換用最新版的 Safari 或 Chrome。');
       return;
     }
     this.loadProfile();

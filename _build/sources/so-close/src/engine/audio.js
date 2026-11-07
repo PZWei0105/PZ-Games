@@ -19,7 +19,7 @@ export class Sound {
     const comp = c.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3; comp.connect(this.master);
     this.out = comp;
     this.sfx = c.createGain(); this.sfx.gain.value = 0.9; this.sfx.connect(comp);
-    this.mus = c.createGain(); this.mus.gain.value = this.musicOn ? 0.32 : 0; this.mus.connect(comp);
+    this.mus = c.createGain(); this.mus.gain.value = this.musicOn ? 0.5 : 0; this.mus.connect(comp);
     // 殘響
     const len = c.sampleRate * 1.6, ir = c.createBuffer(2, len, c.sampleRate);
     for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
@@ -27,19 +27,27 @@ export class Sound {
     this.revIn = c.createGain(); this.revIn.gain.value = 0.32; this.revIn.connect(this.rev); this.rev.connect(comp);
     this.noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
     const nd = this.noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
-    // 馬達（持續音）
-    const mo = c.createOscillator(); mo.type = 'sawtooth'; mo.frequency.value = 70;
-    const mo2 = c.createOscillator(); mo2.type = 'square'; mo2.frequency.value = 141;
-    const mf = c.createBiquadFilter(); mf.type = 'lowpass'; mf.frequency.value = 600; mf.Q.value = 2;
+    // 小馬達：輕柔的「嗡——」＋皮帶的細沙聲（音量刻意壓在配樂底下）
+    const mo = c.createOscillator(); mo.type = 'sine'; mo.frequency.value = 190;
+    const mo2 = c.createOscillator(); mo2.type = 'triangle'; mo2.frequency.value = 381;
+    const g2 = c.createGain(); g2.gain.value = 0.12;
+    const ns = c.createBufferSource(); ns.buffer = this.noiseBuf; ns.loop = true;
+    const nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 1400; nf.Q.value = 1.4;
+    const ng = c.createGain(); ng.gain.value = 0.22;
+    const lfo = c.createOscillator(); lfo.frequency.value = 9; const lg = c.createGain(); lg.gain.value = 0.08;
+    const mf = c.createBiquadFilter(); mf.type = 'lowpass'; mf.frequency.value = 1800; mf.Q.value = 0.5;
     const mg = c.createGain(); mg.gain.value = 0;
-    const mg2 = c.createGain(); mg2.gain.value = 0.25;
-    mo.connect(mf); mo2.connect(mg2); mg2.connect(mf); mf.connect(mg); mg.connect(this.sfx);
-    mo.start(); mo2.start();
-    this.motorNodes = { mo, mo2, mf, mg };
+    const trem = c.createGain(); trem.gain.value = 1;
+    mo.connect(mf); mo2.connect(g2); g2.connect(mf); ns.connect(nf); nf.connect(ng); ng.connect(mf);
+    lfo.connect(lg); lg.connect(trem.gain);
+    mf.connect(trem); trem.connect(mg); mg.connect(this.sfx);
+    mo.start(); mo2.start(); ns.start(); lfo.start();
+    this.motorNodes = { mo, mo2, mf, mg, nf };
+    this.motorOn = false;
     if (this.musicOn) this.startMusic();
   }
   setOn(v) { this.on = v; if (this.master) this.master.gain.setTargetAtTime(v ? this.vol : 0, this.ctx.currentTime, 0.05); }
-  setMusic(v) { this.musicOn = v; if (!this.mus) return; this.mus.gain.setTargetAtTime(v ? 0.32 : 0, this.ctx.currentTime, 0.2); if (v && !this.seqTimer) this.startMusic(); }
+  setMusic(v) { this.musicOn = v; if (!this.mus) return; this.mus.gain.setTargetAtTime(v ? 0.5 : 0, this.ctx.currentTime, 0.2); if (v && !this.seqTimer) this.startMusic(); }
   get t() { return this.ctx ? this.ctx.currentTime : 0; }
 
   tone(f, d, { type = 'sine', vol = 0.3, at = 0, attack = 0.005, rev = 0, dest = null, slide = 0, curve = 'exp' } = {}) {
@@ -78,19 +86,24 @@ export class Sound {
   motor(level, pitch = 1) {
     const n = this.motorNodes; if (!n) return;
     const t = this.ctx.currentTime;
-    n.mg.gain.setTargetAtTime(level * 0.11, t, 0.05);
-    n.mo.frequency.setTargetAtTime(62 * pitch, t, 0.08); n.mo2.frequency.setTargetAtTime(124 * pitch, t, 0.08);
-    n.mf.frequency.setTargetAtTime(380 + 500 * pitch, t, 0.1);
+    const on = level > 0.06;
+    if (on !== this.motorOn) { this.motorOn = on; this.motorTick(on); }
+    n.mg.gain.setTargetAtTime(on ? 0.005 + level * 0.009 : 0, t, on ? 0.06 : 0.09);
+    const f = 250 * pitch * (0.94 + level * 0.1);
+    n.mo.frequency.setTargetAtTime(f, t, 0.12); n.mo2.frequency.setTargetAtTime(f * 2.005, t, 0.12);
+    n.nf.frequency.setTargetAtTime(1100 + 500 * pitch, t, 0.15);
   }
+  // 馬達啟動／停下時的輕「喀」
+  motorTick(on) { this.tone(on ? 2400 : 1900, 0.025, { type: 'triangle', vol: 0.025 }); this.noise(0.03, { vol: 0.02, f: 3200, q: 3 }); }
   land() { this.noise(0.12, { vol: 0.18, f: 900, q: 1.2 }); this.tone(110, 0.12, { vol: 0.12 }); }
-  servo() { this.tone(300, 0.35, { type: 'sawtooth', vol: 0.05, slide: 1.8 }); this.noise(0.3, { vol: 0.05, f: 1800, q: 3, slide: 1.6 }); this.tone(1400, 0.05, { type: 'square', vol: 0.04, at: 0.34 }); }
+  servo() { this.tone(420, 0.32, { type: 'triangle', vol: 0.035, slide: 1.5 }); this.noise(0.28, { vol: 0.02, f: 1600, q: 2, slide: 1.4 }); this.tone(1800, 0.04, { type: 'triangle', vol: 0.03, at: 0.32 }); }
   clunk() { this.noise(0.09, { vol: 0.2, f: 500, q: 2 }); this.tone(160, 0.16, { type: 'triangle', vol: 0.16 }); this.tone(95, 0.2, { vol: 0.1, at: 0.02 }); }
   tap(f) { const v = Math.min(0.22, 0.03 + f * 0.012); this.noise(0.06, { vol: v, f: 2200 + Math.random() * 1600, q: 3 }); this.tone(1200 + Math.random() * 900, 0.05, { vol: v * 0.35, type: 'triangle' }); }
   thump(f) { const v = Math.min(0.25, 0.05 + f * 0.01); this.noise(0.1, { vol: v, f: 420, q: 1 }); this.tone(90, 0.12, { vol: v * 0.8 }); }
   tick(urgent) { this.tone(urgent ? 1760 : 1320, 0.05, { type: 'square', vol: urgent ? 0.07 : 0.04 }); }
   grab() { [0, 4, 7].forEach((s, i) => this.tone(hz(72 + s), 0.18, { type: 'triangle', vol: 0.09, at: i * 0.06 })); }
   slip(near) {
-    this.tone(near ? 880 : 520, 0.6, { type: 'sawtooth', vol: 0.05, slide: 0.45 });
+    this.tone(near ? 880 : 520, 0.6, { type: 'triangle', vol: 0.06, slide: 0.45 });
     if (near) { this.crowd(); }
   }
   crowd() {
@@ -132,38 +145,50 @@ export class Sound {
   toast() { this.tone(1318, 0.12, { vol: 0.05 }); this.tone(1760, 0.18, { vol: 0.05, at: 0.07 }); }
   power() { this.tone(110, 0.6, { type: 'sawtooth', vol: 0.06, slide: 4 }); [79, 83, 86, 91].forEach((m, i) => this.tone(hz(m), 0.2, { type: 'square', vol: 0.05, at: 0.3 + i * 0.07 })); }
 
-  // ---------- 背景音樂：輕快的店內循環 ----------
+  // ---------- 背景音樂：輕快、柔和的店內循環 ----------
+  // 木琴般的分解和弦＋柔和低音＋偶爾出現的鐵琴旋律，沒有重鼓、沒有方波
+  pluck(m, at, vol, d = 0.45, dest = this.mus) {
+    const f = hz(m);
+    this.tone(f, d, { type: 'sine', vol, at, attack: 0.004, dest });
+    this.tone(f * 4, d * 0.25, { type: 'sine', vol: vol * 0.18, at, attack: 0.002, dest });
+  }
   startMusic() {
     if (!this.ctx || this.seqTimer) return;
-    const bpm = 112, beat = 60 / bpm;
-    // I–vi–IV–V 變化
-    const prog = [[60, 64, 67, 71], [57, 60, 64, 67], [53, 57, 60, 64], [55, 59, 62, 65], [60, 64, 67, 71], [57, 60, 64, 67], [62, 65, 69, 72], [55, 59, 62, 67]];
-    const mel = [[76, 0], [79, 1], [81, 1.5], [79, 2.5], [76, 3], null, [72, 4], [74, 5], [76, 5.5], [72, 6.5], [69, 7], null,
-      [77, 8], [76, 9], [74, 9.5], [72, 10.5], [74, 11], null, [76, 12], [79, 13], [81, 13.5], [83, 14.5], [84, 15]];
+    const bpm = 108, beat = 60 / bpm, eighth = beat / 2;
+    // I – vi – IV – V，C 大調
+    const prog = [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62], [60, 64, 67], [57, 60, 64], [62, 65, 69], [55, 59, 62, 65]];
+    const arp = [0, 1, 2, 1, 0, 2, 1, 2];
+    // 旋律（八分音符位置, 音高）兩小節一句
+    const tune = [
+      [[0, 76], [2, 79], [3, 81], [4, 79], [6, 76], [8, 72], [10, 74], [11, 76], [12, 74]],
+      [[0, 77], [2, 76], [3, 74], [4, 72], [6, 74], [8, 76], [10, 79], [12, 77], [13, 76], [14, 74]],
+      [[0, 76], [2, 79], [3, 81], [4, 84], [6, 81], [8, 79], [10, 76], [11, 77], [12, 79]],
+      [[0, 77], [2, 74], [4, 76], [6, 72], [8, 74], [10, 71], [12, 72]],
+    ];
     let step = 0;
     const lookahead = () => {
       const c = this.ctx;
-      while (this.nextT < c.currentTime + 0.25) {
-        const t0 = this.nextT, bar = Math.floor(step / 8) % prog.length, sub = step % 8;
-        const ch = prog[bar];
-        const at = t0 - c.currentTime;
-        if (sub % 2 === 0) this.tone(hz(ch[0] - 24), beat * 0.9, { type: 'triangle', vol: 0.16, at, dest: this.mus });
-        if (sub === 2 || sub === 6) ch.slice(1).forEach((m) => this.tone(hz(m), beat * 0.5, { type: 'square', vol: 0.022, at, dest: this.mus }));
-        this.noise(0.04, { vol: sub % 2 ? 0.02 : 0.035, f: 9000, q: 1, type: 'highpass', at, dest: this.mus });
-        if (sub === 0 || sub === 4) this.tone(70, 0.14, { vol: 0.16, at, slide: 0.5, dest: this.mus });
-        if (sub === 4) this.noise(0.12, { vol: 0.05, f: 1800, q: 0.8, at, dest: this.mus });
-        // 旋律：每 16 拍一輪，隔一輪才出現，避免太吵
-        const phrase = Math.floor(step / 32) % 2;
-        if (phrase === 1) {
-          const beatPos = (step % 32) / 2;
-          for (const n of mel) if (n && Math.abs(n[1] - beatPos) < 0.01) this.tone(hz(n[0]), beat * 0.9, { type: 'sine', vol: 0.07, at, rev: 0.25, dest: this.mus });
+      while (this.nextT < c.currentTime + 0.3) {
+        const at = this.nextT - c.currentTime;
+        const bar = Math.floor(step / 8), sub = step % 8;
+        const ch = prog[bar % prog.length];
+        // 分解和弦
+        this.pluck(ch[arp[sub] % ch.length] + 12, at, sub === 0 ? 0.05 : 0.034, 0.5);
+        // 低音：第 1、3 拍
+        if (sub === 0 || sub === 4) this.tone(hz(ch[0] - 24), beat * 1.6, { type: 'triangle', vol: 0.07, at, attack: 0.01, dest: this.mus });
+        // 很輕的沙鈴，只在反拍
+        if (sub % 2 === 1) this.noise(0.035, { vol: 0.006, f: 7000, q: 1.2, type: 'bandpass', at, dest: this.mus });
+        // 旋律：每 4 小節中有 2 小節出現，讓耳朵休息
+        const phrase = Math.floor(bar / 2) % 4, inPhrase = (bar % 2) * 8 + sub;
+        if ((Math.floor(bar / 8) % 2 === 0) || bar % 8 >= 4) {
+          for (const [pos, m] of tune[phrase]) if (pos === inPhrase) { this.pluck(m, at, 0.04, 0.7); this.tone(hz(m) * 2, 0.6, { type: 'sine', vol: 0.008, at, rev: 0.4, dest: this.mus }); }
         }
         step++;
-        this.nextT += beat / 2;
+        this.nextT += eighth;
       }
     };
     this.nextT = this.ctx.currentTime + 0.1;
-    this.seqTimer = setInterval(lookahead, 80);
+    this.seqTimer = setInterval(lookahead, 90);
   }
-  duck(v) { if (this.mus) this.mus.gain.setTargetAtTime(this.musicOn ? 0.32 * v : 0, this.ctx.currentTime, 0.3); }
+  duck(v) { if (this.mus) this.mus.gain.setTargetAtTime(this.musicOn ? 0.5 * v : 0, this.ctx.currentTime, 0.3); }
 }
