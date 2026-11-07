@@ -20,7 +20,7 @@
 
 截圖原檔（`shots/`）太大沒有放進來；網站用的是 `media/` 裡壓縮過的 WebP。重新 build 時，沒有截圖原檔的遊戲會直接沿用上一版 `catalog.json` 裡的圖片設定，不會壞掉。
 
-遊戲原檔（`raw/`）也沒有放進來：從 GitHub 重新 clone 時，`games/<build>/` 裡的就是目前上架的版本，build 會原封不動保留它（只把 PZ 圓鈕的標籤更新成最新版）。要改一款已上架的遊戲：先把 `games/<build>/` 整個資料夾複製成 `_build/raw/<build>/`，在 raw 裡改，再 build（圓鈕那行 build 會重新插，不用手動處理）。有 `sources/<遊戲 id>/` 的遊戲（長明、差一點）改原始碼、照它的 README 組建，不要直接改打包好的檔。Claude 上的版本（`builds[].artifact`）是另一份，能一起更新就一起更新，不能就記在 ROADMAP 的「已知問題」。
+遊戲原檔（`raw/`）也沒有放進來：從 GitHub 重新 clone 時，`games/<build>/` 裡的就是目前上架的版本，build 會原封不動保留它（只把 PZ 圓鈕的標籤更新成最新版）。要改一款已上架的遊戲：先把 `games/<build>/` 整個資料夾複製成 `_build/raw/<build>/`，在 raw 裡改，再 build（圓鈕那行 build 會重新插，不用手動處理）。有 `sources/<遊戲 id>/` 的遊戲（長明、差一點、墜星）改原始碼、照它的 README 組建，不要直接改打包好的檔。Claude 上的版本（`builds[].artifact`）是另一份，能一起更新就一起更新，不能就記在 ROADMAP 的「已知問題」。
 
 ## 遊戲怎麼開（重要）
 
@@ -85,6 +85,7 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 |---|---|
 | 長明 EVERLIGHT（HD-2D JRPG，第一章） | `_build/sources/everlight/`：`node tools/build.mjs` 產生 Claude 版與獨立網頁版；美術升級藍圖在 `art/` |
 | 差一點 SO CLOSE（3D 夾娃娃機） | `_build/sources/so-close/`：`node tools/build.mjs` 產生 Claude 版與獨立網頁版；`tools/simtest.mjs` 調爪力 |
+| 墜星 LANDFALL（殖民地生存模擬，第一幕） | `_build/sources/landfall/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/landfall/`）；`tests/run.py sim 24` 自動玩 24 天看平衡；收藏庫截圖步驟 `tests/shots_steps.py` |
 
 ## 放在這個網站裡的專屬 App（`apps/`）
 
