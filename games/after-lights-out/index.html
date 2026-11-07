@@ -5520,7 +5520,7 @@ precision mediump float; in vec2 vUV; uniform sampler2D uT; out vec4 o; void mai
         if (a === 'solo') pickRole();
         else if (a === 'coop') {
           if (LO.ONLINE) { UI.hide('title'); A.truckMusic(false); startOnline(false); }
-          else UI.msg('連線合作要用獨立版', '這個版本跑在 Claude 的網頁裡，不能對外連線。\n\n連線合作請用「獨立連線版」：在你的筆電上點兩下 Start_Game，就會開出房間，把畫面上的連結傳給朋友，朋友用手機或電腦的瀏覽器打開就能一起玩。同一個 WiFi 或不同地方都可以。', [{ t: '知道了', primary: true }]);
+          else UI.msg('連線合作要用獨立版', '這個版本沒有連線伺服器，不能和朋友連線。\n\n連線合作請用「獨立連線版」：在你的筆電上點兩下 Start_Game，就會開出房間，把畫面上的連結傳給朋友，朋友用手機或電腦的瀏覽器打開就能一起玩。同一個 WiFi 或不同地方都可以。', [{ t: '知道了', primary: true }]);
         }
         else if (a === 'help') UI.help();
         else if (a === 'settings') openSettings();
