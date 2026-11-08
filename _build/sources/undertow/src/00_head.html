@@ -76,7 +76,7 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
 #hud-pressure .pv{position:absolute;left:0;right:0;top:15px;font-family:var(--num);font-weight:700;font-size:18px;line-height:1}
 #hud-pressure .pl{position:absolute;left:0;right:0;top:34px;font-size:9px;letter-spacing:.18em;color:var(--mute)}
 #hud-pressure .ps{font-size:11px;letter-spacing:.14em;margin-top:2px;font-weight:700;text-shadow:0 1px 3px #000}
-#minimap{position:absolute;right:10px;top:0;width:96px;height:112px;border:1px solid var(--line);background:rgba(2,10,15,.7);pointer-events:auto!important;border-radius:2px}
+#minimap{position:absolute;right:10px;top:0;width:96px;height:112px;border:1px solid rgba(125,255,165,.38);background:#020e08;pointer-events:auto!important;border-radius:3px;box-shadow:0 0 12px rgba(125,255,165,.12)}
 #hud-heart{position:absolute;left:calc(50% + 34px);top:6px;display:flex;align-items:center;gap:4px;font-family:var(--num);font-weight:700;font-size:16px;text-shadow:0 1px 3px #000}
 #hud-heart svg{width:16px;height:16px}
 #hud-heart small{font-family:var(--sans);font-size:9px;color:var(--mute);font-weight:500;letter-spacing:.1em}
@@ -111,6 +111,31 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
 #subtitle .sb.radio .who{color:var(--amber)}
 #subtitle .sb.voice{border-left-color:var(--red)}
 #subtitle .sb.voice .who{color:var(--red)}
+#subtitle .sb.crt{background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),linear-gradient(90deg,rgba(3,24,12,.93),rgba(2,16,9,.72));border-left-color:#7dffa8;color:#c9ffd9;text-shadow:0 0 6px rgba(125,255,165,.4)}
+#subtitle .sb.crt .who{color:#7dffa8;letter-spacing:.16em}
+#subtitle .sb.crt.amber,#subtitle .sb.ai{background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),linear-gradient(90deg,rgba(30,18,3,.93),rgba(20,12,2,.72));border-left-color:#ffb03a;color:#ffe6b8;text-shadow:0 0 6px rgba(255,176,58,.4)}
+#subtitle .sb.crt.amber .who,#subtitle .sb.ai .who{color:#ffb03a}
+#btn-track{position:absolute;right:6px;bottom:156px;width:52px;height:52px;border-radius:50%;background:rgba(2,14,8,.84);border:1.5px solid rgba(125,255,165,.45);color:#9fffbf;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;transition:box-shadow .15s}
+#btn-track svg{width:24px;height:24px}
+#btn-track em{font-style:normal;font-size:9px;letter-spacing:.12em;font-weight:700;margin-top:-2px}
+#btn-track.on{background:radial-gradient(circle at 50% 45%,rgba(125,255,165,.32),rgba(2,20,10,.88));border-color:#7dffa8;color:#eaffef;box-shadow:0 0 14px rgba(125,255,165,.45)}
+#btn-track.ping{box-shadow:0 0 0 6px rgba(125,255,165,.22),0 0 22px rgba(125,255,165,.7)}
+.term{position:relative;margin:2px -4px 6px;padding:14px 16px 12px;border:1px solid rgba(125,255,165,.35);border-radius:6px;overflow:hidden;cursor:pointer;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 40%,#06200f,#010804 75%);
+  color:#c3ffd5;text-shadow:0 0 7px rgba(125,255,165,.5);box-shadow:inset 0 0 40px rgba(0,0,0,.85),0 0 18px rgba(125,255,165,.12)}
+.term::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(125,255,165,.07),transparent 35%);pointer-events:none;animation:termFl 3.6s infinite}
+.term .th{display:flex;justify-content:space-between;font-family:var(--num);font-size:11px;letter-spacing:.2em;color:rgba(125,255,165,.75);border-bottom:1px dashed rgba(125,255,165,.3);padding-bottom:6px;margin-bottom:10px}
+.term .tw{font-size:12px;letter-spacing:.14em;color:#7dffa8;margin-bottom:8px}
+.term .tt{font-size:15px;line-height:1.95;letter-spacing:.05em;min-height:7em;margin:0}
+.term .tf{margin-top:10px;font-size:10px;color:rgba(125,255,165,.45);letter-spacing:.14em}
+.term .cur{display:inline-block;width:.55em;height:1.05em;background:currentColor;vertical-align:-.15em;margin-left:2px;animation:blink 1s steps(1) infinite}
+.term.amber{border-color:rgba(255,176,58,.4);background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 40%,#231503,#080401 75%);color:#ffe2ad;text-shadow:0 0 7px rgba(255,176,58,.5)}
+.term.amber .th{color:rgba(255,190,90,.8);border-bottom-color:rgba(255,176,58,.3)}
+.term.amber .tw{color:#ffb03a}
+.term.amber .tf{color:rgba(255,176,58,.45)}
+@keyframes blink{50%{opacity:0}}
+@keyframes termFl{0%,100%{opacity:.55}50%{opacity:1}}
 #banner{position:absolute;left:0;right:0;top:31%;text-align:center;pointer-events:none}
 #banner .bn{display:inline-block;padding:10px 28px;font-size:20px;font-weight:900;letter-spacing:.3em;color:#fff;
   background:linear-gradient(90deg,transparent,rgba(120,10,20,.7),transparent);text-shadow:0 0 12px rgba(255,60,80,.9);animation:bnIn 2.4s forwards}
@@ -157,6 +182,9 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
 #btn-decoy b,#btn-med b{position:absolute;right:-2px;bottom:-2px;min-width:18px;height:18px;border-radius:9px;background:var(--cyan);color:#021016;font-family:var(--num);font-size:12px;line-height:18px;text-align:center;font-weight:700}
 #btn-decoy.empty,#btn-med.empty{opacity:.4}
 #btn-decoy .cd,#btn-med .cd{position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(0,0,0,.6) var(--p,0%),transparent 0)}
+#grain{position:absolute;inset:-80px;pointer-events:none;background-size:160px 160px;opacity:0;display:none}
+#grain.on{display:block;opacity:.62;animation:grainMove .5s steps(4) infinite}
+@keyframes grainMove{0%{transform:translate(0,0)}25%{transform:translate(-53px,31px)}50%{transform:translate(27px,-61px)}75%{transform:translate(-17px,-23px)}100%{transform:translate(0,0)}}
 #hurt{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 120px 40px rgba(255,20,40,.0);transition:box-shadow .25s}
 #pausehint{position:absolute;left:50%;bottom:calc(var(--sab) + 6px);transform:translateX(-50%);font-size:10px;color:var(--dim);letter-spacing:.2em}
 
@@ -167,7 +195,13 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
 #title .logo h1{margin:0;font-family:var(--serif);font-weight:900;font-size:min(26vw,128px);letter-spacing:.12em;line-height:1;color:#e9fbff;
   text-shadow:0 0 30px rgba(95,231,255,.45),0 0 80px rgba(95,231,255,.25);padding-left:.12em}
 #title .logo .en{font-family:var(--num);font-weight:600;font-size:min(5vw,22px);letter-spacing:1.05em;color:var(--cyan);margin-top:6px;padding-left:1em}
-#title .logo .tg{margin-top:22px;font-family:var(--serif);font-size:15px;letter-spacing:.32em;color:var(--mute)}
+#title .logo .tg{margin-top:22px;font-family:var(--serif);font-size:15px;letter-spacing:.32em;color:var(--mute);opacity:0;animation:enIn 1.6s ease-out 3.9s forwards}
+#title .logo h1{position:relative;display:inline-block}
+#title .logo h1 .ghost{opacity:0;animation:enIn 1.8s ease-out 3.1s forwards}
+#title .logo h1 .sl{position:absolute;left:0;top:0;right:0;padding-left:.12em;opacity:0;text-shadow:none;animation:slIn 1.3s ease-out forwards}
+#title .logo .en i{font-style:normal;opacity:0;animation:enIn .7s ease-out forwards}
+@keyframes slIn{0%{opacity:0;transform:translateY(2px)}55%{opacity:.85}100%{opacity:1;transform:none}}
+@keyframes enIn{to{opacity:1}}
 #title .acts{display:flex;flex-direction:column;gap:12px;width:min(78vw,300px)}
 #title .foot{position:absolute;bottom:calc(var(--sab) + 12px);left:0;right:0;text-align:center;font-size:10px;color:var(--dim);letter-spacing:.2em}
 
@@ -238,10 +272,11 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
 /* 檔案 */
 .lgsec{margin-bottom:16px}
 .lgsec h4{margin:0 0 6px;font-size:12px;letter-spacing:.24em;color:var(--cyan);font-weight:700}
-.lg{display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;background:var(--panel);border:1px solid var(--line);font-size:13.5px}
+.lg{position:relative;display:block;width:100%;text-align:left;padding:10px 12px;margin-bottom:6px;background:var(--panel);border:1px solid var(--line);font-size:13.5px}
 .lg small{display:block;font-size:11px;color:var(--mute);letter-spacing:.08em;margin-bottom:2px}
 .lg.lock{color:var(--dim);border-style:dashed}
-.lg.unread::after{content:"未讀";float:right;font-size:10px;color:var(--red);letter-spacing:.1em;margin-top:-16px}
+.lg.unread{border-left:2px solid var(--red)}
+.lg.unread::after{content:"未讀";position:absolute;right:10px;top:9px;font-size:10px;color:var(--red);letter-spacing:.1em}
 /* 藏品 */
 .rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px}
 .rl{padding:8px 6px 10px;text-align:center;background:var(--panel);border:1px solid var(--line);min-height:120px}
@@ -294,12 +329,13 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
 /* 設定 */
 .set{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
 .set input[type=range]{width:46%;accent-color:var(--cyan)}
+.set span small{display:block;font-size:11px;color:var(--mute);margin-top:2px;letter-spacing:.02em}
 .tgl{width:52px;height:28px;border-radius:14px;background:rgba(255,255,255,.12);position:relative}
 .tgl::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#89a1ab;transition:left .15s}
 .tgl.on{background:rgba(95,231,255,.4)}
 .tgl.on::after{left:27px;background:var(--cyan2)}
 /* 地圖 */
-.mapbox canvas{width:100%;display:block;background:#020a0f;border:1px solid var(--line)}
+.mapbox canvas{width:100%;display:block;background:#010a05;border:1px solid rgba(125,255,165,.35);border-radius:4px;box-shadow:inset 0 0 30px rgba(0,0,0,.8),0 0 16px rgba(125,255,165,.1)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px;color:var(--mute);margin-top:8px}
 .legend i{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px}
 
@@ -333,6 +369,7 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
   #bossbar{top:calc(var(--sat) + 10px);left:calc(50% + 44px);right:auto;transform:none;width:min(210px,calc(50vw - 236px))}
   #dockbar{top:calc(var(--sat) + 90px)}
   #banner{top:30%}
+  #btn-track{right:150px;bottom:60px}
   #title .logo{top:calc(var(--sat) + 6vh)}
   #title .logo h1{font-size:min(18vh,110px)}
 }
@@ -348,6 +385,7 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
 <body>
 <div id="app">
   <canvas id="cv"></canvas>
+  <div id="grain"></div>
   <div id="hurt"></div>
   <div id="hud" class="hidden">
     <div id="hud-top">
@@ -377,6 +415,7 @@ button{font-family:inherit;color:inherit;background:none;border:0;padding:0;curs
       <button id="btn-ctx" class="hidden"><span></span><i></i></button>
       <button id="btn-med" aria-label="醫療包"></button>
       <button id="btn-decoy" aria-label="聲波誘餌"></button>
+      <button id="btn-track" aria-label="動態偵測器"></button>
       <button id="btn-stance" aria-label="開火／潛行"></button>
     </div>
   </div>

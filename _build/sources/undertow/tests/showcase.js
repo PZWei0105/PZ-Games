@@ -24,8 +24,16 @@ window.__show = {
     const r = this.room(q => q.f >= 1 && q.doorL && q.doorR && q.light !== 'dark' && !q.survivor && q.special !== 'dock');
     r.doorL.state = 'open'; r.doorL.open = 1; r.doorR.state = 'open'; r.doorR.open = 1; markDoors();
     this.put(r, 92); W.P.face = 1; toggleStance(true);
-    const h = W.hunter; h.state = 'search'; h.x = r.x0 + 250; h.y = r.floorY; h.tx = h.x; h.ty = h.y; h.searchT = 0; h.face = -1; h.seen = true; h.turn = -.6; h.awayCD = 0;
-    W.heart = 134; W.heartProx = .9; W.pressure = 38;
+    const h = W.hunter; h.state = 'search'; h.x = r.x0 + 262; h.y = r.floorY; h.tx = h.x - 40; h.ty = h.y; h.searchT = 0; h.face = -1; h.seen = true; h.turn = -.6; h.awayCD = 0;
+    W.heart = 134; W.heartProx = .9; W.pressure = 63; toggleTracker(true); W.tracker.t = .1;
+  },
+  // 06：管道裡的牠——格柵在震、滴黏液、燈被干擾
+  vent() {
+    const W = __ut.W; this.calm(); __ut.god();
+    const v = W.vents.find(o => { const r = W.rooms[o.room]; return r.f >= 1 && r.light !== 'dark' && !r.survivor && r.special !== 'dock'; }) || W.vents[0];
+    const r = W.rooms[v.room]; this.put(r, v.x - r.x0 > RW / 2 ? 70 : RW - 70); W.P.face = v.x > W.P.x ? 1 : -1; toggleStance(true);
+    const h = W.hunter; h.state = 'venting'; h.vent = v; h.ventT = 99; h.seen = true;
+    toggleTracker(true); W.tracker.t = .1; W.heart = 128; W.heartProx = .8;
   },
   // 03：水裡的電弧
   zap() {
@@ -46,6 +54,7 @@ window.__show = {
     for (let k = 0; k < 6; k++) { const e = spawnFoe(k % 2 ? 'crab' : 'iso', W.P.x + dir * (150 + k * 30), r.floorY, true); e.spawnT = 0; e.hp = e.hpMax = 900; }
     W.P.face = dir;
   },
+  terminal() { UI.readLog('1-2'); },
   // 05：海燕號（中期進度）
   hubState() {
     const G = __ut.G; G.credits = 2460; G.settings.nums = true;

@@ -1,5 +1,6 @@
 /* ============ 10 介面 ============ */
 const SVG = {
+  track: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 22a11 11 0 0 1 22 0"/><path d="M10 22a6 6 0 0 1 12 0"/><path d="M16 22L23 12"/><circle cx="16" cy="22" r="1.8" fill="currentColor"/></svg>',
   pause: '<svg viewBox="0 0 24 24" fill="#cfeff7"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
   fire: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="16" cy="16" r="9"/><circle cx="16" cy="16" r="2.5" fill="currentColor"/><path d="M16 2v7M16 23v7M2 16h7M23 16h7"/></svg>',
   quiet: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 12a6 6 0 0 1 12 0c0 4-3 5-4 8s-1 6-4 6"/><path d="M14 12a2 2 0 0 1 4 0"/><path d="M4 4l24 24"/></svg>',
@@ -19,10 +20,12 @@ const UI = {
   title() {
     S.mode = 'title'; $('#hud').classList.add('hidden'); this.closeModal();
     const sc = $('#screen'); sc.classList.remove('hidden');
-    sc.innerHTML = `<div id="title"><div class="logo"><h1>深艙</h1><div class="en">UNDERTOW</div><div class="tg">牠看不見你　牠聽得見你</div></div>
+    const N = 16, order = RNG(7).shuffle([...Array(N).keys()]);
+    const slices = order.map((k, j) => `<span class="sl" style="clip-path:inset(0 ${100 - (k + 1) * 100 / N}% 0 ${k * 100 / N}%);animation-delay:${(.25 + j * .16 + (k % 3) * .05).toFixed(2)}s">深艙</span>`).join('');
+    sc.innerHTML = `<div id="title"><div class="logo"><h1><span class="ghost">深艙</span>${slices}</h1><div class="en">${'UNDERTOW'.split('').map((c, j) => `<i style="animation-delay:${(2.9 + j * .12).toFixed(2)}s">${c}</i>`).join('')}</div><div class="tg">牠看不見你　牠聽得見你</div></div>
       <div class="acts"><button class="btn primary" id="t-go">開始下潛</button><button class="btn ghost" id="t-set">設定</button></div>
       <div class="foot">${VERSION}・建議戴耳機</div></div>`;
-    $('#t-go').onclick = () => { AU.init(); AU.play('ui2'); if (!G.seenPrologue) { this.story(PROLOGUE, {}, () => { G.seenPrologue = true; saveGame(); this.hub('dive'); }); } else this.hub('dive'); };
+    $('#t-go').onclick = () => { AU.init(); AU.voiceUnlock(); AU.play('ui2'); if (!G.seenPrologue) { this.story(PROLOGUE, {}, () => { G.seenPrologue = true; saveGame(); this.hub('dive'); }); } else this.hub('dive'); };
     $('#t-set').onclick = () => { AU.init(); AU.play('ui'); this.settings(); };
   },
   /* ---------- 母船 ---------- */
@@ -116,7 +119,13 @@ const UI = {
   },
   readLog(id) {
     const L = LOGS[id]; G.read[id] = true; saveGame();
-    this.modal(`<div class="sub" style="color:${L.kind === 'voice' ? 'var(--cyan)' : 'var(--amber)'}">${L.who}</div><p class="serif" style="font-size:16px;line-height:2;letter-spacing:.04em">${L.text}</p><div class="row"><button class="btn small" data-close>關閉</button></div>`, () => { if (S.mode === 'hub') this.hub('files'); });
+    const amber = L.kind === 'voice' || L.kind === 'cast';
+    this.modal(`<div class="term ${amber ? 'amber' : ''}"><div class="th"><span>瀚淵站 檔案終端</span><span>${id.replace('-', '・')}</span></div><div class="tw">${L.who}</div><p class="tt" id="tt"></p><div class="tf">輕觸文字可直接顯示全文</div></div><div class="row"><button class="btn small" data-close>關閉</button></div>`, () => { clearInterval(this.typeI); if (S.mode === 'hub') this.hub('files'); });
+    const box = $('#tt'), txt = L.text; let i = 0;
+    clearInterval(this.typeI);
+    const step = () => { i = Math.min(txt.length, i + 2); box.innerHTML = txt.slice(0, i) + '<i class="cur"></i>'; if (i % 6 === 0) AU.play('type'); if (i >= txt.length) clearInterval(this.typeI); };
+    this.typeI = setInterval(step, 38);
+    box.parentNode.onclick = () => { i = txt.length - 2; step(); };
   },
   loadout(si) {
     const ws = WEAPON_ORDER.filter(id => G.weapons.includes(id));
@@ -129,7 +138,7 @@ const UI = {
         <div class="row"><button class="btn ghost small" data-close>返回</button><button class="btn primary" id="go">下潛</button></div>`);
       $('#modal').querySelectorAll('[data-wi]').forEach(c => { const x = c.getContext('2d'); x.scale(116 / 64, 116 / 64); drawWeaponIcon(x, c.dataset.wi); });
       $('#modal').querySelectorAll('[data-w]').forEach(b => b.onclick = () => { sel = b.dataset.w; AU.play('ui'); draw(); });
-      $('#go').onclick = () => { AU.play('ui2'); G.lastWeapon = sel; saveGame(); this.closeModal(); this.startDive(si); };
+      $('#go').onclick = () => { AU.init(); AU.voiceUnlock(); AU.play('ui2'); G.lastWeapon = sel; saveGame(); this.closeModal(); this.startDive(si); };
     };
     draw();
   },
@@ -147,6 +156,7 @@ const UI = {
       S0.intro.slice(1).forEach(t => W.subs.push({ who: '', text: t, kind: 'doc', dur: 4 }));
       setTimeout(() => tip('start'), 1500);
       if (si === 4) setTimeout(() => { if (W && W.si === 4) W.subs.push({ who: '【錄音｜林汐】', text: '……你到了。我聽得到你的腳步聲。往下走，我在最底層。', kind: 'log', dur: 5 }); }, 6000);
+      else { const w0 = W; setTimeout(() => { if (W === w0 && W.state === 'play') say(G.stats.dives === 0 ? PA.start[0] : pick(PA.start)); }, 9000); }
     });
   },
   /* ---------- 遊戲中 HUD ---------- */
@@ -155,6 +165,7 @@ const UI = {
     $('#btn-pause').innerHTML = SVG.pause;
     $('#btn-med').innerHTML = SVG.med + '<b></b><i class="cd"></i>';
     $('#btn-decoy').innerHTML = SVG.decoy + '<b></b><i class="cd"></i>';
+    $('#btn-track').innerHTML = SVG.track + '<em>偵測</em>'; this.trackerBtn();
     $('#hud-sector .nm').textContent = W.S.name + (W.S.endless ? ` 第 ${W.tier} 層` : '');
     $('#hud-sector .dp').textContent = fmt(W.S.depth) + ' M';
     $('#bossbar').classList.add('hidden'); $('#dockbar').classList.add('hidden');
@@ -162,6 +173,7 @@ const UI = {
     this.subQ = []; this.subCur = null; this.wslots = null; this.stance(); this.hudT = 0;
     $('#joyhint').classList.toggle('hidden', G.stats.dives > 1);
   },
+  trackerBtn() { const b = $('#btn-track'); if (b && W) b.classList.toggle('on', W.tracker.on); },
   stance() {
     const b = $('#btn-stance'), q = W && W.P.stealth;
     b.className = q ? 'quiet' : '';
@@ -170,6 +182,7 @@ const UI = {
   updateHud(dt) {
     if (!W) return;
     this.tickSubs(dt);
+    const tb = $('#btn-track'); if (tb) tb.classList.toggle('ping', W.tracker.on && W.tracker.pingFx > .75);
     this.hudT -= dt; if (this.hudT > 0) return; this.hudT = .07;
     const p = W.P;
     // 生命／氧氣／經驗
@@ -220,7 +233,7 @@ const UI = {
     if (m && !m.dead && m.state !== 'lured') { bb.classList.remove('hidden'); bb.querySelector('.nm').innerHTML = '母聆'; bb.querySelector('i').style.width = (m.hp / m.hpMax * 100) + '%'; bb.querySelector('b').style.display = 'none'; }
     else if (showH) {
       bb.classList.remove('hidden');
-      const stt = { search: '搜索', hunt: '追獵', attack: '攻擊', stun: '麻痺', charge: '充能尖嘯', leave: '離開', flee: '逃走', drop: '出現', dead: '倒下' }[h.state] || '';
+      const stt = { search: '搜索', hunt: '追獵', attack: '攻擊', stun: '麻痺', charge: '充能尖嘯', leave: '離開', flee: '逃走', drop: '出現', crawl: '管道中', dead: '倒下' }[h.state] || '';
       bb.querySelector('.nm').innerHTML = `聆<em>${h.enraged ? '激怒・' : ''}${stt}</em>`;
       bb.querySelector('i').style.width = (Math.max(0, h.hp) / h.hpMax * 100) + '%';
       const left = h.hpMax * .25 - h.engage, mk = (h.hp - left) / h.hpMax * 100;
@@ -245,7 +258,8 @@ const UI = {
     if (!this.subQ.length) return;
     const s = this.subQ.shift(); this.subCur = s; this.subT = s.dur || 3;
     box.innerHTML = '';
-    const d = el('div', 'sb ' + (s.kind === 'radio' ? 'radio' : s.kind === 'voice' ? 'voice' : ''), (s.who ? `<span class="who">${s.who}</span>` : '') + s.text);
+    const cls = s.kind === 'radio' ? 'radio' : s.kind === 'voice' ? 'voice' : s.kind === 'ai' ? 'ai crt' : (s.kind === 'log' || s.kind === 'doc') ? 'crt' + (s.kind === 'log' ? ' amber' : '') : '';
+    const d = el('div', 'sb ' + cls, (s.who ? `<span class="who">${s.kind === 'ai' ? '◉ ' : ''}${s.who}</span>` : '') + s.text);
     box.appendChild(d); requestAnimationFrame(() => d.classList.add('on'));
   },
   banner(t, s, cls) { const b = $('#banner'); b.innerHTML = ''; const d = el('div', 'bn ' + (cls || ''), t + (s ? `<small>${s}</small>` : '')); b.appendChild(d); setTimeout(() => d.remove(), 2500); },
@@ -286,10 +300,10 @@ const UI = {
     this.modal(`<h3>暫停</h3><div class="sub">${W.S.name}・${fmt(W.S.depth)} m・${Math.floor(W.t / 60)}:${String(Math.floor(W.t % 60)).padStart(2, '0')}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px">${build}</div>
       <div class="mapbox"><canvas id="bigmap" width="640" height="560"></canvas></div>
-      <div class="legend"><span><i style="background:#e9fdff"></i>你</span><span><i style="background:#5fe39a"></i>生還者</span><span><i style="background:#ffb03a"></i>關著的門</span><span><i style="background:#ff4f5e"></i>壞掉／上鎖</span><span><i style="background:#3c96ff"></i>進水</span><span>撤＝撤離塢　艙＝逃生艙</span></div>
+      <div class="legend"><span><i style="background:#ffffff;box-shadow:0 0 6px #7dffa8"></i>你</span><span><i style="background:#5fe7ff"></i>生還者</span><span><i style="background:#ffb03a"></i>關著的門</span><span><i style="background:#ff4f5e"></i>壞掉／上鎖</span><span><i style="background:#3c96ff"></i>進水</span><span><i style="background:#ebfff0;box-shadow:0 0 6px #7dffa8"></i>偵測到的移動</span><span>撤＝撤離塢　艙＝逃生艙</span></div>
       <p style="font-size:12px;color:var(--mute);line-height:1.7;margin:10px 0 0">提示：關上的門會擋住一半的聲音。聆只會去「最後聽到聲音的地方」。</p>
       <div class="row"><button class="btn ghost small" id="ps-set">設定</button><button class="btn ghost small" id="ps-quit">放棄這趟</button><button class="btn primary" data-close>繼續</button></div>`);
-    drawMinimap($('#bigmap').getContext('2d'), 640, 560, true);
+    this.bigMap = $('#bigmap').getContext('2d'); drawMinimap(this.bigMap, 640, 560, true);
     $('#ps-set').onclick = () => { this.settings(() => this.pause()); };
     $('#ps-quit').onclick = () => this.confirm('放棄這趟？', '這趟撈到的東西會全部留在海底。', '放棄', () => endRun('dead'));
   },
@@ -301,13 +315,18 @@ const UI = {
       <div class="set"><span>畫面震動</span><button class="tgl ${s.shake ? 'on' : ''}" id="st-sh"></button></div>
       <div class="set"><span>手機震動</span><button class="tgl ${s.vib ? 'on' : ''}" id="st-vb"></button></div>
       <div class="set"><span>傷害數字</span><button class="tgl ${s.nums ? 'on' : ''}" id="st-nm"></button></div>
+      <div class="set"><span>站內廣播語音<small>手機有中文語音時才會念出來</small></span><button class="tgl ${s.voice ? 'on' : ''}" id="st-vo"></button></div>
+      <div class="set"><span>頻閃與閃光<small>對閃光敏感的話請關閉</small></span><button class="tgl ${s.flash ? 'on' : ''}" id="st-fl"></button></div>
+      <div class="set"><span>膠片顆粒</span><button class="tgl ${s.grain ? 'on' : ''}" id="st-gr"></button></div>
       <div class="set"><span>存檔碼（換裝置用）</span><button class="btn small ghost" id="st-ex">匯出／匯入</button></div>
-      <p style="font-size:11.5px;color:var(--mute);line-height:1.7;margin-top:10px">操作：左半邊拖曳移動（梯子往上／下拖）、右下大鈕切換開火／潛行、情境按鈕開關艙門與互動。鍵盤：WASD／方向鍵、空白鍵切換、E 互動、Q 誘餌、R 醫療包、Esc 暫停。</p>
+      <p style="font-size:11.5px;color:var(--mute);line-height:1.7;margin-top:10px">操作：左半邊拖曳移動（梯子往上／下拖）、右下大鈕切換開火／潛行、雷達鈕開關動態偵測器、情境按鈕開關艙門與互動。鍵盤：WASD／方向鍵、空白鍵切換、E 互動、T 偵測器、Q 誘餌、R 醫療包、Esc 暫停。</p>
       <div class="row"><button class="btn primary small" data-close>完成</button></div>`, () => { saveGame(); back && back(); });
     $('#st-mu').oninput = e => { s.music = +e.target.value; AU.applyVol(); };
     $('#st-sf').oninput = e => { s.sfx = +e.target.value; AU.applyVol(); };
     const tg = (id, k) => { $(id).onclick = () => { s[k] = !s[k]; $(id).classList.toggle('on', s[k]); AU.play('ui'); }; };
-    tg('#st-sh', 'shake'); tg('#st-vb', 'vib'); tg('#st-nm', 'nums');
+    tg('#st-sh', 'shake'); tg('#st-vb', 'vib'); tg('#st-nm', 'nums'); tg('#st-vo', 'voice'); tg('#st-fl', 'flash'); tg('#st-gr', 'grain');
+    $('#st-gr').addEventListener('click', () => setupGrain());
+    $('#st-vo').addEventListener('click', () => { AU.voiceUnlock(); if (s.voice) AU.speak('站內廣播，測試。'); else AU.hush(); });
     $('#st-ex').onclick = () => this.saveCode(back);
   },
   saveCode(back) {

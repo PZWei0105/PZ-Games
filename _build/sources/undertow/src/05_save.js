@@ -10,7 +10,7 @@ function newG() {
     sectors: SECTORS.map((s, i) => ({ unlocked: i === 0, cleared: false, stars: [false, false, false], best: 0, runs: 0 })),
     endless: { unlocked: false, best: 0 }, endings: {}, tips: {}, seenPrologue: false, lastWeapon: 'rivet',
     stats: { dives: 0, kills: 0, deaths: 0, extracts: 0, hunterKills: 0, credits: 0 },
-    settings: { music: .7, sfx: .9, shake: true, vib: true, nums: true },
+    settings: { music: .7, sfx: .9, shake: true, vib: true, nums: true, voice: true, flash: true, grain: true },
     newStuff: {},
   };
 }

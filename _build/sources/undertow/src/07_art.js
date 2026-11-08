@@ -504,13 +504,14 @@ function drawDiverClimb(ctx, p, t, f) {
 
 /* ---------- 獵手「聆」 ---------- */
 function hunterCol(st) { return st === 'hunt' || st === 'attack' ? '#ff3b4e' : st === 'alert' ? '#ffb03a' : st === 'stun' ? '#ffffff' : st === 'flee' ? '#b47cff' : '#5fe7ff'; }
-function drawHunter(ctx, h, t, scale = 1, mother = false) {
-  const f = h.flash || 0;
+function drawHunter(ctx, h, t, scale = 1, mother = false, sil = false) {
+  const f = sil ? 0 : (h.flash || 0);
   ctx.save(); ctx.translate(h.x, h.y); ctx.scale(h.face * scale, scale);
   const glow = hunterCol(h.state);
   const ph = h.walk, mv = h.moving ? 1 : 0;
-  const body = fl(mother ? '#7d8f9c' : '#33414d', f), body2 = fl(mother ? '#a9bac4' : '#4a5c6a', f), belly = fl(mother ? '#d6e2e8' : '#7d8d99', f), dark = fl('#141b21', f);
-  ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.ellipse(0, 2, 46, 6, 0, 0, TAU); ctx.fill();
+  // sil：光照之後再疊一次的暗色剪影（只留發光的頭盤與背脊）
+  const body = sil ? '#05080b' : fl(mother ? '#7d8f9c' : '#33414d', f), body2 = sil ? '#0a1015' : fl(mother ? '#a9bac4' : '#4a5c6a', f), belly = sil ? '#0c1319' : fl(mother ? '#d6e2e8' : '#7d8d99', f), dark = sil ? '#020304' : fl('#141b21', f);
+  if (!sil) { ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.ellipse(0, 2, 46, 6, 0, 0, TAU); ctx.fill(); }
   const atk = h.atkPose || 0;
   // 後腿與後臂
   const legF = (sx, a, c) => {
@@ -533,7 +534,7 @@ function drawHunter(ctx, h, t, scale = 1, mother = false) {
     ctx.translate(0, 46); ctx.rotate(-.35 - lift * .6);
     rrect(ctx, -3, 0, 6, 46, 3); ctx.fill();
     ctx.translate(0, 44);
-    ctx.strokeStyle = fl('#c9d4d9', f); ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.strokeStyle = sil ? '#141c22' : fl('#c9d4d9', f); ctx.lineWidth = 2.5; ctx.lineCap = 'round';
     for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(k * 6 + 6, 10, k * 4 + 14, 6); ctx.stroke(); }
     ctx.restore();
   };
@@ -555,11 +556,12 @@ function drawHunter(ctx, h, t, scale = 1, mother = false) {
   const rx = 10 + 26 * Math.abs(Math.cos(turn * 1.2)), ry = 36;
   ctx.save(); ctx.translate(hx, hy);
   ctx.fillStyle = mixHex(body, '#000000', .25); ctx.beginPath(); ctx.ellipse(-3, 0, rx + 3, ry + 3, 0, 0, TAU); ctx.fill();
-  const dg = ctx.createRadialGradient(0, 0, 2, 0, 0, ry); dg.addColorStop(0, '#05080a'); dg.addColorStop(.45, fl('#1c252c', f)); dg.addColorStop(1, body2);
+  const dg = ctx.createRadialGradient(0, 0, 2, 0, 0, ry); dg.addColorStop(0, '#05080a'); dg.addColorStop(.45, sil ? '#070b0e' : fl('#1c252c', f)); dg.addColorStop(1, body2);
   ctx.fillStyle = dg; ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, TAU); ctx.fill();
+  if (sil) { ctx.strokeStyle = 'rgba(170,215,230,.16)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(0, 0, rx + 1, ry + 1, 0, -2.2, -.6); ctx.stroke(); }
   const pulse = h.state === 'hunt' || h.state === 'attack' ? .7 + .3 * Math.sin(t * 14) : .55 + .25 * Math.sin(t * 2.5);
   ctx.lineWidth = 2.2;
-  for (let k = 1; k <= 3; k++) { ctx.strokeStyle = rgba(glow, pulse * (.25 + k * .2)); ctx.beginPath(); ctx.ellipse(0, 0, rx * k / 3.4, ry * k / 3.4, 0, 0, TAU); ctx.stroke(); }
+  for (let k = 1; k <= 3; k++) { ctx.strokeStyle = rgba(glow, Math.min(1, pulse * (.25 + k * .2) * (sil ? 1.8 : 1))); ctx.beginPath(); ctx.ellipse(0, 0, rx * k / 3.4, ry * k / 3.4, 0, 0, TAU); ctx.stroke(); }
   ctx.fillStyle = rgba(glow, .9 * pulse); ctx.beginPath(); ctx.ellipse(0, 0, Math.max(2, rx * .12), 4, 0, 0, TAU); ctx.fill();
   ctx.restore();
   // 嘴（尖嘯時張開）

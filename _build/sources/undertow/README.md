@@ -52,4 +52,6 @@ python3 tools/shoot.py --game undertow --out shots/undertow --viewport phone --d
 - 聆：`away → venting（管道先震 3.6 秒）→ drop → search/hunt → attack`；一次交手吃到 25% 血量就逃（`flee`），被擊退兩次以後「激怒」不再逃。玩家潛行又站著不動時，牠擦身而過也不會發現（`quiet === 2`）；搜索時亂走的目標夾在同一間艙室裡，卡住 2.2 秒會放棄。
 - 地圖保證：撤離塢一定有月池、深艙一定有收容槽（梯子會被移到牆邊）、所有艙室都走得到（被坍塌艙包圍時會打通一間）。改 `06_mapgen.js` 後跑 `python3 tests/fuzz_maps.py`（1500 張地圖，`nbad` 要是 0）。
 - 平衡：深壓每秒上升量與五個階段在 `updatePressure`（約 10 分鐘到 100%，之後 95 秒崩塌）；聆的血量與傷害在 `SECTORS[].hunter`；升級需求 `xpNeed`。
-- HUD：直拿時右側 42% 高度留給收藏庫的 PZ 圓鈕，武器欄放在左邊。
+- HUD：直拿時右側 42% 高度留給收藏庫的 PZ 圓鈕，武器欄放在左邊；偵測器鈕在情境按鈕上方。
+- v1.1 異形氛圍（偵測器、管道爬行、剪影、警示燈、頻閃、蒸氣、光柱、站內廣播、CRT 終端機）的規則寫在 `DESIGN.md` 最後一節。偵測器在 `updateTracker`，預兆在 `updateOmens`／`updateSteam`，廣播是 `say()`＋`AU.speak()`，剪影是 `hunterSil()`＋`drawHunter(…, sil)`。
+- 聲音：`04_audio.js` 的 WaveShaper 曲線要用 257 點（奇數），輸入 0 才會落在正中央，不然會有直流偏移。

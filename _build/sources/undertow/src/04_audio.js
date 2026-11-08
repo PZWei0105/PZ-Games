@@ -26,7 +26,8 @@ const AU = {
     const bb = c.createBuffer(1, n, c.sampleRate), bd = bb.getChannelData(0); let last = 0;
     for (let i = 0; i < n; i++) { last = (last + .02 * (Math.random() * 2 - 1)) / 1.02; bd[i] = last * 3.2; }
     this.bbuf = bb;
-    this.shaper = c.createWaveShaper(); const cv = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; cv[i] = Math.tanh(x * 3.5); } this.shaper.curve = cv;
+    // 257 點：輸入 0 剛好落在曲線正中央，才不會產生直流偏移
+    this.shaper = c.createWaveShaper(); const cv = new Float32Array(257); for (let i = 0; i < 257; i++) { const x = i / 128 - 1; cv[i] = Math.tanh(x * 3.5); } this.shaper.curve = cv;
     this.shaper.connect(this.sfx);
     this.applyVol(); this.on = true;
   },
@@ -163,7 +164,35 @@ const AU = {
         const b = o.f || 196;
         for (let i = 0; i < 3; i++) this.tone({ f: b, type: 'sine', dur: .22, a: .04, vol: .09 * v, at: i * .36, rev: .8, bus: this.amb });
         this.tone({ f: b * .75, type: 'sine', dur: 1.4, a: .1, vol: .1 * v, at: 1.15, rev: .9, bus: this.amb }); break; }
-      case 'groan': this.noise({ f: 240, f2: 110, filt: 'bandpass', q: 9, dur: 1.6, vol: .12 * v, a: .3, rev: .6, bus: this.amb }); break;
+      case 'groan': this.noise({ f: 240, f2: 110, filt: 'bandpass', q: 9, dur: 1.6, vol: .12 * v, a: .3, rev: .6, bus: this.amb });
+        this.tone({ f: 78 + Math.random() * 30, f2: 52, type: 'sawtooth', dur: 1.8, a: .4, vol: .03 * v, filt: 'bandpass', ff: 260, q: 6, rev: .6, bus: this.amb, glide: 1.8 }); break;
+      /* ---- 異形氛圍更新：偵測器、管道、燈、站體 ---- */
+      case 'track_ping': this.tone({ f: 1185, f2: 1120, glide: .3, dur: .34, vol: .15 * v, rev: .3 }); this.tone({ f: 2370, dur: .1, vol: .025 * v }); break;
+      case 'track_blip': { const f = o.f || 900; this.tone({ f, type: 'triangle', dur: .11, vol: .13 * v, rev: .12 }); this.tone({ f: f * 1.5, dur: .05, vol: .03 * v, at: .015 }); break; }
+      case 'track_on': this.tone({ f: 520, f2: 1500, dur: .2, vol: .07 }); this.noise({ f: 3000, filt: 'bandpass', q: 3, dur: .04, vol: .05, at: .2 }); break;
+      case 'track_off': this.tone({ f: 1300, f2: 380, dur: .18, vol: .06 }); break;
+      case 'crawl': for (let i = 0; i < 3; i++) this.noise({ f: 520 + Math.random() * 900, filt: 'bandpass', q: 5, dur: .05 + Math.random() * .05, vol: .16 * v, at: i * (.07 + Math.random() * .06), pan });
+        this.tone({ f: 72 + Math.random() * 18, f2: 44, dur: .14, vol: .2 * v, pan, at: .05 });
+        if (Math.random() < .35) this.noise({ f: 2300 + Math.random() * 700, filt: 'bandpass', q: 10, dur: .3, vol: .05 * v, a: .06, pan }); break;
+      case 'drip': if (!this.ok(name, 140)) return; this.tone({ f: 480 + Math.random() * 220, f2: 230, dur: .14, vol: .07 * v, rev: .35, pan }); this.noise({ f: 900, filt: 'bandpass', q: 3, dur: .04, vol: .05 * v, pan }); break;
+      case 'buzz': if (!this.ok(name, 260)) return; this.tone({ f: 100, type: 'sawtooth', dur: .22, vol: .045 * v, filt: 'bandpass', ff: 950, q: 3, pan });
+        for (let i = 0; i < 3; i++) this.noise({ f: 4000, filt: 'highpass', dur: .012, vol: .07 * v, at: Math.random() * .2, pan }); break;
+      case 'lamp_pop': this.noise({ f: 5200, filt: 'highpass', dur: .08, vol: .3 * v, pan }); this.tone({ f: 90, f2: 40, dur: .16, vol: .2 * v, pan });
+        for (let i = 0; i < 5; i++) this.tone({ f: 3000 + Math.random() * 2600, type: 'triangle', dur: .05, vol: .03 * v, at: .05 + i * .045 + Math.random() * .03, pan, rev: .3 }); break;
+      case 'strobe': if (!this.ok(name, 120)) return; this.noise({ f: 6500, filt: 'highpass', dur: .025, vol: .06 * v }); this.tone({ f: 120, type: 'square', dur: .04, vol: .02 * v, filt: 'lowpass', ff: 500 }); break;
+      case 'steam': this.noise({ f: 2600, filt: 'highpass', dur: o.dur || 1.3, vol: .1 * v, a: .18, pan, rev: .2 }); break;
+      case 'announce': this.tone({ f: 880, dur: .9, a: .01, vol: .075, rev: .55 }); this.tone({ f: 698.5, dur: 1.2, a: .01, vol: .075, rev: .55, at: .42 }); break;
+      case 'type': if (!this.ok(name, 30)) return; this.noise({ f: 3200, filt: 'bandpass', q: 4, dur: .014, vol: .045 }); break;
+      case 'klaxon': this.tone({ f: 520, f2: 760, glide: .85, type: 'sawtooth', dur: 1.05, a: .18, vol: .03 * v, filt: 'lowpass', ff: 1300, rev: .5, bus: this.amb });
+        this.tone({ f: 523, f2: 765, glide: .85, type: 'square', dur: 1.05, a: .18, vol: .012 * v, filt: 'lowpass', ff: 900, bus: this.amb }); break;
+      case 'sting': if (!this.ok(name, 4000)) return;
+        [196, 207.65, 277.18, 293.66].forEach((f, i) => this.tone({ f, type: 'sawtooth', dur: 1.7, a: .008, vol: .045 * v, filt: 'lowpass', ff: 2600, rev: .9, det: i * 9, bus: this.mus }));
+        this.tone({ f: 55, f2: 28, dur: 1.4, vol: .55 * v, rev: .6, bus: this.mus }); this.noise({ f: 3400, f2: 260, dur: .7, vol: .26 * v, rev: .9, bus: this.mus }); break;
+      case 'creak': this.tone({ f: 820 + Math.random() * 600, f2: 640, type: 'sine', dur: 1.3, a: .35, vol: .022 * v, rev: .8, bus: this.amb, glide: 1.3, pan });
+        this.noise({ f: 1400, filt: 'bandpass', q: 22, dur: 1.1, a: .3, vol: .03 * v, bus: this.amb, pan }); break;
+      case 'chain': [1, 1.47, 2.09].forEach((k, i) => this.tone({ f: 1080 * k, type: 'triangle', dur: .35, vol: .018 * v, at: i * .09 + Math.random() * .05, rev: .8, bus: this.amb, pan })); break;
+      case 'plink': { const f = 1400 + Math.random() * 1300; this.tone({ f, f2: f * .7, dur: .09, vol: .035 * v, rev: .75, bus: this.amb, pan }); break; }
+      case 'thump': this.tone({ f: 46, f2: 30, dur: .5, vol: .2 * v, rev: .7, bus: this.amb, pan }); this.noise({ f: 200, dur: .3, vol: .08 * v, rev: .6, bus: this.amb, pan }); break;
     }
   },
   /* 世界座標的聲音：距離衰減＋左右聲道 */
@@ -189,59 +218,85 @@ const AU = {
     const hum = c.createOscillator(), hg = c.createGain(); hum.frequency.value = 50; hg.gain.value = .018; hum.connect(hg); hg.connect(this.amb); hum.start();
     const hum2 = c.createOscillator(), hg2 = c.createGain(); hum2.frequency.value = 100.6; hg2.gain.value = .008; hum2.connect(hg2); hg2.connect(this.amb); hum2.start();
     this.ambNodes = [s, lfo, hum, hum2]; this.ambGain = g; this.ambOn = true; this.sec = sec || 0;
-    this.nextCreak = 5; this.nextWhale = 12 + Math.random() * 10; this.nextMotif = 40;
+    this.ev = { motif: 40, whale: 12 + Math.random() * 10 }; this.klaxT = 0; this.brT = 1; this.brV = 0;
     this.startMusic();
   },
   stopAmb() {
     if (this.ambNodes) { const t = this.t(); try { this.ambGain.gain.linearRampToValueAtTime(0, t + .6); } catch (e) { } const n = this.ambNodes; setTimeout(() => n.forEach(x => { try { x.stop(); } catch (e) { } }), 700); }
-    this.ambNodes = null; this.ambOn = false; this.stopMusic();
+    this.ambNodes = null; this.ambOn = false; this.stopMusic(); this.hush();
   },
   tickAmb(dt) {
     if (!this.ambOn) return;
-    this.nextCreak -= dt; this.nextWhale -= dt; this.nextMotif -= dt;
-    if (this.nextCreak <= 0) { this.nextCreak = 6 + Math.random() * 10; this.play('groan', { vol: .7 + Math.random() * .5 }); }
-    if (this.nextWhale <= 0) { this.nextWhale = 22 + Math.random() * 26; this.play('whale', { vol: .8 }); }
-    if (this.sec >= 2 && this.nextMotif <= 0) { this.nextMotif = 70 + Math.random() * 60; this.play('motif', { vol: .7 }); }
+    const st = W ? W.stage : 0, k = 1 + st * .3;
+    const ev = this.ev || (this.ev = {});
+    const due = (n, base, jit) => { if (ev[n] == null) ev[n] = Math.random() * base; ev[n] -= dt * k; if (ev[n] <= 0) { ev[n] = base + Math.random() * jit; return true; } return false; };
+    const pan = () => (Math.random() * 2 - 1) * .8;
+    if (due('groan', 9, 10)) this.play('groan', { vol: .6 + Math.random() * .6 });
+    if (due('creak', 15, 14)) this.play('creak', { vol: .6 + Math.random() * .4, pan: pan() });
+    if (due('plink', 4.5, 7)) this.play('plink', { vol: .5 + Math.random() * .5, pan: pan() });
+    if (due('chain', 28, 22)) this.play('chain', { vol: .55, pan: pan() });
+    if (due('thump', 19, 16)) this.play('thump', { vol: .6, pan: pan() });
+    if (due('whale', 26, 26)) this.play('whale', { vol: .8 });
+    if (this.sec >= 2 && due('motif', 70, 60)) this.play('motif', { vol: .7 });
+    this.klaxT = (this.klaxT || 0) - dt;
+    if (st >= 3 && this.klaxT <= 0) { this.klaxT = st >= 4 ? 2.5 : 3.8; this.play('klaxon', { vol: st >= 4 ? 1 : .7 }); }
   },
+  /* 頭盔裡的呼吸：潛行或心跳快的時候聽得到 */
+  tickBreath(dt, heart, quiet, under) {
+    if (!this.on || !this.ctx || !this.ambOn) return;
+    const want = Math.min(1, (quiet ? .5 : 0) + clamp((heart - 92) / 60, 0, 1) * .8);
+    this.brV = lerp(this.brV || 0, want, Math.min(1, dt * .8));
+    if (this.brV < .06) { this.brT = 0; return; }
+    this.brT = (this.brT || 0) - dt;
+    if (this.brT > 0) return;
+    const per = clamp(240 / Math.max(60, heart), 1.5, 3.6), v = this.brV * (under ? .55 : 1);
+    this.brT = per;
+    this.noise({ f: 850, f2: 1500, filt: 'bandpass', q: 1.4, dur: per * .3, a: per * .15, vol: .05 * v });
+    this.noise({ f: 1150, f2: 420, filt: 'bandpass', q: 1.2, dur: per * .38, a: per * .1, vol: .045 * v, at: per * .5 });
+  },
+  /* 配樂：平常幾乎沒有，只在緊張時一層層進來（低鳴→高頻玻璃音→顫音弦樂＋重擊） */
   startMusic() {
     if (!this.ctx) return; this.stopMusic();
-    const c = this.ctx;
-    this.padGain = c.createGain(); this.padGain.gain.value = 0;
-    this.padF = c.createBiquadFilter(); this.padF.type = 'lowpass'; this.padF.frequency.value = 380; this.padF.Q.value = 2;
-    this.padF.connect(this.padGain); this.padGain.connect(this.mus);
-    const rv = c.createGain(); rv.gain.value = .35; this.padGain.connect(rv); rv.connect(this.revIn);
-    this.padOsc = [];
-    const notes = [73.42, 110, 174.6, 220];
-    notes.forEach((f, i) => { for (const d of [-7, 7]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = d + i; o.connect(this.padF); o.start(); this.padOsc.push(o); } });
-    this.chord = 0; this.chordT = 0; this.beatT = 0; this.musOn = true;
-    this.padGain.gain.linearRampToValueAtTime(.05, this.t() + 3);
+    const c = this.ctx, osc = [];
+    const bus = () => { const g = c.createGain(); g.gain.value = 0; g.connect(this.mus); const rv = c.createGain(); rv.gain.value = .4; g.connect(rv); rv.connect(this.revIn); return g; };
+    this.mDrone = bus(); this.mGlass = bus(); this.mTrem = bus();
+    const dF = c.createBiquadFilter(); dF.type = 'lowpass'; dF.frequency.value = 230; dF.connect(this.mDrone);
+    [[55, 'sine', .6], [58.27, 'sine', .55], [110, 'sawtooth', .22]].forEach(([f, ty, gv]) => { const o = c.createOscillator(); o.type = ty; o.frequency.value = f; const g = c.createGain(); g.gain.value = gv; o.connect(g); g.connect(dF); o.start(); osc.push(o); });
+    [1567.98, 1661.22].forEach((f, i) => { const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f; const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 4.6 + i * .8; lg.gain.value = 7; l.connect(lg); lg.connect(o.frequency); const g = c.createGain(); g.gain.value = .5; o.connect(g); g.connect(this.mGlass); o.start(); l.start(); osc.push(o, l); });
+    this.sF = c.createBiquadFilter(); this.sF.type = 'lowpass'; this.sF.frequency.value = 700; this.sF.Q.value = 1.5;
+    const tg = c.createGain(); tg.gain.value = .5; this.sF.connect(tg); tg.connect(this.mTrem);
+    const tl = c.createOscillator(), tlg = c.createGain(); tl.frequency.value = 7; tlg.gain.value = .45; tl.connect(tlg); tlg.connect(tg.gain); tl.start(); osc.push(tl);
+    [[110, -6], [116.54, 5], [164.81, 0]].forEach(([f, d]) => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = d; o.connect(this.sF); o.start(); osc.push(o); });
+    this.musOsc = osc; this.musOn = true; this.hitT = 2; this.tension = 0;
   },
   stopMusic() {
-    if (this.padOsc) { const o = this.padOsc; try { this.padGain.gain.linearRampToValueAtTime(0, this.t() + .5); } catch (e) { } setTimeout(() => o.forEach(x => { try { x.stop(); } catch (e) { } }), 600); }
-    this.padOsc = null; this.musOn = false;
+    if (this.musOsc) { const o = this.musOsc, t = this.t(); try { [this.mDrone, this.mGlass, this.mTrem].forEach(g => g.gain.setTargetAtTime(0, t, .2)); } catch (e) { } setTimeout(() => o.forEach(x => { try { x.stop(); } catch (e) { } }), 900); }
+    this.musOsc = null; this.musOn = false;
   },
-  CHORDS: [[73.42, 110, 174.6, 220], [65.41, 98, 155.6, 196], [58.27, 87.31, 146.8, 174.6], [69.3, 103.8, 164.8, 207.7]],
   tickMusic(dt, tension) {
-    if (!this.musOn || !this.padOsc) return;
-    this.tension = lerp(this.tension, tension, Math.min(1, dt * 1.5));
+    if (!this.musOn || !this.musOsc) return;
+    this.tension = lerp(this.tension, tension, Math.min(1, dt * 1.2));
     const T = this.tension, t = this.t();
-    this.padF.frequency.setTargetAtTime(300 + T * 1500, t, .4);
-    this.padGain.gain.setTargetAtTime(.04 + T * .05, t, .5);
-    this.chordT += dt;
-    if (this.chordT > 9) {
-      this.chordT = 0; this.chord = (this.chord + 1) % this.CHORDS.length;
-      const ch = this.CHORDS[this.chord];
-      this.padOsc.forEach((o, i) => o.frequency.setTargetAtTime(ch[i >> 1], t, 1.2));
-    }
-    if (T > .28) {
-      this.beatT -= dt;
-      if (this.beatT <= 0) {
-        const bpm = 72 + T * 70; this.beatT = 60 / bpm / 2;
-        this.beatN = (this.beatN || 0) + 1;
-        const root = this.CHORDS[this.chord][0];
-        this.tone({ f: root * (this.beatN % 8 === 4 ? 1.5 : 1), type: 'triangle', dur: .16, vol: (.05 + T * .09), bus: this.mus, filt: 'lowpass', ff: 300 + T * 600 });
-        if (T > .7 && this.beatN % 2 === 0) this.noise({ f: 7000, filt: 'highpass', dur: .03, vol: .025 * T, bus: this.mus });
-      }
-    }
+    this.mDrone.gain.setTargetAtTime(T < .18 ? 0 : Math.min(.12, (T - .18) * .22), t, .8);
+    this.mGlass.gain.setTargetAtTime(T > .3 && T < .78 ? .006 + (T - .3) * .012 : 0, t, 1.2);
+    this.mTrem.gain.setTargetAtTime(T < .55 ? 0 : (T - .55) * .24, t, .5);
+    this.sF.frequency.setTargetAtTime(500 + T * 900, t, .5);
+    if (T > .68) { this.hitT -= dt; if (this.hitT <= 0) { this.hitT = .45 + Math.random() * 1.1; this.tone({ f: 62, f2: 38, dur: .3, vol: .22 * T, bus: this.mus }); this.noise({ f: 180, dur: .2, vol: .12 * T, bus: this.mus }); } }
   },
+  /* 站內廣播語音（裝置有中文語音才念） */
+  voiceUnlock() { try { if (window.speechSynthesis && !this.vUnlocked) { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); this.vUnlocked = true; speechSynthesis.onvoiceschanged = () => { this.voice = undefined; }; } } catch (e) { } },
+  pickVoice() {
+    if (this.voice !== undefined) return this.voice;
+    try { const vs = speechSynthesis.getVoices(); if (!vs.length) return null; this.voice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh[-_](HK|Hant)/i.test(v.lang)) || vs.find(v => /^(zh|cmn)/i.test(v.lang)) || null; } catch (e) { this.voice = null; }
+    return this.voice;
+  },
+  speak(text) {
+    try {
+      if (!window.speechSynthesis || !G.settings.voice) return;
+      const v = this.pickVoice(); if (!v) return;
+      const u = new SpeechSynthesisUtterance(text); u.voice = v; u.lang = v.lang; u.rate = .9; u.pitch = .7; u.volume = clamp(G.settings.sfx * 1.05, 0, 1);
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } catch (e) { }
+  },
+  hush() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) { } },
 };
