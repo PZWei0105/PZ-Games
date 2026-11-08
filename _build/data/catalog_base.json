@@ -2284,6 +2284,23 @@
    "claude": "https://claude.ai/artifact/T6XN5fhrpMU4YM5rJsQ6Tj"
   },
   {
+   "id": "reignite",
+   "title": "重新點火",
+   "en": "REIGNITE",
+   "kind": "web",
+   "url": "https://pzwei0105.github.io/PZ-Games/apps/reignite/",
+   "tagline": "每天三個一分鐘，把燈塔船一塊一塊修回來。",
+   "summary": "痞子葳專屬的減重 App：量體重、記外食、慢慢散步，就能修好漂流的燈塔船餘燼號。7 日均線說真話的數據教練、紅牛與甜食降級路線、嘴饞警報小遊戲、從慢走開始的復健式運動階段、回診報告追蹤，還有 13 章航誌。",
+   "palette": [
+    "#4a2410",
+    "#060a15",
+    "#ff8a3d"
+   ],
+   "glyph": "燃",
+   "pin": true,
+   "claude": "https://claude.ai/artifact/WhsJtzRqYda9tvteFMFXGP"
+  },
+  {
    "id": "pz-host",
    "title": "PZ 主機",
    "en": "PZ HOST",

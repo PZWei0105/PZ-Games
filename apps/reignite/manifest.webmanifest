@@ -1,0 +1,30 @@
+{
+ "name": "重新點火 REIGNITE",
+ "short_name": "重新點火",
+ "description": "痞子葳專屬的減重 App：每天三個一分鐘的任務，一塊一塊修好燈塔船餘燼號。",
+ "lang": "zh-Hant-TW",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#060a15",
+ "theme_color": "#060a15",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
