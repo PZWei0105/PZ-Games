@@ -1,6 +1,6 @@
 /* ============ 02 資料 ============ */
 const RW = 360, FH = 240, SLAB = 20, WALLW = 16, DOORH = 128;
-const VERSION = 'v1.0';
+const VERSION = 'v1.1';
 
 const RAR = [
   { k: 'w', name: '普通', col: '#b9c4cc', t: 1.0, val: 8, wt: .5 },

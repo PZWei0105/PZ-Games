@@ -29,6 +29,7 @@ function setupInput() {
   btn('#btn-ctx', () => doInteract());
   btn('#btn-med', () => useMed());
   btn('#btn-decoy', () => throwDecoy());
+  btn('#btn-track', () => toggleTracker());
   btn('#btn-pause', () => UI.pause());
   $('#minimap').addEventListener('pointerdown', e => { e.stopPropagation(); if (S.mode === 'dive' && W && !blocked()) UI.pause(); });
   window.addEventListener('keydown', e => {
@@ -41,6 +42,7 @@ function setupInput() {
     if (e.code === 'KeyE' || e.code === 'KeyF' || e.code === 'Enter') doInteract();
     if (e.code === 'KeyQ') throwDecoy();
     if (e.code === 'KeyR') useMed();
+    if (e.code === 'KeyT') toggleTracker();
     if (e.code === 'KeyM') UI.pause();
   });
   window.addEventListener('keyup', e => { KEYS[e.code] = false; });
@@ -85,6 +87,7 @@ function boot() {
   document.addEventListener('pointerdown', () => { if (AU.ctx && AU.ctx.state === 'suspended') { try { AU.ctx.resume(); } catch (e) { } } }, { passive: true });
   loadGame();
   initRender();
+  setupGrain();
   setupInput();
   UI.title();
   requestAnimationFrame(frame);

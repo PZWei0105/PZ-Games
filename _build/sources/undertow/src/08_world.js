@@ -20,7 +20,15 @@ function newWorld(si, tier) {
     state: 'play', ending: null, deepDone: false, mother: null, linState: 'sit',
     kills: 0, dmgDealt: 0, said: {}, subs: [], shake: 0, hitstop: 0, slow: 1, flowCache: {}, sonarT: 2, fxT: 0,
     hunter: null, finished: false, msg: null,
+    tracker: { on: false, t: 0, per: 1.5, blips: [], seenH: 0, nearD: 0, pingFx: 0 },
+    steam: [], puffs: [], lampT: 22, countSaid: {}, breachSaidT: -99,
   };
+  // 漏氣的管線（每間艙約一半有）
+  for (const r of W.rooms) {
+    if (r.collapsed || r.special === 'deep') continue;
+    const rg = RNG(r.seed + 77);
+    if (rg.f() < .5) W.steam.push({ room: r.i, x: r.x0 + 50 + rg.f() * (RW - 100), y: r.y0 + (r.f === 0 ? 18 : 0) + 14 + rg.f() * 14, dir: rg.f() < .5 ? -1 : 1, t: 2 + rg.f() * 12, on: 0, acc: 0 });
+  }
   // 預先繪製房間
   for (const r of W.rooms) r.bg = paintRoom(r, M);
   const st = W.rooms[M.start];
@@ -179,6 +187,8 @@ function updateWorld(dt) {
   W.foes = W.foes.filter(e => !e.dead || e.deadT < .4);
   updateHunter(dt);
   if (W.mother) updateMother(dt);
+  updateTracker(dt);
+  updateOmens(dt);
   updateWaves(dt);
   updateWater(dt);
   updateDoors(dt);
@@ -267,6 +277,112 @@ function toggleStance(force) {
   AU.play(p.stealth ? 'stance_q' : 'stance_f');
   if (p.stealth) tip('stealth');
   UI.stance();
+}
+
+/* ---------- 動態偵測器：只抓得到「會動的東西」，嗶聲本身也是聲音 ---------- */
+const TRACK_RANGE = 820;
+function toggleTracker(force) {
+  const T = W.tracker; T.on = force != null ? force : !T.on;
+  AU.play(T.on ? 'track_on' : 'track_off');
+  T.t = .3; T.blips = []; T.seenH = 0; T.nearD = 0;
+  if (T.on) G.tips.tracker = true;
+  UI.trackerBtn();
+}
+function updateTracker(dt) {
+  const T = W.tracker, p = W.P;
+  T.seenH = Math.max(0, T.seenH - dt);
+  for (const b of T.blips) b.a = Math.max(0, b.a - dt / Math.max(.6, T.per));
+  T.pingFx = Math.max(0, T.pingFx - dt * 2.2);
+  if (!T.on) return;
+  T.t -= dt;
+  if (T.t > 0) return;
+  const cs = [], RANGE = TRACK_RANGE * PS().sonar;
+  const add = (x, y, big, isH) => { const d = Math.hypot(x - p.x, y - p.y); if (d <= RANGE) cs.push({ x, y, d, big, isH }); };
+  for (const e of W.foes) {
+    if (e.dead) continue;
+    const mv = e.tkx != null && Math.hypot(e.x - e.tkx, e.y - e.tky) > 4;
+    e.tkx = e.x; e.tky = e.y;
+    if (mv) add(e.x, e.y - 20, e.type === 'husk' || e.elite, false);
+  }
+  const h = W.hunter;
+  if (h && !h.dead) {
+    let hx = null, hy = null;
+    if (h.state === 'crawl') { hx = h.cx; hy = h.cy; }
+    else if (h.state === 'venting') { hx = h.vent.x; hy = h.vent.y; }
+    else if (onMap(h)) { const mv = h.tkx != null && Math.hypot(h.x - h.tkx, h.y - h.tky) > 4; h.tkx = h.x; h.tky = h.y; if (mv || h.state === 'attack' || h.state === 'drop' || h.state === 'charge') { hx = h.x; hy = h.y - 90; } }
+    if (hx != null) add(hx, hy, true, true);
+  }
+  const m = W.mother; if (m && !m.dead && m.state !== 'lured') add(m.x, m.y - 120, true, true);
+  cs.sort((a, b) => a.d - b.d);
+  const k = cs.length ? clamp(1 - cs[0].d / RANGE, 0, 1) : 0;
+  T.per = lerp(1.6, .42, k * k); T.t = T.per;
+  T.nearD = cs.length ? cs[0].d : 0;
+  T.blips = cs.slice(0, 16).map(c => ({ x: c.x, y: c.y, big: c.big, a: 1 }));
+  if (cs.some(c => c.isH)) T.seenH = T.per + .6;
+  T.pingFx = 1;
+  AU.play('track_ping', { vol: .9 });
+  if (cs.length) setTimeout(() => { if (W && W.tracker.on) AU.play('track_blip', { f: 620 + 900 * k, vol: .9 }); }, 140);
+  emitNoise(p.x, p.y - 40, 95, 'tracker');
+}
+/* ---------- 預兆：燈管被干擾、爆掉、漏蒸氣 ---------- */
+function omenPos() {
+  const h = W.hunter, m = W.mother;
+  if (m && !m.dead && m.state !== 'lured') return { x: m.x, y: m.y - 100 };
+  if (!h || h.dead) return null;
+  if (h.state === 'crawl') return { x: h.cx, y: h.cy };
+  if (h.state === 'venting') return { x: h.vent.x, y: h.vent.y };
+  if (onMap(h)) return { x: h.x, y: h.y - 100 };
+  return null;
+}
+function updateOmens(dt) {
+  const p = W.P, pr = roomAt(p.x, p.y);
+  for (const r of W.rooms) if (r.flickT > 0) r.flickT -= dt;
+  const o = omenPos();
+  if (o) {
+    for (const r of W.rooms) { if (r.collapsed) continue; if (Math.abs(r.x0 + RW / 2 - o.x) < RW * .78 && Math.abs(r.y0 + FH / 2 - o.y) < FH * .85) r.flickT = .4; }
+    if (pr.flickT > 0 && !pr.lightDead && pr.light !== 'dark') { if (Math.random() < dt * 3) AU.play('buzz', { vol: .7 }); if (W.hunter && W.hunter.seen) tip('flicker'); }
+  }
+  if (W.stage >= 2) {
+    W.lampT -= dt;
+    if (W.lampT <= 0) {
+      W.lampT = rand(16, 34) / (W.stage >= 3 ? 1.6 : 1);
+      const cands = W.rooms.filter(r => !r.collapsed && !r.lightDead && r.light !== 'dark' && r.special !== 'dock' && Math.abs(r.c - pr.c) + Math.abs(r.f - pr.f) <= 1 && r.lights && r.lights.length);
+      if (cands.length) {
+        const r = pick(cands), k = randi(0, r.lights.length - 1); r.deadLamps = r.deadLamps || {};
+        if (!r.deadLamps[k]) {
+          r.deadLamps[k] = true; const l = r.lights[k];
+          spark(l.x, l.y, 14, '#fff3c4', 220);
+          for (let j = 0; j < 4; j++) W.fx.push({ k: 'debris', x: l.x, y: l.y, vx: rand(-90, 90), vy: rand(-60, 40), t: 0, life: rand(.5, .9), rot: rand(0, 6), col: '#cfe4ea' });
+          flashAt(l.x, l.y + 20, '#fff3c4', 170); AU.at('lamp_pop', l.x, l.y, { range: 900 });
+        }
+      }
+    }
+  }
+  updateSteam(dt);
+}
+function updateSteam(dt) {
+  const p = W.P, act = W.stage >= 1 ? 1.7 : 1;
+  for (const s of W.steam) {
+    const r = W.rooms[s.room];
+    if (s.on > 0) {
+      s.on -= dt;
+      if (Math.abs(r.x0 + RW / 2 - p.x) < 900 && Math.abs(r.y0 - p.y) < 720) {
+        s.acc += dt * 16;
+        while (s.acc > 1) { s.acc--; W.puffs.push({ x: s.x, y: s.y, vx: s.dir * rand(55, 120), vy: rand(-8, 26), t: 0, life: rand(1.3, 2.4), s0: rand(5, 9), s1: rand(34, 62) }); }
+      }
+    } else { s.t -= dt * act; if (s.t <= 0) { s.t = rand(7, 16); s.on = rand(1.4, 3.2); AU.at('steam', s.x, s.y, { range: 700, dur: s.on }); } }
+  }
+  for (const f of W.puffs) { f.t += dt; f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 1 - dt * 1.2; f.vy -= 6 * dt; }
+  if (W.puffs.length) W.puffs = W.puffs.filter(f => f.t < f.life);
+  if (W.puffs.length > 220) W.puffs.splice(0, W.puffs.length - 220);
+}
+/* ---------- 站內自動廣播 ---------- */
+function zhNum(n) { const d = '零一二三四五六七八九'; n = Math.max(0, Math.round(n)); if (n < 10) return d[n]; if (n < 20) return '十' + (n % 10 ? d[n % 10] : ''); if (n < 100) return d[Math.floor(n / 10)] + '十' + (n % 10 ? d[n % 10] : ''); return String(n); }
+function say(text, spoken) {
+  if (!W) return;
+  W.subs.push({ who: '瀚淵站　自動廣播', text, kind: 'ai', dur: 2.4 + text.length / 10, prio: 2 });
+  AU.play('announce');
+  setTimeout(() => { if (W && W.state !== 'over') AU.speak(spoken || text); }, 700);
 }
 
 /* ---------- 目標 ---------- */
@@ -674,7 +790,7 @@ function navNext(from, goal, mode) {
 }
 
 /* ---------- 獵手「聆」 ---------- */
-const onMap = h => h && !h.dead && h.state !== 'away' && h.state !== 'venting' && h.state !== 'gone';
+const onMap = h => h && !h.dead && h.state !== 'away' && h.state !== 'venting' && h.state !== 'crawl' && h.state !== 'gone';
 function hunterHear(p) {
   const h = W.hunter;
   if (!h || h.dead || h.state === 'gone' || h.state === 'flee' || h.state === 'stun' || h.state === 'attack' || h.state === 'drop') return;
@@ -687,6 +803,12 @@ function hunterHear(p) {
     return;
   }
   if (h.state === 'venting') return;
+  if (h.state === 'crawl') {
+    if (p.r * mul < 200 || (h.reT || -9) > W.t - 2) return;
+    const v = pickVentArrive(p.x, p.y, true); if (!v || v === h.vent) return;
+    h.reT = W.t; h.c0 = { x: h.cx, y: h.cy }; h.vent = v; h.crawlT = 0; h.crawlDur = clamp(Math.hypot(v.x - h.cx, v.y - h.cy) / 170, 1.5, 6); h.tx = p.x; h.ty = p.y;
+    return;
+  }
   if (!heardBy(p, h.x, h.y - 120, mul)) return;
   h.tx = p.x; h.ty = p.y; h.heard = 1; h.alertT = 1.5;
   AU.at('growl', h.x, h.y, { vol: .8 });
@@ -777,19 +899,39 @@ function updateHunter(dt) {
         const tgt = h.heardAt || { x: p.x + rand(-500, 500), y: p.y };
         let v = pickVentArrive(tgt.x, tgt.y, !!h.heardAt);
         if (!v) { h.awayT = 10; return; }
-        h.vent = v; h.state = 'venting'; h.ventT = 3.6 + (G.survivors.lin ? 1.5 : 0); h.tx = tgt.x; h.ty = tgt.y; h.heardAt = null;
-        tip('vent');
+        // 先在管道裡爬過來：天花板上聽得到、偵測器看得到
+        const far = W.vents.filter(o => o !== v && Math.hypot(o.x - v.x, o.y - v.y) > 480);
+        const s0 = far.length ? pick(far) : { x: clamp(v.x + (v.x > W.C * RW / 2 ? -700 : 700), 20, W.C * RW - 20), y: v.y };
+        h.state = 'crawl'; h.vent = v; h.c0 = { x: s0.x, y: s0.y }; h.cx = s0.x; h.cy = s0.y; h.crawlT = 0; h.crawlStep = .4;
+        h.crawlDur = clamp(Math.hypot(s0.x - v.x, s0.y - v.y) / 160, 3.5, 8.5);
+        h.tx = tgt.x; h.ty = tgt.y; h.heardAt = null;
+        tip('vent'); tip('crawl'); if (!G.tips.tracker) tip('tracker');
       }
+      return; }
+    case 'crawl': {
+      h.crawlT += dt;
+      const u = clamp(h.crawlT / h.crawlDur, 0, 1), u2 = u * u * (3 - 2 * u);
+      h.cx = lerp(h.c0.x, h.vent.x, u2); h.cy = lerp(h.c0.y, h.vent.y, u2);
+      h.crawlStep -= dt;
+      if (h.crawlStep <= 0) {
+        h.crawlStep = rand(.28, .5); AU.at('crawl', h.cx, h.cy, { range: 1100, vol: 1.15 });
+        const r = roomAt(h.cx, h.cy + 40);
+        if (r && !r.collapsed && Math.random() < .7) W.fx.push({ k: 'dust', x: h.cx + rand(-16, 16), y: r.y0 + SLAB + 4, vx: rand(-8, 8), vy: rand(30, 70), t: 0, life: 1.4 });
+      }
+      if (u >= 1) { h.state = 'venting'; h.ventT = 2.6 + (G.survivors.lin ? 1.5 : 0); }
       return; }
     case 'venting': {
       h.ventT -= dt; h.vent.shake = 1;
       if (Math.random() < dt * 2.2) AU.at('vent', h.vent.x, h.vent.y, { range: 1300, vol: 1.1 });
+      if (Math.random() < dt * 6) W.fx.push({ k: 'drip', x: h.vent.x + rand(-18, 18), y: h.vent.y + 15, vx: 0, vy: 20, t: 0, life: 2.5, fy: W.rooms[h.vent.room].floorY });
+      if (Math.random() < dt * 2.5) AU.at('drip', h.vent.x, h.vent.y, { range: 700 });
       if (Math.random() < dt * 8) W.fx.push({ k: 'dust', x: h.vent.x + rand(-24, 24), y: h.vent.y + 14, vx: rand(-20, 20), vy: rand(10, 60), t: 0, life: 1.2 });
       if (h.ventT <= 0) {
         const r = W.rooms[h.vent.room];
         h.x = h.vent.x; h.y = h.vent.y + 20; h.state = 'drop'; h.dropT = 0; h.dropY = r.floorY; h.face = sgn(p.x - h.x) || 1;
         h.vent.shake = 0; h.engage = 0;
         AU.at('step', h.x, r.floorY, { range: 1400, vol: 1.3 });
+        if (!h.stungT || W.t - h.stungT > 60) { h.stungT = W.t; if (Math.hypot(h.x - p.x, h.y - p.y) < 1200) AU.play('sting'); }
         if (!h.seen) { h.seen = true; banner('聆', '牠看不見你。牠聽得見你。', ''); setTimeout(() => tip('hunterSeen'), 1500); }
       }
       return; }
@@ -962,10 +1104,10 @@ function updatePressure(dt) {
   let st = 0; for (let k = 0; k < STAGES.length; k++) if (W.pressure >= STAGES[k].at) st = k;
   if (st > W.stage) {
     W.stage = st;
-    if (st === 1) { tip('p30', true); }
-    if (st === 2) { tip('p60', true); banner('深壓 60%', '牠的聽力變好了', ''); killLights(.25); }
-    if (st === 3) { tip('p85', true); banner('結構警報', '去撤離塢', ''); killLights(.35); AU.play('alarm'); }
-    if (st === 4) { tip('p100', true); banner('崩潰', '站體正在塌陷', ''); W.collapseT = 95; AU.play('alarm'); }
+    if (st === 1) { tip('p30', true); say(PA.p30); }
+    if (st === 2) { tip('p60', true); banner('深壓 60%', '牠的聽力變好了', ''); killLights(.25); say(PA.p60); }
+    if (st === 3) { tip('p85', true); banner('結構警報', '去撤離塢', ''); killLights(.35); AU.play('alarm'); say(PA.p85); }
+    if (st === 4) { tip('p100', true); banner('崩潰', '站體正在塌陷', ''); W.collapseT = 95; AU.play('alarm'); say('站體崩潰程序啟動。倒數 90 秒。', PA.p100); }
   }
   if (W.stage >= 1) {
     W.breachT -= dt;
@@ -976,6 +1118,7 @@ function updatePressure(dt) {
   }
   if (W.stage >= 4) {
     W.collapseT -= dt;
+    for (const k of [60, 30, 10]) if (W.collapseT <= k && W.collapseT > k - 3 && !W.countSaid[k]) { W.countSaid[k] = true; say(`倒數 ${k} 秒。`, PA.count[k]); }
     if (W.collapseT <= 0 && W.state === 'play') { W.P.hp = 0; W.collapsed = true; }
     if (Math.random() < dt * .8) W.shake = Math.max(W.shake, 4);
   }
@@ -990,6 +1133,7 @@ function makeBreach(any) {
   r.breach = { x: hull, y: r.floorY - rand(40, 120), rate: 1 / rand(24, 34), t: 0 };
   AU.at('breach', r.breach.x, r.breach.y, { range: 1400 });
   if (r === pr) tip('breach');
+  if (Math.abs(r.c - pr.c) + Math.abs(r.f - pr.f) <= 1 && W.t - W.breachSaidT > 25) { W.breachSaidT = W.t; const c = paCode(r); say(`警告：${c} 艙段破口。`, `警告，${c.replace('-', ' ')}，艙段破口。`); }
 }
 function updateWater(dt) {
   const C = W.C;
@@ -1273,6 +1417,7 @@ function callDock() {
   emitNoise(r.x0 + RW / 2, r.floorY - 40, 1500, 'dock');
   AU.play('sub'); AU.play('alarm'); tip('dock', true);
   banner('潛艇放下去了', `撐住 ${Math.round(D.t)} 秒`, 'cy');
+  say(`撤離艇下放中。預計抵達：${Math.round(D.t)} 秒。`, `撤離艇下放中。預計抵達，${zhNum(D.t)}秒。`);
   const h = W.hunter; if (h && !h.dead && h.state === 'away' && !W.ending) { h.awayT = Math.min(h.awayT, 8); h.heardAt = { x: r.x0 + RW / 2, y: r.floorY }; }
 }
 function updateDock(dt) {
@@ -1286,7 +1431,7 @@ function updateDock(dt) {
       const r = W.rooms[D.room], pts = waveSpawnPoints(2).filter(p => p.room !== D.room);
       spawnWave(pts.length ? pts : waveSpawnPoints(1), 3 + W.si * .8 + W.pressure / 100 * 4, false);
     }
-    if (D.t <= 0) { D.arrived = true; D.rise = 0; AU.play('sub'); banner('潛艇到了', '走到月池登艇', 'cy'); }
+    if (D.t <= 0) { D.arrived = true; D.rise = 0; AU.play('sub'); banner('潛艇到了', '走到月池登艇', 'cy'); say(PA.docked); }
   } else D.rise = Math.min(1, D.rise + dt / 2);
 }
 
@@ -1306,6 +1451,7 @@ function afterChoice() {
   W.pressure = 100; W.stage = 4; W.collapseT = W.ending === 'C' ? 130 : 110;
   W.linState = W.ending === 'A' ? 'go' : W.ending === 'B' ? 'gate' : 'run';
   AU.play('alarm'); banner('站體崩潰', '去撤離塢', '');
+  setTimeout(() => { if (W && W.ending) say(W.ending === 'C' ? PA.contain : PA.gate); }, 1800);
   if (W.ending === 'C') {
     const dr = W.rooms[W.M.deep];
     const m = W.mother = Object.assign({}, W.hunter, { isHunter: true, mother: true, state: 'hunt', x: dr.x0 + RW - 60, y: dr.floorY, hp: 9000, hpMax: 9000, dead: false, H: { walk: 90, run: 150, dmg: 48, door: 260, hear: 2, shriek: false }, def: { r: 44, h: 260 }, cd: 2, face: -1, lureT: 26, engage: 0, flash: 0 });
@@ -1346,6 +1492,7 @@ function updateHeart(dt) {
   let prox = 0;
   if (onMap(h)) { const d = Math.hypot(h.x - p.x, (h.y - p.y) * 1.4); prox = clamp(1 - d / (900 * st.sonar), 0, 1); if (h.state === 'hunt' || h.state === 'attack') prox = Math.min(1, prox + .25); }
   else if (h && h.state === 'venting') { const d = Math.hypot(h.vent.x - p.x, (h.vent.y - p.y) * 1.4); prox = clamp(1 - d / (1100 * st.sonar), 0, 1) * .8; }
+  else if (h && h.state === 'crawl') { const d = Math.hypot(h.cx - p.x, (h.cy - p.y) * 1.4); prox = clamp(1 - d / (1000 * st.sonar), 0, 1) * .7; }
   if (W.mother && W.mother.state !== 'lured' && !W.mother.dead) prox = Math.max(prox, clamp(1 - Math.hypot(W.mother.x - p.x, W.mother.y - p.y) / 1000, 0, 1));
   W.heartProx = lerp(W.heartProx, prox, Math.min(1, dt * 2));
   const target = 72 + W.heartProx * 70 + W.pressure * .12 + (p.hp < p.hpMax * .35 ? 14 : 0) + (W.dock.called && !W.dock.arrived ? 16 : 0);
@@ -1358,6 +1505,7 @@ function updateHeart(dt) {
   if (W.dock.called && !W.dock.arrived) tension += .4;
   AU.tickMusic(dt, clamp(tension, 0, 1));
   AU.tickAmb(dt);
+  AU.tickBreath(dt, W.heart, p.stealth, AU.under);
 }
 
 /* ---------- 特效 ---------- */
@@ -1369,6 +1517,7 @@ function updateFX(dt) {
   for (const f of W.fx) {
     f.t += dt;
     if (f.vx != null) { f.x += f.vx * dt; f.y += f.vy * dt; if (f.k === 'spark' || f.k === 'debris' || f.k === 'shell') f.vy += 700 * dt; if (f.k === 'flame') { f.vy -= 120 * dt; f.vx *= .96; } }
+    if (f.k === 'drip') { f.vy += 520 * dt; if (f.y >= f.fy) { f.t = f.life; keep.push({ k: 'goo', x: f.x, y: f.fy, r: rand(4, 8), col: 'rgba(150,190,140,.75)', t: 0, life: 4 }); } }
     if (f.t < f.life) keep.push(f);
   }
   W.fx = keep;
