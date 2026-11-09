@@ -46,6 +46,12 @@ function buildHUD() {
   $('#b-bridge').onclick = () => { AU.ui('tap'); if (!bridgeOn()) { toast('艦橋主控台沒有人。派一個人到艦橋，點主控台坐上去。'); return; } UI.bridgeMode ? closeBridgeMode() : openBridgeMode(); };
   $('#b-vents').onclick = () => { AU.ui('tap'); UI.showVents = !UI.showVents; $('#b-vents').classList.toggle('on', UI.showVents); };
   $('#objbox').onclick = () => $('#objbox').classList.toggle('open');
+  // 屏息：按住
+  const br = $('#breath');
+  const hold = on => e => { e.preventDefault(); e.stopPropagation(); if (W) W.breathHeld = on; br.classList.toggle('on', on); if (on) AU.ui('tap'); };
+  br.onpointerdown = e => { try { br.setPointerCapture(e.pointerId); } catch (x) { } hold(true)(e); };
+  br.onpointerup = br.onpointercancel = br.onlostpointercapture = hold(false);
+  br.oncontextmenu = e => e.preventDefault();
 }
 function onCrewCard(i) {
   const m = W.crew[i];
@@ -93,7 +99,7 @@ function updateHUD(dt) {
     const b = Math.round(m.bpm);
     C.bpm.textContent = m.dead ? '—' : '♥' + b; C.bpm.className = 'bpm ' + (b >= 140 ? 'r' : b >= 105 ? 'y' : '');
     C.hp.forEach((e, k) => e.classList.toggle('x', k >= m.hp));
-    let tk = m.dead ? (m.why || '死亡') : m.grabbed ? '被抓住了！' : m.cocoon >= 0 ? '巢裡 ' + Math.ceil(m.cocoon) + '秒' : m.secret ? '……？' : m.panic ? { scream: '尖叫', run: '逃跑', freeze: '嚇呆', rage: '失控' }[m.panic.type] : m.inVent ? '管道裡' : m.hidden ? '躲藏' : m.task ? taskName(m.task) : m.path ? (m.run ? '跑' : '走') : ROOMS[m.room] ? ROOMS[m.room].name : '';
+    let tk = m.dead ? (m.why || '死亡') : m.grabbed ? '被抓住了！' : m.cocoon >= 0 ? '巢裡 ' + Math.ceil(m.cocoon) + '秒' : m.secret ? '……？' : m.panic ? { scream: '尖叫', run: '逃跑', freeze: '嚇呆', rage: '失控' }[m.panic.type] : m.inVent ? '管道裡' : m.hidden ? (m.holding ? '屏息' : '躲藏') : m.task ? taskName(m.task) : m.drive && m.moving ? (m.driveRun ? '跑' : '走') : m.follow >= 0 ? '跟著' + CREW[m.follow].short : m.path ? (m.run ? '跑' : '走') : ROOMS[m.room] ? ROOMS[m.room].name : '';
     C.tk.textContent = tk;
     C.bar.style.width = m.task && m.task.dur < 1e6 ? clamp(m.task.t / m.task.dur, 0, 1) * 100 + '%' : '0';
     let ic = '';
@@ -108,6 +114,33 @@ function updateHUD(dt) {
   else { const op = opportunity(); const txt = op ? `<div class="gbx op"><b>${op[0]}</b><br><span>${op[1]}</span></div>` : '';
     if (gb.dataset.h !== txt) { gb.innerHTML = txt; gb.dataset.h = txt; } }
   positionSubs();
+  updateBreathUI();
+  updateJoyHint();
+}
+// 屏息按鈕：有人躲著、牠就在旁邊時才出現
+function updateBreathUI() {
+  const br = $('#breath'); if (!br) return;
+  const list = W.phase === 'play' ? W.crew.filter(m => !m.dead && breathDanger(m)) : [];
+  const show = list.length > 0 || W.crew.some(m => m.holding);
+  br.classList.toggle('hide', !show);
+  if (!show) { if (W.breathHeld) { W.breathHeld = false; br.classList.remove('on'); } return; }
+  document.documentElement.style.setProperty('--bh', (UI.selBarH || 160) + 'px');
+  const m = list.sort((a, c) => a.breath - c.breath)[0] || W.crew.find(x => x.holding);
+  const lvl = m ? clamp(m.breath, 0, 1) : 1;
+  const f = br.querySelector('.rf'); if (f) f.style.strokeDashoffset = String(301.6 * (1 - lvl));
+  br.classList.toggle('low', lvl < .3);
+  br.classList.toggle('alert', !!(W.breathAlert && W.t - W.breathAlert.t < 2.6) && !W.breathHeld);
+  const nm = list.length === 1 ? CREW[list[0].ci].name : list.length > 1 ? list.length + ' 人' : '';
+  const sm = br.querySelector('small'); const txt = m && m.gaspT > 0 ? '喘不過氣' : W.breathHeld ? (nm || '屏息中') : '按住・' + nm;
+  if (sm.textContent !== txt) sm.textContent = txt;
+}
+// 搖桿提示：還沒用過搖桿的人，選人時在左下角畫一個淡淡的圈
+function updateJoyHint() {
+  const jh = $('#joyhint'); if (!jh) return;
+  const m = W.sel >= 0 ? W.crew[W.sel] : null;
+  const show = !G.joyUsed && m && W.phase === 'play' && !UI.bridgeMode && joyFree(m) && JOY.id == null;
+  jh.classList.toggle('hide', !show);
+  if (show) { const p = joyHome(); jh.style.left = p[0] + 'px'; jh.style.top = p[1] + 'px'; }
 }
 function opportunity() {
   const b = W.beast; if (!b || b.inVent || W.phase !== 'play') return null;
@@ -145,6 +178,7 @@ function refreshActbar(force) {
   if (UI.aimMode) ht = UI.aimMode.hint;
   else if (m && m.inVent) ht = '點一個格柵，阿傑會從管道爬過去';
   else if (!m && W.phase === 'play' && W.t < 40) ht = '點船員卡選人';
+  else if (m && !G.joyUsed && joyFree(m) && !UI.bridgeMode) ht = '左半邊按住拖曳＝搖桿　點地板＝走過去';
   else if (UI.bridgeMode) ht = '艦橋模式：點門開關門、點閘門（D1～D10）開關、點房間開燈或響警報';
   hint.textContent = ht; hint.classList.toggle('hide', !ht);
   UI.selBarH = $('#bottom').offsetHeight;
@@ -165,6 +199,12 @@ function crewButtons(m) {
     if (cn) { const lab = conLabel(m, cn); if (lab) out.push({ id: 'con', icon: lab[1], label: lab[0], on: lab[2], fn: () => orderDo(m, 'con', cn) }); }
     const g = nearestVentNode(m, T * 1.8);
     if (g && m.id === 'jie' && !g.sealed) out.push({ id: 'crawl', icon: 'vent', label: '鑽管道', fn: () => orderDo(m, 'grate', g, { act: 'crawl' }) });
+    // 腳邊的道具
+    const fi = W.items.filter(i => dist(i.x, i.y, m.x, m.y) < T * 1.3).sort((a, b) => dist(a.x, a.y, m.x, m.y) - dist(b.x, b.y, m.x, m.y))[0];
+    if (fi) out.push({ id: 'pick', icon: fi.it, label: '撿' + ITEMS[fi.it].name.slice(0, 3), fn: () => pickUp(m, fi) });
+    // 站在門邊：直接開關門（甩上門擋牠）
+    const dr = nearestDoor(m, T * 1.25);
+    if (dr && !dr.broken && !dr.welded && !dr.jam) out.push({ id: 'door', icon: 'door', label: dr.state === 'open' ? '關門' : '開門', fn: () => { if (dist(m.x, m.y, dr.x, dr.y) < T * 1.3 && !m.task) { setDoor(dr, dr.state !== 'open'); m.ang = Math.atan2(dr.y - m.y, dr.x - m.x); } else orderDo(m, 'door', dr, { act: dr.state === 'open' ? 'close' : 'open' }); } });
   }
   // 道具
   m.inv.forEach((s, i) => {
@@ -172,6 +212,10 @@ function crewButtons(m) {
     const ct = D.stack ? s.n : D.charges ? s.ch : D.fuel != null && s.it === 'flamer' ? Math.round(s.fuel) + '%' : null;
     out.push({ id: 'it' + i, icon: s.it, label: D.name.length > 4 ? D.name.slice(0, 4) : D.name, ct, rar: D.rar, fn: () => useItemUI(m, i) });
   });
+  // 小隊
+  const fol = followersOf(m);
+  if (fol.length) out.push({ id: 'follow', icon: 'group', label: '解散', on: true, ct: fol.length, fn: () => dismissFollow(m) });
+  else if (!m.hidden) { const fc = followCandidates(m); if (fc.length) { out.push({ id: 'follow', icon: 'group', label: '叫大家跟上', ct: fc.length, fn: () => callFollow(m) }); tut('follow'); } }
   const mates = W.crew.filter(o => o !== m && !o.dead && o.cocoon < 0 && dist(o.x, o.y, m.x, m.y) < T * 1.8);
   if (mates.length && m.inv.length) out.push({ id: 'give', icon: 'give', label: '給', fn: () => giveMenu(m, mates) });
   // 巢
@@ -500,7 +544,7 @@ function endRun(id) {
   else if (win && alive.length === 1) final = 'sole';
   // 獎勵
   const base = { strangle: 320, spaced: 260, burned: 240, abandon: 180, stowaway: 300, sole: 120, company: 60, lost: 30, truth: 500 }[final] ?? 50;
-  const rew = [['結局：' + ENDINGS.find(e => e.id === final).name, base], ['活下來的人 ×' + alive.length, alive.length * 45], ['新的調查檔案 ×' + W.logs.filter(l => !G.lore.includes(l)).length, W.logs.filter(l => !G.lore.includes(l)).length * 35], ['救回來的次數 ×' + W.stats.rescues, W.stats.rescues * 20]];
+  const rew = [['結局：' + ENDINGS.find(e => e.id === final).name, base], ['活下來的人 ×' + alive.length, alive.length * 45], ['新的調查檔案 ×' + W.logs.filter(l => !G.lore.includes(l)).length, W.logs.filter(l => !G.lore.includes(l)).length * 35], ['救回來的次數 ×' + W.stats.rescues, W.stats.rescues * 20], ['擦身而過 ×' + (W.stats.close || 0), Math.min(8, W.stats.close || 0) * 12], ['屏住呼吸 ×' + (W.stats.holds || 0), Math.min(6, W.stats.holds || 0) * 15]];
   const total = rew.reduce((s, r) => s + r[1], 0);
   const firstEnd = !G.endings[final];
   G.money += total; G.voyages = (G.voyages || 0) + 1; if (win) G.wins = (G.wins || 0) + 1;

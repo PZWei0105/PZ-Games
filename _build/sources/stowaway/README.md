@@ -30,6 +30,14 @@ Claude 版：用 artifact 工具發布 `dist/artifact/index.html`（作品：htt
 | `10_ui.js` | 訊息與字幕、HUD、船員卡、行動列、點擊判斷、門／格柵選單、艦橋面板、電力與工作台、幕間、逃生艇的限時選擇、結算、暫停、新手提示佇列、確認視窗 |
 | `11_main.js` | 標題與各頁（出航準備、航行日誌、調查檔案、結局、怎麼玩、設定）、觸控／滑鼠／鍵盤、主迴圈（卡頓時自動降解析度）、開機；`window.__sw` 測試掛鉤 |
 
+## 操作（v1.1 起）
+
+- 搖桿在 `11_main.js`：`JOY`（浮動搖桿狀態）、`joyZone`（選中的人有空、在畫面左半邊才會變成搖桿，否則是拖曳鏡頭）、`applyDrive`（每一格把搖桿或 WASD 的方向寫進選中船員的 `m.drive`）。指標每一根有自己的模式：`pending`→`joy`／`pan`／`pinch`；拿著搖桿時第二根手指還能點東西。
+- 走路在 `08_world.js` 的 `driveStep`：牆和關著的門是線段（`06_ship.js` 的 `edgeSolid`／`collideCircle`，半徑 `CREW_R`），`pushDoor` 往關著的門推就開門。
+- 跟上我：`callFollow`／`dismissFollow`／`followStep`（`m.follow` 是帶頭的人的編號，`m.runPref` 記住原本的走／跑設定）。
+- 屏息：`updateBreath`（`m.breath`、`m.holding`、`gasp`）、`breathDanger`、按鈕在 `10_ui.js` 的 `updateBreathUI`；牠查躲藏點的判定在 `08b_beast.js` 的 `goCheck`（第四個參數＝親眼看到你躲進去）與 `stCheck`。
+- 擦身而過：`updateCloseCalls`，紀錄在 `W.stats.close`、`W.stats.holds`。
+
 ## 測試（需要 Playwright＋/usr/bin/google-chrome）
 
 ```bash
@@ -38,9 +46,10 @@ SPEED=4 python3 tests/run.py bot 1500   # 自動玩一整航（「拋出去」�
 python3 tests/flows.py all          # 六條結局路線各跑一次（strangle／airlock／burn／abandon／stowaway／wait）
 python3 tests/showcase.py           # 幼體、成體、撲倒、完全體、艦橋、黑暗、總覽的擺拍
 python3 tests/run.py perf           # 每幀繪製與更新時間
+python3 tests/joy.py                # 搖桿走路、撞牆、推門、鍵盤、叫大家跟上、屏息（撐住／沒撐住）
 ```
 
-收藏庫的七張截圖（在 `_build` 裡）：
+收藏庫的八張截圖（在 `_build` 裡）：
 
 ```bash
 python3 sources/stowaway/tests/shots_steps.py > /tmp/stowaway_steps.json

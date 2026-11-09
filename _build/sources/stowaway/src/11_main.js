@@ -110,10 +110,12 @@ function showEndings() {
 function showHelp(fromPause) {
   const h = `
   <div class="card"><h4>目標</h4><p>你指揮夜鷺號上的六個人，撐過這一夜。牠會在地板下的通風管裡長大——第一幕牠還小，趁機搜刮裝備（也可以試著把牠困死）；氣閘和逃生艇在第一幕被檢疫封鎖。第二幕牠會開始獵人，你要準備一個「最終計畫」；第三幕執行計畫：把牠引進氣閘拋出去、困在房間裡燒死，或是啟動自毀搭逃生艇離開。</p></div>
-  <div class="card"><h4>操作</h4><p>・點<b>船員卡</b>（或畫面上的人）選人，選人時時間會變慢。<br>・點地板走過去，<b>點兩下用跑的</b>（快，但很吵）。<br>・點櫃子搜東西、點衣櫃床底躲起來、點主控台使用。<br>・點門可以開關或焊死；點格柵可以焊死（要焊槍）。<br>・拖曳畫面移動鏡頭，兩指縮放；「總覽」看整艘船。<br>・行動列的道具：照明彈、誘餌點了以後再點地圖丟出去。</p></div>
+  <div class="card"><h4>操作</h4><p>・點<b>船員卡</b>（或畫面上的人）選人，選人時時間會變慢。<br>・<b>搖桿</b>：選人後在畫面左半邊按住拖曳。輕推是走，推到底是跑（快，但很吵）；走進關著的門會自己開。<br>・也可以<b>點地板</b>叫他走過去，點兩下用跑的。點櫃子搜東西、點躲藏點躲起來、點主控台使用；走到旁邊時，下面的行動列也會跳出「搜」「躲」「操作」。<br>・<b>叫大家跟上</b>：附近的同伴會跟著你走，你躲他們也找地方躲。<br>・點門可以開關或焊死；點格柵可以焊死（要焊槍）。<br>・右半邊拖曳移動鏡頭，兩指縮放；「總覽」看整艘船。<br>・行動列的道具：照明彈、誘餌點了以後再點地圖丟出去。<br>・電腦：WASD／方向鍵移動、按住 Shift 跑、F 屏息、G 叫大家跟上、1～6 選人、空白鍵暫停。</p></div>
+  <div class="card"><h4>屏住呼吸</h4><p>有人躲著、牠就在旁邊時，右下會出現<b>「屏息」</b>。按住它，躲著的人心跳就聽不到；牠走到躲藏點前面貼著聽的時候，撐過去牠就會走開。氣有限（心跳越快撐越短），憋到底會喘出來。牠要是親眼看到你躲進去，屏息也沒用。</p></div>
   <div class="card"><h4>心跳</h4><p>船員卡上的 ♥ 是心率。牠喉嚨的發光囊會聽心跳：越害怕的人，越遠就被聽到。躲起來能把範圍減半，但心跳太快一樣會被找到。<br>黑暗、落單、看到牠、受傷會讓心跳升高；和同伴待在一起、艦長在同一間房、打鎮定劑會降下來。心跳太高的人可能會尖叫、亂跑或嚇呆。</p></div>
   <div class="card"><h4>看見牠</h4><p>你只看得到船員視線裡、有燈光照著的地方。偵測器每兩秒掃一次，會動的東西變成紅點；「地板下」的點代表牠在通風管裡。有人坐鎮艦橋主控台，就能看到全船的光點、遠端開關門與通風閘門（D1～D10），也能在任何房間響警報、派清潔機器人小蝸去引開牠。</p></div>
   <div class="card"><h4>牠會學</h4><p>同一種躲藏點用多了，牠會開始去翻；同一招誘餌、警報用到第三次就不上當；被火燒過會改從通風管繞路；被焊死的門擋過，就更常走管道。換招，才活得久。</p></div>
+  <div class="card"><h4>擦身而過</h4><p>牠從躲著或沒被發現的人旁邊走過去，會記在航行日誌裡；每一次擦身而過和屏息成功，回到船塢都會多分到一點分紅。</p></div>
   <div class="card"><h4>被撲倒</h4><p>牠撲倒人以後會拖向最近的格柵。五秒內用火焰、電擊棒、照明彈或魚叉打中牠，牠就會放手。開著「警戒」的船員看到會自己出手。身上帶著電擊棒的人會自己電牠脫身。</p></div>
   <div class="card"><h4>電力</h4><p>反應爐只有六格電。要打開氣閘外門得先給「氣閘」兩格，所以通常要關掉全船的燈。鄧伯能讓反應爐超載多兩格。</p></div>
   <div class="card"><h4>存檔</h4><p>每一幕之間的幕間會自動存檔；中途離開，下次從最近的幕間繼續。</p></div>`;
@@ -132,44 +134,118 @@ function showSettings(fromPause) {
 }
 
 // ---------- 輸入 ----------
-const PTR = new Map(); let pinch = null, drag = null, lastTap = { t: 0, x: 0, y: 0 };
+const PTR = new Map(); let pinch = null, lastTap = { t: 0, x: 0, y: 0 };
+// 搖桿：選人後在畫面左半邊按住拖曳
+const JOY = { id: null, ax: 0, ay: 0, dx: 0, dy: 0, mag: 0, R: 56 };
+const KEYS = {};
+function isLand() { return VW / VH > 1.3; }
+function joyFree(m) { return m && !m.dead && m.cocoon < 0 && !m.grabbed && !m.inVent && !m.task && !m.hidden; }
+function joyZone(x, y) {
+  if (!W || W.phase !== 'play' || UI.bridgeMode || UI.menuOpen || S.paused) return false;
+  const m = W.sel >= 0 ? W.crew[W.sel] : null;
+  if (!joyFree(m)) return false;
+  const land = isLand(), x0 = land ? 146 : 0, x1 = land ? x0 + (VW - x0) * .5 : VW * .56;
+  return x >= x0 && x <= x1 && y > (land ? 84 : 150) && y < VH - (land ? 12 : (UI.selBarH || 160) - 4);
+}
+function joyHome() { const land = isLand(); return [land ? 146 + (VW - 146) * .17 : VW * .2, VH - (land ? 96 : (UI.selBarH || 160) + 92)]; }
+function joyStart(id, x, y) {
+  JOY.id = id; JOY.ax = x; JOY.ay = y; JOY.mag = 0;
+  const j = $('#joy'); j.classList.remove('hide', 'run'); j.style.left = x + 'px'; j.style.top = y + 'px';
+  S.slowT = 0; CAM.follow = W.sel; CAM.freeT = 0; CAM.focus = null;
+  if (!G.joyUsed) { G.joyUsed = true; saveG(); refreshActbar(true); }
+}
+function joyMove(x, y) {
+  let dx = x - JOY.ax, dy = y - JOY.ay, len = Math.hypot(dx, dy);
+  const R0 = JOY.R;
+  if (len > R0 * 1.25) { const k = (len - R0 * 1.25) / len; JOY.ax += dx * k; JOY.ay += dy * k; dx = x - JOY.ax; dy = y - JOY.ay; len = Math.hypot(dx, dy); }
+  const u = Math.min(1, len / R0);
+  JOY.mag = u < .14 ? 0 : (u - .14) / .86;
+  if (len > 0) { JOY.dx = dx / len; JOY.dy = dy / len; }
+  const j = $('#joy'); j.style.left = JOY.ax + 'px'; j.style.top = JOY.ay + 'px';
+  const kx = JOY.dx * u * R0, ky = JOY.dy * u * R0;
+  j.querySelector('.jk').style.transform = `translate(${kx}px,${ky}px)`;
+  const run = JOY.mag >= .86;
+  if (j.classList.contains('run') !== run) { j.classList.toggle('run', run); j.querySelector('.jl').textContent = run ? '跑・很吵' : ''; }
+}
+function joyEnd() {
+  JOY.id = null; JOY.mag = 0;
+  const j = $('#joy'); j.classList.add('hide'); j.querySelector('.jk').style.transform = '';
+}
+// 每一格：把搖桿或鍵盤的方向交給選中的人
+function applyDrive() {
+  if (!W) return;
+  let dx = 0, dy = 0, mag = 0;
+  if (JOY.id != null && JOY.mag > 0) { dx = JOY.dx; dy = JOY.dy; mag = JOY.mag; }
+  else {
+    const kx = (KEYS.r ? 1 : 0) - (KEYS.l ? 1 : 0), ky = (KEYS.d ? 1 : 0) - (KEYS.u ? 1 : 0);
+    if (kx || ky) { const l = Math.hypot(kx, ky); dx = kx / l; dy = ky / l; mag = KEYS.shift ? 1 : .72; }
+  }
+  for (const c of W.crew) c.drive = null;
+  const m = W.sel >= 0 ? W.crew[W.sel] : null;
+  if (!m || mag <= 0 || UI.bridgeMode || W.phase !== 'play') return;
+  if (JOY.id == null && !joyFree(m)) {
+    // 鍵盤：躲著或忙著的人，先叫他出來／放下手邊的事
+    if (m.hidden) unhide(m); else if (m.task && m.task.type !== 'fire') cancelTask(m); else if (!joyFree(m)) return;
+  }
+  m.drive = { x: dx, y: dy, mag };
+  if (CAM.follow !== W.sel || CAM.freeT > 0) { CAM.follow = W.sel; CAM.freeT = 0; }
+}
 function setupInput() {
   const cv = $('#cv');
   cv.addEventListener('pointerdown', e => {
     if (S.mode !== 'game') return;
     cv.setPointerCapture && cv.setPointerCapture(e.pointerId);
-    PTR.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now() });
-    if (PTR.size === 2) { const [a, b] = [...PTR.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: CAM.tz }; drag = null; }
-    else if (PTR.size === 1) drag = { x: e.clientX, y: e.clientY, moved: false };
+    const p = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, lx: e.clientX, ly: e.clientY, t0: performance.now(), mode: 'pending', joyOK: JOY.id == null && joyZone(e.clientX, e.clientY) };
+    PTR.set(e.pointerId, p);
+    // 兩指縮放（拿著搖桿時不縮放）
+    if (JOY.id == null) {
+      const others = [...PTR.values()].filter(q => q.mode !== 'joy');
+      if (others.length === 2) { const [a, b] = others; pinch = { a, b, d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: CAM.tz }; a.mode = b.mode = 'pinch'; }
+    }
   });
   cv.addEventListener('pointermove', e => {
     const p = PTR.get(e.pointerId); if (!p) return;
     p.x = e.clientX; p.y = e.clientY;
-    if (pinch && PTR.size >= 2) { const [a, b] = [...PTR.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); CAM.tz = clamp(pinch.z * d / pinch.d, fitZoom() * .9, 1.8); CAM.freeT = 999; return; }
-    if (drag) { const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (!drag.moved && Math.hypot(e.clientX - p.x0, e.clientY - p.y0) > 9) drag.moved = true; if (drag.moved) { CAM.x -= dx / CAM.z; CAM.y -= dy / CAM.z; CAM.freeT = 999; CAM.focus = null; } drag.x = e.clientX; drag.y = e.clientY; }
+    if (p.mode === 'joy') { joyMove(p.x, p.y); return; }
+    if (p.mode === 'pinch') { if (pinch) { const d = Math.hypot(pinch.a.x - pinch.b.x, pinch.a.y - pinch.b.y); CAM.tz = clamp(pinch.z * d / pinch.d, fitZoom() * .9, 1.8); CAM.freeT = 999; } return; }
+    if (p.mode === 'pending' && Math.hypot(p.x - p.x0, p.y - p.y0) > 10) {
+      if (p.joyOK && JOY.id == null && joyZone(p.x0, p.y0)) { p.mode = 'joy'; joyStart(e.pointerId, p.x0, p.y0); joyMove(p.x, p.y); return; }
+      p.mode = 'pan';
+    }
+    if (p.mode === 'pan') { CAM.x -= (p.x - p.lx) / CAM.z; CAM.y -= (p.y - p.ly) / CAM.z; CAM.freeT = 999; CAM.focus = null; }
+    p.lx = p.x; p.ly = p.y;
   });
   const up = e => {
     const p = PTR.get(e.pointerId); PTR.delete(e.pointerId);
-    if (PTR.size < 2) pinch = null;
     if (!p) return;
-    if (drag && !drag.moved && performance.now() - p.t0 < 450 && PTR.size === 0) {
+    if (p.mode === 'joy' || e.pointerId === JOY.id) { joyEnd(); return; }
+    if (p.mode === 'pinch') { if (pinch && (p === pinch.a || p === pinch.b)) { const o = p === pinch.a ? pinch.b : pinch.a; pinch = null; o.mode = 'done'; } return; }
+    if (p.mode === 'pending' && performance.now() - p.t0 < 450 && e.type === 'pointerup') {
       const now = performance.now(); const dbl = now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 34;
       lastTap = { t: dbl ? 0 : now, x: e.clientX, y: e.clientY };
       handleTap(e.clientX, e.clientY, dbl);
     }
-    if (PTR.size === 0) drag = null;
   };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('wheel', e => { if (S.mode !== 'game') return; e.preventDefault(); CAM.tz = clamp(CAM.tz * (e.deltaY > 0 ? .9 : 1.1), fitZoom() * .9, 1.8); CAM.freeT = 999; }, { passive: false });
+  const KMAP = { KeyW: 'u', ArrowUp: 'u', KeyS: 'd', ArrowDown: 'd', KeyA: 'l', ArrowLeft: 'l', KeyD: 'r', ArrowRight: 'r', ShiftLeft: 'shift', ShiftRight: 'shift' };
   window.addEventListener('keydown', e => {
     if (S.mode !== 'game' || !W) return;
+    if (KMAP[e.code]) { KEYS[KMAP[e.code]] = true; if (e.code.startsWith('Arrow')) e.preventDefault(); return; }
+    if (e.code === 'KeyF') { if (!W.breathHeld && !$('#breath').classList.contains('hide')) { W.breathHeld = true; $('#breath').classList.add('on'); } return; }
     if (e.key >= '1' && e.key <= '6') onCrewCard(+e.key - 1);
     else if (e.key === ' ' || e.key === 'Escape') { if (UI.aimMode) { UI.aimMode = null; refreshActbar(true); } else if (UI.bridgeMode) closeBridgeMode(); else pauseGame(!S.paused); e.preventDefault(); }
     else if (e.key === 'r' || e.key === 'R') { const m = W.crew[W.sel]; if (m) { m.run = !m.run; refreshActbar(true); } }
     else if (e.key === 'b' || e.key === 'B') $('#b-bridge').click();
     else if (e.key === 'v' || e.key === 'V') $('#b-vents').click();
     else if (e.key === 'z' || e.key === 'Z') $('#b-zoom').click();
+    else if (e.key === 'g' || e.key === 'G') { const m = W.crew[W.sel]; if (m && !m.dead) { if (followersOf(m).length) dismissFollow(m); else callFollow(m); refreshActbar(true); } }
   });
+  window.addEventListener('keyup', e => {
+    if (KMAP[e.code]) KEYS[KMAP[e.code]] = false;
+    if (e.code === 'KeyF' && W) { W.breathHeld = false; $('#breath').classList.remove('on'); }
+  });
+  window.addEventListener('blur', () => { for (const k in KEYS) KEYS[k] = false; if (W) W.breathHeld = false; if (JOY.id != null) joyEnd(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && S.mode === 'game' && W && W.phase === 'play' && !S.paused) pauseGame(true); });
   window.addEventListener('pointerdown', () => AU.init(), { once: false, passive: true });
 }
@@ -186,6 +262,7 @@ function frame(ts) {
     if (W.grabbing) ts2 *= .55;
     if (UI.aimMode && S.set.slowmo) ts2 *= .3;
     ts2 *= (S.speed || 1);
+    applyDrive();
     if (W.phase === 'play' && ts2 > 0) { let rem = dt * ts2; while (rem > 0) { const s = Math.min(rem, 1 / 30); worldTick(s); rem -= s; } }
     else if (W.phase === 'cine') { worldTickCine(dt); }
     updateCamera(dt);
