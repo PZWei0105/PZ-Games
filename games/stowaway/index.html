@@ -90,6 +90,33 @@ button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer
 #grab .gbx.op span{color:#cff6ff}
 @keyframes opp{50%{box-shadow:0 0 44px rgba(111,232,255,.6)}}
 
+/* 搖桿 */
+#joy,#joyhint{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none!important;z-index:3}
+#joy .jb,#joyhint .jb{position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;border:2px solid rgba(236,228,210,.34);background:radial-gradient(circle,rgba(10,16,24,.12) 0,rgba(10,16,24,.5) 72%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.45),0 0 24px rgba(0,0,0,.35)}
+#joy .jb::after{content:'';position:absolute;inset:11px;border-radius:50%;border:1px dashed rgba(255,106,26,.5)}
+#joy .jb::before{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(236,228,210,.35)}
+#joy .jk{position:absolute;left:-27px;top:-27px;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#f6efe1,#bdb19a 70%,#8d826e);box-shadow:0 5px 16px rgba(0,0,0,.55),inset 0 -3px 6px rgba(0,0,0,.25);transition:background .15s,box-shadow .15s}
+#joy.run .jk{background:radial-gradient(circle at 38% 32%,#ffc49a,#ff6a1a 70%,#b8420c);box-shadow:0 0 22px rgba(255,106,26,.75),inset 0 -3px 6px rgba(0,0,0,.25)}
+#joy.run .jb{border-color:rgba(255,106,26,.75)}
+#joy .jl{position:absolute;left:-60px;top:66px;width:120px;text-align:center;font:700 11px var(--m);color:var(--orange);letter-spacing:.16em;text-shadow:0 1px 4px #000}
+#joyhint{animation:jh 2.4s ease-in-out infinite}
+#joyhint .jb{border-style:dashed;border-color:rgba(236,228,210,.4);background:radial-gradient(circle,rgba(10,16,24,.05),rgba(10,16,24,.32) 72%)}
+#joyhint span{position:absolute;left:-60px;top:-9px;width:120px;text-align:center;font-size:12px;font-weight:700;color:var(--cream);letter-spacing:.08em;text-shadow:0 1px 4px #000}
+@keyframes jh{50%{opacity:.45}}
+/* 屏息 */
+#breath{position:absolute;right:calc(var(--sar) + 14px);bottom:calc(var(--bh,160px) + 62px);width:96px;height:96px;border-radius:50%;background:rgba(6,24,32,.94);border:2px solid var(--cyan);color:#e2f9ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 0 26px rgba(111,232,255,.4);touch-action:none;z-index:4}
+#breath b{font-size:19px;font-weight:900;letter-spacing:.12em;padding-left:.12em}
+#breath small{font:700 10px var(--f);color:var(--cyan);letter-spacing:.06em;max-width:84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#breath svg.rg{position:absolute;left:-6px;top:-6px;width:104px;height:104px;transform:rotate(-90deg);pointer-events:none}
+#breath .rt{fill:none;stroke:rgba(111,232,255,.16);stroke-width:5}
+#breath .rf{fill:none;stroke:var(--cyan);stroke-width:5;stroke-linecap:round;stroke-dasharray:301.6;transition:stroke-dashoffset .1s linear}
+#breath.on{background:rgba(30,90,110,.96);transform:scale(.95)}
+#breath.low{border-color:#ff8080;box-shadow:0 0 26px rgba(255,80,80,.5)}
+#breath.low .rf{stroke:#ff8080}
+#breath.alert{animation:brp .7s infinite}
+@keyframes brp{50%{box-shadow:0 0 46px rgba(111,232,255,.9);transform:scale(1.06)}}
+@media (min-aspect-ratio:13/10){#breath{bottom:calc(var(--sab) + 86px)}}
+
 #bottom{position:absolute;left:0;right:0;bottom:0;padding:0 calc(var(--sar) + 6px) calc(var(--sab) + 6px) calc(var(--sal) + 6px);display:flex;flex-direction:column;gap:6px;pointer-events:none}
 #bottom>*{pointer-events:auto}
 #actbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-height:0}
@@ -324,6 +351,9 @@ button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer
   <div id="toasts"></div>
   <div id="subs"></div>
   <div id="grab"></div>
+  <div id="joyhint" class="hide"><div class="jb"></div><span>按住拖曳</span></div>
+  <div id="joy" class="hide"><div class="jb"></div><div class="jk"></div><div class="jl"></div></div>
+  <button id="breath" class="hide"><svg class="rg" viewBox="0 0 104 104"><circle cx="52" cy="52" r="48" class="rt"/><circle cx="52" cy="52" r="48" class="rf"/></svg><b>屏息</b><small>按住</small></button>
   <div id="bottom">
     <div id="hint" class="hide"></div>
     <div id="actbar"></div>
@@ -713,7 +743,9 @@ const PROLOGUE = [
 ];
 const TUTOR = [
   { k: 'select', t: '點<b>船員卡</b>或畫面上的船員來選人。選人的時候時間會變慢。' },
-  { k: 'move', t: '選好人以後，<b>點地板</b>就走過去；點櫃子、門、主控台就會走過去做事。<b>點兩下</b>是用跑的（很吵）。' },
+  { k: 'move', t: '選好人以後，在畫面<b>左半邊按住拖曳</b>就是搖桿：輕推是走，推到底是跑（很吵）。也可以<b>點地板</b>叫他走過去，點櫃子、門、主控台就會過去做事。' },
+  { k: 'follow', t: '身邊有同伴時，下面會出現<b>「叫大家跟上」</b>：他們會跟著你走、你躲他們也躲。待在一起，心跳比較穩。' },
+  { k: 'breath', t: '牠往有人躲的地方去了！按住右下的<b>「屏息」</b>，牠就聽不到心跳；憋太久會喘出來。牠要是<b>親眼看到</b>你躲進去，屏息也沒用。' },
   { k: 'bridge', t: '蘇芮就在艦橋：點她，再點<b>艦橋主控台</b>坐上去，就能看全船的光點、遠端開關門。' },
   { k: 'bpm', t: '船員卡上的數字是<b>心跳</b>。牠聽得到心跳——越怕的人越容易被找到。和同伴待在一起、艦長在身邊，心跳會降下來。' },
   { k: 'vent', t: '地上一格一格的鐵網是<b>通風格柵</b>。牠在地板下的管道裡移動，格柵開始震、冒出黏液，就是牠要出來了。' },
@@ -862,11 +894,14 @@ const AU = (() => {
     amb.sub.gain.setTargetAtTime(clamp((tn - .35) * .5, 0, .3), t, .5);
     amb.str.gain.setTargetAtTime(clamp((tn - .55) * .11, 0, .05), t, .6);
     amb.hum.gain.setTargetAtTime(W.power.on.lights ? .16 : .1, t, 1);
-    // 心跳：被選中的人
-    const m = W.sel >= 0 ? W.crew[W.sel] : null;
+    // 屏息：配樂壓到最低，只剩心跳
+    const holder = W.phase === 'play' ? W.crew.find(x => x.holding) : null;
+    musicGain.gain.setTargetAtTime(vol.m * .7 * (holder ? .22 : 1), t, holder ? .12 : .7);
+    // 心跳：被選中的人（屏息時是屏息的人）
+    const m = holder || (W.sel >= 0 ? W.crew[W.sel] : null);
     const bpm = m && !m.dead ? m.bpm : Math.max(...W.crew.filter(x => !x.dead).map(x => x.bpm), 60);
     hbT -= dt;
-    if (bpm > 108 && hbT <= 0 && W.phase === 'play') { hbT = 60 / bpm; const v = clamp((bpm - 100) / 80, .05, .55); tone(58, .14, 'sine', v, null, null, { f2: 38, wet: 0 }); tone(52, .12, 'sine', v * .6, null, null, { f2: 34, delay: .16, wet: 0 }); }
+    if ((bpm > 108 || holder) && hbT <= 0 && W.phase === 'play') { hbT = 60 / bpm; const v = holder ? .62 : clamp((bpm - 100) / 80, .05, .55); tone(58, .14, 'sine', v, null, null, { f2: 38, wet: 0 }); tone(52, .12, 'sine', v * .6, null, null, { f2: 34, delay: .16, wet: 0 }); }
     // 船體的聲音
     dripT -= dt; if (dripT <= 0) { dripT = R.f(4, 11); tone(R.f(1200, 2200), .08, 'sine', .04, CAM.x + R.f(-400, 400), CAM.y + R.f(-400, 400), { f2: 600, wet: .7 }); }
     creakT -= dt; if (creakT <= 0) { creakT = R.f(7, 16); noiseB(R.f(.6, 1.4), .05, 'bandpass', R.f(180, 420), 8, CAM.x + R.f(-500, 500), CAM.y + R.f(-500, 500), { f2: R.f(120, 300), wet: .6, a: .2 }); }
@@ -884,6 +919,7 @@ const AU = (() => {
     scream(x, y, ci) { const f = [190, 330, 150, 360, 300, 160][ci] || 250; tone(f, .9, 'sawtooth', .16, x, y, { f2: f * 1.6, lp: 2000, a: .03, wet: .5 }); noiseB(.8, .08, 'bandpass', 1400, 2, x, y, { a: .03 }); },
     hurt(x, y, ci) { tone(([180, 300, 140, 320, 280, 150][ci] || 220), .25, 'sawtooth', .14, x, y, { f2: 120, lp: 1500 }); noiseB(.15, .16, 'lowpass', 500, 1, x, y); },
     death(x, y) { tone(80, 1.2, 'sine', .25, x, y, { f2: 30 }); noiseB(1.2, .1, 'lowpass', 400, 1, x, y, { f2: 100, wet: .6 }); A.stab(.8); },
+    gasp(x, y) { noiseB(.42, .22, 'bandpass', 700, 1.4, x, y, { a: .015, f2: 1700, wet: .35 }); noiseB(.5, .12, 'bandpass', 1300, 2, x, y, { delay: .45, f2: 500, a: .05, wet: .3 }); },
     search(x, y) { for (let k = 0; k < 4; k++) noiseB(.08, .05, 'bandpass', R.f(1500, 3000), 4, x, y, { delay: k * .18 + R.f(0, .08) }); },
     hide(x, y) { noiseB(.3, .06, 'lowpass', 700, 1, x, y); tone(140, .1, 'triangle', .06, x, y, { delay: .2 }); },
     weld(x, y) { noiseB(.9, .12, 'highpass', 3500, 1, x, y, { wet: .2 }); for (let k = 0; k < 5; k++) tone(R.f(3000, 5000), .02, 'square', .03, x, y, { delay: R.f(0, .8), wet: 0 }); },
@@ -928,7 +964,7 @@ const AU = (() => {
 // ============ 存檔 ============
 const SAVE_KEY = 'stowaway.v1';
 function defaultG() {
-  return { v: 1, voyages: 0, wins: 0, money: 0, owned: [], equip: [], lore: [], newLore: [], endings: {}, runs: [], tut: {}, hard: false,
+  return { v: 1, voyages: 0, wins: 0, money: 0, owned: [], equip: [], lore: [], newLore: [], endings: {}, runs: [], tut: {}, hard: false, joyUsed: false,
     set: { music: .8, sfx: 1, slowmo: true, haptic: true, flash: true, shake: true, hints: true }, ckpt: null };
 }
 function loadG() {
@@ -1138,6 +1174,41 @@ function visPoly(x, y, R, n, a0 = 0, a1 = TAU) {
 function hasLOS(ax, ay, bx, by) {
   const d = Math.hypot(bx - ax, by - ay); if (d < 1) return true;
   return castRay(ax, ay, (bx - ax) / d, (by - ay) / d, d) >= d - 2;
+}
+// ---------- 搖桿直接操控：牆與關著的門當成線段，船員是一個圓 ----------
+const CREW_R = 14;
+function edgeSolid(ax, ay, bx, by) {
+  const fa = tileFree(ax, ay), fb = tileFree(bx, by);
+  if (fa !== fb) return true;
+  if (!fa) return false;
+  const ra = roomIdx(ax, ay), rb = roomIdx(bx, by);
+  if (ra === rb) return false;
+  const d = doorBetween(ax, ay, bx, by);
+  return !d || d.kind === 'airout' || !doorOpen(d);
+}
+function pushSeg(x, y, r, vert, c, s0, s1, px, py) {
+  // vert：直的線段 x = c、y 在 s0～s1；否則橫的 y = c、x 在 s0～s1
+  const qx = vert ? c : clamp(x, s0, s1), qy = vert ? clamp(y, s0, s1) : c;
+  const dx = x - qx, dy = y - qy, d = Math.hypot(dx, dy);
+  if (d >= r) return null;
+  if (d > 1e-3) return [qx + dx / d * r, qy + dy / d * r];
+  return vert ? [c + (px < c ? -r : r), y] : [x, c + (py < c ? -r : r)];
+}
+function collideCircle(x, y, r, px, py) {
+  for (let it = 0; it < 3; it++) {
+    const tx = Math.floor(x / T), ty = Math.floor(y / T);
+    let hit = false;
+    for (let gy = ty - 1; gy <= ty + 1; gy++) for (const cx of [tx - 1, tx]) {
+      if (!edgeSolid(cx, gy, cx + 1, gy)) continue;
+      const res = pushSeg(x, y, r, true, (cx + 1) * T, gy * T, (gy + 1) * T, px, py); if (res) { x = res[0]; y = res[1]; hit = true; }
+    }
+    for (let gx = tx - 1; gx <= tx + 1; gx++) for (const cy of [ty - 1, ty]) {
+      if (!edgeSolid(gx, cy, gx, cy + 1)) continue;
+      const res = pushSeg(x, y, r, false, (cy + 1) * T, gx * T, (gx + 1) * T, px, py); if (res) { x = res[0]; y = res[1]; hit = true; }
+    }
+    if (!hit) break;
+  }
+  return [x, y];
 }
 // 房間之間要隔幾道關著的門（聲音衰減、聲納用）
 function recomputeRoomCosts() {
@@ -1862,7 +1933,8 @@ function newRun(opt = {}) {
     lights: ROOMS.map(() => ({ on: true, broken: false, flick: 0 })),
     plan: null, stance: null, dir: { m: 0, hi: 0, lo: 0, cool: 0, nudge: 0, firstScare: false },
     learn: { hide: { locker: 0, under: 0, pod: 0, crate: 0 }, lure: 0, alarm: 0, fire: 0, weld: 0, bot: 0, sentry: {} },
-    chron: [], logs: [], stats: { searched: 0, rescues: 0, kills: 0, burns: 0, hides: 0, lures: 0, dmg: 0 },
+    chron: [], logs: [], stats: { searched: 0, rescues: 0, kills: 0, burns: 0, hides: 0, lures: 0, dmg: 0, close: 0, holds: 0 },
+    breathHeld: false, breathAlert: null, closeT: 0, closeChronT: 0,
     bridgeOp: -1, sel: -1, airLife: 0, sweepT: 0, mimicT: 60 + R.f(0, 40), agent: null, agentDone: false, confessed: false,
     flags: {}, objs: [], lastBeep: 0, lightVer: 0, tension: 0, grabbing: null, airT: 0, finalPlanReady: false,
     mods: { mimic: voyage >= 2, agent: voyage >= 3 && R.chance(.55), event: voyage >= 4 ? R.pick(['reactor', 'jam', 'sensors', 'dark']) : null },
@@ -1872,7 +1944,8 @@ function newRun(opt = {}) {
     const m = { ci: d.i, id: d.id, x: d.start[0] * T, y: d.start[1] * T, ang: R.f(0, TAU), hp: 3, bpm: 74, bpmT: 74, dead: false,
       path: null, pi: 0, goal: null, task: null, moving: false, walkPh: 0, run: false, held: null, inv: [], hidden: null, crouch: 0,
       stance: 'guard', panic: null, virtue: false, sed: 0, seen: 99, grabbed: false, lampOn: true, room: -1, barkCd: 0, stepT: 0, wait: null,
-      freeze: 0, cocoon: -1, aim: false, firing: false, saved: 0, lastAlone: 0, aboard: false, suit: false, wounds: [] };
+      freeze: 0, cocoon: -1, aim: false, firing: false, saved: 0, lastAlone: 0, aboard: false, suit: false, wounds: [],
+      drive: null, driveRun: false, doorPush: 0, follow: -1, followT: 0, breath: 1, holding: false, gaspT: 0, near: 0 };
     for (const it of d.items) giveItem(m, it);
     if (d.id === 'wei' && perkOn('tracker2')) giveItem(m, 'tracker');
     if (d.id === 'wen' && perkOn('medbag')) { giveItem(m, 'sedative'); giveItem(m, 'medkit'); }
@@ -1956,6 +2029,7 @@ function worldTick(dt) {
   updateCycle(dt);
   for (const m of W.crew) updateCrew(m, dt);
   updateBeast(W.beast, dt);
+  updateCloseCalls();
   updateBot(dt);
   updateTraps(dt);
   updateSensors(dt);
@@ -2023,18 +2097,23 @@ function updateCrew(m, dt) {
   m.barkCd = Math.max(0, m.barkCd - dt); m.freeze = Math.max(0, m.freeze - dt); m.sed = Math.max(0, m.sed - dt); m.saved = Math.max(0, m.saved - dt);
   m.room = roomIdxW(m.x, m.y);
   if (m.cocoon >= 0) { m.cocoon -= dt; if (m.cocoon <= 0) { killCrew(m, '死在巢裡'); } return; }
-  if (m.grabbed) { m.bpm = Math.min(190, m.bpm + dt * 30); return; }
+  if (m.grabbed) { m.bpm = Math.min(190, m.bpm + dt * 30); m.holding = false; return; }
   updateBpm(m, dt);
+  updateBreath(m, dt);
   // 恐慌
   if (m.panic) { m.panic.t -= dt; if (m.panic.t <= 0) m.panic = null; }
   else if (!m.hidden && m.bpm >= (def.id === 'batu' || def.id === 'wei' ? 168 : 156) && !m.virtue) {
     m.panicRoll = (m.panicRoll || 0) - dt;
     if (m.panicRoll <= 0) { m.panicRoll = 3; if (R.chance((m.bpm - 150) / 55)) startPanic(m); }
   }
+  // 搖桿直接操控（選中的人）
+  const drv = m.drive && !(m.panic && m.panic.type === 'run');
+  if (drv && m.freeze > 0) { if ((m.driveWarn || 0) < W.t) { m.driveWarn = W.t + 2.5; toast(CREW[m.ci].name + '嚇得動不了……', 'bad'); } m.moving = false; }
+  else if (drv) { if (m.task) cancelTask(m); m.path = null; m.goal = null; stopFollow(m); if (m.hidden) unhide(m); driveStep(m, dt); }
   // 任務
-  if (m.task) { if (m.freeze <= 0) runTask(m, dt); }
-  else if (m.path && m.freeze <= 0) moveAlong(m, dt);
-  else { m.moving = false; autoBehavior(m, dt); }
+  else if (m.task) { if (m.freeze <= 0) runTask(m, dt); }
+  else if (m.path && m.freeze <= 0) { moveAlong(m, dt); if (m.follow >= 0 && !m.goal && m.path) followStep(m, dt); }
+  else { m.moving = false; m.driveRun = false; m.doorPush = 0; autoBehavior(m, dt); if (!m.path && !m.task) followStep(m, dt); }
   m.crouch = lerp(m.crouch, m.hidden || (m.task && m.task.crouch) ? 1 : 0, dt * 6);
   m.aim = !!(m.firing || (m.task && m.task.aim));
 }
@@ -2111,11 +2190,137 @@ function moveAlong(m, dt) {
   if (m.stepT <= 0) { m.stepT = m.run ? .34 : .6; noise(m.x, m.y, m.run ? T * 4.2 : T * .9, 'step'); if (m.run) AU.step(m.x, m.y, true); }
 }
 function lerpAng(a, b, t) { return a + angDiff(a, b) * Math.min(1, t); }
+
+// ---------- 搖桿：直接操控 ----------
+function driveStep(m, dt) {
+  const D = m.drive;
+  const tx = Math.floor(m.x / T), ty = Math.floor(m.y / T);
+  if (!tileFree(tx, ty)) { const n = nearestFree(tx, ty); if (n) { m.x = (n[0] + .5) * T; m.y = (n[1] + .5) * T; } }
+  const run = D.mag >= .86;
+  let sp = run ? RUN : WALK * (.4 + .6 * Math.min(1, D.mag / .86));
+  if (m.hp === 2) sp *= .82; else if (m.hp === 1) sp *= .55;
+  if (m.sed > 0) sp *= .85;
+  if (W.stance === 'huddle') sp *= .9;
+  if (m.virtue) sp *= 1.12;
+  const px = m.x, py = m.y;
+  const [nx, ny] = collideCircle(m.x + D.x * sp * dt, m.y + D.y * sp * dt, CREW_R, px, py);
+  m.x = nx; m.y = ny;
+  const moved = Math.hypot(nx - px, ny - py) / Math.max(dt, 1e-4);
+  m.ang = lerpAng(m.ang, Math.atan2(D.y, D.x), dt * 12);
+  m.moving = moved > 6; m.driveRun = run && moved > 20;
+  const k = Math.max(.45, Math.min(1, moved / WALK));
+  if (m.moving) {
+    m.walkPh += dt * (m.driveRun ? 13 : 9 * k);
+    m.stepT -= dt;
+    if (m.stepT <= 0) { m.stepT = m.driveRun ? .34 : .6 / Math.max(.6, k); noise(m.x, m.y, m.driveRun ? T * 4.2 : T * .8 * k, 'step'); if (m.driveRun) AU.step(m.x, m.y, true); }
+  }
+  pushDoor(m, D, dt);
+}
+// 往關著的門推：門會自己打開（焊死、卡住就過不去）
+function pushDoor(m, D, dt) {
+  const tx = Math.floor(m.x / T), ty = Math.floor(m.y / T);
+  let door = null;
+  const cands = [];
+  if (Math.abs(D.x) > .3) cands.push([tx + Math.sign(D.x), ty]);
+  if (Math.abs(D.y) > .3) cands.push([tx, ty + Math.sign(D.y)]);
+  for (const [bx, by] of cands) {
+    const d = doorBetween(tx, ty, bx, by);
+    if (!d || doorOpen(d)) continue;
+    const gap = bx !== tx ? Math.abs(Math.max(tx, bx) * T - m.x) : Math.abs(Math.max(ty, by) * T - m.y);
+    if (gap < CREW_R + 7) { door = d; break; }
+  }
+  if (!door || door.kind === 'airout') { m.doorPush = 0; return; }
+  if (door.welded || door.jam) { if ((m.doorWarn || 0) < W.t) { m.doorWarn = W.t + 3; toast(CREW[m.ci].name + '：門' + (door.welded ? '被焊死了' : '卡住了') + '，過不去。', 'bad'); } return; }
+  if (door.state === 'open') return;
+  m.doorPush += dt;
+  if (m.doorPush > (W.power.on.doors ? .18 : 1)) { setDoor(door, true); m.doorPush = 0; }
+}
+
+// ---------- 跟上我：小隊跟著帶頭的人走 ----------
+function stopFollow(m) { if (m.follow >= 0) { m.follow = -1; m.run = !!m.runPref; } }
+function followersOf(L) { return W.crew.filter(o => o !== L && !o.dead && o.cocoon < 0 && o.follow === L.ci); }
+function followCandidates(L) {
+  return W.crew.filter(o => o !== L && !o.dead && o.cocoon < 0 && !o.grabbed && !o.inVent && !o.task && o.follow !== L.ci && !(o.panic && o.panic.type === 'run')
+    && dist(o.x, o.y, L.x, L.y) < T * 7 && (o.room === L.room || hasLOS(o.x, o.y, L.x, L.y)));
+}
+function callFollow(L) {
+  const c = followCandidates(L); if (!c.length) return;
+  for (const o of c) { if (o.hidden) unhide(o); o.runPref = o.run; o.follow = L.ci; o.path = null; o.goal = null; o.followT = 0; }
+  toast(c.map(o => CREW[o.ci].name).join('、') + ' 跟上了' + CREW[L.ci].name + '。待在一起，心跳比較穩。', 'good');
+  bark(c[0], 'move', true);
+}
+function dismissFollow(L) { for (const o of followersOf(L)) { stopFollow(o); o.path = null; } toast('大家原地待命。'); }
+function followStep(m, dt) {
+  if (m.follow < 0) return;
+  const L = W.crew[m.follow];
+  if (!L || L.dead || L.cocoon >= 0 || L.inVent || L.left) { stopFollow(m); return; }
+  if (m.panic || m.freeze > 0) return;
+  const b = W.beast, danger = b && !b.inVent && b.state !== 'dormant' && b.state !== 'dead' && dist(b.x, b.y, m.x, m.y) < T * 6;
+  // 帶頭的躲起來：自己找附近的地方躲
+  if (L.hidden) {
+    if (!m.hidden && (m.followT -= dt) <= 0) {
+      m.followT = 1.5;
+      const h = SHIP.hides.filter(x => x.occ == null && x.room === m.room && dist(x.sx, x.sy, m.x, m.y) < T * 5).sort((a, c) => dist(a.sx, a.sy, m.x, m.y) - dist(c.sx, c.sy, m.x, m.y))[0];
+      if (h) orderDo(m, 'hide', h, { keepFollow: true });
+    }
+    return;
+  }
+  if (m.hidden) { if (danger || dist(L.x, L.y, m.x, m.y) < T * 2.5) return; unhide(m); }
+  const d = dist(m.x, m.y, L.x, L.y);
+  if (d < T * 1.5) return;
+  if ((m.followT -= dt) > 0) return;
+  m.followT = .45;
+  const fs = followersOf(L), k = fs.indexOf(m), n = fs.length;
+  const a = L.ang + Math.PI + (k - (n - 1) / 2) * .8;
+  let gx = L.x + Math.cos(a) * T * 1.2, gy = L.y + Math.sin(a) * T * 1.2;
+  if (!tileFree(Math.floor(gx / T), Math.floor(gy / T)) || roomIdxW(gx, gy) !== L.room) { gx = L.x; gy = L.y; }
+  const run = d > T * 4.5 || L.driveRun || (L.path && L.run);
+  orderMove(m, gx, gy, run, true);
+}
+
+// ---------- 屏住呼吸 ----------
+function breathDanger(m) {
+  const b = W.beast;
+  if (!m.hidden || !b || b.inVent || b.state === 'dormant' || b.state === 'dead' || b.state === 'spaced' || b.stage === 0) return false;
+  return dist(b.x, b.y, m.x, m.y) < T * 4.2 || (b.state === 'check' && b.checkSpot === m.hidden);
+}
+function updateBreath(m, dt) {
+  m.gaspT = Math.max(0, m.gaspT - dt);
+  m.holding = !!(W.breathHeld && breathDanger(m) && m.breath > 0 && m.gaspT <= 0);
+  if (m.holding) {
+    m.breath -= dt / clamp(7.5 - (m.bpm - 80) / 18, 3, 7.5);
+    m.bpm = Math.min(190, m.bpm + dt * 3);
+    if (m.breath <= 0) gasp(m);
+  } else m.breath = Math.min(1, m.breath + dt / 5);
+}
+function gasp(m) {
+  m.holding = false; m.breath = 0; m.gaspT = 2.2; m.bpm = Math.min(190, m.bpm + 15);
+  noise(m.x, m.y, T * 3.4, 'gasp'); AU.gasp(m.x, m.y);
+  say(m.id, '……哈啊——！'); chron(CREW[m.ci].name + '憋不住氣，喘了出來。');
+}
+
+// ---------- 擦身而過 ----------
+function updateCloseCalls() {
+  const b = W.beast;
+  if (!b || b.inVent || b.stage === 0 || b.state === 'dormant' || b.state === 'dead' || b.state === 'spaced') { for (const m of W.crew) m.near = 0; return; }
+  for (const m of W.crew) {
+    if (m.dead || m.cocoon >= 0 || m.grabbed || m.inVent) { m.near = 0; continue; }
+    if ((b.state === 'chase' || b.state === 'grab') && b.target === m) { m.near = 0; continue; }
+    const d = dist(b.x, b.y, m.x, m.y);
+    if (d < T * 1.9) m.near = 1;
+    else if (m.near && d > T * 4.5) {
+      m.near = 0; W.stats.close = (W.stats.close || 0) + 1;
+      const where = m.hidden ? '躲的' + m.hidden.name + '前面' : '身邊';
+      if (W.closeT < W.t) { W.closeT = W.t + 25; toast('擦身而過：牠從' + CREW[m.ci].name + where + '走了過去。', 'good'); }
+      if (W.closeChronT < W.t) { W.closeChronT = W.t + 20; chron('牠從' + CREW[m.ci].name + where + '走了過去，沒有發現。'); }
+    }
+  }
+}
 function orderMove(m, x, y, run, auto) {
   if (m.dead || m.grabbed || m.cocoon >= 0) return false;
   if (m.freeze > 0 && !auto) { toast(CREW[m.ci].name + '嚇得動不了……', 'bad'); return false; }
   if (m.hidden) unhide(m);
-  if (!auto) { cancelTask(m); m.goal = null; }
+  if (!auto) { cancelTask(m); m.goal = null; m.follow = -1; }
   if (W.bridgeOp === m.ci && !auto) leaveBridge(m);
   const path = findPath(Math.floor(m.x / T), Math.floor(m.y / T), Math.floor(x / T), Math.floor(y / T), 'crew');
   if (!path) { if (!auto) toast('那裡走不過去。', 'bad'); return false; }
@@ -2131,6 +2336,7 @@ function orderDo(m, kind, target, extra = {}) {
   if (m.freeze > 0) { toast(CREW[m.ci].name + '嚇得動不了……', 'bad'); return false; }
   const pos = goalPos(kind, target, m);
   cancelTask(m);
+  if (!extra.keepFollow) stopFollow(m);
   if (m.hidden && !(kind === 'unhide')) unhide(m);
   if (W.bridgeOp === m.ci && kind !== 'bridge') leaveBridge(m);
   m.goal = { kind, target, ...extra };
@@ -2711,6 +2917,7 @@ function sonarPulse(b) {
     if (m.dead || m.grabbed || m.cocoon >= 0 || m.inVent) continue;
     let R0 = 90 + Math.max(0, m.bpm - 60) * 2.4;
     if (m.hidden) R0 *= .5;
+    if (m.holding) R0 *= .12;
     const k = Math.min(2, roomCost(br, m.room)); R0 *= Math.pow(.5, k);
     if (b.inVent) R0 *= .65;
     const d = dist(b.x, b.y, m.x, m.y);
@@ -2748,7 +2955,7 @@ function beastSenses(b, dt, held) {
     b.tmem = { x: seen.x, y: seen.y, t: W.t, m: seen };
   }
   // 誰躲進去被看到
-  for (const m of W.crew) if (m.hidden && m.seenHiding && b.state !== 'check' && b.state !== 'grab' && b.stage > 0) { m.seenHiding = false; goCheck(b, m.hidden, true); }
+  for (const m of W.crew) if (m.hidden && m.seenHiding && b.state !== 'check' && b.state !== 'grab' && b.stage > 0) { m.seenHiding = false; goCheck(b, m.hidden, true, true); }
   if (held) return;
   // 聽覺
   if (b.state === 'chase' || b.state === 'grab' || b.state === 'flee') return;
@@ -2879,24 +3086,42 @@ function stSearch(b, dt, st) {
     const spots = SHIP.hides.filter(h => h.room === ri && !b.checked.has(h.i));
     for (const h of spots) {
       let p = .12 + .2 * W.learn.hide[h.ht];
-      if (h.occ != null) { const m = W.crew[h.occ]; p += Math.max(0, m.bpm - 95) / 160; }
+      if (h.occ != null) { const m = W.crew[h.occ]; p += m.holding ? 0 : Math.max(0, m.bpm - 95) / 160; }
       if (R.chance(Math.min(.92, p))) { goCheck(b, h, false); return; }
     }
   }
   if (b.st > b.searchT) { b.checkedRoom = false; b.checked.clear(); if (b.wary) { b.wary = false; beastToVent(b); return; } decideNext(b); }
 }
-function goCheck(b, h, sure) {
+function goCheck(b, h, sure, saw) {
+  b.checkSaw = !!saw;
+  if (h.occ != null) breathWarn(h);
   if (b.inVent) { ventToward(b, h.sx, h.sy, 'check'); b.checkSpot = h; return; }
   b.checkSpot = h; b.checked.add(h.i);
   if (!walkTo(b, h.sx, h.sy, 'check')) { b.state = 'search'; b.st = 0; return; }
   b.sure = sure;
+}
+// 牠往有人躲的地方去：提醒屏息
+function breathWarn(h) {
+  W.breathAlert = { t: W.t, h };
+  if (S.set.slowmo && W.sel >= 0) S.slowT = Math.max(S.slowT || 0, 1.2);
+  tut('breath');
 }
 function stCheck(b, dt, st) {
   if (b.path) { if (!stepPath(b, dt, st.walk * 1.5 * T)) return; if (b.pi >= b.path.length) b.path = null; return; }
   b.st += dt;
   const h = b.checkSpot; if (!h) { b.state = 'search'; b.st = 0; return; }
   b.ang = lerpAng(b.ang, Math.atan2(h.py - b.y, h.px - b.x), dt * 6);
-  if (b.st > 1.1) {
+  // 有人在裡面：牠會貼著聽久一點（這時候屏住呼吸）
+  const occ = h.occ != null ? W.crew[h.occ] : null;
+  if (occ && ((b.st >= .3 && b.st - dt < .3) || (b.st >= 1.25 && b.st - dt < 1.25))) { b.sonarFx = 1; W.breathAlert = { t: W.t, h }; }
+  if (b.st > (occ ? 2 : 1.1)) {
+    if (occ && occ.holding && !b.checkSaw) {
+      b.state = 'search'; b.st = 1; b.checkSpot = null; b.checked.add(h.i);
+      W.stats.holds = (W.stats.holds || 0) + 1;
+      toast(CREW[occ.ci].name + '屏住了呼吸……牠聽不到，走開了。', 'good');
+      chron('牠在' + h.name + '前面停下來聽。' + CREW[occ.ci].name + '憋住了氣，牠走開了。');
+      return;
+    }
     if (h.occ != null) {
       const m = W.crew[h.occ];
       unhide(m); m.seen = 0; bark(m, 'found', true);
@@ -2920,7 +3145,7 @@ function stChase(b, dt, st) {
   const d = dist(b.x, b.y, m.x, m.y);
   const see = !m.hidden && hasLOS(b.x, b.y, m.x, m.y) && d < T * 9;
   if (see) { b.lostT = 0; b.tmem = { x: m.x, y: m.y, t: W.t, m }; } else b.lostT += dt;
-  if (m.hidden) { goCheck(b, m.hidden, true); return; }
+  if (m.hidden) { goCheck(b, m.hidden, true, b.lostT < 1.2); return; }
   if (b.lostT > 4.5) { const tm = b.tmem; b.target = null; if (tm) walkTo(b, tm.x, tm.y, 'investigate'); else { b.state = 'search'; b.st = 0; } return; }
   // 怕火
   const fl = W.crew.find(o => !o.dead && o.firing && dist(o.x, o.y, b.x, b.y) < T * 3.6);
@@ -3137,7 +3362,7 @@ function stTelegraph(b, dt) {
     if (b.stage === 2 && b.exitWhy === 'investigate' && n.room === ROOM.airlock.i && !W.crew.some(m => !m.dead && m.room === n.room) && R.chance(src === 'alarm' ? .4 : .2) && !SHIP.dampers.D9.closed && !n.sealed) {
       b.state = 'search'; b.st = 0; b.searchT = .9; b.wary = true; toast('牠在氣閘裡停了一下……好像察覺到不對勁。', 'learn');
     }
-    if (b.exitWhy === 'check' && b.checkSpot) { goCheck(b, b.checkSpot, true); }
+    if (b.exitWhy === 'check' && b.checkSpot) { goCheck(b, b.checkSpot, true, b.checkSaw); }
     else if (b.exitWhy === 'nest') { b.state = 'search'; }
     const near = W.crew.filter(m => !m.dead && m.cocoon < 0 && !m.hidden && dist(m.x, m.y, b.x, b.y) < T * 6 && hasLOS(m.x, m.y, b.x, b.y));
     if (b.exitWhy === 'bite' && b.target && !b.target.dead) { startChase(b, b.target); }
@@ -3797,6 +4022,13 @@ function drawOverlays(c, t, vis) {
     }
   }
   if (UI.aimMode) drawAimMode(c, t, px);
+  // 跟著選中的人走的同伴
+  if (W.sel >= 0) {
+    const L = W.crew[W.sel];
+    c.strokeStyle = 'rgba(255,176,58,.38)'; c.lineWidth = 1.6 * px; c.setLineDash([3 * px, 5 * px]);
+    for (const o of W.crew) if (o !== L && !o.dead && o.cocoon < 0 && o.follow === L.ci && !o.hidden) { c.beginPath(); c.moveTo(o.x, o.y); c.lineTo(L.x, L.y); c.stroke(); }
+    c.setLineDash([]);
+  }
   // 船員頭上
   for (const m of W.crew) {
     if (m.dead || m.cocoon >= 0) continue;
@@ -3804,7 +4036,19 @@ function drawOverlays(c, t, vis) {
     if (m.task && m.task.dur < 1e6 && m.task.type !== 'fire') { const u = clamp(m.task.t / m.task.dur, 0, 1); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 5 * px; c.beginPath(); c.arc(m.x, y0, 9 * px, 0, TAU); c.stroke(); c.strokeStyle = '#ffb03a'; c.lineWidth = 3 * px; c.beginPath(); c.arc(m.x, y0, 9 * px, -Math.PI / 2, -Math.PI / 2 + TAU * u); c.stroke(); }
     if (m.panic) { c.fillStyle = '#ff3d3d'; c.font = `900 ${16 * px}px ${FONT}`; c.textAlign = 'center'; c.fillText('!!', m.x, y0 - 6 * px); }
     if (m.grabbed) { const g = W.beast.grabT / STAGES[W.beast.stage].grab; c.strokeStyle = '#ff3d3d'; c.lineWidth = 4 * px; c.beginPath(); c.arc(m.x, m.y, 30, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(g, 0, 1)); c.stroke(); }
-    if (m.hidden) { c.fillStyle = 'rgba(236,228,210,.7)'; c.font = `700 ${10 * px}px ${FONT}`; c.textAlign = 'center'; c.fillText('躲藏中', m.x, y0); }
+    if (m.hidden) {
+      const dg = breathDanger(m);
+      if (dg || m.breath < 1) {
+        // 屏息的氣：圈越短越快撐不住
+        const r0 = 24, lv = clamp(m.breath, 0, 1);
+        c.lineWidth = 4 * px; c.strokeStyle = 'rgba(0,0,0,.55)'; c.beginPath(); c.arc(m.x, m.y, r0, 0, TAU); c.stroke();
+        c.strokeStyle = lv < .3 ? '#ff8080' : m.holding ? '#6fe8ff' : 'rgba(111,232,255,.55)'; c.lineWidth = 3 * px;
+        c.beginPath(); c.arc(m.x, m.y, r0, -Math.PI / 2, -Math.PI / 2 + TAU * lv); c.stroke();
+      }
+      c.fillStyle = m.holding ? '#9ff0ff' : dg ? '#ffb3b3' : 'rgba(236,228,210,.7)'; c.font = `700 ${(m.holding || dg ? 11 : 10) * px}px ${FONT}`; c.textAlign = 'center';
+      const lb = m.gaspT > 0 ? '喘氣！' : m.holding ? '屏息中' : dg ? '牠在旁邊' : '躲藏中', ly = y0 - (dg ? 4 * px : 0);
+      c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineWidth = 3 * px; c.lineJoin = 'round'; c.strokeText(lb, m.x, ly); c.fillText(lb, m.x, ly);
+    }
     if (m.inVent) { c.fillStyle = 'rgba(134,240,160,.85)'; c.beginPath(); c.arc(m.x, m.y, 7 * px, 0, TAU); c.fill(); c.font = `700 ${10 * px}px ${FONT}`; c.textAlign = 'center'; c.fillText('阿傑（管道裡）', m.x, m.y - 12 * px); }
     if (z > .55 && (W.sel === m.ci || UI.bridgeMode)) { c.font = `700 ${11 * px}px ${FONT}`; c.textAlign = 'center'; c.fillStyle = 'rgba(0,0,0,.6)'; c.fillText(CREW[m.ci].name, m.x + 1 * px, m.y + 38 + 1 * px); c.fillStyle = CREW[m.ci].col; c.fillText(CREW[m.ci].name, m.x, m.y + 38); }
   }
@@ -3847,10 +4091,10 @@ function drawIconCanvas(c, k, x, y, s, col) { c.fillStyle = col; c.font = `900 $
 function drawDoorButtons(c, t, px) {
   const show = UI.bridgeMode || W.sel >= 0;
   if (!show || (CAM.z < .32 && !UI.bridgeMode)) return;
-  const big = UI.bridgeMode;
+  const big = UI.bridgeMode, bs = big ? clamp(CAM.z / .5, .76, 1) : 1;
   for (const d of SHIP.doors) {
     if (d.kind === 'airout' && !UI.bridgeMode) continue;
-    const r0 = (big ? 13 : 9) * px;
+    const r0 = (big ? 13 * bs : 9) * px;
     const col = d.broken ? '#777777' : d.welded ? '#ff8a3d' : d.state === 'open' ? '#86f0a0' : '#ff3d3d';
     c.fillStyle = 'rgba(8,12,18,.85)'; c.beginPath(); c.arc(d.x, d.y, r0, 0, TAU); c.fill();
     c.strokeStyle = col; c.lineWidth = 2 * px; c.stroke();
@@ -3859,7 +4103,7 @@ function drawDoorButtons(c, t, px) {
     if (d.remoteCd > 0) { c.strokeStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(d.x, d.y, r0 + 3 * px, -Math.PI / 2, -Math.PI / 2 + TAU * d.remoteCd / 1.2); c.stroke(); }
   }
   if (UI.bridgeMode || UI.showVents) for (const id in SHIP.dampers) {
-    const dm = SHIP.dampers[id], r0 = (big ? 12 : 8) * px;
+    const dm = SHIP.dampers[id], r0 = (big ? 12 * bs : 8) * px;
     c.fillStyle = 'rgba(8,12,18,.9)'; c.fillRect(dm.x - r0, dm.y - r0, r0 * 2, r0 * 2);
     c.strokeStyle = dm.closed ? '#ff3d3d' : '#ffb03a'; c.lineWidth = 2 * px; c.strokeRect(dm.x - r0, dm.y - r0, r0 * 2, r0 * 2);
     c.fillStyle = c.strokeStyle; c.font = `800 ${r0 * .8}px ${FONT_M}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(id, dm.x, dm.y + .5 * px); c.textBaseline = 'alphabetic';
@@ -3986,6 +4230,12 @@ function buildHUD() {
   $('#b-bridge').onclick = () => { AU.ui('tap'); if (!bridgeOn()) { toast('艦橋主控台沒有人。派一個人到艦橋，點主控台坐上去。'); return; } UI.bridgeMode ? closeBridgeMode() : openBridgeMode(); };
   $('#b-vents').onclick = () => { AU.ui('tap'); UI.showVents = !UI.showVents; $('#b-vents').classList.toggle('on', UI.showVents); };
   $('#objbox').onclick = () => $('#objbox').classList.toggle('open');
+  // 屏息：按住
+  const br = $('#breath');
+  const hold = on => e => { e.preventDefault(); e.stopPropagation(); if (W) W.breathHeld = on; br.classList.toggle('on', on); if (on) AU.ui('tap'); };
+  br.onpointerdown = e => { try { br.setPointerCapture(e.pointerId); } catch (x) { } hold(true)(e); };
+  br.onpointerup = br.onpointercancel = br.onlostpointercapture = hold(false);
+  br.oncontextmenu = e => e.preventDefault();
 }
 function onCrewCard(i) {
   const m = W.crew[i];
@@ -4033,7 +4283,7 @@ function updateHUD(dt) {
     const b = Math.round(m.bpm);
     C.bpm.textContent = m.dead ? '—' : '♥' + b; C.bpm.className = 'bpm ' + (b >= 140 ? 'r' : b >= 105 ? 'y' : '');
     C.hp.forEach((e, k) => e.classList.toggle('x', k >= m.hp));
-    let tk = m.dead ? (m.why || '死亡') : m.grabbed ? '被抓住了！' : m.cocoon >= 0 ? '巢裡 ' + Math.ceil(m.cocoon) + '秒' : m.secret ? '……？' : m.panic ? { scream: '尖叫', run: '逃跑', freeze: '嚇呆', rage: '失控' }[m.panic.type] : m.inVent ? '管道裡' : m.hidden ? '躲藏' : m.task ? taskName(m.task) : m.path ? (m.run ? '跑' : '走') : ROOMS[m.room] ? ROOMS[m.room].name : '';
+    let tk = m.dead ? (m.why || '死亡') : m.grabbed ? '被抓住了！' : m.cocoon >= 0 ? '巢裡 ' + Math.ceil(m.cocoon) + '秒' : m.secret ? '……？' : m.panic ? { scream: '尖叫', run: '逃跑', freeze: '嚇呆', rage: '失控' }[m.panic.type] : m.inVent ? '管道裡' : m.hidden ? (m.holding ? '屏息' : '躲藏') : m.task ? taskName(m.task) : m.drive && m.moving ? (m.driveRun ? '跑' : '走') : m.follow >= 0 ? '跟著' + CREW[m.follow].short : m.path ? (m.run ? '跑' : '走') : ROOMS[m.room] ? ROOMS[m.room].name : '';
     C.tk.textContent = tk;
     C.bar.style.width = m.task && m.task.dur < 1e6 ? clamp(m.task.t / m.task.dur, 0, 1) * 100 + '%' : '0';
     let ic = '';
@@ -4048,6 +4298,33 @@ function updateHUD(dt) {
   else { const op = opportunity(); const txt = op ? `<div class="gbx op"><b>${op[0]}</b><br><span>${op[1]}</span></div>` : '';
     if (gb.dataset.h !== txt) { gb.innerHTML = txt; gb.dataset.h = txt; } }
   positionSubs();
+  updateBreathUI();
+  updateJoyHint();
+}
+// 屏息按鈕：有人躲著、牠就在旁邊時才出現
+function updateBreathUI() {
+  const br = $('#breath'); if (!br) return;
+  const list = W.phase === 'play' ? W.crew.filter(m => !m.dead && breathDanger(m)) : [];
+  const show = list.length > 0 || W.crew.some(m => m.holding);
+  br.classList.toggle('hide', !show);
+  if (!show) { if (W.breathHeld) { W.breathHeld = false; br.classList.remove('on'); } return; }
+  document.documentElement.style.setProperty('--bh', (UI.selBarH || 160) + 'px');
+  const m = list.sort((a, c) => a.breath - c.breath)[0] || W.crew.find(x => x.holding);
+  const lvl = m ? clamp(m.breath, 0, 1) : 1;
+  const f = br.querySelector('.rf'); if (f) f.style.strokeDashoffset = String(301.6 * (1 - lvl));
+  br.classList.toggle('low', lvl < .3);
+  br.classList.toggle('alert', !!(W.breathAlert && W.t - W.breathAlert.t < 2.6) && !W.breathHeld);
+  const nm = list.length === 1 ? CREW[list[0].ci].name : list.length > 1 ? list.length + ' 人' : '';
+  const sm = br.querySelector('small'); const txt = m && m.gaspT > 0 ? '喘不過氣' : W.breathHeld ? (nm || '屏息中') : '按住・' + nm;
+  if (sm.textContent !== txt) sm.textContent = txt;
+}
+// 搖桿提示：還沒用過搖桿的人，選人時在左下角畫一個淡淡的圈
+function updateJoyHint() {
+  const jh = $('#joyhint'); if (!jh) return;
+  const m = W.sel >= 0 ? W.crew[W.sel] : null;
+  const show = !G.joyUsed && m && W.phase === 'play' && !UI.bridgeMode && joyFree(m) && JOY.id == null;
+  jh.classList.toggle('hide', !show);
+  if (show) { const p = joyHome(); jh.style.left = p[0] + 'px'; jh.style.top = p[1] + 'px'; }
 }
 function opportunity() {
   const b = W.beast; if (!b || b.inVent || W.phase !== 'play') return null;
@@ -4085,6 +4362,7 @@ function refreshActbar(force) {
   if (UI.aimMode) ht = UI.aimMode.hint;
   else if (m && m.inVent) ht = '點一個格柵，阿傑會從管道爬過去';
   else if (!m && W.phase === 'play' && W.t < 40) ht = '點船員卡選人';
+  else if (m && !G.joyUsed && joyFree(m) && !UI.bridgeMode) ht = '左半邊按住拖曳＝搖桿　點地板＝走過去';
   else if (UI.bridgeMode) ht = '艦橋模式：點門開關門、點閘門（D1～D10）開關、點房間開燈或響警報';
   hint.textContent = ht; hint.classList.toggle('hide', !ht);
   UI.selBarH = $('#bottom').offsetHeight;
@@ -4105,6 +4383,12 @@ function crewButtons(m) {
     if (cn) { const lab = conLabel(m, cn); if (lab) out.push({ id: 'con', icon: lab[1], label: lab[0], on: lab[2], fn: () => orderDo(m, 'con', cn) }); }
     const g = nearestVentNode(m, T * 1.8);
     if (g && m.id === 'jie' && !g.sealed) out.push({ id: 'crawl', icon: 'vent', label: '鑽管道', fn: () => orderDo(m, 'grate', g, { act: 'crawl' }) });
+    // 腳邊的道具
+    const fi = W.items.filter(i => dist(i.x, i.y, m.x, m.y) < T * 1.3).sort((a, b) => dist(a.x, a.y, m.x, m.y) - dist(b.x, b.y, m.x, m.y))[0];
+    if (fi) out.push({ id: 'pick', icon: fi.it, label: '撿' + ITEMS[fi.it].name.slice(0, 3), fn: () => pickUp(m, fi) });
+    // 站在門邊：直接開關門（甩上門擋牠）
+    const dr = nearestDoor(m, T * 1.25);
+    if (dr && !dr.broken && !dr.welded && !dr.jam) out.push({ id: 'door', icon: 'door', label: dr.state === 'open' ? '關門' : '開門', fn: () => { if (dist(m.x, m.y, dr.x, dr.y) < T * 1.3 && !m.task) { setDoor(dr, dr.state !== 'open'); m.ang = Math.atan2(dr.y - m.y, dr.x - m.x); } else orderDo(m, 'door', dr, { act: dr.state === 'open' ? 'close' : 'open' }); } });
   }
   // 道具
   m.inv.forEach((s, i) => {
@@ -4112,6 +4396,10 @@ function crewButtons(m) {
     const ct = D.stack ? s.n : D.charges ? s.ch : D.fuel != null && s.it === 'flamer' ? Math.round(s.fuel) + '%' : null;
     out.push({ id: 'it' + i, icon: s.it, label: D.name.length > 4 ? D.name.slice(0, 4) : D.name, ct, rar: D.rar, fn: () => useItemUI(m, i) });
   });
+  // 小隊
+  const fol = followersOf(m);
+  if (fol.length) out.push({ id: 'follow', icon: 'group', label: '解散', on: true, ct: fol.length, fn: () => dismissFollow(m) });
+  else if (!m.hidden) { const fc = followCandidates(m); if (fc.length) { out.push({ id: 'follow', icon: 'group', label: '叫大家跟上', ct: fc.length, fn: () => callFollow(m) }); tut('follow'); } }
   const mates = W.crew.filter(o => o !== m && !o.dead && o.cocoon < 0 && dist(o.x, o.y, m.x, m.y) < T * 1.8);
   if (mates.length && m.inv.length) out.push({ id: 'give', icon: 'give', label: '給', fn: () => giveMenu(m, mates) });
   // 巢
@@ -4440,7 +4728,7 @@ function endRun(id) {
   else if (win && alive.length === 1) final = 'sole';
   // 獎勵
   const base = { strangle: 320, spaced: 260, burned: 240, abandon: 180, stowaway: 300, sole: 120, company: 60, lost: 30, truth: 500 }[final] ?? 50;
-  const rew = [['結局：' + ENDINGS.find(e => e.id === final).name, base], ['活下來的人 ×' + alive.length, alive.length * 45], ['新的調查檔案 ×' + W.logs.filter(l => !G.lore.includes(l)).length, W.logs.filter(l => !G.lore.includes(l)).length * 35], ['救回來的次數 ×' + W.stats.rescues, W.stats.rescues * 20]];
+  const rew = [['結局：' + ENDINGS.find(e => e.id === final).name, base], ['活下來的人 ×' + alive.length, alive.length * 45], ['新的調查檔案 ×' + W.logs.filter(l => !G.lore.includes(l)).length, W.logs.filter(l => !G.lore.includes(l)).length * 35], ['救回來的次數 ×' + W.stats.rescues, W.stats.rescues * 20], ['擦身而過 ×' + (W.stats.close || 0), Math.min(8, W.stats.close || 0) * 12], ['屏住呼吸 ×' + (W.stats.holds || 0), Math.min(6, W.stats.holds || 0) * 15]];
   const total = rew.reduce((s, r) => s + r[1], 0);
   const firstEnd = !G.endings[final];
   G.money += total; G.voyages = (G.voyages || 0) + 1; if (win) G.wins = (G.wins || 0) + 1;
@@ -4620,10 +4908,12 @@ function showEndings() {
 function showHelp(fromPause) {
   const h = `
   <div class="card"><h4>目標</h4><p>你指揮夜鷺號上的六個人，撐過這一夜。牠會在地板下的通風管裡長大——第一幕牠還小，趁機搜刮裝備（也可以試著把牠困死）；氣閘和逃生艇在第一幕被檢疫封鎖。第二幕牠會開始獵人，你要準備一個「最終計畫」；第三幕執行計畫：把牠引進氣閘拋出去、困在房間裡燒死，或是啟動自毀搭逃生艇離開。</p></div>
-  <div class="card"><h4>操作</h4><p>・點<b>船員卡</b>（或畫面上的人）選人，選人時時間會變慢。<br>・點地板走過去，<b>點兩下用跑的</b>（快，但很吵）。<br>・點櫃子搜東西、點衣櫃床底躲起來、點主控台使用。<br>・點門可以開關或焊死；點格柵可以焊死（要焊槍）。<br>・拖曳畫面移動鏡頭，兩指縮放；「總覽」看整艘船。<br>・行動列的道具：照明彈、誘餌點了以後再點地圖丟出去。</p></div>
+  <div class="card"><h4>操作</h4><p>・點<b>船員卡</b>（或畫面上的人）選人，選人時時間會變慢。<br>・<b>搖桿</b>：選人後在畫面左半邊按住拖曳。輕推是走，推到底是跑（快，但很吵）；走進關著的門會自己開。<br>・也可以<b>點地板</b>叫他走過去，點兩下用跑的。點櫃子搜東西、點躲藏點躲起來、點主控台使用；走到旁邊時，下面的行動列也會跳出「搜」「躲」「操作」。<br>・<b>叫大家跟上</b>：附近的同伴會跟著你走，你躲他們也找地方躲。<br>・點門可以開關或焊死；點格柵可以焊死（要焊槍）。<br>・右半邊拖曳移動鏡頭，兩指縮放；「總覽」看整艘船。<br>・行動列的道具：照明彈、誘餌點了以後再點地圖丟出去。<br>・電腦：WASD／方向鍵移動、按住 Shift 跑、F 屏息、G 叫大家跟上、1～6 選人、空白鍵暫停。</p></div>
+  <div class="card"><h4>屏住呼吸</h4><p>有人躲著、牠就在旁邊時，右下會出現<b>「屏息」</b>。按住它，躲著的人心跳就聽不到；牠走到躲藏點前面貼著聽的時候，撐過去牠就會走開。氣有限（心跳越快撐越短），憋到底會喘出來。牠要是親眼看到你躲進去，屏息也沒用。</p></div>
   <div class="card"><h4>心跳</h4><p>船員卡上的 ♥ 是心率。牠喉嚨的發光囊會聽心跳：越害怕的人，越遠就被聽到。躲起來能把範圍減半，但心跳太快一樣會被找到。<br>黑暗、落單、看到牠、受傷會讓心跳升高；和同伴待在一起、艦長在同一間房、打鎮定劑會降下來。心跳太高的人可能會尖叫、亂跑或嚇呆。</p></div>
   <div class="card"><h4>看見牠</h4><p>你只看得到船員視線裡、有燈光照著的地方。偵測器每兩秒掃一次，會動的東西變成紅點；「地板下」的點代表牠在通風管裡。有人坐鎮艦橋主控台，就能看到全船的光點、遠端開關門與通風閘門（D1～D10），也能在任何房間響警報、派清潔機器人小蝸去引開牠。</p></div>
   <div class="card"><h4>牠會學</h4><p>同一種躲藏點用多了，牠會開始去翻；同一招誘餌、警報用到第三次就不上當；被火燒過會改從通風管繞路；被焊死的門擋過，就更常走管道。換招，才活得久。</p></div>
+  <div class="card"><h4>擦身而過</h4><p>牠從躲著或沒被發現的人旁邊走過去，會記在航行日誌裡；每一次擦身而過和屏息成功，回到船塢都會多分到一點分紅。</p></div>
   <div class="card"><h4>被撲倒</h4><p>牠撲倒人以後會拖向最近的格柵。五秒內用火焰、電擊棒、照明彈或魚叉打中牠，牠就會放手。開著「警戒」的船員看到會自己出手。身上帶著電擊棒的人會自己電牠脫身。</p></div>
   <div class="card"><h4>電力</h4><p>反應爐只有六格電。要打開氣閘外門得先給「氣閘」兩格，所以通常要關掉全船的燈。鄧伯能讓反應爐超載多兩格。</p></div>
   <div class="card"><h4>存檔</h4><p>每一幕之間的幕間會自動存檔；中途離開，下次從最近的幕間繼續。</p></div>`;
@@ -4642,44 +4932,118 @@ function showSettings(fromPause) {
 }
 
 // ---------- 輸入 ----------
-const PTR = new Map(); let pinch = null, drag = null, lastTap = { t: 0, x: 0, y: 0 };
+const PTR = new Map(); let pinch = null, lastTap = { t: 0, x: 0, y: 0 };
+// 搖桿：選人後在畫面左半邊按住拖曳
+const JOY = { id: null, ax: 0, ay: 0, dx: 0, dy: 0, mag: 0, R: 56 };
+const KEYS = {};
+function isLand() { return VW / VH > 1.3; }
+function joyFree(m) { return m && !m.dead && m.cocoon < 0 && !m.grabbed && !m.inVent && !m.task && !m.hidden; }
+function joyZone(x, y) {
+  if (!W || W.phase !== 'play' || UI.bridgeMode || UI.menuOpen || S.paused) return false;
+  const m = W.sel >= 0 ? W.crew[W.sel] : null;
+  if (!joyFree(m)) return false;
+  const land = isLand(), x0 = land ? 146 : 0, x1 = land ? x0 + (VW - x0) * .5 : VW * .56;
+  return x >= x0 && x <= x1 && y > (land ? 84 : 150) && y < VH - (land ? 12 : (UI.selBarH || 160) - 4);
+}
+function joyHome() { const land = isLand(); return [land ? 146 + (VW - 146) * .17 : VW * .2, VH - (land ? 96 : (UI.selBarH || 160) + 92)]; }
+function joyStart(id, x, y) {
+  JOY.id = id; JOY.ax = x; JOY.ay = y; JOY.mag = 0;
+  const j = $('#joy'); j.classList.remove('hide', 'run'); j.style.left = x + 'px'; j.style.top = y + 'px';
+  S.slowT = 0; CAM.follow = W.sel; CAM.freeT = 0; CAM.focus = null;
+  if (!G.joyUsed) { G.joyUsed = true; saveG(); refreshActbar(true); }
+}
+function joyMove(x, y) {
+  let dx = x - JOY.ax, dy = y - JOY.ay, len = Math.hypot(dx, dy);
+  const R0 = JOY.R;
+  if (len > R0 * 1.25) { const k = (len - R0 * 1.25) / len; JOY.ax += dx * k; JOY.ay += dy * k; dx = x - JOY.ax; dy = y - JOY.ay; len = Math.hypot(dx, dy); }
+  const u = Math.min(1, len / R0);
+  JOY.mag = u < .14 ? 0 : (u - .14) / .86;
+  if (len > 0) { JOY.dx = dx / len; JOY.dy = dy / len; }
+  const j = $('#joy'); j.style.left = JOY.ax + 'px'; j.style.top = JOY.ay + 'px';
+  const kx = JOY.dx * u * R0, ky = JOY.dy * u * R0;
+  j.querySelector('.jk').style.transform = `translate(${kx}px,${ky}px)`;
+  const run = JOY.mag >= .86;
+  if (j.classList.contains('run') !== run) { j.classList.toggle('run', run); j.querySelector('.jl').textContent = run ? '跑・很吵' : ''; }
+}
+function joyEnd() {
+  JOY.id = null; JOY.mag = 0;
+  const j = $('#joy'); j.classList.add('hide'); j.querySelector('.jk').style.transform = '';
+}
+// 每一格：把搖桿或鍵盤的方向交給選中的人
+function applyDrive() {
+  if (!W) return;
+  let dx = 0, dy = 0, mag = 0;
+  if (JOY.id != null && JOY.mag > 0) { dx = JOY.dx; dy = JOY.dy; mag = JOY.mag; }
+  else {
+    const kx = (KEYS.r ? 1 : 0) - (KEYS.l ? 1 : 0), ky = (KEYS.d ? 1 : 0) - (KEYS.u ? 1 : 0);
+    if (kx || ky) { const l = Math.hypot(kx, ky); dx = kx / l; dy = ky / l; mag = KEYS.shift ? 1 : .72; }
+  }
+  for (const c of W.crew) c.drive = null;
+  const m = W.sel >= 0 ? W.crew[W.sel] : null;
+  if (!m || mag <= 0 || UI.bridgeMode || W.phase !== 'play') return;
+  if (JOY.id == null && !joyFree(m)) {
+    // 鍵盤：躲著或忙著的人，先叫他出來／放下手邊的事
+    if (m.hidden) unhide(m); else if (m.task && m.task.type !== 'fire') cancelTask(m); else if (!joyFree(m)) return;
+  }
+  m.drive = { x: dx, y: dy, mag };
+  if (CAM.follow !== W.sel || CAM.freeT > 0) { CAM.follow = W.sel; CAM.freeT = 0; }
+}
 function setupInput() {
   const cv = $('#cv');
   cv.addEventListener('pointerdown', e => {
     if (S.mode !== 'game') return;
     cv.setPointerCapture && cv.setPointerCapture(e.pointerId);
-    PTR.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now() });
-    if (PTR.size === 2) { const [a, b] = [...PTR.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: CAM.tz }; drag = null; }
-    else if (PTR.size === 1) drag = { x: e.clientX, y: e.clientY, moved: false };
+    const p = { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, lx: e.clientX, ly: e.clientY, t0: performance.now(), mode: 'pending', joyOK: JOY.id == null && joyZone(e.clientX, e.clientY) };
+    PTR.set(e.pointerId, p);
+    // 兩指縮放（拿著搖桿時不縮放）
+    if (JOY.id == null) {
+      const others = [...PTR.values()].filter(q => q.mode !== 'joy');
+      if (others.length === 2) { const [a, b] = others; pinch = { a, b, d: Math.hypot(a.x - b.x, a.y - b.y) || 1, z: CAM.tz }; a.mode = b.mode = 'pinch'; }
+    }
   });
   cv.addEventListener('pointermove', e => {
     const p = PTR.get(e.pointerId); if (!p) return;
     p.x = e.clientX; p.y = e.clientY;
-    if (pinch && PTR.size >= 2) { const [a, b] = [...PTR.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); CAM.tz = clamp(pinch.z * d / pinch.d, fitZoom() * .9, 1.8); CAM.freeT = 999; return; }
-    if (drag) { const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (!drag.moved && Math.hypot(e.clientX - p.x0, e.clientY - p.y0) > 9) drag.moved = true; if (drag.moved) { CAM.x -= dx / CAM.z; CAM.y -= dy / CAM.z; CAM.freeT = 999; CAM.focus = null; } drag.x = e.clientX; drag.y = e.clientY; }
+    if (p.mode === 'joy') { joyMove(p.x, p.y); return; }
+    if (p.mode === 'pinch') { if (pinch) { const d = Math.hypot(pinch.a.x - pinch.b.x, pinch.a.y - pinch.b.y); CAM.tz = clamp(pinch.z * d / pinch.d, fitZoom() * .9, 1.8); CAM.freeT = 999; } return; }
+    if (p.mode === 'pending' && Math.hypot(p.x - p.x0, p.y - p.y0) > 10) {
+      if (p.joyOK && JOY.id == null && joyZone(p.x0, p.y0)) { p.mode = 'joy'; joyStart(e.pointerId, p.x0, p.y0); joyMove(p.x, p.y); return; }
+      p.mode = 'pan';
+    }
+    if (p.mode === 'pan') { CAM.x -= (p.x - p.lx) / CAM.z; CAM.y -= (p.y - p.ly) / CAM.z; CAM.freeT = 999; CAM.focus = null; }
+    p.lx = p.x; p.ly = p.y;
   });
   const up = e => {
     const p = PTR.get(e.pointerId); PTR.delete(e.pointerId);
-    if (PTR.size < 2) pinch = null;
     if (!p) return;
-    if (drag && !drag.moved && performance.now() - p.t0 < 450 && PTR.size === 0) {
+    if (p.mode === 'joy' || e.pointerId === JOY.id) { joyEnd(); return; }
+    if (p.mode === 'pinch') { if (pinch && (p === pinch.a || p === pinch.b)) { const o = p === pinch.a ? pinch.b : pinch.a; pinch = null; o.mode = 'done'; } return; }
+    if (p.mode === 'pending' && performance.now() - p.t0 < 450 && e.type === 'pointerup') {
       const now = performance.now(); const dbl = now - lastTap.t < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 34;
       lastTap = { t: dbl ? 0 : now, x: e.clientX, y: e.clientY };
       handleTap(e.clientX, e.clientY, dbl);
     }
-    if (PTR.size === 0) drag = null;
   };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('wheel', e => { if (S.mode !== 'game') return; e.preventDefault(); CAM.tz = clamp(CAM.tz * (e.deltaY > 0 ? .9 : 1.1), fitZoom() * .9, 1.8); CAM.freeT = 999; }, { passive: false });
+  const KMAP = { KeyW: 'u', ArrowUp: 'u', KeyS: 'd', ArrowDown: 'd', KeyA: 'l', ArrowLeft: 'l', KeyD: 'r', ArrowRight: 'r', ShiftLeft: 'shift', ShiftRight: 'shift' };
   window.addEventListener('keydown', e => {
     if (S.mode !== 'game' || !W) return;
+    if (KMAP[e.code]) { KEYS[KMAP[e.code]] = true; if (e.code.startsWith('Arrow')) e.preventDefault(); return; }
+    if (e.code === 'KeyF') { if (!W.breathHeld && !$('#breath').classList.contains('hide')) { W.breathHeld = true; $('#breath').classList.add('on'); } return; }
     if (e.key >= '1' && e.key <= '6') onCrewCard(+e.key - 1);
     else if (e.key === ' ' || e.key === 'Escape') { if (UI.aimMode) { UI.aimMode = null; refreshActbar(true); } else if (UI.bridgeMode) closeBridgeMode(); else pauseGame(!S.paused); e.preventDefault(); }
     else if (e.key === 'r' || e.key === 'R') { const m = W.crew[W.sel]; if (m) { m.run = !m.run; refreshActbar(true); } }
     else if (e.key === 'b' || e.key === 'B') $('#b-bridge').click();
     else if (e.key === 'v' || e.key === 'V') $('#b-vents').click();
     else if (e.key === 'z' || e.key === 'Z') $('#b-zoom').click();
+    else if (e.key === 'g' || e.key === 'G') { const m = W.crew[W.sel]; if (m && !m.dead) { if (followersOf(m).length) dismissFollow(m); else callFollow(m); refreshActbar(true); } }
   });
+  window.addEventListener('keyup', e => {
+    if (KMAP[e.code]) KEYS[KMAP[e.code]] = false;
+    if (e.code === 'KeyF' && W) { W.breathHeld = false; $('#breath').classList.remove('on'); }
+  });
+  window.addEventListener('blur', () => { for (const k in KEYS) KEYS[k] = false; if (W) W.breathHeld = false; if (JOY.id != null) joyEnd(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && S.mode === 'game' && W && W.phase === 'play' && !S.paused) pauseGame(true); });
   window.addEventListener('pointerdown', () => AU.init(), { once: false, passive: true });
 }
@@ -4696,6 +5060,7 @@ function frame(ts) {
     if (W.grabbing) ts2 *= .55;
     if (UI.aimMode && S.set.slowmo) ts2 *= .3;
     ts2 *= (S.speed || 1);
+    applyDrive();
     if (W.phase === 'play' && ts2 > 0) { let rem = dt * ts2; while (rem > 0) { const s = Math.min(rem, 1 / 30); worldTick(s); rem -= s; } }
     else if (W.phase === 'cine') { worldTickCine(dt); }
     updateCamera(dt);
