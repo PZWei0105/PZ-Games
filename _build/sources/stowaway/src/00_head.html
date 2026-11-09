@@ -90,6 +90,33 @@ button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer
 #grab .gbx.op span{color:#cff6ff}
 @keyframes opp{50%{box-shadow:0 0 44px rgba(111,232,255,.6)}}
 
+/* 搖桿 */
+#joy,#joyhint{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none!important;z-index:3}
+#joy .jb,#joyhint .jb{position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;border:2px solid rgba(236,228,210,.34);background:radial-gradient(circle,rgba(10,16,24,.12) 0,rgba(10,16,24,.5) 72%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.45),0 0 24px rgba(0,0,0,.35)}
+#joy .jb::after{content:'';position:absolute;inset:11px;border-radius:50%;border:1px dashed rgba(255,106,26,.5)}
+#joy .jb::before{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(236,228,210,.35)}
+#joy .jk{position:absolute;left:-27px;top:-27px;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#f6efe1,#bdb19a 70%,#8d826e);box-shadow:0 5px 16px rgba(0,0,0,.55),inset 0 -3px 6px rgba(0,0,0,.25);transition:background .15s,box-shadow .15s}
+#joy.run .jk{background:radial-gradient(circle at 38% 32%,#ffc49a,#ff6a1a 70%,#b8420c);box-shadow:0 0 22px rgba(255,106,26,.75),inset 0 -3px 6px rgba(0,0,0,.25)}
+#joy.run .jb{border-color:rgba(255,106,26,.75)}
+#joy .jl{position:absolute;left:-60px;top:66px;width:120px;text-align:center;font:700 11px var(--m);color:var(--orange);letter-spacing:.16em;text-shadow:0 1px 4px #000}
+#joyhint{animation:jh 2.4s ease-in-out infinite}
+#joyhint .jb{border-style:dashed;border-color:rgba(236,228,210,.4);background:radial-gradient(circle,rgba(10,16,24,.05),rgba(10,16,24,.32) 72%)}
+#joyhint span{position:absolute;left:-60px;top:-9px;width:120px;text-align:center;font-size:12px;font-weight:700;color:var(--cream);letter-spacing:.08em;text-shadow:0 1px 4px #000}
+@keyframes jh{50%{opacity:.45}}
+/* 屏息 */
+#breath{position:absolute;right:calc(var(--sar) + 14px);bottom:calc(var(--bh,160px) + 62px);width:96px;height:96px;border-radius:50%;background:rgba(6,24,32,.94);border:2px solid var(--cyan);color:#e2f9ff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 0 26px rgba(111,232,255,.4);touch-action:none;z-index:4}
+#breath b{font-size:19px;font-weight:900;letter-spacing:.12em;padding-left:.12em}
+#breath small{font:700 10px var(--f);color:var(--cyan);letter-spacing:.06em;max-width:84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#breath svg.rg{position:absolute;left:-6px;top:-6px;width:104px;height:104px;transform:rotate(-90deg);pointer-events:none}
+#breath .rt{fill:none;stroke:rgba(111,232,255,.16);stroke-width:5}
+#breath .rf{fill:none;stroke:var(--cyan);stroke-width:5;stroke-linecap:round;stroke-dasharray:301.6;transition:stroke-dashoffset .1s linear}
+#breath.on{background:rgba(30,90,110,.96);transform:scale(.95)}
+#breath.low{border-color:#ff8080;box-shadow:0 0 26px rgba(255,80,80,.5)}
+#breath.low .rf{stroke:#ff8080}
+#breath.alert{animation:brp .7s infinite}
+@keyframes brp{50%{box-shadow:0 0 46px rgba(111,232,255,.9);transform:scale(1.06)}}
+@media (min-aspect-ratio:13/10){#breath{bottom:calc(var(--sab) + 86px)}}
+
 #bottom{position:absolute;left:0;right:0;bottom:0;padding:0 calc(var(--sar) + 6px) calc(var(--sab) + 6px) calc(var(--sal) + 6px);display:flex;flex-direction:column;gap:6px;pointer-events:none}
 #bottom>*{pointer-events:auto}
 #actbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-height:0}
@@ -324,6 +351,9 @@ button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer
   <div id="toasts"></div>
   <div id="subs"></div>
   <div id="grab"></div>
+  <div id="joyhint" class="hide"><div class="jb"></div><span>按住拖曳</span></div>
+  <div id="joy" class="hide"><div class="jb"></div><div class="jk"></div><div class="jl"></div></div>
+  <button id="breath" class="hide"><svg class="rg" viewBox="0 0 104 104"><circle cx="52" cy="52" r="48" class="rt"/><circle cx="52" cy="52" r="48" class="rf"/></svg><b>屏息</b><small>按住</small></button>
   <div id="bottom">
     <div id="hint" class="hide"></div>
     <div id="actbar"></div>

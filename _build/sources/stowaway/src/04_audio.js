@@ -75,11 +75,14 @@ const AU = (() => {
     amb.sub.gain.setTargetAtTime(clamp((tn - .35) * .5, 0, .3), t, .5);
     amb.str.gain.setTargetAtTime(clamp((tn - .55) * .11, 0, .05), t, .6);
     amb.hum.gain.setTargetAtTime(W.power.on.lights ? .16 : .1, t, 1);
-    // 心跳：被選中的人
-    const m = W.sel >= 0 ? W.crew[W.sel] : null;
+    // 屏息：配樂壓到最低，只剩心跳
+    const holder = W.phase === 'play' ? W.crew.find(x => x.holding) : null;
+    musicGain.gain.setTargetAtTime(vol.m * .7 * (holder ? .22 : 1), t, holder ? .12 : .7);
+    // 心跳：被選中的人（屏息時是屏息的人）
+    const m = holder || (W.sel >= 0 ? W.crew[W.sel] : null);
     const bpm = m && !m.dead ? m.bpm : Math.max(...W.crew.filter(x => !x.dead).map(x => x.bpm), 60);
     hbT -= dt;
-    if (bpm > 108 && hbT <= 0 && W.phase === 'play') { hbT = 60 / bpm; const v = clamp((bpm - 100) / 80, .05, .55); tone(58, .14, 'sine', v, null, null, { f2: 38, wet: 0 }); tone(52, .12, 'sine', v * .6, null, null, { f2: 34, delay: .16, wet: 0 }); }
+    if ((bpm > 108 || holder) && hbT <= 0 && W.phase === 'play') { hbT = 60 / bpm; const v = holder ? .62 : clamp((bpm - 100) / 80, .05, .55); tone(58, .14, 'sine', v, null, null, { f2: 38, wet: 0 }); tone(52, .12, 'sine', v * .6, null, null, { f2: 34, delay: .16, wet: 0 }); }
     // 船體的聲音
     dripT -= dt; if (dripT <= 0) { dripT = R.f(4, 11); tone(R.f(1200, 2200), .08, 'sine', .04, CAM.x + R.f(-400, 400), CAM.y + R.f(-400, 400), { f2: 600, wet: .7 }); }
     creakT -= dt; if (creakT <= 0) { creakT = R.f(7, 16); noiseB(R.f(.6, 1.4), .05, 'bandpass', R.f(180, 420), 8, CAM.x + R.f(-500, 500), CAM.y + R.f(-500, 500), { f2: R.f(120, 300), wet: .6, a: .2 }); }
@@ -97,6 +100,7 @@ const AU = (() => {
     scream(x, y, ci) { const f = [190, 330, 150, 360, 300, 160][ci] || 250; tone(f, .9, 'sawtooth', .16, x, y, { f2: f * 1.6, lp: 2000, a: .03, wet: .5 }); noiseB(.8, .08, 'bandpass', 1400, 2, x, y, { a: .03 }); },
     hurt(x, y, ci) { tone(([180, 300, 140, 320, 280, 150][ci] || 220), .25, 'sawtooth', .14, x, y, { f2: 120, lp: 1500 }); noiseB(.15, .16, 'lowpass', 500, 1, x, y); },
     death(x, y) { tone(80, 1.2, 'sine', .25, x, y, { f2: 30 }); noiseB(1.2, .1, 'lowpass', 400, 1, x, y, { f2: 100, wet: .6 }); A.stab(.8); },
+    gasp(x, y) { noiseB(.42, .22, 'bandpass', 700, 1.4, x, y, { a: .015, f2: 1700, wet: .35 }); noiseB(.5, .12, 'bandpass', 1300, 2, x, y, { delay: .45, f2: 500, a: .05, wet: .3 }); },
     search(x, y) { for (let k = 0; k < 4; k++) noiseB(.08, .05, 'bandpass', R.f(1500, 3000), 4, x, y, { delay: k * .18 + R.f(0, .08) }); },
     hide(x, y) { noiseB(.3, .06, 'lowpass', 700, 1, x, y); tone(140, .1, 'triangle', .06, x, y, { delay: .2 }); },
     weld(x, y) { noiseB(.9, .12, 'highpass', 3500, 1, x, y, { wet: .2 }); for (let k = 0; k < 5; k++) tone(R.f(3000, 5000), .02, 'square', .03, x, y, { delay: R.f(0, .8), wet: 0 }); },

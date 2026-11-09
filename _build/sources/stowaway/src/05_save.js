@@ -1,7 +1,7 @@
 // ============ 存檔 ============
 const SAVE_KEY = 'stowaway.v1';
 function defaultG() {
-  return { v: 1, voyages: 0, wins: 0, money: 0, owned: [], equip: [], lore: [], newLore: [], endings: {}, runs: [], tut: {}, hard: false,
+  return { v: 1, voyages: 0, wins: 0, money: 0, owned: [], equip: [], lore: [], newLore: [], endings: {}, runs: [], tut: {}, hard: false, joyUsed: false,
     set: { music: .8, sfx: 1, slowmo: true, haptic: true, flash: true, shake: true, hints: true }, ckpt: null };
 }
 function loadG() {

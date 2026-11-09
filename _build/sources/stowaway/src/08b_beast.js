@@ -81,6 +81,7 @@ function sonarPulse(b) {
     if (m.dead || m.grabbed || m.cocoon >= 0 || m.inVent) continue;
     let R0 = 90 + Math.max(0, m.bpm - 60) * 2.4;
     if (m.hidden) R0 *= .5;
+    if (m.holding) R0 *= .12;
     const k = Math.min(2, roomCost(br, m.room)); R0 *= Math.pow(.5, k);
     if (b.inVent) R0 *= .65;
     const d = dist(b.x, b.y, m.x, m.y);
@@ -118,7 +119,7 @@ function beastSenses(b, dt, held) {
     b.tmem = { x: seen.x, y: seen.y, t: W.t, m: seen };
   }
   // 誰躲進去被看到
-  for (const m of W.crew) if (m.hidden && m.seenHiding && b.state !== 'check' && b.state !== 'grab' && b.stage > 0) { m.seenHiding = false; goCheck(b, m.hidden, true); }
+  for (const m of W.crew) if (m.hidden && m.seenHiding && b.state !== 'check' && b.state !== 'grab' && b.stage > 0) { m.seenHiding = false; goCheck(b, m.hidden, true, true); }
   if (held) return;
   // 聽覺
   if (b.state === 'chase' || b.state === 'grab' || b.state === 'flee') return;
@@ -249,24 +250,42 @@ function stSearch(b, dt, st) {
     const spots = SHIP.hides.filter(h => h.room === ri && !b.checked.has(h.i));
     for (const h of spots) {
       let p = .12 + .2 * W.learn.hide[h.ht];
-      if (h.occ != null) { const m = W.crew[h.occ]; p += Math.max(0, m.bpm - 95) / 160; }
+      if (h.occ != null) { const m = W.crew[h.occ]; p += m.holding ? 0 : Math.max(0, m.bpm - 95) / 160; }
       if (R.chance(Math.min(.92, p))) { goCheck(b, h, false); return; }
     }
   }
   if (b.st > b.searchT) { b.checkedRoom = false; b.checked.clear(); if (b.wary) { b.wary = false; beastToVent(b); return; } decideNext(b); }
 }
-function goCheck(b, h, sure) {
+function goCheck(b, h, sure, saw) {
+  b.checkSaw = !!saw;
+  if (h.occ != null) breathWarn(h);
   if (b.inVent) { ventToward(b, h.sx, h.sy, 'check'); b.checkSpot = h; return; }
   b.checkSpot = h; b.checked.add(h.i);
   if (!walkTo(b, h.sx, h.sy, 'check')) { b.state = 'search'; b.st = 0; return; }
   b.sure = sure;
+}
+// 牠往有人躲的地方去：提醒屏息
+function breathWarn(h) {
+  W.breathAlert = { t: W.t, h };
+  if (S.set.slowmo && W.sel >= 0) S.slowT = Math.max(S.slowT || 0, 1.2);
+  tut('breath');
 }
 function stCheck(b, dt, st) {
   if (b.path) { if (!stepPath(b, dt, st.walk * 1.5 * T)) return; if (b.pi >= b.path.length) b.path = null; return; }
   b.st += dt;
   const h = b.checkSpot; if (!h) { b.state = 'search'; b.st = 0; return; }
   b.ang = lerpAng(b.ang, Math.atan2(h.py - b.y, h.px - b.x), dt * 6);
-  if (b.st > 1.1) {
+  // 有人在裡面：牠會貼著聽久一點（這時候屏住呼吸）
+  const occ = h.occ != null ? W.crew[h.occ] : null;
+  if (occ && ((b.st >= .3 && b.st - dt < .3) || (b.st >= 1.25 && b.st - dt < 1.25))) { b.sonarFx = 1; W.breathAlert = { t: W.t, h }; }
+  if (b.st > (occ ? 2 : 1.1)) {
+    if (occ && occ.holding && !b.checkSaw) {
+      b.state = 'search'; b.st = 1; b.checkSpot = null; b.checked.add(h.i);
+      W.stats.holds = (W.stats.holds || 0) + 1;
+      toast(CREW[occ.ci].name + '屏住了呼吸……牠聽不到，走開了。', 'good');
+      chron('牠在' + h.name + '前面停下來聽。' + CREW[occ.ci].name + '憋住了氣，牠走開了。');
+      return;
+    }
     if (h.occ != null) {
       const m = W.crew[h.occ];
       unhide(m); m.seen = 0; bark(m, 'found', true);
@@ -290,7 +309,7 @@ function stChase(b, dt, st) {
   const d = dist(b.x, b.y, m.x, m.y);
   const see = !m.hidden && hasLOS(b.x, b.y, m.x, m.y) && d < T * 9;
   if (see) { b.lostT = 0; b.tmem = { x: m.x, y: m.y, t: W.t, m }; } else b.lostT += dt;
-  if (m.hidden) { goCheck(b, m.hidden, true); return; }
+  if (m.hidden) { goCheck(b, m.hidden, true, b.lostT < 1.2); return; }
   if (b.lostT > 4.5) { const tm = b.tmem; b.target = null; if (tm) walkTo(b, tm.x, tm.y, 'investigate'); else { b.state = 'search'; b.st = 0; } return; }
   // 怕火
   const fl = W.crew.find(o => !o.dead && o.firing && dist(o.x, o.y, b.x, b.y) < T * 3.6);
@@ -507,7 +526,7 @@ function stTelegraph(b, dt) {
     if (b.stage === 2 && b.exitWhy === 'investigate' && n.room === ROOM.airlock.i && !W.crew.some(m => !m.dead && m.room === n.room) && R.chance(src === 'alarm' ? .4 : .2) && !SHIP.dampers.D9.closed && !n.sealed) {
       b.state = 'search'; b.st = 0; b.searchT = .9; b.wary = true; toast('牠在氣閘裡停了一下……好像察覺到不對勁。', 'learn');
     }
-    if (b.exitWhy === 'check' && b.checkSpot) { goCheck(b, b.checkSpot, true); }
+    if (b.exitWhy === 'check' && b.checkSpot) { goCheck(b, b.checkSpot, true, b.checkSaw); }
     else if (b.exitWhy === 'nest') { b.state = 'search'; }
     const near = W.crew.filter(m => !m.dead && m.cocoon < 0 && !m.hidden && dist(m.x, m.y, b.x, b.y) < T * 6 && hasLOS(m.x, m.y, b.x, b.y));
     if (b.exitWhy === 'bite' && b.target && !b.target.dead) { startChase(b, b.target); }

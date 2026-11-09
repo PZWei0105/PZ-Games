@@ -333,6 +333,13 @@ function drawOverlays(c, t, vis) {
     }
   }
   if (UI.aimMode) drawAimMode(c, t, px);
+  // 跟著選中的人走的同伴
+  if (W.sel >= 0) {
+    const L = W.crew[W.sel];
+    c.strokeStyle = 'rgba(255,176,58,.38)'; c.lineWidth = 1.6 * px; c.setLineDash([3 * px, 5 * px]);
+    for (const o of W.crew) if (o !== L && !o.dead && o.cocoon < 0 && o.follow === L.ci && !o.hidden) { c.beginPath(); c.moveTo(o.x, o.y); c.lineTo(L.x, L.y); c.stroke(); }
+    c.setLineDash([]);
+  }
   // 船員頭上
   for (const m of W.crew) {
     if (m.dead || m.cocoon >= 0) continue;
@@ -340,7 +347,19 @@ function drawOverlays(c, t, vis) {
     if (m.task && m.task.dur < 1e6 && m.task.type !== 'fire') { const u = clamp(m.task.t / m.task.dur, 0, 1); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 5 * px; c.beginPath(); c.arc(m.x, y0, 9 * px, 0, TAU); c.stroke(); c.strokeStyle = '#ffb03a'; c.lineWidth = 3 * px; c.beginPath(); c.arc(m.x, y0, 9 * px, -Math.PI / 2, -Math.PI / 2 + TAU * u); c.stroke(); }
     if (m.panic) { c.fillStyle = '#ff3d3d'; c.font = `900 ${16 * px}px ${FONT}`; c.textAlign = 'center'; c.fillText('!!', m.x, y0 - 6 * px); }
     if (m.grabbed) { const g = W.beast.grabT / STAGES[W.beast.stage].grab; c.strokeStyle = '#ff3d3d'; c.lineWidth = 4 * px; c.beginPath(); c.arc(m.x, m.y, 30, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(g, 0, 1)); c.stroke(); }
-    if (m.hidden) { c.fillStyle = 'rgba(236,228,210,.7)'; c.font = `700 ${10 * px}px ${FONT}`; c.textAlign = 'center'; c.fillText('躲藏中', m.x, y0); }
+    if (m.hidden) {
+      const dg = breathDanger(m);
+      if (dg || m.breath < 1) {
+        // 屏息的氣：圈越短越快撐不住
+        const r0 = 24, lv = clamp(m.breath, 0, 1);
+        c.lineWidth = 4 * px; c.strokeStyle = 'rgba(0,0,0,.55)'; c.beginPath(); c.arc(m.x, m.y, r0, 0, TAU); c.stroke();
+        c.strokeStyle = lv < .3 ? '#ff8080' : m.holding ? '#6fe8ff' : 'rgba(111,232,255,.55)'; c.lineWidth = 3 * px;
+        c.beginPath(); c.arc(m.x, m.y, r0, -Math.PI / 2, -Math.PI / 2 + TAU * lv); c.stroke();
+      }
+      c.fillStyle = m.holding ? '#9ff0ff' : dg ? '#ffb3b3' : 'rgba(236,228,210,.7)'; c.font = `700 ${(m.holding || dg ? 11 : 10) * px}px ${FONT}`; c.textAlign = 'center';
+      const lb = m.gaspT > 0 ? '喘氣！' : m.holding ? '屏息中' : dg ? '牠在旁邊' : '躲藏中', ly = y0 - (dg ? 4 * px : 0);
+      c.strokeStyle = 'rgba(0,0,0,.75)'; c.lineWidth = 3 * px; c.lineJoin = 'round'; c.strokeText(lb, m.x, ly); c.fillText(lb, m.x, ly);
+    }
     if (m.inVent) { c.fillStyle = 'rgba(134,240,160,.85)'; c.beginPath(); c.arc(m.x, m.y, 7 * px, 0, TAU); c.fill(); c.font = `700 ${10 * px}px ${FONT}`; c.textAlign = 'center'; c.fillText('阿傑（管道裡）', m.x, m.y - 12 * px); }
     if (z > .55 && (W.sel === m.ci || UI.bridgeMode)) { c.font = `700 ${11 * px}px ${FONT}`; c.textAlign = 'center'; c.fillStyle = 'rgba(0,0,0,.6)'; c.fillText(CREW[m.ci].name, m.x + 1 * px, m.y + 38 + 1 * px); c.fillStyle = CREW[m.ci].col; c.fillText(CREW[m.ci].name, m.x, m.y + 38); }
   }
@@ -383,10 +402,10 @@ function drawIconCanvas(c, k, x, y, s, col) { c.fillStyle = col; c.font = `900 $
 function drawDoorButtons(c, t, px) {
   const show = UI.bridgeMode || W.sel >= 0;
   if (!show || (CAM.z < .32 && !UI.bridgeMode)) return;
-  const big = UI.bridgeMode;
+  const big = UI.bridgeMode, bs = big ? clamp(CAM.z / .5, .76, 1) : 1;
   for (const d of SHIP.doors) {
     if (d.kind === 'airout' && !UI.bridgeMode) continue;
-    const r0 = (big ? 13 : 9) * px;
+    const r0 = (big ? 13 * bs : 9) * px;
     const col = d.broken ? '#777777' : d.welded ? '#ff8a3d' : d.state === 'open' ? '#86f0a0' : '#ff3d3d';
     c.fillStyle = 'rgba(8,12,18,.85)'; c.beginPath(); c.arc(d.x, d.y, r0, 0, TAU); c.fill();
     c.strokeStyle = col; c.lineWidth = 2 * px; c.stroke();
@@ -395,7 +414,7 @@ function drawDoorButtons(c, t, px) {
     if (d.remoteCd > 0) { c.strokeStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(d.x, d.y, r0 + 3 * px, -Math.PI / 2, -Math.PI / 2 + TAU * d.remoteCd / 1.2); c.stroke(); }
   }
   if (UI.bridgeMode || UI.showVents) for (const id in SHIP.dampers) {
-    const dm = SHIP.dampers[id], r0 = (big ? 12 : 8) * px;
+    const dm = SHIP.dampers[id], r0 = (big ? 12 * bs : 8) * px;
     c.fillStyle = 'rgba(8,12,18,.9)'; c.fillRect(dm.x - r0, dm.y - r0, r0 * 2, r0 * 2);
     c.strokeStyle = dm.closed ? '#ff3d3d' : '#ffb03a'; c.lineWidth = 2 * px; c.strokeRect(dm.x - r0, dm.y - r0, r0 * 2, r0 * 2);
     c.fillStyle = c.strokeStyle; c.font = `800 ${r0 * .8}px ${FONT_M}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(id, dm.x, dm.y + .5 * px); c.textBaseline = 'alphabetic';

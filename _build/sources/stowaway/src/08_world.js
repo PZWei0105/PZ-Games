@@ -13,7 +13,8 @@ function newRun(opt = {}) {
     lights: ROOMS.map(() => ({ on: true, broken: false, flick: 0 })),
     plan: null, stance: null, dir: { m: 0, hi: 0, lo: 0, cool: 0, nudge: 0, firstScare: false },
     learn: { hide: { locker: 0, under: 0, pod: 0, crate: 0 }, lure: 0, alarm: 0, fire: 0, weld: 0, bot: 0, sentry: {} },
-    chron: [], logs: [], stats: { searched: 0, rescues: 0, kills: 0, burns: 0, hides: 0, lures: 0, dmg: 0 },
+    chron: [], logs: [], stats: { searched: 0, rescues: 0, kills: 0, burns: 0, hides: 0, lures: 0, dmg: 0, close: 0, holds: 0 },
+    breathHeld: false, breathAlert: null, closeT: 0, closeChronT: 0,
     bridgeOp: -1, sel: -1, airLife: 0, sweepT: 0, mimicT: 60 + R.f(0, 40), agent: null, agentDone: false, confessed: false,
     flags: {}, objs: [], lastBeep: 0, lightVer: 0, tension: 0, grabbing: null, airT: 0, finalPlanReady: false,
     mods: { mimic: voyage >= 2, agent: voyage >= 3 && R.chance(.55), event: voyage >= 4 ? R.pick(['reactor', 'jam', 'sensors', 'dark']) : null },
@@ -23,7 +24,8 @@ function newRun(opt = {}) {
     const m = { ci: d.i, id: d.id, x: d.start[0] * T, y: d.start[1] * T, ang: R.f(0, TAU), hp: 3, bpm: 74, bpmT: 74, dead: false,
       path: null, pi: 0, goal: null, task: null, moving: false, walkPh: 0, run: false, held: null, inv: [], hidden: null, crouch: 0,
       stance: 'guard', panic: null, virtue: false, sed: 0, seen: 99, grabbed: false, lampOn: true, room: -1, barkCd: 0, stepT: 0, wait: null,
-      freeze: 0, cocoon: -1, aim: false, firing: false, saved: 0, lastAlone: 0, aboard: false, suit: false, wounds: [] };
+      freeze: 0, cocoon: -1, aim: false, firing: false, saved: 0, lastAlone: 0, aboard: false, suit: false, wounds: [],
+      drive: null, driveRun: false, doorPush: 0, follow: -1, followT: 0, breath: 1, holding: false, gaspT: 0, near: 0 };
     for (const it of d.items) giveItem(m, it);
     if (d.id === 'wei' && perkOn('tracker2')) giveItem(m, 'tracker');
     if (d.id === 'wen' && perkOn('medbag')) { giveItem(m, 'sedative'); giveItem(m, 'medkit'); }
@@ -107,6 +109,7 @@ function worldTick(dt) {
   updateCycle(dt);
   for (const m of W.crew) updateCrew(m, dt);
   updateBeast(W.beast, dt);
+  updateCloseCalls();
   updateBot(dt);
   updateTraps(dt);
   updateSensors(dt);
@@ -174,18 +177,23 @@ function updateCrew(m, dt) {
   m.barkCd = Math.max(0, m.barkCd - dt); m.freeze = Math.max(0, m.freeze - dt); m.sed = Math.max(0, m.sed - dt); m.saved = Math.max(0, m.saved - dt);
   m.room = roomIdxW(m.x, m.y);
   if (m.cocoon >= 0) { m.cocoon -= dt; if (m.cocoon <= 0) { killCrew(m, '死在巢裡'); } return; }
-  if (m.grabbed) { m.bpm = Math.min(190, m.bpm + dt * 30); return; }
+  if (m.grabbed) { m.bpm = Math.min(190, m.bpm + dt * 30); m.holding = false; return; }
   updateBpm(m, dt);
+  updateBreath(m, dt);
   // 恐慌
   if (m.panic) { m.panic.t -= dt; if (m.panic.t <= 0) m.panic = null; }
   else if (!m.hidden && m.bpm >= (def.id === 'batu' || def.id === 'wei' ? 168 : 156) && !m.virtue) {
     m.panicRoll = (m.panicRoll || 0) - dt;
     if (m.panicRoll <= 0) { m.panicRoll = 3; if (R.chance((m.bpm - 150) / 55)) startPanic(m); }
   }
+  // 搖桿直接操控（選中的人）
+  const drv = m.drive && !(m.panic && m.panic.type === 'run');
+  if (drv && m.freeze > 0) { if ((m.driveWarn || 0) < W.t) { m.driveWarn = W.t + 2.5; toast(CREW[m.ci].name + '嚇得動不了……', 'bad'); } m.moving = false; }
+  else if (drv) { if (m.task) cancelTask(m); m.path = null; m.goal = null; stopFollow(m); if (m.hidden) unhide(m); driveStep(m, dt); }
   // 任務
-  if (m.task) { if (m.freeze <= 0) runTask(m, dt); }
-  else if (m.path && m.freeze <= 0) moveAlong(m, dt);
-  else { m.moving = false; autoBehavior(m, dt); }
+  else if (m.task) { if (m.freeze <= 0) runTask(m, dt); }
+  else if (m.path && m.freeze <= 0) { moveAlong(m, dt); if (m.follow >= 0 && !m.goal && m.path) followStep(m, dt); }
+  else { m.moving = false; m.driveRun = false; m.doorPush = 0; autoBehavior(m, dt); if (!m.path && !m.task) followStep(m, dt); }
   m.crouch = lerp(m.crouch, m.hidden || (m.task && m.task.crouch) ? 1 : 0, dt * 6);
   m.aim = !!(m.firing || (m.task && m.task.aim));
 }
@@ -262,11 +270,137 @@ function moveAlong(m, dt) {
   if (m.stepT <= 0) { m.stepT = m.run ? .34 : .6; noise(m.x, m.y, m.run ? T * 4.2 : T * .9, 'step'); if (m.run) AU.step(m.x, m.y, true); }
 }
 function lerpAng(a, b, t) { return a + angDiff(a, b) * Math.min(1, t); }
+
+// ---------- 搖桿：直接操控 ----------
+function driveStep(m, dt) {
+  const D = m.drive;
+  const tx = Math.floor(m.x / T), ty = Math.floor(m.y / T);
+  if (!tileFree(tx, ty)) { const n = nearestFree(tx, ty); if (n) { m.x = (n[0] + .5) * T; m.y = (n[1] + .5) * T; } }
+  const run = D.mag >= .86;
+  let sp = run ? RUN : WALK * (.4 + .6 * Math.min(1, D.mag / .86));
+  if (m.hp === 2) sp *= .82; else if (m.hp === 1) sp *= .55;
+  if (m.sed > 0) sp *= .85;
+  if (W.stance === 'huddle') sp *= .9;
+  if (m.virtue) sp *= 1.12;
+  const px = m.x, py = m.y;
+  const [nx, ny] = collideCircle(m.x + D.x * sp * dt, m.y + D.y * sp * dt, CREW_R, px, py);
+  m.x = nx; m.y = ny;
+  const moved = Math.hypot(nx - px, ny - py) / Math.max(dt, 1e-4);
+  m.ang = lerpAng(m.ang, Math.atan2(D.y, D.x), dt * 12);
+  m.moving = moved > 6; m.driveRun = run && moved > 20;
+  const k = Math.max(.45, Math.min(1, moved / WALK));
+  if (m.moving) {
+    m.walkPh += dt * (m.driveRun ? 13 : 9 * k);
+    m.stepT -= dt;
+    if (m.stepT <= 0) { m.stepT = m.driveRun ? .34 : .6 / Math.max(.6, k); noise(m.x, m.y, m.driveRun ? T * 4.2 : T * .8 * k, 'step'); if (m.driveRun) AU.step(m.x, m.y, true); }
+  }
+  pushDoor(m, D, dt);
+}
+// 往關著的門推：門會自己打開（焊死、卡住就過不去）
+function pushDoor(m, D, dt) {
+  const tx = Math.floor(m.x / T), ty = Math.floor(m.y / T);
+  let door = null;
+  const cands = [];
+  if (Math.abs(D.x) > .3) cands.push([tx + Math.sign(D.x), ty]);
+  if (Math.abs(D.y) > .3) cands.push([tx, ty + Math.sign(D.y)]);
+  for (const [bx, by] of cands) {
+    const d = doorBetween(tx, ty, bx, by);
+    if (!d || doorOpen(d)) continue;
+    const gap = bx !== tx ? Math.abs(Math.max(tx, bx) * T - m.x) : Math.abs(Math.max(ty, by) * T - m.y);
+    if (gap < CREW_R + 7) { door = d; break; }
+  }
+  if (!door || door.kind === 'airout') { m.doorPush = 0; return; }
+  if (door.welded || door.jam) { if ((m.doorWarn || 0) < W.t) { m.doorWarn = W.t + 3; toast(CREW[m.ci].name + '：門' + (door.welded ? '被焊死了' : '卡住了') + '，過不去。', 'bad'); } return; }
+  if (door.state === 'open') return;
+  m.doorPush += dt;
+  if (m.doorPush > (W.power.on.doors ? .18 : 1)) { setDoor(door, true); m.doorPush = 0; }
+}
+
+// ---------- 跟上我：小隊跟著帶頭的人走 ----------
+function stopFollow(m) { if (m.follow >= 0) { m.follow = -1; m.run = !!m.runPref; } }
+function followersOf(L) { return W.crew.filter(o => o !== L && !o.dead && o.cocoon < 0 && o.follow === L.ci); }
+function followCandidates(L) {
+  return W.crew.filter(o => o !== L && !o.dead && o.cocoon < 0 && !o.grabbed && !o.inVent && !o.task && o.follow !== L.ci && !(o.panic && o.panic.type === 'run')
+    && dist(o.x, o.y, L.x, L.y) < T * 7 && (o.room === L.room || hasLOS(o.x, o.y, L.x, L.y)));
+}
+function callFollow(L) {
+  const c = followCandidates(L); if (!c.length) return;
+  for (const o of c) { if (o.hidden) unhide(o); o.runPref = o.run; o.follow = L.ci; o.path = null; o.goal = null; o.followT = 0; }
+  toast(c.map(o => CREW[o.ci].name).join('、') + ' 跟上了' + CREW[L.ci].name + '。待在一起，心跳比較穩。', 'good');
+  bark(c[0], 'move', true);
+}
+function dismissFollow(L) { for (const o of followersOf(L)) { stopFollow(o); o.path = null; } toast('大家原地待命。'); }
+function followStep(m, dt) {
+  if (m.follow < 0) return;
+  const L = W.crew[m.follow];
+  if (!L || L.dead || L.cocoon >= 0 || L.inVent || L.left) { stopFollow(m); return; }
+  if (m.panic || m.freeze > 0) return;
+  const b = W.beast, danger = b && !b.inVent && b.state !== 'dormant' && b.state !== 'dead' && dist(b.x, b.y, m.x, m.y) < T * 6;
+  // 帶頭的躲起來：自己找附近的地方躲
+  if (L.hidden) {
+    if (!m.hidden && (m.followT -= dt) <= 0) {
+      m.followT = 1.5;
+      const h = SHIP.hides.filter(x => x.occ == null && x.room === m.room && dist(x.sx, x.sy, m.x, m.y) < T * 5).sort((a, c) => dist(a.sx, a.sy, m.x, m.y) - dist(c.sx, c.sy, m.x, m.y))[0];
+      if (h) orderDo(m, 'hide', h, { keepFollow: true });
+    }
+    return;
+  }
+  if (m.hidden) { if (danger || dist(L.x, L.y, m.x, m.y) < T * 2.5) return; unhide(m); }
+  const d = dist(m.x, m.y, L.x, L.y);
+  if (d < T * 1.5) return;
+  if ((m.followT -= dt) > 0) return;
+  m.followT = .45;
+  const fs = followersOf(L), k = fs.indexOf(m), n = fs.length;
+  const a = L.ang + Math.PI + (k - (n - 1) / 2) * .8;
+  let gx = L.x + Math.cos(a) * T * 1.2, gy = L.y + Math.sin(a) * T * 1.2;
+  if (!tileFree(Math.floor(gx / T), Math.floor(gy / T)) || roomIdxW(gx, gy) !== L.room) { gx = L.x; gy = L.y; }
+  const run = d > T * 4.5 || L.driveRun || (L.path && L.run);
+  orderMove(m, gx, gy, run, true);
+}
+
+// ---------- 屏住呼吸 ----------
+function breathDanger(m) {
+  const b = W.beast;
+  if (!m.hidden || !b || b.inVent || b.state === 'dormant' || b.state === 'dead' || b.state === 'spaced' || b.stage === 0) return false;
+  return dist(b.x, b.y, m.x, m.y) < T * 4.2 || (b.state === 'check' && b.checkSpot === m.hidden);
+}
+function updateBreath(m, dt) {
+  m.gaspT = Math.max(0, m.gaspT - dt);
+  m.holding = !!(W.breathHeld && breathDanger(m) && m.breath > 0 && m.gaspT <= 0);
+  if (m.holding) {
+    m.breath -= dt / clamp(7.5 - (m.bpm - 80) / 18, 3, 7.5);
+    m.bpm = Math.min(190, m.bpm + dt * 3);
+    if (m.breath <= 0) gasp(m);
+  } else m.breath = Math.min(1, m.breath + dt / 5);
+}
+function gasp(m) {
+  m.holding = false; m.breath = 0; m.gaspT = 2.2; m.bpm = Math.min(190, m.bpm + 15);
+  noise(m.x, m.y, T * 3.4, 'gasp'); AU.gasp(m.x, m.y);
+  say(m.id, '……哈啊——！'); chron(CREW[m.ci].name + '憋不住氣，喘了出來。');
+}
+
+// ---------- 擦身而過 ----------
+function updateCloseCalls() {
+  const b = W.beast;
+  if (!b || b.inVent || b.stage === 0 || b.state === 'dormant' || b.state === 'dead' || b.state === 'spaced') { for (const m of W.crew) m.near = 0; return; }
+  for (const m of W.crew) {
+    if (m.dead || m.cocoon >= 0 || m.grabbed || m.inVent) { m.near = 0; continue; }
+    if ((b.state === 'chase' || b.state === 'grab') && b.target === m) { m.near = 0; continue; }
+    const d = dist(b.x, b.y, m.x, m.y);
+    if (d < T * 1.9) m.near = 1;
+    else if (m.near && d > T * 4.5) {
+      m.near = 0; W.stats.close = (W.stats.close || 0) + 1;
+      const where = m.hidden ? '躲的' + m.hidden.name + '前面' : '身邊';
+      if (W.closeT < W.t) { W.closeT = W.t + 25; toast('擦身而過：牠從' + CREW[m.ci].name + where + '走了過去。', 'good'); }
+      if (W.closeChronT < W.t) { W.closeChronT = W.t + 20; chron('牠從' + CREW[m.ci].name + where + '走了過去，沒有發現。'); }
+    }
+  }
+}
 function orderMove(m, x, y, run, auto) {
   if (m.dead || m.grabbed || m.cocoon >= 0) return false;
   if (m.freeze > 0 && !auto) { toast(CREW[m.ci].name + '嚇得動不了……', 'bad'); return false; }
   if (m.hidden) unhide(m);
-  if (!auto) { cancelTask(m); m.goal = null; }
+  if (!auto) { cancelTask(m); m.goal = null; m.follow = -1; }
   if (W.bridgeOp === m.ci && !auto) leaveBridge(m);
   const path = findPath(Math.floor(m.x / T), Math.floor(m.y / T), Math.floor(x / T), Math.floor(y / T), 'crew');
   if (!path) { if (!auto) toast('那裡走不過去。', 'bad'); return false; }
@@ -282,6 +416,7 @@ function orderDo(m, kind, target, extra = {}) {
   if (m.freeze > 0) { toast(CREW[m.ci].name + '嚇得動不了……', 'bad'); return false; }
   const pos = goalPos(kind, target, m);
   cancelTask(m);
+  if (!extra.keepFollow) stopFollow(m);
   if (m.hidden && !(kind === 'unhide')) unhide(m);
   if (W.bridgeOp === m.ci && kind !== 'bridge') leaveBridge(m);
   m.goal = { kind, target, ...extra };

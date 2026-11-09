@@ -163,6 +163,41 @@ function hasLOS(ax, ay, bx, by) {
   const d = Math.hypot(bx - ax, by - ay); if (d < 1) return true;
   return castRay(ax, ay, (bx - ax) / d, (by - ay) / d, d) >= d - 2;
 }
+// ---------- 搖桿直接操控：牆與關著的門當成線段，船員是一個圓 ----------
+const CREW_R = 14;
+function edgeSolid(ax, ay, bx, by) {
+  const fa = tileFree(ax, ay), fb = tileFree(bx, by);
+  if (fa !== fb) return true;
+  if (!fa) return false;
+  const ra = roomIdx(ax, ay), rb = roomIdx(bx, by);
+  if (ra === rb) return false;
+  const d = doorBetween(ax, ay, bx, by);
+  return !d || d.kind === 'airout' || !doorOpen(d);
+}
+function pushSeg(x, y, r, vert, c, s0, s1, px, py) {
+  // vert：直的線段 x = c、y 在 s0～s1；否則橫的 y = c、x 在 s0～s1
+  const qx = vert ? c : clamp(x, s0, s1), qy = vert ? clamp(y, s0, s1) : c;
+  const dx = x - qx, dy = y - qy, d = Math.hypot(dx, dy);
+  if (d >= r) return null;
+  if (d > 1e-3) return [qx + dx / d * r, qy + dy / d * r];
+  return vert ? [c + (px < c ? -r : r), y] : [x, c + (py < c ? -r : r)];
+}
+function collideCircle(x, y, r, px, py) {
+  for (let it = 0; it < 3; it++) {
+    const tx = Math.floor(x / T), ty = Math.floor(y / T);
+    let hit = false;
+    for (let gy = ty - 1; gy <= ty + 1; gy++) for (const cx of [tx - 1, tx]) {
+      if (!edgeSolid(cx, gy, cx + 1, gy)) continue;
+      const res = pushSeg(x, y, r, true, (cx + 1) * T, gy * T, (gy + 1) * T, px, py); if (res) { x = res[0]; y = res[1]; hit = true; }
+    }
+    for (let gx = tx - 1; gx <= tx + 1; gx++) for (const cy of [ty - 1, ty]) {
+      if (!edgeSolid(gx, cy, gx, cy + 1)) continue;
+      const res = pushSeg(x, y, r, false, (cy + 1) * T, gx * T, (gx + 1) * T, px, py); if (res) { x = res[0]; y = res[1]; hit = true; }
+    }
+    if (!hit) break;
+  }
+  return [x, y];
+}
 // 房間之間要隔幾道關著的門（聲音衰減、聲納用）
 function recomputeRoomCosts() {
   const n = ROOMS.length, M = [];

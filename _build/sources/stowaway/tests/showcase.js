@@ -30,7 +30,7 @@
     if (m.hidden) unhide(m);
     cancelTask(m); m.path = null; m.goal = null; m.panic = null; m.wait = null;
     m.x = x * TT; m.y = y * TT; m.room = roomIdxW(m.x, m.y);
-    m.lampOn = o.lamp !== false; m.stance = o.stance || 'walk';
+    m.lampOn = o.lamp !== false; m.stance = o.stance || 'walk'; m.follow = o.follow ?? -1;
     if (o.inv) { m.inv = []; for (const it of o.inv) giveItem(m, it); refreshHeld(m); }
     if (o.bpm) m.bpm = o.bpm;
     if (o.at) m.ang = Math.atan2(o.at[1] * TT - m.y, o.at[0] * TT - m.x); else if (o.ang != null) m.ang = o.ang;
@@ -77,6 +77,47 @@
   }
   function heroLine() { quiet(); say('su', '別出聲……牠在聽心跳。'); const b = __sw.W.beast; b.sonarFx = .55; return 'ok'; }
 
+  // 屏息：牠貼在冷藏庫前面聽，桌下還躲著一個
+  function breath() {
+    const W = __sw.W;
+    if (W.act !== 1) { startAct(1); }
+    W.phase = 'play'; W.dir.cool = 30; go(1);
+    hideIn('deng', '冷藏庫'); hideIn('jie', '餐桌底下');
+    crew('deng').bpm = 132; crew('jie').bpm = 118;
+    park('wei', 8.0, 11.5); park('su', 9.5, 2.5); park('wen', 3.0, 11.5); park('batu', 8.0, 23.5);
+    const b = W.beast; const h = SHIP.hides.find(x => x.name === '冷藏庫');
+    pose(b, 6.05, 19.05, Math.PI * .22, Math.PI * .95, 2.6);
+    b.state = 'check'; b.checkSpot = h; b.checkSaw = false; b.path = null; b.st = .95; b.visible = true;
+    W.breathHeld = true; crew('deng').breath = .62; crew('jie').breath = .7;
+    cam(4.15, 17.55, 1.36); quiet();
+    return 'ok';
+  }
+  function breathLine() { quiet(); const b = __sw.W.beast; b.sonarFx = .5; __sw.W.breathAlert = { t: __sw.W.t, h: b.checkSpot }; return 'ok'; }
+
+  // 帶隊：左手搖桿，大家跟著走
+  function squad() {
+    const W = __sw.W; go(1);
+    if (W.power.on.lights) togglePower('lights');
+    const b = W.beast; b.inVent = true; b.state = 'lurk'; b.lurkT = 99; b.visible = false; b.x = SHIP.vnode.vg1.x; b.y = SHIP.vnode.vg1.y; b.vnode = SHIP.vnode.vg1.i;
+    for (const id of ['deng', 'jie']) { const m = crew(id); if (m.hidden) unhide(m); }
+    const L = place('wei', 8.0, 26.6, { ang: Math.PI / 2, inv: ['prod', 'flare'], bpm: 96 });
+    const a = place('su', 7.55, 25.35, { ang: Math.PI / 2, inv: ['tracker'], bpm: 92 });
+    const c = place('batu', 8.45, 25.2, { ang: Math.PI / 2, inv: ['flamer'], bpm: 90 });
+    a.follow = L.ci; c.follow = L.ci; a.runPref = c.runPref = false;
+    park('deng', 12.5, 11.2); park('jie', 3.5, 11.5); park('wen', 3.0, 9.8);
+    __sw.selectCrew(0); S.slowT = 0;
+    cam(8.0, 26.9, 1.3); quiet();
+    return 'ok';
+  }
+  function squadStick() {
+    const p = joyHome(); joyStart(-7, p[0], p[1]); joyMove(p[0] + 4, p[1] + 40);
+    const W = __sw.W; W.crew[0].moving = true; W.crew[0].walkPh = 2.1;
+    for (const m of W.crew) if (m.follow === 0) { m.moving = true; m.walkPh = 1.2; }
+    quiet(); say('wei', '跟緊我。別跑。');
+    return 'ok';
+  }
+  function squadEnd() { joyEnd(); return 'ok'; }
+
   // 被抓住：五秒內救人
   function grab() {
     const W = __sw.W; go(1);
@@ -100,7 +141,7 @@
     const b = W.beast; b.inVent = true; b.state = 'lurk'; b.lurkT = 99; b.x = SHIP.vnode.vg2.x; b.y = SHIP.vnode.vg2.y; b.vnode = SHIP.vnode.vg2.i; b.visible = false;
     place('wei', 7.4, 2.5, { ang: Math.PI / 2 }); place('su', 9.4, 2.2, { ang: Math.PI / 2 });
     place('jie', 3.2, 25.4, { ang: -1 }); place('deng', 12.3, 26.2, { ang: 2 }); place('wen', 11.8, 11.2, { ang: 0 }); place('batu', 6.0, 34.4, { ang: 0 });
-    enterBridge(crew('su'));
+    enterBridge(crew('su')); W.sel = -1; refreshActbar(true);
     for (const id of ['b_aft', 'd_store', 'a_in']) { const d = SHIP.door[id]; d.state = 'closed'; d.open = 0; }
     SHIP.dampers.D7.closed = true; SHIP.dampers.D9.closed = true;
     W.lights[ROOM.cargo.i].on = false; W.lights[ROOM.airlock.i].on = false; W.lightVer = (W.lightVer || 0) + 1;
@@ -159,6 +200,6 @@
     return W.beast.state + ' ' + W.beast.st.toFixed(2);
   }
 
-  window.__show = { start, juv, hero, heroLine, grab, grabLine, bridge, bridgeView, plans, pickPlan, airlock, airlockWatch, quiet, freeze, go, cam, pose, place };
+  window.__show = { start, juv, hero, heroLine, breath, breathLine, squad, squadStick, squadEnd, grab, grabLine, bridge, bridgeView, plans, pickPlan, airlock, airlockWatch, quiet, freeze, go, cam, pose, place };
   return 'show ready';
 })();
