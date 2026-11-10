@@ -6,8 +6,8 @@ function sectorCfg(si, tier) {
   return {
     id: 5, endless: true, tier: t, name: '無盡深潛', en: 'ENDLESS', depth: 8400 + 140 * t, cols: 4, floors: Math.min(6, 4 + Math.floor((t + 1) / 2)),
     T: Math.max(500, 660 - t * 12), col: '#b47cff', themes: ENDLESS_THEMES,
-    hunter: { hp: 4000 + 600 * t, walk: 86, run: Math.min(178, 163 + t), dmg: 40 + t * 2.5, door: 110 + t * 4, hear: 1.65, shriek: true },
-    wave: { first: 32, int: Math.max(32, 44 - t), budget: 8 + t * 1.3, grow: 2 + t * .12 }, sleepers: 2, husks: 2 + Math.floor(t / 2),
+    hunter: { walk: 86, run: Math.min(362, 340 + t * 2), door: 82 + t * 3, hear: 1.7, shriek: true },
+    husks: 3 + Math.floor(t / 2), walls: 3, trickle: Math.max(42, 56 - t * 2),
     survivors: [], logs: [], intro: [`無盡深潛・第 ${t} 層`, '瀚淵站底下的舊礦井。沒有地圖，沒有人，只有更深的地方。'],
   };
 }
@@ -16,30 +16,40 @@ const PROPW = { bunk: 92, locker: 34, desk: 72, table: 104, fridge: 48, counter:
   washer: 48, pump: 112, valve: 30, generator: 122, bench: 92, cable: 42, console: 74, speaker: 62, server: 40, mic: 22, tank: 56, optable: 104, freezer: 74, labbench: 104,
   bigtank: 170, hatch: 72, suitrack: 62, podhatch: 74, body: 62, moonpool: 190 };
 const SEARCHABLE = { locker: 1, desk: 1, fridge: 1, cabinet: 1, crate: 1, shelf: 1, counter: 1, washer: 1, bench: 1, console: 1, server: 1, tank: 1, freezer: 1, labbench: 1, suitrack: 1, body: 1, barrel: 1, bunk: 1, bed: 1, optable: 1, sofa: 1 };
+/* 躲得進去的家具：locker＝關在櫃子裡（最安靜）、bed＝床底、desk＝桌子底下 */
+const HIDEABLE = { locker: 'locker', freezer: 'locker', bunk: 'bed', bed: 'bed', sofa: 'bed', desk: 'desk', table: 'desk', counter: 'desk', labbench: 'desk', bench: 'desk', optable: 'desk' };
+const HIDE_INFO = {
+  locker: { label: '躲進置物櫃', muf: .34, enter: 95, ov: 'locker' },
+  bed: { label: '躲到床底', muf: .5, enter: 55, ov: 'low' },
+  desk: { label: '躲到桌子下', muf: .62, enter: 45, ov: 'low' },
+};
+const HIDE_LABEL = { grate: '躲進月池邊的維修坑', freezer: '躲進冷凍櫃', sofa: '躲到沙發後面', table: '躲到桌子下', counter: '躲到流理台下', labbench: '躲到實驗台下', bench: '躲到工作台下', optable: '躲到解剖台下', bunk: '躲到床底' };
+/* 開了會一直響的機器：可以拿來引開聆 */
+const MACHINES = { washer: '洗衣機', pump: '泵浦', generator: '發電機', speaker: '喇叭' };
 const THEME_PROPS = {
   airlock: ['suitrack', 'locker', 'locker', 'crate'],
-  pod: ['locker', 'crate'],
+  pod: ['locker', 'crate', 'locker'],
   dock: [],
   dorm: ['bunk', 'bunk', 'locker', 'locker', 'desk'],
   mess: ['table', 'table', 'fridge', 'counter'],
   med: ['bed', 'bed', 'cabinet', 'iv', 'cabinet'],
-  storage: ['crate', 'crate', 'shelf', 'shelf', 'barrel'],
+  storage: ['crate', 'locker', 'shelf', 'crate', 'barrel'],
   lounge: ['sofa', 'shelf', 'plant', 'table'],
   laundry: ['washer', 'washer', 'washer', 'locker', 'crate'],
-  pump: ['pump', 'valve', 'crate', 'barrel'],
-  power: ['generator', 'cabinet', 'cabinet', 'barrel'],
+  pump: ['pump', 'locker', 'valve', 'barrel'],
+  power: ['generator', 'locker', 'cabinet', 'barrel'],
   workshop: ['bench', 'crate', 'shelf', 'barrel'],
-  corridor: ['crate', 'cable', 'barrel', 'crate'],
-  sonar: ['console', 'speaker', 'server', 'console'],
-  studio: ['console', 'mic', 'shelf', 'sofa'],
+  corridor: ['crate', 'locker', 'cable', 'barrel'],
+  sonar: ['console', 'speaker', 'desk', 'console'],
+  studio: ['console', 'mic', 'desk', 'sofa'],
   archive: ['server', 'server', 'server', 'desk'],
   office: ['desk', 'desk', 'shelf', 'plant'],
-  tanks: ['tank', 'tank', 'cabinet', 'tank'],
+  tanks: ['tank', 'locker', 'tank', 'cabinet'],
   autopsy: ['optable', 'cabinet', 'cabinet', 'iv'],
   freezer: ['freezer', 'freezer', 'crate'],
   lab: ['labbench', 'tank', 'cabinet', 'shelf'],
   control: ['console', 'console', 'desk', 'server'],
-  server: ['server', 'server', 'server', 'server', 'cabinet'],
+  server: ['server', 'locker', 'server', 'server', 'cabinet'],
   deep: [],
 };
 
@@ -203,20 +213,56 @@ function genMap(si, seed, tier) {
     const r = logRooms[k % logRooms.length]; if (!r) return;
     const sp = takeSpot(r, s => ['console', 'desk', 'body', 'server'].includes(s.prop)); if (sp) { sp.kind = 'log'; sp.log = lid; sp.rar = 2; }
   });
-  const nCache = 2 + (C * F >= 20 ? 1 : 0);
+  const nCache = 3 + (C * F >= 20 ? 1 : 0);
   rng.shuffle(spotRooms.filter(r => r.special !== 'start')).slice(0, nCache).forEach(r => { const sp = takeSpot(r); if (sp) { sp.kind = 'cache'; sp.rar = 3; } });
+  // 陷阱艙：有配電箱的艙，插上保險絲、灌水，就能把聆電死在裡面
+  const trapPref = ['pump', 'power', 'laundry', 'workshop', 'tanks', 'freezer', 'storage', 'lab', 'mess', 'server'];
+  const trapC = rng.shuffle(M.rooms.filter(r => ok(r) && r.special !== 'vault' && (r.doorL || r.doorR) && (dStart.get(r.i) || 0) >= 1))
+    .sort((a, b) => (trapPref.includes(b.theme) ? 1 : 0) - (trapPref.includes(a.theme) ? 1 : 0));
+  M.traps = [];
+  const nTrap = C * F >= 20 ? 2 : 1;
+  for (const r of trapC) {
+    if (M.traps.length >= nTrap) break;
+    if (M.traps.some(i => { const o = M.rooms[i]; return Math.abs(o.c - r.c) + Math.abs(o.f - r.f) < 2; })) continue;
+    const left = !(r.vent && r.vent.x - r.x0 < RW / 2);
+    r.trap = { bx: r.x0 + (left ? 62 : RW - 62), by: r.y0 + (r.f === 0 ? 18 : 0) + 104, vx: r.x0 + (left ? RW - 92 : 92), state: 'nofuse', flood: 0, seen: false };
+    M.traps.push(r.i);
+  }
+  // 每個陷阱一定有一根保險絲放在別的艙
+  for (const ti of M.traps) {
+    const dT = gdist(M.rooms[ti]);
+    const fc = rng.shuffle(spotRooms.filter(r => r.i !== ti && r.special !== 'start' && r.special !== 'vault' && (dT.get(r.i) || 0) >= 2 && r.spots.some(s => s.kind === 'loot')));
+    const fr = fc[0] || spotRooms.find(r => r.i !== ti && r.spots.some(s => s.kind === 'loot'));
+    if (fr) { const sp = takeSpot(fr); if (sp) { sp.kind = 'fuse'; sp.rar = 2; } }
+  }
   // 起點房只給一點普通東西
   start.spots.forEach(s => { if (s.kind === 'loot') s.rar = Math.min(s.rar, 1); });
-  // 沉睡的怪、遊蕩的回聲人
-  M.sleepers = [];
+  // 住在站裡的東西：遊蕩的回聲人、長在牆裡的人
+  M.residents = [];
   const far = rng.shuffle(M.rooms.filter(r => !r.collapsed && r.special !== 'start' && r.special !== 'dock' && r.special !== 'deep' && !r.survivor && (dStart.get(r.i) || 0) >= 2));
-  for (let k = 0; k < S.sleepers && k < far.length; k++) M.sleepers.push({ room: far[k].i, type: 'iso', n: rng.int(2, 4) });
-  for (let k = 0; k < S.husks; k++) { const r = far[(k + S.sleepers) % far.length]; if (r) M.sleepers.push({ room: r.i, type: 'husk', n: 1 }); }
+  for (let k = 0; k < S.husks && far.length; k++) { const r = far[k % far.length]; M.residents.push({ room: r.i, type: 'husk', x: r.x0 + rng.int(70, RW - 70) }); }
+  let walls = 0;
+  for (const r of rng.shuffle(far.slice())) {
+    if (walls >= S.walls) break;
+    if (M.traps.includes(r.i) || M.residents.some(o => o.room === r.i && o.type === 'wall')) continue;
+    const gx = wallGap(r); if (gx == null) continue;
+    M.residents.push({ room: r.i, type: 'wall', x: r.x0 + gx }); walls++;
+  }
   M.start = start.i; M.dock = dock.i; M.vault = vault ? vault.i : -1; M.deep = deep ? deep.i : -1;
   M.dist = dStart;
   return M;
 }
 
+/* 牆上空著、可以「長」一個人的位置（不擋家具、通風口、梯子） */
+function wallGap(r) {
+  const busy = r.props.map(p => [p.x - 10, p.x + p.w + 10]);
+  if (r.vent) busy.push([r.vent.x - r.x0 - 44, r.vent.x - r.x0 + 44]);
+  if (r.ladUp) busy.push([r.ladUp.x - r.x0 - 40, r.ladUp.x - r.x0 + 40]);
+  if (r.ladDown) busy.push([r.ladDown.x - r.x0 - 40, r.ladDown.x - r.x0 + 40]);
+  if (r.survivor) busy.push([r.survivor.x - r.x0 - 50, r.survivor.x - r.x0 + 50]);
+  for (const x of [RW / 2, 120, RW - 120, 90, RW - 90, 150, RW - 150]) if (busy.every(([a, b]) => x + 30 < a || x - 30 > b)) return x;
+  return null;
+}
 function freeX(r, rng, pref) {
   const bad = [];
   if (r.ladUp) bad.push(r.ladUp.x - r.x0); if (r.ladDown) bad.push(r.ladDown.x - r.x0);
@@ -236,6 +282,8 @@ function layoutRoom(r, rng) {
     for (const mx of [RW / 2 - PROPW.moonpool / 2 + 20, 128, 136, 112, 60, 48, 40]) if (place('moonpool', mx)) break;
     if (!props.some(p => p.kind === 'moonpool')) { props.push({ kind: 'moonpool', x: 128, w: PROPW.moonpool }); forb.push([124, 128 + PROPW.moonpool + 4]); }
     for (const cx of [44, 40, 250, 270]) if (place('console', cx)) break;
+    // 撤離塢也要有地方躲：撐倒數的時候牠一定會來
+    for (const lx of [126, 84, 270, 300, 240, 50]) if (place('locker', lx)) break;
   }
   else if (r.theme === 'deep') {
     const lad = r.ladUp ? r.ladUp.x - r.x0 : null;
@@ -253,6 +301,11 @@ function layoutRoom(r, rng) {
   if (rng.chance(.22) && r.special !== 'start') { for (let t = 0; t < 6; t++) if (place('body', rng.int(40, RW - 100))) break; }
   props.sort((a, b) => a.x - b.x);
   r.props = props;
+  r.hides = props.filter(p => HIDEABLE[p.kind]).map(p => ({ x: r.x0 + p.x + p.w / 2, w: p.w, kind: p.kind, type: HIDEABLE[p.kind], room: r.i }));
+  // 撤離塢：月池邊的維修坑也能躲（撐倒數的時候牠一定會來）
+  const mp = props.find(p => p.kind === 'moonpool');
+  if (mp) r.hides.push({ x: r.x0 + mp.x + mp.w - 24, w: 40, kind: 'grate', type: 'bed', room: r.i });
+  r.machines = props.filter(p => MACHINES[p.kind]).map(p => ({ x: r.x0 + p.x + p.w / 2, kind: p.kind, room: r.i, on: 0, cd: 0, broken: false, pulse: 0 }));
   // 搜索點：每間 1～3 個
   const sp = props.filter(p => SEARCHABLE[p.kind]);
   rng.shuffle(sp);

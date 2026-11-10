@@ -136,7 +136,10 @@ function renderDive(dt) {
   const h = W.hunter;
   if (h && (onMap(h) || (h.dead && h.deadT < 3))) drawHunterWrap(ctx, h, t);
   if (W.mother && !W.mother.dead && W.mother.state !== 'lured') drawHunter(ctx, W.mother, t, 1.55, true);
-  if (W.state !== 'over' || W.finishedKind !== 'pod') drawDiver(ctx, p, t);
+  for (const c of W.clouds) drawCloud(ctx, c, t);
+  if (p.caught) drawCaught(ctx, p, t);
+  else if (p.hide) drawHidden(ctx, p, t);
+  else if (W.state !== 'over' || W.finishedKind !== 'pod') drawDiver(ctx, p, t);
   for (const d of W.drones) drawDrone(ctx, d, t);
   // 子彈與特效
   drawProjs(ctx);
@@ -180,7 +183,8 @@ function hunterSil(h) {
   a *= 1 - clamp((h.flash || 0) * 1.6, 0, 1);
   if (!p.climb && floorOf(p.y) === floorOf(h.y) && sgn(h.x - p.x) === p.face && Math.abs(h.x - p.x) < (p.stealth ? 210 : 340)) a *= .4;
   for (const f of W.fx) if (f.k === 'light' && Math.abs(f.x - h.x) < f.r && Math.abs(f.y - (h.y - 90)) < f.r + 60) { a *= .45; break; }
-  if (h.state === 'stun') a *= .5;
+  if (h.state === 'stun' || h.state === 'trapped') a *= .45;
+  if (h.state === 'attack' || h.state === 'grab') a *= .6;
   return a;
 }
 /* 蒸氣 */
@@ -223,24 +227,63 @@ function drawLeviathan(ctx, t, a) {
 }
 function drawFoeWrap(ctx, e, t) {
   if (e.dead) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - e.deadT / .4); drawFoe(ctx, e, t); ctx.restore(); return; }
+  if (e.lurk) { ctx.save(); ctx.globalAlpha = .22 + .08 * Math.sin(t * 2 + e.seed); drawFoe(ctx, e, t); ctx.restore(); return; }
   if (e.spawnT > 0) { ctx.save(); ctx.globalAlpha = 1 - e.spawnT * 1.6; drawFoe(ctx, e, t); ctx.restore(); return; }
   drawFoe(ctx, e, t);
-  if (e.sleep) { ctx.fillStyle = 'rgba(200,230,255,.6)'; ctx.font = '700 12px "Rajdhani",sans-serif'; ctx.fillText('z', e.x + 10, e.y - 30 - (t * 10 % 10)); }
-  if (e.hp < e.hpMax && !e.dead) { const w = e.elite ? 44 : 28; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(e.x - w / 2, e.y - e.def.h * (e.elite ? 1.4 : 1.05) - (e.def.fly ? 44 : 10), w, 3); ctx.fillStyle = e.elite ? '#ff5a7a' : '#ff8a6a'; ctx.fillRect(e.x - w / 2, e.y - e.def.h * (e.elite ? 1.4 : 1.05) - (e.def.fly ? 44 : 10), w * Math.max(0, e.hp / e.hpMax), 3); }
+  if (e.hp < e.hpMax && !e.dead && e.type !== 'wall') { const w = 28, y = e.y - e.def.h * 1.05 - (e.def.fly ? 44 : 10); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(e.x - w / 2, y, w, 3); ctx.fillStyle = '#ff8a6a'; ctx.fillRect(e.x - w / 2, y, w * Math.max(0, e.hp / e.hpMax), 3); }
 }
 function drawHunterWrap(ctx, h, t) {
-  if (h.dead) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - h.deadT / 3); ctx.translate(h.x, h.y); ctx.rotate(-Math.min(1.4, h.deadT * 2) * h.face); ctx.translate(-h.x, -h.y); drawHunter(ctx, h, t); ctx.restore(); return; }
+  if (h.dead) { ctx.save(); ctx.globalAlpha = Math.max(0, 1 - h.deadT / 4); ctx.translate(h.x, h.y); ctx.rotate(-Math.min(1.45, h.deadT * 1.6) * h.face); ctx.translate(-h.x, -h.y); drawHunter(ctx, h, t); ctx.restore(); return; }
+  if (h.state === 'trapped') { ctx.save(); ctx.translate(rand(-3, 3), rand(-2, 2)); drawHunter(ctx, h, t + rand(0, 3)); ctx.restore(); return; }
   drawHunter(ctx, h, t);
-  if (h.state === 'stun') { ctx.fillStyle = '#fff'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.1; ctx.beginPath(); ctx.arc(h.x + h.face * 30 + Math.cos(a) * 24, h.y - 190 + Math.sin(a) * 6, 3, 0, TAU); ctx.fill(); } }
-  if (h.heard > 0) { h.heard = Math.max(0, h.heard - 1 / 60); ctx.save(); ctx.globalAlpha = h.heard; ctx.font = '900 26px "Rajdhani",sans-serif'; ctx.fillStyle = h.state === 'hunt' ? '#ff3b4e' : '#ffb03a'; ctx.textAlign = 'center'; ctx.fillText(h.state === 'hunt' ? '!' : '?', h.x + h.face * 30, h.y - 196 - (1 - h.heard) * 10); ctx.restore(); }
+  const top = h.y - (h.quad > .5 ? 120 : 210);
+  if (h.state === 'stun') { ctx.fillStyle = '#fff'; for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.1; ctx.beginPath(); ctx.arc(h.x + h.face * 36 + Math.cos(a) * 24, top + 14 + Math.sin(a) * 6, 3, 0, TAU); ctx.fill(); } }
+  if (h.heard > 0) { h.heard = Math.max(0, h.heard - 1 / 60); ctx.save(); ctx.globalAlpha = h.heard; ctx.font = '900 26px "Rajdhani",sans-serif'; ctx.fillStyle = h.state === 'hunt' || h.state === 'attack' ? '#ff3b4e' : '#ffb03a'; ctx.textAlign = 'center'; ctx.fillText(h.state === 'hunt' || h.state === 'attack' ? '!' : '?', h.x + h.face * 36, top - (1 - h.heard) * 10); ctx.restore(); }
 }
 function drawDrone(ctx, d, t) {
   ctx.save(); ctx.translate(d.x, d.y);
-  ctx.fillStyle = '#4a5a62'; rrect(ctx, -9, -4, 18, 8, 3); ctx.fill();
-  ctx.fillStyle = '#a6ff9e'; ctx.fillRect(-3, -1, 6, 2);
+  ctx.fillStyle = '#4a5a62'; rrect(ctx, -11, -5, 22, 10, 3); ctx.fill();
+  ctx.fillStyle = d.state === 'hover' && (t * 3) % 1 < .5 ? '#ffffff' : '#a6ff9e'; ctx.fillRect(-4, -1, 8, 3);
   ctx.strokeStyle = 'rgba(200,220,230,.6)'; ctx.lineWidth = 1.5; const s = Math.sin(t * 60) * 7;
   ctx.beginPath(); ctx.moveTo(-14 - s * .3, -7); ctx.lineTo(-4, -7); ctx.moveTo(4, -7); ctx.lineTo(14 + s * .3, -7); ctx.stroke();
   ctx.restore();
+}
+
+/* 躲起來的你：櫃子門縫裡的面罩反光、床底下的黑影；沒憋氣的時候，呼出的白霧會從縫裡飄出來 */
+function drawHidden(ctx, p, t) {
+  const sp = p.hide.spot, y = p.y;
+  if (p.hide.type === 'locker') {
+    const g = .5 + .5 * Math.sin(t * 1.3);
+    ctx.fillStyle = `rgba(95,231,255,${.35 + .25 * g})`; ctx.fillRect(sp.x + p.face * 3 - 3, y - 92, 6, 1.6);
+  } else {
+    const yy = y - (p.hide.type === 'bed' ? 9 : 11);
+    ctx.fillStyle = 'rgba(4,7,9,.92)'; ctx.beginPath(); ctx.ellipse(sp.x - p.face * 6, yy, 28, 8, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(sp.x + p.face * 22, yy - 3, 8.5, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(95,231,255,.55)'; ctx.fillRect(sp.x + p.face * 24 - 2, yy - 5, 5, 2);
+  }
+  if (!p.hold && W.state === 'play') {
+    const k = (t * .8) % 1, ox = p.hide.type === 'locker' ? sp.x + p.face * 10 : sp.x + p.face * 30, oy = p.hide.type === 'locker' ? y - 90 : y - 18;
+    ctx.fillStyle = `rgba(220,235,240,${.22 * (1 - k)})`; ctx.beginPath(); ctx.arc(ox + p.face * k * 10, oy - k * 16, 3 + k * 6, 0, TAU); ctx.fill();
+  }
+}
+/* 被抓住：牠把你舉起來 */
+function drawCaught(ctx, p, t) {
+  const h = W.caughtBy === 'mother' ? W.mother : W.hunter;
+  if (!h) { drawDiver(ctx, p, t); return; }
+  const sc = h.mother ? 1.55 : 1, u = clamp((h.grabT || 0) / .5, 0, 1);
+  const hx = lerp(p.x, h.x + h.face * 64 * sc, u), hy = lerp(p.y, h.y - 150 * sc, u);
+  ctx.save(); ctx.translate(hx + rand(-2, 2), hy + rand(-2, 2)); ctx.rotate(-h.face * (.4 + Math.sin(t * 22) * .12)); ctx.translate(0, 40);
+  const q = Object.assign({}, p, { x: 0, y: 0, moving: true, walk: t * 30, climb: null, flash: .2 });
+  drawDiver(ctx, q, t);
+  ctx.restore();
+}
+function drawCloud(ctx, c, t) {
+  const u = c.t / c.life, a = (u < .15 ? u / .15 : u > .75 ? (1 - u) / .25 : 1) * .5, rr = c.r * (.75 + .25 * Math.min(1, c.t * 3));
+  const g = ctx.createRadialGradient(c.x, c.y, rr * .1, c.x, c.y, rr);
+  g.addColorStop(0, `rgba(215,240,255,${a * .55})`); g.addColorStop(.7, `rgba(190,230,255,${a * .35})`); g.addColorStop(1, 'rgba(190,230,255,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(c.x, c.y, rr, rr * .55, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = `rgba(240,250,255,${a})`;
+  for (let k = 0; k < 10; k++) { const ang = t * .6 + k * .63, rad = rr * (.3 + (k % 4) * .17); ctx.fillRect(c.x + Math.cos(ang) * rad, c.y + Math.sin(ang * 1.3) * rad * .45, 2, 2); }
 }
 
 /* ---------- 房間的動態部分 ---------- */
@@ -277,11 +320,36 @@ function drawRoomDyn(ctx, r, t) {
     ctx.strokeStyle = '#05080a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(b.x - 14, b.y - 18); ctx.lineTo(b.x - 3, b.y - 4); ctx.lineTo(b.x - 9, b.y + 6); ctx.lineTo(b.x + 4, b.y + 18); ctx.moveTo(b.x - 3, b.y - 4); ctx.lineTo(b.x + 12, b.y - 10); ctx.stroke();
     for (let k = 0; k < 7; k++) { const u = ((t * 2.6 + k / 7) % 1); const dir = r.c === 0 ? 1 : r.c === W.C - 1 ? -1 : (k % 2 ? 1 : -1); ctx.fillStyle = `rgba(190,235,255,${.7 * (1 - u)})`; ctx.beginPath(); ctx.arc(b.x + dir * u * 90, b.y + u * u * (r.floorY - b.y), 3 + u * 5, 0, TAU); ctx.fill(); }
   }
+  // 陷阱：配電箱與海水閘
+  if (r.trap) {
+    const T = r.trap, bx = T.bx, by = T.by;
+    ctx.fillStyle = '#1b2226'; ctx.fillRect(bx - 2, by + 18, 4, r.floorY - by - 18);
+    ctx.fillStyle = '#2d383e'; rrect(ctx, bx - 16, by - 22, 32, 40, 3); ctx.fill();
+    ctx.strokeStyle = '#56646b'; ctx.lineWidth = 1.5; ctx.strokeRect(bx - 16, by - 22, 32, 40);
+    hazard(ctx, bx - 16, by - 27, 32, 5, 4);
+    const lampC = T.state === 'armed' ? (Math.sin(t * 7) > 0 ? '#ffd23a' : '#8a6a10') : T.state === 'spent' ? '#2a2222' : '#8a1a24';
+    ctx.fillStyle = lampC; ctx.beginPath(); ctx.arc(bx + 9, by - 14, 3.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = T.state === 'spent' ? '#3a3a30' : '#ffcf5a'; ctx.beginPath(); ctx.moveTo(bx + 2, by - 10); ctx.lineTo(bx - 5, by + 2); ctx.lineTo(bx, by + 2); ctx.lineTo(bx - 3, by + 12); ctx.lineTo(bx + 6, by - 1); ctx.lineTo(bx + 1, by - 1); ctx.closePath(); ctx.fill();
+    if (T.state === 'armed' && Math.sin(t * 13 + bx) > .93) { ctx.fillStyle = '#fff6c8'; ctx.fillRect(bx - 12 + rand(0, 24), by + 16, 2, 2); }
+    const vx = T.vx, fy = r.floorY;
+    ctx.fillStyle = '#2d383e'; ctx.fillRect(vx - 18, fy - 8, 36, 8); ctx.fillStyle = '#3e4c53'; ctx.fillRect(vx - 4, fy - 40, 8, 32); ctx.fillRect(vx - 4, fy - 44, 26, 7);
+    ctx.save(); ctx.translate(vx, fy - 30); ctx.rotate((T.flood > 0 ? t * 3 : 0) + (T.flood === 0 && r.water > .5 ? 1.2 : 0));
+    ctx.strokeStyle = '#c84a3a'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.arc(0, 0, 11, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-11, 0); ctx.lineTo(11, 0); ctx.moveTo(0, -11); ctx.lineTo(0, 11); ctx.stroke(); ctx.restore();
+    if (T.flood > 0) for (let k = 0; k < 8; k++) { const u = (t * 2.2 + k / 8) % 1; ctx.fillStyle = `rgba(170,230,250,${.7 * (1 - u)})`; ctx.beginPath(); ctx.arc(vx + 22 + u * 20, fy - 40 + u * u * 40, 2.5 + u * 3, 0, TAU); ctx.fill(); }
+  }
+  // 機器在運轉：抖動、警示燈；被拆掉的會冒火花
+  for (const m of r.machines || []) {
+    if (m.on > 0) { const on = Math.sin(t * 10) > 0; ctx.fillStyle = on ? '#ffb03a' : '#5a3a10'; ctx.beginPath(); ctx.arc(m.x, r.floorY - 136, 4, 0, TAU); ctx.fill(); ctx.strokeStyle = `rgba(255,190,90,${.35 + .3 * Math.sin(t * 20)})`; ctx.lineWidth = 1.5; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(m.x, r.floorY - 70, 30 + k * 12 + ((t * 30) % 12), -.9, -.3); ctx.stroke(); ctx.beginPath(); ctx.arc(m.x, r.floorY - 70, 30 + k * 12 + ((t * 30) % 12), Math.PI + .3, Math.PI + .9); ctx.stroke(); } }
+    else if (m.broken && Math.sin(t * 9 + m.x) > .95) { ctx.fillStyle = '#ffd28a'; ctx.fillRect(m.x + rand(-20, 20), r.floorY - rand(40, 100), 2, 2); }
+  }
   // 閃爍伺服器燈
   if (r.blink) for (const bl of r.blink) for (let k = 0; k < 8; k++) if (Math.sin(t * 4 + k * 7 + bl.x) > .6) { ctx.fillStyle = k % 3 ? '#5aff8a' : '#ffcf5a'; ctx.fillRect(bl.x, bl.y + k * 14, 3, 2); }
   // 逃生艙電池燈
   const pod = W.pods.find(q => q.room === r.i);
   if (pod && r.podPos) for (let k = 0; k < 3; k++) { ctx.fillStyle = k < pod.cells ? '#ffcf3a' : '#2a343a'; ctx.beginPath(); ctx.arc(r.podPos.x - 16 + k * 16, r.podPos.y + 12, 4.5, 0, TAU); ctx.fill(); }
+  // 撤離塢：月池邊的維修坑格柵
+  for (const sp of r.hides || []) if (sp.kind === 'grate') { ctx.fillStyle = '#0b1013'; ctx.fillRect(sp.x - 20, r.floorY - 3, 40, 5); ctx.strokeStyle = '#56646b'; ctx.lineWidth = 1.5; for (let k = -16; k <= 16; k += 6) { ctx.beginPath(); ctx.moveTo(sp.x + k, r.floorY - 3); ctx.lineTo(sp.x + k, r.floorY + 2); ctx.stroke(); } }
   // 撤離塢：月池與潛艇
   if (r.moon) {
     const m = r.moon, wy = r.floorY + 6;
@@ -375,6 +443,13 @@ function drawFX(ctx, t) {
 }
 function drawWater(ctx, r, t) {
   if (r.collapsed || r.water < .004) return;
+  if (W.zap && W.zap.room === r.i) {
+    const hgt = waterAt(r), top = r.floorY - hgt, a = 1 - W.zap.t / W.zap.life;
+    ctx.fillStyle = `rgba(160,245,255,${.35 * a})`; ctx.fillRect(r.x0 + 8, top, RW - 16, hgt);
+    ctx.strokeStyle = `rgba(230,255,255,${a})`; ctx.lineWidth = 2; ctx.beginPath();
+    for (let k = 0; k < 16; k++) { let x0 = r.x0 + rand(14, RW - 14), y0 = top + rand(0, hgt); ctx.moveTo(x0, y0); for (let j = 0; j < 4; j++) { x0 += rand(-26, 26); y0 += rand(-14, 14); ctx.lineTo(x0, clamp(y0, top - 30, r.floorY)); } }
+    ctx.stroke();
+  }
   const h = waterAt(r), top = r.floorY - h, x0 = r.x0 + (r.c === 0 ? 20 : 8), x1 = r.x0 + RW - (r.c === W.C - 1 ? 20 : 8);
   const g = ctx.createLinearGradient(0, top, 0, r.floorY);
   g.addColorStop(0, 'rgba(60,170,200,.28)'); g.addColorStop(1, 'rgba(8,50,72,.55)');
@@ -389,7 +464,8 @@ function drawWater(ctx, r, t) {
 /* ---------- 光照 ---------- */
 function drawLighting(ctx, vis, t) {
   const L = R.lctx, s = R.LS, z = R.zoom;
-  const dark = clamp(.87 + W.si * .015 + (W.stage >= 3 ? .04 : 0), 0, .95) * (1 - .65 * (R.strobeA || 0));
+  const black = W.blackT > 0 && Math.random() > .12;
+  const dark = black ? .975 : clamp(.87 + W.si * .015 + (W.stage >= 3 ? .04 : 0), 0, .95) * (1 - .65 * (R.strobeA || 0));
   L.globalCompositeOperation = 'source-over';
   L.fillStyle = `rgba(1,5,9,${dark})`; L.fillRect(0, 0, R.lm.width, R.lm.height);
   L.globalCompositeOperation = 'destination-out';
@@ -413,7 +489,7 @@ function drawLighting(ctx, vis, t) {
   };
   for (const r of vis) {
     if (r.collapsed) continue;
-    const dead = r.lightDead && r.special !== 'dock';
+    const dead = (r.lightDead && r.special !== 'dock') || black;
     if (!dead && r.light !== 'dark') r.lights.forEach((l, k) => {
       if (r.deadLamps && r.deadLamps[k]) return;
       let a = r.light === 'lit' ? .95 : .72;
@@ -427,7 +503,10 @@ function drawLighting(ctx, vis, t) {
       lampLight(l.x, l.y, kk, a, col);
       if (a > .25) beams.push([l.x, l.y + 6, r.floorY, 96 * kk, a, col]);
     });
-    if (R.alarm) {
+    if (W.zap && W.zap.room === r.i) light(r.x0 + RW / 2, r.floorY - waterAt(r) / 2, 260, .9 * (1 - W.zap.t / W.zap.life), '#bff8ff');
+    for (const m of r.machines || []) if (m.on > 0) light(m.x, r.floorY - 120, 50, .5 + .3 * Math.sin(t * 10), '#ffb03a');
+    if (r.trap && r.trap.state === 'armed') light(r.trap.bx, r.trap.by, 40, .45, '#ffd23a');
+    if (R.alarm && !black) {
       const b = beaconPos(r), ang = t * 2.6 + r.i * 1.7, face = .5 + .5 * Math.sin(ang), dir = Math.PI / 2 + Math.cos(ang) * 1.25;
       const bsx = toSX(b.x) * s, bsy = toSY(b.y) * s, rr = 340 * z * s;
       if (bsx > -rr && bsx < R.lm.width + rr && bsy > -rr && bsy < R.lm.height + rr) {
@@ -458,9 +537,9 @@ function drawLighting(ctx, vis, t) {
     cones.push([hx, hy, p.face < 0 ? Math.PI - .12 : .12, rr, ang, `rgba(205,235,255,${p.stealth ? .07 : .12})`]);
   }
   for (const f of W.fx) { if (f.k === 'light') light(f.x, f.y, f.r, .9 * (1 - f.t / f.life), f.col); else if (f.k === 'bolt' && f.t < .08) light(f.pts[1][0], f.pts[1][1], 120, .8, '#7fe9ff'); else if (f.k === 'flame' && Math.random() < .2) light(f.x, f.y, 80, .6, '#ff8a3d'); else if (f.k === 'ring' && f.t < .15) light(f.x, f.y, f.r1 * .8, .6, f.col); else if (f.k === 'beam') light(f.x, f.y - 60, 90, .6 * (1 - f.t / f.life), f.col); }
-  for (const e of W.foes) { if (e.dead) continue; if (e.type === 'jelly') light(e.x, e.y - 26, 80, .6, '#7fe9ff'); else if (e.type === 'husk') light(e.x, e.y - 50, 50, .35, '#b6ff6d'); else if (e.elite) light(e.x, e.y - 20, 70, .4, '#ff5a7a'); }
-  const h = W.hunter; if (onMap(h)) light(h.x + h.face * 30, h.y - 142, 90, .45, hunterCol(h.state));
-  for (const it of W.items) if (it.kind === 'orb' || (it.rar >= 3 && it.ground)) light(it.x, it.y, it.kind === 'orb' ? 22 : 60, .5, null);
+  for (const e of W.foes) { if (e.dead) continue; if (e.type === 'jelly') light(e.x, e.y - 26, 80, .6, '#7fe9ff'); else if (e.type === 'husk') light(e.x + e.face * 8, e.y - 40, 38, .3, '#b6ff6d'); else if (e.type === 'wall' && e.awake && !e.silent) light(e.x, e.y - 120, 60, .4, '#b6ff6d'); }
+  const h = W.hunter; if (onMap(h)) light(h.x + h.face * (h.quad > .5 ? 70 : 44), h.y - (h.quad > .5 ? 70 : 158), 70, .32, hunterCol(h.state));
+  for (const it of W.items) if (it.rar >= 3 && it.ground) light(it.x, it.y, 60, .5, null);
   for (const d of W.decoys) if (d.landed) light(d.x, d.y - 10, 70, .5 * (.5 + .5 * Math.sin(t * 9)), '#ffcf3a');
   for (const sp of spotsVisible(vis)) light(sp.x, sp.y - 50, 40, .35, null);
   if (W.dock.arrived) { const r = W.rooms[W.dock.room]; light(r.x0 + RW / 2, r.floorY - 20, 160, .8, '#ffd28a'); }
@@ -540,12 +619,23 @@ function drawWorldHints(ctx, vis, t) {
   if (p.reinforcing) { const d = p.reinforcing; ctx.fillStyle = '#ffd28a'; ctx.font = '700 12px "Noto Sans TC",sans-serif'; ctx.textAlign = 'center'; ctx.fillText('加固中', d.x, d.y - DOORH - 40); ctx.textAlign = 'left'; }
   // 情境動作進度
   if (p.channel) { const c = p.channel; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(p.x, p.y - 100, 14, 0, TAU); ctx.stroke(); ctx.strokeStyle = '#5fe7ff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y - 100, 14, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(c.t / c.it.dur, 0, 1)); ctx.stroke(); }
-  // 波次預警點
-  for (const w of W.warns) {
-    if (w.t <= 0) continue;
-    const a = .5 + .5 * Math.sin(t * 10);
-    ctx.fillStyle = `rgba(255,77,94,${.25 + .35 * a})`; ctx.beginPath(); ctx.ellipse(w.x, w.y - 4, 34, 6, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = `rgba(255,77,94,${.6 + .4 * a})`; ctx.font = '900 22px "Rajdhani",sans-serif'; ctx.textAlign = 'center'; ctx.fillText(Math.ceil(w.t), w.x, w.y - 30); ctx.textAlign = 'left';
+  // 聆在附近：標出這間艙躲得進去的地方
+  const h = W.hunter, danger = h && !h.dead && h.state !== 'away' && h.state !== 'gone';
+  if ((danger || W.mother) && !p.hide && !p.caught) {
+    const pr = roomAt(p.x, p.y);
+    for (const sp of pr.hides || []) {
+      if (Math.abs(sp.x - p.x) > 300) continue;
+      const a = .35 + .25 * Math.sin(t * 4 + sp.x), y = p.y - (sp.type === 'locker' ? 126 : 66);
+      ctx.strokeStyle = `rgba(200,240,255,${a})`; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(sp.x - 9, y - 4); ctx.lineTo(sp.x - 9, y + 5); ctx.lineTo(sp.x + 9, y + 5); ctx.lineTo(sp.x + 9, y - 4); ctx.stroke();
+      ctx.beginPath(); ctx.arc(sp.x, y - 1, 2.2, 0, TAU); ctx.stroke();
+    }
+  }
+  // 陷阱提示
+  for (const r of vis) if (r.trap && r.trap.state !== 'spent' && r.explored) {
+    const T = r.trap, y = T.by - 46 + Math.sin(t * 2.4) * 2;
+    ctx.fillStyle = 'rgba(3,12,17,.75)'; ctx.beginPath(); ctx.arc(T.bx, y, 11, 0, TAU); ctx.fill();
+    ctx.fillStyle = T.state === 'armed' ? '#ffd23a' : '#ff8a3d'; ctx.font = '900 12px "Noto Sans TC",sans-serif'; ctx.textAlign = 'center'; ctx.fillText(T.state === 'armed' ? '電' : '?', T.bx, y + 4); ctx.textAlign = 'left';
   }
 }
 function drawNums(ctx) {
@@ -591,7 +681,7 @@ function drawEdge(ctx, t) {
   else if (h && h.state === 'crawl' && T.seenH > 0) mark(h.cx, h.cy, '#7dffa8', '管道', 'hunter', true);
   else if (h && h.state === 'venting') mark(h.vent.x, h.vent.y, '#ff3b4e', '管道', 'hunter', true);
   if (W.mother && !W.mother.dead && W.mother.state !== 'lured') mark(W.mother.x, W.mother.y - 150, '#ff3b4e', Math.round(Math.hypot(W.mother.x - p.x, W.mother.y - p.y) * .025) + 'm', 'hunter', true);
-  for (const w of W.warns) if (w.t > 0) mark(w.x, w.y - 30, '#ff4d5e', Math.ceil(w.t) + '', 'warn', true);
+  const tr = trapReady(); if (tr) mark(tr.trap.bx, tr.trap.by, '#ffd23a', '通電', 'dock', true);
   if (W.dock.called || W.stage >= 3 || W.ending) { const r = W.rooms[W.dock.room]; mark(r.x0 + RW / 2, r.floorY - 60, '#5fe7ff', '撤離', 'dock', false); }
 }
 
@@ -630,7 +720,7 @@ function drawMinimap(m, w, h, big) {
     m.fillStyle = d.state === 'open' ? PH(.65) : d.state === 'closed' ? '#ffb03a' : '#ff4f5e';
     if (d.state === 'open') m.fillRect(x - 1, y + ch - 7, 2, 5); else m.fillRect(x - 1.5, y + ch * .35, 3, ch * .6);
   }
-  for (const wn of W.warns) if (wn.t > 0 && Math.sin(t * 10) > 0) { m.fillStyle = '#ff4d5e'; m.beginPath(); m.arc(mx(wn.x), oy + (floorOf(wn.y) + .7) * ch, big ? 5 : 3, 0, TAU); m.fill(); }
+  for (const i of W.M.traps) { const r = W.rooms[i]; if (!r.explored && !big) continue; if (!r.explored && big && !r.trap.seen) continue; const T = r.trap; if (T.state === 'spent') continue; m.fillStyle = T.state === 'armed' ? (Math.sin(t * 6) > 0 ? '#ffd23a' : '#8a6a10') : '#ff8a3d'; m.font = `900 ${big ? 12 : 8}px "Noto Sans TC",sans-serif`; m.textAlign = 'center'; m.fillText('電', mx(T.bx), oy + r.f * ch + ch / 2 + 3); m.textAlign = 'left'; }
   const hh = W.hunter;
   if (hh && hh.state === 'venting' && Math.sin(t * 8) > 0) { m.strokeStyle = '#ff3b4e'; m.lineWidth = 1.5; m.beginPath(); m.arc(mx(hh.vent.x), my(hh.vent.y), big ? 7 : 4, 0, TAU); m.stroke(); }
   if (onMap(hh) && roomAt(hh.x, hh.y) === pr) { m.fillStyle = hunterCol(hh.state); m.beginPath(); m.arc(mx(hh.x), my(hh.y) - 3, big ? 5 : 3, 0, TAU); m.fill(); }

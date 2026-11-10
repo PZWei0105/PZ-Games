@@ -1,6 +1,6 @@
 /* ============ 02 資料 ============ */
 const RW = 360, FH = 240, SLAB = 20, WALLW = 16, DOORH = 128;
-const VERSION = 'v1.1';
+const VERSION = 'v2.0';
 
 const RAR = [
   { k: 'w', name: '普通', col: '#b9c4cc', t: 1.0, val: 8, wt: .5 },
@@ -14,116 +14,114 @@ const RAR = [
 /* 噪音等級說明 */
 const NZ = [{ t: '極小聲', c: 'n0' }, { t: '小聲', c: 'n0' }, { t: '中等聲響', c: 'n1' }, { t: '大聲', c: 'n2' }, { t: '震耳欲聾', c: 'n3' }];
 
-/* ---------- 武器 ---------- */
+/* ---------- 槍：手動開火、子彈有限；對聆完全無效（只會讓牠知道你在哪） ---------- */
 const WEAPONS = {
   rivet: {
-    name: '鉚釘槍', col: '#ffcf7a', nz: 2, noise: 230, unlocked: true,
-    desc: '連射鉚釘，穩定可靠。聲音中等。',
-    lv: ['連射鉚釘，聲音中等', '傷害 +30%', '每次多射 1 發', '射速 +25%', '進化「重鉚」：穿透 2 個目標、傷害 +40%'],
+    kind: 'gun', name: '鉚釘槍', col: '#ffcf7a', nz: 2, noise: 230, ammo0: 36, pick: 12, rate: .26, unit: '發',
+    desc: '半自動鉚釘槍，穩定可靠。每一發都是中等聲響。',
+    lv: ['半自動鉚釘，聲音中等', '傷害 +30%', '撿到的鉚釘 +50%', '射速 +25%、槍聲 -25%', '進化「重鉚」：穿透 2 個目標、傷害 +40%'],
     evo: '重鉚',
   },
   arc: {
-    name: '電弧器', col: '#7fe9ff', nz: 1, noise: 110, unlocked: true,
-    desc: '連鎖電擊，打在水裡會傳遍整池。很安靜，讓聆麻痺。',
-    lv: ['連鎖電擊 3 個目標，水裡傳遍整池', '連鎖 +1', '傷害 +40%', '冷卻 -25%', '進化「雷暴」：每一跳都分叉，並讓小怪麻痺'],
+    kind: 'gun', name: '電弧器', col: '#7fe9ff', nz: 1, noise: 110, ammo0: 14, pick: 5, rate: .8, unit: '格電',
+    desc: '連鎖電擊，打在水裡會傳遍整池。很安靜，但電量有限。',
+    lv: ['連鎖電擊 3 個目標，水裡傳遍整池', '連鎖 +1', '傷害 +40%', '撿到的電量 +2', '進化「雷暴」：每一跳都分叉；電到泡在水裡的聆，能讓牠麻痺 2 秒'],
     evo: '雷暴',
   },
   harpoon: {
-    name: '魚叉砲', col: '#e8f0f4', nz: 2, noise: 200,
-    desc: '重型魚叉，貫穿整排、無視甲殼。',
-    lv: ['貫穿所有敵人、無視甲殼', '傷害 +35%', '冷卻 -20%', '連發 2 支', '進化「鎖鏈」：命中的敵人被釘住 1.2 秒'],
+    kind: 'gun', name: '魚叉砲', col: '#e8f0f4', nz: 2, noise: 200, ammo0: 8, pick: 3, rate: 1.1, unit: '支',
+    desc: '重型魚叉，一支貫穿整排。裝填慢，但打得又深又準。',
+    lv: ['貫穿所有敵人、無視甲殼', '傷害 +35%', '撿到的魚叉 +1', '連發 2 支', '進化「鎖鏈」：命中的敵人被釘住 1.2 秒'],
     evo: '鎖鏈',
   },
-  sonic: {
-    name: '聲波炮', col: '#ffa36b', nz: 4, noise: 650,
-    desc: '環狀震波擊退四周。對聆傷害 ×2.5 並使牠暈眩——但整座站都聽得到。',
-    lv: ['環狀震波，對聆特效', '範圍 +25%', '傷害 +40%', '冷卻 -20%', '進化「共振」：被震到的敵人 3 秒內受傷 +30%，聆暈眩更久'],
-    evo: '共振',
-  },
+  /* ---------- 保命工具：次數有限，是少數能對付聆的東西 ---------- */
   torch: {
-    name: '焊槍', col: '#ff8a3d', nz: 0, noise: 60,
-    desc: '短程電漿火焰，幾乎無聲。對正在撞門的怪傷害 ×1.5。',
-    lv: ['短程火焰＋灼燒，幾乎無聲', '射程 +25%', '傷害 +35%', '灼燒加倍', '進化「熔斷」：燒死的敵人會爆開'],
-    evo: '熔斷',
+    kind: 'tool', name: '焊槍', col: '#ff8a3d', nz: 0, noise: 60, uses0: 3, pick: 1,
+    desc: '近距離電漿火焰。燒到聆的頭盤，牠會退回管道——但牠記得痛，燒第三次就不怕了。',
   },
-  drone: {
-    name: '無人機', col: '#a6ff9e', nz: 1, noise: 70,
-    desc: '跟在肩上的小型無人機，自動點射。',
-    lv: ['自動點射附近敵人', '傷害 +40%', '射速 +30%', '射程 +30%', '進化「雙機」：再多一台無人機'],
-    evo: '雙機',
+  sonic: {
+    kind: 'tool', name: '聲波炮', col: '#ffa36b', nz: 4, noise: 650, uses0: 2, pick: 1,
+    desc: '環狀震波，讓聆暈眩 3 秒、震飛四周的東西。代價是整座站都聽得到。',
   },
   cryo: {
-    name: '冷凍霧', col: '#bfe6ff', nz: 1, noise: 80,
-    desc: '向四周噴出冷凍霧，減速敵人，被減速的敵人受傷 +20%。',
-    lv: ['四周冷凍霧、減速 50%', '範圍 +20%', '減速時間 +1.5 秒', '冷卻 -25%', '進化「絕對零度」：第一下直接凍住 1.2 秒'],
-    evo: '絕對零度',
+    kind: 'tool', name: '冷凍霧', col: '#bfe6ff', nz: 1, noise: 80, uses0: 2, pick: 1,
+    desc: '在身邊噴出一團冷霧，維持 5 秒。聆走進霧裡會慢到追不上你，小怪直接凍住。',
+  },
+  drone: {
+    kind: 'tool', name: '誘餌無人機', col: '#a6ff9e', nz: 3, noise: 520, uses0: 2, pick: 1,
+    desc: '往前飛出去，停在走廊盡頭大聲嗶嗶叫 9 秒。比丟誘餌更遠，牠和小怪都會被引過去。',
   },
 };
-const WEAPON_ORDER = ['rivet', 'arc', 'harpoon', 'torch', 'drone', 'cryo', 'sonic'];
+const WEAPON_ORDER = ['rivet', 'arc', 'harpoon', 'torch', 'sonic', 'cryo', 'drone'];
+const GUN_ORDER = WEAPON_ORDER.filter(id => WEAPONS[id].kind === 'gun');
+const TOOL_ORDER = WEAPON_ORDER.filter(id => WEAPONS[id].kind === 'tool');
 
 /* ---------- 被動 ---------- */
 const PASSIVES = {
   quiet: { name: '靜音襯墊', icon: 'quiet', max: 3, lv: ['所有聲響 -15%', '所有聲響再 -15%', '所有聲響再 -15%'] },
+  lungs: { name: '肺活量', icon: 'lungs', max: 3, lv: ['憋氣時間 +30%', '憋氣時間再 +30%', '憋氣時間再 +30%，憋氣時心跳不會加快'] },
+  calm: { name: '定心', icon: 'calm', max: 3, lv: ['聆在附近時心跳少升 20%', '再少升 20%', '再少升 20%，躲著的時候心跳會慢慢降下來'] },
   hull: { name: '耐壓艙衣', icon: 'hull', max: 3, lv: ['最大生命 +20%', '最大生命再 +20%', '最大生命再 +20%'] },
   regen: { name: '奈米修補', icon: 'regen', max: 3, lv: ['每秒回復 0.6 生命', '每秒回復 1.2 生命', '每秒回復 1.8 生命'] },
   fins: { name: '推進鰭', icon: 'fins', max: 3, lv: ['移動速度 +8%', '移速再 +8%，水中減速減半', '移速再 +8%，水中不減速'] },
   welder: { name: '焊工手套', icon: 'welder', max: 3, lv: ['加固／修補速度 +40%，艙門耐久 +40', '速度再 +40%，耐久再 +40', '速度再 +40%，耐久再 +40'] },
   scan: { name: '掃描儀', icon: 'scan', max: 3, lv: ['搜索速度 +25%', '搜索速度再 +25%', '搜索速度再 +25%，搜索點顯示在小地圖'] },
-  magnet: { name: '生物磁吸', icon: 'magnet', max: 3, lv: ['拾取範圍 +40%、經驗 +10%', '拾取範圍再 +40%、經驗再 +10%', '拾取範圍再 +40%、經驗再 +10%'] },
-  conduct: { name: '導電液', icon: 'conduct', max: 3, lv: ['電擊傷害 +30%', '電擊傷害再 +30%', '電擊傷害再 +30%，電擊打聆的麻痺加倍'] },
+  pack: { name: '彈藥袋', icon: 'pack', max: 3, lv: ['撿到的彈藥 +40%', '撿到的彈藥再 +40%', '再 +40%，工具每次撿到多 1 次'] },
+  conduct: { name: '導電液', icon: 'conduct', max: 3, lv: ['電擊傷害 +30%', '電擊傷害再 +30%', '再 +30%，裝保險絲快一倍'] },
   ballistic: { name: '彈道核心', icon: 'ballistic', max: 3, lv: ['暴擊率 +7%、暴擊傷害 +20%', '再 +7%、+20%', '再 +7%、+20%'] },
   adren: { name: '腎上腺', icon: 'adren', max: 3, lv: ['受傷後 2.5 秒移速 +35%', '加速時間 +1 秒', '受傷後多 0.4 秒無敵'] },
 };
 
-/* ---------- 敵人 ---------- */
+/* ---------- 小怪：被寄生的船員，和從破口進來的東西 ---------- */
 const FOES = {
-  iso: { name: '蝕甲蟲', hp: 20, spd: 72, dmg: 8, door: 7, xp: 2, r: 18, h: 26, cost: 1, wind: .35, reach: 34 },
-  jelly: { name: '燈水母', hp: 14, spd: 46, dmg: 20, door: 45, xp: 2, r: 18, h: 40, cost: 1.4, fly: true, fuse: .9, blast: 78 },
-  crab: { name: '鉗蟹', hp: 82, spd: 46, dmg: 15, door: 18, xp: 6, r: 28, h: 40, cost: 3, wind: .55, reach: 46, armor: .4 },
-  eel: { name: '鞭鰻', hp: 30, spd: 52, wspd: 190, dmg: 13, door: 5, xp: 3, r: 20, h: 22, cost: 2, wind: .4, reach: 130, water: true },
-  husk: { name: '回聲人', hp: 62, spd: 50, dmg: 12, door: 11, xp: 6, r: 18, h: 66, cost: 3, wind: .6, reach: 40, shout: true },
+  husk: { name: '回聲人', hp: 55, spd: 44, dmg: 14, door: 11, r: 18, h: 76, wind: .55, reach: 42, shout: true },
+  drowned: { name: '溺者', hp: 45, spd: 40, wspd: 175, dmg: 16, door: 6, r: 24, h: 34, wind: .4, reach: 46 },
+  wall: { name: '牆裡的人', hp: 40, spd: 0, dmg: 10, door: 0, r: 20, h: 120, wind: .5, reach: 44, fixed: true },
+  jelly: { name: '燈水母', hp: 14, spd: 22, dmg: 18, door: 45, r: 18, h: 40, fly: true, fuse: .9, blast: 78 },
+  eel: { name: '鞭鰻', hp: 30, spd: 52, wspd: 190, dmg: 13, door: 5, r: 20, h: 22, wind: .4, reach: 130, water: true },
 };
 const HUSK_LINES = ['「……有人嗎？」', '「救救我……門打不開……」', '「小宋？是你嗎？」', '「媽……我好冷……」', '「別關門！別關門！」', '「站長說沒事的……」', '「我聽見你了。」', '「進來啊。」'];
+const WALL_LINES = ['「……放我出來……」', '「好痛……好痛……」', '「不要看我……」', '「牠在聽……牠一直在聽……」', '「拉我出去，求你……」'];
 
 /* ---------- 區段 ---------- */
 const SECTORS = [
   {
     id: 0, name: '生活艙段', en: 'HABITAT', depth: 7820, cols: 3, floors: 4, T: 600, col: '#ffb347',
     themes: ['dorm', 'mess', 'med', 'dorm', 'storage', 'lounge', 'laundry', 'dorm', 'mess'],
-    hunter: { hp: 1800, walk: 75, run: 155, dmg: 26, door: 70, hear: 1.5 },
-    wave: { first: 40, int: 52, budget: 5, grow: 1.4 }, sleepers: 1, husks: 1,
+    hunter: { walk: 72, run: 300, door: 50, hear: 1.5 },
+    husks: 1, walls: 1, trickle: 80,
     survivors: ['amon', 'ye', 'bai'], logs: ['1-1', '1-2', '1-3', '1-4', '1-5'],
     intro: ['生活艙段・水深 7,820 公尺', '宿舍、食堂、醫務室。二十三天前，這裡還有人在排隊打飯。'],
   },
   {
     id: 1, name: '機電艙段', en: 'ENGINEERING', depth: 7960, cols: 3, floors: 5, T: 620, col: '#ff8a3d',
     themes: ['pump', 'power', 'workshop', 'storage', 'corridor', 'pump', 'power', 'workshop'],
-    hunter: { hp: 2400, walk: 80, run: 160, dmg: 31, door: 80, hear: 1.55 },
-    wave: { first: 36, int: 48, budget: 6.5, grow: 1.6 }, sleepers: 2, husks: 1,
+    hunter: { walk: 76, run: 310, door: 58, hear: 1.55 },
+    husks: 2, walls: 1, trickle: 72,
     survivors: ['kai', 'wen', 'lily'], logs: ['2-1', '2-2', '2-3', '2-4', '2-5'],
     intro: ['機電艙段・水深 7,960 公尺', '泵浦、發電機、維修通道。整座站的心臟，也是最吵的地方。'],
   },
   {
     id: 2, name: '聲學艙段', en: 'ACOUSTICS', depth: 8110, cols: 4, floors: 5, T: 640, col: '#5fe7ff',
     themes: ['sonar', 'studio', 'archive', 'office', 'sonar', 'studio', 'archive'],
-    hunter: { hp: 3100, walk: 82, run: 162, dmg: 37, door: 90, hear: 1.6, shriek: true },
-    wave: { first: 34, int: 46, budget: 7.5, grow: 1.8 }, sleepers: 2, husks: 2,
+    hunter: { walk: 80, run: 320, door: 66, hear: 1.6, shriek: true },
+    husks: 2, walls: 2, trickle: 66,
     survivors: ['chen', 'yuki'], logs: ['3-1', '3-2', '3-3', '3-4', '3-5'],
     intro: ['聲學艙段・水深 8,110 公尺', '他們在這裡聽海。後來，海也開始聽他們。'],
   },
   {
     id: 3, name: '標本艙段', en: 'SPECIMEN', depth: 8240, cols: 4, floors: 5, T: 660, col: '#b47cff',
     themes: ['tanks', 'autopsy', 'freezer', 'lab', 'tanks', 'lab', 'freezer'],
-    hunter: { hp: 3900, walk: 85, run: 165, dmg: 41, door: 100, hear: 1.65, shriek: true },
-    wave: { first: 32, int: 44, budget: 8.5, grow: 2 }, sleepers: 2, husks: 2,
+    hunter: { walk: 84, run: 330, door: 74, hear: 1.65, shriek: true },
+    husks: 3, walls: 2, trickle: 60,
     survivors: ['liang', 'tie'], logs: ['4-1', '4-2', '4-3', '4-4', '4-5'],
     intro: ['標本艙段・水深 8,240 公尺', '培養槽的燈還亮著。裡面有些東西，還在動。'],
   },
   {
     id: 4, name: '回聲深艙', en: 'THE DEEP HOLD', depth: 8400, cols: 4, floors: 6, T: 700, col: '#ff4f5e',
     themes: ['control', 'server', 'tanks', 'office', 'control', 'server', 'lab'],
-    hunter: { hp: 4600, walk: 88, run: 168, dmg: 45, door: 110, hear: 1.7, shriek: true },
-    wave: { first: 32, int: 42, budget: 9.5, grow: 2.1 }, sleepers: 2, husks: 3,
+    hunter: { walk: 88, run: 340, door: 82, hear: 1.7, shriek: true },
+    husks: 3, walls: 3, trickle: 56,
     survivors: ['wei', 'lu'], logs: ['5-1', '5-2', '5-3', '5-4'],
     intro: ['回聲深艙・水深 8,400 公尺', '林汐說她在這裡。'],
     final: true,
@@ -187,7 +185,7 @@ const SURV = {
     line: '「林汐……她還活著嗎？」', tes: '是我教她看頻譜的。她比我早三個月聽懂牠們在說什麼。我花了三個星期，才承認她是對的。那三個星期，死了九個人。' },
   yuki: { name: '小雪', role: '錄音工程師', sector: 2, perk: 'quiet', ptxt: '所有聲響 -10%', hue: 180,
     line: '（她在紙上寫：謝謝。）', tes: '（便條）我錄了二十三天的聲音。最可怕的不是牠們，是我們自己的廣播。它一開，連海都安靜了。' },
-  liang: { name: '梁醫師', role: '生物醫學', sector: 3, perk: 'leech', ptxt: '擊殺時有機率回復生命', hue: 100,
+  liang: { name: '梁醫師', role: '生物醫學', sector: 3, perk: 'leech', ptxt: '擊倒小怪時有機率回復生命', hue: 100,
     line: '「帶我走。我要作證，我全都記下來了。」', tes: 'Y-01 的聽覺神經比人類敏感一萬倍。牠聽得見我們的心跳。牠哭的時候，整層樓的人都睡不著，因為那聲音就在你胸口裡面。' },
   tie: { name: '鐵哥', role: '保全主任', sector: 3, perk: 'reroll', ptxt: '每局多 1 次重抽', hue: 0,
     line: '「槍早就丟了。開槍是在叫牠來吃飯。」', tes: '站長給我的命令是守住深艙。我守了三天，然後林汐來了。她什麼都沒說，只是看著我。我把鑰匙給了她。' },
@@ -208,14 +206,14 @@ const RELICS = [
   { id: 'pumpcap', name: '被拆開的泵浦外蓋', sec: 1, txt: '十二顆螺絲一顆都沒少，整整齊齊排成一列。不是人排的。', k: 'door', v: 8, b: '艙門耐久 +8' },
   { id: 'fuse', name: '燒黑的主保險絲', sec: 1, txt: '有人用手硬拔下來的。指紋還在上面。', k: 'dmg', v: .03, b: '傷害 +3%' },
   { id: 'phones', name: '林汐的耳機', sec: 2, txt: '左耳的海綿掉了。她總是只戴右邊——左邊留著聽人說話。', k: 'sonar', v: .08, b: '聆的預警距離 +8%' },
-  { id: 'spectrum', name: '頻譜印表紙', sec: 2, txt: '三短一長。被人用紅筆圈了一百多次。', k: 'xp', v: .05, b: '經驗 +5%' },
+  { id: 'spectrum', name: '頻譜印表紙', sec: 2, txt: '三短一長。被人用紅筆圈了一百多次。', k: 'ammo', v: .06, b: '撿到的彈藥 +6%' },
   { id: 'castkey', name: '定向廣播鑰匙', sec: 2, txt: '沈鐸隨身帶著，從來沒有交出去過。上面有齒痕。', k: 'dmg', v: .03, b: '傷害 +3%' },
   { id: 'tag7', name: '七號櫃的名牌', sec: 3, txt: '上面有四個名字。最後一個是手寫補上去的。', k: 'crit', v: .03, b: '暴擊率 +3%' },
   { id: 'notes', name: '小雪的便條本', sec: 3, txt: '整本寫滿了同一個字：噓。', k: 'noise', v: -.03, b: '所有聲響 -3%' },
   { id: 'molt', name: 'Y-01 的蛻殼', sec: 3, txt: '很小，薄得透光，像一隻張開的手掌。', k: 'credits', v: .04, b: '信用點 +4%' },
   { id: 'medal', name: '沈鐸的獎章', sec: 4, txt: '「年度傑出領導」。背面刻著：為了更深的地方。', k: 'credits', v: .04, b: '信用點 +4%' },
   { id: 'toysub', name: '藍色潛艇模型', sec: 4, txt: '某個孩子寄給站上爸爸的生日禮物。郵戳是二十三天前。', k: 'hp', v: 6, b: '最大生命 +6' },
-  { id: 'disc', name: '聆的耳盤碎片', sec: -1, txt: '摸上去是溫的。貼近耳朵，會聽到自己的心跳——比平常快一點。', k: 'hunter', v: .06, b: '對聆傷害 +6%' },
+  { id: 'disc', name: '聆的耳盤碎片', sec: -1, txt: '摸上去是溫的。貼近耳朵，會聽到自己的心跳——比平常快一點。', k: 'sonar', v: .06, b: '聆的預警距離 +6%' },
 ];
 
 /* ---------- 母船整備 ---------- */
@@ -228,9 +226,11 @@ const META = [
   { id: 'magnet', name: '回收磁鐵', icon: 'magnet', max: 3, cost: [120, 280, 520], txt: l => `拾取範圍 +${l * 20}%`, nx: '每級 +20% 拾取範圍' },
   { id: 'med', name: '備用醫療包', icon: 'med', max: 2, cost: [260, 600], txt: l => `開局多 ${l} 個醫療包`, nx: '開局 +1 醫療包' },
   { id: 'decoy', name: '誘餌彈匣', icon: 'decoy', max: 2, cost: [240, 560], txt: l => `開局多 ${l} 個聲波誘餌`, nx: '開局 +1 誘餌' },
+  { id: 'flash', name: '保命震爆彈', icon: 'flash', max: 1, cost: [520], txt: l => l ? '開局多帶 1 顆震爆彈（被抓住時自動用掉）' : '', nx: '開局 +1 震爆彈' },
+  { id: 'lungs', name: '呼吸調節器', icon: 'lungs', max: 2, cost: [260, 620], txt: l => `憋氣時間 +${l * 20}%`, nx: '每級 +20% 憋氣時間' },
   { id: 'reroll', name: '重抽晶片', icon: 'reroll', max: 2, cost: [300, 700], txt: l => `每局多 ${l} 次重抽`, nx: '每局 +1 重抽' },
   { id: 'battery', name: '備用電池', icon: 'battery', max: 1, cost: [400], txt: l => l ? '開局帶 1 顆電池' : '', nx: '開局帶 1 顆電池' },
 ];
 
 /* 星級首通獎勵：給藍圖的時機 */
-const BLUEPRINT_PLAN = { 0: 'harpoon', 1: 'torch', 2: 'sonic', 3: 'drone', 4: 'cryo' };
+const BLUEPRINT_PLAN = { 0: 'torch', 1: 'harpoon', 2: 'sonic', 3: 'cryo', 4: 'drone' };

@@ -8,7 +8,7 @@ function newG() {
   return {
     v: 1, credits: 0, meta: {}, weapons: ['rivet', 'arc'], survivors: {}, logs: {}, read: {}, relics: {},
     sectors: SECTORS.map((s, i) => ({ unlocked: i === 0, cleared: false, stars: [false, false, false], best: 0, runs: 0 })),
-    endless: { unlocked: false, best: 0 }, endings: {}, tips: {}, seenPrologue: false, lastWeapon: 'rivet',
+    endless: { unlocked: false, best: 0 }, endings: {}, tips: {}, seenPrologue: false, lastWeapon: 'rivet', lastTool: null,
     stats: { dives: 0, kills: 0, deaths: 0, extracts: 0, hunterKills: 0, credits: 0 },
     settings: { music: .7, sfx: .9, shake: true, vib: true, nums: true, voice: true, flash: true, grain: true },
     newStuff: {},
@@ -25,6 +25,9 @@ function loadGame() {
     const base = newG().sectors;
     g.sectors = base.map((s, i) => Object.assign(s, (d.sectors || [])[i] || {}));
     g.endless = Object.assign({ unlocked: false, best: 0 }, d.endless || {});
+    // v2.0：通關過的區段，補發該區的裝備藍圖（第一區改給焊槍）
+    g.sectors.forEach((s, i) => { const bp = BLUEPRINT_PLAN[i]; if (s.cleared && bp && !g.weapons.includes(bp)) g.weapons.push(bp); });
+    g.weapons = g.weapons.filter(id => WEAPONS[id]);
   }
   G = g;
   return g;

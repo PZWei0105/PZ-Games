@@ -4,7 +4,7 @@ sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(_
 from run import page
 from playwright.async_api import async_playwright
 JS = r"""() => {
-  const out = {}; const bad = [];
+  const out = {}; const bad = []; let hideRooms = 0, liveRooms = 0;
   for (let si = 0; si <= 5; si++) {
     let n = 0;
     for (let seed = 1; seed <= 250; seed++) {
@@ -29,11 +29,19 @@ JS = r"""() => {
       if (!seen.has(M.dock)) bad.push([si, seed, 'dock unreachable']);
       if (M.deep >= 0 && !seen.has(M.deep)) bad.push([si, seed, 'deep unreachable']);
       if (M.vault >= 0 && !M.rooms.some(r => (r.spots || []).some(s => s.kind === 'key'))) bad.push([si, seed, 'vault without key']);
+      // v2.0：陷阱艙、保險絲、躲藏點
+      if (!M.traps.length) bad.push([si, seed, 'no trap room']);
+      const fuses = M.rooms.reduce((a, r) => a + (r.spots || []).filter(s => s.kind === 'fuse').length, 0);
+      if (fuses < M.traps.length) bad.push([si, seed, 'trap without fuse']);
+      for (const ti of M.traps) if (!seen.has(ti)) bad.push([si, seed, 'trap unreachable']);
+      if (!(dock.hides || []).length) bad.push([si, seed, 'dock no hide']);
+      const live = M.rooms.filter(r => !r.collapsed); hideRooms += live.filter(r => (r.hides || []).length).length; liveRooms += live.length;
+      for (const rs of M.residents) if (rs.type === 'wall') { const r = M.rooms[rs.room]; if ((r.props || []).some(p => rs.x - r.x0 > p.x - 8 && rs.x - r.x0 < p.x + p.w + 8)) bad.push([si, seed, 'wall on prop']); }
     }
     out[si] = n;
   }
   const agg = {}; for (const b of bad) agg[b[0] + ':' + b[2]] = (agg[b[0] + ':' + b[2]] || 0) + 1;
-  return { out, nbad: bad.length, agg, sample: bad.slice(0, 8) };
+  return { out, nbad: bad.length, agg, sample: bad.slice(0, 8), hideRoomPct: Math.round(hideRooms / liveRooms * 100) };
 }"""
 async def main():
     async with async_playwright() as pw:

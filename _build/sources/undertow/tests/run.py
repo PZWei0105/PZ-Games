@@ -24,9 +24,9 @@ async def page(pw, w=390, h=844, mobile=True):
     return b, pg, errs
 
 STATE = """() => { const W = __ut.W; if (!W) return {mode: __ut.S.mode}; const p = W.P, h = W.hunter;
- return {mode: __ut.S.mode, st: W.state, t: Math.round(W.t), pr: Math.round(W.pressure), hp: Math.round(p.hp), lv: p.lvl, ws: p.weapons.map(w=>w.id+w.lv).join(','),
-  foes: W.foes.filter(e=>!e.dead).length, kills: W.kills, wave: W.waveN, bag: Math.round(W.bagVal), resc: W.obj.rescued + '/' + W.obj.survivors,
-  hunter: h ? h.state + ' ' + Math.round(h.hp) : null, room: roomAt(p.x,p.y).i, dock: W.dock.called ? (W.dock.arrived ? 'arrived' : Math.round(W.dock.t)) : '-', bot: (window.__bot||{log:[]}).log.slice(-2)}; }"""
+ return {mode: __ut.S.mode, st: W.state, t: Math.round(W.t), pr: Math.round(W.pressure), hp: Math.round(p.hp), gun: p.gun + p.gunLv + ':' + p.ammo, tool: p.tool ? p.tool + ':' + p.toolUses : '-', fl: p.flashes, hide: p.hide ? p.hide.type : '',
+  foes: W.foes.filter(e=>!e.dead).map(e=>e.type[0]).join(''), kills: W.kills, bag: Math.round(W.bagVal), resc: W.obj.rescued + '/' + W.obj.survivors, esc: W.escapes, dodge: W.dodges,
+  hunter: h ? h.state + (h.know > 0 ? '!' : '') : null, room: roomAt(p.x,p.y).i, dock: W.dock.called ? (W.dock.arrived ? 'arrived' : Math.round(W.dock.t)) : '-', bot: (window.__bot||{log:[]}).log.slice(-2)}; }"""
 
 
 async def shots():
@@ -54,10 +54,10 @@ async def bot(si, god, secs, every):
     async with async_playwright() as pw:
         b, pg, errs = await page(pw)
         await pg.evaluate('localStorage.clear()'); await pg.reload(); await pg.wait_for_timeout(600)
-        await pg.evaluate(f"""() => {{ __ut.G.seenPrologue = true; __ut.G.sectors.forEach(s => s.unlocked = true); __ut.G.weapons = (window.__ALLW ? ['rivet','arc','harpoon','torch','drone','cryo','sonic'] : ['rivet','arc']); AU.init(); __ut.start({si}); }}""")
+        await pg.evaluate(f"""() => {{ __ut.G.seenPrologue = true; __ut.G.sectors.forEach(s => s.unlocked = true); __ut.G.weapons = (window.__ALLW ? ['rivet','arc','harpoon','torch','drone','cryo','sonic'] : ['rivet','arc','torch']); __ut.G.lastTool = 'torch'; AU.init(); __ut.start({si}); }}""")
         await pg.wait_for_timeout(1500)
         await pg.evaluate(BOT)
-        await pg.evaluate(f"__bot.opts.god = {'true' if god else 'false'}; __bot.opts.extractAt = {os.environ.get('EXTRACT', 72)}; __ut.S.speed = {os.environ.get('SPEED', 1)}")
+        await pg.evaluate(f"__bot.opts.god = {'true' if god else 'false'}; __bot.opts.extractAt = {os.environ.get('EXTRACT', 72)}; __bot.opts.choice = '{os.environ.get('CHOICE', 'a')}'; __bot.opts.stealth = {os.environ.get('STEALTH', 'false')}; __ut.S.speed = {os.environ.get('SPEED', 1)}")
         t0 = time.time(); n = 0
         while time.time() - t0 < secs:
             await pg.wait_for_timeout(every * 1000)

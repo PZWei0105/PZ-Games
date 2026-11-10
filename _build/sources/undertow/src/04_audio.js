@@ -185,9 +185,40 @@ const AU = {
       case 'type': if (!this.ok(name, 30)) return; this.noise({ f: 3200, filt: 'bandpass', q: 4, dur: .014, vol: .045 }); break;
       case 'klaxon': this.tone({ f: 520, f2: 760, glide: .85, type: 'sawtooth', dur: 1.05, a: .18, vol: .03 * v, filt: 'lowpass', ff: 1300, rev: .5, bus: this.amb });
         this.tone({ f: 523, f2: 765, glide: .85, type: 'square', dur: 1.05, a: .18, vol: .012 * v, filt: 'lowpass', ff: 900, bus: this.amb }); break;
-      case 'sting': if (!this.ok(name, 4000)) return;
+      case 'sting': if (!this.ok(name, o.force ? 900 : 4000)) return;
         [196, 207.65, 277.18, 293.66].forEach((f, i) => this.tone({ f, type: 'sawtooth', dur: 1.7, a: .008, vol: .045 * v, filt: 'lowpass', ff: 2600, rev: .9, det: i * 9, bus: this.mus }));
         this.tone({ f: 55, f2: 28, dur: 1.4, vol: .55 * v, rev: .6, bus: this.mus }); this.noise({ f: 3400, f2: 260, dur: .7, vol: .26 * v, rev: .9, bus: this.mus }); break;
+      case 'empty': if (!this.ok(name, 200)) return; this.noise({ f: 3800, filt: 'bandpass', q: 6, dur: .025, vol: .14 }); this.tone({ f: 900, dur: .03, vol: .03, at: .05 }); break;
+      case 'thud': if (!this.ok(name, 70)) return; this.tone({ f: 120 * P, f2: 70, dur: .09, vol: .3 * v, pan }); this.noise({ f: 600, filt: 'lowpass', dur: .06, vol: .14 * v, pan }); break;
+      case 'lunge': this.noise({ f: 260, f2: 1800, filt: 'bandpass', q: 2, dur: .45, vol: .42 * v, pan, dist: true }); this.tone({ f: 70, f2: 38, type: 'sawtooth', dur: .5, vol: .28 * v, filt: 'lowpass', ff: 400, pan }); break;
+      case 'grab': this.noise({ f: 500, f2: 3600, filt: 'bandpass', q: 1.5, dur: 1.4, vol: .55, dist: true, rev: .5 }); this.tone({ f: 48, f2: 26, dur: 1.6, vol: .6, rev: .5 });
+        [233.08, 246.94, 329.63, 349.23].forEach((f, i) => this.tone({ f, type: 'sawtooth', dur: 1.9, a: .005, vol: .05, filt: 'lowpass', ff: 3000, rev: .9, det: i * 11, bus: this.mus })); break;
+      case 'flashbang': this.noise({ f: 5000, f2: 400, dur: .9, vol: .6, rev: .6 }); this.tone({ f: 3800, dur: 1.6, a: .02, vol: .05 }); this.tone({ f: 70, f2: 30, dur: .6, vol: .45 }); break;
+      case 'gallop': if (!this.ok(name, 120)) return; this.tone({ f: 62, f2: 36, dur: .1, vol: .3 * v, pan }); this.noise({ f: 300, dur: .05, vol: .12 * v, pan }); this.tone({ f: 58, f2: 34, dur: .09, vol: .24 * v, pan, at: .09 }); break;
+      case 'check': for (let i = 0; i < 5; i++) this.noise({ f: 700 + Math.random() * 900, filt: 'bandpass', q: 7, dur: .05, vol: .2 * v, at: i * .11 + Math.random() * .03, pan }); this.tone({ f: 160, f2: 110, type: 'triangle', dur: .3, vol: .08 * v, at: .5, pan }); break;
+      case 'smash': this.noise({ f: 2200, f2: 300, dur: .5, vol: .45 * v, pan, rev: .4 }); this.tone({ f: 90, f2: 40, dur: .3, vol: .35 * v, pan }); for (let i = 0; i < 4; i++) this.tone({ f: 1800 + i * 700, type: 'triangle', dur: .12, vol: .04 * v, at: .1 + i * .06, pan }); break;
+      case 'machine': this.tone({ f: 70, f2: 110, type: 'sawtooth', dur: .6, vol: .1 * v, filt: 'lowpass', ff: 500, pan }); this.noise({ f: 1200, filt: 'bandpass', q: 2, dur: .5, vol: .08 * v, pan }); break;
+      case 'machine_hum': if (!this.ok(name, 300)) return; this.tone({ f: o.kind === 'speaker' ? 440 : o.kind === 'washer' ? 82 : 110, type: o.kind === 'speaker' ? 'square' : 'sawtooth', dur: .72, vol: .06 * v, filt: 'lowpass', ff: o.kind === 'speaker' ? 1600 : 600, pan }); this.noise({ f: 700, filt: 'bandpass', q: 3, dur: .5, vol: .05 * v, pan }); break;
+      case 'machine_off': this.tone({ f: 110, f2: 40, type: 'sawtooth', dur: .5, vol: .06 * v, filt: 'lowpass', ff: 500, pan }); break;
+      case 'locker_in': this.noise({ f: 900, filt: 'bandpass', q: 3, dur: .12, vol: .22 }); this.tone({ f: 180, f2: 120, type: 'square', dur: .08, vol: .05, filt: 'lowpass', ff: 600, at: .12 }); this.noise({ f: 2400, filt: 'bandpass', q: 6, dur: .03, vol: .1, at: .22 }); break;
+      case 'locker_out': this.noise({ f: 1500, filt: 'bandpass', q: 3, dur: .1, vol: .14 }); this.tone({ f: 160, f2: 220, type: 'square', dur: .06, vol: .04, filt: 'lowpass', ff: 600 }); break;
+      case 'hide_in': this.noise({ f: 600, filt: 'lowpass', dur: .3, vol: .14, a: .05 }); break;
+      case 'hide_out': this.noise({ f: 700, filt: 'lowpass', dur: .25, vol: .1, a: .05 }); break;
+      case 'inhale': this.noise({ f: 900, f2: 1700, filt: 'bandpass', q: 1.3, dur: .35, a: .12, vol: .1 }); break;
+      case 'exhale': this.noise({ f: 1300, f2: 450, filt: 'bandpass', q: 1.1, dur: .6, a: .05, vol: .11 * v }); break;
+      case 'gasp': this.noise({ f: 700, f2: 2400, filt: 'bandpass', q: 1.2, dur: .4, a: .02, vol: .3 }); this.noise({ f: 1500, f2: 500, filt: 'bandpass', q: 1.2, dur: .7, a: .04, vol: .2, at: .4 }); break;
+      case 'kill_h': if (!this.ok(name, 60)) return; this.noise({ f: 500 * P, f2: 120, filt: 'bandpass', q: 2, dur: .3, vol: .26 * v, pan }); this.tone({ f: 180 * P, f2: 60, type: 'sawtooth', dur: .3, vol: .08 * v, filt: 'lowpass', ff: 700, pan }); break;
+      case 'surge': this.noise({ f: 1800, f2: 300, dur: .6, vol: .35 * v, pan, rev: .3 }); this.noise({ f: 300, filt: 'bandpass', q: 2, dur: .5, vol: .2 * v, pan, at: .1 }); break;
+      case 'wall_scream': this.noise({ f: 900, f2: 2600, filt: 'bandpass', q: 4, dur: 1.2, vol: .35 * v, pan, rev: .5, dist: true }); this.tone({ f: 420, f2: 760, type: 'sawtooth', dur: 1.1, vol: .05 * v, filt: 'bandpass', ff: 1400, q: 3, pan, glide: 1 }); break;
+      case 'moan': if (!this.ok(name, 600)) return; this.tone({ f: 190 + Math.random() * 40, f2: 150, type: 'sawtooth', dur: 1.4, a: .3, vol: .05 * v, filt: 'bandpass', ff: 700, q: 4, pan, rev: .5, glide: 1.2 }); break;
+      case 'torch': this.noise({ f: 900, f2: 2600, filt: 'bandpass', q: .8, dur: .85, a: .04, vol: .32 }); this.tone({ f: 80, f2: 60, type: 'sawtooth', dur: .8, vol: .08, filt: 'lowpass', ff: 400 }); break;
+      case 'drone_go': this.tone({ f: 600, f2: 1600, type: 'square', dur: .3, vol: .04, filt: 'lowpass', ff: 3000 }); this.noise({ f: 3000, filt: 'bandpass', q: 3, dur: .3, vol: .06 }); break;
+      case 'arm': this.tone({ f: 120, f2: 60, type: 'square', dur: .2, vol: .1, filt: 'lowpass', ff: 600 }); this.noise({ f: 5000, filt: 'highpass', dur: .25, vol: .2, at: .05 }); this.tone({ f: 60, type: 'sawtooth', dur: .8, a: .1, vol: .06, filt: 'lowpass', ff: 300, at: .15 }); break;
+      case 'flood': this.noise({ f: 1400, f2: 600, filt: 'bandpass', q: .7, dur: 2.6, a: .3, vol: .22 * v, pan, rev: .4 }); this.tone({ f: 70, f2: 50, dur: 2, a: .4, vol: .12 * v, pan }); break;
+      case 'valve': if (!this.ok(name, 250)) return; this.tone({ f: 220 + Math.random() * 60, f2: 180, type: 'square', dur: .07, vol: .03 * v, filt: 'lowpass', ff: 900 }); break;
+      case 'trap': this.noise({ f: 6000, f2: 1200, filt: 'bandpass', q: .8, dur: 1.8, a: .01, vol: .6, dist: true, rev: .4 });
+        for (let i = 0; i < 12; i++) this.noise({ f: 2000 + Math.random() * 5000, filt: 'bandpass', q: 3, dur: .06, vol: .3, at: Math.random() * 1.6 });
+        this.tone({ f: 50, f2: 30, type: 'sawtooth', dur: 2, vol: .3, filt: 'lowpass', ff: 300 }); this.tone({ f: 120, type: 'square', dur: 1.6, vol: .05, filt: 'bandpass', ff: 240, q: 4 }); break;
       case 'creak': this.tone({ f: 820 + Math.random() * 600, f2: 640, type: 'sine', dur: 1.3, a: .35, vol: .022 * v, rev: .8, bus: this.amb, glide: 1.3, pan });
         this.noise({ f: 1400, filt: 'bandpass', q: 22, dur: 1.1, a: .3, vol: .03 * v, bus: this.amb, pan }); break;
       case 'chain': [1, 1.47, 2.09].forEach((k, i) => this.tone({ f: 1080 * k, type: 'triangle', dur: .35, vol: .018 * v, at: i * .09 + Math.random() * .05, rev: .8, bus: this.amb, pan })); break;
@@ -242,9 +273,10 @@ const AU = {
     if (st >= 3 && this.klaxT <= 0) { this.klaxT = st >= 4 ? 2.5 : 3.8; this.play('klaxon', { vol: st >= 4 ? 1 : .7 }); }
   },
   /* 頭盔裡的呼吸：潛行或心跳快的時候聽得到 */
-  tickBreath(dt, heart, quiet, under) {
+  tickBreath(dt, heart, quiet, under, hold, hidden) {
     if (!this.on || !this.ctx || !this.ambOn) return;
-    const want = Math.min(1, (quiet ? .5 : 0) + clamp((heart - 92) / 60, 0, 1) * .8);
+    if (hold) { this.brT = .4; this.brV = (this.brV || 0) * .9; return; }
+    const want = Math.min(1, (quiet ? .5 : 0) + (hidden ? .35 : 0) + clamp((heart - 92) / 60, 0, 1) * .8);
     this.brV = lerp(this.brV || 0, want, Math.min(1, dt * .8));
     if (this.brV < .06) { this.brT = 0; return; }
     this.brT = (this.brT || 0) - dt;
