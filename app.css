@@ -725,6 +725,9 @@ img { display: block; max-width: 100%; }
 #boot .count { margin-top: 10px; text-align: center; font-size: 12.5px; color: var(--mute); opacity: 0; animation: fadeUp .8s 1.5s forwards; }
 #boot .beam { position: absolute; left: 50%; top: 45%; width: 2px; height: 0; background: linear-gradient(180deg, transparent, #fff, transparent); box-shadow: 0 0 20px #8fd3ff; animation: beam 1.2s .1s var(--ease) forwards; opacity: .8; }
 @keyframes beam { 0% { height: 0; top: 45%; opacity: 0; } 40% { opacity: 1; } 100% { height: 120vh; top: -10vh; opacity: 0; } }
+/* The launch backdrop (#prelude) that the boot screen takes over from is styled inline in index.html,
+   so it is right on the very first frame even before this file has arrived. Its colors match #boot and
+   #boot .wall::after above: change them together. */
 
 /* ───────────── responsive ───────────── */
 /* ───────── 手氣不錯 banner ───────── */
@@ -1174,6 +1177,9 @@ img { display: block; max-width: 100%; }
 .tp-shine { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .35) 50%, transparent 65%); transform: translateX(-100%); }
 .tp.on .tp-shine { animation: tpShine 1s .35s var(--ease) forwards; }
 @keyframes tpShine { to { transform: translateX(100%); } }
+/* a bubble that comes while a trophy banner is up sits just below it instead of hiding under it,
+   and slides back up when the banner has gone */
+#tpop:not(:empty) ~ #toast.on { transform: translate(-50%, 76px); }
 
 /* the results screen after a game */
 #results { position: fixed; inset: 0; z-index: 94; display: none; place-items: center; padding: calc(var(--safe-t) + 20px) 16px calc(var(--safe-b) + 20px); overflow-y: auto; }
