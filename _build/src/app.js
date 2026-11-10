@@ -2296,6 +2296,18 @@ function shell() {
   addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.installEvt = e; });
   setInterval(() => { $$('img:not(.ld)').forEach((im) => { if (im.complete && im.naturalWidth) im.classList.add('ld'); }); }, 700);
 }
+// The launch backdrop (#prelude, in index.html) covers the half-built lobby until there is something to
+// show. The boot screen replaces it at once (same backdrop, so no seam); otherwise it waits until the
+// first page has been drawn and then fades into it.
+function unveil(now) {
+  const p = document.getElementById('prelude');
+  if (!p || p.classList.contains('gone')) return;
+  if (now) { p.remove(); return; }
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    p.classList.add('gone');
+    setTimeout(() => p.remove(), 520);
+  }));
+}
 function boot(done) {
   let booted = false;
   try { booted = sessionStorage.getItem('pzgc.booted') === '1'; } catch (e) { /* ignore */ }
@@ -2327,6 +2339,7 @@ function boot(done) {
     <div class="count">${S.games.length} 款遊戲・${S.apps.length} 個 App${p ? `・Lv ${p.lv} ${esc(p.title)}` : ''}</div>
     <div class="cta"><b>PRESS START</b><span>輕觸任意處開始</span></div></div>`;
   document.body.appendChild(b);
+  unveil(true);
   let gone = false;
   const go = () => {
     if (gone) return; gone = true;
@@ -2370,7 +2383,7 @@ async function start() {
   let cat;
   try { cat = await loadCatalog(); } catch (e) {
     $('#view-home').innerHTML = `<div class="empty" style="padding-top:40vh"><b>收藏庫沒有載入成功</b>請確認網路連線後重新打開。</div>`;
-    $('#view-home').classList.add('on'); return;
+    $('#view-home').classList.add('on'); unveil(true); return;
   }
   prep(cat);
   // A page that opens on #play-… has usually just been reloaded, often because the phone ran out
@@ -2404,26 +2417,35 @@ async function start() {
   if (!back && !upgrade) session = takeSession();
   else try { sessionStorage.removeItem('pzgc.ms0'); } catch (e) { /* ignore */ }
   if (!upgrade) late = trophyCheck();
-  // the hero starts from its first slide the moment the boot screen is dismissed
+  // the hero starts from its first slide the moment the boot screen is dismissed. The boot screen waits
+  // for PRESS START and sits above the bubbles and trophy banners, so what would pop up while it is still
+  // there waits for it to go (otherwise a new-game bubble could play out unseen underneath it).
   boot((tapped) => {
     if (tapped && Hero.el && S.base === 'home' && !S.current) heroGo(0, false);
     if (upgrade) showUpgrade(upgrade);
     else if (firstPops.length) setTimeout(() => trophyPop(firstPops), 900);
+    const q = S.afterBoot; S.afterBoot = null;
+    if (q) q.forEach((f) => f());
   });
+  const deferred = !!document.getElementById('boot');
+  if (deferred) S.afterBoot = [];
+  const later = (f) => (S.afterBoot ? S.afterBoot.push(f) : f());
   applyRoute();
   const shown = reportSession(session, false);
-  if (late.length) setTimeout(() => trophyPop(late), shown ? 1200 : 2600);
+  if (late.length) later(() => setTimeout(() => trophyPop(late), shown ? 1200 : deferred ? 1400 : 2600));
   if (back && wasPlaying) {
     setTimeout(() => toast(back.kind === 'app' ? `《${back.title}》剛剛被重新載入了，先回到 App 頁；點它就能再打開` : `《${back.title}》剛剛被重新載入了，先停在遊戲頁；按「開始遊戲」就能接著玩`, 6000), 900);
   }
   Motes.start();
   S.quietNote = !!(back && wasPlaying); // the reload notice gets the bubble this time
-  // news bubbles (new games, update notes) wait until the results screen is closed
-  if (shown) S.pendingNews = true; else checkNew();
+  // news bubbles (new games, update notes) wait until the results screen is closed, or the boot screen
+  if (shown) S.pendingNews = true; else later(checkNew);
   if (MODE === 'web' && 'serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
+  unveil();
 }
 window.__pz = { S, Sound, Hero, heroGo, heroPause, openGame, renderHome, setBase, launch, openSettings, openSearch, toast };
-start();
+// a failure while starting must never leave the launch backdrop over the screen; the error is still reported
+start().catch((e) => { unveil(true); setTimeout(() => { throw e; }); });
 })();
