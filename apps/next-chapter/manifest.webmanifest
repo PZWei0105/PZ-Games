@@ -1,0 +1,30 @@
+{
+ "name": "下回分解",
+ "short_name": "下回分解",
+ "description": "痞子葳的書房：連載小說寫完就上架，也能匯入自己的電子書；翻頁、聽說書都在這裡。",
+ "lang": "zh-Hant-TW",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#0b1422",
+ "theme_color": "#0b1422",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

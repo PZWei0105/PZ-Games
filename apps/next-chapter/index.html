@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>下回分解</title>
+<meta name="description" content="痞子葳的書房：連載小說寫完就上架，也能匯入自己的電子書；翻頁、聽說書都在這裡。">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#0b1422">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="下回分解">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d2f4a'/%3E%3Crect x='14' y='12' width='22' height='40' rx='1.500' fill='%23ece4d2'/%3E%3Crect x='19' y='37' width='12' height='11' rx='1.500' fill='%23b3382c'/%3E%3Cpath d='M48 8v48' stroke='%23e4dcc8' stroke-width='2'/%3E%3Cpath d='M48 18h10M48 32h10M48 46h10' stroke='%23e4dcc8' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;500;700;900&display=swap">
+<style>
+/* 下回分解 — 說書人的夜桌：靛青布面、宣紙題簽、朱印、泥金 */
+:root {
+  --night: #0b1422; --night-2: #111d30; --night-3: #18283f; --line: rgba(190, 210, 235, .13);
+  --moon: #dfe6ee; --mist: #8fa0b5; --paper: #ece4d2; --seal: #b3382c; --gilt: #c9a45c; --gilt-2: #e3c88a;
+  --kai: "LXGW WenKai TC", "Kaiti TC", "DFKai-SB", "BiauKai", serif;
+  --song: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--night); color: var(--moon); font: 15px/1.6 var(--song); -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+body { overflow: hidden; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--gilt-2); outline-offset: 2px; border-radius: 4px; }
+[hidden] { display: none !important; }
+svg { display: block; }
+.ib svg, .ic svg, .btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+svg .fill { fill: currentColor; stroke: none; }
+.ib svg text { font: 700 7.5px var(--song); fill: currentColor; stroke: none; }
+
+#app { position: fixed; inset: 0; }
+.view { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; outline: none;
+  background:
+    radial-gradient(90% 46% at 78% -6%, rgba(255, 186, 110, .17), transparent 62%),
+    radial-gradient(70% 40% at -10% 104%, rgba(46, 82, 128, .38), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 3px), var(--night); }
+.wrap { max-width: 1040px; margin: 0 auto; padding: calc(var(--st) + 14px) 20px calc(var(--sb) + 110px); }
+
+/* ── 書房 ── */
+.lib-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand h1 { margin: 0; font: 700 25px/1 var(--kai); letter-spacing: .14em; }
+.brand-seal { width: 30px; height: 30px; border-radius: 5px; background: var(--seal); color: #fff; font: 700 19px/30px var(--kai); text-align: center; box-shadow: inset 0 0 0 1.500px rgba(255,255,255,.28), 0 2px 8px rgba(0,0,0,.4); transform: rotate(-4deg); }
+.lib-acts { display: flex; gap: 4px; }
+.ib { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: var(--moon); }
+.ib:active { background: rgba(255,255,255,.08); }
+
+.hero { display: grid; grid-template-columns: minmax(118px, 34%) 1fr; gap: 20px; align-items: center; margin-bottom: 38px; }
+.hero-cover { perspective: 900px; }
+.hero-kicker { margin: 0 0 6px; color: var(--gilt); font: 400 14px/1.4 var(--kai); letter-spacing: .12em; }
+.hero h2 { margin: 0; font: 700 clamp(23px, 6.4vw, 38px)/1.25 var(--kai); letter-spacing: .04em; }
+.hero-ch { margin: 6px 0 0; color: var(--mist); font-size: 14.500px; }
+.hero-x { margin: 14px 0 0; padding: 0 0 0 12px; border-left: 2px solid rgba(201,164,92,.5); color: #c3cedb; font: 400 15px/1.75 var(--song); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.hero-prog { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: var(--mist); font-size: 12.500px; }
+.bar { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gilt), var(--gilt-2)); border-radius: 3px; }
+.hero-btns { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.hero.blank { grid-template-columns: 1fr; padding: 26px 22px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.025); }
+.hero.blank p { margin: 8px 0 0; color: var(--mist); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(223,230,238,.28); font: 700 15px/1 var(--song); letter-spacing: .08em; color: var(--moon); white-space: nowrap; }
+.btn:active { transform: scale(.97); }
+.btn.gilt { background: linear-gradient(180deg, #dcc07d, #b99147); color: #1b1408; border-color: transparent; box-shadow: 0 6px 18px -8px rgba(227,200,138,.7), inset 0 1px 0 rgba(255,255,255,.35); }
+.btn.quiet { border-color: transparent; color: var(--mist); padding: 0 10px; font-weight: 500; }
+.btn.danger { border-color: rgba(220,90,80,.5); color: #ef9a90; }
+.btn svg { width: 18px; height: 18px; }
+
+.shelf { margin-bottom: 34px; }
+.shelf-h { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 16px; padding-bottom: 9px; border-bottom: 1px solid var(--line); }
+.shelf-h h2 { margin: 0; font: 700 18px/1 var(--kai); letter-spacing: .2em; }
+.shelf-h span { color: var(--mist); font-size: 12.500px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 26px 18px; }
+.bk { display: block; text-align: left; min-width: 0; }
+.bk-t { display: block; margin-top: 12px; font: 700 14.500px/1.35 var(--song); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.bk-m { display: block; margin-top: 3px; color: var(--mist); font-size: 12px; line-height: 1.5; }
+.bk-m b { color: var(--gilt-2); font-weight: 700; }
+.cover { position: relative; display: block; aspect-ratio: 2 / 3; border-radius: 2px 3px 3px 2px; background: #1d2f4a;
+  box-shadow: -1px 0 0 #d8cfba, -2px 1px 0 #a69c85, -3px 1px 0 #d8cfba, -4px 2px 0 #948a74, 0 16px 26px -12px rgba(0,0,0,.85), 0 2px 5px rgba(0,0,0,.45); margin-left: 4px; transition: transform .25s ease; }
+.cover-svg { width: 100%; height: 100%; border-radius: inherit; }
+.cv-t { font-family: var(--kai); font-weight: 700; fill: #2a2118; }
+.cv-s { font-family: var(--kai); font-weight: 700; fill: #fff; }
+.bk:active .cover { transform: translateY(2px) scale(.985); }
+.cover .tag { position: absolute; top: -7px; left: -9px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 5px; background: var(--seal); color: #fff; font: 700 12.500px/26px var(--kai); text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.3); transform: rotate(-6deg); }
+.cover .pg { position: absolute; left: 0; right: 22px; bottom: 0; height: 3px; background: rgba(0,0,0,.35); }
+.cover .pg i { display: block; height: 100%; background: var(--gilt-2); }
+.bk.add .cover { background: none; box-shadow: none; border: 1.500px dashed rgba(223,230,238,.3); display: grid; place-items: center; color: var(--mist); margin-left: 0; }
+.bk.add .cover svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.lib-foot { color: #5f6f85; font-size: 12px; text-align: center; margin-top: 10px; }
+
+/* ── 書頁 ── */
+.bv-top { display: flex; justify-content: space-between; margin: 0 -8px 8px; }
+.bv-head { display: grid; grid-template-columns: minmax(120px, 36%) 1fr; gap: 22px; align-items: end; }
+.bv-head h1 { margin: 0; font: 700 clamp(25px, 7vw, 40px)/1.2 var(--kai); letter-spacing: .04em; }
+.bv-by { margin: 6px 0 0; color: var(--mist); font-size: 13.500px; }
+.bv-stats { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 14px 0 0; padding: 0; list-style: none; color: #c3cedb; font-size: 13px; }
+.bv-stats b { display: block; font: 700 17px/1.3 var(--kai); color: var(--moon); }
+.state { display: inline-block; margin-top: 10px; padding: 2px 9px; border: 1px solid rgba(201,164,92,.6); color: var(--gilt-2); border-radius: 4px; font: 700 12px/1.6 var(--kai); letter-spacing: .2em; }
+.bv-btns { display: flex; gap: 10px; margin: 22px 0 0; }
+.bv-btns .btn { flex: 1; }
+.bv-blurb { margin: 22px 0 0; color: #c3cedb; font-size: 15px; line-height: 1.9; text-align: justify; }
+.toc-h { display: flex; justify-content: space-between; align-items: baseline; margin: 30px 0 4px; padding-bottom: 9px; border-bottom: 1px solid var(--line); }
+.toc-h h2 { margin: 0; font: 700 18px/1 var(--kai); letter-spacing: .2em; }
+.toc-h button { color: var(--mist); font-size: 13px; padding: 6px 0 6px 12px; }
+.toc { list-style: none; margin: 0; padding: 0; }
+.toc .row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: baseline; width: 100%; padding: 14px 2px; border-bottom: 1px solid rgba(190,210,235,.07); text-align: left; }
+.toc .row:active { background: rgba(255,255,255,.04); }
+.r-no { color: var(--mist); font: 400 13px/1.4 var(--kai); min-width: 3.6em; }
+.r-nm { font: 500 16px/1.4 var(--song); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r-meta { color: #6f7f95; font-size: 12px; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.r-meta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.row.done .r-nm { color: #7d8ba0; }
+.row.cur .r-nm { color: var(--gilt-2); font-weight: 700; }
+.row.cur .r-no { color: var(--gilt); }
+.row .new { display: inline-block; margin-left: 8px; padding: 0 5px; background: var(--seal); color: #fff; border-radius: 3px; font: 700 11px/17px var(--kai); vertical-align: 2px; }
+.sheet .toc .row { padding: 13px 2px; }
+
+/* ── 閱讀器 ── */
+#reader { position: absolute; inset: 0; z-index: 20; background: var(--rd-outer); color: var(--rd-fg); --mx: 24px; --fs: 19px; --lh: 1.9; --ff: var(--song); }
+#reader[data-theme="night"] { --rd-bg: #131a25; --rd-fg: #c3cad5; --rd-dim: #66727f; --rd-acc: #c9a45c; --rd-outer: #0a0f17; --rd-flap: #1a2331; --rd-on: rgba(201,164,92,.2); --rd-bar: rgba(16,23,34,.94); --rd-ghost: .1; }
+#reader[data-theme="paper"] { --rd-bg: #e9dfc8; --rd-fg: #33291d; --rd-dim: #8f7f66; --rd-acc: #9c3b2a; --rd-outer: #cdbf9f; --rd-flap: #d9cdb1; --rd-on: rgba(156,59,42,.15); --rd-bar: rgba(240,231,210,.96); --rd-ghost: .16; }
+#reader[data-theme="black"] { --rd-bg: #000; --rd-fg: #9c9c9c; --rd-dim: #4c4c4c; --rd-acc: #8d7748; --rd-outer: #000; --rd-flap: #0c0c0c; --rd-on: rgba(255,255,255,.13); --rd-bar: rgba(10,10,10,.96); }
+.rd-stage { position: absolute; top: 0; bottom: 0; left: 50%; width: min(100%, 760px); transform: translateX(-50%); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; background: var(--rd-bg); box-shadow: 0 0 60px rgba(0,0,0,.35); }
+.leaf { position: absolute; inset: 0; overflow: hidden; z-index: 1; will-change: transform; }
+.leaf-in { position: absolute; inset: 0; background: var(--rd-bg); will-change: transform; }
+#reader[data-theme="paper"] .leaf-in, #reader[data-theme="paper"] .rd-scroll { background-image: radial-gradient(120% 70% at 50% -10%, rgba(255,255,255,.34), transparent 60%), radial-gradient(110% 80% at 50% 110%, rgba(125,92,40,.16), transparent 70%); }
+.vp { position: absolute; left: var(--mx); right: var(--mx); top: calc(var(--st) + 30px); bottom: calc(var(--sb) + 48px); overflow: hidden; }
+.flow { font-family: var(--ff); font-size: var(--fs); line-height: var(--lh); color: var(--rd-fg); column-fill: auto; text-align: justify; line-break: strict; word-break: normal; overflow-wrap: anywhere; font-feature-settings: "palt" 0; }
+.flow p { margin: 0 0 .58em; text-indent: 2em; orphans: 1; widows: 1; }
+.flow p.quote { text-indent: 0; padding-left: 1em; border-left: 2px solid var(--rd-dim); color: color-mix(in srgb, var(--rd-fg) 82%, transparent); }
+.ch-head { text-align: center; padding: min(15vh, 120px) 0 min(8vh, 64px); break-inside: avoid; }
+.ch-no { font: 400 .82em/1 var(--kai); letter-spacing: .5em; margin-right: -.5em; color: var(--rd-acc); }
+.ch-nm { margin: .55em 0 0; font: 700 1.95em/1.3 var(--kai); letter-spacing: .08em; text-indent: 0; }
+.ch-orn { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 1.300em; }
+.ch-orn i { width: 34px; height: 1px; background: var(--rd-dim); }
+.ch-orn b { width: 7px; height: 7px; background: var(--rd-acc); transform: rotate(45deg); }
+.brk { display: flex; justify-content: center; gap: 14px; margin: 1.500em 0 1.700em; break-inside: avoid; }
+.brk i { width: 5px; height: 5px; background: var(--rd-dim); transform: rotate(45deg); }
+.flow h3.sub { margin: 1.200em 0 .8em; font: 700 1.150em/1.5 var(--kai); text-align: center; text-indent: 0; break-after: avoid; }
+.endmark { text-align: center; text-indent: 0 !important; margin-top: 2.200em !important; color: var(--rd-dim); font: 400 .82em/1.6 var(--kai); letter-spacing: .3em; }
+.fig { margin: 1em 0; text-align: center; break-inside: avoid; }
+.fig img { max-width: 100%; max-height: 62vh; border-radius: 2px; }
+.s { border-radius: .18em; transition: background-color .25s ease; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.s.on { background: var(--rd-on); box-shadow: 0 0 0 .14em var(--rd-on); }
+.pg-foot { position: absolute; left: var(--mx); right: var(--mx); bottom: calc(var(--sb) + 15px); display: flex; justify-content: space-between; gap: 16px; font: 400 11.500px/1.4 var(--song); color: var(--rd-dim); letter-spacing: .1em; }
+.pf-l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-r { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.flapc { position: absolute; inset: 0; overflow: hidden; z-index: 5; pointer-events: none; will-change: transform; }
+.flap { position: absolute; inset: 0; background: var(--rd-flap); will-change: transform; }
+.flap::before { content: ""; position: absolute; top: 0; bottom: 0; right: 100%; width: 30px; background: linear-gradient(to left, rgba(0,0,0,.3), transparent); }
+.flap::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to right, rgba(255,255,255,.12), rgba(255,255,255,0) 22%); }
+.ghost { position: absolute; inset: 0; transform: scaleX(-1); opacity: var(--rd-ghost, .12); pointer-events: none; }
+.flapc.off, .foldsh.off { visibility: hidden; }
+.flapc::after { content: ""; position: absolute; top: 0; bottom: 0; right: 0; width: 52px; background: linear-gradient(to left, rgba(255,255,255,.16) 0, rgba(255,255,255,.16) 1px, rgba(0,0,0,.36) 1px, rgba(0,0,0,.08) 55%, transparent); }
+.foldsh { position: absolute; top: 0; bottom: 0; left: 0; width: 60px; z-index: 4; pointer-events: none; background: linear-gradient(to right, rgba(0,0,0,.42), rgba(0,0,0,.1) 50%, transparent); will-change: transform, opacity; }
+#reader[data-theme="black"] .foldsh, #reader[data-theme="black"] .flapc::after { background: linear-gradient(to right, rgba(255,255,255,.12), transparent); }
+#reader[data-theme="black"] .flapc::after { background: linear-gradient(to left, rgba(255,255,255,.3) 0, rgba(255,255,255,.3) 1px, rgba(255,255,255,.1) 1px, transparent); }
+
+.rd-scroll { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; background-color: var(--rd-bg); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.rd-scroll .flow { position: relative; max-width: 720px; margin: 0 auto; padding: calc(var(--st) + 26px) var(--mx) calc(var(--sb) + 120px); }
+.sc-end { margin-top: 3em; text-align: center; font-family: var(--song); }
+.sc-next { flex-direction: column; gap: 6px; min-height: 64px; padding: 10px 28px; border-color: var(--rd-dim); color: var(--rd-fg); font-size: 16px; white-space: normal; }
+.sc-next small { font: 400 12px/1 var(--kai); letter-spacing: .3em; color: var(--rd-acc); }
+.sc-fin { text-indent: 0 !important; color: var(--rd-dim); font: 400 .9em/1.8 var(--kai); letter-spacing: .2em; text-align: center; }
+
+.rd-top, .rd-bot { position: absolute; left: 0; right: 0; z-index: 30; background: var(--rd-bar); color: var(--rd-fg); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .2s; }
+.rd-top { top: 0; display: flex; align-items: center; gap: 2px; padding: calc(var(--st) + 4px) 8px 6px; transform: translateY(-105%); box-shadow: 0 1px 0 color-mix(in srgb, var(--rd-fg) 12%, transparent); }
+.rd-bot { bottom: 0; padding: 12px 18px calc(var(--sb) + 14px); transform: translateY(105%); box-shadow: 0 -1px 0 color-mix(in srgb, var(--rd-fg) 12%, transparent); }
+#reader.chrome-on .rd-top, #reader.chrome-on .rd-bot { transform: none; }
+.rd-top .ib, .rd-bot .ib { color: var(--rd-fg); }
+.rd-title { flex: 1; min-width: 0; text-align: center; line-height: 1.3; }
+.rd-title b { display: block; font: 700 15px/1.3 var(--kai); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rd-title span { display: block; font-size: 12px; color: var(--rd-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rd-seek { display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; }
+.tb { font-size: 13px; color: var(--rd-fg); padding: 10px 2px; white-space: nowrap; opacity: .85; }
+.rd-acts { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 720px; margin: 10px auto 0; }
+#rdPos { font-size: 12.500px; color: var(--rd-dim); font-variant-numeric: tabular-nums; }
+input[type="range"] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 28px; background: transparent; margin: 0; --p: 0%; }
+input[type="range"]::-webkit-slider-runnable-track { height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--gilt) var(--p), rgba(128,128,128,.35) var(--p)); }
+input[type="range"]::-moz-range-track { height: 3px; border-radius: 3px; background: rgba(128,128,128,.35); }
+input[type="range"]::-moz-range-progress { height: 3px; border-radius: 3px; background: var(--gilt); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7.500px; border-radius: 50%; background: var(--gilt-2); border: 0; box-shadow: 0 1px 5px rgba(0,0,0,.5); }
+input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--gilt-2); border: 0; }
+.rd-pill { position: absolute; left: 50%; bottom: calc(var(--sb) + 64px); transform: translateX(-50%); z-index: 25; padding: 9px 16px; border-radius: 999px; background: var(--gilt); color: #1b1408; font: 700 13px/1 var(--song); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+.rd-load { position: absolute; inset: 0; z-index: 40; display: none; place-items: center; background: var(--rd-bg); }
+#reader.loading .rd-load { display: grid; }
+.rd-load i, .busy-box i { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(128,128,128,.3); border-top-color: var(--gilt); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 說書：迷你播放列 ── */
+#mini { position: absolute; left: 12px; right: 12px; bottom: calc(var(--sb) + 12px); z-index: 26; max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 16px; background: rgba(24, 36, 56, .96); border: 1px solid rgba(201,164,92,.35); box-shadow: 0 12px 30px rgba(0,0,0,.5); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); overflow: hidden; }
+#mini .mi-main { flex: 1; min-width: 0; text-align: left; }
+#mini .mi-t { display: block; font: 700 13.500px/1.3 var(--kai); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#mini .mi-x { display: block; font-size: 12px; color: var(--mist); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#mini .mi-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255,255,255,.08); }
+#mini .mi-bar i { display: block; height: 100%; background: var(--gilt-2); }
+#mini .ib { width: 40px; height: 40px; flex: none; }
+#mini .ib.play { background: var(--gilt); color: #1b1408; }
+#mini.in-reader { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(var(--sb) + 6px); padding: 3px 4px 3px 12px; border-radius: 999px; gap: 6px; width: auto; max-width: 78vw; background: var(--rd-bar-solid, rgba(24,36,56,.96)); }
+#mini.in-reader .mi-x, #mini.in-reader .mi-bar, #mini.in-reader .mi-close { display: none; }
+#mini.in-reader .mi-t { font-size: 12px; max-width: 42vw; }
+#mini.in-reader .ib { width: 32px; height: 32px; }
+#mini.in-reader .ib svg { width: 17px; height: 17px; }
+body.chrome-on #mini.in-reader { display: none; }
+
+/* ── 抽屜 ── */
+.sheet { position: absolute; inset: 0; z-index: 50; }
+.sheet-bg { position: absolute; inset: 0; background: rgba(4, 8, 14, .6); animation: fade .22s ease both; }
+.sheet-panel { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; background: #132035; border-radius: 20px 20px 0 0; border-top: 1px solid rgba(201,164,92,.3); box-shadow: 0 -18px 50px rgba(0,0,0,.55); animation: rise .3s cubic-bezier(.2,.85,.25,1) both; outline: none; }
+.sheet-grab { padding: 10px 0 4px; display: grid; place-items: center; cursor: pointer; }
+.sheet-grab i { width: 38px; height: 4px; border-radius: 4px; background: rgba(223,230,238,.25); }
+#sheetBody { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 6px 20px calc(var(--sb) + 22px); }
+.sheet h2 { margin: 4px 0 14px; font: 700 19px/1.3 var(--kai); letter-spacing: .16em; }
+.sheet h3 { margin: 20px 0 9px; font: 500 13px/1 var(--song); color: var(--mist); letter-spacing: .1em; }
+@keyframes fade { from { opacity: 0; } }
+@keyframes rise { from { transform: translateY(40%); opacity: 0; } }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.seg button { min-height: 46px; border-radius: 12px; border: 1px solid var(--line); font: 500 14.500px/1.2 var(--song); color: var(--moon); padding: 6px 4px; }
+.seg button[aria-pressed="true"] { border-color: var(--gilt); background: rgba(201,164,92,.14); color: var(--gilt-2); font-weight: 700; }
+.seg.themes button { min-height: 62px; display: grid; gap: 4px; place-items: center; }
+.seg.themes i { width: 30px; height: 20px; border-radius: 4px; border: 1px solid rgba(128,128,128,.5); display: block; }
+.seg.fonts button:nth-child(1) { font-family: var(--song); } .seg.fonts button:nth-child(2) { font-family: "Noto Sans TC", "PingFang TC", sans-serif; } .seg.fonts button:nth-child(3) { font-family: var(--kai); font-size: 16px; }
+.step { display: flex; align-items: center; gap: 12px; }
+.step button { width: 54px; height: 46px; border-radius: 12px; border: 1px solid var(--line); font: 700 17px/1 var(--song); }
+.step button:last-of-type { font-size: 22px; }
+.step output { flex: 1; text-align: center; color: var(--mist); font-size: 14px; font-variant-numeric: tabular-nums; }
+.sw { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; padding: 13px 0; border-bottom: 1px solid rgba(190,210,235,.07); text-align: left; font-size: 15px; }
+.sw small { display: block; color: var(--mist); font-size: 12.500px; line-height: 1.5; margin-top: 2px; }
+.sw i { flex: none; width: 46px; height: 28px; border-radius: 28px; background: rgba(223,230,238,.18); position: relative; transition: background .2s; }
+.sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.sw[aria-checked="true"] i { background: var(--gilt); }
+.sw[aria-checked="true"] i::after { transform: translateX(18px); }
+.note { color: var(--mist); font-size: 12.500px; line-height: 1.75; margin: 12px 0 0; }
+
+/* ── 說書現場 ── */
+.np { text-align: center; }
+.np-art { width: 108px; margin: 2px auto 14px; }
+.np h2 { margin: 0; letter-spacing: .06em; font-size: 20px; }
+.np-sub { margin: 3px 0 0; color: var(--mist); font-size: 13px; }
+.np-lines { margin: 16px 0 6px; min-height: 9.200em; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.np-lines p { margin: 0; font: 400 14px/1.6 var(--song); color: #6f8097; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.np-lines p.now { font: 500 17.500px/1.7 var(--song); color: var(--moon); -webkit-line-clamp: 4; }
+.np-time { display: flex; justify-content: space-between; color: var(--mist); font-size: 12px; font-variant-numeric: tabular-nums; margin-top: -2px; }
+.np-ctl { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 12px 0 8px; }
+.np-ctl .ib { width: 50px; height: 50px; }
+.np-ctl .ib svg { width: 26px; height: 26px; }
+.np-ctl .ib.big { width: 70px; height: 70px; background: linear-gradient(180deg, #dcc07d, #b99147); color: #1b1408; box-shadow: 0 10px 24px -8px rgba(227,200,138,.6); }
+.np-ctl .ib.big svg { width: 32px; height: 32px; }
+.np-ctl .ib.big.wait svg { animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chips button { min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); font-size: 13.500px; color: var(--moon); font-variant-numeric: tabular-nums; }
+.chips button[aria-pressed="true"] { border-color: var(--gilt); color: var(--gilt-2); background: rgba(201,164,92,.14); font-weight: 700; }
+.np-src { margin: 14px 0 0; color: var(--mist); font-size: 12.500px; line-height: 1.7; }
+.np select { width: 100%; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: #0f1a2b; color: var(--moon); font: 500 14.500px var(--song); padding: 0 12px; }
+.np .rowb { display: flex; gap: 10px; margin-top: 14px; }
+.np .rowb .btn { flex: 1; }
+
+/* ── 零件 ── */
+#pop { position: absolute; z-index: 45; transform: translate(-50%, -100%); padding-bottom: 10px; }
+#pop button { padding: 11px 16px; border-radius: 12px; background: #1b2c47; border: 1px solid rgba(201,164,92,.5); color: var(--gilt-2); font: 700 14px/1 var(--song); box-shadow: 0 10px 26px rgba(0,0,0,.55); white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+#pop button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+#toasts { position: absolute; left: 0; right: 0; top: calc(var(--st) + 10px); z-index: 70; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; padding: 0 16px; }
+.toast { pointer-events: auto; display: flex; align-items: center; gap: 12px; max-width: 520px; padding: 11px 16px; border-radius: 12px; background: #1b2c47; border: 1px solid rgba(201,164,92,.45); color: var(--moon); font-size: 14px; line-height: 1.55; box-shadow: 0 12px 30px rgba(0,0,0,.5); opacity: 0; transform: translateY(-12px); transition: opacity .25s, transform .25s; }
+.toast.on { opacity: 1; transform: none; }
+.toast.bad { border-color: rgba(230,110,100,.6); }
+.toast button { flex: none; color: var(--gilt-2); font-weight: 700; padding: 6px 4px; }
+#busy { position: absolute; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(4,8,14,.72); }
+.busy-box { display: flex; align-items: center; gap: 14px; padding: 18px 22px; border-radius: 14px; background: #132035; border: 1px solid var(--line); font-size: 15px; max-width: 84vw; }
+#drop { position: absolute; inset: 0; z-index: 85; display: grid; place-items: center; background: rgba(8,14,24,.86); border: 3px dashed var(--gilt); pointer-events: none; text-align: center; }
+#drop b { display: block; font: 700 26px/1.4 var(--kai); letter-spacing: .1em; } #drop span { color: var(--mist); }
+#opening { position: absolute; inset: 0; z-index: 60; perspective: 1500px; overflow: hidden; pointer-events: none; }
+#opening .op-bg { position: absolute; inset: 0; background: var(--night); opacity: 0; }
+#opening .op-book { position: absolute; transform-style: preserve-3d; }
+#opening .op-page { position: absolute; inset: 0; border-radius: 2px; }
+#opening .op-cover { position: absolute; inset: 0; transform-origin: 100% 50%; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.6); }
+#opening .op-cover svg { width: 100%; height: 100%; }
+
+.empty { padding: 30px 8px; text-align: center; color: var(--mist); line-height: 1.9; }
+@media (min-width: 720px) {
+  .wrap { padding-left: 40px; padding-right: 40px; }
+  .hero { grid-template-columns: 220px 1fr; gap: 40px; margin-bottom: 54px; }
+  .bv-head { grid-template-columns: 230px 1fr; gap: 40px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 40px 34px; }
+  .bv-btns .btn { flex: 0 1 190px; }
+  .hero-x { font-size: 16.500px; -webkit-line-clamp: 4; }
+  #reader { --mx-extra: 20px; }
+  .vp, .pg-foot { left: calc(var(--mx) + 26px); right: calc(var(--mx) + 26px); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+</style>
+</head>
+<body>
+<noscript><p style="color:#dfe6ee;padding:24px;font-family:serif">下回分解需要開啟 JavaScript 才能使用。</p></noscript>
+<div id="app">
+  <main id="lib" class="view" tabindex="-1"></main>
+  <section id="bookv" class="view" hidden tabindex="-1"></section>
+
+  <section id="reader" hidden aria-label="閱讀器">
+    <div class="rd-stage" id="rdStage">
+      <div class="leaf" id="leafA"><div class="leaf-in"><div class="vp"><div class="flow"></div></div><div class="pg-foot"><span class="pf-l"></span><span class="pf-r"></span></div></div></div>
+      <div class="leaf" id="leafB"><div class="leaf-in"><div class="vp"><div class="flow"></div></div><div class="pg-foot"><span class="pf-l"></span><span class="pf-r"></span></div></div></div>
+      <div class="flapc off" id="flapC"><div class="flap"><div class="ghost"><div class="vp"><div class="flow"></div></div></div></div></div>
+      <div class="foldsh off" id="foldSh"></div>
+    </div>
+    <div class="rd-scroll" id="rdScroll" hidden><div class="flow" id="scFlow"></div></div>
+    <header class="rd-top">
+      <button type="button" class="ib" data-act="rd-back" aria-label="回到書頁"></button>
+      <div class="rd-title"><b id="rdBook"></b><span id="rdCh"></span></div>
+      <button type="button" class="ib" data-act="rd-toc" aria-label="目錄"></button>
+      <button type="button" class="ib" data-act="rd-look" aria-label="字體與外觀"></button>
+    </header>
+    <footer class="rd-bot">
+      <div class="rd-seek">
+        <button type="button" class="tb" data-act="rd-prevch">上一回</button>
+        <input type="range" id="rdRange" min="0" max="0" step="1" value="0" aria-label="這一回的頁數">
+        <button type="button" class="tb" data-act="rd-nextch">下一回</button>
+      </div>
+      <div class="rd-acts"><span id="rdPos"></span><button type="button" class="btn gilt" data-act="rd-narr"></button></div>
+    </footer>
+    <button type="button" class="rd-pill" id="rdFollow" data-act="rd-follow" hidden>回到說書的地方</button>
+    <div class="rd-load" aria-hidden="true"><i></i></div>
+  </section>
+
+  <div id="mini" hidden></div>
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-bg" data-act="sheet-close"></div>
+    <div class="sheet-panel" role="dialog" aria-modal="true" tabindex="-1"><div class="sheet-grab" data-act="sheet-close" aria-hidden="true"><i></i></div><div id="sheetBody"></div></div>
+  </div>
+  <div id="pop" hidden></div>
+  <div id="opening" hidden aria-hidden="true"></div>
+  <div id="busy" hidden><div class="busy-box"><i></i><span id="busyText"></span></div></div>
+  <div id="drop" hidden><div><b>放開就匯入</b><span>EPUB、TXT、Markdown</span></div></div>
+  <div id="toasts" aria-live="polite"></div>
+  <input type="file" id="file" hidden multiple accept=".epub,.txt,.md,.markdown,application/epub+zip,text/plain,text/markdown">
+</div>
+<script>
+!function(f){typeof module!='undefined'&&typeof exports=='object'?module.exports=f():typeof define!='undefined'&&define.amd?define(f):(typeof self!='undefined'?self:this).fflate=f()}(function(){var _e={};"use strict";var t=(typeof module!='undefined'&&typeof exports=='object'?function(_f){"use strict";var e,t=";var __w=require('worker_threads');__w.parentPort.on('message',function(m){onmessage({data:m})}),postMessage=function(m,t){__w.parentPort.postMessage(m,t)},close=process.exit;self=global";try{e=require("worker_threads").Worker}catch(e){}exports.default=e?function(r,n,o,a,s){var u=!1,i=new e(r+t,{eval:!0}).on("error",(function(e){return s(e,null)})).on("message",(function(e){return s(null,e)})).on("exit",(function(e){e&&!u&&s(Error("exited with code "+e),null)}));return i.postMessage(o,a),i.terminate=function(){return u=!0,e.prototype.terminate.call(i)},i}:function(e,t,r,n,o){setImmediate((function(){return o(Error("async operations unsupported - update to Node 12+ (or Node 10-11 with the --experimental-worker CLI flag)"),null)}));var a=function(){};return{terminate:a,postMessage:a}};return _f}:function(_f){"use strict";var e={};_f.default=function(r,t,s,a,n){var o=new Worker(e[t]||(e[t]=URL.createObjectURL(new Blob([r+';addEventListener("error",function(e){e=e.error;postMessage({$e$:[e.message,e.code,e.stack]})})'],{type:"text/javascript"}))));return o.onmessage=function(e){var r=e.data,t=r.$e$;if(t){var s=Error(t[0]);s.code=t[1],s.stack=t[2],n(s,null)}else n(null,r)},o.postMessage(s,a),o};return _f})({}),n=Uint8Array,r=Uint16Array,e=Int32Array,i=new n([0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0,0,0,0]),o=new n([0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,0,0]),s=new n([16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15]),a=function(t,n){for(var i=new r(31),o=0;o<31;++o)i[o]=n+=1<<t[o-1];var s=new e(i[30]);for(o=1;o<30;++o)for(var a=i[o];a<i[o+1];++a)s[a]=a-i[o]<<5|o;return{b:i,r:s}},u=a(i,2),h=u.b,f=u.r;h[28]=258,f[258]=28;for(var l=a(o,0),c=l.b,p=l.r,v=new r(32768),d=0;d<32768;++d){var g=(43690&d)>>1|(21845&d)<<1;v[d]=((65280&(g=(61680&(g=(52428&g)>>2|(13107&g)<<2))>>4|(3855&g)<<4))>>8|(255&g)<<8)>>1}var y=function(t,n,e){for(var i=t.length,o=0,s=new r(n);o<i;++o)t[o]&&++s[t[o]-1];var a,u=new r(n);for(o=1;o<n;++o)u[o]=u[o-1]+s[o-1]<<1;if(e){a=new r(1<<n);var h=15-n;for(o=0;o<i;++o)if(t[o])for(var f=o<<4|t[o],l=n-t[o],c=u[t[o]-1]++<<l,p=c|(1<<l)-1;c<=p;++c)a[v[c]>>h]=f}else for(a=new r(i),o=0;o<i;++o)t[o]&&(a[o]=v[u[t[o]-1]++]>>15-t[o]);return a},m=new n(288);for(d=0;d<144;++d)m[d]=8;for(d=144;d<256;++d)m[d]=9;for(d=256;d<280;++d)m[d]=7;for(d=280;d<288;++d)m[d]=8;var b=new n(32);for(d=0;d<32;++d)b[d]=5;var w=y(m,9,0),x=y(m,9,1),z=y(b,5,0),k=y(b,5,1),M=function(t){for(var n=t[0],r=1;r<t.length;++r)t[r]>n&&(n=t[r]);return n},S=function(t,n,r){var e=n/8|0;return(t[e]|t[e+1]<<8)>>(7&n)&r},A=function(t,n){var r=n/8|0;return(t[r]|t[r+1]<<8|t[r+2]<<16)>>(7&n)},T=function(t){return(t+7)/8|0},D=function(t,r,e){return(null==r||r<0)&&(r=0),(null==e||e>t.length)&&(e=t.length),new n(t.subarray(r,e))};_e.FlateErrorCode={UnexpectedEOF:0,InvalidBlockType:1,InvalidLengthLiteral:2,InvalidDistance:3,StreamFinished:4,NoStreamHandler:5,InvalidHeader:6,NoCallback:7,InvalidUTF8:8,ExtraFieldTooLong:9,InvalidDate:10,FilenameTooLong:11,StreamFinishing:12,InvalidZipData:13,UnknownCompressionMethod:14};var C=["unexpected EOF","invalid block type","invalid length/literal","invalid distance","stream finished","no stream handler",,"no callback","invalid UTF-8 data","extra field too long","date not in range 1980-2099","filename too long","stream finishing","invalid zip data"],I=function(t,n,r){var e=Error(n||C[t]);if(e.code=t,Error.captureStackTrace&&Error.captureStackTrace(e,I),!r)throw e;return e},U=function(t,r,e,a){var u=t.length,f=a?a.length:0;if(!u||r.f&&!r.l)return e||new n(0);var l=!e,p=l||2!=r.i,v=r.i;l&&(e=new n(3*u));var d=function(t){var r=e.length;if(t>r){var i=new n(Math.max(2*r,t));i.set(e),e=i}},g=r.f||0,m=r.p||0,b=r.b||0,w=r.l,z=r.d,C=r.m,U=r.n,F=8*u;do{if(!w){g=S(t,m,1);var E=S(t,m+1,3);if(m+=3,!E){var Z=t[(J=T(m)+4)-4]|t[J-3]<<8,q=J+Z;if(q>u){v&&I(0);break}p&&d(b+Z),e.set(t.subarray(J,q),b),r.b=b+=Z,r.p=m=8*q,r.f=g;continue}if(1==E)w=x,z=k,C=9,U=5;else if(2==E){var O=S(t,m,31)+257,G=S(t,m+10,15)+4,L=O+S(t,m+5,31)+1;m+=14;for(var H=new n(L),j=new n(19),N=0;N<G;++N)j[s[N]]=S(t,m+3*N,7);m+=3*G;var P=M(j),B=(1<<P)-1,Y=y(j,P,1);for(N=0;N<L;){var J,K=Y[S(t,m,B)];if(m+=15&K,(J=K>>4)<16)H[N++]=J;else{var Q=0,R=0;for(16==J?(R=3+S(t,m,3),m+=2,Q=H[N-1]):17==J?(R=3+S(t,m,7),m+=3):18==J&&(R=11+S(t,m,127),m+=7);R--;)H[N++]=Q}}var V=H.subarray(0,O),W=H.subarray(O);C=M(V),U=M(W),w=y(V,C,1),z=y(W,U,1)}else I(1);if(m>F){v&&I(0);break}}p&&d(b+131072);for(var X=(1<<C)-1,$=(1<<U)-1,_=m;;_=m){var tt=(Q=w[A(t,m)&X])>>4;if((m+=15&Q)>F){v&&I(0);break}if(Q||I(2),tt<256)e[b++]=tt;else{if(256==tt){_=m,w=null;break}var nt=tt-254;tt>264&&(nt=S(t,m,(1<<(it=i[N=tt-257]))-1)+h[N],m+=it);var rt=z[A(t,m)&$],et=rt>>4;if(rt||I(3),m+=15&rt,W=c[et],et>3){var it=o[et];W+=A(t,m)&(1<<it)-1,m+=it}if(m>F){v&&I(0);break}p&&d(b+131072);var ot=b+nt;if(b<W){var st=f-W,at=Math.min(W,ot);for(st+b<0&&I(3);b<at;++b)e[b]=a[st+b]}for(;b<ot;++b)e[b]=e[b-W]}}r.l=w,r.p=_,r.b=b,r.f=g,w&&(g=1,r.m=C,r.d=z,r.n=U)}while(!g);return b!=e.length&&l?D(e,0,b):e.subarray(0,b)},F=function(t,n,r){var e=n/8|0;t[e]|=r<<=7&n,t[e+1]|=r>>8},E=function(t,n,r){var e=n/8|0;t[e]|=r<<=7&n,t[e+1]|=r>>8,t[e+2]|=r>>16},Z=function(t,e){for(var i=[],o=0;o<t.length;++o)t[o]&&i.push({s:o,f:t[o]});var s=i.length,a=i.slice();if(!s)return{t:N,l:0};if(1==s){var u=new n(i[0].s+1);return u[i[0].s]=1,{t:u,l:1}}i.sort((function(t,n){return t.f-n.f})),i.push({s:-1,f:25001});var h=i[0],f=i[1],l=0,c=1,p=2;for(i[0]={s:-1,f:h.f+f.f,l:h,r:f};c!=s-1;)h=i[i[l].f<i[p].f?l++:p++],f=i[l!=c&&i[l].f<i[p].f?l++:p++],i[c++]={s:-1,f:h.f+f.f,l:h,r:f};var v=a[0].s;for(o=1;o<s;++o)a[o].s>v&&(v=a[o].s);var d=new r(v+1),g=q(i[c-1],d,0);if(g>e){o=0;var y=0,m=g-e,b=1<<m;for(a.sort((function(t,n){return d[n.s]-d[t.s]||t.f-n.f}));o<s;++o){var w=a[o].s;if(!(d[w]>e))break;y+=b-(1<<g-d[w]),d[w]=e}for(y>>=m;y>0;){var x=a[o].s;d[x]<e?y-=1<<e-d[x]++-1:++o}for(;o>=0&&y;--o){var z=a[o].s;d[z]==e&&(--d[z],++y)}g=e}return{t:new n(d),l:g}},q=function(t,n,r){return-1==t.s?Math.max(q(t.l,n,r+1),q(t.r,n,r+1)):n[t.s]=r},O=function(t){for(var n=t.length;n&&!t[--n];);for(var e=new r(++n),i=0,o=t[0],s=1,a=function(t){e[i++]=t},u=1;u<=n;++u)if(t[u]==o&&u!=n)++s;else{if(!o&&s>2){for(;s>138;s-=138)a(32754);s>2&&(a(s>10?s-11<<5|28690:s-3<<5|12305),s=0)}else if(s>3){for(a(o),--s;s>6;s-=6)a(8304);s>2&&(a(s-3<<5|8208),s=0)}for(;s--;)a(o);s=1,o=t[u]}return{c:e.subarray(0,i),n:n}},G=function(t,n){for(var r=0,e=0;e<n.length;++e)r+=t[e]*n[e];return r},L=function(t,n,r){var e=r.length,i=T(n+2);t[i]=255&e,t[i+1]=e>>8,t[i+2]=255^t[i],t[i+3]=255^t[i+1];for(var o=0;o<e;++o)t[i+o+4]=r[o];return 8*(i+4+e)},H=function(t,n,e,a,u,h,f,l,c,p,v){F(n,v++,e),++u[256];for(var d=Z(u,15),g=d.t,x=d.l,k=Z(h,15),M=k.t,S=k.l,A=O(g),T=A.c,D=A.n,C=O(M),I=C.c,U=C.n,q=new r(19),H=0;H<T.length;++H)++q[31&T[H]];for(H=0;H<I.length;++H)++q[31&I[H]];for(var j=Z(q,7),N=j.t,P=j.l,B=19;B>4&&!N[s[B-1]];--B);var Y,J,K,Q,R=p+5<<3,V=G(u,m)+G(h,b)+f,W=G(u,g)+G(h,M)+f+14+3*B+G(q,N)+2*q[16]+3*q[17]+7*q[18];if(c>=0&&R<=V&&R<=W)return L(n,v,t.subarray(c,c+p));if(F(n,v,1+(W<V)),v+=2,W<V){Y=y(g,x,0),J=g,K=y(M,S,0),Q=M;var X=y(N,P,0);for(F(n,v,D-257),F(n,v+5,U-1),F(n,v+10,B-4),v+=14,H=0;H<B;++H)F(n,v+3*H,N[s[H]]);v+=3*B;for(var $=[T,I],_=0;_<2;++_){var tt=$[_];for(H=0;H<tt.length;++H)F(n,v,X[rt=31&tt[H]]),v+=N[rt],rt>15&&(F(n,v,tt[H]>>5&127),v+=tt[H]>>12)}}else Y=w,J=m,K=z,Q=b;for(H=0;H<l;++H){var nt=a[H];if(nt>255){var rt;E(n,v,Y[257+(rt=nt>>18&31)]),v+=J[rt+257],rt>7&&(F(n,v,nt>>23&31),v+=i[rt]);var et=31&nt;E(n,v,K[et]),v+=Q[et],et>3&&(E(n,v,nt>>5&8191),v+=o[et])}else E(n,v,Y[nt]),v+=J[nt]}return E(n,v,Y[256]),v+J[256]},j=new e([65540,131080,131088,131104,262176,1048704,1048832,2114560,2117632]),N=new n(0),P=function(t,s,a,u,h,l){var c=l.z||t.length,v=new n(u+c+5*(1+Math.ceil(c/7e3))+h),d=v.subarray(u,v.length-h),g=l.l,y=7&(l.r||0);if(s){y&&(d[0]=l.r>>3);for(var m=j[s-1],b=m>>13,w=8191&m,x=(1<<a)-1,z=l.p||new r(32768),k=l.h||new r(x+1),M=Math.ceil(a/3),S=2*M,A=function(n){return(t[n]^t[n+1]<<M^t[n+2]<<S)&x},C=new e(25e3),I=new r(288),U=new r(32),F=0,E=0,Z=l.i||0,q=0,O=l.w||0,G=0;Z+2<c;++Z){var N=A(Z),P=32767&Z,B=k[N];if(z[P]=B,k[N]=P,O<=Z){var Y=c-Z;if((F>7e3||q>24576)&&(Y>423||!g)){y=H(t,d,0,C,I,U,E,q,G,Z-G,y),q=F=E=0,G=Z;for(var J=0;J<286;++J)I[J]=0;for(J=0;J<30;++J)U[J]=0}var K=2,Q=0,R=w,V=P-B&32767;if(Y>2&&N==A(Z-V))for(var W=Math.min(b,Y)-1,X=Math.min(32767,Z),$=Math.min(258,Y);V<=X&&--R&&P!=B;){if(t[Z+K]==t[Z+K-V]){for(var _=0;_<$&&t[Z+_]==t[Z+_-V];++_);if(_>K){if(K=_,Q=V,_>W)break;var tt=Math.min(V,_-2),nt=0;for(J=0;J<tt;++J){var rt=Z-V+J&32767,et=rt-z[rt]&32767;et>nt&&(nt=et,B=rt)}}}V+=(P=B)-(B=z[P])&32767}if(Q){C[q++]=268435456|f[K]<<18|p[Q];var it=31&f[K],ot=31&p[Q];E+=i[it]+o[ot],++I[257+it],++U[ot],O=Z+K,++F}else C[q++]=t[Z],++I[t[Z]]}}for(Z=Math.max(Z,O);Z<c;++Z)C[q++]=t[Z],++I[t[Z]];y=H(t,d,g,C,I,U,E,q,G,Z-G,y),g||(l.r=7&y|d[y/8|0]<<3,y-=7,l.h=k,l.p=z,l.i=Z,l.w=O)}else{for(Z=l.w||0;Z<c+g;Z+=65535){var st=Z+65535;st>=c&&(d[y/8|0]=g,st=c),y=L(d,y+1,t.subarray(Z,st))}l.i=c}return D(v,0,u+T(y)+h)},B=function(){for(var t=new Int32Array(256),n=0;n<256;++n){for(var r=n,e=9;--e;)r=(1&r&&-306674912)^r>>>1;t[n]=r}return t}(),Y=function(){var t=-1;return{p:function(n){for(var r=t,e=0;e<n.length;++e)r=B[255&r^n[e]]^r>>>8;t=r},d:function(){return~t}}},J=function(){var t=1,n=0;return{p:function(r){for(var e=t,i=n,o=0|r.length,s=0;s!=o;){for(var a=Math.min(s+2655,o);s<a;++s)i+=e+=r[s];e=(65535&e)+15*(e>>16),i=(65535&i)+15*(i>>16)}t=e,n=i},d:function(){return(255&(t%=65521))<<24|(65280&t)<<8|(255&(n%=65521))<<8|n>>8}}},K=function(t,r,e,i,o){if(!o&&(o={l:1},r.dictionary)){var s=r.dictionary.subarray(-32768),a=new n(s.length+t.length);a.set(s),a.set(t,s.length),t=a,o.w=s.length}return P(t,null==r.level?6:r.level,null==r.mem?o.l?Math.ceil(1.5*Math.max(8,Math.min(13,Math.log(t.length)))):20:12+r.mem,e,i,o)},Q=function(t,n){var r={};for(var e in t)r[e]=t[e];for(var e in n)r[e]=n[e];return r},R=function(t,n,r){for(var e=t(),i=""+t,o=i.slice(i.indexOf("[")+1,i.lastIndexOf("]")).replace(/\s+/g,"").split(","),s=0;s<e.length;++s){var a=e[s],u=o[s];if("function"==typeof a){n+=";"+u+"=";var h=""+a;if(a.prototype)if(-1!=h.indexOf("[native code]")){var f=h.indexOf(" ",8)+1;n+=h.slice(f,h.indexOf("(",f))}else for(var l in n+=h,a.prototype)n+=";"+u+".prototype."+l+"="+a.prototype[l];else n+=h}else r[u]=a}return n},V=[],W=function(t){var n=[];for(var r in t)t[r].buffer&&n.push((t[r]=new t[r].constructor(t[r])).buffer);return n},X=function(n,r,e,i){if(!V[e]){for(var o="",s={},a=n.length-1,u=0;u<a;++u)o=R(n[u],o,s);V[e]={c:R(n[a],o,s),e:s}}var h=Q({},V[e].e);return(0,t.default)(V[e].c+";onmessage=function(e){for(var k in e.data)self[k]=e.data[k];onmessage="+r+"}",e,h,W(h),i)},$=function(){return[n,r,e,i,o,s,h,c,x,k,v,C,y,M,S,A,T,D,I,U,Tt,it,ot]},_=function(){return[n,r,e,i,o,s,f,p,w,m,z,b,v,j,N,y,F,E,Z,q,O,G,L,H,T,D,P,K,kt,it]},tt=function(){return[pt,gt,ct,Y,B]},nt=function(){return[vt,dt]},rt=function(){return[yt,ct,J]},et=function(){return[mt]},it=function(t){return postMessage(t,[t.buffer])},ot=function(t){return t&&{out:t.size&&new n(t.size),dictionary:t.dictionary}},st=function(t,n,r,e,i,o){var s=X(r,e,i,(function(t,n){s.terminate(),o(t,n)}));return s.postMessage([t,n],n.consume?[t.buffer]:[]),function(){s.terminate()}},at=function(t){return t.ondata=function(t,n){return postMessage([t,n],[t.buffer])},function(n){n.data.length?(t.push(n.data[0],n.data[1]),postMessage([n.data[0].length])):t.flush()}},ut=function(t,n,r,e,i,o,s){var a,u=X(t,e,i,(function(t,r){t?(u.terminate(),n.ondata.call(n,t)):Array.isArray(r)?1==r.length?(n.queuedSize-=r[0],n.ondrain&&n.ondrain(r[0])):(r[1]&&u.terminate(),n.ondata.call(n,t,r[0],r[1])):s(r)}));u.postMessage(r),n.queuedSize=0,n.push=function(t,r){n.ondata||I(5),a&&n.ondata(I(4,0,1),null,!!r),n.queuedSize+=t.length,u.postMessage([t,a=r],[t.buffer])},n.terminate=function(){u.terminate()},o&&(n.flush=function(){u.postMessage([])})},ht=function(t,n){return t[n]|t[n+1]<<8},ft=function(t,n){return(t[n]|t[n+1]<<8|t[n+2]<<16|t[n+3]<<24)>>>0},lt=function(t,n){return ft(t,n)+4294967296*ft(t,n+4)},ct=function(t,n,r){for(;r;++n)t[n]=r,r>>>=8},pt=function(t,n){var r=n.filename;if(t[0]=31,t[1]=139,t[2]=8,t[8]=n.level<2?4:9==n.level?2:0,t[9]=3,0!=n.mtime&&ct(t,4,Math.floor(new Date(n.mtime||Date.now())/1e3)),r){t[3]=8;for(var e=0;e<=r.length;++e)t[e+10]=r.charCodeAt(e)}},vt=function(t){31==t[0]&&139==t[1]&&8==t[2]||I(6,"invalid gzip data");var n=t[3],r=10;4&n&&(r+=2+(t[10]|t[11]<<8));for(var e=(n>>3&1)+(n>>4&1);e>0;e-=!t[r++]);return r+(2&n)},dt=function(t){var n=t.length;return(t[n-4]|t[n-3]<<8|t[n-2]<<16|t[n-1]<<24)>>>0},gt=function(t){return 10+(t.filename?t.filename.length+1:0)},yt=function(t,n){var r=n.level,e=0==r?0:r<6?1:9==r?3:2;if(t[0]=120,t[1]=e<<6|(n.dictionary&&32),t[1]|=31-(t[0]<<8|t[1])%31,n.dictionary){var i=J();i.p(n.dictionary),ct(t,2,i.d())}},mt=function(t,n){return(8!=(15&t[0])||t[0]>>4>7||(t[0]<<8|t[1])%31)&&I(6,"invalid zlib data"),(t[1]>>5&1)==+!n&&I(6,"invalid zlib data: "+(32&t[1]?"need":"unexpected")+" dictionary"),2+(t[1]>>3&4)};function bt(t,n){return"function"==typeof t&&(n=t,t={}),this.ondata=n,t}var wt=function(){function t(t,r){if("function"==typeof t&&(r=t,t={}),this.ondata=r,this.o=t||{},this.s={l:0,i:32768,w:32768,z:32768},this.b=new n(98304),this.o.dictionary){var e=this.o.dictionary.subarray(-32768);this.b.set(e,32768-e.length),this.s.i=32768-e.length}}return t.prototype.p=function(t,n){this.ondata(K(t,this.o,0,0,this.s),n)},t.prototype.push=function(t,r){this.ondata||I(5),this.s.l&&I(4);var e=t.length+this.s.z;if(e>this.b.length){if(e>2*this.b.length-32768){var i=new n(-32768&e);i.set(this.b.subarray(0,this.s.z)),this.b=i}var o=this.b.length-this.s.z;this.b.set(t.subarray(0,o),this.s.z),this.s.z=this.b.length,this.p(this.b,!1),this.b.set(this.b.subarray(-32768)),this.b.set(t.subarray(o),32768),this.s.z=t.length-o+32768,this.s.i=32766,this.s.w=32768}else this.b.set(t,this.s.z),this.s.z+=t.length;this.s.l=1&r,(this.s.z>this.s.w+8191||r)&&(this.p(this.b,r||!1),this.s.w=this.s.i,this.s.i-=2)},t.prototype.flush=function(){this.ondata||I(5),this.s.l&&I(4),this.p(this.b,!1),this.s.w=this.s.i,this.s.i-=2},t}();_e.Deflate=wt;var xt=function(){return function(t,n){ut([_,function(){return[at,wt]}],this,bt.call(this,t,n),(function(t){var n=new wt(t.data);onmessage=at(n)}),6,1)}}();function zt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[_],(function(t){return it(kt(t.data[0],t.data[1]))}),0,r)}function kt(t,n){return K(t,n||{},0,0)}_e.AsyncDeflate=xt,_e.deflate=zt,_e.deflateSync=kt;var Mt=function(){function t(t,r){"function"==typeof t&&(r=t,t={}),this.ondata=r;var e=t&&t.dictionary&&t.dictionary.subarray(-32768);this.s={i:0,b:e?e.length:0},this.o=new n(32768),this.p=new n(0),e&&this.o.set(e)}return t.prototype.e=function(t){if(this.ondata||I(5),this.d&&I(4),this.p.length){if(t.length){var r=new n(this.p.length+t.length);r.set(this.p),r.set(t,this.p.length),this.p=r}}else this.p=t},t.prototype.c=function(t){this.s.i=+(this.d=t||!1);var n=this.s.b,r=U(this.p,this.s,this.o);this.ondata(D(r,n,this.s.b),this.d),this.o=D(r,this.s.b-32768),this.s.b=this.o.length,this.p=D(this.p,this.s.p/8|0),this.s.p&=7},t.prototype.push=function(t,n){this.e(t),this.c(n)},t}();_e.Inflate=Mt;var St=function(){return function(t,n){ut([$,function(){return[at,Mt]}],this,bt.call(this,t,n),(function(t){var n=new Mt(t.data);onmessage=at(n)}),7,0)}}();function At(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[$],(function(t){return it(Tt(t.data[0],ot(t.data[1])))}),1,r)}function Tt(t,n){return U(t,{i:2},n&&n.out,n&&n.dictionary)}_e.AsyncInflate=St,_e.inflate=At,_e.inflateSync=Tt;var Dt=function(){function t(t,n){this.c=Y(),this.l=0,this.v=1,wt.call(this,t,n)}return t.prototype.push=function(t,n){this.c.p(t),this.l+=t.length,wt.prototype.push.call(this,t,n)},t.prototype.p=function(t,n){var r=K(t,this.o,this.v&&gt(this.o),n&&8,this.s);this.v&&(pt(r,this.o),this.v=0),n&&(ct(r,r.length-8,this.c.d()),ct(r,r.length-4,this.l)),this.ondata(r,n)},t.prototype.flush=function(){wt.prototype.flush.call(this)},t}();_e.Gzip=Dt,_e.Compress=Dt;var Ct=function(){return function(t,n){ut([_,tt,function(){return[at,wt,Dt]}],this,bt.call(this,t,n),(function(t){var n=new Dt(t.data);onmessage=at(n)}),8,1)}}();function It(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[_,tt,function(){return[Ut]}],(function(t){return it(Ut(t.data[0],t.data[1]))}),2,r)}function Ut(t,n){n||(n={});var r=Y(),e=t.length;r.p(t);var i=K(t,n,gt(n),8),o=i.length;return pt(i,n),ct(i,o-8,r.d()),ct(i,o-4,e),i}_e.AsyncGzip=Ct,_e.AsyncCompress=Ct,_e.gzip=It,_e.compress=It,_e.gzipSync=Ut,_e.compressSync=Ut;var Ft=function(){function t(t,n){this.v=1,this.r=0,Mt.call(this,t,n)}return t.prototype.push=function(t,r){if(Mt.prototype.e.call(this,t),this.r+=t.length,this.v){var e=this.p.subarray(this.v-1),i=e.length>3?vt(e):4;if(i>e.length){if(!r)return}else this.v>1&&this.onmember&&this.onmember(this.r-e.length);this.p=e.subarray(i),this.v=0}Mt.prototype.c.call(this,r),!this.s.f||this.s.l||r||(this.v=T(this.s.p)+9,this.s={i:0},this.o=new n(0),this.push(new n(0),r))},t}();_e.Gunzip=Ft;var Et=function(){return function(t,n){var r=this;ut([$,nt,function(){return[at,Mt,Ft]}],this,bt.call(this,t,n),(function(t){var n=new Ft(t.data);n.onmember=function(t){return postMessage(t)},onmessage=at(n)}),9,0,(function(t){return r.onmember&&r.onmember(t)}))}}();function Zt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[$,nt,function(){return[qt]}],(function(t){return it(qt(t.data[0],t.data[1]))}),3,r)}function qt(t,r){var e=vt(t);return e+8>t.length&&I(6,"invalid gzip data"),U(t.subarray(e,-8),{i:2},r&&r.out||new n(dt(t)),r&&r.dictionary)}_e.AsyncGunzip=Et,_e.gunzip=Zt,_e.gunzipSync=qt;var Ot=function(){function t(t,n){this.c=J(),this.v=1,wt.call(this,t,n)}return t.prototype.push=function(t,n){this.c.p(t),wt.prototype.push.call(this,t,n)},t.prototype.p=function(t,n){var r=K(t,this.o,this.v&&(this.o.dictionary?6:2),n&&4,this.s);this.v&&(yt(r,this.o),this.v=0),n&&ct(r,r.length-4,this.c.d()),this.ondata(r,n)},t.prototype.flush=function(){wt.prototype.flush.call(this)},t}();_e.Zlib=Ot;var Gt=function(){return function(t,n){ut([_,rt,function(){return[at,wt,Ot]}],this,bt.call(this,t,n),(function(t){var n=new Ot(t.data);onmessage=at(n)}),10,1)}}();function Lt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[_,rt,function(){return[Ht]}],(function(t){return it(Ht(t.data[0],t.data[1]))}),4,r)}function Ht(t,n){n||(n={});var r=J();r.p(t);var e=K(t,n,n.dictionary?6:2,4);return yt(e,n),ct(e,e.length-4,r.d()),e}_e.AsyncZlib=Gt,_e.zlib=Lt,_e.zlibSync=Ht;var jt=function(){function t(t,n){Mt.call(this,t,n),this.v=t&&t.dictionary?2:1}return t.prototype.push=function(t,n){if(Mt.prototype.e.call(this,t),this.v){if(this.p.length<6&&!n)return;this.p=this.p.subarray(mt(this.p,this.v-1)),this.v=0}n&&(this.p.length<4&&I(6,"invalid zlib data"),this.p=this.p.subarray(0,-4)),Mt.prototype.c.call(this,n)},t}();_e.Unzlib=jt;var Nt=function(){return function(t,n){ut([$,et,function(){return[at,Mt,jt]}],this,bt.call(this,t,n),(function(t){var n=new jt(t.data);onmessage=at(n)}),11,0)}}();function Pt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),st(t,n,[$,et,function(){return[Bt]}],(function(t){return it(Bt(t.data[0],ot(t.data[1])))}),5,r)}function Bt(t,n){return U(t.subarray(mt(t,n&&n.dictionary),-4),{i:2},n&&n.out,n&&n.dictionary)}_e.AsyncUnzlib=Nt,_e.unzlib=Pt,_e.unzlibSync=Bt;var Yt=function(){function t(t,n){this.o=bt.call(this,t,n)||{},this.G=Ft,this.I=Mt,this.Z=jt}return t.prototype.i=function(){var t=this;this.s.ondata=function(n,r){t.ondata(n,r)}},t.prototype.push=function(t,r){if(this.ondata||I(5),this.s)this.s.push(t,r);else{if(this.p&&this.p.length){var e=new n(this.p.length+t.length);e.set(this.p),e.set(t,this.p.length)}else this.p=t;this.p.length>2&&(this.s=31==this.p[0]&&139==this.p[1]&&8==this.p[2]?new this.G(this.o):8!=(15&this.p[0])||this.p[0]>>4>7||(this.p[0]<<8|this.p[1])%31?new this.I(this.o):new this.Z(this.o),this.i(),this.s.push(this.p,r),this.p=null)}},t}();_e.Decompress=Yt;var Jt=function(){function t(t,n){Yt.call(this,t,n),this.queuedSize=0,this.G=Et,this.I=St,this.Z=Nt}return t.prototype.i=function(){var t=this;this.s.ondata=function(n,r,e){t.ondata(n,r,e)},this.s.ondrain=function(n){t.queuedSize-=n,t.ondrain&&t.ondrain(n)}},t.prototype.push=function(t,n){this.queuedSize+=t.length,Yt.prototype.push.call(this,t,n)},t}();function Kt(t,n,r){return r||(r=n,n={}),"function"!=typeof r&&I(7),31==t[0]&&139==t[1]&&8==t[2]?Zt(t,n,r):8!=(15&t[0])||t[0]>>4>7||(t[0]<<8|t[1])%31?At(t,n,r):Pt(t,n,r)}function Qt(t,n){return 31==t[0]&&139==t[1]&&8==t[2]?qt(t,n):8!=(15&t[0])||t[0]>>4>7||(t[0]<<8|t[1])%31?Tt(t,n):Bt(t,n)}_e.AsyncDecompress=Jt,_e.decompress=Kt,_e.decompressSync=Qt;var Rt=function(t,r,e,i){for(var o in t){var s=t[o],a=r+o,u=i;Array.isArray(s)&&(u=Q(i,s[1]),s=s[0]),s instanceof n?e[a]=[s,u]:(e[a+="/"]=[new n(0),u],Rt(s,a,e,i))}},Vt="undefined"!=typeof TextEncoder&&new TextEncoder,Wt="undefined"!=typeof TextDecoder&&new TextDecoder,Xt=0;try{Wt.decode(N,{stream:!0}),Xt=1}catch(t){}var $t=function(t){for(var n="",r=0;;){var e=t[r++],i=(e>127)+(e>223)+(e>239);if(r+i>t.length)return{s:n,r:D(t,r-1)};i?3==i?(e=((15&e)<<18|(63&t[r++])<<12|(63&t[r++])<<6|63&t[r++])-65536,n+=String.fromCharCode(55296|e>>10,56320|1023&e)):n+=String.fromCharCode(1&i?(31&e)<<6|63&t[r++]:(15&e)<<12|(63&t[r++])<<6|63&t[r++]):n+=String.fromCharCode(e)}},_t=function(){function t(t){this.ondata=t,Xt?this.t=new TextDecoder:this.p=N}return t.prototype.push=function(t,r){if(this.ondata||I(5),r=!!r,this.t)return this.ondata(this.t.decode(t,{stream:!0}),r),void(r&&(this.t.decode().length&&I(8),this.t=null));this.p||I(4);var e=new n(this.p.length+t.length);e.set(this.p),e.set(t,this.p.length);var i=$t(e),o=i.s,s=i.r;r?(s.length&&I(8),this.p=null):this.p=s,this.ondata(o,r)},t}();_e.DecodeUTF8=_t;var tn=function(){function t(t){this.ondata=t}return t.prototype.push=function(t,n){this.ondata||I(5),this.d&&I(4),this.ondata(nn(t),this.d=n||!1)},t}();function nn(t,r){if(r){for(var e=new n(t.length),i=0;i<t.length;++i)e[i]=t.charCodeAt(i);return e}if(Vt)return Vt.encode(t);var o=t.length,s=new n(t.length+(t.length>>1)),a=0,u=function(t){s[a++]=t};for(i=0;i<o;++i){if(a+5>s.length){var h=new n(a+8+(o-i<<1));h.set(s),s=h}var f=t.charCodeAt(i);f<128||r?u(f):f<2048?(u(192|f>>6),u(128|63&f)):f>55295&&f<57344?(u(240|(f=65536+(1047552&f)|1023&t.charCodeAt(++i))>>18),u(128|f>>12&63),u(128|f>>6&63),u(128|63&f)):(u(224|f>>12),u(128|f>>6&63),u(128|63&f))}return D(s,0,a)}function rn(t,n){if(n){for(var r="",e=0;e<t.length;e+=16384)r+=String.fromCharCode.apply(null,t.subarray(e,e+16384));return r}if(Wt)return Wt.decode(t);var i=$t(t),o=i.s;return(r=i.r).length&&I(8),o}_e.EncodeUTF8=tn,_e.strToU8=nn,_e.strFromU8=rn;var en=function(t){return 1==t?3:t<6?2:9==t?1:0},on=function(t,n){return n+30+ht(t,n+26)+ht(t,n+28)},sn=function(t,n,r){var e=ht(t,n+28),i=rn(t.subarray(n+46,n+46+e),!(2048&ht(t,n+8))),o=n+46+e,s=ft(t,n+20),a=r&&4294967295==s?an(t,o):[s,ft(t,n+24),ft(t,n+42)],u=a[0],h=a[1],f=a[2];return[ht(t,n+10),u,h,i,o+ht(t,n+30)+ht(t,n+32),f]},an=function(t,n){for(;1!=ht(t,n);n+=4+ht(t,n+2));return[lt(t,n+12),lt(t,n+4),lt(t,n+20)]},un=function(t){var n=0;if(t)for(var r in t){var e=t[r].length;e>65535&&I(9),n+=e+4}return n},hn=function(t,n,r,e,i,o,s,a){var u=e.length,h=r.extra,f=a&&a.length,l=un(h);ct(t,n,null!=s?33639248:67324752),n+=4,null!=s&&(t[n++]=20,t[n++]=r.os),t[n]=20,n+=2,t[n++]=r.flag<<1|(o<0&&8),t[n++]=i&&8,t[n++]=255&r.compression,t[n++]=r.compression>>8;var c=new Date(null==r.mtime?Date.now():r.mtime),p=c.getFullYear()-1980;if((p<0||p>119)&&I(10),ct(t,n,p<<25|c.getMonth()+1<<21|c.getDate()<<16|c.getHours()<<11|c.getMinutes()<<5|c.getSeconds()>>1),n+=4,-1!=o&&(ct(t,n,r.crc),ct(t,n+4,o<0?-o-2:o),ct(t,n+8,r.size)),ct(t,n+12,u),ct(t,n+14,l),n+=16,null!=s&&(ct(t,n,f),ct(t,n+6,r.attrs),ct(t,n+10,s),n+=14),t.set(e,n),n+=u,l)for(var v in h){var d=h[v],g=d.length;ct(t,n,+v),ct(t,n+2,g),t.set(d,n+4),n+=4+g}return f&&(t.set(a,n),n+=f),n},fn=function(t,n,r,e,i){ct(t,n,101010256),ct(t,n+8,r),ct(t,n+10,r),ct(t,n+12,e),ct(t,n+16,i)},ln=function(){function t(t){this.filename=t,this.c=Y(),this.size=0,this.compression=0}return t.prototype.process=function(t,n){this.ondata(null,t,n)},t.prototype.push=function(t,n){this.ondata||I(5),this.c.p(t),this.size+=t.length,n&&(this.crc=this.c.d()),this.process(t,n||!1)},t}();_e.ZipPassThrough=ln;var cn=function(){function t(t,n){var r=this;n||(n={}),ln.call(this,t),this.d=new wt(n,(function(t,n){r.ondata(null,t,n)})),this.compression=8,this.flag=en(n.level)}return t.prototype.process=function(t,n){try{this.d.push(t,n)}catch(t){this.ondata(t,null,n)}},t.prototype.push=function(t,n){ln.prototype.push.call(this,t,n)},t}();_e.ZipDeflate=cn;var pn=function(){function t(t,n){var r=this;n||(n={}),ln.call(this,t),this.d=new xt(n,(function(t,n,e){r.ondata(t,n,e)})),this.compression=8,this.flag=en(n.level),this.terminate=this.d.terminate}return t.prototype.process=function(t,n){this.d.push(t,n)},t.prototype.push=function(t,n){ln.prototype.push.call(this,t,n)},t}();_e.AsyncZipDeflate=pn;var vn=function(){function t(t){this.ondata=t,this.u=[],this.d=1}return t.prototype.add=function(t){var r=this;if(this.ondata||I(5),2&this.d)this.ondata(I(4+8*(1&this.d),0,1),null,!1);else{var e=nn(t.filename),i=e.length,o=t.comment,s=o&&nn(o),a=i!=t.filename.length||s&&o.length!=s.length,u=i+un(t.extra)+30;i>65535&&this.ondata(I(11,0,1),null,!1);var h=new n(u);hn(h,0,t,e,a,-1);var f=[h],l=function(){for(var t=0,n=f;t<n.length;t++)r.ondata(null,n[t],!1);f=[]},c=this.d;this.d=0;var p=this.u.length,v=Q(t,{f:e,u:a,o:s,t:function(){t.terminate&&t.terminate()},r:function(){if(l(),c){var t=r.u[p+1];t?t.r():r.d=1}c=1}}),d=0;t.ondata=function(e,i,o){if(e)r.ondata(e,i,o),r.terminate();else if(d+=i.length,f.push(i),o){var s=new n(16);ct(s,0,134695760),ct(s,4,t.crc),ct(s,8,d),ct(s,12,t.size),f.push(s),v.c=d,v.b=u+d+16,v.crc=t.crc,v.size=t.size,c&&v.r(),c=1}else c&&l()},this.u.push(v)}},t.prototype.end=function(){var t=this;2&this.d?this.ondata(I(4+8*(1&this.d),0,1),null,!0):(this.d?this.e():this.u.push({r:function(){1&t.d&&(t.u.splice(-1,1),t.e())},t:function(){}}),this.d=3)},t.prototype.e=function(){for(var t=0,r=0,e=0,i=0,o=this.u;i<o.length;i++)e+=46+(h=o[i]).f.length+un(h.extra)+(h.o?h.o.length:0);for(var s=new n(e+22),a=0,u=this.u;a<u.length;a++){var h;hn(s,t,h=u[a],h.f,h.u,-h.c-2,r,h.o),t+=46+h.f.length+un(h.extra)+(h.o?h.o.length:0),r+=h.b}fn(s,t,this.u.length,e,r),this.ondata(null,s,!0),this.d=2},t.prototype.terminate=function(){for(var t=0,n=this.u;t<n.length;t++)n[t].t();this.d=2},t}();function dn(t,r,e){e||(e=r,r={}),"function"!=typeof e&&I(7);var i={};Rt(t,"",i,r);var o=Object.keys(i),s=o.length,a=0,u=0,h=s,f=Array(s),l=[],c=function(){for(var t=0;t<l.length;++t)l[t]()},p=function(t,n){xn((function(){e(t,n)}))};xn((function(){p=e}));var v=function(){var t=new n(u+22),r=a,e=u-a;u=0;for(var i=0;i<h;++i){var o=f[i];try{var s=o.c.length;hn(t,u,o,o.f,o.u,s);var l=30+o.f.length+un(o.extra),c=u+l;t.set(o.c,c),hn(t,a,o,o.f,o.u,s,u,o.m),a+=16+l+(o.m?o.m.length:0),u=c+s}catch(t){return p(t,null)}}fn(t,a,f.length,e,r),p(null,t)};s||v();for(var d=function(t){var n=o[t],r=i[n],e=r[0],h=r[1],d=Y(),g=e.length;d.p(e);var y=nn(n),m=y.length,b=h.comment,w=b&&nn(b),x=w&&w.length,z=un(h.extra),k=0==h.level?0:8,M=function(r,e){if(r)c(),p(r,null);else{var i=e.length;f[t]=Q(h,{size:g,crc:d.d(),c:e,f:y,m:w,u:m!=n.length||w&&b.length!=x,compression:k}),a+=30+m+z+i,u+=76+2*(m+z)+(x||0)+i,--s||v()}};if(m>65535&&M(I(11,0,1),null),k)if(g<16e4)try{M(null,kt(e,h))}catch(t){M(t,null)}else l.push(zt(e,h,M));else M(null,e)},g=0;g<h;++g)d(g);return c}function gn(t,r){r||(r={});var e={},i=[];Rt(t,"",e,r);var o=0,s=0;for(var a in e){var u=e[a],h=u[0],f=u[1],l=0==f.level?0:8,c=(M=nn(a)).length,p=f.comment,v=p&&nn(p),d=v&&v.length,g=un(f.extra);c>65535&&I(11);var y=l?kt(h,f):h,m=y.length,b=Y();b.p(h),i.push(Q(f,{size:h.length,crc:b.d(),c:y,f:M,m:v,u:c!=a.length||v&&p.length!=d,o:o,compression:l})),o+=30+c+g+m,s+=76+2*(c+g)+(d||0)+m}for(var w=new n(s+22),x=o,z=s-o,k=0;k<i.length;++k){var M;hn(w,(M=i[k]).o,M,M.f,M.u,M.c.length);var S=30+M.f.length+un(M.extra);w.set(M.c,M.o+S),hn(w,o,M,M.f,M.u,M.c.length,M.o,M.m),o+=16+S+(M.m?M.m.length:0)}return fn(w,o,i.length,z,x),w}_e.Zip=vn,_e.zip=dn,_e.zipSync=gn;var yn=function(){function t(){}return t.prototype.push=function(t,n){this.ondata(null,t,n)},t.compression=0,t}();_e.UnzipPassThrough=yn;var mn=function(){function t(){var t=this;this.i=new Mt((function(n,r){t.ondata(null,n,r)}))}return t.prototype.push=function(t,n){try{this.i.push(t,n)}catch(t){this.ondata(t,null,n)}},t.compression=8,t}();_e.UnzipInflate=mn;var bn=function(){function t(t,n){var r=this;n<32e4?this.i=new Mt((function(t,n){r.ondata(null,t,n)})):(this.i=new St((function(t,n,e){r.ondata(t,n,e)})),this.terminate=this.i.terminate)}return t.prototype.push=function(t,n){this.i.terminate&&(t=D(t,0)),this.i.push(t,n)},t.compression=8,t}();_e.AsyncUnzipInflate=bn;var wn=function(){function t(t){this.onfile=t,this.k=[],this.o={0:yn},this.p=N}return t.prototype.push=function(t,r){var e=this;if(this.onfile||I(5),this.p||I(4),this.c>0){var i=Math.min(this.c,t.length),o=t.subarray(0,i);if(this.c-=i,this.d?this.d.push(o,!this.c):this.k[0].push(o),(t=t.subarray(i)).length)return this.push(t,r)}else{var s=0,a=0,u=void 0,h=void 0;this.p.length?t.length?((h=new n(this.p.length+t.length)).set(this.p),h.set(t,this.p.length)):h=this.p:h=t;for(var f=h.length,l=this.c,c=l&&this.d,p=function(){var t,n=ft(h,a);if(67324752==n){s=1,u=a,v.d=null,v.c=0;var r=ht(h,a+6),i=ht(h,a+8),o=2048&r,c=8&r,p=ht(h,a+26),d=ht(h,a+28);if(f>a+30+p+d){var g=[];v.k.unshift(g),s=2;var y,m=ft(h,a+18),b=ft(h,a+22),w=rn(h.subarray(a+30,a+=30+p),!o);4294967295==m?(t=c?[-2]:an(h,a),m=t[0],b=t[1]):c&&(m=-1),a+=d,v.c=m;var x={name:w,compression:i,start:function(){if(x.ondata||I(5),m){var t=e.o[i];t||x.ondata(I(14,"unknown compression type "+i,1),null,!1),(y=m<0?new t(w):new t(w,m,b)).ondata=function(t,n,r){x.ondata(t,n,r)};for(var n=0,r=g;n<r.length;n++)y.push(r[n],!1);e.k[0]==g&&e.c?e.d=y:y.push(N,!0)}else x.ondata(null,N,!0)},terminate:function(){y&&y.terminate&&y.terminate()}};m>=0&&(x.size=m,x.originalSize=b),v.onfile(x)}return"break"}if(l){if(134695760==n)return u=a+=12+(-2==l&&8),s=3,v.c=0,"break";if(33639248==n)return u=a-=4,s=3,v.c=0,"break"}},v=this;a<f-4&&"break"!==p();++a);if(this.p=N,l<0){var d=h.subarray(0,s?u-12-(-2==l&&8)-(134695760==ft(h,u-16)&&4):a);c?c.push(d,!!s):this.k[+(2==s)].push(d)}if(2&s)return this.push(h.subarray(a),r);this.p=h.subarray(a)}r&&(this.c&&I(13),this.p=null)},t.prototype.register=function(t){this.o[t.compression]=t},t}();_e.Unzip=wn;var xn="function"==typeof queueMicrotask?queueMicrotask:"function"==typeof setTimeout?setTimeout:function(t){t()};function zn(t,r,e){e||(e=r,r={}),"function"!=typeof e&&I(7);var i=[],o=function(){for(var t=0;t<i.length;++t)i[t]()},s={},a=function(t,n){xn((function(){e(t,n)}))};xn((function(){a=e}));for(var u=t.length-22;101010256!=ft(t,u);--u)if(!u||t.length-u>65558)return a(I(13,0,1),null),o;var h=ht(t,u+8);if(h){var f=h,l=ft(t,u+16),c=4294967295==l||65535==f;if(c){var p=ft(t,u-12);(c=101075792==ft(t,p))&&(f=h=ft(t,p+32),l=ft(t,p+48))}for(var v=r&&r.filter,d=function(r){var e=sn(t,l,c),u=e[0],f=e[1],p=e[2],d=e[3],g=e[4],y=on(t,e[5]);l=g;var m=function(t,n){t?(o(),a(t,null)):(n&&(s[d]=n),--h||a(null,s))};if(!v||v({name:d,size:f,originalSize:p,compression:u}))if(u)if(8==u){var b=t.subarray(y,y+f);if(p<524288||f>.8*p)try{m(null,Tt(b,{out:new n(p)}))}catch(t){m(t,null)}else i.push(At(b,{size:p},m))}else m(I(14,"unknown compression type "+u,1),null);else m(null,D(t,y,y+f));else m(null,null)},g=0;g<f;++g)d()}else a(null,{});return o}function kn(t,r){for(var e={},i=t.length-22;101010256!=ft(t,i);--i)(!i||t.length-i>65558)&&I(13);var o=ht(t,i+8);if(!o)return{};var s=ft(t,i+16),a=4294967295==s||65535==o;if(a){var u=ft(t,i-12);(a=101075792==ft(t,u))&&(o=ft(t,u+32),s=ft(t,u+48))}for(var h=r&&r.filter,f=0;f<o;++f){var l=sn(t,s,a),c=l[0],p=l[1],v=l[2],d=l[3],g=l[4],y=on(t,l[5]);s=g,h&&!h({name:d,size:p,originalSize:v,compression:c})||(c?8==c?e[d]=Tt(t.subarray(y,y+p),{out:new n(v)}):I(14,"unknown compression type "+c):e[d]=D(t,y,y+p))}return e}_e.unzip=zn,_e.unzipSync=kn;return _e});
+</script>
+<script>
+(function () {
+'use strict';
+/* ───────── 下回分解：基礎工具、設定、儲存 ───────── */
+const VERSION = '2026.11.11-0430';
+const PFX = 'pznc.v1.';
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const raf = () => new Promise((r) => requestAnimationFrame(r));
+const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+function el(tag, attrs, html) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) { if (k === 'class') e.className = attrs[k]; else if (attrs[k] != null) e.setAttribute(k, attrs[k]); }
+  if (html != null) e.innerHTML = html;
+  return e;
+}
+function hash32(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function fmtCount(n) { return n >= 10000 ? (n / 10000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, '') + ' 萬字' : n + ' 字'; }
+function fmtMin(chars) { const m = Math.max(1, Math.round(chars / 450)); return m >= 60 ? Math.floor(m / 60) + ' 小時 ' + (m % 60 ? (m % 60) + ' 分' : '') : m + ' 分鐘'; }
+function fmtClock(sec) { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0'); }
+function fmtDate(iso) { if (!iso) return ''; const d = new Date(iso + (iso.length <= 10 ? 'T00:00:00+08:00' : '')); const now = Date.now(), days = Math.floor((now - d.getTime()) / 864e5); return days <= 0 ? '今天' : days === 1 ? '昨天' : days < 7 ? days + ' 天前' : (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日'; }
+
+/* ── 小東西存 localStorage（設定、進度、看過哪些章） ── */
+const Store = {
+  get(k, d) { try { const v = localStorage.getItem(PFX + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(PFX + k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(PFX + k); } catch (e) {} },
+};
+
+const DEFAULTS = { theme: 'night', mode: 'page', font: 'song', size: 19, lh: 1.9, margin: 1, sfx: true, rate: 1, voice: '', follow: true, keepAwake: true };
+const Settings = Object.assign({}, DEFAULTS, Store.get('settings', {}));
+function saveSettings() { Store.set('settings', Settings); }
+
+/* ── 大東西存 IndexedDB（匯入的書、章節、圖片） ── */
+const DB = (() => {
+  let p = null;
+  const open = () => p || (p = new Promise((res, rej) => {
+    let rq;
+    try { rq = indexedDB.open('pznc', 1); } catch (e) { return rej(e); }
+    rq.onupgradeneeded = () => { const db = rq.result; ['books', 'chaps', 'assets'].forEach((n) => { if (!db.objectStoreNames.contains(n)) db.createObjectStore(n); }); };
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+    rq.onblocked = () => rej(new Error('blocked'));
+  }));
+  const tx = (store, mode, fn) => open().then((db) => new Promise((res, rej) => {
+    const t = db.transaction(store, mode); let out;
+    t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('abort'));
+    out = fn(t);
+  }));
+  const req = (r) => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  return {
+    get: (s, k) => open().then((db) => req(db.transaction(s).objectStore(s).get(k))),
+    all: (s) => open().then((db) => req(db.transaction(s).objectStore(s).getAll())),
+    put: (s, k, v) => tx(s, 'readwrite', (t) => { t.objectStore(s).put(v, k); }),
+    putMany: (items) => tx(Array.from(new Set(items.map((i) => i[0]))), 'readwrite', (t) => { items.forEach(([s, k, v]) => t.objectStore(s).put(v, k)); }),
+    delPrefix: (s, prefix) => tx(s, 'readwrite', (t) => { t.objectStore(s).delete(IDBKeyRange.bound(prefix, prefix + '￿')); }),
+    del: (s, k) => tx(s, 'readwrite', (t) => { t.objectStore(s).delete(k); }),
+  };
+})();
+
+/* ── 事件匯流排 ── */
+const Bus = (() => { const m = {}; return { on(e, f) { (m[e] = m[e] || []).push(f); }, emit(e, a) { (m[e] || []).forEach((f) => { try { f(a); } catch (x) { console.error(x); } }); } }; })();
+
+/* ── 提示泡泡 ── */
+function toast(msg, opt) {
+  opt = opt || {};
+  const box = $('#toasts');
+  const t = el('div', { class: 'toast' + (opt.kind ? ' ' + opt.kind : ''), role: 'status' });
+  t.innerHTML = '<span>' + msg + '</span>' + (opt.action ? '<button type="button">' + esc(opt.action) + '</button>' : '');
+  if (opt.action) t.querySelector('button').onclick = () => { opt.onAction && opt.onAction(); t.remove(); };
+  box.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('on'));
+  setTimeout(() => { t.classList.remove('on'); setTimeout(() => t.remove(), 350); }, opt.ms || (opt.action ? 6500 : 3200));
+}
+
+const ICON = {
+  back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  toc: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h9"/></svg>',
+  aa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l4.5-11h1L13 18M4.6 14.5h6.8M15 18l3-7.5h.6l3 7.5M16 15.8h4.8" /></svg>',
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5.5v13l11-6.5z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z"/></svg>',
+  prev: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M7 6h2v12H7zM19 6v12l-9-6z"/></svg>',
+  next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M15 6h2v12h-2zM5 6v12l9-6z"/></svg>',
+  back15: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7.5 7.5 0 1 1-7.2 5.4M12 5L9 2.4M12 5L9 7.8"/><text x="12" y="15.6" text-anchor="middle">15</text></svg>',
+  fwd30: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a7.5 7.5 0 1 0 7.2 5.4M12 5l3-2.6M12 5l3 2.8"/><text x="12" y="15.6" text-anchor="middle">30</text></svg>',
+  ear: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14.5c0-1 .8-1.5 1.8-1.5H7v6H5.8C4.800 19 4 18.300 4 17.300zM20 14.5c0-1-.8-1.5-1.8-1.5H17v6h1.200c1 0 1.800-.7 1.800-1.700z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14.500A7.500 7.500 0 0 1 9.500 5a7.500 7.500 0 1 0 9.500 9.500z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/></svg>',
+  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.500M12 18.500V21M3 12h2.500M18.500 12H21M5.600 5.600l1.800 1.800M16.600 16.600l1.800 1.800M5.600 18.400l1.800-1.800M16.600 7.400l1.800-1.800"/></svg>',
+  down: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+  target: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" class="fill"/></svg>',
+};
+
+/* ───────── 封面：每本書都是一冊線裝書（布面、右側四眼線裝、左上題簽、朱印） ───────── */
+const Cover = (() => {
+  const CLOTHS = ['#1d2f4a', '#4a2c20', '#1e3a34', '#3b2238', '#2b2f38', '#5a3d1e', '#263a52', '#40282a', '#2f3b22'];
+  const MOTIFS = ['waves', 'cloud', 'moon', 'grid', 'reeds'];
+  const mix = (hex, to, a) => {
+    const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const c = p(hex), t = p(to);
+    return '#' + c.map((v, i) => Math.round(v + (t[i] - v) * a).toString(16).padStart(2, '0')).join('');
+  };
+  const rng = (seed) => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+  const motifs = {
+    // 關山：層疊的山脊、嶺上一座烽燧、落雪
+    pass(r, hi, lo, cloth) {
+      let s = '<circle cx="132" cy="92" r="26" fill="' + hi + '" opacity=".1"/><circle cx="132" cy="92" r="17" fill="' + hi + '" opacity=".16"/>';
+      const tones = [mix(cloth, '#ffffff', .13), mix(cloth, '#000000', .2), mix(cloth, '#000000', .42)];
+      let peak = [0, 0];
+      for (let k = 0; k < 3; k++) {
+        const base = 206 + k * 30; let d = 'M0 ' + (base + 6);
+        for (let x = 0; x <= 180; x += 12 + r() * 16) { const y = base - r() * (34 - k * 8) - (k === 1 ? 22 * Math.exp(-Math.pow((x - 112) / 26, 2)) : 0); d += ' L' + x.toFixed(0) + ' ' + y.toFixed(0); if (k === 1 && Math.abs(x - 112) < 12 && (!peak[1] || y < peak[1])) peak = [x, y]; }
+        s += '<path d="' + d + ' L180 300 L0 300Z" fill="' + tones[k] + '"/>';
+        if (k === 1 && peak[1]) s += '<path d="M' + (peak[0] - 5) + ' ' + (peak[1] + 2) + 'l1.500-15h7l1.500 15z" fill="' + tones[2] + '"/><circle cx="' + peak[0] + '" cy="' + (peak[1] - 16) + '" r="2" fill="#ffc977"/><circle cx="' + peak[0] + '" cy="' + (peak[1] - 16) + '" r="7" fill="#ffc977" opacity=".16"/>';
+      }
+      for (let i = 0; i < 30; i++) s += '<circle cx="' + (r() * 176).toFixed(0) + '" cy="' + (40 + r() * 230).toFixed(0) + '" r="' + (.5 + r() * 1).toFixed(1) + '" fill="#fff" opacity="' + (.12 + r() * .3).toFixed(2) + '"/>';
+      return s;
+    },
+    // 環帶：小行星帶的弧、碎石、一點船燈
+    belt(r, hi, lo) {
+      let s = '';
+      for (let k = 0; k < 4; k++) s += '<ellipse cx="150" cy="250" rx="' + (70 + k * 26) + '" ry="' + (22 + k * 9) + '" fill="none" stroke="' + hi + '" stroke-width="' + (k === 1 ? 1.2 : .6) + '" opacity="' + (.34 - k * .05) + '" transform="rotate(-24 150 250)"/>';
+      for (let i = 0; i < 40; i++) { const a = r() * 6.283, rr = 76 + r() * 70, x = 150 + Math.cos(a) * rr, y = 250 + Math.sin(a) * rr * .34, c = Math.cos(-.42), n = Math.sin(-.42), X = 150 + (x - 150) * c - (y - 250) * n, Y = 250 + (x - 150) * n + (y - 250) * c; if (X < 2 || X > 176 || Y > 296) continue; s += '<rect x="' + X.toFixed(1) + '" y="' + Y.toFixed(1) + '" width="' + (1 + r() * 2.6).toFixed(1) + '" height="' + (1 + r() * 2).toFixed(1) + '" fill="' + hi + '" opacity="' + (.25 + r() * .4).toFixed(2) + '" transform="rotate(' + (r() * 90).toFixed(0) + ' ' + X.toFixed(1) + ' ' + Y.toFixed(1) + ')"/>'; }
+      return s + '<circle cx="96" cy="206" r="1.8" fill="#ffd9a0" opacity=".9"/><circle cx="96" cy="206" r="6" fill="#ffd9a0" opacity=".12"/>';
+    },
+    // 浮字：一行行沒說出口的話，往上淡掉
+    words(r, hi) {
+      let s = '';
+      for (let c = 0; c < 6; c++) { const x = 92 + c * 15; let y = 150 + r() * 60; for (let i = 0; i < 9 && y < 290; i++) { const hgt = 5 + r() * 9; s += '<rect x="' + x + '" y="' + y.toFixed(0) + '" width="7" height="' + hgt.toFixed(0) + '" rx="1" fill="' + hi + '" opacity="' + (.05 + (y - 150) / 150 * .3).toFixed(2) + '"/>'; y += hgt + 4; } }
+      return s;
+    },
+    // 殘卷：蟲蛀破口的紙邊與流雲
+    scroll(r, hi, lo) {
+      let d = 'M86 300'; for (let y = 300; y >= 196; y -= 8) d += ' L' + (86 + r() * 9).toFixed(0) + ' ' + y; d += ' L178 196 L178 300Z';
+      let s = '<path d="' + d + '" fill="' + hi + '" opacity=".14"/>';
+      for (let i = 0; i < 5; i++) s += '<path d="M' + (100 + i * 14) + ' 206v' + (70 + r() * 16).toFixed(0) + '" stroke="' + hi + '" stroke-width=".7" opacity=".3"/>';
+      for (let i = 0; i < 3; i++) { const x = 30 + r() * 90, y = 200 + i * 30; s += '<path d="M' + x + ' ' + y + 'q9-9 18 0t18 0" fill="none" stroke="' + hi + '" stroke-width=".9" opacity=".3"/>'; }
+      return s;
+    },
+    // 雷紋：秦器上的回字紋
+    thunder(r, hi) {
+      let s = '';
+      for (let row = 0; row < 3; row++) for (let i = 0; i < 6; i++) { const x = 6 + i * 29, y = 208 + row * 29; s += '<path d="M' + x + ' ' + y + 'h23v23h-18v-13h9v6" fill="none" stroke="' + hi + '" stroke-width="1.3" opacity="' + (.16 + row * .1) + '"/>'; }
+      return s;
+    },
+    // 海線：一條沿海的路，浪一層一層
+    road(r, hi) {
+      let s = '<path d="M20 300C40 262 120 262 110 228S60 198 150 172" fill="none" stroke="' + hi + '" stroke-width="5" opacity=".14"/><path d="M20 300C40 262 120 262 110 228S60 198 150 172" fill="none" stroke="' + hi + '" stroke-width=".9" stroke-dasharray="5 6" opacity=".5"/>';
+      for (let i = 0; i < 5; i++) s += '<path d="M' + (112 + i * 5) + ' ' + (236 + i * 13) + 'q8-6 16 0t16 0t16 0" fill="none" stroke="' + hi + '" stroke-width=".8" opacity="' + (.2 + i * .05) + '"/>';
+      return s;
+    },
+    // 孤月遠峰
+    moon(r, hi, lo) {
+      return '<circle cx="118" cy="178" r="34" fill="' + hi + '" opacity=".1"/><circle cx="118" cy="178" r="34" fill="none" stroke="' + hi + '" stroke-width=".8" opacity=".4"/><path d="M0 268L34 226l22 24 30-42 38 50 22-20 32 30v34H0z" fill="' + lo + '" opacity=".7"/>';
+    },
+    // 繩紋：一道絞緊的繩
+    rope(r, hi) {
+      let s = '';
+      for (let i = 0; i < 16; i++) s += '<path d="M' + (i * 12 - 6) + ' 262q8-16 16 0" fill="none" stroke="' + hi + '" stroke-width="2.4" opacity=".28"/><path d="M' + (i * 12) + ' 258q8 16 16 0" fill="none" stroke="' + hi + '" stroke-width="1" opacity=".2"/>';
+      return s;
+    },
+    waves(r, hi) {
+      let s = '';
+      for (let row = 0; row < 5; row++) for (let i = -1; i < 7; i++) { const x = i * 30 + (row % 2 ? 15 : 0), y = 300 - row * 15; s += '<path d="M' + x + ' ' + y + 'a15 15 0 0 1 30 0M' + (x + 6) + ' ' + y + 'a9 9 0 0 1 18 0" fill="none" stroke="' + hi + '" stroke-width=".8" opacity="' + (.34 - row * .05) + '"/>'; }
+      return s;
+    },
+    cloud(r, hi) {
+      let s = '';
+      for (let i = 0; i < 5; i++) { const x = 16 + r() * 110, y = 188 + i * 22; s += '<path d="M' + x + ' ' + y + 'c6-10 20-10 24 0c8-6 18 0 16 8h-48c-4-4 0-10 8-8z" fill="none" stroke="' + hi + '" stroke-width=".9" opacity="' + (.2 + r() * .2).toFixed(2) + '"/>'; }
+      return s;
+    },
+    grid(r, hi) {
+      let s = '';
+      for (let i = 0; i < 7; i++) s += '<path d="M' + (8 + i * 27) + ' 196v104" stroke="' + hi + '" stroke-width=".6" opacity=".22"/>';
+      return s + '<path d="M0 196h178" stroke="' + hi + '" stroke-width="1.2" opacity=".3"/>';
+    },
+    reeds(r, hi) {
+      let s = '';
+      for (let i = 0; i < 14; i++) { const x = 20 + r() * 150, hgt = 40 + r() * 70, bend = (r() - .5) * 30; s += '<path d="M' + x.toFixed(0) + ' 300q' + (bend / 2).toFixed(0) + '-' + (hgt / 2).toFixed(0) + ' ' + bend.toFixed(0) + '-' + hgt.toFixed(0) + '" fill="none" stroke="' + hi + '" stroke-width=".9" opacity="' + (.2 + r() * .25).toFixed(2) + '"/>'; }
+      return s;
+    },
+    plain() { return ''; },
+  };
+
+  function slip(title, seal) {
+    const latin = (title.match(/[\x20-\x7e]/g) || []).length > title.length * .5;
+    let chars = Array.from(title.replace(/\s+/g, latin ? ' ' : ''));
+    let out = '', H;
+    if (latin) {
+      const t = chars.length > 26 ? chars.slice(0, 25).join('') + '…' : chars.join('');
+      H = clamp(40 + t.length * 8.2, 110, 236);
+      out += '<text transform="translate(47 ' + (36) + ') rotate(90)" font-size="15" class="cv-t" textLength="' + Math.min(H - 44, t.length * 8.6).toFixed(0) + '" lengthAdjust="spacingAndGlyphs">' + esc(t) + '</text>';
+    } else {
+      if (chars.length > 16) chars = chars.slice(0, 15).concat('…');
+      const two = chars.length > 8, per = two ? Math.ceil(chars.length / 2) : chars.length;
+      const fs = two ? 17 : clamp(190 / Math.max(per, 4), 18, 27), step = fs * 1.16;
+      H = Math.max(96, 30 + per * step + 26);
+      chars.forEach((c, i) => {
+        const col = two ? Math.floor(i / per) : 0, row = two ? i % per : i;
+        const x = two ? (col === 0 ? 53 : 33) : 43;
+        out += '<text x="' + x + '" y="' + (36 + row * step + fs * .86).toFixed(1) + '" font-size="' + fs.toFixed(1) + '" text-anchor="middle" class="cv-t">' + esc(c) + '</text>';
+      });
+    }
+    const y1 = 22 + H;
+    return '<g><rect x="20" y="22" width="46" height="' + H.toFixed(0) + '" rx="1.500" fill="#ece4d2"/><rect x="20" y="22" width="46" height="' + H.toFixed(0) + '" rx="1.500" fill="url(#cvPaper)"/>'
+      + '<rect x="22.500" y="24.500" width="41" height="' + (H - 5).toFixed(0) + '" fill="none" stroke="#7b6a48" stroke-width=".7" opacity=".55"/>' + out
+      + '<rect x="34" y="' + (y1 - 23).toFixed(0) + '" width="18" height="18" rx="2" fill="#b3382c"/><text x="43" y="' + (y1 - 9.200).toFixed(1) + '" font-size="12.500" text-anchor="middle" class="cv-s">' + esc(seal) + '</text></g>';
+  }
+
+  function svg(book, opt) {
+    opt = opt || {};
+    const cv = book.cover || {}, id = book.id || book.title;
+    const cloth = cv.cloth || CLOTHS[hash32(id) % CLOTHS.length];
+    const hi = mix(cloth, '#ffffff', .55), lo = mix(cloth, '#000000', .35);
+    const motif = motifs[cv.motif] ? cv.motif : MOTIFS[hash32(id + 'm') % MOTIFS.length];
+    const r = rng(hash32(id) || 7);
+    const uid = 'c' + hash32(id + (opt.k || '')).toString(36);
+    let holes = '';
+    [34, 111, 189, 266].forEach((y) => { holes += '<path d="M185 ' + y + 'h15" stroke="#e4dcc8" stroke-width="1.300" opacity=".9"/><circle cx="185" cy="' + y + '" r="1.700" fill="#0c0f14"/>'; });
+    const img = opt.img ? '<image href="' + opt.img + '" x="0" y="0" width="200" height="300" preserveAspectRatio="xMidYMid slice"/>' : '';
+    return '<svg class="cover-svg" viewBox="0 0 200 300" role="img" aria-label="' + esc(book.title) + ' 封面" preserveAspectRatio="xMidYMid slice">'
+      + '<defs><pattern id="' + uid + 'w" width="3" height="3" patternUnits="userSpaceOnUse"><path d="M0 .5h3M.5 0v3" stroke="#fff" stroke-width=".35" opacity=".07"/><path d="M0 2h3" stroke="#000" stroke-width=".35" opacity=".12"/></pattern>'
+      + '<linearGradient id="' + uid + 'l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>'
+      + '<linearGradient id="cvPaper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#8a7a5a" stop-opacity=".18"/></linearGradient></defs>'
+      + '<rect width="200" height="300" fill="' + cloth + '"/>'
+      + (img || ('<g>' + motifs[motif](r, hi, lo, cloth) + '</g>'))
+      + '<rect width="200" height="300" fill="url(#' + uid + 'w)"/>'
+      + (img ? '' : slip(book.title || '無題', cv.seal || Array.from(book.title || '書')[0]))
+      + '<rect x="178" width="22" height="300" fill="#000" opacity="' + (img ? .28 : .2) + '"/><path d="M178 0v300" stroke="#000" stroke-width=".8" opacity=".35"/>'
+      + '<path d="M185 0v300" stroke="#e4dcc8" stroke-width="1.300" opacity=".9"/>' + holes
+      + '<rect width="200" height="300" fill="url(#' + uid + 'l)"/></svg>';
+  }
+
+  function pick(title) { const h = hash32(title); return { cloth: CLOTHS[h % CLOTHS.length], motif: MOTIFS[(h >>> 8) % MOTIFS.length], seal: Array.from(title.replace(/[\s《》「」]/g, '') || '書')[0] }; }
+  /* 給鎖屏與系統播放器用的封面圖（PNG data URL） */
+  function png(book, size) {
+    return new Promise((res) => {
+      try {
+        const s = svg(book, { k: 'png' }).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" ').replace(/class="cv-t"/g, 'font-family="serif" font-weight="700" fill="#2a2118"').replace(/class="cv-s"/g, 'font-family="serif" font-weight="700" fill="#fff"');
+        const im = new Image();
+        im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d'); g.fillStyle = (book.cover && book.cover.cloth) || '#1d2f4a'; g.fillRect(0, 0, size, size); const w = size * .62, hh = w * 1.5; g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = size * .05; g.drawImage(im, (size - w) / 2, (size - hh) / 2, w, hh); try { res(c.toDataURL('image/png')); } catch (e) { res(''); } };
+        im.onerror = () => res('');
+        im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+      } catch (e) { res(''); }
+    });
+  }
+  return { svg, pick, png, CLOTHS };
+})();
+
+/* ───────── 音效：全部即時合成（翻頁的紙聲、說書人的驚堂木、輕點） ───────── */
+const Sound = (() => {
+  let ctx = null, noiseBuf = null;
+  function unlock() {
+    if (ctx) { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try { ctx = new AC(); } catch (e) { ctx = null; return; }
+    const n = Math.floor(ctx.sampleRate * .6); noiseBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const ok = () => ctx && Settings.sfx && ctx.state === 'running';
+  function noise(dur, f0, f1, q, gain, when) {
+    const t = ctx.currentTime + (when || 0), src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = noiseBuf; src.playbackRate.value = .7 + Math.random() * .5;
+    bp.type = 'bandpass'; bp.Q.value = q; bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + dur * .22); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp).connect(g).connect(ctx.destination); src.start(t, Math.random() * .3, dur + .05);
+  }
+  function tone(freq, dur, gain, type, when) {
+    const t = ctx.currentTime + (when || 0), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(freq * .82, t + dur);
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + dur + .02);
+  }
+  return {
+    unlock,
+    page(back) { if (!ok()) return; noise(.2, back ? 900 : 2400, back ? 2200 : 800, .8, .05); noise(.09, 5200, 3000, 1.2, .018, .1); },
+    /* 驚堂木：一聲脆響，後面跟著桌面的悶響 */
+    knock() { if (!ok()) return; noise(.03, 3200, 1800, 1.5, .5); tone(940, .07, .32, 'triangle'); tone(1880, .04, .12, 'sine'); tone(170, .16, .4, 'sine', .004); },
+    tap() { if (!ok()) return; tone(660, .05, .05, 'sine'); },
+    open() { if (!ok()) return; noise(.32, 500, 1600, .6, .045); tone(196, .5, .05, 'sine', .05); tone(294, .6, .035, 'sine', .12); },
+    chime() { if (!ok()) return; [523, 784, 1047].forEach((f, i) => tone(f, .5, .05, 'sine', i * .09)); },
+  };
+})();
+
+/* ───────── 書架資料：連載（從 GitHub 上的書架抓）＋匯入的書（存在這台裝置） ───────── */
+const KEY = [112, 122, 45, 110, 101, 120, 116, 45, 99, 104, 97, 112, 116, 101, 114, 33]; // "pz-next-chapter!"
+
+function unpackPZC(buf) {
+  const u = new Uint8Array(buf);
+  if (u[0] !== 80 || u[1] !== 90 || u[2] !== 67 || u[3] !== 49) throw new Error('章節檔格式不對');
+  const raw = new Uint8Array(u.length - 4);
+  for (let i = 0; i < raw.length; i++) raw[i] = u[i + 4] ^ KEY[i % 16];
+  return new TextDecoder('utf-8').decode(fflate.inflateSync(raw));
+}
+
+/* 跟 tools/shelf.py 的 blocks() 同一套規則：每個非空行是一塊 */
+function parseBlocks(body) {
+  const out = [];
+  body.split('\n').forEach((ln) => {
+    const s = ln.trim();
+    if (!s) return;
+    if (s === '---' || s === '***' || s === '* * *') out.push({ t: 'br' });
+    else if (s[0] === '#') out.push({ t: 'h', x: s.replace(/^#+\s*/, '') });
+    else if (/^[（(]\s*第.{1,12}[章回卷節]\s*完\s*[）)]$/.test(s) || /^[（(]\s*(全書完|未完待續|本卷完|卷.{1,6}完)\s*[）)]$/.test(s)) out.push({ t: 'end', x: s });
+    else out.push({ t: 'p', x: s });
+  });
+  return out;
+}
+
+/* 斷句：句末標點（連同後面的引號、括號）算一句 */
+const ENDERS = '。！？!?…⋯', CLOSERS = '」』”’）》〉】〕)"\'';
+function sentences(text) {
+  const out = []; let st = 0, i = 0; const n = text.length;
+  while (i < n) {
+    if (ENDERS.indexOf(text[i]) >= 0) {
+      let j = i + 1;
+      while (j < n && (ENDERS.indexOf(text[j]) >= 0 || text[j] === '—')) j++;
+      while (j < n && CLOSERS.indexOf(text[j]) >= 0) j++;
+      // 「……」後面緊接著「他說」這類短尾巴也可以是下一句；這裡只管切
+      if (j < n && j - st < 4) { i = j; continue; }
+      out.push([st, j]); st = j; i = j;
+    } else i++;
+  }
+  if (st < n) { if (out.length && n - st < 3) out[out.length - 1][1] = n; else out.push([st, n]); }
+  return out;
+}
+
+function chapterHTML(ch, blocks, imgURL) {
+  let h = '<header class="ch-head" data-b="-1"><div class="ch-no">' + esc(ch.label || '') + '</div>' + (ch.name ? '<h2 class="ch-nm">' + esc(ch.name) + '</h2>' : '') + '<div class="ch-orn" aria-hidden="true"><i></i><b></b><i></i></div></header>';
+  blocks.forEach((b, i) => {
+    if (b.t === 'p' || b.t === 'q') {
+      const ss = sentences(b.x); let inner = '';
+      ss.forEach((r) => { inner += '<span class="s" data-b="' + i + '" data-s="' + r[0] + '" data-e="' + r[1] + '">' + esc(b.x.slice(r[0], r[1])) + '</span>'; });
+      h += '<p' + (b.t === 'q' ? ' class="quote"' : '') + ' data-b="' + i + '">' + inner + '</p>';
+    } else if (b.t === 'br') h += '<div class="brk" data-b="' + i + '" aria-hidden="true"><i></i><i></i><i></i></div>';
+    else if (b.t === 'h') h += '<h3 class="sub" data-b="' + i + '"><span class="s" data-b="' + i + '" data-s="0" data-e="' + b.x.length + '">' + esc(b.x) + '</span></h3>';
+    else if (b.t === 'end') h += '<p class="endmark" data-b="' + i + '">' + esc(b.x.replace(/^[（(]\s*|\s*[）)]$/g, '')) + '</p>';
+    else if (b.t === 'img') { const u = imgURL && imgURL(b.k); if (u) h += '<figure class="fig" data-b="' + i + '"><img src="' + u + '" alt="' + esc(b.alt || '') + '"></figure>'; }
+  });
+  return h;
+}
+
+const Lib = (() => {
+  let remote = Store.get('lib', null) || { books: [] };
+  let local = [];
+  const mem = new Map();           // 章節內容的小快取
+  const urls = new Map();          // 匯入書的圖片 blob URL
+  const ck = (book, ch, i) => book.remote ? 'n' + ch.n : 'i' + i;
+
+  function all() {
+    const r = (remote.books || []).map((b) => Object.assign({ remote: true }, b));
+    return r.concat(local);
+  }
+  const find = (id) => all().find((b) => b.id === id);
+  const total = (b) => b.chapters.reduce((s, c) => s + (c.chars || 0), 0);
+
+  async function init() {
+    try { local = (await DB.all('books')) || []; local.sort((a, b) => (b.added || '').localeCompare(a.added || '')); } catch (e) { local = []; Bus.emit('idb-fail', e); }
+  }
+
+  /* 向書架要最新的目錄；回傳這次新到的章節 */
+  async function sync() {
+    let fresh;
+    try {
+      const r = await fetch('books/library.json?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' });
+      if (!r.ok) throw new Error(r.status);
+      fresh = await r.json();
+    } catch (e) { return { ok: false, news: [] }; }
+    const known = Store.get('known', null), news = [], next = known || {};
+    (fresh.books || []).forEach((b) => {
+      const have = next[b.id];
+      if (!have) { next[b.id] = b.chapters.map((c) => 'n' + c.n); if (known) b.chapters.forEach((c) => news.push({ book: b, ch: c, first: true })); return; }
+      b.chapters.forEach((c) => { if (have.indexOf('n' + c.n) < 0) { have.push('n' + c.n); news.push({ book: b, ch: c }); } });
+    });
+    Store.set('known', next);
+    if (news.length) { const fl = Store.get('fresh', {}); news.forEach((x) => { (fl[x.book.id] = fl[x.book.id] || []).push('n' + x.ch.n); }); Store.set('fresh', fl); }
+    const changed = JSON.stringify(fresh) !== JSON.stringify(remote);
+    remote = fresh; Store.set('lib', fresh);
+    return { ok: true, news, changed };
+  }
+
+  function freshSet(id) { return (Store.get('fresh', {})[id]) || []; }
+  function clearFresh(id, key) { const fl = Store.get('fresh', {}); if (!fl[id]) return; fl[id] = fl[id].filter((k) => k !== key); if (!fl[id].length) delete fl[id]; Store.set('fresh', fl); }
+
+  async function chapter(book, i) {
+    const ch = book.chapters[i], key = book.id + ':' + (book.remote ? ch.v : i);
+    if (mem.has(key)) return mem.get(key);
+    let blocks;
+    if (book.remote) {
+      const r = await fetch('books/' + book.id + '/' + ch.f + '?v=' + ch.v);
+      if (!r.ok) throw new Error('這一章還沒下載，連上網路再試一次');
+      blocks = parseBlocks(unpackPZC(await r.arrayBuffer()));
+    } else {
+      const rec = await DB.get('chaps', book.id + ':' + String(i).padStart(5, '0'));
+      if (!rec) throw new Error('找不到這一章的內容');
+      blocks = rec.blocks;
+      for (const b of blocks) if (b.t === 'img' && !urls.has(b.k)) { try { const blob = await DB.get('assets', b.k); if (blob) urls.set(b.k, URL.createObjectURL(blob)); } catch (e) {} }
+    }
+    const val = { blocks };
+    mem.set(key, val); if (mem.size > 8) mem.delete(mem.keys().next().value);
+    return val;
+  }
+  const imgURL = (k) => urls.get(k);
+
+  async function timeline(book, i) {
+    const ch = book.chapters[i];
+    if (!book.remote || !ch.au) return null;
+    try { const r = await fetch('books/' + book.id + '/' + ch.au.tl + '?v=' + ch.au.v); if (!r.ok) return null; return await r.json(); } catch (e) { return null; }
+  }
+  const audioURL = (book, i) => { const ch = book.chapters[i]; return book.remote && ch.au ? 'books/' + book.id + '/' + ch.au.f + '?v=' + ch.au.v : null; };
+
+  /* 把連載的文字全部先抓下來，離線也能讀（一章只有幾 KB） */
+  async function prefetch() {
+    const got = Store.get('cached', {});
+    let n = 0;
+    for (const b of (remote.books || [])) for (const c of b.chapters) {
+      const k = b.id + '/' + c.f;
+      if (got[k] === c.v) continue;
+      try { const r = await fetch('books/' + b.id + '/' + c.f + '?v=' + c.v); if (r.ok) { await r.arrayBuffer(); got[k] = c.v; n++; } } catch (e) { Store.set('cached', got); return n; }
+    }
+    Store.set('cached', got);
+    return n;
+  }
+
+  async function addLocal(book, chapBlocks, assets) {
+    const items = [['books', book.id, book]];
+    chapBlocks.forEach((blocks, i) => items.push(['chaps', book.id + ':' + String(i).padStart(5, '0'), { blocks }]));
+    (assets || []).forEach((a) => items.push(['assets', a.k, a.blob]));
+    await DB.putMany(items);
+    local = local.filter((b) => b.id !== book.id); local.unshift(book);
+  }
+  async function removeLocal(id) {
+    await DB.del('books', id); await DB.delPrefix('chaps', id + ':'); await DB.delPrefix('assets', id + '/');
+    local = local.filter((b) => b.id !== id);
+    const p = Store.get('prog', {}); delete p[id]; Store.set('prog', p);
+    const d = Store.get('done', {}); delete d[id]; Store.set('done', d);
+  }
+  async function coverURL(book) {
+    if (!book.cover || !book.cover.img) return null;
+    if (urls.has(book.cover.img)) return urls.get(book.cover.img);
+    try { const blob = await DB.get('assets', book.cover.img); if (blob) { const u = URL.createObjectURL(blob); urls.set(book.cover.img, u); return u; } } catch (e) {}
+    return null;
+  }
+  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, imgURL, coverURL, ck, freshSet, clearFresh, hasRemote: () => (remote.books || []).length > 0 };
+})();
+
+/* ── 閱讀進度：每本書記到哪一章、哪一句 ── */
+const Prog = {
+  get(id) { return Store.get('prog', {})[id] || null; },
+  set(id, v) { const p = Store.get('prog', {}); p[id] = Object.assign({ t: Date.now() }, v); Store.set('prog', p); Store.set('last', id); },
+  index(book) { const p = Prog.get(book.id); if (!p) return -1; const i = book.chapters.findIndex((c, j) => Lib.ck(book, c, j) === p.ck); return i; },
+  done(id) { return Store.get('done', {})[id] || []; },
+  markDone(id, key) { const d = Store.get('done', {}); const a = d[id] = d[id] || []; if (a.indexOf(key) < 0) { a.push(key); Store.set('done', d); } },
+  /* 整本書讀了幾成（照字數算） */
+  pct(book) {
+    const p = Prog.get(book.id); if (!p) return 0;
+    const i = Prog.index(book); if (i < 0) return 0;
+    const tot = Lib.total(book) || 1; let before = 0;
+    for (let j = 0; j < i; j++) before += book.chapters[j].chars || 0;
+    return clamp((before + (book.chapters[i].chars || 0) * (p.f || 0)) / tot, 0, 1);
+  },
+  last() { return Store.get('last', null); },
+};
+
+/* ───────── 匯入：EPUB、TXT、Markdown 全在這台裝置上解析，不上傳到任何地方 ───────── */
+const Importer = (() => {
+  const COMMON = '的一是不了人我在有他這中大來上國個到說們為子和你地出道也時年得就那要下以生會自著去之過家學對可她裡後小麼心多天而能好都然沒日於起還發成事只作當想看文無開手十用主行方又如前所本見經頭面公同三已老從動兩長这为来国个说们时会对里后么没于还发当见经头动两长';
+  const HEAD_RE = /^(第\s*[零〇一二三四五六七八九十百千萬万两兩0-9０-９]{1,9}\s*[章回卷節节集部篇話话幕][\s　:：、.．]*.{0,30}|序[章言幕曲]?|楔\s*子|引\s*[子言]|前\s*言|後\s*記|后\s*记|尾\s*聲|尾\s*声|終\s*章|终\s*章|番外.{0,24}|卷[一二三四五六七八九十0-9]{1,4}[\s　:：].{0,30}|(?:Chapter|CHAPTER|Prologue|PROLOGUE|Epilogue|EPILOGUE)\b.{0,40})$/;
+  const SPLIT_RE = /^(第\s*[^章回卷節节集部篇話话幕\s]{1,9}\s*[章回卷節节集部篇話话幕]|序[章言幕曲]?|楔\s*子|引\s*[子言]|前\s*言|後\s*記|后\s*记|尾\s*聲|尾\s*声|終\s*章|终\s*章|番外|卷[一二三四五六七八九十0-9]{1,4}|(?:Chapter|CHAPTER)\s+[0-9IVXLC]+)[\s　:：、.．\-—]*(.*)$/;
+  const splitTitle = (t) => { t = (t || '').replace(/\s+/g, ' ').trim(); const m = t.match(SPLIT_RE); return m && m[2] !== undefined ? { label: m[1].replace(/\s+/g, ''), name: m[2].trim() } : { label: '', name: t }; };
+  const countChars = (blocks) => blocks.reduce((s, b) => s + (b.x ? b.x.replace(/\s/g, '').length : 0), 0);
+  const cleanName = (fn) => fn.replace(/\.[^.]+$/, '').replace(/[《》]/g, '').replace(/[\[【(（](全本|全集|完結|完结|精校|校對版?|txt|TXT|epub)[^\]】)）]*[\]】)）]/g, '').replace(/[_]+/g, ' ').trim() || '未命名';
+
+  function decodeText(u8) {
+    if (u8[0] === 0xEF && u8[1] === 0xBB && u8[2] === 0xBF) return new TextDecoder('utf-8').decode(u8.subarray(3));
+    if (u8[0] === 0xFF && u8[1] === 0xFE) return new TextDecoder('utf-16le').decode(u8.subarray(2));
+    if (u8[0] === 0xFE && u8[1] === 0xFF) return new TextDecoder('utf-16be').decode(u8.subarray(2));
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(u8); } catch (e) {}
+    const sample = u8.subarray(0, Math.min(u8.length, 200000));
+    let best = null, bestScore = -1e9;
+    ['big5', 'gb18030'].forEach((enc) => {
+      let s; try { s = new TextDecoder(enc).decode(sample); } catch (e) { return; }
+      let score = 0; for (let i = 0; i < s.length; i++) { const c = s[i]; if (c === '�') score -= 8; else if (COMMON.indexOf(c) >= 0) score += 1; }
+      if (score > bestScore) { bestScore = score; best = enc; }
+    });
+    return new TextDecoder(best || 'utf-8').decode(u8);
+  }
+
+  /* 有些 TXT 每行固定寬度硬斷行：把它接回完整的段落 */
+  function reflow(lines) {
+    const lens = lines.filter((l) => l.trim()).map((l) => l.replace(/\s+$/, '').length);
+    if (lens.length < 40) return lines;
+    const freq = {}; lens.forEach((n) => { freq[n] = (freq[n] || 0) + 1; });
+    const mode = +Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0];
+    const near = lens.filter((n) => Math.abs(n - mode) <= 2).length / lens.length;
+    if (mode < 18 || mode > 60 || near < .5) return lines;
+    const out = []; let cur = '';
+    lines.forEach((raw) => {
+      const l = raw.replace(/\s+$/, '');
+      if (!l.trim()) { if (cur) out.push(cur); cur = ''; out.push(''); return; }
+      const indented = /^(　|\s{2,})/.test(l);
+      if (cur && (indented || HEAD_RE.test(l.trim()))) { out.push(cur); cur = ''; }
+      cur += l.trim();
+      if (l.length < mode - 3 || HEAD_RE.test(l.trim())) { out.push(cur); cur = ''; }
+    });
+    if (cur) out.push(cur);
+    return out;
+  }
+
+  function fromText(text, fileName, isMd) {
+    text = text.replace(/\r\n?/g, '\n').replace(/\u0000/g, '');
+    let lines = text.split('\n');
+    if (!isMd) lines = reflow(lines);
+    let title = cleanName(fileName), author = '';
+    const chapters = []; let cur = null;
+    const start = (t) => { cur = { title: t, blocks: [] }; chapters.push(cur); };
+    let mdLevel = 0;
+    if (isMd) { const h1 = lines.filter((l) => /^#\s+\S/.test(l)).length, h2 = lines.filter((l) => /^##\s+\S/.test(l)).length; mdLevel = h2 >= 2 ? 2 : h1 >= 2 ? 1 : h2 === 1 ? 2 : 0; }
+    for (let i = 0; i < lines.length; i++) {
+      const s = lines[i].replace(/^[\s　]+|[\s　]+$/g, '');
+      if (!s) continue;
+      if (i < 12 && !author) { const m = s.match(/^作者[\s　:：]*(.{1,20})$/); if (m) { author = m[1]; continue; } }
+      if (isMd) {
+        const m = s.match(/^(#{1,6})\s+(.*)$/);
+        if (m) {
+          const lv = m[1].length, t = m[2].replace(/[*_`]/g, '').trim();
+          if (lv === 1 && mdLevel === 2 && !chapters.length) { title = t; continue; }
+          if (lv <= mdLevel || (mdLevel === 0 && lv <= 2 && !chapters.length && HEAD_RE.test(t))) { start(t); continue; }
+          if (!cur) start('');
+          cur.blocks.push({ t: 'h', x: t }); continue;
+        }
+        if (/^(-{3,}|\*{3,}|\* \* \*|_{3,})$/.test(s)) { if (cur) cur.blocks.push({ t: 'br' }); continue; }
+        if (!cur) start('');
+        cur.blocks.push(s[0] === '>' ? { t: 'q', x: s.replace(/^>\s*/, '') } : { t: 'p', x: s.replace(/\*\*(.+?)\*\*/g, '$1').replace(/(^|[^*])\*([^*\s][^*]*?)\*/g, '$1$2') });
+        continue;
+      }
+      if (s.length <= 42 && HEAD_RE.test(s) && !/[，。；]$/.test(s)) { start(s); continue; }
+      if (/^(-{3,}|\*{3,}|\* \* \*|={3,}|＊{3,}|※{3,})$/.test(s)) { if (cur) cur.blocks.push({ t: 'br' }); continue; }
+      if (!cur) start('');
+      cur.blocks.push({ t: 'p', x: s });
+    }
+    let chs = chapters.filter((c) => c.blocks.some((b) => b.x));
+    // 第一個章節標題之前的東西：只有一兩行（書名、作者）就不算一章；有內容才留下來當卷首
+    if (chs.length > 1 && !chs[0].title) {
+      if (countChars(chs[0].blocks) < 90) { const m = (chs[0].blocks[0].x || '').match(/^《(.{1,30})》$/); if (m) title = m[1]; chs.shift(); }
+      else chs[0].title = countChars(chs[0].blocks) < 1500 ? '卷首' : '開頭';
+    }
+    // 完全沒有章節標題：每八千字左右切一段
+    if (chs.length <= 1) {
+      const blocks = chs.length ? chs[0].blocks : [];
+      const only = chs.length ? chs[0].title : '';
+      if (countChars(blocks) > 14000) {
+        chs = []; let part = [], n = 0;
+        blocks.forEach((b) => { part.push(b); n += b.x ? b.x.length : 0; if (n >= 8000) { chs.push({ title: '第 ' + (chs.length + 1) + ' 段', blocks: part }); part = []; n = 0; } });
+        if (part.length) { if (n < 1500 && chs.length) chs[chs.length - 1].blocks = chs[chs.length - 1].blocks.concat(part); else chs.push({ title: '第 ' + (chs.length + 1) + ' 段', blocks: part }); }
+      } else chs = [{ title: only || '全文', blocks }];
+    }
+    if (!chs.length || !countChars(chs[0].blocks) && chs.length === 1) throw new Error('這個檔案裡沒有讀得到的文字');
+    return { title, author, chapters: chs, assets: [], coverKey: null };
+  }
+
+  /* ── EPUB ── */
+  const dirOf = (p) => p.indexOf('/') >= 0 ? p.slice(0, p.lastIndexOf('/') + 1) : '';
+  function resolve(base, rel) {
+    rel = decodeURIComponent((rel || '').split('#')[0]);
+    if (rel[0] === '/') return rel.slice(1);
+    const parts = (dirOf(base) + rel).split('/'), out = [];
+    parts.forEach((p) => { if (p === '..') out.pop(); else if (p && p !== '.') out.push(p); });
+    return out.join('/');
+  }
+  const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', avif: 'image/avif' };
+  const BLOCK = { P: 1, DIV: 1, SECTION: 1, ARTICLE: 1, LI: 1, UL: 1, OL: 1, BLOCKQUOTE: 1, PRE: 1, TABLE: 1, TR: 1, TD: 1, TH: 1, DL: 1, DT: 1, DD: 1, FIGURE: 1, FIGCAPTION: 1, HEADER: 1, FOOTER: 1, MAIN: 1, BODY: 1, ASIDE: 1, CENTER: 1, ADDRESS: 1 };
+  const SKIP = { SCRIPT: 1, STYLE: 1, HEAD: 1, RT: 1, RP: 1, NAV: 1, TEMPLATE: 1, NOSCRIPT: 1, IFRAME: 1, OBJECT: 1, AUDIO: 1, VIDEO: 1 };
+  const CJK = '[\\u2e80-\\u9fff\\uf900-\\ufaff\\u3000-\\u303f\\uff00-\\uffef]';
+  const tidy = (s) => s.replace(/[\s ]+/g, ' ').replace(new RegExp('(' + CJK + ') (?=' + CJK + ')', 'g'), '$1').replace(/^[\s　]+|[\s　]+$/g, '');
+
+  function extract(doc, path, bookId, need) {
+    const out = []; let buf = '', quote = 0;
+    const flush = (kind, lv) => { const x = tidy(buf); buf = ''; if (!x) return; out.push(kind === 'h' ? { t: 'h', x, lv } : { t: quote ? 'q' : 'p', x }); };
+    const walk = (node) => {
+      for (let n = node.firstChild; n; n = n.nextSibling) {
+        if (n.nodeType === 3) { buf += n.nodeValue; continue; }
+        if (n.nodeType !== 1) continue;
+        const tag = (n.localName || n.nodeName).toUpperCase();
+        if (SKIP[tag]) continue;
+        if (tag === 'BR') { flush(); continue; }
+        if (tag === 'HR') { flush(); out.push({ t: 'br' }); continue; }
+        if (tag === 'IMG' || tag === 'IMAGE') {
+          const src = n.getAttribute('src') || n.getAttribute('xlink:href') || n.getAttributeNS('http://www.w3.org/1999/xlink', 'href') || n.getAttribute('href');
+          if (src && !/^data:|^https?:/.test(src)) { flush(); const p = resolve(path, src); need.add(p); out.push({ t: 'img', k: bookId + '/' + p, alt: n.getAttribute('alt') || '' }); }
+          continue;
+        }
+        if (/^H[1-6]$/.test(tag)) { flush(); walk(n); flush('h', +tag[1]); continue; }
+        if (BLOCK[tag]) { flush(); if (tag === 'BLOCKQUOTE') quote++; walk(n); flush(); if (tag === 'BLOCKQUOTE') quote--; continue; }
+        walk(n);
+      }
+    };
+    const body = doc.body || doc.getElementsByTagName('body')[0] || doc.documentElement;
+    if (body) { walk(body); flush(); }
+    return out;
+  }
+
+  function fromEpub(u8, fileName, bookId) {
+    let files;
+    try { files = fflate.unzipSync(u8); } catch (e) { throw new Error('這個 EPUB 打不開（檔案可能壞了，或是有加密保護）'); }
+    const str = (p) => { const f = files[p]; return f ? new TextDecoder('utf-8').decode(f) : null; };
+    const xml = (s, type) => new DOMParser().parseFromString(s, type || 'application/xml');
+    if (files['META-INF/encryption.xml'] && /EncryptedData/.test(str('META-INF/encryption.xml') || '') && !/font/i.test(str('META-INF/encryption.xml') || '')) throw new Error('這本書有 DRM 加密保護，沒辦法匯入');
+    const cont = str('META-INF/container.xml');
+    if (!cont) throw new Error('這不是有效的 EPUB 檔');
+    const rf = xml(cont).getElementsByTagName('rootfile')[0];
+    const opfPath = rf && rf.getAttribute('full-path');
+    const opfS = opfPath && str(opfPath);
+    if (!opfS) throw new Error('這個 EPUB 缺少書籍資訊檔');
+    const opf = xml(opfS);
+    const tagText = (n) => { const e = opf.getElementsByTagName(n)[0] || opf.getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', n.replace('dc:', ''))[0]; return e ? e.textContent.trim() : ''; };
+    const title = tagText('dc:title') || cleanName(fileName), author = tagText('dc:creator');
+    const items = {}; let navHref = null, ncxHref = null, coverPath = null;
+    Array.from(opf.getElementsByTagName('item')).forEach((it) => {
+      const href = resolve(opfPath, it.getAttribute('href') || ''), o = { href, type: it.getAttribute('media-type') || '', props: it.getAttribute('properties') || '' };
+      items[it.getAttribute('id')] = o;
+      if (/\bnav\b/.test(o.props)) navHref = href;
+      if (o.type === 'application/x-dtbncx+xml') ncxHref = href;
+      if (/\bcover-image\b/.test(o.props)) coverPath = href;
+    });
+    if (!coverPath) { const m = Array.from(opf.getElementsByTagName('meta')).find((x) => x.getAttribute('name') === 'cover'); if (m && items[m.getAttribute('content')] && /^image\//.test(items[m.getAttribute('content')].type)) coverPath = items[m.getAttribute('content')].href; }
+    // 目錄：章節檔案 → 標題
+    const toc = {};
+    const put = (href, label) => { const k = href.split('#')[0]; label = (label || '').replace(/\s+/g, ' ').trim(); if (label && !toc[k]) toc[k] = label; };
+    if (navHref && str(navHref)) {
+      const d = xml(str(navHref), 'application/xhtml+xml');
+      const navs = Array.from(d.getElementsByTagName('nav'));
+      const nav = navs.find((n) => /toc/.test(n.getAttribute('epub:type') || n.getAttributeNS('http://www.idpf.org/2007/ops', 'type') || '')) || navs[0];
+      if (nav) Array.from(nav.getElementsByTagName('a')).forEach((a) => { const h = a.getAttribute('href'); if (h) put(resolve(navHref, h), a.textContent); });
+    }
+    if (ncxHref && str(ncxHref)) {
+      const d = xml(str(ncxHref));
+      Array.from(d.getElementsByTagName('navPoint')).forEach((np) => { const c = np.getElementsByTagName('content')[0], t = np.getElementsByTagName('text')[0]; if (c && t) put(resolve(ncxHref, c.getAttribute('src') || ''), t.textContent); });
+    }
+    const need = new Set(), chapters = [];
+    Array.from(opf.getElementsByTagName('itemref')).forEach((ir) => {
+      const it = items[ir.getAttribute('idref')];
+      if (!it || !/x?html|xml/.test(it.type || 'html')) return;
+      const s = str(it.href); if (!s) return;
+      let doc = xml(s, 'application/xhtml+xml');
+      if (doc.getElementsByTagName('parsererror').length) doc = xml(s, 'text/html');
+      const blocks = extract(doc, it.href, bookId, need);
+      if (!blocks.length) return;
+      const chars = countChars(blocks), hasImg = blocks.some((b) => b.t === 'img');
+      if (!chars && !hasImg) return;
+      // 一個檔案裡塞了很多章：照大標題切開
+      const heads = blocks.map((b, i) => (b.t === 'h' && b.lv <= 2 ? i : -1)).filter((i) => i >= 0);
+      if (chars > 20000 && heads.length >= 3) {
+        if (heads[0] > 0 && countChars(blocks.slice(0, heads[0])) > 0) chapters.push({ title: toc[it.href] || '', blocks: blocks.slice(0, heads[0]) });
+        heads.forEach((hi, k) => chapters.push({ title: blocks[hi].x, blocks: blocks.slice(hi + 1, heads[k + 1] || blocks.length) }));
+        return;
+      }
+      let t = toc[it.href] || '';
+      const first = blocks[0];
+      if (!t && first.t === 'h') t = first.x;
+      if (first.t === 'h' && t && tidy(first.x).replace(/\s/g, '') === t.replace(/\s/g, '')) blocks.shift();
+      // 只有一張圖、沒有字的頁（封面、插圖頁）併到下一章開頭，不單獨成章
+      if (!chars && chapters.length === 0 && blocks.every((b) => b.t === 'img') && coverPath && blocks.some((b) => b.k === bookId + '/' + coverPath)) return;
+      chapters.push({ title: t, blocks });
+    });
+    // 沒有標題又很短的頁（版權頁、扉頁）接到前後，免得目錄一堆空白
+    const merged = [];
+    chapters.forEach((c) => { const last = merged[merged.length - 1]; if (!c.title && last && countChars(c.blocks) < 400) last.blocks = last.blocks.concat(c.blocks); else merged.push(c); });
+    merged.forEach((c, i) => { if (!c.title) c.title = i === 0 ? '卷首' : '第 ' + (i + 1) + ' 節'; });
+    if (!merged.length) throw new Error('這本 EPUB 裡沒有讀得到的文字（可能是純圖片的書）');
+    const assets = [];
+    if (coverPath) need.add(coverPath);
+    need.forEach((p) => { const f = files[p]; if (!f) return; const ext = (p.split('.').pop() || '').toLowerCase(); assets.push({ k: bookId + '/' + p, blob: new Blob([f], { type: MIME[ext] || 'application/octet-stream' }) }); });
+    const have = new Set(assets.map((a) => a.k));
+    merged.forEach((c) => { c.blocks = c.blocks.filter((b) => b.t !== 'img' || have.has(b.k)); });
+    return { title, author, chapters: merged.filter((c) => c.blocks.length), assets, coverKey: coverPath && have.has(bookId + '/' + coverPath) ? bookId + '/' + coverPath : null };
+  }
+
+  async function importFile(file) {
+    if (file.size > 120 * 1024 * 1024) throw new Error('檔案超過 120 MB，太大了');
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    const u8 = new Uint8Array(await file.arrayBuffer());
+    const isZip = u8[0] === 0x50 && u8[1] === 0x4B;
+    const id = 'u' + hash32(file.name + '|' + file.size).toString(36) + (u8.length > 64 ? hash32(String.fromCharCode.apply(null, u8.subarray(u8.length - 64))).toString(36) : '');
+    let r;
+    if (ext === 'epub' || (isZip && ext !== 'txt')) r = fromEpub(u8, file.name, id);
+    else if (ext === 'pdf' || (u8[0] === 0x25 && u8[1] === 0x50 && u8[2] === 0x44 && u8[3] === 0x46)) throw new Error('PDF 的版面是固定的，重新排版後品質不好，目前不支援；請改用 EPUB 或 TXT');
+    else if (/^(mobi|azw3?|kfx)$/.test(ext)) throw new Error('Kindle 格式（' + ext + '）目前不支援；請先轉成 EPUB');
+    else if (ext === 'md' || ext === 'markdown') r = fromText(decodeText(u8), file.name, true);
+    else r = fromText(decodeText(u8), file.name, false);
+    const chMeta = r.chapters.map((c) => Object.assign(splitTitle(c.title), { chars: countChars(c.blocks) }));
+    const book = { id, title: r.title, author: r.author || '', src: ext === 'epub' || isZip ? 'epub' : ext === 'md' || ext === 'markdown' ? 'md' : 'txt', added: new Date().toISOString(), cover: Object.assign(Cover.pick(r.title), r.coverKey ? { img: r.coverKey } : {}), chapters: chMeta };
+    await Lib.addLocal(book, r.chapters.map((c) => c.blocks.map((b) => { const o = { t: b.t }; if (b.x != null) o.x = b.x; if (b.k) { o.k = b.k; o.alt = b.alt; } return o; })), r.assets);
+    return book;
+  }
+  return { importFile, splitTitle, decodeText, fromText };
+})();
+
+/* ───────── 閱讀器：仿真翻頁（兩片紙＋摺起來的頁背）與捲動 ───────── */
+const Reader = (() => {
+  const GAP = 64;
+  let root, stage, flapC, flap, foldSh, scroller, scFlow;
+  let book = null, ci = 0;
+  const L = [];                       // 兩片頁面
+  const G = { vp: null, flow: null, ghost: null, ci: -1 };   // 頁背：鏡像的同一頁，淡淡透出字來
+  let cur = 0;
+  let W = 0, cw = 0, chh = 0, stride = 1;
+  let turning = null, animId = 0, token = 0;
+  let marks = null, followPaused = false;
+  let pin = null;                     // 讀到哪一句：翻頁時更新；改字級、轉螢幕時靠它回到同一句
+  let scEls = [], scTick = 0, relayT = 0;
+  const FONTS = { song: '"Noto Serif TC", "Songti TC", "PMingLiU", serif', hei: '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif', kai: '"LXGW WenKai TC", "Kaiti TC", "DFKai-SB", serif' };
+  const THEME_COLOR = { night: '#131a25', paper: '#e9dfc8', black: '#000000' };
+  const paged = () => Settings.mode !== 'scroll';
+  const isOpen = () => !!book && !root.hidden;
+
+  function init() {
+    root = $('#reader'); stage = $('#rdStage'); flapC = $('#flapC'); flap = flapC.firstElementChild; foldSh = $('#foldSh');
+    scroller = $('#rdScroll'); scFlow = $('#scFlow');
+    ['#leafA', '#leafB'].forEach((id) => {
+      const e = $(id);
+      L.push({ el: e, inner: $('.leaf-in', e), vp: $('.vp', e), flow: $('.flow', e), footL: $('.pf-l', e), footR: $('.pf-r', e), ci: -1, pages: 1, pi: 0, els: [], map: [], bs: [], ss: [], es: [] });
+    });
+    G.ghost = $('.ghost', flapC); G.vp = $('.vp', flapC); G.flow = $('.flow', flapC);
+    bindPointer(); bindKeys();
+    scroller.addEventListener('scroll', () => { if (!scTick) scTick = setTimeout(() => { scTick = 0; onScrolled(); }, 160); }, { passive: true });
+    window.addEventListener('resize', () => { clearTimeout(relayT); relayT = setTimeout(() => isOpen() && relayout(), 160); });
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { clearTimeout(relayT); relayT = setTimeout(() => isOpen() && relayout(), 120); });
+    applyLook();
+  }
+
+  /* ── 外觀 ── */
+  function applyLook() {
+    const r = root || $('#reader');
+    r.dataset.theme = Settings.theme; r.dataset.mode = Settings.mode;
+    r.style.setProperty('--fs', Settings.size + 'px');
+    r.style.setProperty('--lh', Settings.lh);
+    r.style.setProperty('--mx', [16, 24, 34][Settings.margin] + 'px');
+    r.style.setProperty('--ff', FONTS[Settings.font] || FONTS.song);
+    if (Settings.font === 'hei' && !$('#fontHei')) document.head.appendChild(el('link', { id: 'fontHei', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap' }));
+    if (r.hidden === false) setThemeColor(THEME_COLOR[Settings.theme]);
+  }
+  function setThemeColor(c) { const m = $('meta[name="theme-color"]'); if (m) m.setAttribute('content', c); }
+
+  /* ── 排版與分頁 ── */
+  function measure() {
+    W = stage.clientWidth; const vp = L[0].vp;
+    cw = Math.max(120, vp.clientWidth); chh = Math.max(160, vp.clientHeight); stride = cw + GAP;
+  }
+  function sizeFlow(lf) { const s = lf.flow.style; s.height = chh + 'px'; s.width = cw + 'px'; s.columnWidth = cw + 'px'; s.columnGap = GAP + 'px'; }
+  function paginate(lf) {
+    lf.vp.scrollLeft = 0;
+    const base = lf.flow.getBoundingClientRect().left;
+    lf.els = $$('.s, .brk, .fig, .ch-head, .endmark', lf.flow);
+    lf.map = new Array(lf.els.length); lf.bs = new Array(lf.els.length); lf.ss = new Array(lf.els.length); lf.es = new Array(lf.els.length);
+    let last = 0;
+    for (let i = 0; i < lf.els.length; i++) {
+      const e = lf.els[i], rs = e.getClientRects(), r0 = rs[0] || e.getBoundingClientRect(), r1 = rs[rs.length - 1] || r0;
+      lf.map[i] = Math.max(0, Math.floor((r0.left - base + .5) / stride));      // 用無條件捨去：一句話從行的右半邊開始，也還是這一頁
+      last = Math.max(last, Math.floor((r1.left - base + .5) / stride));
+      lf.bs[i] = +e.dataset.b; lf.ss[i] = e.dataset.s ? +e.dataset.s : 0; lf.es[i] = e.dataset.e ? +e.dataset.e : 1e9;
+    }
+    lf.pages = Math.max(1, last + 1);
+  }
+  function fill(lf, i, data) {
+    lf.ci = i;
+    lf.flow.innerHTML = htmlOf(i, data);
+    lf.footL.textContent = (book.chapters[i].label ? book.chapters[i].label + '　' : '') + (book.chapters[i].name || '');
+    sizeFlow(lf); paginate(lf);
+    $$('img', lf.flow).forEach((im) => { if (!im.complete) im.addEventListener('load', () => { clearTimeout(relayT); relayT = setTimeout(() => isOpen() && relayout(), 80); }, { once: true }); });
+    if (marks && marks.ci === i) paint(lf.flow);
+  }
+  const htmlOf = (i, data) => data.html || (data.html = chapterHTML(book.chapters[i], data.blocks, Lib.imgURL));
+  function fillGhost(i, data) { G.ci = i; G.flow.innerHTML = htmlOf(i, data); sizeFlow(G); }
+  function show(lf, pi) {
+    lf.pi = clamp(pi, 0, lf.pages - 1);
+    lf.vp.scrollLeft = lf.pi * stride;
+    lf.footR.textContent = (lf.pi + 1) + ' / ' + lf.pages;
+  }
+  function idxOf(lf, a) {
+    if (!a) return 0;
+    let first = -1;
+    for (let i = 0; i < lf.els.length; i++) { if (lf.bs[i] !== a.b) continue; if (first < 0) first = i; if ((a.s || 0) < lf.es[i]) return i; }
+    if (first >= 0) return first;
+    for (let i = 0; i < lf.els.length; i++) if (lf.bs[i] > a.b) return i;   // 那一塊不見了（改稿後）：落在它後面最近的地方
+    return Math.max(0, lf.els.length - 1);
+  }
+  const pageOf = (lf, a) => (a && lf.els.length ? lf.map[idxOf(lf, a)] : 0);
+  function anchorAt(lf, pi) {
+    let k = -1;
+    for (let i = 0; i < lf.els.length; i++) { if (lf.map[i] === pi) { k = i; break; } if (lf.map[i] > pi) { k = Math.max(0, i - 1); break; } }
+    if (k < 0) k = lf.els.length - 1;
+    if (k < 0) return { b: -1, s: 0, x: '' };
+    // 頁首如果是章名，引文改抓第一句正文
+    let t = k; while (t < lf.els.length && !lf.els[t].classList.contains('s')) t++;
+    return { b: lf.bs[k], s: lf.ss[k], x: t < lf.els.length ? lf.els[t].textContent.slice(0, 44) : '' };
+  }
+  function setPin(a) {
+    if (paged()) { const lf = L[cur]; if (a && a !== 'end' && a.b >= 0 && lf.els.length) { const k = idxOf(lf, a); let t = k; while (t < lf.els.length && !lf.els[t].classList.contains('s')) t++; pin = { b: lf.bs[k], s: lf.ss[k], x: t < lf.els.length ? lf.els[t].textContent.slice(0, 44) : '' }; } else pin = anchorAt(lf, lf.pi); }
+    else pin = scAnchor();
+  }
+
+  /* ── 開書、換章 ── */
+  async function open(b, i, anchor, opt) {
+    const my = ++token;
+    book = b; followPaused = false;
+    i = clamp(i, 0, b.chapters.length - 1);
+    root.hidden = false; root.classList.add('loading'); applyLook();
+    let data;
+    try { data = await Lib.chapter(b, i); } catch (e) { if (my === token) { root.classList.remove('loading'); toast(esc(e.message || '讀不到這一章'), { kind: 'bad' }); if (!(opt && opt.keep)) close(); } return false; }
+    if (my !== token) return false;
+    stopTurn(); ci = i;
+    if (paged()) {
+      scroller.hidden = true; stage.hidden = false;
+      measure(); fill(L[cur], i, data); show(L[cur], anchor === 'end' ? 1e9 : pageOf(L[cur], anchor)); resetLayers();
+      const other = L[1 - cur]; other.ci = -1;
+      idle(() => { if (my === token && !turning && other.ci !== ci) { fill(other, ci, data); show(other, L[cur].pi); } if (my === token && G.ci !== ci) fillGhost(ci, data); });
+    } else {
+      stage.hidden = true; scroller.hidden = false;
+      scFlow.innerHTML = chapterHTML(b.chapters[i], data.blocks, Lib.imgURL) + endNav();
+      scEls = $$('.s, .brk, .fig, .ch-head, .endmark', scFlow);
+      if (marks && marks.ci === i) paint(scFlow);
+      await raf();
+      if (anchor === 'end') scroller.scrollTop = scroller.scrollHeight; else if (anchor && anchor.b >= 0) { const e = scElOf(anchor); scroller.scrollTop = e ? Math.max(0, e.offsetTop - 28) : 0; } else scroller.scrollTop = 0;
+    }
+    root.classList.remove('loading'); setPin(anchor);
+    Lib.clearFresh(b.id, Lib.ck(b, b.chapters[i], i));
+    afterShow(true);
+    if (i + 1 < b.chapters.length) idle(() => Lib.chapter(b, i + 1).catch(() => {}));
+    return true;
+  }
+  const idle = (f) => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 400 }) : setTimeout(f, 60));
+  function endNav() {
+    const last = ci >= book.chapters.length - 1, nx = !last && book.chapters[ci + 1];
+    return '<div class="sc-end">' + (last
+      ? '<p class="sc-fin">' + (book.remote && book.status === '連載中' ? '欲知後事如何，且聽下回分解。' : '全書完') + '</p>'
+      : '<button type="button" class="btn sc-next" data-act="next-ch"><small>下一回</small>' + esc((nx.label ? nx.label + '　' : '') + (nx.name || '')) + '</button>') + '</div>';
+  }
+  function close() {
+    if (!book) return;
+    save(); token++; stopTurn(); pin = null;
+    root.hidden = true; root.classList.remove('chrome-on');
+    setThemeColor('#0b1422');
+    const b = book; book = null;
+    L.forEach((lf) => { lf.flow.innerHTML = ''; lf.ci = -1; lf.els = []; }); G.flow.innerHTML = ''; G.ci = -1; scFlow.innerHTML = ''; scEls = [];
+    Bus.emit('reader:close', b);
+  }
+
+  function relayout() {
+    if (!book) return;
+    stopTurn();
+    if (!paged()) return;
+    const a = pin || anchorAt(L[cur], L[cur].pi);
+    measure();
+    L.forEach((lf) => { if (lf.ci >= 0) { sizeFlow(lf); paginate(lf); show(lf, lf === L[cur] ? pageOf(lf, a) : 0); } });
+    if (G.ci >= 0) sizeFlow(G);
+    resetLayers(); emitShow();
+  }
+  /* 換了翻頁／捲動，或換章：整個重開在同一個位置 */
+  function reopen(at) { if (!book) return; const a = at || where(); return open(book, ci, a, { keep: true }); }
+
+  function where() {
+    if (!book) return null;
+    return Object.assign({ ci }, pin || (paged() ? anchorAt(L[cur], L[cur].pi) : scAnchor()));
+  }
+  function frac() {
+    if (paged()) { const lf = L[cur]; return lf.pages > 1 ? lf.pi / (lf.pages - 1) : 1; }
+    const max = scroller.scrollHeight - scroller.clientHeight; return max > 4 ? clamp(scroller.scrollTop / max, 0, 1) : 1;
+  }
+  function save() {
+    if (!book) return;
+    const a = where(), ch = book.chapters[ci], key = Lib.ck(book, ch, ci), f = frac();
+    Prog.set(book.id, { ck: key, b: a.b, s: a.s, x: a.x, f });
+    if (f >= .995) Prog.markDone(book.id, key);
+  }
+  function emitShow() { Bus.emit('reader:show', info()); }
+  function afterShow(chapterChanged) { save(); if (chapterChanged) Bus.emit('reader:chapter', info()); emitShow(); }
+  function info() { const lf = L[cur]; return { book, ci, pi: paged() ? lf.pi : 0, pages: paged() ? lf.pages : 1, f: book ? frac() : 0, paged: paged() }; }
+
+  /* ── 捲動模式 ── */
+  function scElOf(a) { for (const e of scEls) { if (+e.dataset.b === a.b && (a.s || 0) < (e.dataset.e ? +e.dataset.e : 1e9)) return e; } return null; }
+  function scAnchor() {
+    const top = scroller.scrollTop + 8; let lo = 0, hi = scEls.length - 1, k = hi;
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (scEls[m].offsetTop >= top) { k = m; hi = m - 1; } else lo = m + 1; }
+    if (k < 0) return { b: -1, s: 0, x: '' };
+    const e = scEls[k]; let t = k; while (t < scEls.length && !scEls[t].classList.contains('s')) t++;
+    return { b: +e.dataset.b, s: e.dataset.s ? +e.dataset.s : 0, x: t < scEls.length ? scEls[t].textContent.slice(0, 44) : '' };
+  }
+  function onScrolled() { if (!book || paged()) return; setPin(); save(); emitShow(); }
+
+  /* ── 翻頁 ── */
+  function target(dir) {
+    const c = L[cur];
+    if (dir > 0) { if (c.pi < c.pages - 1) return { ci: c.ci, pi: c.pi + 1 }; if (c.ci < book.chapters.length - 1) return { ci: c.ci + 1, pi: 0 }; return null; }
+    if (c.pi > 0) return { ci: c.ci, pi: c.pi - 1 }; if (c.ci > 0) return { ci: c.ci - 1, pi: -1 }; return null;
+  }
+  function resetLayers() {
+    L.forEach((lf) => { lf.el.style.transform = ''; lf.inner.style.transform = ''; });
+    L[cur].el.style.zIndex = 2; L[1 - cur].el.style.zIndex = 1;
+    flapC.classList.add('off'); foldSh.classList.add('off');
+  }
+  function frame(t) {
+    const dir = turning.dir, xf = Math.round(dir > 0 ? W * (1 - t) : W * t), off = W - xf;
+    const top = dir > 0 ? L[cur] : L[1 - cur];
+    top.el.style.transform = 'translate3d(' + (-off - 1) + 'px,0,0)';        // 多收一像素，摺線邊緣才不會露出一條字
+    top.inner.style.transform = 'translate3d(' + (off + 1) + 'px,0,0)';
+    flapC.style.transform = 'translate3d(' + (xf - W) + 'px,0,0)';
+    flap.style.transform = 'translate3d(' + xf + 'px,0,0)';
+    foldSh.style.transform = 'translate3d(' + xf + 'px,0,0)';
+    const k = Math.sin(Math.PI * clamp(off / W, 0, 1));
+    flapC.style.opacity = off < 1 ? 0 : 1;
+    foldSh.style.opacity = xf > 2 && off > 1 ? (.3 + .7 * k).toFixed(3) : 0;
+    turning.t = t;
+  }
+  function setup(dir) {
+    const c = L[cur], a = L[1 - cur];
+    if (dir > 0) { c.el.style.zIndex = 2; a.el.style.zIndex = 1; } else { a.el.style.zIndex = 2; c.el.style.zIndex = 1; }
+    const tl = dir > 0 ? c : a;
+    if (G.ci === tl.ci) { G.vp.scrollLeft = tl.pi * stride; G.ghost.style.visibility = ''; } else G.ghost.style.visibility = 'hidden';
+    flapC.classList.remove('off'); foldSh.classList.remove('off'); frame(0);
+  }
+  /* 準備好另一片（要翻到的那一頁）；同一章是同步完成的 */
+  function prepare(tg) {
+    const alt = L[1 - cur];
+    const go = () => { show(alt, tg.pi < 0 ? alt.pages - 1 : tg.pi); return true; };
+    if (alt.ci === tg.ci) return go();
+    return Lib.chapter(book, tg.ci).then((d) => { if (!turning || turning.tg !== tg) return false; fill(alt, tg.ci, d); return go(); });
+  }
+  function commit() {
+    const old = L[cur]; cur = 1 - cur; const now = L[cur], changed = now.ci !== ci;
+    turning = null; resetLayers(); setPin();
+    if (changed) { ci = now.ci; Lib.clearFresh(book.id, Lib.ck(book, book.chapters[ci], ci)); if (ci + 1 < book.chapters.length) idle(() => book && Lib.chapter(book, ci + 1).catch(() => {})); }
+    afterShow(changed);
+    const my = token;
+    idle(() => { if (my !== token || turning || !book || (old.ci === L[cur].ci && G.ci === L[cur].ci)) return; Lib.chapter(book, L[cur].ci).then((d) => { if (my !== token || turning || !book) return; if (L[1 - cur] === old && old.ci !== L[cur].ci) { fill(old, L[cur].ci, d); show(old, L[cur].pi); } if (G.ci !== L[cur].ci) fillGhost(L[cur].ci, d); }); });
+  }
+  function cancel() { turning = null; resetLayers(); }
+  function stopTurn() { if (animId) cancelAnimationFrame(animId); animId = 0; if (turning) { if (turning.live && turning.to === 1) commit(); else cancel(); } }
+  function animate(to, ms, ease) {
+    const from = turning.t, t0 = performance.now(); turning.to = to; turning.live = true;
+    const step = (now) => {
+      if (!turning) return;
+      const p = clamp((now - t0) / ms, 0, 1), e = ease === 'out' ? 1 - Math.pow(1 - p, 3) : (p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+      frame(from + (to - from) * e);
+      if (p < 1) animId = requestAnimationFrame(step); else { animId = 0; if (to === 1) commit(); else cancel(); }
+    };
+    animId = requestAnimationFrame(step);
+  }
+  function edge(dir) {
+    const lf = L[cur].inner;
+    lf.style.transition = 'transform .16s ease-out'; lf.style.transform = 'translate3d(' + (dir > 0 ? -14 : 14) + 'px,0,0)';
+    setTimeout(() => { lf.style.transform = ''; setTimeout(() => { lf.style.transition = ''; }, 180); }, 160);
+    if (dir > 0) Bus.emit('reader:end', book); else toast('這是第一頁');
+  }
+  async function turn(dir, userAct) {
+    if (!book) return;
+    if (!paged()) { scroller.scrollBy({ top: dir * (scroller.clientHeight - 64), behavior: REDUCED ? 'auto' : 'smooth' }); return; }
+    stopTurn();
+    const tg = target(dir);
+    if (!tg) return edge(dir);
+    turning = { dir, tg, t: 0 };
+    let ok;
+    try { ok = prepare(tg); if (ok && ok.then) ok = await ok; } catch (e) { turning = null; toast(esc(e.message || '讀不到下一章'), { kind: 'bad' }); return; }
+    if (!ok || !turning || turning.tg !== tg) return;
+    if (userAct) userTurned();
+    setup(dir);
+    if (REDUCED) { commit(); return; }
+    Sound.page(dir < 0);
+    animate(1, 430, 'inout');
+  }
+  function gotoPage(pi) { if (!paged() || !book) return; stopTurn(); show(L[cur], pi); setPin(); afterShow(); }
+  function userTurned() { if (marks && Bus) { followPaused = true; Bus.emit('reader:follow', false); } }
+  function resumeFollow() { followPaused = false; Bus.emit('reader:follow', true); if (marks) reveal(marks, true); }
+
+  /* ── 說書時標出正在唸的那一句，並跟著翻頁 ── */
+  function paint(rootEl) {
+    $$('.s.on', rootEl).forEach((e) => e.classList.remove('on'));
+    if (!marks) return;
+    $$('.s[data-b="' + marks.b + '"]', rootEl).forEach((sp) => { if (+sp.dataset.s < marks.e && +sp.dataset.e > marks.s) sp.classList.add('on'); });
+  }
+  function mark(m) {
+    marks = m;
+    if (!book || !m || m.bookId !== book.id) { if (book) unpaint(); return; }
+    if (paged()) L.forEach((lf) => { if (lf.ci === m.ci) paint(lf.flow); else $$('.s.on', lf.flow).forEach((e) => e.classList.remove('on')); });
+    else if (m.ci === ci) paint(scFlow); else unpaint();
+    if (Settings.follow && !followPaused) reveal(m);
+  }
+  function unpaint() { $$('.s.on', root).forEach((e) => e.classList.remove('on')); }
+  function unmark() { marks = null; followPaused = false; if (root) unpaint(); }
+  function reveal(m, force) {
+    if (!book || m.bookId !== book.id) return;
+    if (m.ci !== ci) { if (!turning) { if (paged() && m.ci === ci + 1 && L[cur].pi === L[cur].pages - 1 && !force) turn(1); else open(book, m.ci, { b: m.b, s: m.s }, { keep: true }); } return; }
+    if (paged()) {
+      if (turning) return;
+      const lf = L[cur], pg = pageOf(lf, { b: m.b, s: m.s });
+      if (pg === lf.pi) return;
+      if (pg === lf.pi + 1 && !force) turn(1); else gotoPage(pg);
+    } else {
+      const e = scElOf({ b: m.b, s: m.s }); if (!e) return;
+      const y = e.offsetTop - scroller.scrollTop, h = scroller.clientHeight;
+      if (force || y < h * .12 || y > h * .7) scroller.scrollTo({ top: Math.max(0, e.offsetTop - h * .3), behavior: REDUCED ? 'auto' : 'smooth' });
+    }
+  }
+
+  /* ── 手勢 ── */
+  function bindPointer() {
+    let p = null, lpT = 0;
+    const clearLP = () => { if (lpT) { clearTimeout(lpT); lpT = 0; } };
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.button > 0 || !book) return;
+      Sound.unlock();
+      p = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), mode: '', lx: e.clientX, lt: performance.now(), vx: 0 };
+      clearLP();
+      lpT = setTimeout(() => { lpT = 0; if (!p || p.mode) return; const hit = document.elementFromPoint(p.x, p.y), sp = hit && hit.closest ? hit.closest('.s') : null; if (sp) { p.mode = 'long'; Bus.emit('reader:sentence', { ci: L[cur].ci, b: +sp.dataset.b, s: +sp.dataset.s, x: sp.textContent, cx: p.x, cy: p.y }); } }, 560);
+    });
+    stage.addEventListener('pointermove', (e) => {
+      if (!p || e.pointerId !== p.id) return;
+      const dx = e.clientX - p.x, dy = e.clientY - p.y, now = performance.now();
+      if (now > p.lt) { p.vx = (e.clientX - p.lx) / (now - p.lt); p.lx = e.clientX; p.lt = now; }
+      if (!p.mode) {
+        if (Math.abs(dx) < 9 && Math.abs(dy) < 9) return;
+        clearLP();
+        if (Math.abs(dx) <= Math.abs(dy)) { p.mode = 'v'; return; }
+        const dir = dx < 0 ? 1 : -1;
+        stopTurn();
+        const tg = target(dir);
+        if (!tg) { p.mode = 'edge'; edge(dir); return; }
+        p.mode = 'drag'; p.dir = dir; turning = { dir, tg, t: 0, drag: true };
+        try { stage.setPointerCapture(p.id); } catch (x) {}
+        let ok; try { ok = prepare(tg); } catch (x) { ok = false; }
+        const start = (v) => { if (!v || !turning || turning.tg !== tg) { if (turning && turning.tg === tg) turning = null; return; } userTurned(); setup(dir); turning.ready = true; if (!p || p.mode !== 'drag') { Sound.page(dir < 0); animate(1, 380, 'inout'); } };
+        if (ok && ok.then) ok.then(start, () => { turning = null; }); else start(ok);
+      }
+      if (p.mode === 'drag' && turning && turning.ready && !turning.live) frame(clamp(Math.abs(dx) / (W * .86), 0, 1) * (dx * p.dir < 0 ? 1 : 0));
+    });
+    const up = (e) => {
+      if (!p || e.pointerId !== p.id) return;
+      clearLP();
+      const q = p; p = null;
+      if (q.mode === 'drag') {
+        if (!turning || !turning.ready || turning.live) return;
+        const fast = q.vx * q.dir < -.35, go = e.type !== 'pointercancel' && (turning.t > .28 || (fast && turning.t > .04));
+        if (go) Sound.page(q.dir < 0);
+        animate(go ? 1 : 0, 150 + 230 * (go ? 1 - turning.t : turning.t), 'out');
+        return;
+      }
+      if (q.mode || e.type === 'pointercancel' || performance.now() - q.t > 500) return;
+      const r = stage.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width;
+      if (root.classList.contains('chrome-on')) { setChrome(false); return; }
+      if (fx < .28) turn(-1, true); else if (fx > .72) turn(1, true); else setChrome(true);
+    };
+    stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+    stage.addEventListener('wheel', (e) => { if (!book || !paged() || turning) return; if (Math.abs(e.deltaY) + Math.abs(e.deltaX) > 20) turn((Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX) > 0 ? 1 : -1, true); }, { passive: true });
+    // 捲動模式：點一下叫出工具列；長按一句可以從那裡開始說書
+    let sp = null, slp = 0;
+    scroller.addEventListener('pointerdown', (e) => { Sound.unlock(); sp = { x: e.clientX, y: e.clientY, t: performance.now(), top: scroller.scrollTop }; clearTimeout(slp); slp = setTimeout(() => { if (!sp || Math.abs(scroller.scrollTop - sp.top) > 4) return; const hit = document.elementFromPoint(sp.x, sp.y), s = hit && hit.closest ? hit.closest('.s') : null; if (s) { Bus.emit('reader:sentence', { ci, b: +s.dataset.b, s: +s.dataset.s, x: s.textContent, cx: sp.x, cy: sp.y }); sp = null; } }, 560); }, { passive: true });
+    scroller.addEventListener('pointermove', (e) => { if (sp && (Math.abs(e.clientX - sp.x) > 9 || Math.abs(e.clientY - sp.y) > 9)) { clearTimeout(slp); } }, { passive: true });
+    scroller.addEventListener('pointerup', (e) => {
+      clearTimeout(slp);
+      if (!sp) return; const q = sp; sp = null;
+      if (Math.abs(e.clientX - q.x) > 8 || Math.abs(e.clientY - q.y) > 8 || performance.now() - q.t > 450 || Math.abs(scroller.scrollTop - q.top) > 4) { if (marks) userTurned(); return; }
+      const act = e.target.closest && e.target.closest('[data-act]');
+      if (act) { if (act.dataset.act === 'next-ch') chapter(1); return; }
+      setChrome(!root.classList.contains('chrome-on'));
+    });
+  }
+  function bindKeys() {
+    document.addEventListener('keydown', (e) => {
+      if (!isOpen() || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.body.classList.contains('sheet-open')) return;
+      const k = e.key;
+      if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'ArrowDown' && paged()) { e.preventDefault(); turn(1, true); }
+      else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'ArrowUp' && paged()) { e.preventDefault(); turn(-1, true); }
+      else if (k === 'Escape') { if (root.classList.contains('chrome-on')) setChrome(false); else close(); }
+      else if (k === 'Enter') setChrome(!root.classList.contains('chrome-on'));
+    });
+  }
+  function setChrome(on) { root.classList.toggle('chrome-on', !!on); Bus.emit('reader:chrome', !!on); }
+  function chapter(d) {
+    if (!book) return;
+    const n = ci + d;
+    if (n < 0) return toast('這是第一回');
+    if (n >= book.chapters.length) return Bus.emit('reader:end', book);
+    open(book, n, null, { keep: true });
+  }
+
+  return { init, open, close, reopen, relayout, applyLook, where, info, turn, gotoPage, chapter, mark, unmark, resumeFollow, setChrome, isOpen, get book() { return book; }, get ci() { return ci; }, get following() { return !followPaused; } };
+})();
+
+/* ───────── 說書：有預錄音軌就放音軌（鎖屏、背景都能聽），沒有就用這台裝置的語音逐句唸 ───────── */
+const Narrator = (() => {
+  const audio = new Audio(); audio.preload = 'auto';
+  const synth = window.speechSynthesis || null;
+  let st = null;             // { book, ci, mode, units, blocks, ui, playing, ready, tok }
+  let sess = 0, utok = 0, tickId = 0, sleepAt = 0, sleepCh = false, wake = null, voices = [], lastSave = 0, artCache = {};
+  const STRIP = /[「」『』“”‘’《》〈〉【】〔〕]/g;
+
+  /* ── 語音清單（裝置語音模式用） ── */
+  function loadVoices() {
+    if (!synth) return [];
+    const score = (v) => (/natural|neural|online/i.test(v.name) ? 60 : 0) + (/premium|enhanced|高音質|優化|加強|siri/i.test(v.name) ? 30 : 0) + (/zh[-_]TW|Taiwan|臺灣|台灣/i.test(v.lang + v.name) ? 20 : /zh[-_]CN|cmn/i.test(v.lang) ? 8 : 0) + (v.default ? 2 : 0);
+    voices = synth.getVoices().filter((v) => /^(zh|cmn)/i.test(v.lang) && !/HK|yue|粵|粤|Cantonese/i.test(v.lang + ' ' + v.name)).map((v) => ({ v, score: score(v) })).sort((a, b) => b.score - a.score).map((x) => x.v);
+    return voices;
+  }
+  if (synth) { loadVoices(); if (synth.addEventListener) synth.addEventListener('voiceschanged', () => { loadVoices(); emit(); }); }
+  const pickVoice = () => voices.find((v) => v.voiceURI === Settings.voice) || voices[0] || null;
+  const hasTrack = (book, i) => { const c = book.chapters[i]; return !!(book.remote && c && c.au && (!c.au.text || c.au.text === c.v)); };
+  const canSpeak = () => !!synth && (voices.length > 0 || loadVoices().length > 0);
+
+  /* 沒有時間軸時自己切：短句併一併，唸起來比較順 */
+  function buildUnits(blocks) {
+    const out = [];
+    blocks.forEach((b, bi) => {
+      if (b.t === 'br') { if (out.length) out[out.length - 1].gap = 900; return; }
+      if (b.t !== 'p' && b.t !== 'q' && b.t !== 'h') return;
+      const ss = sentences(b.x); let i = 0;
+      while (i < ss.length) {
+        let a = ss[i][0], e = ss[i][1];
+        while (e - a < 12 && i + 1 < ss.length && ss[i + 1][1] - a <= 90) { i++; e = ss[i][1]; }
+        out.push({ b: bi, s: a, e, gap: 0 }); i++;
+      }
+      if (out.length) out[out.length - 1].gap = Math.max(out[out.length - 1].gap, b.t === 'h' ? 500 : 180);
+    });
+    return out;
+  }
+  function unitAt(a) {
+    if (!a || a.b < 0) return 0;
+    const u = st.units; for (let i = 0; i < u.length; i++) if (u[i].b > a.b || (u[i].b === a.b && u[i].e > (a.s || 0))) return i;
+    return Math.max(0, u.length - 1);
+  }
+  const textOf = (i) => { const u = st && st.units[i]; if (!u) return ''; const b = st.blocks[u.b]; return b && b.x ? b.x.slice(u.s, u.e) : ''; };
+
+  /* ── 開始 ── */
+  async function start(book, ci, anchor) {
+    if (!hasTrack(book, ci) && !canSpeak()) { toast('這台裝置沒有中文語音可以朗讀；有預錄音軌的章節才能聽', { kind: 'bad' }); return false; }
+    halt();
+    const my = ++sess, track = hasTrack(book, ci);
+    st = { book, ci, mode: track ? 'track' : 'speech', units: [], blocks: [], ui: 0, playing: true, ready: false, tok: ++utok, head: !anchor || anchor.b < 0 };
+    // 這一步要在手指點下去的當下做，手機才准許之後自己接著播
+    if (track) { audio.muted = true; audio.src = Lib.audioURL(book, ci); audio.playbackRate = Settings.rate; audio.play().catch(() => {}); }
+    else if (synth) { try { synth.cancel(); const u = new SpeechSynthesisUtterance(' '); u.volume = 0; synth.speak(u); } catch (e) {} }
+    emit();
+    let data, tl = null;
+    try { [data, tl] = await Promise.all([Lib.chapter(book, ci), track ? Lib.timeline(book, ci) : null]); } catch (e) { if (my === sess) { toast(esc(e.message || '讀不到這一章'), { kind: 'bad' }); stop(); } return false; }
+    if (my !== sess) return false;
+    st.blocks = data.blocks;
+    if (track && tl && tl.units && tl.units.length) st.units = tl.units.map((u) => ({ b: u[0], s: u[1], e: u[2], t0: u[3], t1: u[4] }));
+    else {
+      st.units = buildUnits(data.blocks);
+      if (track) { st.mode = 'speech'; audio.pause(); audio.removeAttribute('src'); if (!canSpeak()) { toast('音軌的時間軸載入失敗', { kind: 'bad' }); stop(); return false; } }
+    }
+    if (!st.units.length) { toast('這一章沒有可以唸的文字'); stop(); return false; }
+    st.ui = unitAt(anchor); st.ready = true;
+    if (st.mode === 'track') {
+      const seek = () => { if (my !== sess) return; const to = st.head && st.ui === 0 ? 0 : st.units[st.ui].t0; jump(to); audio.muted = false; if (st.playing) audio.play().catch(() => { st.playing = false; emit(); }); };
+      if (audio.readyState >= 1) seek(); else audio.addEventListener('loadedmetadata', seek, { once: true });
+      session();
+    } else { Sound.knock(); keepAwake(true); setTimeout(() => { if (my === sess && st && st.playing) speak(st.head && st.ui === 0); }, 380); session(); }
+    setMark(); ticker(true); emit();
+    return true;
+  }
+
+  /* ── 裝置語音 ── */
+  function clean(s) { return s.replace(STRIP, '').replace(/[—─－]{2,}/g, '，').replace(/[…⋯]{2,}/g, '…'); }
+  function speak(withHead) {
+    if (!st || st.mode !== 'speech' || !synth) return;
+    const my = st.tok, u = st.units[st.ui];
+    if (!u) return finished();
+    const ch = st.book.chapters[st.ci];
+    const text = withHead ? (ch.label || '') + '，' + (ch.name || '') + '。' : clean(textOf(st.ui));
+    if (!/[一-鿿A-Za-z0-9]/.test(text)) { st.ui++; return speak(); }
+    const ut = new SpeechSynthesisUtterance(text), v = pickVoice();
+    if (v) { ut.voice = v; ut.lang = v.lang; } else ut.lang = 'zh-TW';
+    ut.rate = clamp(Settings.rate, .5, 2);
+    let doneOnce = false;
+    const next = () => { if (doneOnce || !st || st.tok !== my || !st.playing) return; doneOnce = true; const gap = withHead ? 600 : (u.gap || 0); if (!withHead) st.ui++; if (st.ui >= st.units.length) return finished(); if (!withHead) { setMark(); emit(); } setTimeout(() => { if (st && st.tok === my && st.playing) speak(); }, gap); };
+    ut.onend = next;
+    ut.onerror = (e) => { if (e.error === 'interrupted' || e.error === 'canceled') return; next(); };
+    st.utt = ut;        // 留著參考，不然有些瀏覽器唸完不會通知
+    try { synth.speak(ut); } catch (e) { next(); }
+    if (!withHead) setMark();
+  }
+
+  /* ── 目前唸到哪 ── */
+  function setMark() {
+    if (!st || !st.ready) return;
+    const u = st.units[st.ui]; if (!u) return;
+    Reader.mark({ bookId: st.book.id, ci: st.ci, b: u.b, s: u.s, e: u.e });
+    const now = Date.now();
+    if (now - lastSave > 4000 && !(Reader.isOpen() && Reader.book && Reader.book.id === st.book.id && Reader.following)) {
+      lastSave = now; const ch = st.book.chapters[st.ci];
+      Prog.set(st.book.id, { ck: Lib.ck(st.book, ch, st.ci), b: u.b, s: u.s, x: textOf(st.ui).slice(0, 44), f: st.units.length > 1 ? st.ui / (st.units.length - 1) : 1 });
+    }
+  }
+  /* 跳到某個時間。有些手機要等音檔載一點才肯跳，所以記住目標，沒跳成就再跳一次 */
+  function jump(to) { if (!st) return; st.want = to > .3 ? { t: to, n: 0 } : null; try { audio.currentTime = to; } catch (e) {} }
+  function syncTrack() {
+    if (!st || st.mode !== 'track' || !st.ready) return;
+    if (st.want) { if (Math.abs(audio.currentTime - st.want.t) < 4 || st.want.n > 12) st.want = null; else { st.want.n++; try { audio.currentTime = st.want.t; } catch (e) {} return; } }
+    const t = audio.currentTime + .06, u = st.units; let lo = 0, hi = u.length - 1, k = 0;
+    while (lo <= hi) { const m = (lo + hi) >> 1; if (u[m].t0 <= t) { k = m; lo = m + 1; } else hi = m - 1; }
+    if (t < u[0].t0) { if (st.ui !== 0 || !st.inHead) { st.inHead = true; emit(); } return; }
+    if (k !== st.ui || st.inHead) { st.ui = k; st.inHead = false; setMark(); emit(); }
+  }
+  function ticker(on) {
+    clearInterval(tickId); tickId = 0;
+    if (!on) return;
+    tickId = setInterval(() => {
+      if (!st) return;
+      if (st.mode === 'track') { syncTrack(); if (navigator.mediaSession && navigator.mediaSession.setPositionState && isFinite(audio.duration) && audio.duration > 0) { try { navigator.mediaSession.setPositionState({ duration: audio.duration, playbackRate: audio.playbackRate, position: Math.min(audio.currentTime, audio.duration) }); } catch (e) {} } }
+      if (sleepAt && Date.now() >= sleepAt) { sleepAt = 0; pause(); toast('睡眠定時到了，說書先停在這裡'); }
+      Bus.emit('narr:tick', state());
+    }, 250);
+  }
+
+  /* ── 一回唸完 ── */
+  function finished() {
+    if (!st) return;
+    const book = st.book, ci = st.ci, ch = book.chapters[ci];
+    Prog.markDone(book.id, Lib.ck(book, ch, ci));
+    if (sleepCh) { sleepCh = false; stop(); toast('這一回說完了，說書先停在這裡'); return; }
+    if (ci + 1 < book.chapters.length) { start(book, ci + 1, null); return; }
+    stop();
+    toast(book.remote && book.status === '連載中' ? '欲知後事如何，且聽下回分解。' : '全書說完了');
+  }
+  audio.addEventListener('ended', () => { if (st && st.mode === 'track') finished(); });
+  audio.addEventListener('timeupdate', syncTrack);
+  audio.addEventListener('pause', () => { if (st && st.mode === 'track' && st.ready && st.playing && !audio.ended && document.visibilityState !== 'hidden') { st.playing = false; emit(); } });
+  audio.addEventListener('play', () => { if (st && st.mode === 'track' && !st.playing) { st.playing = true; emit(); } });
+  audio.addEventListener('waiting', () => { if (st) { st.buffering = true; emit(); } });
+  audio.addEventListener('playing', () => { if (st) { st.buffering = false; emit(); } });
+  audio.addEventListener('error', () => {
+    if (!st || st.mode !== 'track' || !audio.getAttribute('src')) return;
+    const b = st.book, i = st.ci, u = st.units[st.ui];
+    if (canSpeak() && st.ready) { toast('音軌載入失敗，先改用裝置語音'); st.mode = 'speech'; st.units = buildUnits(st.blocks); st.ui = unitAt(u ? { b: u.b, s: u.s } : null); audio.removeAttribute('src'); keepAwake(true); if (st.playing) speak(); emit(); }
+    else { toast('音軌載入失敗，檢查一下網路', { kind: 'bad' }); stop(); }
+    void b; void i;
+  });
+
+  /* ── 控制 ── */
+  function pause() {
+    if (!st || !st.playing) return;
+    st.playing = false;
+    if (st.mode === 'track') audio.pause(); else { st.tok = ++utok; try { synth.cancel(); } catch (e) {} keepAwake(false); }
+    emit();
+  }
+  function resume() {
+    if (!st || st.playing) return;
+    st.playing = true;
+    if (st.mode === 'track') audio.play().catch(() => { st.playing = false; emit(); }); else { st.tok = ++utok; keepAwake(true); setTimeout(() => speak(), 60); }
+    emit();
+  }
+  const toggle = () => (st && st.playing ? pause() : resume());
+  function halt() { sess++; utok++; ticker(false); try { audio.pause(); } catch (e) {} if (synth) { try { synth.cancel(); } catch (e) {} } keepAwake(false); }
+  function stop() {
+    halt(); if (audio.getAttribute('src')) { audio.removeAttribute('src'); try { audio.load(); } catch (e) {} }
+    st = null; sleepAt = 0; sleepCh = false; Reader.unmark();
+    if (navigator.mediaSession) { try { navigator.mediaSession.playbackState = 'none'; } catch (e) {} }
+    emit();
+  }
+  function seekUnit(i) {
+    if (!st || !st.ready) return;
+    st.ui = clamp(i, 0, st.units.length - 1); st.inHead = false;
+    if (st.mode === 'track') jump(st.units[st.ui].t0);
+    else if (st.playing) { st.tok = ++utok; try { synth.cancel(); } catch (e) {} setTimeout(() => speak(), 80); }
+    setMark(); emit();
+  }
+  function skip(sec) {
+    if (!st || !st.ready) return;
+    if (st.mode === 'track') { jump(clamp(audio.currentTime + sec, 0, (audio.duration || 1e9) - .5)); syncTrack(); }
+    else seekUnit(st.ui + (sec < 0 ? -2 : 3));
+  }
+  function seekFrac(f) {
+    if (!st || !st.ready) return;
+    if (st.mode === 'track' && isFinite(audio.duration)) { jump(clamp(f, 0, .999) * audio.duration); syncTrack(); }
+    else seekUnit(Math.round(f * (st.units.length - 1)));
+  }
+  function chapter(d) {
+    if (!st) return;
+    const n = st.ci + d;
+    if (n < 0) return seekUnit(0);
+    if (n >= st.book.chapters.length) return toast('後面還沒有下一回');
+    start(st.book, n, null);
+  }
+  function setRate(r) { Settings.rate = r; saveSettings(); if (st && st.mode === 'track') audio.playbackRate = r; else if (st && st.playing) seekUnit(st.ui); emit(); }
+  function setVoice(uri) { Settings.voice = uri; saveSettings(); if (st && st.mode === 'speech' && st.playing) seekUnit(st.ui); emit(); }
+  function setSleep(v) { sleepCh = v === 'ch'; sleepAt = typeof v === 'number' && v > 0 ? Date.now() + v * 60000 : 0; emit(); }
+
+  async function keepAwake(on) {
+    try {
+      if (on && Settings.keepAwake && navigator.wakeLock && !wake && document.visibilityState === 'visible') { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); }
+      else if (!on && wake) { const w = wake; wake = null; await w.release(); }
+    } catch (e) { wake = null; }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && st && st.mode === 'speech' && st.playing) keepAwake(true); });
+
+  /* ── 鎖屏與耳機按鍵 ── */
+  async function session() {
+    const ms = navigator.mediaSession; if (!ms || !st) return;
+    const b = st.book, ch = b.chapters[st.ci], my = sess;
+    const art = [{ src: new URL('icons/icon-512.png', location.href).href, sizes: '512x512', type: 'image/png' }];
+    if (!IS_IOS) { if (!artCache[b.id]) artCache[b.id] = await Cover.png(b, 512); if (!st || sess !== my) return; if (artCache[b.id]) art.unshift({ src: artCache[b.id], sizes: '512x512', type: 'image/png' }); }
+    try {
+      ms.metadata = new MediaMetadata({ title: (ch.label ? ch.label + '　' : '') + (ch.name || ''), artist: b.title, album: '下回分解', artwork: art });
+      const h = { play: resume, pause, seekbackward: () => skip(-15), seekforward: () => skip(30), previoustrack: () => chapter(-1), nexttrack: () => chapter(1), seekto: (e) => { if (st && st.mode === 'track' && e.seekTime != null) { audio.currentTime = e.seekTime; syncTrack(); } }, stop };
+      Object.keys(h).forEach((k) => { try { ms.setActionHandler(k, h[k]); } catch (e) {} });
+    } catch (e) {}
+  }
+
+  function state() {
+    if (!st) return { active: false };
+    const track = st.mode === 'track', dur = track ? (isFinite(audio.duration) && audio.duration ? audio.duration : (st.book.chapters[st.ci].au || {}).dur || 0) : 0;
+    const head = st.inHead || (st.head && !st.ready);
+    return { active: true, playing: st.playing, ready: st.ready, buffering: !!st.buffering && track, mode: st.mode, book: st.book, ci: st.ci, ui: st.ui, n: st.units.length,
+      text: st.ready ? textOf(st.ui) : '', prevText: st.ready && st.ui > 0 ? textOf(st.ui - 1) : '', nextText: st.ready ? textOf(st.ui + 1) : '', head,
+      time: track ? audio.currentTime : 0, dur, f: track ? (dur ? audio.currentTime / dur : 0) : (st.units.length > 1 ? st.ui / (st.units.length - 1) : 0),
+      rate: Settings.rate, sleepLeft: sleepAt ? Math.max(0, sleepAt - Date.now()) : 0, sleepCh, voices, voice: pickVoice() };
+  }
+  function emit() { if (navigator.mediaSession && st) { try { navigator.mediaSession.playbackState = st.playing ? 'playing' : 'paused'; } catch (e) {} } Bus.emit('narr', state()); }
+
+  return { start, stop, pause, resume, toggle, skip, seekUnit, seekFrac, chapter, setRate, setVoice, setSleep, state, hasTrack, canSpeak, get active() { return !!st; }, get voices() { return voices.length ? voices : loadVoices(); } };
+})();
+
+/* ───────── 畫面：書房、書頁、抽屜、說書現場 ───────── */
+const UI = (() => {
+  const lib = $('#lib'), bookv = $('#bookv'), sheet = $('#sheet'), sheetBody = $('#sheetBody'), mini = $('#mini'), pop = $('#pop');
+  let state = { v: 'lib' }, sheetKind = '', popT = 0, lastNarr = { active: false };
+  const chName = (c) => (c.label ? c.label + '　' : '') + (c.name || '');
+  const RATES = [0.8, 1, 1.15, 1.3, 1.5, 1.75, 2];
+
+  /* ── 封面 ── */
+  function coverHTML(b, extra) {
+    const fresh = Lib.freshSet(b.id).length, pct = Prog.pct(b);
+    return '<span class="cover" data-cv="' + esc(b.id) + '">' + Cover.svg(b, { k: extra || '' })
+      + (fresh ? '<span class="tag">新</span>' : '')
+      + (pct > 0.004 ? '<span class="pg"><i style="width:' + Math.round(pct * 100) + '%"></i></span>' : '') + '</span>';
+  }
+  function hydrateCovers(root) {
+    $$('.cover[data-cv]', root).forEach((c) => {
+      const b = Lib.find(c.dataset.cv);
+      if (!b || !b.cover || !b.cover.img) return;
+      Lib.coverURL(b).then((u) => { if (!u || !c.isConnected) return; const old = c.querySelector('svg'); if (old) old.outerHTML = Cover.svg(b, { img: u, k: 'i' }); });
+    });
+  }
+
+  /* ── 書房 ── */
+  function renderLib() {
+    const books = Lib.all(), serial = books.filter((b) => b.remote), mine = books.filter((b) => !b.remote);
+    let hero = Lib.find(Prog.last());
+    if (hero && !hero.chapters.length) hero = null;
+    const first = !hero && serial.find((b) => b.chapters.length);
+    let h = '<div class="wrap"><header class="lib-top"><div class="brand"><span class="brand-seal" aria-hidden="true">回</span><h1>下回分解</h1></div>'
+      + '<div class="lib-acts"><button type="button" class="ib" data-act="import" aria-label="匯入電子書">' + ICON.plus + '</button><button type="button" class="ib" data-act="settings" aria-label="設定">' + ICON.gear + '</button></div></header>';
+    if (hero) {
+      const p = Prog.get(hero.id), i = Math.max(0, Prog.index(hero)), ch = hero.chapters[i], pct = Prog.pct(hero), fresh = Lib.freshSet(hero.id).length;
+      const canHear = Narrator.hasTrack(hero, i) || Narrator.canSpeak();
+      h += '<section class="hero" data-id="' + esc(hero.id) + '"><button type="button" class="hero-cover" data-act="continue" aria-label="接著讀《' + esc(hero.title) + '》">' + coverHTML(hero, 'h') + '</button><div>'
+        + '<p class="hero-kicker">痞子葳，上回說到</p><h2>' + esc(hero.title) + '</h2><p class="hero-ch">' + esc(chName(ch)) + (fresh ? '　<b style="color:var(--gilt-2)">新到 ' + fresh + ' 回</b>' : '') + '</p>'
+        + (p && p.x ? '<blockquote class="hero-x">' + esc(p.x) + '……</blockquote>' : '')
+        + '<div class="hero-prog"><span class="bar"><i style="width:' + Math.round(pct * 100) + '%"></i></span><span>全書 ' + Math.round(pct * 100) + '%</span></div>'
+        + '<div class="hero-btns"><button type="button" class="btn gilt" data-act="continue">接著讀</button>' + (canHear ? '<button type="button" class="btn" data-act="listen">' + ICON.ear + '聽說書</button>' : '') + '</div></div></section>';
+    } else if (first) {
+      h += '<section class="hero" data-id="' + esc(first.id) + '"><button type="button" class="hero-cover" data-act="continue" aria-label="開始讀《' + esc(first.title) + '》">' + coverHTML(first, 'h') + '</button><div>'
+        + '<p class="hero-kicker">痞子葳，今晚從這本開始</p><h2>' + esc(first.title) + '</h2><p class="hero-ch">' + first.chapters.length + ' 回　' + fmtCount(Lib.total(first)) + '</p>'
+        + (first.blurb ? '<blockquote class="hero-x">' + esc(first.blurb) + '</blockquote>' : '')
+        + '<div class="hero-btns"><button type="button" class="btn gilt" data-act="continue">開始讀</button></div></div></section>';
+    } else {
+      h += '<section class="hero blank"><div><h2>書房還是空的</h2><p>連載小說寫好一回就會自己上架；也可以把手邊的 EPUB、TXT 電子書收進來。</p><div class="hero-btns"><button type="button" class="btn gilt" data-act="import">' + ICON.plus + '匯入電子書</button></div></div></section>';
+    }
+    const card = (b) => {
+      const i = Prog.index(b), fresh = Lib.freshSet(b.id).length, unit = b.remote ? ' 回' : ' 章';
+      const meta = fresh ? '<b>新到 ' + fresh + ' 回</b>' : i >= 0 ? '讀到 ' + esc(b.chapters[i].label || b.chapters[i].name || ('第 ' + (i + 1) + ' 章')) : b.chapters.length + unit;
+      return '<button type="button" class="bk" data-act="book" data-id="' + esc(b.id) + '">' + coverHTML(b) + '<span class="bk-t">' + esc(b.title) + '</span><span class="bk-m">' + meta + '</span></button>';
+    };
+    if (serial.length) h += '<section class="shelf"><div class="shelf-h"><h2>連載</h2><span>寫好一回，上架一回</span></div><div class="grid">' + serial.map(card).join('') + '</div></section>';
+    h += '<section class="shelf"><div class="shelf-h"><h2>我的藏書</h2><span>' + (mine.length ? mine.length + ' 本，存在這台裝置' : 'EPUB、TXT、Markdown') + '</span></div><div class="grid">' + mine.map(card).join('')
+      + '<button type="button" class="bk add" data-act="import" aria-label="匯入電子書"><span class="cover">' + ICON.plus + '</span><span class="bk-t">匯入電子書</span><span class="bk-m">從這台裝置挑檔案</span></button></div></section>';
+    h += '</div>';
+    lib.innerHTML = h; hydrateCovers(lib);
+  }
+
+  /* ── 書頁 ── */
+  function tocHTML(b, withCur) {
+    const p = Prog.get(b.id), done = Prog.done(b.id), fresh = Lib.freshSet(b.id);
+    return '<ol class="toc">' + b.chapters.map((c, i) => {
+      const key = Lib.ck(b, c, i), cur = p && p.ck === key;
+      return '<li><button type="button" class="row' + (done.indexOf(key) >= 0 ? ' done' : '') + (cur && withCur !== false ? ' cur' : '') + '" data-act="read" data-id="' + esc(b.id) + '" data-i="' + i + '">'
+        + '<span class="r-no">' + esc(c.label || String(i + 1)) + '</span><span class="r-nm">' + esc(c.name || (c.label ? '' : '第 ' + (i + 1) + ' 章')) + (fresh.indexOf(key) >= 0 ? '<span class="new">新</span>' : '') + '</span>'
+        + '<span class="r-meta">' + (Narrator.hasTrack(b, i) ? ICON.ear : '') + (done.indexOf(key) >= 0 ? '讀過了' : cur ? Math.round((p.f || 0) * 100) + '%' : fmtMin(c.chars || 0)) + '</span></button></li>';
+    }).join('') + '</ol>';
+  }
+  function renderBook(id) {
+    const b = Lib.find(id);
+    if (!b) { go({ v: 'lib' }, true); return; }
+    const i = Prog.index(b), tot = Lib.total(b), tracks = b.chapters.filter((c, j) => Narrator.hasTrack(b, j)).length;
+    const canHear = b.chapters.length && (Narrator.hasTrack(b, Math.max(0, i)) || Narrator.canSpeak());
+    bookv.innerHTML = '<div class="wrap"><div class="bv-top"><button type="button" class="ib" data-act="back" aria-label="回書房">' + ICON.back + '</button>'
+      + (b.remote ? '' : '<button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button>') + '</div>'
+      + '<div class="bv-head"><div class="bv-cover">' + coverHTML(b, 'b') + '</div><div><h1>' + esc(b.title) + '</h1>' + (b.author ? '<p class="bv-by">' + esc(b.author) + '</p>' : '')
+      + (b.remote && b.status ? '<span class="state">' + esc(b.status) + '</span>' : '')
+      + '<ul class="bv-stats"><li><b>' + b.chapters.length + '</b>' + (b.remote ? '回' : '章') + '</li><li><b>' + (tot >= 10000 ? (tot / 10000).toFixed(1).replace(/\.0$/, '') + ' 萬' : tot) + '</b>字</li><li><b>' + fmtMin(tot).replace(/ (小時|分鐘|分)/g, '') + '</b>' + (tot / 450 >= 60 ? '小時讀完' : '分鐘讀完') + '</li>'
+      + (tracks ? '<li><b>' + tracks + '</b>回有說書</li>' : '') + '</ul></div></div>'
+      + '<div class="bv-btns"><button type="button" class="btn gilt" data-act="continue" data-id="' + esc(b.id) + '">' + (i >= 0 ? '接著讀' : '開始讀') + '</button>' + (canHear ? '<button type="button" class="btn" data-act="listen" data-id="' + esc(b.id) + '">' + ICON.ear + '聽說書</button>' : '') + '</div>'
+      + (b.blurb ? '<p class="bv-blurb">' + esc(b.blurb) + '</p>' : '')
+      + '<div class="toc-h"><h2>目錄</h2></div>' + (b.chapters.length ? tocHTML(b) : '<p class="empty">第一回還在路上。</p>') + '</div>';
+    bookv.dataset.id = id; hydrateCovers(bookv);
+  }
+
+  /* ── 換畫面（手機的返回鍵也走這裡） ── */
+  function show(s) {
+    state = s;
+    if (s.v !== 'read' && Reader.isOpen()) Reader.close();
+    lib.hidden = s.v !== 'lib' && s.v !== 'read';
+    bookv.hidden = s.v !== 'book';
+    if (s.v === 'lib') renderLib();
+    if (s.v === 'book') { renderBook(s.id); bookv.scrollTop = 0; }
+    if (s.v === 'read') { if (s.from === 'book') { lib.hidden = true; bookv.hidden = false; } }
+    syncMini();
+  }
+  function go(s, replace) { try { history[replace ? 'replaceState' : 'pushState'](s, ''); } catch (e) {} show(s); }
+  window.addEventListener('popstate', (e) => {
+    if (!sheet.hidden) { closeSheet(); try { history.pushState(state, ''); } catch (x) {} return; }
+    show(e.state && e.state.v ? e.state : { v: 'lib' });
+  });
+  const back = () => { if (history.state && history.state.v && history.state.v !== 'lib') history.back(); else go({ v: 'lib' }, true); };
+
+  /* ── 翻開一本書 ── */
+  async function openBook(b, i, anchor, fromEl) {
+    if (!b || !b.chapters.length) return;
+    Sound.unlock();
+    go({ v: 'read', id: b.id, from: state.v === 'book' ? 'book' : 'lib' });
+    const anim = fromEl && !REDUCED && fromEl.getBoundingClientRect().width > 20 ? opening(b, fromEl) : null;
+    await Reader.open(b, i, anchor);
+    if (anim) await anim;
+  }
+  function resume(b, fromEl) {
+    const p = Prog.get(b.id), i = Prog.index(b);
+    return openBook(b, i >= 0 ? i : 0, i >= 0 && p ? { b: p.b, s: p.s } : null, fromEl);
+  }
+  async function opening(b, fromEl) {
+    const ov = $('#opening'), r = fromEl.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+    const th = Math.min(vh * .62, vw * .78 * 1.5), tw = th / 1.5, sc = tw / r.width;
+    const paper = { night: '#131a25', paper: '#e9dfc8', black: '#000' }[Settings.theme] || '#131a25';
+    ov.hidden = false;
+    const tx = (vw - tw) / 2, ty = (vh - th) / 2, from = 'translate(' + (r.left - tx) + 'px,' + (r.top - ty) + 'px) scale(' + (1 / sc) + ')';
+    ov.innerHTML = '<div class="op-bg"></div><div class="op-book" style="left:' + tx + 'px;top:' + ty + 'px;width:' + tw + 'px;height:' + th + 'px;transform-origin:0 0;transform:' + from + '"><div class="op-page" style="background:' + paper + '"></div><div class="op-cover">' + Cover.svg(b, { k: 'op' }) + '</div></div>';
+    const bk = $('.op-book', ov), cv = $('.op-cover', ov), bg = $('.op-bg', ov);
+    try {
+      bg.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, fill: 'forwards' });
+      const mid = 'none';
+      await bk.animate([{ transform: from }, { transform: mid }], { duration: 400, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' }).finished;
+      Sound.open();
+      cv.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(118deg)' }], { duration: 560, easing: 'cubic-bezier(.5,0,.25,1)', fill: 'forwards' });
+      await sleep(250);
+      const full = 'translate(' + (-tx) + 'px,' + (-ty) + 'px) scale(' + (vw / tw) + ',' + (vh / th) + ')';
+      await bk.animate([{ transform: mid }, { transform: full }], { duration: 380, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards' }).finished;
+      await ov.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: 'forwards' }).finished;
+    } catch (e) {}
+    ov.hidden = true; ov.innerHTML = ''; ov.getAnimations && ov.getAnimations().forEach((a) => a.cancel());
+  }
+
+  /* ── 抽屜 ── */
+  function openSheet(kind, html) { sheetKind = kind; sheetBody.innerHTML = html; sheet.hidden = false; document.body.classList.add('sheet-open'); sheetBody.scrollTop = 0; $('.sheet-panel', sheet).focus({ preventScroll: true }); }
+  function closeSheet() { sheet.hidden = true; sheetKind = ''; sheetBody.innerHTML = ''; document.body.classList.remove('sheet-open'); }
+  const pressed = (on) => ' aria-pressed="' + (on ? 'true' : 'false') + '"';
+  function lookHTML() {
+    const S = Settings;
+    return '<h2>字體與外觀</h2>'
+      + '<div class="seg themes">' + [['night', '夜間', '#131a25', '#c3cad5'], ['paper', '羊皮紙', '#e9dfc8', '#33291d'], ['black', '純黑', '#000', '#9c9c9c']].map((t) => '<button type="button" data-act="set" data-k="theme" data-v="' + t[0] + '"' + pressed(S.theme === t[0]) + '><i style="background:' + t[2] + ';box-shadow:inset 0 -7px 0 -4px ' + t[3] + '"></i>' + t[1] + '</button>').join('') + '</div>'
+      + '<h3>翻書的方式</h3><div class="seg">' + [['page', '仿真翻頁'], ['scroll', '上下捲動']].map((t) => '<button type="button" data-act="set" data-k="mode" data-v="' + t[0] + '"' + pressed(S.mode === t[0]) + '>' + t[1] + '</button>').join('') + '</div>'
+      + '<h3>字體</h3><div class="seg fonts">' + [['song', '宋體'], ['hei', '黑體'], ['kai', '楷體']].map((t) => '<button type="button" data-act="set" data-k="font" data-v="' + t[0] + '"' + pressed(S.font === t[0]) + '>' + t[1] + '</button>').join('') + '</div>'
+      + '<h3>字級</h3><div class="step"><button type="button" data-act="step" data-k="size" data-d="-1" aria-label="字小一點">A</button><output>' + S.size + '</output><button type="button" data-act="step" data-k="size" data-d="1" aria-label="字大一點">A</button></div>'
+      + '<h3>行距</h3><div class="step"><button type="button" data-act="step" data-k="lh" data-d="-1" aria-label="行距緊一點">−</button><output>' + S.lh.toFixed(1) + '</output><button type="button" data-act="step" data-k="lh" data-d="1" aria-label="行距鬆一點">＋</button></div>'
+      + '<h3>左右邊距</h3><div class="seg">' + ['窄', '適中', '寬'].map((t, i) => '<button type="button" data-act="set" data-k="margin" data-v="' + i + '"' + pressed(S.margin === i) + '>' + t + '</button>').join('') + '</div>'
+      + '<h3>其他</h3><button type="button" class="sw" role="switch" data-act="sw" data-k="sfx" aria-checked="' + S.sfx + '"><span>翻頁的紙聲</span><i></i></button>';
+  }
+  function settingsHTML() {
+    const mine = Lib.all().filter((b) => !b.remote).length;
+    return '<h2>設定</h2>'
+      + '<button type="button" class="sw" role="switch" data-act="sw" data-k="sfx" aria-checked="' + Settings.sfx + '"><span>音效<small>翻頁的紙聲、開書、驚堂木</small></span><i></i></button>'
+      + '<button type="button" class="sw" role="switch" data-act="sw" data-k="keepAwake" aria-checked="' + Settings.keepAwake + '"><span>用裝置語音朗讀時，螢幕保持開著<small>手機鎖屏會讓裝置語音停下來；有預錄音軌的章節不受影響</small></span><i></i></button>'
+      + '<div class="rowb" style="display:flex;gap:10px;margin-top:18px"><button type="button" class="btn" data-act="sync" style="flex:1">看看有沒有新的一回</button></div>'
+      + '<p class="note">連載小說放在你的書架上，寫好一回就會出現在這裡，文字會自動存一份，離線也能讀。<br>匯入的書（現在 ' + mine + ' 本）、閱讀進度和設定只存在這台裝置的瀏覽器裡，不會上傳；換手機或清除瀏覽器資料就要重新匯入。<br>版本 ' + VERSION + '</p>';
+  }
+  function playerHTML(st) {
+    const b = st.book, ch = b.chapters[st.ci], track = st.mode === 'track';
+    return '<div class="np"><div class="np-art">' + coverHTML(b, 'np') + '</div><h2>' + esc(chName(ch)) + '</h2><p class="np-sub">' + esc(b.title) + '</p>'
+      + '<div class="np-lines"><p id="npPrev"></p><p class="now" id="npNow"></p><p id="npNext"></p></div>'
+      + '<input type="range" id="npRange" min="0" max="1000" value="0" aria-label="說書進度">'
+      + '<div class="np-time"><span id="npT">0:00</span><span id="npD"></span></div>'
+      + '<div class="np-ctl"><button type="button" class="ib" data-act="np-prev" aria-label="上一回">' + ICON.prev + '</button><button type="button" class="ib" data-act="np-back" aria-label="倒回十五秒">' + ICON.back15 + '</button>'
+      + '<button type="button" class="ib big" id="npPlay" data-act="np-toggle" aria-label="播放或暫停"></button>'
+      + '<button type="button" class="ib" data-act="np-fwd" aria-label="快轉三十秒">' + ICON.fwd30 + '</button><button type="button" class="ib" data-act="np-next" aria-label="下一回">' + ICON.next + '</button></div>'
+      + '<h3>語速</h3><div class="chips" id="npRates">' + RATES.map((r) => '<button type="button" data-act="np-rate" data-v="' + r + '"' + pressed(Math.abs(st.rate - r) < .01) + '>' + r + '×</button>').join('') + '</div>'
+      + '<h3>睡眠定時</h3><div class="chips" id="npSleep">' + [[0, '不設'], [15, '15 分'], [30, '30 分'], [45, '45 分'], [60, '60 分'], ['ch', '說完這一回']].map((x) => '<button type="button" data-act="np-sleep" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>'
+      + (track ? '<p class="np-src">這一回是預錄的說書音軌：鎖屏、切到別的 App 都會繼續說，耳機和鎖屏畫面可以直接控制。</p>'
+        : '<h3>聲音</h3><select id="npVoice" aria-label="朗讀的聲音">' + (st.voices || []).map((v) => '<option value="' + esc(v.voiceURI) + '"' + (st.voice && st.voice.voiceURI === v.voiceURI ? ' selected' : '') + '>' + esc(v.name.replace(/Microsoft |Google |\(Natural\)|Online /g, '').trim()) + '（' + esc(v.lang) + '）</option>').join('') + '</select>'
+          + '<p class="np-src">這一回用這台裝置內建的語音逐句朗讀，鎖屏後會停。' + (IS_IOS ? '想要好一點的聲音：到 iPhone「設定 → 輔助使用 → 語音內容 → 聲音 → 中文」下載「高音質」版本，再回來選。' : '在電腦用 Edge 開，可以選到最自然的線上語音。') + '</p>')
+      + '<div class="rowb"><button type="button" class="btn" data-act="np-goto">' + ICON.target + '看正在說的地方</button><button type="button" class="btn quiet" data-act="np-stop">收攤</button></div></div>';
+  }
+  function paintPlayer(st, tickOnly) {
+    if (sheetKind !== 'player') return;
+    if (!st.active) { closeSheet(); return; }
+    const set = (id, t) => { const e = $(id); if (e && e.textContent !== t) e.textContent = t; };
+    if (!tickOnly) {
+      set('#npPrev', st.prevText || ''); set('#npNow', st.head ? '（驚堂木一響）' + chName(st.book.chapters[st.ci]) : st.text || (st.ready ? '' : '正在準備……')); set('#npNext', st.nextText || '');
+      const pb = $('#npPlay'); if (pb) { pb.innerHTML = st.playing ? ICON.pause : ICON.play; pb.classList.toggle('wait', !st.ready || st.buffering); }
+      $$('#npRates button').forEach((x) => x.setAttribute('aria-pressed', Math.abs(+x.dataset.v - st.rate) < .01 ? 'true' : 'false'));
+    }
+    const left = st.sleepLeft ? Math.ceil(st.sleepLeft / 60000) : 0;
+    $$('#npSleep button').forEach((x) => { const v = x.dataset.v, on = v === 'ch' ? st.sleepCh : v === '0' ? !st.sleepLeft && !st.sleepCh : false; x.setAttribute('aria-pressed', on ? 'true' : 'false'); if (v === '0') x.textContent = left ? '剩 ' + left + ' 分，取消' : '不設'; });
+    const rg = $('#npRange');
+    if (rg && !rg.matches(':active') && document.activeElement !== rg) { rg.value = Math.round(st.f * 1000); rg.style.setProperty('--p', (st.f * 100).toFixed(1) + '%'); }
+    if (st.mode === 'track') { set('#npT', fmtClock(st.time)); set('#npD', st.dur ? '-' + fmtClock((st.dur - st.time) / (st.rate || 1)) : ''); }
+    else { set('#npT', '第 ' + (st.ui + 1) + ' 句'); set('#npD', '共 ' + st.n + ' 句'); }
+  }
+  function openPlayer() { const st = Narrator.state(); if (!st.active) return; openSheet('player', playerHTML(st)); paintPlayer(st); }
+
+  /* ── 迷你播放列 ── */
+  function syncMini(st) {
+    st = st || lastNarr;
+    if (!st.active) { mini.hidden = true; return; }
+    const inReader = state.v === 'read';
+    mini.hidden = false; mini.classList.toggle('in-reader', inReader);
+    const ch = st.book.chapters[st.ci], key = st.book.id + ':' + st.ci + ':' + inReader;
+    if (mini.dataset.k !== key) {
+      mini.dataset.k = key;
+      mini.innerHTML = '<button type="button" class="mi-main" data-act="mi-open" aria-label="打開說書現場"><span class="mi-t">' + esc((inReader ? '說書中　' : st.book.title + '　') + (ch.label || ch.name || '')) + '</span><span class="mi-x"></span></button>'
+        + '<button type="button" class="ib play" data-act="mi-toggle" aria-label="播放或暫停"></button><button type="button" class="ib mi-close" data-act="np-stop" aria-label="收攤">' + ICON.close + '</button><div class="mi-bar"><i></i></div>';
+    }
+    const x = $('.mi-x', mini); if (x) x.textContent = st.head ? chName(ch) : st.text || '';
+    $('.play', mini).innerHTML = st.playing ? ICON.pause : ICON.play;
+    $('.mi-bar i', mini).style.width = (st.f * 100).toFixed(1) + '%';
+  }
+
+  /* ── 閱讀器的工具列 ── */
+  function paintChrome(inf) {
+    if (!inf || !inf.book) return;
+    const ch = inf.book.chapters[inf.ci];
+    $('#rdBook').textContent = inf.book.title; $('#rdCh').textContent = chName(ch);
+    const rg = $('#rdRange');
+    if (inf.paged) { rg.disabled = false; rg.max = Math.max(0, inf.pages - 1); if (document.activeElement !== rg || !rg.matches(':active')) rg.value = inf.pi; rg.style.setProperty('--p', (inf.pages > 1 ? inf.pi / (inf.pages - 1) * 100 : 100) + '%'); }
+    else { rg.disabled = true; rg.max = 1000; rg.value = Math.round(inf.f * 1000); rg.style.setProperty('--p', (inf.f * 100).toFixed(1) + '%'); }
+    $('#rdPos').textContent = (inf.paged ? '第 ' + (inf.pi + 1) + ' 頁，共 ' + inf.pages + ' 頁' : '這一回 ' + Math.round(inf.f * 100) + '%') + '　全書 ' + Math.round(Prog.pct(inf.book) * 100) + '%';
+    paintNarrBtn();
+  }
+  function paintNarrBtn() {
+    const b = Reader.book; if (!b) return;
+    const st = lastNarr, mine = st.active && st.book.id === b.id, btn = $('[data-act="rd-narr"]');
+    btn.innerHTML = ICON.ear + (mine ? '說書現場' : Narrator.hasTrack(b, Reader.ci) ? '聽說書' : '朗讀這一回');
+    btn.hidden = !mine && !Narrator.hasTrack(b, Reader.ci) && !Narrator.canSpeak();
+  }
+
+  /* ── 匯入 ── */
+  async function importFiles(files) {
+    files = Array.from(files || []); if (!files.length) return;
+    const busy = $('#busy'); let last = null, okN = 0;
+    for (const f of files) {
+      $('#busyText').textContent = '正在讀《' + f.name.replace(/\.[^.]+$/, '') + '》……'; busy.hidden = false;
+      await raf(); await sleep(30);
+      try { last = await Importer.importFile(f); okN++; }
+      catch (e) { toast(esc(f.name) + '：' + esc(e && e.message ? e.message : '匯入失敗'), { kind: 'bad', ms: 6000 }); }
+    }
+    busy.hidden = true;
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    if (!okN) return;
+    if (state.v === 'lib') renderLib();
+    const b = last;
+    toast(okN > 1 ? '收進藏書了，一共 ' + okN + ' 本' : '《' + esc(b.title) + '》收進藏書了，' + b.chapters.length + ' 章', { action: '打開', onAction: () => go({ v: 'book', id: b.id }) });
+    Sound.chime();
+  }
+
+  /* ── 點擊 ── */
+  function bookFrom(t) { const h = t.closest('[data-id]'); return Lib.find(t.dataset.id || (h && h.dataset.id) || state.id); }
+  function onAct(t, ev) {
+    const a = t.dataset.act; let b;
+    switch (a) {
+      case 'import': $('#file').value = ''; $('#file').click(); break;
+      case 'settings': openSheet('settings', settingsHTML()); break;
+      case 'book': Sound.unlock(); Sound.tap(); go({ v: 'book', id: t.dataset.id }); break;
+      case 'back': back(); break;
+      case 'continue': b = bookFrom(t); if (b) resume(b, $('.cover', t.closest('.hero') || $('.bv-cover', bookv) || document)); break;
+      case 'read': {
+        b = Lib.find(t.dataset.id); const i = +t.dataset.i; if (!b) break;
+        const p = Prog.get(b.id), same = p && Prog.index(b) === i;
+        if (sheetKind === 'toc') { closeSheet(); Reader.open(b, i, same ? { b: p.b, s: p.s } : null, { keep: true }); Reader.setChrome(false); }
+        else openBook(b, i, same ? { b: p.b, s: p.s } : null, $('.bv-cover .cover', bookv));
+        break;
+      }
+      case 'listen': { b = bookFrom(t); if (!b) break; Sound.unlock(); const p = Prog.get(b.id), i = Math.max(0, Prog.index(b)); Narrator.start(b, i, p && Prog.index(b) >= 0 ? { b: p.b, s: p.s } : null).then((ok) => ok && openPlayer()); break; }
+      case 'del-book': b = Lib.find(t.dataset.id); if (b) openSheet('confirm', '<h2>把《' + esc(b.title) + '》移出藏書？</h2><p class="note" style="margin:0 0 18px">這本書和它的閱讀進度會從這台裝置刪掉。原本的檔案不受影響，之後可以再匯入。</p><div style="display:flex;gap:10px"><button type="button" class="btn" data-act="sheet-close" style="flex:1">留著</button><button type="button" class="btn danger" data-act="del-yes" data-id="' + esc(b.id) + '" style="flex:1">移出藏書</button></div>'); break;
+      case 'del-yes': { const id = t.dataset.id; closeSheet(); if (lastNarr.active && lastNarr.book.id === id) Narrator.stop(); Lib.removeLocal(id).then(() => { toast('已經移出藏書'); go({ v: 'lib' }, true); }).catch(() => toast('刪不掉，再試一次', { kind: 'bad' })); break; }
+      case 'sync': closeSheet(); toast('正在看書架……', { ms: 1500 }); Boot.sync(true); break;
+      case 'sheet-close': closeSheet(); break;
+      case 'rd-back': back(); break;
+      case 'rd-toc': b = Reader.book; if (b) { openSheet('toc', '<h2>' + esc(b.title) + '</h2>' + tocHTML(b)); const c = $('.row.cur', sheetBody); if (c) c.scrollIntoView({ block: 'center' }); } break;
+      case 'rd-look': openSheet('look', lookHTML()); break;
+      case 'rd-prevch': Reader.chapter(-1); break;
+      case 'rd-nextch': Reader.chapter(1); break;
+      case 'rd-follow': Reader.resumeFollow(); break;
+      case 'rd-narr': {
+        b = Reader.book; if (!b) break;
+        if (lastNarr.active && lastNarr.book.id === b.id) { openPlayer(); break; }
+        const w = Reader.where(); Reader.setChrome(false);
+        Narrator.start(b, w.ci, w.b >= 0 ? { b: w.b, s: w.s } : null);
+        break;
+      }
+      case 'say-here': { const d = pop._d; hidePop(); if (d && Reader.book) Narrator.start(Reader.book, d.ci, { b: d.b, s: d.s }); break; }
+      case 'mi-open': openPlayer(); break;
+      case 'mi-toggle': case 'np-toggle': Narrator.toggle(); break;
+      case 'np-back': Narrator.skip(-15); break;
+      case 'np-fwd': Narrator.skip(30); break;
+      case 'np-prev': Narrator.chapter(-1); break;
+      case 'np-next': Narrator.chapter(1); break;
+      case 'np-rate': Narrator.setRate(+t.dataset.v); break;
+      case 'np-sleep': Narrator.setSleep(t.dataset.v === 'ch' ? 'ch' : +t.dataset.v); paintPlayer(Narrator.state(), true); break;
+      case 'np-stop': Narrator.stop(); break;
+      case 'np-goto': { const st = Narrator.state(); if (!st.active) break; closeSheet(); const u = { b: 0, s: 0 }; if (Reader.isOpen() && Reader.book.id === st.book.id) Reader.resumeFollow(); else { const p = Prog.get(st.book.id); openBook(st.book, st.ci, p ? { b: p.b, s: p.s } : u); } break; }
+      case 'set': {
+        const k = t.dataset.k, v = k === 'margin' ? +t.dataset.v : t.dataset.v, modeChanged = k === 'mode' && Settings.mode !== v;
+        const at = modeChanged ? Reader.where() : null;      // 換翻書方式之前，先記住現在讀到哪一句
+        Settings[k] = v; saveSettings(); Reader.applyLook(); sheetBody.innerHTML = lookHTML();
+        if (modeChanged) Reader.reopen(at); else Reader.relayout();
+        break;
+      }
+      case 'step': {
+        const k = t.dataset.k, d = +t.dataset.d;
+        if (k === 'size') Settings.size = clamp(Settings.size + d, 14, 32); else Settings.lh = clamp(Math.round((Settings.lh + d * .1) * 10) / 10, 1.4, 2.6);
+        saveSettings(); Reader.applyLook(); Reader.relayout(); sheetBody.innerHTML = lookHTML();
+        break;
+      }
+      case 'sw': { const k = t.dataset.k; Settings[k] = !Settings[k]; saveSettings(); t.setAttribute('aria-checked', Settings[k]); if (k === 'sfx' && Settings.sfx) { Sound.unlock(); Sound.page(); } break; }
+    }
+    void ev;
+  }
+  function hidePop() { clearTimeout(popT); pop.hidden = true; pop._d = null; }
+
+  function init() {
+    $('[data-act="rd-back"]').innerHTML = ICON.back; $('[data-act="rd-toc"]').innerHTML = ICON.toc; $('[data-act="rd-look"]').innerHTML = ICON.aa;
+    document.addEventListener('click', (e) => { const t = e.target.closest && e.target.closest('[data-act]'); if (!t || t.closest('#rdScroll')) return; Sound.unlock(); onAct(t, e); });
+    document.addEventListener('pointerdown', (e) => { if (!pop.hidden && !(e.target.closest && e.target.closest('#pop'))) hidePop(); }, true);
+    $('#file').addEventListener('change', (e) => importFiles(e.target.files));
+    $('#rdRange').addEventListener('input', (e) => { e.target.style.setProperty('--p', (e.target.max > 0 ? e.target.value / e.target.max * 100 : 0) + '%'); Reader.gotoPage(+e.target.value); });
+    sheet.addEventListener('input', (e) => { if (e.target.id === 'npRange') { e.target.style.setProperty('--p', (e.target.value / 10) + '%'); } });
+    sheet.addEventListener('change', (e) => { if (e.target.id === 'npRange') { Narrator.seekFrac(+e.target.value / 1000); e.target.blur(); } else if (e.target.id === 'npVoice') Narrator.setVoice(e.target.value); });
+    // 拖檔案進來（電腦）
+    let dragN = 0; const drop = $('#drop');
+    const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') >= 0;
+    window.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragN++; drop.hidden = false; });
+    window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
+    window.addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN) drop.hidden = true; });
+    window.addEventListener('drop', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragN = 0; drop.hidden = true; if (Reader.isOpen()) back(); importFiles(e.dataTransfer.files); });
+
+    Bus.on('reader:show', paintChrome);
+    Bus.on('reader:chapter', () => { paintNarrBtn(); });
+    Bus.on('reader:chrome', (on) => { document.body.classList.toggle('chrome-on', on); if (on) paintChrome(Reader.info()); });
+    Bus.on('reader:close', () => { document.body.classList.remove('chrome-on'); $('#rdFollow').hidden = true; hidePop(); if (state.v === 'read') back(); });
+    Bus.on('reader:follow', (on) => { $('#rdFollow').hidden = on || !lastNarr.active; });
+    Bus.on('reader:end', (b) => toast(b.remote && b.status === '連載中' ? '欲知後事如何，且聽下回分解。' : '這本書讀完了'));
+    Bus.on('reader:sentence', (d) => {
+      if (!Reader.book || (!Narrator.hasTrack(Reader.book, d.ci) && !Narrator.canSpeak())) return;
+      pop._d = d; pop.innerHTML = '<button type="button" data-act="say-here">' + ICON.ear + '從這句開始說書</button>';
+      pop.style.left = clamp(d.cx, 96, innerWidth - 96) + 'px'; pop.style.top = Math.max(70, d.cy - 14) + 'px'; pop.hidden = false;
+      clearTimeout(popT); popT = setTimeout(hidePop, 4200);
+      if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+    });
+    Bus.on('narr', (st) => {
+      const was = lastNarr; lastNarr = st; syncMini(st); paintPlayer(st);
+      if (Reader.isOpen()) paintNarrBtn();
+      if (!st.active) $('#rdFollow').hidden = true;
+      if (was.active !== st.active && state.v === 'lib') renderLib();
+    });
+    Bus.on('narr:tick', (st) => { lastNarr = st; if (st.active) { const i = $('.mi-bar i', mini); if (i) i.style.width = (st.f * 100).toFixed(1) + '%'; paintPlayer(st, true); } });
+    Bus.on('idb-fail', () => toast('這個瀏覽器不讓網頁存資料（可能是無痕模式），匯入的書存不下來', { kind: 'bad', ms: 7000 }));
+  }
+  return { init, renderLib, go, show, refresh: () => { if (state.v === 'lib') renderLib(); else if (state.v === 'book') renderBook(state.id); }, get state() { return state; } };
+})();
+
+/* ───────── 開機 ───────── */
+const Boot = (() => {
+  let lastSync = 0;
+  function announce(news) {
+    const real = news.filter((x) => !x.first);
+    if (!real.length) return;
+    const by = {}; real.forEach((x) => { (by[x.book.id] = by[x.book.id] || { book: x.book, list: [] }).list.push(x.ch); });
+    Object.keys(by).forEach((id) => {
+      const g = by[id], c = g.list[g.list.length - 1];
+      toast('《' + esc(g.book.title) + '》' + (g.list.length > 1 ? '新到 ' + g.list.length + ' 回' : '新的一回：' + esc((c.label || '') + (c.name ? '　' + c.name : ''))), { action: '去看', onAction: () => UI.go({ v: 'book', id }), ms: 9000 });
+    });
+    Sound.chime();
+  }
+  async function sync(manual) {
+    lastSync = Date.now();
+    const r = await Lib.sync();
+    if (!r.ok) { if (manual || !Lib.hasRemote()) toast(navigator.onLine === false ? '現在沒有網路，先讀已經存下來的' : '連不上書架，等一下再試', { kind: manual ? 'bad' : '' }); return; }
+    if (r.changed || r.news.length) UI.refresh();
+    announce(r.news);
+    if (manual && !r.news.filter((x) => !x.first).length) toast('書架沒有新的一回');
+    Lib.prefetch();
+  }
+  async function start() {
+    Reader.init(); UI.init();
+    try { history.replaceState({ v: 'lib' }, ''); } catch (e) {}
+    await Lib.init();
+    UI.show({ v: 'lib' });
+    sync(false);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - lastSync > 10 * 60000) sync(false); });
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  return { start, sync };
+})();
+Boot.start();
+
+})();
+</script>
+</body>
+</html>

@@ -1910,6 +1910,22 @@
    "claude": "https://claude.ai/artifact/WhsJtzRqYda9tvteFMFXGP"
   },
   {
+   "id": "next-chapter",
+   "title": "下回分解",
+   "en": "NEXT CHAPTER",
+   "kind": "web",
+   "url": "https://pzwei0105.github.io/PZ-Games/apps/next-chapter/",
+   "tagline": "寫好一回，上架一回。",
+   "summary": "痞子葳的書房：我們寫的連載小說寫好一回就自動上架，也能匯入 EPUB、TXT、Markdown 電子書。線裝書封面、仿真翻頁與上下捲動、夜間／羊皮紙／純黑三種紙色、自動記住讀到哪一句，還有說書模式：逐句標示、跟著翻頁、語速與睡眠定時。",
+   "palette": [
+    "#1d2f4a",
+    "#0b1422",
+    "#c9a45c"
+   ],
+   "glyph": "回",
+   "pin": true
+  },
+  {
    "id": "pz-host",
    "title": "PZ 主機",
    "en": "PZ HOST",
