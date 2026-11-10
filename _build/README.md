@@ -21,7 +21,7 @@
 
 截圖原檔（`shots/`）太大沒有放進來；網站用的是 `media/` 裡壓縮過的 WebP。重新 build 時，沒有截圖原檔的遊戲會直接沿用上一版 `catalog.json` 裡的圖片設定，不會壞掉。
 
-遊戲原檔（`raw/`）也沒有放進來：從 GitHub 重新 clone 時，`games/<build>/` 裡的就是目前上架的版本，build 會原封不動保留它（只把 PZ 圓鈕的標籤更新成最新版）。要改一款已上架的遊戲：先把 `games/<build>/` 整個資料夾複製成 `_build/raw/<build>/`，在 raw 裡改，再 build（圓鈕那行 build 會重新插，不用手動處理）。有 `sources/<遊戲 id>/` 的遊戲（長明、差一點、墜星、竊夢者、深艙、偷渡者、寸土）改原始碼、照它的 README 組建，不要直接改打包好的檔。Claude 上的版本（`builds[].artifact`）是另一份，能一起更新就一起更新，不能就記在 ROADMAP 的「已知問題」。
+遊戲原檔（`raw/`）也沒有放進來：從 GitHub 重新 clone 時，`games/<build>/` 裡的就是目前上架的版本，build 會原封不動保留它（只把 PZ 圓鈕的標籤更新成最新版）。要改一款已上架的遊戲：先把 `games/<build>/` 整個資料夾複製成 `_build/raw/<build>/`，在 raw 裡改，再 build（圓鈕那行 build 會重新插，不用手動處理）。有 `sources/<遊戲 id>/` 的遊戲（長明、差一點、墜星、竊夢者、深艙、偷渡者）改原始碼、照它的 README 組建，不要直接改打包好的檔。Claude 上的版本（`builds[].artifact`）是另一份，能一起更新就一起更新，不能就記在 ROADMAP 的「已知問題」。
 
 ## 遊戲怎麼開（重要）
 
@@ -90,7 +90,6 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 | 深艙 UNDERTOW（深海搜打撤，完整版） | `_build/sources/undertow/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/undertow/`）；`tests/run.py bot 0` 自動玩、`tests/fuzz_maps.py` 檢查地圖；收藏庫截圖步驟 `tests/shots_steps.py` |
 | 竊夢者 DREAMTHIEF（搜打撤動作，完整版） | `_build/sources/dreamthief/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/dreamthief/`）；`tests/run.py bot 0` 自動玩、`tests/run.py boss 1` 打心魔；收藏庫截圖步驟 `tests/shots_steps.py` |
 | 偷渡者 STOWAWAY（太空恐怖生存＋船員指揮，完整版） | `_build/sources/stowaway/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/stowaway/`）；`tests/run.py bot 1500` 自動玩一整航、`tests/flows.py all` 跑六條結局路線；收藏庫截圖步驟 `tests/shots_steps.py` |
-| 寸土 EVERY INCH（三線即時戰線對戰＋凍原戰役，完整版） | `_build/sources/every-inch/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/every-inch/`）；`tests/shot.py '#test-kaz'` 看兩邊 AI 自動對打、`tests/flow.py`／`tests/story.py`／`tests/input.py` 跑戰役流程、劇情抉擇與觸控部署；收藏庫截圖步驟 `tests/shots_steps.py`（戰鬥畫面用固定亂數種子重播） |
 
 ## 放在這個網站裡的專屬 App（`apps/`）
 
