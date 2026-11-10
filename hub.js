@@ -24,14 +24,26 @@
 
   /* ── play time ── */
   const stat = (fn) => { const all = get('stats', {}); const s = all[GID] || { plays: 0, ms: 0, last: 0 }; fn(s); all[GID] = s; set('stats', all); };
-  if (ss.get('pzgc.hub.' + BID) !== '1') { ss.set('pzgc.hub.' + BID, '1'); stat((s) => { s.plays = (s.plays || 0) + 1; s.last = Date.now(); }); }
+  if (ss.get('pzgc.hub.' + BID) !== '1') { ss.set('pzgc.hub.' + BID, '1'); stat((s) => { s.plays = (s.plays || 0) + 1; s.last = Date.now(); if (!s.first) s.first = s.last; }); }
   let acc = 0, t0 = document.hidden ? 0 : Date.now(), played = 0;
+  const dayKey = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   function flush() {
     const now = Date.now();
     if (t0) { acc += now - t0; t0 = document.hidden ? 0 : now; }
     if (acc < 1000) return;
     const add = Math.min(acc, 6 * 36e5); acc = 0; played += add;
-    stat((s) => { s.ms = (s.ms || 0) + add; s.last = now; });
+    // best = the longest stretch in one sitting (this page, this tab)
+    stat((s) => { s.ms = (s.ms || 0) + add; s.last = now; if (played > (s.best || 0)) s.best = played; });
+    // per day and per hour of the day: the collection's player page and trophies read these
+    const d = new Date(now), days = get('days', {}), k = dayKey(d);
+    days[k] = (days[k] || 0) + add;
+    const keys = Object.keys(days);
+    if (keys.length > 400) keys.sort().slice(0, keys.length - 400).forEach((x) => { delete days[x]; });
+    set('days', days);
+    const hours = get('hours', null);
+    const hrs = Array.isArray(hours) && hours.length === 24 ? hours : new Array(24).fill(0);
+    hrs[d.getHours()] = (hrs[d.getHours()] || 0) + add;
+    set('hours', hrs);
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); else t0 = Date.now(); });
   addEventListener('pagehide', flush);

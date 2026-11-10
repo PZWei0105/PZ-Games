@@ -92,7 +92,22 @@ const I = {
   film: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 9.5h18M3 14.5h18M8 5v4.5M8 14.5V19M16 5v4.5M16 14.5V19"/></svg>',
   dice: '<svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zm1.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM12 10.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8.5 14a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>',
   games: '<svg viewBox="0 0 24 24"><path d="M7.5 7h9a5 5 0 0 1 4.9 6l-.8 4a2.4 2.4 0 0 1-4.2 1L14.5 16h-5l-1.9 2a2.4 2.4 0 0 1-4.2-1l-.8-4a5 5 0 0 1 4.9-6z"/><path d="M8 10v3M6.5 11.5h3"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24"><path d="M8 4h8v5.5a4 4 0 0 1-8 0z"/><path d="M8 6H5.2a2.8 2.8 0 0 0 3.2 4M16 6h2.8a2.8 2.8 0 0 1-3.2 4M12 13.5V17M8.5 20.5h7M10 17h4v3.5h-4z"/></svg>',
+  me: '<svg viewBox="0 0 24 24"><path d="M12 2.8 19.5 7v10L12 21.2 4.5 17V7z"/><circle cx="12" cy="10.2" r="2.6"/><path d="M7.8 16.4a4.6 4.6 0 0 1 8.4 0"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24"><path d="M13.5 2.5 5 13.5h6l-1 8 8.5-11h-6z"/></svg>',
+  fire: '<svg viewBox="0 0 24 24"><path d="M12 21a6.5 6.5 0 0 0 6.5-6.5c0-3.2-2-5.4-3.6-7.2-.4 1.6-1.3 2.6-2.4 3.1C12.6 7 11.2 4.6 9 3c.3 3-1.4 4.8-2.8 6.6A7.2 7.2 0 0 0 5.5 14.5 6.5 6.5 0 0 0 12 21z"/></svg>',
 };
+// trophy cups, one gradient per tier (each call gets its own id: the same id twice on one page breaks in Safari)
+const CUP_COL = { b: ['#ffd2ad', '#b8713f'], s: ['#ffffff', '#9aa7c0'], g: ['#fff1b8', '#d9961a'], p: ['#f3fbff', '#8ab4ff'] };
+let cupN = 0;
+function cup(t) {
+  const [a, b] = CUP_COL[t] || CUP_COL.b, id = 'cup' + (++cupN);
+  return `<svg class="cup" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>`
+    + `<path d="M14.5 8h19v9.5a9.5 9.5 0 0 1-19 0z" fill="url(#${id})"/><path d="M14.5 11.2H9.6a5.6 5.6 0 0 0 6.6 7.4M33.5 11.2h4.9a5.6 5.6 0 0 1-6.6 7.4" fill="none" stroke="url(#${id})" stroke-width="2.6"/>`
+    + `<rect x="21.4" y="26.6" width="5.2" height="5.6" fill="url(#${id})"/><rect x="14.5" y="32" width="19" height="5.6" rx="1.8" fill="url(#${id})"/>`
+    + `<path d="M19 11.6c0 4.3 1.4 7 3.7 8.3" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.9" stroke-linecap="round"/>`
+    + (t === 'p' ? `<path d="M38.5 4.5l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z" fill="#fff"/>` : '') + `</svg>`;
+}
 const MARK = (id = 'm') => `<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe7a8"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#8fd3ff"/></linearGradient></defs><rect x="3" y="3" width="58" height="58" rx="16" fill="rgba(10,13,26,.85)" stroke="url(#${id}g)" stroke-width="2.4"/><path d="M25 18.5 46 32 25 45.5z" fill="none" stroke="url(#${id}g)" stroke-width="4.6" stroke-linejoin="round"/></svg>`;
 
 /* ───────────── storage ───────────── */
@@ -103,10 +118,12 @@ const Store = {
 };
 const S = {
   cat: null, games: [], archive: [], apps: [], byId: {}, byBuild: {}, genres: {},
-  settings: Object.assign({ sfx: true, music: true, vol: 0.8, boot: true }, Store.get('settings', {})),
+  settings: Object.assign({ sfx: true, music: true, vol: 0.8, boot: true, results: true }, Store.get('settings', {})),
   favs: new Set(Store.get('favs', [])),
   hidden: new Set(Store.get('hidden', [])),
   stats: Store.get('stats', {}),
+  trophies: Store.get('trophies', null), // null until this device first runs 2.0
+  flags: Store.get('flags', {}),
   builds: Store.get('builds', {}),
   seen: Store.get('seen', null),
   base: 'home',
@@ -261,6 +278,55 @@ const Sound = (() => {
       tone({ t: 0.85, f: 46, f1: 38, d: 1.4, g: 0.38 });
       [0, 7, 12, 16, 19].forEach((s, i) => tone({ t: 0.85, f: N(45 + 12 + s), d: 2.6, g: 0.04, type: 'sawtooth', lp: 1800, wet: 0.7, det: i * 3 }));
       [12, 19, 24, 28, 31, 36].forEach((s, i) => tone({ t: 1.0 + i * 0.09, f: N(57 + s), d: 1.2, g: 0.04, type: 'sine', wet: 0.8 }));
+    },
+    // PRESS START: a bright two-step confirm, the console waking up
+    start() {
+      if (!on()) return;
+      tone({ f: N(57 + 24), d: 0.11, g: 0.06, type: 'square', lp: 3400 });
+      tone({ t: 0.075, f: N(57 + 31), d: 0.55, g: 0.06, type: 'square', lp: 3800, wet: 0.5 });
+      tone({ t: 0.075, f: N(57 + 36), d: 0.7, g: 0.035, type: 'sine', wet: 0.8 });
+      noise({ t: 0.07, f: 7400, type: 'highpass', d: 0.5, g: 0.03, wet: 0.6 });
+      vib(14);
+    },
+    tab() { if (!on()) return; tone({ f: 640, f1: 1020, d: 0.075, g: 0.06, type: 'triangle' }); tone({ f: N(root + 31), t: 0.03, d: 0.18, g: 0.022, wet: 0.45 }); vib(6); },
+    hover() { if (!on()) return; tone({ f: 2100 + Math.random() * 500, d: 0.022, g: 0.011 }); },
+    xp(p = 0) { if (!on()) return; tone({ f: 860 + p * 1200, d: 0.04, g: 0.028, type: 'triangle', lp: 5200 }); },
+    // the results screen sliding in after a game
+    results() {
+      if (!on()) return;
+      noise({ f: 300, f1: 4600, d: 0.5, a: 0.34, g: 0.06, q: 1.1, wet: 0.4 });
+      tone({ t: 0.4, f: 64, f1: 40, d: 0.75, g: 0.26 });
+      [0, 7, 12, 16].forEach((s, i) => tone({ t: 0.42 + i * 0.03, f: N(root + 12 + s), d: 1.5, g: 0.032, type: 'triangle', wet: 0.7 }));
+    },
+    // trophy: a bell "ding" with a sparkle; gold and platinum add weight underneath
+    trophy(t = 'b') {
+      if (!on()) return;
+      const big = t === 'g' || t === 'p', k = root + (t === 'p' ? 5 : 0);
+      tone({ f: N(k + 31), d: 1.3, g: 0.075, type: 'sine', wet: 0.6 });
+      tone({ f: N(k + 38), t: 0.07, d: 1.2, g: 0.05, type: 'sine', wet: 0.7 });
+      [0, 4, 7, 12, 16].forEach((s, i) => tone({ t: 0.12 + i * 0.045, f: N(k + 36 + s), d: 0.45, g: 0.026, type: 'triangle', wet: 0.8 }));
+      noise({ t: 0.06, f: 8200, type: 'highpass', d: 0.7, g: 0.022, wet: 0.7 });
+      if (big) {
+        tone({ f: 74, f1: 44, d: 0.9, g: 0.3 });
+        [0, 7, 12, 16].forEach((s, i) => tone({ t: 0.03, f: N(k + s), d: 1.8, g: 0.03, type: 'sawtooth', lp: 1800, wet: 0.75, det: i * 4 }));
+      }
+      vib(big ? [16, 40, 22] : 12);
+    },
+    levelUp() {
+      if (!on()) return;
+      tone({ f: 72, f1: 42, d: 0.95, g: 0.34 });
+      noise({ f: 1200, f1: 160, type: 'lowpass', d: 0.6, g: 0.2, q: 0.6, a: 0.004, wet: 0.5 });
+      [0, 4, 7, 12, 16, 19, 24, 28].forEach((s, i) => tone({ t: 0.04 + i * 0.05, f: N(root + 12 + s), d: 0.42, g: 0.045, type: 'square', lp: 3800, wet: 0.5 }));
+      [0, 4, 7, 12].forEach((s, i) => tone({ t: 0.46, f: N(root + s), d: 2.3, g: 0.034, type: 'sawtooth', lp: 2000, wet: 0.8, det: i * 5 }));
+      [24, 31, 36].forEach((s, i) => tone({ t: 0.5 + i * 0.08, f: N(root + 12 + s), d: 1.6, g: 0.028, type: 'sine', wet: 0.9 }));
+      noise({ t: 0.46, f: 8000, type: 'highpass', d: 1.2, g: 0.024, a: 0.2, wet: 0.8 });
+      vib([20, 60, 30]);
+    },
+    // the 2.0 system update: a long rise while the bar fills
+    install() {
+      if (!on()) return;
+      noise({ f: 160, f1: 5200, d: 1.7, a: 1.4, g: 0.06, q: 1.0, wet: 0.5 });
+      tone({ f: N(45), f1: N(57), d: 1.7, g: 0.05, type: 'sawtooth', lp: 1100, a: 1.2, wet: 0.5 });
     },
   };
   /* lobby music: a bright, bouncy chiptune-pop loop (major key, 112 BPM, light swing).
@@ -469,6 +535,159 @@ const buildOf = (g) => (g.builds || []).find((b) => b.id === S.builds[g.id]) || 
 const cssVars = (o) => `--c:${o.accent};--c-rgb:${o.rgb};--c0:${o.c0};--c1:${o.c1}`;
 const gameUrl = (b) => (MODE === 'claude' ? b.artifact : 'games/' + b.id + '/index.html');
 
+/* ───────────── 玩家系統：等級、經驗、精通度、獎盃 ─────────────
+   Everything is worked out from what the game pages record through hub.js (play time per game, per day,
+   per hour of the day, the longest sitting). Only trophy unlock times and a few flags are stored on top,
+   all in this browser's localStorage (pzgc.v1.*). */
+const TIERS = [
+  { name: '初見', ms: 0, c: '#e4ecf8' },
+  { name: '上手', ms: 15 * 6e4, c: '#6fe3a8' },
+  { name: '熟練', ms: 60 * 6e4, c: '#7cc4ff' },
+  { name: '精通', ms: 3 * 36e5, c: '#c49bff' },
+  { name: '大師', ms: 8 * 36e5, c: '#ffd36a' },
+];
+function tierOf(s) {
+  if (!s || !(s.plays || s.ms)) return -1;
+  let t = 0;
+  for (let i = 1; i < TIERS.length; i++) if ((s.ms || 0) >= TIERS[i].ms) t = i;
+  return t;
+}
+const TITLES = [[1, '新手玩家'], [5, '熱血玩家'], [10, '收藏家'], [15, '鑑賞家'], [20, '資深玩家'], [30, '遊戲達人'], [40, '骨灰玩家'], [60, '傳說玩家'], [80, '殿堂玩家'], [99, '遊戲之神']];
+const needXp = (lv) => 60 + 20 * (lv - 1);
+function levelOf(xp) {
+  let lv = 1, left = Math.max(0, Math.floor(xp || 0));
+  while (lv < 99 && left >= needXp(lv)) { left -= needXp(lv); lv++; }
+  let title = TITLES[0][1];
+  for (const [l, t] of TITLES) if (lv >= l) title = t;
+  return { lv, into: lv < 99 ? left : 1, need: lv < 99 ? needXp(lv) : 1, title, xp: Math.max(0, Math.floor(xp || 0)) };
+}
+const TROPHY_XP = { b: 30, s: 60, g: 120, p: 300 };
+const TIER_NAME = { b: '銅', s: '銀', g: '金', p: '白金' };
+const pct = (v, goal) => Math.min(goal, Math.max(0, Math.floor(v)));
+// val(c) is compared against goal (a number, or a function of the collection when it grows with it)
+const TROPHIES = [
+  { id: 'boot', t: 'b', name: '開機', desc: '第一次打開你的遊戲收藏', val: () => 1, goal: 1 },
+  { id: 'first', t: 'b', name: '初次啟動', desc: '玩第一款遊戲', val: (c) => c.played, goal: 1 },
+  { id: 'five', t: 'b', name: '嚐鮮', desc: '玩過 5 款不同的遊戲', val: (c) => c.played, goal: 5 },
+  { id: 'fav', t: 'b', name: '一見鍾情', desc: '把一款遊戲加入最愛', val: (c) => c.favs, goal: 1 },
+  { id: 'spin', t: 'b', name: '命運的輪盤', desc: '用「今天玩什麼？」轉出一款遊戲', val: (c) => (c.flags.spin ? 1 : 0), goal: 1 },
+  { id: 'trailer', t: 'b', name: '首映', desc: '看完一支遊戲預告', val: (c) => (c.flags.trailer ? 1 : 0), goal: 1 },
+  { id: 'hand', t: 'b', name: '小試身手', desc: '任一款遊戲達到「上手」（累積 15 分鐘）', val: (c) => (c.topTier >= 1 ? 1 : 0), goal: 1 },
+  { id: 'owl', t: 'b', name: '夜貓子', desc: '在凌晨 0～5 點玩遊戲', val: (c) => (c.night ? 1 : 0), goal: 1 },
+  { id: 'early', t: 'b', name: '早起的鳥兒', desc: '在早上 5～8 點玩遊戲', val: (c) => (c.early ? 1 : 0), goal: 1 },
+  { id: 'fresh', t: 'b', name: '搶先體驗', desc: '新遊戲入庫三天內就玩到', val: (c) => (c.freshPlay ? 1 : 0), goal: 1 },
+  { id: 'ten', t: 's', name: '十全十美', desc: '玩過 10 款不同的遊戲', val: (c) => c.played, goal: 10 },
+  { id: 'genres5', t: 's', name: '跨界玩家', desc: '玩過 5 種不同類型', val: (c) => c.genres, goal: 5 },
+  { id: 'immerse', t: 's', name: '沉浸', desc: '一次連續玩 30 分鐘', val: (c) => c.best / 6e4, goal: 30, unit: '分' },
+  { id: 'skill', t: 's', name: '熟能生巧', desc: '任一款達到「熟練」（累積 1 小時）', val: (c) => (c.topTier >= 2 ? 1 : 0), goal: 1 },
+  { id: 'streak3', t: 's', name: '三天打魚', desc: '連續 3 天都有玩遊戲', val: (c) => c.streakMax, goal: 3, unit: '天' },
+  { id: 'favs5', t: 's', name: '私房名單', desc: '最愛收藏 5 款', val: (c) => c.favs, goal: 5 },
+  { id: 'h10', t: 's', name: '十小時', desc: '總遊玩時間 10 小時', val: (c) => c.total / 36e5, goal: 10, unit: '小時' },
+  { id: 'half', t: 'g', name: '半壁江山', desc: '玩過收藏庫一半的遊戲', val: (c) => c.played, goal: (c) => Math.ceil(c.n / 2) },
+  { id: 'master', t: 'g', name: '登堂入室', desc: '任一款達到「精通」（累積 3 小時）', val: (c) => (c.topTier >= 3 ? 1 : 0), goal: 1 },
+  { id: 'allgenres', t: 'g', name: '全類型制霸', desc: '每一種類型都玩過', val: (c) => c.genres, goal: (c) => c.genreN },
+  { id: 'streak7', t: 'g', name: '一週不間斷', desc: '連續 7 天都有玩遊戲', val: (c) => c.streakMax, goal: 7, unit: '天' },
+  { id: 'marathon', t: 'g', name: '馬拉松', desc: '一次連續玩 2 小時', val: (c) => c.best / 6e4, goal: 120, unit: '分' },
+  { id: 'h50', t: 'g', name: '五十小時', desc: '總遊玩時間 50 小時', val: (c) => c.total / 36e5, goal: 50, unit: '小時' },
+  { id: 'grand', t: 'g', name: '一代宗師', desc: '任一款達到「大師」（累積 8 小時）', val: (c) => (c.topTier >= 4 ? 1 : 0), goal: 1 },
+  { id: 'all', t: 'p', name: '全破收藏家', desc: '收藏庫裡每一款遊戲都玩過', val: (c) => c.played, goal: (c) => c.n },
+];
+const TROPHY_BY = Object.fromEntries(TROPHIES.map((t) => [t.id, t]));
+const goalOf = (t, c) => (typeof t.goal === 'function' ? t.goal(c) : t.goal);
+const dayKey = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const dayAt = (k) => new Date(k + 'T12:00:00');
+function streaks(days) {
+  const on = new Set(Object.keys(days || {}).filter((k) => days[k] > 0));
+  let best = 0;
+  for (const k of on) {
+    if (on.has(dayKey(new Date(dayAt(k).getTime() - DAY)))) continue; // not the start of a run
+    let n = 1, d = dayAt(k);
+    for (;;) { d = new Date(d.getTime() + DAY); if (on.has(dayKey(d))) n++; else break; }
+    best = Math.max(best, n);
+  }
+  // the current run counts today, or ends yesterday if nothing has been played yet today
+  let now = 0, d = new Date();
+  if (!on.has(dayKey(d))) d = new Date(d.getTime() - DAY);
+  while (on.has(dayKey(d))) { now++; d = new Date(d.getTime() - DAY); }
+  return { best, now };
+}
+function playerCtx() {
+  const games = visible();
+  const days = Store.get('days', {}), hours = Store.get('hours', []) || [];
+  const c = { n: games.length, played: 0, genres: 0, genreN: 0, topTier: -1, total: 0, best: 0, favs: S.favs.size, flags: S.flags || {}, night: false, early: false, freshPlay: false, days, hours };
+  const seen = new Set(), all = new Set();
+  for (const g of games) {
+    all.add(g.genre);
+    const s = S.stats[g.id];
+    if (!s || !(s.plays || s.ms)) continue;
+    c.played++; seen.add(g.genre);
+    if (s.first && g.created && s.first - new Date(g.created + 'T00:00:00+08:00').getTime() < 3 * DAY) c.freshPlay = true;
+  }
+  // play time counts everything ever played here, also games no longer in the collection
+  for (const s of Object.values(S.stats)) { c.total += s.ms || 0; c.best = Math.max(c.best, s.best || 0); c.topTier = Math.max(c.topTier, tierOf(s)); }
+  c.genres = seen.size; c.genreN = all.size;
+  const h = (i) => +hours[i] || 0;
+  c.night = [0, 1, 2, 3, 4].some((i) => h(i) > 0);
+  c.early = [5, 6, 7].some((i) => h(i) > 0);
+  const st = streaks(days); c.streakMax = st.best; c.streakNow = st.now;
+  return c;
+}
+// XP: 40 for every game tried, 1 per minute played, 15 per mastery tier reached, plus every trophy's reward
+function xpOf(got) {
+  let xp = 0;
+  for (const s of Object.values(S.stats)) {
+    if (!s || !(s.plays || s.ms)) continue;
+    xp += 40 + Math.floor((s.ms || 0) / 6e4) + 15 * Math.max(0, tierOf(s));
+  }
+  for (const id of Object.keys(got || {})) { const t = TROPHY_BY[id]; if (t) xp += TROPHY_XP[t.t]; }
+  return xp;
+}
+const player = () => levelOf(xpOf(S.trophies));
+function trophyCheck() {
+  if (!S.trophies) return [];
+  const c = playerCtx(), fresh = [];
+  for (const t of TROPHIES) {
+    if (S.trophies[t.id]) continue;
+    const goal = goalOf(t, c);
+    if (goal > 0 && t.val(c) >= goal) { S.trophies[t.id] = Date.now(); fresh.push(t); }
+  }
+  if (fresh.length) Store.set('trophies', S.trophies);
+  return fresh;
+}
+function setFlag(k) {
+  if (S.flags[k]) return;
+  S.flags[k] = Date.now(); Store.set('flags', S.flags);
+  trophyPop(trophyCheck());
+}
+// the level ring: the PZ mark inside a ring that fills with this level's XP
+function lvRing(p, cls = '') {
+  const r = 27, C = 2 * Math.PI * r, f = clamp(p.into / p.need, 0, 1);
+  return `<span class="lvr ${cls}"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="${r}" class="tr"/><circle cx="32" cy="32" r="${r}" class="fg" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - f)).toFixed(1)}"/></svg><span class="lvn"><small>LV</small><b>${p.lv}</b></span></span>`;
+}
+function tierBadge(tr) {
+  return tr >= 0 ? `<span class="tbadge" style="--tc:${TIERS[tr].c}">${TIERS[tr].name}</span>` : '<span class="tbadge none">未玩</span>';
+}
+// trophy pop-ups: one banner at a time at the top of the screen, with a chime
+const TP = { q: [], busy: false };
+function trophyPop(list) {
+  if (!list || !list.length) return;
+  TP.q.push(...list);
+  if (!TP.busy) tpNext();
+}
+function tpNext() {
+  const t = TP.q.shift(), box = $('#tpop');
+  if (!t || !box) { TP.busy = false; return; }
+  TP.busy = true;
+  const el = document.createElement('button');
+  el.className = 'tp tier-' + t.t; el.dataset.act = 'tab'; el.dataset.arg = 'me';
+  el.innerHTML = `<span class="tp-cup">${cup(t.t)}</span><span class="tp-tx"><small>獲得${TIER_NAME[t.t]}獎盃・+${TROPHY_XP[t.t]} XP</small><b>${esc(t.name)}</b></span><span class="tp-shine"></span>`;
+  box.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+  Sound.play.trophy(t.t);
+  setTimeout(() => { el.classList.remove('on'); el.classList.add('off'); setTimeout(() => el.remove(), 600); }, 3000);
+  setTimeout(tpNext, 3300);
+}
+
 /* ───────────── templates ───────────── */
 function cover(g, cls = '') {
   const m = g.media || {};
@@ -477,7 +696,10 @@ function cover(g, cls = '') {
   if (g.status === 'failed') tags.push(`<span class="chip st-failed">試作失敗</span>`);
   if (isNew(g) && g.kind === 'game') tags.push(`<span class="chip new">新</span>`);
   const img = m.cover ? `<img src="${esc(m.cover)}" alt="" loading="lazy" decoding="async">` : `<div class="glyph">${esc((g.glyph || g.title || '?').slice(0, 1))}${g.kind === 'archive' ? `<small>${esc(STATUS[g.status] || '')}</small>` : ''}</div>`;
-  return `<div class="cv ${cls}">${img}${g.pick ? `<span class="star" title="PZ 推薦">${I.star}</span>` : ''}<div class="tags">${tags.join('')}</div></div>`;
+  // mastery pips: five little lights, lit up to how well you know this game
+  const tr = g.kind === 'game' ? tierOf(statOf(g.id)) : -1;
+  const pips = tr >= 0 ? `<span class="mp" title="精通度：${TIERS[tr].name}" style="--tc:${TIERS[tr].c}">${TIERS.map((_, i) => `<i${i <= tr ? ' class="on"' : ''}></i>`).join('')}</span>` : '';
+  return `<div class="cv ${cls}">${img}${pips}${g.pick ? `<span class="star" title="PZ 推薦">${I.star}</span>` : ''}<div class="tags">${tags.join('')}</div></div>`;
 }
 function card(g, sub) {
   const s = sub != null ? sub : (S.genres[g.genre] ? S.genres[g.genre].label : '');
@@ -541,6 +763,18 @@ function playBtn(g, label, cls = '') {
   if (MODE === 'claude') return `<a class="play ${cls}" href="${esc(b.artifact)}" target="_blank" rel="noopener" data-act="ext" style="${cssVars(g)}">${I.play}${esc(label)}</a>`;
   return `<button class="play ${cls}" data-act="play" data-id="${esc(g.id)}" style="${cssVars(g)}">${I.play}${esc(label)}</button>`;
 }
+// the player card on the home page: level ring, title, XP to the next level, trophies and games played
+function playerStrip() {
+  const p = player(), c = playerCtx(), got = Object.keys(S.trophies || {}).length;
+  const f = clamp(p.into / p.need, 0, 1);
+  return `<button class="pstrip" data-act="tab" data-arg="me" aria-label="打開我的玩家檔案">
+    ${lvRing(p)}
+    <span class="ps-txt"><small>PLAYER</small><b>痞子葳<em>${esc(p.title)}</em></b>
+      <span class="xpb"><i style="width:${(f * 100).toFixed(1)}%"></i></span>
+      <span class="ps-xp">${p.lv < 99 ? `再 ${p.need - p.into} XP 升到 Lv ${p.lv + 1}` : '已經是最高等級'}</span></span>
+    <span class="ps-st"><span>${I.trophy}<b>${got}</b><em>/${TROPHIES.length}</em></span><span>${I.games}<b>${c.played}</b><em>/${c.n}</em></span></span>
+  </button>`;
+}
 function renderHome() {
   const v = $('#view-home');
   Hero.list = heroList();
@@ -560,18 +794,12 @@ function renderHome() {
     shelves += shelf(S.genres[k] ? S.genres[k].label : k, items, { more: { act: 'lib-genre', arg: k } });
   }
   shelves += shelf('試作失敗的原型', vis.filter((g) => g.status === 'failed'), { desc: '沒有成功，但留著當紀念，也當借鏡。', sub: () => '試作失敗' });
-  const totalMs = Object.values(S.stats).reduce((a, s) => a + (s.ms || 0), 0);
-  const played = Object.values(S.stats).filter((s) => s.plays).length;
-  const stats = `<div class="stat-strip">
-    <div class="stat"><b>${vis.length}</b><span>款可以玩</span></div>
-    <div class="stat"><b>${played}</b><span>款玩過</span></div>
-    <div class="stat"><b>${fmtDurShort(totalMs)}</b><span>總遊玩時間</span></div>
-    <div class="stat"><b>${S.favs.size}</b><span>款最愛</span></div></div>`;
+  const stats = playerStrip();
   const fanPool = live.filter((g) => (g.builds || []).length && g.media && g.media.cover), fan = [];
   for (let k = 0; k < 3 && fanPool.length; k++) fan.push(fanPool.splice((Math.random() * fanPool.length) | 0, 1)[0]);
   const lucky = fan.length ? `<button class="lucky" data-act="spin"><span class="lk-fan">${fan.map((g) => `<img src="${esc(g.media.cover)}" alt="" loading="lazy">`).join('')}</span><span class="lk-txt"><small>手氣不錯</small><b>今天玩什麼？</b><span>不知道玩哪款，就讓收藏庫替你轉一款</span></span><span class="lk-go">${I.dice}</span></button>` : '';
   v.innerHTML = `<section class="hero" id="hero">${Hero.list.map(heroSlide).join('')}</section>
-    <div class="shelves">${stats}${lucky}${shelves}
+    <div class="shelves"><div class="duo">${stats}${lucky}</div>${shelves}
       <button class="browse-all" data-act="tab" data-arg="library"><div><b>瀏覽全部 ${vis.length} 款遊戲</b><span>依類型、狀態篩選，或直接搜尋</span></div>${I.chev}</button>
     </div>`;
   Hero.el = $('#hero');
@@ -746,6 +974,112 @@ function renderApps() {
     <div class="tool-list">${tools.map(tool).join('')}</div>`;
 }
 
+/* ───────────── 我的：玩家檔案 ───────────── */
+const shortDate = (ts) => { const d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate(); };
+function peakText(h) { return (h < 5 ? '凌晨 ' : h < 12 ? '早上 ' : h < 13 ? '中午 ' : h < 18 ? '下午 ' : '晚上 ') + (h % 12 || 12) + ' 點'; }
+function renderMe() {
+  const v = $('#view-me');
+  const p = player(), c = playerCtx(), got = S.trophies || {};
+  const games = visible();
+  const played = games.filter((g) => tierOf(statOf(g.id)) >= 0).sort((a, b) => (statOf(b.id).ms || 0) - (statOf(a.id).ms || 0));
+  const unlocked = TROPHIES.filter((t) => got[t.id]);
+  const f = clamp(p.into / p.need, 0, 1);
+  const card = `<div class="pcard" id="pcard"><div class="pc-foil"></div><div class="pc-grid"></div>
+    <div class="pc-top">${lvRing(p, 'big')}
+      <div class="pc-id"><small>PZ COLLECTION・玩家</small><h2>痞子葳</h2><div class="pc-title">${I.me}${esc(p.title)}</div></div></div>
+    <div class="pc-xp"><div class="xpb"><i style="width:${(f * 100).toFixed(1)}%"></i></div>
+      <div class="pc-xpl"><span>Lv ${p.lv}</span><span>${p.lv < 99 ? `${p.into} / ${p.need} XP` : 'MAX'}</span><span>${p.lv < 99 ? 'Lv ' + (p.lv + 1) : ''}</span></div></div>
+    <div class="pc-foot"><span>總經驗 ${p.xp.toLocaleString()} XP</span><span>No. 0001</span></div></div>`;
+  const tiles = [
+    [I.clock, fmtDurShort(c.total), '總遊玩時間'],
+    [I.games, `${c.played}<small>/${c.n}</small>`, '玩過的遊戲'],
+    [I.trophy, `${unlocked.length}<small>/${TROPHIES.length}</small>`, '獎盃'],
+    [I.bolt, fmtDurShort(c.best), '最長的一次'],
+    [I.fire, `${c.streakNow}<small>天</small>`, `連續遊玩・最高 ${c.streakMax} 天`],
+    [I.star, `${S.favs.size}`, '最愛'],
+  ];
+  const statsHtml = `<div class="me-stats">${tiles.map(([ic, b, s]) => `<div class="mst">${ic}<b>${b}</b><span>${esc(s)}</span></div>`).join('')}</div>`;
+  const tcount = ['p', 'g', 's', 'b'].map((t) => `<span class="tc tier-${t}"><i></i>${TIER_NAME[t]} ${TROPHIES.filter((x) => x.t === t && got[x.id]).length}/${TROPHIES.filter((x) => x.t === t).length}</span>`).join('');
+  // newest unlocks first, then the locked ones closest to done
+  const rows = TROPHIES.map((t, i) => { const goal = goalOf(t, c), val = t.val(c); return { t, i, at: got[t.id] || 0, goal, val, p: goal > 0 ? clamp(val / goal, 0, 1) : 0 }; })
+    .sort((a, b) => (b.at ? 1 : 0) - (a.at ? 1 : 0) || (a.at && b.at ? b.at - a.at : b.p - a.p) || a.i - b.i);
+  const tro = rows.map(({ t, at, goal, val, p: pr }) => {
+    const prog = !at && goal > 1 ? `<span class="tpg"><i style="width:${(pr * 100).toFixed(0)}%"></i></span><small class="tpn">${pct(val, goal)} / ${goal}${t.unit ? ' ' + t.unit : ''}</small>` : '';
+    return `<div class="trophy tier-${t.t}${at ? ' got' : ''}"><span class="tcup">${cup(t.t)}</span><span class="tx"><b>${esc(t.name)}</b><span>${esc(t.desc)}</span>${at ? `<small class="when">${shortDate(at)} 解鎖・+${TROPHY_XP[t.t]} XP</small>` : prog}</span></div>`;
+  }).join('');
+  const cabinet = `<section class="me-sec"><div class="me-h"><h2>獎盃櫃</h2><span class="n">${unlocked.length} / ${TROPHIES.length}</span></div><div class="tcounts">${tcount}</div>
+    <div class="trophies clip">${tro}</div><button class="ghost sm me-more" data-act="tro-more">顯示全部 ${TROPHIES.length} 個獎盃</button></section>`;
+  const top = played.slice(0, 5), maxMs = top.length ? Math.max(1, statOf(top[0].id).ms || 0) : 1;
+  const topHtml = top.length ? top.map((g, i) => {
+    const s = statOf(g.id);
+    return `<button class="topg" style="${cssVars(g)}" data-act="open" data-id="${esc(g.id)}"><span class="rk">${i + 1}</span><span class="th">${g.media && g.media.cover ? `<img src="${esc(g.media.cover)}" alt="" loading="lazy" decoding="async">` : ''}</span>
+      <span class="tg"><b>${esc(g.title)}</b><span class="bar"><i style="width:${Math.max(4, ((s.ms || 0) / maxMs) * 100).toFixed(0)}%"></i></span><small>${esc(fmtDur(s.ms))}・開過 ${s.plays || 0} 次</small></span>${tierBadge(tierOf(s))}</button>`;
+  }).join('') : '<div class="me-empty">還沒有遊玩紀錄。挑一款開始玩，這裡就會排出你最常玩的遊戲。</div>';
+  const unplayed = games.filter((g) => tierOf(statOf(g.id)) < 0 && g.status !== 'failed' && (g.builds || []).length).length;
+  const nudge = unplayed ? `<button class="me-nudge" data-act="me-spin">${I.dice}<span><b>還有 ${unplayed} 款沒玩過</b><small>讓收藏庫從裡面轉一款給你</small></span>${I.chev}</button>` : '';
+  const ms = {};
+  for (const g of games) ms[g.genre] = (ms[g.genre] || 0) + (statOf(g.id).ms || 0);
+  const gl = GENRE_ORDER.filter((k) => games.some((g) => g.genre === k)).map((k) => [k, ms[k] || 0]).sort((a, b) => b[1] - a[1]);
+  const gmax = Math.max(1, ...gl.map((x) => x[1]));
+  const genreHtml = gl.map(([k, t]) => `<div class="gbar${t ? '' : ' zero'}"><span class="gl">${esc((S.genres[k] || {}).label || k)}</span><span class="gb"><i style="width:${((t / gmax) * 100).toFixed(1)}%"></i></span><span class="gv">${t ? fmtDurShort(t) : '還沒玩'}</span></div>`).join('');
+  // a calendar of the last 15 weeks, one square per day (Monday on top)
+  const today = new Date(), W = 15, days = c.days || {};
+  const start = new Date(today.getTime() - ((today.getDay() + 6) % 7) * DAY - (W - 1) * 7 * DAY);
+  let cells = '';
+  for (let w = 0; w < W; w++) {
+    for (let d = 0; d < 7; d++) {
+      const dt = new Date(start.getTime() + (w * 7 + d) * DAY), k = dayKey(dt), t = days[k] || 0;
+      const lvl = t <= 0 ? 0 : t < 15 * 6e4 ? 1 : t < 45 * 6e4 ? 2 : t < 90 * 6e4 ? 3 : 4;
+      cells += `<i class="hm${lvl}${dt > today ? ' fut' : ''}${k === dayKey(today) ? ' now' : ''}" style="grid-column:${w + 1};grid-row:${d + 1}"></i>`;
+    }
+  }
+  const since = Object.keys(days).filter((k) => days[k] > 0).sort()[0];
+  const heat = `<div class="heat">${cells}</div><div class="heat-l"><span>${since ? `從 ${+since.slice(5, 7)}/${+since.slice(8)} 開始記錄` : '從現在開始記錄每天玩了多久'}</span><span class="lg">少<i class="hm1"></i><i class="hm2"></i><i class="hm3"></i><i class="hm4"></i>多</span></div>`;
+  const hrs = Array.isArray(c.hours) && c.hours.length === 24 ? c.hours : new Array(24).fill(0);
+  const hmax = Math.max(1, ...hrs), peak = hrs.indexOf(Math.max(...hrs));
+  const hoursHtml = `<div class="hours">${hrs.map((t, i) => `<i class="${t ? 'on' : ''}${i === peak && t ? ' pk' : ''}" style="height:${Math.max(4, (t / hmax) * 100).toFixed(0)}%"></i>`).join('')}</div>
+    <div class="hours-l"><span>0 點</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
+    <p class="me-note">${hrs.some(Boolean) ? `你最常在${peakText(peak)}玩遊戲。` : '玩過幾次之後，這裡會畫出你最常在幾點玩。'}</p>`;
+  const mastery = played.map((g) => {
+    const s = statOf(g.id), tr = tierOf(s), nx = TIERS[tr + 1];
+    const pr = nx ? ((s.ms || 0) - TIERS[tr].ms) / (nx.ms - TIERS[tr].ms) : 1;
+    return `<button class="mrow" style="${cssVars(g)};--tc:${TIERS[tr].c}" data-act="open" data-id="${esc(g.id)}"><span class="mt">${esc(g.title)}</span><span class="mpips">${TIERS.map((_, i) => `<i${i <= tr ? ' class="on"' : ''}></i>`).join('')}</span><span class="mn">${TIERS[tr].name}</span><span class="mbar"><i style="width:${(clamp(pr, 0, 1) * 100).toFixed(0)}%"></i></span></button>`;
+  }).join('');
+  const tierKey = TIERS.map((t) => `<span style="--tc:${t.c}"><i></i>${t.name}${t.ms ? ` ${t.ms >= 36e5 ? t.ms / 36e5 + ' 小時' : t.ms / 6e4 + ' 分'}` : ''}</span>`).join('');
+  v.innerHTML = `<header class="phead me-head"><h1>我的</h1><p>等級、獎盃和遊玩紀錄，只記在這台裝置。</p></header>
+    <div class="me-wrap">
+      <section class="me-sec me-card">${card}${statsHtml}${nudge}</section>
+      ${cabinet}
+      <section class="me-sec"><div class="me-h"><h2>最常玩</h2></div><div class="tops">${topHtml}</div></section>
+      ${played.length ? `<section class="me-sec"><div class="me-h"><h2>精通度</h2><span class="n">${played.length} 款</span></div><div class="tkey">${tierKey}</div><div class="mlist${played.length > 8 ? ' clip' : ''}">${mastery}</div>${played.length > 8 ? '<button class="ghost sm me-more" data-act="me-more">顯示全部</button>' : ''}</section>` : ''}
+      <section class="me-sec"><div class="me-h"><h2>類型偏好</h2></div><div class="gbars">${genreHtml}</div></section>
+      <section class="me-sec"><div class="me-h"><h2>遊玩日曆</h2></div>${heat}</section>
+      <section class="me-sec"><div class="me-h"><h2>遊玩時段</h2></div>${hoursHtml}</section>
+    </div>`;
+  bindCardTilt($('#pcard'));
+}
+// the player card leans toward your finger or mouse and its foil catches the light
+function bindCardTilt(el) {
+  if (!el || reduced) return;
+  let raf = 0, ev = null;
+  const apply = () => {
+    raf = 0; if (!ev) return;
+    const r = el.getBoundingClientRect();
+    const px = clamp((ev.clientX - r.left) / r.width, 0, 1), py = clamp((ev.clientY - r.top) / r.height, 0, 1);
+    el.style.setProperty('--ry', ((px - 0.5) * 14).toFixed(2) + 'deg');
+    el.style.setProperty('--rx', ((0.5 - py) * 10).toFixed(2) + 'deg');
+    el.style.setProperty('--fx', (px * 100).toFixed(1) + '%');
+    el.style.setProperty('--fy', (py * 100).toFixed(1) + '%');
+  };
+  const move = (e) => { ev = e; el.classList.add('lean'); if (!raf) raf = requestAnimationFrame(apply); };
+  const end = () => { ev = null; el.classList.remove('lean'); ['--rx', '--ry'].forEach((k) => el.style.removeProperty(k)); };
+  el.addEventListener('pointermove', move, { passive: true });
+  el.addEventListener('pointerdown', move, { passive: true });
+  el.addEventListener('pointerleave', end);
+  el.addEventListener('pointerup', () => { if (isTouch) end(); });
+  el.addEventListener('pointercancel', end);
+}
+
 /* ───────────── game page ───────────── */
 const DEV_ICON = { '觸控': 'touch', '滑鼠': 'mouse', '鍵盤': 'kb', '手把': 'pad' };
 function deviceText(h) {
@@ -806,7 +1140,15 @@ function renderGame(g) {
     if (i === facts.length || full[i]) { if (run % 2) full[i - 1] = true; run = 0; } else run++;
   }
   const factsHtml = `<div class="sec"><h2>遊戲資訊</h2><dl class="facts">${facts.map(([k, v], i) => `<div${full[i] ? ' class="full"' : ''}><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl></div>`;
-  const mine = `<div class="sec"><h2>我的紀錄</h2><div class="mine"><div><b>${st.plays || 0}</b><span>次開啟</span></div><div><b>${fmtDurShort(st.ms)}</b><span>遊玩時間</span></div><div><b style="font-size:17px;line-height:1.75">${esc(relTime(st.last))}</b><span>上次遊玩</span></div></div></div>`;
+  const tr = tierOf(st), nx = TIERS[tr + 1];
+  const into = tr < 0 ? 0 : nx ? clamp(((st.ms || 0) - TIERS[tr].ms) / (nx.ms - TIERS[tr].ms), 0, 1) : 1;
+  const msHint = tr < 0 ? '開始玩就會亮起第一盞「初見」' : nx ? `再玩 ${fmtDur(nx.ms - (st.ms || 0))}，升到「${nx.name}」` : '最高的「大師」，這款你是專家了';
+  const mine = `<div class="sec"><h2>你的戰績</h2>
+    <div class="mastery" style="--tc:${tr >= 0 ? TIERS[tr].c : 'rgba(255,255,255,.45)'}">
+      <div class="ms-top">${tierBadge(tr)}<div><b>精通度</b><small>${esc(msHint)}</small></div></div>
+      <div class="ms-track">${TIERS.map((t, i) => `<div class="seg${i <= tr ? ' on' : ''}" style="--tc:${t.c}"><span class="bar"><i style="width:${i <= tr ? 100 : i === tr + 1 ? (into * 100).toFixed(0) : 0}%"></i></span><small>${t.name}</small></div>`).join('')}</div>
+    </div>
+    <div class="mine four"><div><b>${st.plays || 0}</b><span>次開啟</span></div><div><b>${fmtDurShort(st.ms)}</b><span>遊玩時間</span></div><div><b>${fmtDurShort(st.best || 0)}</b><span>最長一次</span></div><div><b class="sm">${esc(relTime(st.last))}</b><span>上次遊玩</span></div></div></div>`;
   const notes = (g.verdict || g.next) ? `<div class="sec"><h2>製作筆記</h2><dl class="notes">${g.verdict ? `<dt>你上次的評語</dt><dd>${esc(g.verdict)}</dd>` : ''}${g.next ? `<dt>下一步</dt><dd>${esc(g.next)}</dd>` : ''}</dl></div>` : '';
   const links = [];
   if (b && b.artifact && MODE === 'web') links.push(`<a href="${esc(b.artifact)}" target="_blank" rel="noopener" data-act="ext">${I.cloud}<div>在 Claude 開啟這一版<small>Claude 裡的版本會把存檔同步到雲端</small></div>${I.out.replace('<svg', '<svg class="arr"')}</a>`);
@@ -935,18 +1277,22 @@ function ignite(g, b) {
   if (h.orientation === 'landscape' && portraitScreen && isTouch) hint = `<div class="hint">${I.rotate}這款請把手機橫過來玩</div>`;
   else if (h.device === 'desktop' && isTouch) hint = `<div class="hint">${I.laptop}這款建議用電腦玩</div>`;
   el.style.cssText = cssVars(g);
-  el.innerHTML = `<div class="ign"><div class="art" style="background-image:url('${esc(m.hero || m.blur || '')}')"></div><div class="rays"></div><div class="burst"></div><div class="ring"></div>
+  // jump to warp: light streams out of the centre, the cartridge (cover) rushes at the screen, the title lands
+  el.innerHTML = `<div class="ign"><div class="art" style="background-image:url('${esc(m.hero || m.blur || '')}')"></div><canvas class="warp"></canvas><div class="rays"></div>
+      ${m.cover ? `<div class="cart"><img src="${esc(m.cover)}" alt=""></div>` : ''}<div class="burst"></div><div class="ring"></div><div class="flash"></div>
       <div class="ttl"><b>${esc(g.title)}</b>${g.en ? `<small>${esc(g.en)}</small>` : ''}</div>${hint}
       <div class="load"><div class="bar"><i></i></div><span>遊戲載入中</span></div></div>`;
   el.classList.remove('ready', 'failed', 'full', 'settled'); el.classList.add('on');
   void el.offsetWidth; el.classList.add('go');
+  warpStart(g.accent);
   Sound.stopMusic(0.5);
   Sound.play.launch(Sound.root);
   Motes.stop();
   heroPause(true);
   try {
     sessionStorage.setItem('pzgc.from', b.id);
-    sessionStorage.setItem('pzgc.ms0', JSON.stringify({ id: g.id, ms: statOf(g.id).ms || 0 }));
+    // what things looked like before this session, for the results screen afterwards
+    sessionStorage.setItem('pzgc.ms0', JSON.stringify({ id: g.id, ms: statOf(g.id).ms || 0, xp: S.trophies ? xpOf(S.trophies) : null, tier: tierOf(statOf(g.id)) }));
   } catch (e) { /* ignore */ }
   const url = gameUrl(b);
   S.igniting = setTimeout(() => {
@@ -957,9 +1303,44 @@ function ignite(g, b) {
     S.igniteWatch = setTimeout(() => { if (!S.left && !document.hidden) { settleAfterGame(); toast('遊戲沒有打開，再按一次「開始遊戲」試試'); } }, 25000);
   }, hint ? 1700 : 1150);
 }
+// light-speed streaks for the launch: drawn on one canvas for under two seconds, then gone
+const WP = { raf: 0 };
+function warpStart(hex) {
+  warpStop();
+  const cv = $('#launcher canvas.warp');
+  if (!cv || reduced) return;
+  const dpr = Math.min(1.5, devicePixelRatio || 1), w = innerWidth, h = innerHeight;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const [r, g, b] = hexRgb(hex);
+  const cx = w / 2, cy = h * 0.46, R = Math.hypot(w, h) * 0.56, N = w > 900 ? 230 : 150;
+  const ps = Array.from({ length: N }, () => ({ a: Math.random() * 6.2832, d: 6 + Math.random() * R * 0.85, v: 40 + Math.random() * 90, white: Math.random() < 0.32 }));
+  const t0 = performance.now(); let last = t0;
+  const frame = (now) => {
+    const t = (now - t0) / 1000, dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    if (t > 1.9) { WP.raf = 0; return; }
+    WP.raf = requestAnimationFrame(frame);
+    const k = t < 0.5 ? 1 + t * 9 : 5.5 + (t - 0.5) * 4; // slow start, then the jump
+    x.globalCompositeOperation = 'destination-out'; x.fillStyle = 'rgba(0,0,0,0.34)'; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'lighter'; x.lineCap = 'round';
+    for (const p of ps) {
+      const sp = p.v * k, near = p.d / R;
+      p.d += sp * dt * (0.35 + near * 1.6);
+      if (p.d > R) { p.d = 4 + Math.random() * 40; continue; }
+      const len = Math.min(260, sp * 0.06 * (0.3 + near) * k), ca = Math.cos(p.a), sa = Math.sin(p.a);
+      const al = Math.min(0.9, 0.12 + near * 0.95);
+      x.strokeStyle = p.white ? `rgba(255,255,255,${al.toFixed(3)})` : `rgba(${r},${g},${b},${al.toFixed(3)})`;
+      x.lineWidth = 0.6 + near * 2.4;
+      x.beginPath(); x.moveTo(cx + ca * p.d, cy + sa * p.d); x.lineTo(cx + ca * (p.d + len), cy + sa * (p.d + len)); x.stroke();
+    }
+  };
+  WP.raf = requestAnimationFrame(frame);
+}
+function warpStop() { if (WP.raf) cancelAnimationFrame(WP.raf); WP.raf = 0; }
 // The collection we leave behind may sit in the browser's page cache while the game runs; it keeps
 // as little as possible there (no pages full of covers). settleAfterGame() draws it again on return.
 function shed() {
+  warpStop();
   S.shedGp = $('#gamepage').scrollTop;
   S.shedViews = $$('.view').map((v) => v.scrollTop);
   $$('.view').forEach((v) => { v.innerHTML = ''; });
@@ -969,19 +1350,144 @@ function shed() {
 }
 // back from a game through the browser's page cache: tidy the launch screen and pick up the new play time
 // back from a game: say how long this session was (the game's button records the time)
-function welcomeBack(sound) {
+// what the last game session did: read before the page is drawn, so the player card already counts it
+function takeSession() {
   let m0 = null;
   try { m0 = JSON.parse(sessionStorage.getItem('pzgc.ms0') || 'null'); sessionStorage.removeItem('pzgc.ms0'); } catch (e) { /* ignore */ }
-  if (!m0 || !S.byId[m0.id]) return;
-  const d = (statOf(m0.id).ms || 0) - (m0.ms || 0);
+  if (!m0 || !S.byId[m0.id]) return null;
+  const g = S.byId[m0.id], s1 = statOf(g.id);
+  const fresh = trophyCheck();
+  return { g, d: (s1.ms || 0) - (m0.ms || 0), xp0: m0.xp, xp1: S.trophies ? xpOf(S.trophies) : null, tier0: m0.tier == null ? -1 : m0.tier, tier1: tierOf(s1), fresh };
+}
+// a real session gets the results screen (time, XP, level, mastery, new trophies); a short one a quiet word
+function reportSession(r, sound) {
+  if (!r) return false;
   if (sound) Sound.play.back();
-  if (d >= 60000) setTimeout(() => toast(`《${S.byId[m0.id].title}》這次玩了 ${fmtDur(d)}`), 500);
+  if (r.d >= 30000 && S.settings.results && r.xp0 != null && r.xp1 != null) { showResults(r); return true; }
+  if (r.d >= 60000) setTimeout(() => toast(`《${r.g.title}》這次玩了 ${fmtDur(r.d)}`), 500);
+  if (r.fresh.length) setTimeout(() => trophyPop(r.fresh), 700);
+  return false;
+}
+
+/* ───────────── 遊玩結算 ───────────── */
+const RS = { timers: [], done: false, raf: 0, fin: null };
+function fmtSess(ms) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  if (s < 60) return s + ' 秒';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + ' 分 ' + String(s % 60).padStart(2, '0') + ' 秒';
+  return Math.floor(m / 60) + ' 小時 ' + (m % 60) + ' 分';
+}
+function showResults(r) {
+  const el = $('#results'); if (!el) return;
+  const g = r.g, m = g.media || {};
+  const L0 = levelOf(r.xp0), gain = Math.max(0, r.xp1 - r.xp0);
+  const up = r.tier1 > r.tier0 && r.tier1 >= 0;
+  el.style.cssText = cssVars(g);
+  el.innerHTML = `<div class="rs-bg" style="background-image:url('${esc(m.blur || m.hero || '')}')"></div>
+    <div class="rs-card">
+      <div class="rs-kick"><b>SESSION COMPLETE</b><span>本次遊玩</span></div>
+      <div class="rs-game">${m.cover ? `<img src="${esc(m.cover)}" alt="">` : ''}<div><b>${esc(g.title)}</b>${g.en ? `<small>${esc(g.en)}</small>` : ''}</div></div>
+      <div class="rs-rows">
+        <div class="rs-row" data-k="time"><span>${I.clock}遊玩時間</span><b><i>0 秒</i></b></div>
+        <div class="rs-row" data-k="xp"><span>${I.bolt}獲得經驗</span><b class="xp">+<i>0</i> XP</b></div>
+        ${up ? `<div class="rs-row" data-k="tier"><span>${I.games}精通度</span><b class="tierup">${r.tier0 >= 0 ? `${tierBadge(r.tier0)}${I.chev}` : ''}${tierBadge(r.tier1)}</b></div>` : ''}
+      </div>
+      <div class="rs-lv"><div class="rs-badge"><small>LV</small><b>${L0.lv}</b></div>
+        <div class="rs-track"><div class="xpb"><i style="width:${((L0.into / L0.need) * 100).toFixed(1)}%"></i></div><div class="lbl"><span class="ttl">${esc(L0.title)}</span><span class="num">${L0.into} / ${L0.need} XP</span></div></div></div>
+      ${r.fresh.length ? `<div class="rs-tro"><h4>新獎盃</h4>${r.fresh.map((t) => `<div class="rt tier-${t.t}">${cup(t.t)}<div><b>${esc(t.name)}</b><small>${esc(t.desc)}</small></div><em>+${TROPHY_XP[t.t]}</em></div>`).join('')}</div>` : ''}
+      <div class="rs-tap">點一下繼續</div>
+    </div>
+    <div class="rs-lvup"><b>LEVEL UP</b><span></span></div>`;
+  RS.timers.forEach(clearTimeout); RS.timers = []; RS.done = false; cancelAnimationFrame(RS.raf);
+  el.classList.remove('done', 'lvup'); el.classList.add('on');
+  const T = (ms, fn) => RS.timers.push(setTimeout(fn, ms));
+  const timeEl = $('[data-k=time] i', el), xpEl = $('[data-k=xp] i', el);
+  const bar = $('.rs-track .xpb i', el), badge = $('.rs-badge b', el), ttl = $('.rs-track .ttl', el), num = $('.rs-track .num', el);
+  let shownLv = L0.lv;
+  const setXp = (v) => {
+    const L = levelOf(v);
+    bar.style.width = ((L.into / L.need) * 100).toFixed(1) + '%';
+    num.textContent = L.lv < 99 ? `${L.into} / ${L.need} XP` : 'MAX';
+    if (L.lv !== shownLv) {
+      shownLv = L.lv; badge.textContent = L.lv; ttl.textContent = L.title;
+      $('.rs-lvup span', el).textContent = `Lv ${L.lv}・${L.title}`;
+      el.classList.remove('lvup'); void el.offsetWidth; el.classList.add('lvup');
+      Sound.play.levelUp();
+    }
+  };
+  const finish = () => {
+    RS.timers.forEach(clearTimeout); RS.timers = []; cancelAnimationFrame(RS.raf);
+    timeEl.textContent = fmtSess(r.d); xpEl.textContent = gain;
+    setXp(r.xp1);
+    $$('.rs-row, .rt', el).forEach((n) => n.classList.add('in'));
+    el.classList.add('done'); RS.done = true;
+    RS.timers.push(setTimeout(() => closeResults(), 15000));
+  };
+  RS.fin = finish;
+  if (reduced) { finish(); return; }
+  Sound.play.results();
+  const count = (dur, from, to, step, cb) => {
+    const t0 = performance.now(); let tick = 0;
+    const f = (now) => {
+      const k = clamp((now - t0) / dur, 0, 1), e = 1 - Math.pow(1 - k, 3), v = from + (to - from) * e;
+      step(v);
+      if (now - tick > 70) { tick = now; Sound.play.xp(k); }
+      if (k < 1) RS.raf = requestAnimationFrame(f); else if (cb) cb();
+    };
+    RS.raf = requestAnimationFrame(f);
+  };
+  T(420, () => { $('[data-k=time]', el).classList.add('in'); count(700, 0, r.d, (v) => { timeEl.textContent = fmtSess(v); }); });
+  T(1250, () => { $('[data-k=xp]', el).classList.add('in'); count(1100, 0, 1, (k) => { xpEl.textContent = Math.round(gain * k); setXp(r.xp0 + gain * k); }); });
+  let at = 2500;
+  if (up) { T(at, () => { $('[data-k=tier]', el).classList.add('in'); Sound.play.fav(true); }); at += 500; }
+  const gap = Math.min(650, Math.max(180, 2600 / Math.max(1, r.fresh.length))); // a long list comes in quicker
+  $$('.rt', el).forEach((n, i) => { T(at + i * gap, () => { n.classList.add('in'); if (i < 6) Sound.play.trophy(r.fresh[i].t); }); });
+  at += r.fresh.length * gap;
+  T(at + 200, finish);
+}
+function closeResults() {
+  const el = $('#results'); if (!el || !el.classList.contains('on')) return;
+  RS.timers.forEach(clearTimeout); RS.timers = []; cancelAnimationFrame(RS.raf);
+  el.classList.remove('on'); el.classList.add('off');
+  setTimeout(() => { el.classList.remove('off', 'done', 'lvup'); el.innerHTML = ''; }, 500);
+  if (S.pendingNews) { S.pendingNews = false; checkNew(); }
+}
+
+/* ───────────── 2.0 升級 ───────────── */
+function showUpgrade(got) {
+  const el = $('#upgrade'); if (!el) return;
+  const p = player();
+  const feats = [
+    [I.me, '等級與稱號', '玩遊戲、試新遊戲、拿獎盃都會累積經驗'],
+    [I.trophy, `${TROPHIES.length} 個獎盃`, '銅、銀、金，還有一座白金'],
+    [I.games, '每款遊戲的精通度', '初見、上手、熟練、精通、大師'],
+    [I.bolt, '遊玩結算', '玩完回來，看這次的時間、經驗和新獎盃'],
+    [I.clock, '「我的」玩家檔案', '遊玩日曆、時段、類型偏好、最常玩'],
+  ];
+  el.innerHTML = `<div class="up-in">
+      <div class="up-kick">SYSTEM UPDATE</div><div class="up-ver">2.0</div>
+      <div class="up-bar"><i></i></div><div class="up-st">正在升級你的主機…</div>
+      <div class="up-done"><h2>主機升級完成</h2><p>歡迎回來，痞子葳。</p>
+        <ul class="up-feat">${feats.map(([ic, b, s]) => `<li>${ic}<div><b>${esc(b)}</b><span>${esc(s)}</span></div></li>`).join('')}</ul>
+        <div class="up-you">${lvRing(p)}<div>依你之前的遊玩紀錄：<b>Lv ${p.lv}・${esc(p.title)}</b><br>已經拿到 <b>${got.length}</b> 個獎盃</div></div>
+        <div class="up-acts"><button class="play" data-act="up-me">${I.me}看我的玩家檔案</button><button class="ghost" data-act="up-close">開始</button></div></div></div>`;
+  el.classList.add('on');
+  Sound.play.install();
+  setTimeout(() => { if (!el.classList.contains('on')) return; el.classList.add('done'); Sound.play.levelUp(); }, reduced ? 0 : 1900);
+}
+function closeUpgrade() {
+  const el = $('#upgrade'); if (!el || !el.classList.contains('on')) return;
+  el.classList.remove('on'); el.classList.add('off');
+  setTimeout(() => { el.classList.remove('off', 'done'); el.innerHTML = ''; }, 500);
 }
 function settleAfterGame() {
   clearTimeout(S.igniting); S.igniting = 0; clearTimeout(S.igniteWatch); S.left = false;
+  warpStop();
   const el = $('#launcher');
   if (el.classList.contains('on') && !L.frame) { el.classList.remove('on', 'go', 'ready', 'failed', 'full', 'settled'); el.innerHTML = ''; }
   S.stats = Store.get('stats', {});
+  const session = takeSession();
   if (S.shed) {
     S.shed = false;
     const v = $('#view-' + S.base);
@@ -997,7 +1503,7 @@ function settleAfterGame() {
     if (S.base === 'home' && !S.current) heroPause(false);
     Sound.resume(); if (S.settings.music) Sound.startMusic();
   }
-  welcomeBack(true);
+  reportSession(session, true);
 }
 function openLauncher(item, url, kind) {
   const el = $('#launcher');
@@ -1175,9 +1681,10 @@ function openSettings() {
     <div class="opt"><div><b>背景音樂</b><span>輕快的大廳配樂，調性會跟著你正在看的遊戲變換</span></div><button class="sw${st.music ? ' on' : ''}" data-act="set" data-arg="music" aria-label="背景音樂"></button></div>
     <div class="opt"><div><b>音量</b></div><input class="range" type="range" min="0" max="1" step="0.05" value="${st.vol}" id="vol"></div>
     <div class="opt"><div><b>開機動畫</b><span>每次打開收藏庫時播放</span></div><button class="sw${st.boot ? ' on' : ''}" data-act="set" data-arg="boot" aria-label="開機動畫"></button></div>
+    <div class="opt"><div><b>遊玩結算</b><span>玩完回來時，顯示這次的時間、經驗、升級和新獎盃</span></div><button class="sw${st.results ? ' on' : ''}" data-act="set" data-arg="results" aria-label="遊玩結算"></button></div>
     <div class="opt" style="display:block"><b>隱藏的遊戲</b><span>${hidden.length ? '點一下就會回到收藏庫' : '目前沒有隱藏任何遊戲'}</span>
       ${hidden.length ? `<div class="hidden-list">${hidden.map((g) => `<button data-act="unhide" data-id="${esc(g.id)}">${esc(g.title)}<em>取消隱藏</em></button>`).join('')}</div>` : ''}</div>
-    <div class="opt"><div><b>遊玩紀錄</b><span>${totalMs ? `總共玩了${esc(spacedDur(totalMs))}，只記在這台裝置` : '還沒有遊玩紀錄，只會記在這台裝置'}</span></div><button class="ghost sm" data-act="clear-stats">清除</button></div>
+    <div class="opt"><div><b>遊玩紀錄</b><span>${totalMs ? `總共玩了${esc(spacedDur(totalMs))}，只記在這台裝置；清除後等級、獎盃、精通度一起重來` : '還沒有遊玩紀錄，只會記在這台裝置'}</span></div><button class="ghost sm" data-act="clear-stats">清除</button></div>
     ${MODE === 'web' && !standalone ? `<div class="add-home">${isIOS ? '<b>加到主畫面：</b>用 Safari 打開這頁，點下方的「分享」按鈕，選「加入主畫面」。之後就能像 App 一樣從主畫面打開。' : (S.installEvt ? '<b>安裝成 App：</b><button class="ghost sm" data-act="install" style="margin-top:8px">安裝到這台裝置</button>' : '<b>加到主畫面：</b>在瀏覽器選單裡選「加到主畫面」或「安裝應用程式」。')}</div>` : ''}
     <div class="about">PZ 遊戲收藏　版本 ${esc(S.cat.version || '')}<br>${S.games.length} 款遊戲、${S.apps.length} 個 App，資料更新於 ${esc(fmtDate(S.cat.updated))}。${MODE === 'web' ? '<br>新遊戲做好後會直接放上來，重新打開收藏庫就會看到。' : ''}</div>`);
   const vol = $('#vol');
@@ -1350,6 +1857,7 @@ function spinLand(g, ix) {
   Ambient.set(g);
   Sound.play.win(g);
   vib([16, 50, 24]);
+  setTimeout(() => setFlag('spin'), 1400);
   const b = $('.sp-burst', SP.el);
   if (!reduced) {
     let h = '<i class="ring"></i>';
@@ -1443,6 +1951,7 @@ function trGo(i) {
         <div class="acts">${playBtn(g, '開始遊戲', 'big')}<button class="ghost" data-act="tr-replay">${I.refresh}再看一次</button></div></div></div>`, 'end');
     cap.innerHTML = '';
     Sound.play.trEnd();
+    setTimeout(() => setFlag('trailer'), 2200);
   }
 }
 function trTick(now) {
@@ -1489,11 +1998,14 @@ function setBase(name) {
   const changed = S.base !== name || !$('#view-' + name).innerHTML;
   S.base = name;
   $$('.view').forEach((v) => v.classList.toggle('on', v.id === 'view-' + name));
-  $$('#tabbar button').forEach((b) => b.classList.toggle('on', b.dataset.arg === (name === 'apps' ? 'apps' : 'home') ));
+  const tab = name === 'apps' || name === 'me' ? name : 'home';
+  $$('#tabbar button').forEach((b) => b.classList.toggle('on', b.dataset.arg === tab));
+  glideTab();
   if (changed) {
     if (name === 'home') renderHome();
     if (name === 'library') renderLibrary();
     if (name === 'apps') renderApps();
+    if (name === 'me') renderMe();
   }
   $('#topbar').classList.toggle('solid', name !== 'home' || $('#view-' + name).scrollTop > 40);
   if (name === 'home') { heroPause(!!S.current); if (Hero.list[Hero.ix] && !S.current) Ambient.set(Hero.list[Hero.ix].g); } else heroPause(true);
@@ -1504,7 +2016,17 @@ function refreshBase() {
   if (S.base === 'home') renderHome();
   else if (S.base === 'library') { renderLibrary(); }
   else if (S.base === 'apps') renderApps();
+  else if (S.base === 'me') renderMe();
   if (v) v.scrollTop = sc;
+}
+// the white pill under the tab bar glides to the tab that is on
+function glideTab() {
+  const tb = $('#tabbar'), gl = $('#tabbar .glide'), b = $('#tabbar button.on');
+  if (!gl || !b) return;
+  gl.style.width = b.offsetWidth + 'px';
+  gl.style.transform = `translateX(${b.offsetLeft}px)`;
+  // the first placement doesn't slide in from the side; later moves do
+  if (!tb.classList.contains('ready')) requestAnimationFrame(() => requestAnimationFrame(() => tb.classList.add('ready')));
 }
 function applyRoute() {
   // navigating (incl. the phone's back button) dismisses the full-screen overlays
@@ -1516,6 +2038,7 @@ function applyRoute() {
   else if (h === 'library') base = 'library';
   else if (h.startsWith('library-')) { base = 'library'; S.lib.genre = h.slice(8); S.lib.fav = false; }
   else if (h === 'apps') base = 'apps';
+  else if (h === 'me') base = 'me';
   else if (h.startsWith('game-')) game = h.slice(5);
   else if (h.startsWith('play-')) play = h.slice(5);
   else if (h.startsWith('app-')) play = 'app:' + h.slice(4);
@@ -1574,13 +2097,19 @@ function onClick(e) {
       break;
     }
     case 'tab': {
-      Sound.play.tap();
-      const name = arg === 'library' ? 'library' : arg === 'apps' ? 'apps' : 'home';
+      Sound.play.tab();
+      const name = arg === 'library' || arg === 'apps' || arg === 'me' ? arg : 'home';
       if (S.current) hideGame();
+      if (SP.el) closeSpin(true);
       if (name === S.base) { $('#view-' + name).scrollTo({ top: 0, behavior: 'smooth' }); break; }
       setHash(name === 'home' ? '' : name, true);
       break;
     }
+    case 'me-more': { Sound.play.tick(); const l = $('#view-me .mlist'); if (l) l.classList.remove('clip'); t.remove(); break; }
+    case 'tro-more': { Sound.play.tick(); const l = $('#view-me .trophies'); if (l) l.classList.remove('clip'); t.remove(); break; }
+    case 'me-spin': Sound.play.tap(); SP.mode = 'fresh'; openSpin(); break;
+    case 'up-me': Sound.play.tab(); closeUpgrade(); setHash('me', true); break;
+    case 'up-close': Sound.play.tap(); closeUpgrade(); break;
     case 'lib-genre': Sound.play.tap(); S.lib.genre = arg; S.lib.fav = false; S.lib.status = 'all'; setHash('library-' + arg, true); renderLibrary(); $('#view-library').scrollTop = 0; break;
     case 'f-genre': Sound.play.tick(); S.lib.genre = arg; S.lib.fav = false; renderLibrary(); break;
     case 'f-fav': Sound.play.tick(); S.lib.fav = !S.lib.fav; if (S.lib.fav) S.lib.genre = 'all'; renderLibrary(); break;
@@ -1592,6 +2121,7 @@ function onClick(e) {
     case 'fav': {
       const on = !S.favs.has(id); on ? S.favs.add(id) : S.favs.delete(id); save.favs();
       t.classList.toggle('on', on); Sound.play.fav(on); toast(on ? '已加入我的最愛' : '已從最愛移除');
+      if (on) setTimeout(() => trophyPop(trophyCheck()), 600);
       break;
     }
     case 'hide': {
@@ -1631,7 +2161,10 @@ function onClick(e) {
         setTimeout(() => { S.clearArm = false; if (t.isConnected) { t.textContent = '清除'; t.classList.remove('armed'); } }, 3000);
         break;
       }
-      S.clearArm = false; S.stats = {}; save.stats(); Sound.play.toggle(false); closeSheet(); refreshBase(); toast('遊玩紀錄已清除'); break;
+      S.clearArm = false; S.stats = {}; save.stats();
+      Store.set('days', {}); Store.set('hours', new Array(24).fill(0));
+      S.flags = {}; Store.set('flags', {}); S.trophies = {}; Store.set('trophies', {}); trophyCheck();
+      Sound.play.toggle(false); closeSheet(); refreshBase(); toast('遊玩紀錄、等級和獎盃都已清除'); break;
     }
     case 'install': if (S.installEvt) { S.installEvt.prompt(); S.installEvt = null; closeSheet(); } break;
     case 'l-close': closeSheet(true); closeLauncher(); break;
@@ -1657,6 +2190,8 @@ function updateSndBtn() {
 function onKey(e) {
   if (e.target && /input|textarea/i.test(e.target.tagName)) { if (e.key === 'Escape') closeSearch(); return; }
   if (e.key === '/' && !S.current) { e.preventDefault(); openSearch(); return; }
+  if ($('#results.on')) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!RS.done && RS.fin) RS.fin(); else closeResults(); } return; }
+  if ($('#upgrade.on')) { if (e.key === 'Escape') closeUpgrade(); return; }
   if (TR.el) {
     if (e.key === 'Escape') { Sound.play.back(); closeTrailer(); }
     else if (e.key === 'ArrowRight') { if (TR.steps[TR.i].k !== 'end') trGo(TR.i + 1); }
@@ -1690,14 +2225,19 @@ function shell() {
       <button class="ibtn" data-act="search" aria-label="搜尋">${I.search}</button>
       <button class="ibtn" id="snd-btn" data-act="snd" aria-label="聲音"></button>
       <button class="ibtn" data-act="settings" aria-label="設定">${I.gear}</button></header>
-    <main id="app"><div class="view" id="view-home"></div><div class="view" id="view-library"></div><div class="view" id="view-apps"></div></main>
-    <nav id="tabbar"><button data-act="tab" data-arg="home">${I.games}遊戲</button><button data-act="tab" data-arg="apps">${I.apps}App</button></nav>
+    <main id="app"><div class="view" id="view-home"></div><div class="view" id="view-library"></div><div class="view" id="view-apps"></div><div class="view" id="view-me"></div></main>
+    <nav id="tabbar"><span class="glide"></span><button data-act="tab" data-arg="home">${I.games}遊戲</button><button data-act="tab" data-arg="apps">${I.apps}App</button><button data-act="tab" data-arg="me">${I.me}我的</button></nav>
     <section id="gamepage" aria-label="遊戲介紹"></section>
     <div id="lightbox"></div><div id="search"></div>
     <div id="launcher"></div><button id="handle" aria-label="收藏庫選單"></button>
+    <div id="results" role="dialog" aria-label="遊玩結算"></div><div id="upgrade" role="dialog" aria-label="主機升級"></div>
+    <div id="tpop" aria-live="polite"></div>
     <div id="toast" role="status"></div>`);
   updateSndBtn();
   bindHandle();
+  // results: the first tap skips the count-up, the next one closes it
+  $('#results').addEventListener('click', () => { if (!RS.done && RS.fin) RS.fin(); else closeResults(); });
+  addEventListener('resize', () => glideTab());
   const top = $('#topbar');
   $$('.view').forEach((v) => v.addEventListener('scroll', () => { if (v.classList.contains('on')) top.classList.toggle('solid', v.scrollTop > 40 || S.base !== 'home'); }, { passive: true }));
   document.addEventListener('click', onClick);
@@ -1731,6 +2271,8 @@ function shell() {
       if (c !== tc) {
         if (tc) { tc.classList.remove('tilt'); ['--rx', '--ry'].forEach((k) => tc.style.removeProperty(k)); }
         tc = c; if (tc) tc.classList.add('tilt');
+        // a soft tick as the pointer moves onto a card, like moving the cursor on a console menu
+        if (tc && performance.now() - (S.hoverT || 0) > 70) { S.hoverT = performance.now(); Sound.play.hover(); }
       }
       ev = e; if (tc && !raf) raf = requestAnimationFrame(apply);
     }, { passive: true });
@@ -1760,32 +2302,42 @@ function boot(done) {
   if (!S.settings.boot || booted || reduced) { done(); return; }
   const b = document.createElement('div');
   b.id = 'boot';
-  // a tilted wall of every cover drifts behind the emblem
+  // a tilted wall of every cover; its rows drift past each other in opposite directions
   const covers = S.games.filter((g) => g.media && g.media.cover && g.status !== 'failed').map((g) => g.media.cover);
   let wall = '';
   if (covers.length >= 6) {
-    const cells = [];
-    for (let k = 0; k < 72; k++) cells.push(covers[(k * 7 + Math.floor(k / 9) * 3) % covers.length]);
-    wall = `<div class="wall"><div class="plane">${cells.map((c, k) => `<img src="${esc(c)}" alt="" decoding="async" style="--d:${((k % 9) * 0.06 + Math.floor(k / 9) * 0.05).toFixed(2)}s">`).join('')}</div></div>`;
+    const rows = [];
+    for (let r = 0; r < 8; r++) {
+      const cells = [];
+      for (let k = 0; k < 9; k++) cells.push(covers[((r * 9 + k) * 7 + r * 3) % covers.length]);
+      rows.push(`<div class="wrow" style="--dir:${r % 2 ? -1 : 1};--rd:${22 + (r % 4) * 5}s">${cells.map((c, k) => `<img src="${esc(c)}" alt="" decoding="async" style="--d:${(k * 0.06 + r * 0.05).toFixed(2)}s">`).join('')}</div>`);
+    }
+    wall = `<div class="wall"><div class="plane">${rows.join('')}</div></div>`;
   }
-  b.innerHTML = `${wall}<div class="beam"></div><div style="text-align:center;position:relative;z-index:2">
-    <svg class="em" viewBox="0 0 64 64"><defs><linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe7a8"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#8fd3ff"/></linearGradient><radialGradient id="bgl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8fd3ff" stop-opacity=".5"/><stop offset="1" stop-color="#8fd3ff" stop-opacity="0"/></radialGradient></defs>
+  const hr = new Date().getHours();
+  const greet = hr < 5 ? '夜深了' : hr < 11 ? '早安' : hr < 18 ? '午安' : '晚安';
+  const p = S.trophies ? player() : null;
+  b.innerHTML = `${wall}<div class="beam"></div><div class="boot-in">
+    <div class="em-wrap"><svg class="em" viewBox="0 0 64 64"><defs><linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe7a8"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#8fd3ff"/></linearGradient><radialGradient id="bgl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8fd3ff" stop-opacity=".5"/><stop offset="1" stop-color="#8fd3ff" stop-opacity="0"/></radialGradient></defs>
       <circle class="fillg" cx="32" cy="32" r="30" fill="url(#bgl)"/>
       <rect class="stroke" x="5" y="5" width="54" height="54" rx="15" fill="none" stroke="url(#bg2)" stroke-width="2"/>
-      <path class="stroke" d="M25 19 45 32 25 45z" fill="none" stroke="url(#bg2)" stroke-width="3.6" stroke-linejoin="round"/></svg>
+      <path class="stroke" d="M25 19 45 32 25 45z" fill="none" stroke="url(#bg2)" stroke-width="3.6" stroke-linejoin="round"/></svg><i class="glint"></i></div>
     <div class="wm">遊戲收藏<small>PZ COLLECTION</small></div>
-    <div class="count">${S.games.length} 款遊戲・${S.apps.length} 個 App</div>
-    <div class="cta">輕觸任意處進入</div></div>`;
+    <div class="greet">${greet}，痞子葳</div>
+    <div class="count">${S.games.length} 款遊戲・${S.apps.length} 個 App${p ? `・Lv ${p.lv} ${esc(p.title)}` : ''}</div>
+    <div class="cta"><b>PRESS START</b><span>輕觸任意處開始</span></div></div>`;
   document.body.appendChild(b);
   let gone = false;
   const go = () => {
     if (gone) return; gone = true;
     // the tap that dismisses the boot screen must not also land on whatever sits underneath it
     S.swallowClick = true; setTimeout(() => { S.swallowClick = false; }, 450);
-    Sound.unlock(); Sound.play.boot();
+    Sound.unlock(); Sound.play.start(); Sound.play.boot();
+    b.classList.add('press');
     try { sessionStorage.setItem('pzgc.booted', '1'); } catch (e) { /* ignore */ }
-    b.classList.add('out');
-    setTimeout(() => { b.remove(); if (S.settings.music) Sound.startMusic(); }, 700);
+    // PRESS START flashes, then the whole screen blows out into the collection
+    setTimeout(() => b.classList.add('out'), reduced ? 0 : 220);
+    setTimeout(() => { b.remove(); if (S.settings.music) Sound.startMusic(); }, reduced ? 700 : 920);
     done(true);
   };
   b.addEventListener('click', go);
@@ -1834,16 +2386,40 @@ async function start() {
     back = S.byId[h0.slice(4)] || null;
     history.replaceState(null, '', '#apps');
   }
+  // 2.0: the first time this version runs on a device, every trophy already earned is unlocked quietly.
+  // Someone who used the collection before gets the upgrade screen; a new device just starts at level 1.
+  let upgrade = null, firstPops = [];
+  if (!S.trophies) {
+    const prior = !!S.seen;
+    S.trophies = {};
+    const got = trophyCheck();
+    if (prior) upgrade = got; else firstPops = got;
+    const n0 = (S.cat.changelog || [])[0];
+    if (prior && n0) Store.set('noteSeen', n0.id); // the upgrade screen already says what's new
+  }
+  // back from a game: settle the session (and any trophies it earned) before anything is drawn,
+  // so the player card and covers already show the new level; then trophies earned some other way
+  // (a streak that began yesterday, say) are picked up too
+  let session = null, late = [];
+  if (!back && !upgrade) session = takeSession();
+  else try { sessionStorage.removeItem('pzgc.ms0'); } catch (e) { /* ignore */ }
+  if (!upgrade) late = trophyCheck();
   // the hero starts from its first slide the moment the boot screen is dismissed
-  boot((tapped) => { if (tapped && Hero.el && S.base === 'home' && !S.current) heroGo(0, false); });
+  boot((tapped) => {
+    if (tapped && Hero.el && S.base === 'home' && !S.current) heroGo(0, false);
+    if (upgrade) showUpgrade(upgrade);
+    else if (firstPops.length) setTimeout(() => trophyPop(firstPops), 900);
+  });
   applyRoute();
-  if (!back) welcomeBack(false);
+  const shown = reportSession(session, false);
+  if (late.length) setTimeout(() => trophyPop(late), shown ? 1200 : 2600);
   if (back && wasPlaying) {
     setTimeout(() => toast(back.kind === 'app' ? `《${back.title}》剛剛被重新載入了，先回到 App 頁；點它就能再打開` : `《${back.title}》剛剛被重新載入了，先停在遊戲頁；按「開始遊戲」就能接著玩`, 6000), 900);
   }
   Motes.start();
   S.quietNote = !!(back && wasPlaying); // the reload notice gets the bubble this time
-  checkNew();
+  // news bubbles (new games, update notes) wait until the results screen is closed
+  if (shown) S.pendingNews = true; else checkNew();
   if (MODE === 'web' && 'serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
