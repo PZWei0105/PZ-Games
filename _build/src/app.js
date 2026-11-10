@@ -657,7 +657,9 @@ function renderLibrary() {
   const gchips = [`<button class="fchip${L.genre === 'all' && !L.fav ? ' on' : ''}" data-act="f-genre" data-arg="all">全部<span class="n">${vis.length}</span></button>`,
     `<button class="fchip${L.fav ? ' on' : ''}" data-act="f-fav">我的最愛<span class="n">${vis.filter((g) => S.favs.has(g.id)).length}</span></button>`,
     ...GENRE_ORDER.filter((k) => counts[k]).map((k) => `<button class="fchip${L.genre === k ? ' on' : ''}" data-act="f-genre" data-arg="${k}">${esc(S.genres[k].label)}<span class="n">${counts[k]}</span></button>`)].join('');
-  const sts = [['all', '全部狀態'], ['shipped', '已完成'], ['dev', '製作中'], ['failed', '試作失敗']];
+  // only offer the statuses some game actually has (an empty 「試作失敗」 chip is just clutter)
+  const sts = [['all', '全部狀態'], ['shipped', '已完成'], ['dev', '製作中'], ['failed', '試作失敗']].filter(([k]) => k === 'all' || S.games.some((g) => g.status === k));
+  if (!sts.some(([k]) => k === L.status)) L.status = 'all';
   const sorts = { new: '最新入庫', recent: '最近玩過', time: '玩最久', name: '名稱' };
   const schips = sts.map(([k, t]) => `<button class="fchip${L.status === k ? ' on' : ''}" data-act="f-status" data-arg="${k}">${t}</button>`).join('')
     + `<button class="fchip sel" data-act="f-sort">排序：${sorts[L.sort]}${I.down}</button>`;
@@ -667,8 +669,8 @@ function renderLibrary() {
       <div class="filters">${gchips}</div><div class="filters">${schips}</div>
     </div>
     <div id="lib-grid"></div>
-    <div id="lib-arch"><div class="sec-title"><h2>還沒上架的作品</h2><p>早期在對話裡做的、或還在構想中的，先收在這裡。</p></div>
-    <div class="grid">${S.archive.map((a) => card(a, STATUS[a.status] || '')).join('')}</div></div>`;
+    ${S.archive.length ? `<div id="lib-arch"><div class="sec-title"><h2>還沒上架的作品</h2><p>早期在對話裡做的、或還在構想中的，先收在這裡。</p></div>
+    <div class="grid">${S.archive.map((a) => card(a, STATUS[a.status] || '')).join('')}</div></div>` : ''}`;
   renderLibGrid();
   const inp = $('#lib-q');
   inp.addEventListener('input', () => { L.q = inp.value.trim(); renderLibGrid(); });
