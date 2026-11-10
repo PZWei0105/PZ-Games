@@ -87,7 +87,7 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 | 長明 EVERLIGHT（HD-2D JRPG，第一章） | `_build/sources/everlight/`：`node tools/build.mjs` 產生 Claude 版與獨立網頁版；美術升級藍圖在 `art/` |
 | 差一點 SO CLOSE（3D 夾娃娃機） | `_build/sources/so-close/`：`node tools/build.mjs` 產生 Claude 版與獨立網頁版；`tools/simtest.mjs` 調爪力 |
 | 墜星 LANDFALL（殖民地生存模擬，第一幕） | `_build/sources/landfall/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/landfall/`）；`tests/run.py sim 24` 自動玩 24 天看平衡；收藏庫截圖步驟 `tests/shots_steps.py` |
-| 深艙 UNDERTOW（深海搜打撤，完整版） | `_build/sources/undertow/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/undertow/`）；`tests/run.py bot 0` 自動玩、`tests/fuzz_maps.py` 檢查地圖；收藏庫截圖步驟 `tests/shots_steps.py` |
+| 深艙 UNDERTOW（深海搜打撤，完整版） | `_build/sources/undertow/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/undertow/`）；`tests/run.py bot 0` 自動玩、`tests/scenarios.py` 檢查核心規則（躲藏、憋氣、陷阱、震爆彈…）、`tests/fuzz_maps.py` 檢查地圖；收藏庫截圖步驟 `tests/shots_steps.py` |
 | 偷渡者 STOWAWAY（太空恐怖生存＋船員指揮，完整版） | `_build/sources/stowaway/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/stowaway/`）；`tests/run.py bot 1500` 自動玩一整航、`tests/flows.py all` 跑六條結局路線；收藏庫截圖步驟 `tests/shots_steps.py` |
 
 ## 放在這個網站裡的專屬 App（`apps/`）

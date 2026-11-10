@@ -25,7 +25,17 @@ function setupInput() {
   const end = e => { if (e.pointerId !== JOY.id) return; JOY.id = null; INPUT.jx = 0; INPUT.jy = 0; joy.classList.remove('on'); knob.style.transform = ''; };
   window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
   const btn = (id, fn) => { const b = $(id); b.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); if (S.mode === 'dive' && W && !blocked()) fn(); }); };
+  // 大鈕：按住開火；躲起來的時候變成按住憋氣
+  const act = $('#btn-act'); let actId = null;
+  const actOn = () => { if (W.P.hide) holdBreath(true); else setFire(true); };
+  const actOff = () => { if (!W) return; holdBreath(false); setFire(false); };
+  act.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); if (S.mode !== 'dive' || !W || blocked()) return; actId = e.pointerId; try { act.setPointerCapture(e.pointerId); } catch (er) { } actOn(); });
+  const actUp = e => { if (e.pointerId !== actId) return; actId = null; actOff(); };
+  act.addEventListener('pointerup', actUp); act.addEventListener('pointercancel', actUp); act.addEventListener('lostpointercapture', actUp);
+  S.actOff = actOff;
   btn('#btn-stance', () => toggleStance());
+  btn('#btn-tool', () => useTool());
+  btn('#btn-trap', () => fireTrap());
   btn('#btn-ctx', () => doInteract());
   btn('#btn-med', () => useMed());
   btn('#btn-decoy', () => throwDecoy());
@@ -33,21 +43,26 @@ function setupInput() {
   btn('#btn-pause', () => UI.pause());
   $('#minimap').addEventListener('pointerdown', e => { e.stopPropagation(); if (S.mode === 'dive' && W && !blocked()) UI.pause(); });
   window.addEventListener('keydown', e => {
+    if (e.code === 'Space') e.preventDefault();
     if (e.repeat) return;
     KEYS[e.code] = true;
     if (S.mode !== 'dive' || !W) return;
-    if (e.code === 'Escape' || e.code === 'KeyP') { if (UI.modalOpen && W.state === 'play' && !W.lvQ && !W.cacheQ) { UI.closeModal(); } else UI.pause(); return; }
+    if (e.code === 'Escape' || e.code === 'KeyP') { if (UI.modalOpen && W.state === 'play' && !W.cacheQ) { UI.closeModal(); } else UI.pause(); return; }
     if (blocked()) return;
-    if (e.code === 'Space') { e.preventDefault(); toggleStance(); }
+    if (e.code === 'Space' || e.code === 'KeyJ') { if (W.P.hide) holdBreath(true); else setFire(true); }
+    if (e.code === 'KeyC' || e.code === 'ShiftLeft') toggleStance();
     if (e.code === 'KeyE' || e.code === 'KeyF' || e.code === 'Enter') doInteract();
+    if (e.code === 'KeyG') useTool();
+    if (e.code === 'KeyV') fireTrap();
     if (e.code === 'KeyQ') throwDecoy();
     if (e.code === 'KeyR') useMed();
     if (e.code === 'KeyT') toggleTracker();
     if (e.code === 'KeyM') UI.pause();
   });
-  window.addEventListener('keyup', e => { KEYS[e.code] = false; });
+  window.addEventListener('keyup', e => { KEYS[e.code] = false; if ((e.code === 'Space' || e.code === 'KeyJ') && W) { holdBreath(false); setFire(false); } });
+  window.addEventListener('blur', () => { if (W) { holdBreath(false); setFire(false); } });
   window.addEventListener('resize', () => { resize(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && S.mode === 'dive' && W && W.state === 'play' && !blocked()) UI.pause(); if (AU.ctx) { if (document.hidden) AU.ctx.suspend(); else AU.ctx.resume(); } });
+  document.addEventListener('visibilitychange', () => { if (W) { holdBreath(false); setFire(false); } if (document.hidden && S.mode === 'dive' && W && W.state === 'play' && !blocked()) UI.pause(); if (AU.ctx) { if (document.hidden) AU.ctx.suspend(); else AU.ctx.resume(); } });
 }
 function keyAxes() {
   if (JOY.id != null) return;
@@ -62,15 +77,12 @@ function frame(ts) {
   if (S.mode === 'dive' && W) {
     keyAxes();
     if (!blocked() && (W.state === 'play' || W.state === 'dying')) {
-      const sp = S.speed || 1, cap = 4 * sp;
+      const sp = S.speed === undefined ? 1 : S.speed, cap = 4 * sp;
       S.acc += dt * sp;
       let n = 0;
       while (S.acc >= 1 / 60 && n < cap) { updateWorld(1 / 60); S.acc -= 1 / 60; n++; if (blocked() || (W.state !== 'play' && W.state !== 'dying')) break; }
       if (n >= cap) S.acc = 0;
-      if (W.state === 'play' && !blocked()) {
-        if (W.cacheQ > 0) UI.levelUp(true);
-        else if (W.lvQ > 0) UI.levelUp(false);
-      }
+      if (W.state === 'play' && !blocked() && W.cacheQ > 0) { if (S.actOff) S.actOff(); UI.levelUp(); }
     } else S.acc = 0;
     UI.updateHud(dt);
   }
@@ -97,8 +109,8 @@ window.__ut = {
   get W() { return W; }, get G() { return G; }, S, UI, R,
   start(si, wpn) { if (wpn) G.lastWeapon = wpn; UI.startDive(si); },
   god() { if (W) W.god = true; },
-  give(id) { if (W && !W.P.weapons.some(w => w.id === id)) W.P.weapons.push(newWeapon(id)); },
-  lv(id, l) { const w = W.P.weapons.find(q => q.id === id); if (w) w.lv = l; },
+  give(id) { if (!W) return; const p = W.P; if (WEAPONS[id].kind === 'gun') { p.gun = id; p.ammo = Math.max(p.ammo, WEAPONS[id].ammo0); } else { p.tool = id; p.toolUses = Math.max(p.toolUses, WEAPONS[id].uses0); UI.initHud(); } },
+  lv(id, l) { if (W && W.P.gun === id) W.P.gunLv = l; },
   hunterNow() { const h = W.hunter; h.awayT = 0; h.heardAt = { x: W.P.x + 300, y: W.P.y }; },
   tp(x, y) { W.P.x = x; W.P.y = y; W.P.climb = null; },
   roomInfo() { return W.rooms.map(r => ({ i: r.i, c: r.c, f: r.f, th: r.theme, sp: r.special, col: r.collapsed, lu: !!r.ladUp, ld: !!r.ladDown, surv: r.survivor ? r.survivor.name : null })); },

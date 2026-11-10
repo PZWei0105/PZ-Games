@@ -25,14 +25,44 @@ window.__bot = (function () {
     if (best) return best;
     return { room: W.rooms[W.dock.room], x: W.rooms[W.dock.room].x0 + 70, act: 'call' };
   }
+  function danger() {
+    const h = W.hunter, p = W.P; if (!h || h.dead) return 0;
+    if (onMap(h)) return Math.hypot(h.x - p.x, (h.y - p.y) * 1.5) < 560 ? 2 : 0;
+    if ((h.state === 'venting' || h.state === 'crawl') && h.vent) return Math.hypot(h.vent.x - p.x, h.vent.y - p.y) < 640 ? 1 : 0;
+    return 0;
+  }
   function step() {
     if (!W || __ut.S.mode !== 'dive') return;
     if (B.opts.god) { W.god = true; W.P.hp = Math.max(W.P.hp, 30); }
     // 自動選卡
-    const card = document.querySelector('#modal .card'); if (card && (W.lvQ || W.cacheQ)) { const cs = document.querySelectorAll('#modal .card'); cs[Math.floor(Math.random() * cs.length)].click(); return; }
-    if (UI.storyOn) { const ch = document.querySelector('#ch-a'); if (ch) { ch.click(); return; } document.querySelector('#story').click(); return; }
+    const card = document.querySelector('#modal .card'); if (card && W.cacheQ) { const cs = document.querySelectorAll('#modal .card'); cs[Math.floor(Math.random() * cs.length)].click(); return; }
+    if (UI.storyOn) { const ch = document.querySelector(B.opts.choice === 'c' ? '#ch-c' : '#ch-a'); if (ch) { ch.click(); return; } document.querySelector('#story').click(); return; }
     if (W.state !== 'play') return;
     const p = W.P, pr = roomAt(p.x, p.y);
+    // 潛行模式：聆在附近就找家具躲、牠經過時憋氣
+    if (B.opts.stealth) {
+      const h = W.hunter, dz = danger();
+      if (dz && !p.stealth) toggleStance(true);
+      if (p.hide) {
+        INPUT.jx = 0; INPUT.jy = 0;
+        const near = onMap(h) && Math.abs(h.x - p.x) < 190 && floorOf(h.y) === floorOf(p.y);
+        if (near && !p.hold && p.breath > .25) holdBreath(true);
+        if (p.hold && (!near || p.breath < .08)) holdBreath(false);
+        if (!dz) { B.calmT = (B.calmT || 0) + .05; if (B.calmT > 2.5) { B.calmT = 0; doInteract(); say('unhide'); } } else B.calmT = 0;
+        return;
+      }
+      if (dz) {
+        let best = null, bd = 260; for (const sp of pr.hides || []) { const d = Math.abs(sp.x - p.x); if (d < bd) { bd = d; best = sp; } }
+        if (best) {
+          if (Math.abs(best.x - p.x) < 10) { INPUT.jx = 0; const it = interactables().find(q => q.k === 'hide'); if (it) { enterHide(it.sp); say('hide ' + it.sp.kind); } return; }
+          INPUT.jy = 0; INPUT.jx = Math.sign(best.x - p.x); return;
+        }
+      } else if (p.stealth && !dz) toggleStance(false);
+    }
+    // 打小怪：同一層、夠近就按住開火（聆打不死，不對牠開槍）
+    const foe = !p.hide && !p.climb && W.foes.find(e => !e.dead && !e.lurk && e.type !== 'wall' && floorOf(e.y) === floorOf(p.y) && Math.abs(e.x - p.x) < 300);
+    const want = !!foe && !(B.opts.stealth && danger());
+    if (want !== !!p.fireHeld) { setFire(want); if (want) say('fire ' + foe.type); }
     B.goal = pickGoal();
     const g = B.goal;
     // 低血量用醫療包
