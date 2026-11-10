@@ -349,6 +349,84 @@ def check_player(br, base, cat, out, R, shots):
         R['bad'].append('2.0 升級畫面：程式錯誤 ' + m)
 
 
+# what is on top at the top bar, the middle of the screen and the tab bar while the catalog is still loading
+COVERED = """(() => { const hit = (y) => { const e = document.elementFromPoint(innerWidth / 2, y); return !!(e && e.closest('#prelude')); };
+  return hit(30) && hit(innerHeight / 2) && hit(innerHeight - 40); })()"""
+
+
+def check_launch(br, base, cat, R):
+    """The launch backdrop (#prelude): while the catalog is still on its way nothing of the half-built lobby
+    may show (it used to flash by on every launch); the boot screen takes over from it, or without a boot
+    screen it fades into the lobby; a catalog that doesn't load still gets its error message on screen.
+    The boot screen waits for PRESS START: a new-game bubble or a trophy banner must wait for it too,
+    instead of playing out unseen underneath it."""
+    from playwright.sync_api import TimeoutError as Slow
+    ids = [g['id'] for g in cat['games']]
+    notes = cat.get('changelog') or []
+    # someone who has seen every game but the first, and every update note but the newest
+    news = 'try{' + ''.join('localStorage.setItem(%s, %s);' % (json.dumps('pzgc.v1.' + k), json.dumps(json.dumps(v))) for k, v in
+                            {'seen': ids[1:], 'trophies': {}, 'noteSeen': notes[1]['id'] if len(notes) > 1 else ''}.items()) + '}catch(e){}'
+    for case in ('boot', 'warm', 'fail'):
+        c = br.new_context(**PHONE)
+        c.add_init_script(news if case == 'boot' else SKIP_BOOT)
+        held = []
+
+        def holder(case, held):
+            # (Playwright looks at how many arguments a handler takes, so no defaults here)
+            def hold(route):
+                # only the page's own first request waits; later ones (the service worker caching it) go straight through
+                if case == 'fail':
+                    route.abort()
+                elif held:
+                    route.continue_()
+                else:
+                    held.append(route)
+            return hold
+        c.route('**/catalog.json*', holder(case, held))
+        pg = c.new_page()
+        errs = []
+        pg.on('pageerror', lambda e: errs.append(short(getattr(e, 'message', None) or e)))
+        name = {'boot': '啟動（開機畫面）', 'warm': '啟動（玩完回來）', 'fail': '啟動（收藏庫載入失敗）'}[case]
+        try:
+            pg.goto(base, wait_until='domcontentloaded')
+            if case == 'fail':
+                pg.wait_for_function("!document.getElementById('prelude') && !!document.querySelector('#view-home.on .empty')", timeout=6000)
+            else:
+                for _ in range(60):
+                    if held:
+                        break
+                    pg.wait_for_timeout(50)
+                pg.wait_for_timeout(400)
+                if not held:
+                    R['bad'].append(name + '：沒有去讀收藏庫目錄')
+                else:
+                    if not pg.evaluate(COVERED):
+                        R['bad'].append(name + '：目錄還沒載完，半成品的大廳（頂列、分頁列）就露出來了')
+                    held[0].continue_()
+                    if case == 'boot':
+                        pg.wait_for_selector('#boot', timeout=8000)
+                        if pg.evaluate("!!document.getElementById('prelude')"):
+                            R['bad'].append(name + '：開機畫面出來了，啟動底圖卻還在')
+                        pg.wait_for_timeout(2600)
+                        if pg.evaluate("!!document.querySelector('#toast.on') || !!document.querySelector('#tpop .tp')"):
+                            R['bad'].append(name + '：還停在 PRESS START，新遊戲提示或獎盃橫幅就在開機畫面底下跳完了')
+                        pg.locator('#boot').tap(timeout=5000)
+                        try:
+                            pg.wait_for_function("(document.querySelector('#toast.on') || {}).textContent && document.querySelector('#toast.on').textContent.includes('新遊戲入庫')", timeout=5000)
+                        except Slow:
+                            R['bad'].append(name + '：按了 PRESS START 之後，「新遊戲入庫」沒有出現')
+                    else:
+                        pg.wait_for_function("!document.getElementById('prelude') && !!document.querySelector('#view-home.on')", timeout=6000)
+        except Slow:
+            R['bad'].append(name + '：啟動底圖沒有讓開（畫面會一直停在暗底）')
+        except Exception as e:
+            R['bad'].append(name + '：檢查到一半出錯（%s）' % short(e, 120))
+        finally:
+            c.close()
+        for m in errs:
+            R['bad'].append(name + '：程式錯誤 ' + m)
+
+
 def check_offline(br, site, out, R, shots):
     """Open the collection once, take the server away, open it again: the service worker must carry it."""
     srv, base = serve(site)
@@ -521,6 +599,7 @@ def main():
             check_shell(br, base, '390', PHONE, out, cat, R, shots)
             check_shell(br, base, '1440', DESK, out, cat, R, shots)
             check_player(br, base, cat, out, R, shots)
+            check_launch(br, base, cat, R)
             check_offline(br, site, out, R, shots)
             br.close()
     if not a.shell:
