@@ -255,6 +255,13 @@ def check_shell(br, base, tag, opts, out, cat, R, shots):
         if cat.get('apps') and not pg.evaluate("document.querySelectorAll('#view-apps [data-act]').length"):
             bad('專屬 App 分頁是空的')
         shot(pg, os.path.join(d, 'apps_%s.png' % tag), shots)
+        # 2.0: the player page (level card, trophy cabinet, charts)
+        pg.evaluate("location.hash = 'me'")
+        try:
+            pg.wait_for_function("document.querySelectorAll('#view-me .trophy').length >= 20 && !!document.querySelector('#view-me .pcard') && !!document.querySelector('#view-me .heat')", timeout=6000)
+        except Slow:
+            bad('「我的」玩家檔案沒有正常出現')
+        shot(pg, os.path.join(d, 'me_%s.png' % tag), shots)
         web = [a for a in cat.get('apps', []) if a.get('type') == 'web' and a.get('url')]
         if web:
             pg.evaluate('(h) => { location.hash = h; }', 'app-' + web[0]['id'])
@@ -285,6 +292,61 @@ def check_shell(br, base, tag, opts, out, cat, R, shots):
         R['warn'].append('收藏庫 %s：console 錯誤 %s' % (tag, m))
     for h in s['ext']:
         R['ext'].setdefault(h, set()).add('收藏庫')
+
+
+def check_player(br, base, cat, out, R, shots):
+    """2.0 player system: the results screen after a game session, and the one-time upgrade screen
+    someone who used the collection before 2.0 sees."""
+    from playwright.sync_api import TimeoutError as Slow
+    gid = cat['games'][0]['id']
+    now = int(time.time() * 1000)
+    seen = [g['id'] for g in cat['games']]
+
+    def ctx(ls, ss):
+        js = 'try{' + ''.join('localStorage.setItem(%s, %s);' % (json.dumps('pzgc.v1.' + k), json.dumps(json.dumps(v))) for k, v in ls.items())
+        js += ''.join('sessionStorage.setItem(%s, %s);' % (json.dumps(k), json.dumps(v if isinstance(v, str) else json.dumps(v))) for k, v in ss.items()) + '}catch(e){}'
+        c = br.new_context(**PHONE)
+        c.add_init_script(js)
+        pg = c.new_page()
+        errs = []
+        pg.on('pageerror', lambda e: errs.append(short(getattr(e, 'message', None) or e)))
+        return c, pg, errs
+    # back from a 30-minute session: the results screen counts up, a tap skips to the end, the next closes it
+    c, pg, errs = ctx({'stats': {gid: {'plays': 2, 'ms': 40 * 60000, 'last': now, 'best': 30 * 60000}}, 'trophies': {}, 'seen': seen},
+                      {'pzgc.booted': '1', 'pzgc.ms0': {'id': gid, 'ms': 10 * 60000, 'xp': 0, 'tier': 0}})
+    try:
+        pg.goto(base + '#game-' + gid, wait_until='domcontentloaded')
+        pg.wait_for_function("document.querySelector('#results.on .rs-card')", timeout=8000)
+        pg.wait_for_timeout(1600)
+        shot(pg, os.path.join(out, 'shell', 'results_390.png'), shots)
+        pg.mouse.click(195, 300)
+        pg.wait_for_function("document.querySelector('#results.done')", timeout=4000)
+        pg.mouse.click(195, 300)
+        pg.wait_for_function("!document.querySelector('#results.on')", timeout=4000)
+    except Slow:
+        R['bad'].append('遊玩結算：玩完回來時結算畫面沒出現，或點了關不掉')
+    except Exception as e:
+        R['bad'].append('遊玩結算：檢查到一半出錯（%s）' % short(e, 120))
+    finally:
+        c.close()
+    for m in errs:
+        R['bad'].append('遊玩結算：程式錯誤 ' + m)
+    # an existing player opening 2.0 the first time: the system update screen, then 開始 closes it
+    c, pg, errs = ctx({'stats': {gid: {'plays': 1, 'ms': 5 * 60000, 'last': now}}, 'seen': seen}, {'pzgc.booted': '1'})
+    try:
+        pg.goto(base, wait_until='domcontentloaded')
+        pg.wait_for_function("document.querySelector('#upgrade.on.done [data-act=up-close]')", timeout=8000)
+        shot(pg, os.path.join(out, 'shell', 'upgrade_390.png'), shots)
+        pg.click('#upgrade [data-act=up-close]')
+        pg.wait_for_function("!document.querySelector('#upgrade.on')", timeout=4000)
+    except Slow:
+        R['bad'].append('2.0 升級畫面：沒出現，或按「開始」關不掉')
+    except Exception as e:
+        R['bad'].append('2.0 升級畫面：檢查到一半出錯（%s）' % short(e, 120))
+    finally:
+        c.close()
+    for m in errs:
+        R['bad'].append('2.0 升級畫面：程式錯誤 ' + m)
 
 
 def check_offline(br, site, out, R, shots):
@@ -458,6 +520,7 @@ def main():
             br = p.chromium.launch(**launch)
             check_shell(br, base, '390', PHONE, out, cat, R, shots)
             check_shell(br, base, '1440', DESK, out, cat, R, shots)
+            check_player(br, base, cat, out, R, shots)
             check_offline(br, site, out, R, shots)
             br.close()
     if not a.shell:
