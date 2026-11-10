@@ -1712,41 +1712,6 @@
    "chat": "https://claude.ai/chat/d46d3fc9-cd93-4cf2-801e-13c5f4abb6b1"
   },
   {
-   "id": "sword-sea",
-   "title": "劍渡雲海",
-   "en": "",
-   "genre": "action",
-   "status": "shipped",
-   "created": "2026-09-28",
-   "updated": "2026-09-28",
-   "tagline": "蒼梧劍宗懸於雲海之上，已三百年。",
-   "summary": "3D 御劍修仙動作。護山大陣的四座陣眼一夜熄滅，魏子葳要御劍重啟陣眼、斬殺蝕淵魔蛟。",
-   "highlights": [
-    "3D 御劍：鍵鼠、手把、觸控",
-    "四象劍訣＋五行相剋",
-    "萬劍歸宗・瞬身",
-    "魔蛟逆鱗破甲",
-    "卷一・四象陣"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "",
-   "palette": [
-    "#336499",
-    "#0e1d33",
-    "#9fd7ff"
-   ],
-   "builds": [
-    {
-     "id": "sword-sea",
-     "label": "卷一・四象陣",
-     "note": "需要較新的瀏覽器",
-     "artifact": "https://claude.ai/artifact/PkCxfCitw9DvL5NBn6H7zF"
-    }
-   ],
-   "chat": ""
-  },
-  {
    "id": "justice-clash",
    "title": "正義對決",
    "en": "JUSTICE CLASH",
