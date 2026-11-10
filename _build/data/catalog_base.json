@@ -115,42 +115,6 @@
    "chat": ""
   },
   {
-   "id": "dreamthief",
-   "title": "竊夢者",
-   "en": "DREAMTHIEF",
-   "genre": "action",
-   "status": "failed",
-   "featured": false,
-   "created": "2026-11-07",
-   "updated": "2026-11-08",
-   "tagline": "在夢主醒來以前，帶著記憶離開。",
-   "summary": "搜打撤動作遊戲：進去搜刮、打怪、活著撤出來，但沒有體力、抽獎和課金。你是魏子葳，替一間只在晚上開門的當鋪「夜當」從別人的夢裡偷記憶。潛進夢主的夢翻箱倒櫃，越往深處越值錢；可是時間、槍聲、尖叫都會讓夢主越來越清醒，眼睛張開的那一刻，夢就開始崩塌。帶出來的記憶可以典當換錢、升級裝備，也可以留著：集滿一個人的人生記憶，就會看見他的故事。五位夢主、五種夢的規則、五個心魔，還有三年前妹妹睡著的那一夜，三種結局。",
-   "highlights": [
-    "搜・打・撤：翻櫃子、自動瞄準、四種撤離方式",
-    "潛行背刺：靜步、躲巡夜者的手電筒",
-    "清醒度：夢主越醒越危險，滿了夢就崩塌",
-    "5 位夢主、5 種夢的規則、5 個心魔頭目",
-    "典當或珍藏：人生記憶拼出故事・3 種結局"
-   ],
-   "inspired": "《無盡輪迴：鬼域摸金》、《搜！打！撤！》",
-   "verdict": "做歪了：第一版變成吸血鬼倖存者式自動射擊加篩背包；照參考遊戲核心重做的試玩關也沒過。方案暫停。",
-   "next": "",
-   "palette": [
-    "#3a2f6e",
-    "#07060c",
-    "#53f0d6"
-   ],
-   "builds": [
-    {
-     "id": "dreamthief",
-     "label": "完整版",
-     "note": "手機直拿、橫拿、電腦都能玩",
-     "artifact": "https://claude.ai/artifact/7Kbym9Zjg3nFyTsNEJFHdY"
-    }
-   ],
-   "chat": ""
-  },
-  {
    "id": "landfall",
    "title": "墜星",
    "en": "LANDFALL",
@@ -291,12 +255,6 @@
      "label": "加法版：立繪＋分軌配樂",
      "note": "9 位角色立繪與表情、五章分軌配樂、環境音與事件音",
      "artifact": "https://claude.ai/artifact/6U5Kq8dkomcpXBdEqTbh44"
-    },
-    {
-     "id": "tideline-v1",
-     "label": "初版",
-     "note": "沒有人物立繪與真實配樂，聲音都是即時合成",
-     "artifact": "https://claude.ai/artifact/VUQhDTu4TB3xLF4rueaMFk"
     }
    ],
    "chat": "https://claude.ai/chat/77cab720-8953-471a-bf36-6c7a24195e63"
@@ -939,104 +897,6 @@
    "chat": "https://claude.ai/chat/67a7daa6-54cc-477b-bf56-62b64b0d3b2d"
   },
   {
-   "id": "steelbone",
-   "title": "鋼骸",
-   "en": "STEELBONE",
-   "genre": "survivor",
-   "status": "dev",
-   "created": "2026-10-08",
-   "updated": "2026-10-08",
-   "tagline": "變形，然後把屍潮輾過去。",
-   "summary": "仿手遊《機甲變變變》的機甲變形倖存者，賽璐璐美漫風。機甲變形的爽感、殭屍潮割草、藏品養成與賽季長線，三塊融在一起。",
-   "highlights": [
-    "機甲變形",
-    "殭屍潮割草",
-    "藏品養成・賽季長線",
-    "賽璐璐美漫風"
-   ],
-   "inspired": "機甲變變變",
-   "verdict": "",
-   "next": "筆電版照藍圖在 C:\\GameStudio\\Steelbone 製作中。",
-   "palette": [
-    "#2a3a4a",
-    "#0a0f14",
-    "#ff7a2a"
-   ],
-   "builds": [
-    {
-     "id": "steelbone",
-     "label": "手機版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/EifaDLMAdsxkaj3NEZwexn"
-    }
-   ],
-   "chat": ""
-  },
-  {
-   "id": "burner",
-   "title": "拼牆",
-   "en": "BURNER",
-   "genre": "duel",
-   "status": "dev",
-   "created": "2026-10-08",
-   "updated": "2026-10-08",
-   "tagline": "一面牆、一張海報，搶光整條街的觀眾。",
-   "summary": "塗鴉海報卡牌的 A 案試作：每回合用手牌拼一張海報（背景、主角、標題、特效），用分數 × 倍率計分，跟敵對塗鴉幫老大搶觀眾。",
-   "highlights": [
-    "構圖牌型分級，最高雙炸版",
-    "招牌、撞色、同色加成",
-    "街頭傳說被動三選一",
-    "對手漂白、限手牌干擾",
-    "自由拼模式"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "試作等你試玩回饋；筆電版另走塗鴉美術極致路線。",
-   "palette": [
-    "#4a1235",
-    "#13040e",
-    "#ffe03a"
-   ],
-   "builds": [
-    {
-     "id": "burner",
-     "label": "試作",
-     "note": "對墨鴉 MONO 打四回合",
-     "artifact": "https://claude.ai/artifact/5XSCg49AKSz1ArPPQC3jsC"
-    }
-   ],
-   "chat": "https://claude.ai/chat/096033dc-07fd-4a7c-941b-fc6b55613d98"
-  },
-  {
-   "id": "overpaint",
-   "title": "疊城",
-   "en": "OVERPAINT",
-   "genre": "duel",
-   "status": "failed",
-   "created": "2026-10-08",
-   "updated": "2026-10-08",
-   "tagline": "撕開一張海報，底下還有一張。",
-   "summary": "塗鴉海報 × 日系動漫美術的卡牌原型：疊海報，被撕開時觸發底下的底稿。",
-   "highlights": [],
-   "inspired": "",
-   "verdict": "這個機制不好玩，主動權都在敵人手上。",
-   "next": "",
-   "palette": [
-    "#3a1450",
-    "#100518",
-    "#39ff88"
-   ],
-   "builds": [
-    {
-     "id": "overpaint",
-     "label": "原型",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/LY87g4UHj4u4HUpnZ2aHga"
-    }
-   ],
-   "chat": "https://claude.ai/chat/096033dc-07fd-4a7c-941b-fc6b55613d98"
-  },
-  {
    "id": "grey-curtain",
    "title": "灰幕",
    "en": "GREY CURTAIN",
@@ -1172,12 +1032,6 @@
      "label": "1.1 說書現場版",
      "note": "全面換上說書現場戰鬥美術",
      "artifact": "https://claude.ai/artifact/AztwP3mMxxZCdPjrDCjxgW"
-    },
-    {
-     "id": "tiexia-sample",
-     "label": "戰鬥樣品＋試煉場",
-     "note": "兩場示範戰，加上可直接挑戰各路頭目的試煉場",
-     "artifact": "https://claude.ai/artifact/Sf2LDuJgeT7gTQ8F8hWD5M"
     }
    ],
    "chat": "https://claude.ai/chat/97e5db15-6f15-494b-bbce-8c8624635046"
@@ -1217,47 +1071,6 @@
     }
    ],
    "chat": "https://claude.ai/chat/0f9a0860-8025-49a9-accf-32936203a60f"
-  },
-  {
-   "id": "reload",
-   "title": "再上膛",
-   "en": "RELOAD",
-   "genre": "survivor",
-   "status": "dev",
-   "created": "2026-10-04",
-   "updated": "2026-10-05",
-   "tagline": "倒下，就回到零點。再上膛。",
-   "summary": "參考 Crazy Gunner 的像素小隊倖存者射擊。魏子葳帶夜巡隊撐過鐘樓舊城的零點到零點五分，倒下就回到零點，在時間迴圈裡越打越強。給自己玩：沒有體力、沒有廣告。",
-   "highlights": [
-    "三人小隊・陣型切換",
-    "16 張雙分支技能卡",
-    "槍在局內進化",
-    "時間迴圈與刻痕",
-    "第 1 章 鐘樓舊城"
-   ],
-   "inspired": "Crazy Gunner：像素生存者",
-   "verdict": "喜歡劇情、手感、Boss 和特效；但角色和怪物太小太糊、分不出誰是誰，玩法只要繞圈就好。",
-   "next": "角色放大到《潮界》的尺寸、提高像素質感，加入擋住繞圈打法的設計。",
-   "palette": [
-    "#2b2350",
-    "#0b0a19",
-    "#7cf0ff"
-   ],
-   "builds": [
-    {
-     "id": "reload",
-     "label": "第 1 章 鐘樓舊城",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/TC5soEcY1N3DxddfKVfFRy"
-    }
-   ],
-   "docs": [
-    {
-     "label": "遊戲企劃書",
-     "url": "https://claude.ai/artifact/PDm9ha3RtiZ7xR6WUkQZM5"
-    }
-   ],
-   "chat": "https://claude.ai/chat/34d40eb2-9f6a-4dd4-9458-6163524dbd94"
   },
   {
    "id": "lianying",
@@ -1360,35 +1173,6 @@
      "label": "手機版 1.0.0",
      "note": "5 章、3 種結局＋片尾",
      "artifact": "https://claude.ai/artifact/RPsH4PR4oCnwPm4aBjMpZQ"
-    }
-   ],
-   "chat": "https://claude.ai/chat/957d7a33-32af-46b1-bc0e-c94962722e85"
-  },
-  {
-   "id": "flame-up",
-   "title": "炎上",
-   "en": "ENJO",
-   "genre": "survivor",
-   "status": "failed",
-   "created": "2026-10-03",
-   "updated": "2026-10-03",
-   "tagline": "2077 台北，流量就是命。",
-   "summary": "賽博龐克直播倖存者：2077 年台北的網路公審與演算法。外送員魏子葳被演算法標成熱點，一邊開台直播一邊殺出五章劇情與六隻 Boss。被否決後打掉重練，改做成《守歲》。",
-   "highlights": [],
-   "inspired": "",
-   "verdict": "射擊輕飄飄、子彈沒朝敵人打、手繪立繪臉歪，遠不如《潮界》。",
-   "next": "",
-   "palette": [
-    "#45104a",
-    "#10051a",
-    "#ff86bc"
-   ],
-   "builds": [
-    {
-     "id": "flame-up",
-     "label": "手機 v1",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/53Dxdsj79FnDrgvmVhmfwr"
     }
    ],
    "chat": "https://claude.ai/chat/957d7a33-32af-46b1-bc0e-c94962722e85"
@@ -1740,12 +1524,6 @@
      "label": "完整三卷",
      "note": "加了第二卷《海與燈》與終卷《雁回》",
      "artifact": "https://claude.ai/artifact/3dbZNa2Ggh6RtJ8EBgQcTy"
-    },
-    {
-     "id": "migrant-birds-v1",
-     "label": "舊版：只有第一卷",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/9TzGtz6J8KW7KV2AWVWEEC"
     }
    ],
    "chat": "https://claude.ai/chat/a9ebea5f-db43-4eef-b6c2-05007aac63c7"
@@ -2037,179 +1815,9 @@
     }
    ],
    "chat": "https://claude.ai/chat/8d7bd098-a41b-45f4-9e8c-ed2d36d1b588"
-  },
-  {
-   "id": "shifeng",
-   "title": "拾鋒",
-   "en": "",
-   "genre": "survivor",
-   "status": "failed",
-   "created": "2026-10-15",
-   "updated": "2026-10-15",
-   "tagline": "每一次，只能帶走一件。",
-   "summary": "參考《太吾異世劫》的刷寶倖存者第一關試作（斷戟原）。被否決後改做科幻題材，成為《零時方舟》。",
-   "highlights": [],
-   "inspired": "太吾異世劫",
-   "verdict": "質感很差，遊戲性和美術都不行。",
-   "next": "",
-   "palette": [
-    "#3a3530",
-    "#0e0c0b",
-    "#c9b48a"
-   ],
-   "builds": [
-    {
-     "id": "shifeng",
-     "label": "第一關試作",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/B57WqXA7YYBiFyuhmbBXDs"
-    }
-   ],
-   "chat": "https://claude.ai/chat/ec260dbd-9ce5-4ba0-9a3d-1db6de77d0e7"
   }
  ],
- "archive": [
-  {
-   "id": "pizixiuxian",
-   "title": "痞子修仙傳",
-   "genre": "rpg",
-   "status": "archived",
-   "created": "2026-07-16",
-   "tagline": "最早一起做的修仙冒險。",
-   "summary": "修仙題材的冒險 RPG，是最早期一起做的遊戲之一（React 版）。",
-   "where": "早期對話裡的 React 版"
-  },
-  {
-   "id": "feitu",
-   "title": "廢土餘生",
-   "genre": "rpg",
-   "status": "archived",
-   "created": "2026-07-16",
-   "tagline": "每一次玩，末日都不一樣。",
-   "summary": "末日生存冒險 RPG，劇情由 AI 即時生成，每次玩都不一樣。",
-   "where": "早期對話裡的 React 版"
-  },
-  {
-   "id": "xueyue",
-   "title": "血月山莊",
-   "genre": "party",
-   "status": "archived",
-   "created": "2026-08-07",
-   "tagline": "天黑請閉眼。",
-   "summary": "劇情向的單人狼人殺，和 AI 扮演的 NPC 對局，不會玩狼人殺也看得懂。",
-   "where": "早期對話裡的 React 版"
-  },
-  {
-   "id": "wuxia-text",
-   "title": "都市武俠文字遊戲",
-   "genre": "rpg",
-   "status": "idea",
-   "created": "2026-08-12",
-   "tagline": "醜男廢柴，也能行俠仗義。",
-   "summary": "仿《活俠傳》的養成＋文字冒險，現代都市武俠惡搞；主線手寫，隨機事件由 Claude 生成。",
-   "where": "只有設計定案"
-  },
-  {
-   "id": "zishi",
-   "title": "子時接體",
-   "genre": "puzzle",
-   "status": "paused",
-   "created": "2026-08-13",
-   "tagline": "第一章〈未闔眼〉。",
-   "summary": "紙嫁衣式的民俗恐怖點擊解謎、密室逃脫，接體員世界觀的原創新篇，一章一案。",
-   "where": "早期對話裡的單檔 React（第一章）"
-  },
-  {
-   "id": "fuanli",
-   "title": "福安里",
-   "genre": "sim",
-   "status": "archived",
-   "created": "2026-08-20",
-   "tagline": "一整個里的 AI 居民，自己過日子。",
-   "summary": "仿史丹佛 Generative Agents（Smallville）的 AI 沙盒小鎮：宮廟、夜市、里長選舉，AI 居民自己生活、互動。",
-   "where": "早期對話裡的試玩版"
-  },
-  {
-   "id": "yanyu",
-   "title": "煙雨行",
-   "genre": "rpg",
-   "status": "archived",
-   "created": "2026-08-20",
-   "tagline": "十二時辰，一座江湖。",
-   "summary": "仿《煙雨江湖》的開放式武俠 RPG：十二時辰、九個地點、回合制戰鬥與武學搭配，還有奇遇、門派、生活技能。",
-   "where": "早期對話裡的單檔 React"
-  },
-  {
-   "id": "startup-monopoly",
-   "title": "新創大富翁",
-   "genre": "party",
-   "status": "archived",
-   "created": "2026-08-20",
-   "tagline": "葳幣、道具卡、新聞事件，創業版大富翁。",
-   "summary": "科技創業主題的大富翁，可以單人對 AI，也可以同一台手機輪流玩；有葳幣、道具卡和新聞事件。",
-   "where": "早期對話裡的 React 版"
-  },
-  {
-   "id": "jieming",
-   "title": "借命",
-   "genre": "duel",
-   "status": "archived",
-   "created": "2026-08-21",
-   "tagline": "完全原創的 1v1 卡牌對戰。",
-   "summary": "不限機制與背景、由 Claude 完全原創設計的 1v1 卡牌對戰。",
-   "where": "早期對話裡的 React 版"
-  },
-  {
-   "id": "jinjie",
-   "title": "燼界",
-   "genre": "duel",
-   "status": "archived",
-   "created": "2026-08-28",
-   "tagline": "原創奇幻世界的三戰區卡牌對戰。",
-   "summary": "Marvel Snap 風格的原創奇幻卡牌對戰：大卡池自由構築、AI 對手。它的對戰引擎後來改造成《正義對決》。",
-   "where": "早期對話裡的 React 版"
-  },
-  {
-   "id": "chaojie2",
-   "title": "潮界・回潮",
-   "genre": "survivor",
-   "status": "idea",
-   "created": "2026-10-02",
-   "tagline": "海送回來的人，有幾個是真的？",
-   "summary": "《潮界》續作，接一代結局「送潮」。新機制「歸還」：從頭燈下有沒有影子、說話的年代用語、重複的台詞，分辨海送回來的人是真是假。",
-   "where": "企劃書 v1 已定稿"
-  },
-  {
-   "id": "one-night",
-   "title": "一夜模擬（暫名）",
-   "genre": "sim",
-   "status": "idea",
-   "created": "2026-10-18",
-   "tagline": "限時一夜，每件事都在搶你的時間。",
-   "summary": "受《我熱愛值班》啟發的「限時一夜、多線取捨」模擬類型，考慮用《零時方舟》的世界觀做成外傳。",
-   "where": "討論中"
-  },
-  {
-   "id": "grid-duel",
-   "title": "格陣戰棋卡牌（暫名）",
-   "genre": "tactics",
-   "status": "idea",
-   "created": "2026-10-28",
-   "tagline": "8×8 格子上的卡牌戰棋，還能寫中文腳本讓它自己打。",
-   "summary": "看了《格陣星途 Grid Tactics: Duel》後的構想：8×8 格子卡牌戰棋、回合結束自動連鎖結算，加上用中文寫腳本讓電腦自動對戰。",
-   "where": "討論中"
-  },
-  {
-   "id": "mecha-defense",
-   "title": "機甲守城（暫名）",
-   "genre": "tactics",
-   "status": "idea",
-   "created": "2026-11-01",
-   "tagline": "守住城市，也別把城市打爛。",
-   "summary": "受網頁遊戲《機甲大戰－台北》啟發的斜俯視機甲守城，城市可以被破壞，打壞了要賠錢。",
-   "where": "討論中"
-  }
- ],
+ "archive": [],
  "apps": [
   {
    "id": "coldeye",
