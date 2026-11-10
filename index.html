@@ -12,16 +12,31 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="遊戲收藏">
 <link rel="manifest" href="manifest.webmanifest">
+<style>
+/* The launch backdrop: the first thing drawn after the phone's own launch screen, before any other file has
+   arrived. It is the boot screen's empty backdrop (same colors as #boot in app.css), held while the collection
+   loads; the boot screen then takes over from it without a seam, or without a boot screen it fades into the
+   lobby (unveil() in app.js). Before it, the half-built lobby flashed by on every launch. On a slow connection
+   a faint line breathes where the boot beam will rise; if anything ever goes wrong it lets go by itself. */
+html, body { background: #04050a; }
+#prelude { position: fixed; inset: 0; z-index: 99; background: radial-gradient(60% 55% at 50% 46%, rgba(14, 17, 36, .95), rgba(4, 5, 10, .6) 75%), radial-gradient(80% 60% at 50% 45%, #10142a 0%, #04050a 70%); animation: preludeAway .4s 12s forwards; }
+#prelude::after { content: ""; position: absolute; left: 50%; top: 45%; width: 2px; height: 56px; margin: -28px 0 0 -1px; border-radius: 2px; background: linear-gradient(180deg, transparent, #fff, transparent); box-shadow: 0 0 20px #8fd3ff; opacity: 0; animation: preludeWait 1.3s 1.2s ease-in-out infinite alternate; }
+#prelude.gone { opacity: 0; pointer-events: none; transition: opacity .45s ease; }
+@keyframes preludeWait { to { opacity: .5; } }
+@keyframes preludeAway { to { opacity: 0; visibility: hidden; } }
+</style>
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap">
-<link rel="stylesheet" href="app.css?v=9dfb78cc">
+<link rel="stylesheet" href="app.css?v=119ddabe">
 
+<noscript><style>#prelude{display:none}</style></noscript>
 </head>
 <body>
+<div id="prelude" aria-hidden="true"></div>
 <noscript>這個收藏庫需要開啟 JavaScript 才能使用。</noscript>
-<script src="app.js?v=9dfb78cc" defer></script>
+<script src="app.js?v=119ddabe" defer></script>
 </body>
 </html>
