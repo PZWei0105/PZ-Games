@@ -4,7 +4,7 @@ from playwright.async_api import async_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = '/tmp/fc'
 class Game:
-    def __init__(self, w=390, h=844, build='web'): self.w, self.h, self.build, self.errs = w, h, build, []
+    def __init__(self, w=390, h=844, build='web'): self.w, self.h, self.build, self.errs = w, h, os.environ.get('FC_BUILD', build), []  # FC_BUILD=old：拿 dist/old/（自己放進去的舊版）來對照
     async def __aenter__(self):
         self.pw = await async_playwright().start()
         self.b = await self.pw.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-first-run', '--autoplay-policy=no-user-gesture-required'])

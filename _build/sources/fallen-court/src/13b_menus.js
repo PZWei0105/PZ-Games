@@ -29,7 +29,7 @@ function removeItem(uid) { G.bag = G.bag.filter(x => x !== uid); delete G.items[
 // ---------- 主選單 ----------
 const MENU_TABS = [['party', '隊伍'], ['bag', '背包'], ['ledger', '秤簿'], ['window', '殘窗'], ['codex', '圖鑑'], ['set', '設定']];
 function openMenu(tab, hero) {
-  if (S.mode !== 'explore' || S.dialog || S.cut) return;
+  if (S.mode !== 'explore' || S.dialog || S.cut || S.hold) return;
   if (tab) PM.tab = tab; if (hero) PM.hero = hero; if (!G.party[PM.hero] || !G.party[PM.hero].active) PM.hero = activeIds()[0];
   const pb = panelShow({ party: '隊伍', bag: '背包', ledger: '秤簿', window: '殘窗', codex: '圖鑑', set: '設定' }[PM.tab], MENU_TABS, PM.tab, t => openMenu(t));
   ({ party: tabParty, bag: tabBag, ledger: tabLedger, window: tabWindow, codex: tabCodex, set: tabSet })[PM.tab](pb);
@@ -149,7 +149,12 @@ function tabSet(pb) {
   $$('#panel [data-sp]').forEach(b => b.onclick = () => { S.set.speed = +b.dataset.sp; saveSettings(); sfx('ui'); openMenu('set'); });
   saveGame(); $('#svout').value = exportSave();
   $('#svcopy').onclick = () => { const t = $('#svout'); t.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { /* ignore */ } if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(() => toast('複製好了。'), () => toast(ok ? '複製好了。' : '複製不了：請長按文字框自己全選複製。')); else toast(ok ? '複製好了。' : '請長按文字框自己全選複製。'); };
-  $('#svload').onclick = async () => { const code = $('#svin').value; if (!code.trim()) { toast('先把存檔碼貼進去。'); return; } const keep = JSON.stringify(G); if (!importSave(code)) { G = JSON.parse(keep); toast('這串存檔碼讀不出來。'); sfx('deny'); return; } panelClose(); await fadeTo(1); enterZone(G.zone, null, G.pos); hudMode('explore'); await fadeTo(0); toast('讀好了。'); };
+  // 讀存檔碼：先把選單關掉（關選單會存一次現在這份），再換成碼裡的那一份——順序反過來的話，碼裡的進度會被搬到現在站的地方
+  $('#svload').onclick = async () => {
+    const code = $('#svin').value; if (!code.trim()) { toast('先把存檔碼貼進去。'); return; }
+    const g = decodeSave(code); if (!g) { toast('這串存檔碼讀不出來。'); sfx('deny'); return; }
+    panelClose(); switchSave(g, '讀好了。');
+  };
   $('#totitle').onclick = async () => { panelClose(); await fadeTo(1); showTitle(); await fadeTo(0); };
 }
 

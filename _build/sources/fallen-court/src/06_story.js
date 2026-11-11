@@ -215,7 +215,7 @@ SCRIPTS.t_scale = async () => {
   for (;;) {
     const opts = [{ t: '買賣' }, f.has_debtbook ? { t: '把債簿交給她。', key: true } : null, G.rep.ji >= 2 && !f.got_scale ? { t: '「妳那桿秤……」', key: true } : null, { t: '「上面有什麼？」' }, { t: '「城是怎麼掉下來的？」' }, { t: '走了' }];
     const k = await choose(opts, { prompt: '秤婆把秤桿擱平，等你開口。' });
-    if (k === 0) { endTalk(); await openShop(); }
+    if (k === 0) { endTalk(); await openShop(); saveHere(); }
     else if (k === 1) {
       await lines(['scale', '……這是算盤的簿子。'], ['scale', '你知道這上面是多少人的幾年嗎。'], [null, '她一頁一頁撕。撕下來的放進秤盤。\n秤盤沉到底。然後她把整盤倒進火盆。'], ['scale', '債沒了。繩幫會來要。\n讓他們來。']);
       f.has_debtbook = 0; flag('debt_cleared'); addRep('ji', 2); addRep('bang', -1); if (has('yuan')) addAff('yuan', 1); deed('他把繩幫的債簿交給秤婆燒了。集裡一半的人不欠了。');

@@ -14,7 +14,7 @@ window.claude = { use: name => new Promise(res => setTimeout(() => {
   else res(null);
 }, %(useDelay)d)) };
 """
-MKSAVE = """(args) => { const [lv, sec, ts, zone] = args; newGame(); G.lv = lv; G.stat.sec = sec; G.zone = zone; G.disc[zone] = 1; G.flags.met_yuan = 1; G.party.yuan.active = true; G.party.yuan.lv = lv; G.ts = ts; const code = exportSave(), json = JSON.stringify(G); G = null; return [code, json]; }"""
+MKSAVE = """(args) => { const [lv, sec, ts, zone] = args; newGame(); G.lv = lv; G.stat.sec = sec; G.zone = zone; G.disc[zone] = 1; G.flags.met_yuan = 1; G.flags[zone + '_intro'] = 1; G.party.yuan.active = true; G.party.yuan.lv = lv; G.ts = ts; const code = exportSave(), json = JSON.stringify(G); G = null; return [code, json]; }"""
 P = 'data/users/u_test/save'
 fails = []
 def check(name, cond, info=''):
@@ -86,7 +86,7 @@ async def main():
         ctx, pg, errs = await page_for(b, docs=doc(new, 2000000), use_delay=7000)
         await pg.click('#title .bt[data-k=new]'); await pg.wait_for_timeout(5900)
         st = await pg.evaluate("({ mode: S.mode, state: CLOUD.state })"); check('new game started after 5s', st['mode'] == 'explore' and st['state'] == 'wait', st)
-        await pg.evaluate("(() => { Dlg.skip && Dlg.skip(); saveGame(); return 1; })()"); await pg.wait_for_timeout(2600)
+        await pg.evaluate("(() => { saveGame(true); return 1; })()"); await pg.wait_for_timeout(2600)
         st = await pg.evaluate("({ state: CLOUD.state, ask: !!CLOUD.ask, sets: __db.sets, cloudTs: __db.docs['%s'].ts })" % P); check('cloud untouched, ask pending', st == {'state': 'on', 'ask': True, 'sets': 0, 'cloudTs': 2000000}, st)
         # 把開場劇情快轉掉，站著沒事的時候才會問
         await pg.evaluate("(() => { try { endTalk(); } catch (e) {} S.cut = 0; S.dialog = false; UI.dlg.classList.add('hide'); UI.scene.classList.remove('on'); hudMode('explore'); return 1; })()"); await pg.wait_for_timeout(1800)
@@ -104,8 +104,39 @@ async def main():
         check('position-only save not written', s0 == base, (base, s0)); check('two quick changes → one write with the latest', s1[0] == base + 1 and s1[1] == s1[2], (base, s1))
         await pg.evaluate("(() => { __db.failCode = 'unavailable'; G.coin += 5; saveGame(); return 1; })()"); await pg.wait_for_timeout(4800)
         st = await pg.evaluate("({ state: CLOUD.state, dirty: CLOUD.dirty, sets: __db.sets, local: JSON.parse(localStorage.getItem('fallencourt.v1')).coin === G.coin })"); check('transient failure: stays on, local saved', st == {'state': 'on', 'dirty': True, 'sets': base + 1, 'local': True}, st)
+        # 暫時寫不進去：不用等下一次存檔，它自己會再試（頭一次隔幾秒）
+        await pg.evaluate("(() => { __db.failCode = null; return 1; })()"); await pg.wait_for_timeout(6500)
+        st = await pg.evaluate("({ sets: __db.sets, dirty: CLOUD.dirty, cloudCoin: JSON.parse(decodeURIComponent(escape(atob(__db.docs['%s'].code.slice(4))))).coin, coin: G.coin })" % P); check('retries by itself once the cloud is back', st['sets'] == base + 2 and st['cloudCoin'] == st['coin'] and not st['dirty'], st)
+        # 不認得的錯誤代碼：當成暫時的，不關掉雲端
+        await pg.evaluate("(() => { __db.failCode = 'something_new'; G.coin += 5; saveGame(); return 1; })()"); await pg.wait_for_timeout(4800)
+        st = await pg.evaluate("({ state: CLOUD.state, dirty: CLOUD.dirty })"); check('unknown error code: treated as transient', st == {'state': 'on', 'dirty': True}, st)
         await pg.evaluate("(() => { __db.failCode = 'revoked'; CLOUD.failAt = 0; G.coin += 5; saveGame(); return 1; })()"); await pg.wait_for_timeout(4800)
         st = await pg.evaluate("({ state: CLOUD.state, mode: S.mode, note: cloudNote() })"); check('revoked: cloud off, game goes on', st['state'] == 'off' and st['mode'] == 'explore', st); check('no errors', not errs, errs); await ctx.close()
+
+        print('J 頁面被收起來（切到別的 App）→ 等著寫的那一筆馬上送；劇情演到一半不會存到半套')
+        ctx, pg, errs = await page_for(b, docs=doc(new, 2000000), local=new_json, synced=2000000); await pg.wait_for_timeout(700)
+        await pg.click('#title .bt[data-k=cont]'); await pg.wait_for_timeout(1500)
+        await pg.evaluate("(() => { saveGame(); return 1; })()"); await pg.wait_for_timeout(4600); base = await pg.evaluate("__db.sets")
+        HIDE = "Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); document.dispatchEvent(new Event('visibilitychange'));"
+        await pg.evaluate("(() => { G.coin += 7; %s return 1; })()" % HIDE); await pg.wait_for_timeout(500)
+        st = await pg.evaluate("({ sets: __db.sets, cloudCoin: JSON.parse(decodeURIComponent(escape(atob(__db.docs['%s'].code.slice(4))))).coin, coin: G.coin, local: JSON.parse(localStorage.getItem('fallencourt.v1')).coin })" % P)
+        check('hidden: saved locally and sent at once', st['sets'] == base + 1 and st['cloudCoin'] == st['coin'] == st['local'], (base, st))
+        # 劇情中途（S.cut）切走：這台和雲端都不能寫進「演到一半」的狀態
+        await pg.evaluate("(() => { SCRIPTS.__half = async () => { flag('__half_a'); await new Promise(() => { }); }; runScript('__half'); return 1; })()"); await pg.wait_for_timeout(200)
+        await pg.evaluate("(() => { %s return 1; })()" % HIDE); await pg.wait_for_timeout(600)
+        st = await pg.evaluate("({ sets: __db.sets, mem: !!G.flags.__half_a, local: !!JSON.parse(localStorage.getItem('fallencourt.v1')).flags.__half_a, pend: S.savePend })")
+        check('hidden mid-script: nothing half-done is written', st == {'sets': base + 1, 'mem': True, 'local': False, 'pend': True}, st); check('no errors', not errs, errs); await ctx.close()
+
+        print('K 另一台停在「打贏了、戰後的話還沒講完」→ 這台接上之後，按繼續會把那段話演出來')
+        ctx, pg, errs = await page_for(b)
+        pcode = await pg.evaluate("(() => { newGame(); G.lv = 2; G.zone = 'vault'; G.pos = { x: 14, y: 14 }; G.flags.met_yuan = 1; G.flags.pre_z0a = 1; G.flags.pre_z0b = 1; G.party.yuan.active = true; G.party.yuan.lv = 2; zs('vault').enc = { z0a: 1, z0b: 1 }; G.pend = { enc: 'z0b' }; G.ts = 3000000; const c = exportSave(); G = null; return c; })()"); await ctx.close()
+        ctx, pg, errs = await page_for(b, docs=doc(pcode, 3000000)); await pg.wait_for_timeout(900)
+        check('adopted on this device', (await title_buttons(pg))[0] == '繼續'); await pg.click('#title .bt[data-k=cont]'); await pg.wait_for_timeout(2200)
+        st = await pg.evaluate("({ cut: S.cut, dlg: S.dialog, text: document.querySelector('#dlg').innerText, deeds: G.deeds.length, pend: !!G.pend })")
+        check('the pending talk starts by itself', st['cut'] == 1 and st['dlg'] and '岑鳶' in st['text'] and st['pend'], st)
+        await pg.evaluate("(async () => { Dlg.auto = o => o.choose ? 0 : undefined; for (let i = 0; i < 400 && S.cut; i++) { if (Dlg.adv) Dlg.adv(); await new Promise(r => setTimeout(r, 15)); } return 1; })()"); await pg.wait_for_timeout(4800)
+        st = await pg.evaluate("({ cut: S.cut, deeds: G.deeds.length, pend: !!G.pend, cloudPend: 'pend' in JSON.parse(decodeURIComponent(escape(atob(__db.docs['%s'].code.slice(4))))), sets: __db.sets })" % P)
+        check('talk finished: pending mark cleared here and in the cloud', st == {'cut': 0, 'deeds': 1, 'pend': False, 'cloudPend': False, 'sets': 1}, st); check('no errors', not errs, errs); await ctx.close()
 
         print('I 沒有 db（沒宣告／沒登入）→ 當成沒有雲端')
         ctx, pg, errs = await page_for(b, nodb='true'); await pg.wait_for_timeout(500)
