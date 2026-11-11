@@ -19,12 +19,19 @@ Claude 版：用 artifact 工具發布 `dist/artifact/index.html`（目前在 ht
 ### 存檔
 
 - 這台裝置：localStorage（`fallencourt.v1`，設定在 `fallencourt.set`；讀寫失敗時退回記憶體）。戰後、過場、進出區域自動存，另外每 20 秒存一次位置。
+- **存檔只寫「接得下去」的狀態**（`saveGame`，`10_world.js`）。劇情跑到一半（`S.cut`）、或一場遭遇從戰前的話到戰後的話結束之前（`S.hold`），要存也先記著不寫，整段結束才存。不這樣做的話，在過場中途關掉遊戲會留下半套進度——第一次發布的版本就有這個洞：在覆舟營第一段話講到一半關掉，骸骨坡永遠不會開放。
+  - 打贏、戰利品一入袋就存一次（`engageRun`）；戰後還有話要講的，存檔裡記 `G.pend = { enc }`，讀檔後（`afterLoad` → `resumePend`）從那段話的開頭接著演，不用重打。從別段劇情裡打起來的遭遇（`fight()`）不存：那一整段劇情算一件事。
+  - 終幕三幕之間各存一次（`checkpoint('n_cutlink')`），在哪一幕關掉就從哪一幕接；`vol1_done` 一立就存。要在劇情裡加存檔點，只能加在「這之前的事都交代完了」的地方，用 `checkpoint()` 或 `saveHere()`，不要直接呼叫 `saveGame(true)`。
+  - 剛到一個區域的那段話（`arrive_<區域>`）讀檔後會補演（它們都用旗標記得自己演過沒有）。新寫的 `arrive_` 劇情一定要照這個寫法：開頭 `if (旗標) return; flag(旗標)`。
+  - 頁面被收起來（切到別的 App、鎖螢幕、關分頁）時存一次、雲端那一筆也馬上送。
+  - 改這一段、或改了任何會設旗標的劇情流程，要跑 `python3 tests/resume.py`。
 - 存檔碼：設定頁可匯出／匯入（Claude 版與網頁版互通）。
 - **雲端（只有 Claude 版）**：`10b_cloud.js`。頁面有 `window.claude` 時，把同一份存檔另外寫到 `db` 的 `data/users/<自己>/save`（每個人自己的、別人看不到），換裝置或清掉瀏覽器資料都接得回來。網頁版沒有 `window.claude`，整段不會動——兩個版本是同一份程式。
-  - 內容真的變了才寫（只有位置和時鐘在動不寫）、隔幾秒寫一次、一次一筆；寫失敗只是「這次沒有雲端」，遊戲照常。
+  - 內容真的變了才寫（只有位置和時鐘在動不寫）、隔幾秒寫一次、一次一筆。寫失敗：暫時的狀況（連不上、太頻繁、不認得的錯誤代碼）自己再試——先隔幾秒，再不行每半分鐘一次；沒有權限、被收回、資料太大這一類（`CLOUD_END`）就當「這次沒有雲端」，遊戲照常。
+  - 一份存檔約 5～35 KB，離單筆 256 KiB 的上限很遠。
   - 開機時比兩邊的最後存檔時間（`G.ts`）：雲端新、這台又同步過 → 直接接上；這台有沒同步過的進度、或已經在玩了雲端才回話 → 跳「有兩份進度」讓玩家選。
   - 雲端還沒回話時片頭的按鈕會先等它（最多 5 秒），免得新遊戲蓋掉另一台的進度。
-  - 改這一段一定要跑 `python3 tests/cloud.py`（用假的 `window.claude` 跑九種情境）。
+  - 改這一段一定要跑 `python3 tests/cloud.py`（用假的 `window.claude` 跑十一種情境）。
 
 ## 結構（`src/` 依檔名順序串成一支 script）
 
@@ -64,7 +71,8 @@ python3 tests/full.py all          # 在瀏覽器裡自動玩完整條主線，�
 python3 tests/qa.py 390 844 q      # 選單、對話、戰利品等畫面逐一截圖到 /tmp/fc
 python3 tests/qa_battle.py 390 844 b o3   # 戰鬥畫面（也可以 844 390、1280 720）
 python3 tests/qa_zones.py          # 各區域截圖
-python3 tests/cloud.py             # 雲端存檔的九種情境（假的 window.claude）
+python3 tests/cloud.py             # 雲端存檔的十一種情境（假的 window.claude）
+python3 tests/resume.py            # 中途關掉再回來：戰後的話、打到一半、終幕的每一幕、剛到新區域、讀存檔碼（約 1 分鐘）
 node tests/dump.js                 # 把定案數值倒成表（核對 DESIGN.md 用）
 ```
 

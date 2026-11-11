@@ -7,8 +7,19 @@ function boot() {
   let last = performance.now();
   const frame = now => { const raw = now - last, dt = Math.min(.05, Math.max(0, raw / 1000)); last = now; S.t += dt; S.dt = dt; try { tick(dt); } catch (e) { console.error(e); } perfWatch(raw); requestAnimationFrame(frame); };
   requestAnimationFrame(frame);
-  setInterval(() => { if (G && S.mode === 'explore' && !S.cut && !S.dialog && !S.panel) saveGame(); }, 20000);
-  addEventListener('pagehide', () => { if (G && S.mode !== 'title') saveGame(); });
+  // 站著沒事的時候每 20 秒存一次。
+  // 保險：「這一段先別存」（S.hold）不該在站著沒事的時候還掛著；真的卡了一分鐘就放掉它，不能讓遊戲從此不存檔。
+  let stale = 0;
+  setInterval(() => {
+    if (!G || S.mode !== 'explore' || S.cut || S.dialog || S.panel) { stale = 0; return; }
+    if (S.hold) { if (!UI.modal.classList.contains('hide') || ++stale < 3) return; S.hold = 0; }
+    stale = 0; saveGame();
+  }, 20000);
+  // 頁面被收起來（切到別的 App、鎖螢幕、關分頁）：把能存的存下來，等著上雲端的那一筆也馬上送。
+  // 手機上切走之後頁面常常直接被系統收掉，等不到下一次自動存檔。劇情或戰鬥中途不會存到一半（見 saveGame）。
+  const onHide = () => { if (!G || S.mode === 'title') return; saveGame(); if (typeof cloudNow === 'function') cloudNow(); };
+  addEventListener('pagehide', onHide);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) onHide(); });
 }
 // 「自動」畫質：連續好幾秒每秒不到 24 格，才把解析度降一級（不會自己升回去，免得忽高忽低）
 const PERF = { acc: 0, n: 0, bad: 0 };
@@ -47,13 +58,13 @@ function drawTitle(t) {
   const vg = cx.createRadialGradient(VW / 2, VH * .5, Math.min(VW, VH) * .3, VW / 2, VH * .5, Math.max(VW, VH) * .75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(2,3,8,.72)'); cx.fillStyle = vg; cx.fillRect(0, 0, VW, VH);
 }
 function showTitle() {
-  S.mode = 'title'; S.panel = false; S.dialog = false; S.cut = 0; hudMode('none'); UI.dlg.classList.add('hide'); UI.panel.classList.add('hide'); modalClose(); UI.scene.classList.remove('on');
+  S.mode = 'title'; S.panel = false; S.dialog = false; S.cut = 0; S.hold = 0; S.savePend = false; hudMode('none'); UI.dlg.classList.add('hide'); UI.panel.classList.add('hide'); modalClose(); UI.scene.classList.remove('on');
   const save = loadGame(); TITLE.lit = save && save.shards && save.shards.length ? save.shards.slice() : [2, 3, 6, 7, 10, 11]; TITLE.key = '';
   let t = $('#title'); if (t) t.remove();
   t = el('div', '', `<div class="lg"><b>墜庭</b><span>FALLEN COURT</span><em>所有人都盯著那個光點</em></div><div class="tb">${save ? '<button class="bt gold" data-k="cont">繼續</button>' : ''}<button class="bt ${save ? '' : 'gold'}" data-k="new">${save ? '重新開始' : '醒來'}</button><button class="bt" data-k="code">用存檔碼接續</button></div><div class="ver">第一卷　壓艙層</div>`);
   t.id = 'title'; $('#ui').appendChild(t);
   if (AU.ctx) { AU.mode = 'deep'; AU.battle = 0; audioMode(); }
-  const start = async fresh => { await fadeTo(1); t.remove(); if (fresh) { newGame(); enterZone('vault'); } else enterZone(G.zone, null, G.pos); hudMode('explore'); await fadeTo(0); if (fresh) runScript('intro'); else if (!zs(G.zone).seen) { zs(G.zone).seen = 1; } };
+  const start = async fresh => { await fadeTo(1); t.remove(); if (!fresh) { resumeWorld(); return; } newGame(); enterZone('vault'); hudMode('explore'); await fadeTo(0); runScript('intro'); };
   $$('#title .bt').forEach(b => b.onclick = async () => {
     audioInit(); sfx('confirm'); const k = b.dataset.k;
     // Claude 版：雲端的進度還沒回來就先等一下（最多 5 秒），免得開一個新遊戲把另一台裝置的進度蓋掉

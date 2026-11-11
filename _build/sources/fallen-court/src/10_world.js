@@ -13,7 +13,51 @@ function newGame() {
   for (const id of G.roster) G.party[id].hp = heroNow(id).hpMax;
   return G;
 }
-function saveGame() { if (!G) return; if (Z && Z.leader && S.mode !== 'battle') { G.zone = Z.id; G.pos = { x: Z.leader.x, y: Z.leader.y }; } G.ts = Date.now(); try { store.set(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ } if (typeof cloudPush === 'function') cloudPush(); }
+// 存檔只寫「接得下去」的狀態。
+// 劇情跑到一半（S.cut）、或一場遭遇從開打到戰後交代完之前（S.hold），要存也先記著不寫，等整段結束再存：
+// 不然在過場中途關掉遊戲，會留下「人已經打倒了、後面的事卻沒發生」的進度，主線就接不下去了。
+// force＝劇情自己確定可以存的點（見 checkpoint、saveHere、engageRun）。
+S.hold = 0; S.savePend = false;
+function saveGame(force) {
+  if (!G) return;
+  if (!force && (S.cut || S.hold)) { S.savePend = true; return; }
+  S.savePend = false;
+  if (Z && Z.leader && S.mode !== 'battle') { G.zone = Z.id; G.pos = { x: Z.leader.x, y: Z.leader.y }; }
+  G.ts = Date.now(); try { store.set(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ }
+  if (typeof cloudPush === 'function') cloudPush();
+}
+// 劇情裡確定可以存的地方。next＝在這之後關掉遊戲的話，回來要自動接著跑的那段劇情（沒有就清掉）
+function checkpoint(next) { if (next) G.pend = { run: next }; else delete G.pend; saveGame(true); }
+// 選單型的對話（買賣）每做完一輪就存；外面還包著別段劇情或戰鬥的時候不存
+function saveHere() { if (S.cut <= 1 && !S.hold && !G.pend) saveGame(true); }
+// 上次停在「還有一段劇情沒演完」（打贏之後的交代、終幕的某一幕）：讀進進度之後接著演
+async function resumePend() {
+  const p = G && G.pend; if (!p || !Z) return;
+  S.hold++;
+  try {
+    if (p.run) { if (SCRIPTS[p.run]) await runScript(p.run); }
+    else if (p.enc && zs(Z.id).enc[p.enc]) {
+      const e = Z.m.ents.find(x => x.k === 'enc' && x.id === p.enc), post = e && (e.post || (SCRIPTS['post_' + p.enc] ? 'post_' + p.enc : null));
+      if (post) await runScript(post, { id: p.enc, e, units: [] }, { over: 'win', win: true, pylons: p.pylons });
+    }
+  } finally { S.hold = Math.max(0, S.hold - 1); delete G.pend; if (!S.hold && !S.cut) saveGame(); }
+}
+// 讀進一份進度、站進區域之後：沒演完的接著演（戰後的交代、剛到這一區的那段話——它們都只演一次，演過的不會重來）
+async function afterLoad() { await resumePend(); const arr = 'arrive_' + Z.id; if (SCRIPTS[arr] && S.mode === 'explore' && !S.cut) await runScript(arr); }
+// 把手上這份進度（G）接起來：站進存檔時的區域、淡入、再把沒演完的接著演。
+// 淡入的那半秒先別讓世界動（S.cut）：不然站的地方剛好有敵人看得到，會跟要接著演的劇情撞在一起。
+async function resumeWorld(msg) {
+  enterZone(G.zone, null, G.pos); hudMode('explore'); S.cut++;
+  await fadeTo(0); S.cut = Math.max(0, S.cut - 1);
+  if (!zs(G.zone).seen) zs(G.zone).seen = 1; if (msg) toast(msg);
+  await afterLoad();
+}
+// 玩到一半換成另一份進度（讀存檔碼、接另一台裝置的）：先讓世界停住，再淡出、換、淡入
+async function switchSave(g, msg) {
+  S.cut++; await fadeTo(1); S.cut = Math.max(0, S.cut - 1);
+  G = g; try { store.set(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ }
+  await resumeWorld(msg);
+}
 function loadGame() { try { const s = store.get(SAVE_KEY); if (!s) return null; const g = JSON.parse(s); if (!g || g.v !== 1 || !g.party || !ZONES[g.zone]) return null; return g; } catch (e) { return null; } }
 function exportSave() { try { return 'FC1.' + btoa(unescape(encodeURIComponent(JSON.stringify(G)))); } catch (e) { return ''; } }
 function importSave(code) { const g = decodeSave(code); if (!g) return false; G = g; try { store.set(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ } return true; }
@@ -148,7 +192,15 @@ function worldUpdate(dt) {
   }
 }
 function useExit(e) { if (e.script) { runScript(e.script); return; } if (e.to === 'map') openLayerMap(); else travel(e.to); }
-async function travel(id, spawn) { saveGame(); await fadeTo(1); enterZone(id, spawn); saveGame(); await fadeTo(0); if (!zs(id).seen) { zs(id).seen = 1; if (typeof zoneTitle === 'function') zoneTitle(ZONES[id]); } const arr = 'arrive_' + id; if (SCRIPTS[arr]) await runScript(arr); }
+// 換區。淡出、淡入的那半秒世界先不動（S.cut）：不然淡出時被敵人看到會開打，人卻已經換到下一區了。
+async function travel(id, spawn) {
+  saveGame();
+  S.cut++; await fadeTo(1); S.cut = Math.max(0, S.cut - 1);
+  enterZone(id, spawn); saveGame();
+  S.cut++; await fadeTo(0); S.cut = Math.max(0, S.cut - 1);
+  if (!zs(id).seen) { zs(id).seen = 1; if (typeof zoneTitle === 'function') zoneTitle(ZONES[id]); }
+  const arr = 'arrive_' + id; if (SCRIPTS[arr]) await runScript(arr);
+}
 
 // ---------- 互動 ----------
 function entAt(sx, sy) { // 螢幕點附近可互動的東西
@@ -189,14 +241,30 @@ async function openChest(e) {
 function collectShard(e) { if (e.done) return; e.done = true; zs(Z.id).got[e.id] = 1; if (!G.shards.includes(e.id)) G.shards.push(e.id); sfx('shard'); for (let i = 0; i < 18; i++) part({ x: e.x, y: e.y, z: e.z + 1, vx: (Math.random() - .5) * 2.4, vy: (Math.random() - .5) * 2.4, vz: 1 + Math.random() * 2.4, life: 1.2, size: 3, col: GLASS[i % 5], k: 'shard', spin: 6, add: false }); saveGame(); runScript('sys_shard', e); }
 
 // ---------- 遭遇與戰鬥 ----------
+// 一場遭遇從戰前的話、打、戰利品到戰後的話，算一件事：中間不存檔（見 saveGame）
 async function engage(g, ambush, opts) {
-  if (S.mode !== 'explore') return; const E = ENC[g.id];
+  if (S.mode !== 'explore') return;
+  S.hold++;
+  try { return await engageRun(g, ambush, opts); }
+  finally { S.hold = Math.max(0, S.hold - 1); if (!S.hold && !S.cut && S.savePend) saveGame(); }
+}
+async function engageRun(g, ambush, opts) {
+  const E = ENC[g.id];
   const pre = g.e.pre || (SCRIPTS['pre_' + g.id] ? 'pre_' + g.id : null);
   if (pre && !G.flags['pre_' + g.id]) { const r = await runScript(pre, g); if (r === false) { g.cool = Z.t + 3; return; } flag('pre_' + g.id); }
   if (typeof encAmbush === 'function') ambush = encAmbush(g, ambush);
   { const fresh = mkGroup(g.e); if (fresh.units.length !== g.units.length) g.units = fresh.units; } // 隊伍人數變了，敵群跟著重排
   const res = await doBattle(g, Object.assign({ ambush }, opts || {}));
-  if (res.over === 'win') { zs(Z.id).enc[g.id] = 1; Z.groups = Z.groups.filter(x => x !== g); refreshBlocked(); await afterWin(g, res); const post = g.e.post || (SCRIPTS['post_' + g.id] ? 'post_' + g.id : null); if (post) await runScript(post, g, res); refreshBlocked(); if (typeof hudZone === 'function') hudZone(); saveGame(); }
+  if (res.over === 'win') {
+    zs(Z.id).enc[g.id] = 1; Z.groups = Z.groups.filter(x => x !== g); refreshBlocked();
+    // 打贏、戰利品一入袋就存一次：停在戰利品那一頁關掉遊戲，這一場也不用重打。
+    // 戰後還有話要交代的，記下「等著演」（G.pend）：在那段話中途關掉，回來會從它的開頭接著演。
+    // 從別段劇情裡打起來的那幾場不存：那一整段劇情是一件事，要嘛全有、要嘛全無。
+    const post = g.e.post || (SCRIPTS['post_' + g.id] ? 'post_' + g.id : null), mark = !S.cut && S.hold === 1;
+    await afterWin(g, res, () => { if (!mark) return; if (post) G.pend = { enc: g.id, pylons: res.pylons }; saveGame(true); });
+    if (post) { await runScript(post, g, res); if (mark) delete G.pend; }
+    refreshBlocked(); if (typeof hudZone === 'function') hudZone(); saveGame();
+  }
   else if (res.over === 'flee') { g.cool = Z.t + 4; const L = Z.leader, a = Math.atan2(L.y - g.e.y, L.x - g.e.x); const p = findPath(L.x, L.y, g.e.x + Math.cos(a) * 7, g.e.y + Math.sin(a) * 7); if (p && p.length) { const q = p[Math.min(p.length - 1, 6)]; L.x = q[0]; L.y = q[1]; refreshFollowers(); } }
   return res;
 }
@@ -222,7 +290,7 @@ async function doBattle(g, opts) {
     battleCleanup(); return r;
   }
 }
-async function afterWin(g, r) {
+async function afterWin(g, r, granted) {
   const E = ENC[g.id], zl = E.zl, items = [], mats = {};
   G.coin += r.coin;
   for (const t of r.kills) { const F = FOE[t]; if (F.minor) continue; const ch = F.elite || F.boss ? 1 : .34; if (Math.random() < ch) items.push(giveItem(rollDrop(F.elite || F.boss ? 'elite' : 'mob', zl))); if (F.elite || F.boss) { mats.dust = (mats.dust || 0) + 1; G.dust++; } if (Math.random() < .5) { const n = R.i(1, 2); mats.scrap = (mats.scrap || 0) + n; G.scrap += n; } }
@@ -231,6 +299,7 @@ async function afterWin(g, r) {
   if (E.elite) { mats.lacquer = (mats.lacquer || 0) + 1; G.lacquer++; }
   if (Math.random() < .3 && G.cons.potion < G.beltMax) { G.cons.potion++; mats.potion = 1; }
   const ups = gainXp(r.xp);
+  if (granted) granted(); // 東西都入袋了（下面只是把它們秀出來、選天賦）
   await showLoot({ items, coin: r.coin, mats, xp: r.xp, ups, title: E.boss ? '層主' : E.elite ? '精英' : '戰利品' });
   for (const t of pendingTalents()) await chooseTalent(t);
 }

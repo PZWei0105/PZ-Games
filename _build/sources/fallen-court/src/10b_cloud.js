@@ -7,9 +7,13 @@
 // - 開機時兩邊比「最後存檔時間」(G.ts)。雲端比較新、而且這台的進度已經同步過 → 直接接上雲端那份。
 //   這台有還沒同步的進度、或是已經開始玩了雲端才回話 → 不自己決定，問玩家要哪一份。
 // - 雲端還沒回話之前，片頭的按鈕會先等它（最多 5 秒），免得一個新遊戲把雲端的舊進度蓋掉。
-// - 任何一步失敗都只是「這次沒有雲端」：遊戲照常用這台裝置的存檔。
+// - 頁面被收起來（切到別的 App、鎖螢幕）的時候，等著寫的那一筆馬上送出去，不等那幾秒。
+// - 寫失敗：暫時的狀況會自己再試（先隔幾秒、再不行每半分鐘一次）；沒有權限、被收回這一類就當「這次沒有雲端」。
+// - 任何一步失敗都只影響雲端那一份：遊戲照常用這台裝置的存檔。
 const SYNC_KEY = 'fallencourt.sync';
-const CLOUD = { state: 'off', doc: null, ready: null, remote: null, busy: false, dirty: false, timer: 0, failAt: 0, okAt: 0, sig: '', ask: null, asking: false };
+const CLOUD = { state: 'off', doc: null, ready: null, remote: null, busy: false, dirty: false, timer: 0, failAt: 0, wait: 0, fails: 0, okAt: 0, sig: '', ask: null, asking: false };
+// 寫不進去、而且再試也沒用的狀況（沒有寫入的權限、被收回、資料太大、額度滿了、這個畫面不給用）。其餘的——包含不認得的——都當成暫時的
+const CLOUD_END = { invalid_argument: 1, quota_exceeded: 1, revoked: 1, not_granted: 1, capability_disabled: 1, capability_removed: 1, transform_error: 1 };
 const cloudOn = () => CLOUD.state === 'on';
 function decodeSave(code) { try { code = String(code).trim(); if (!code.startsWith('FC1.')) return null; const g = JSON.parse(decodeURIComponent(escape(atob(code.slice(4))))); return g && g.v === 1 && g.party && ZONES[g.zone] ? g : null; } catch (e) { return null; } }
 // 存檔裡「會不會一直變但不重要」的欄位（位置、時鐘）拿掉之後的內容：只有這個變了才值得寫上雲端
@@ -50,7 +54,7 @@ const saveLine = g => `第 ${g.lv} 級・${ZONES[g.zone].n}・走了 ${Math.floo
 async function cloudAsk() {
   const R = CLOUD.ask; if (!R || CLOUD.asking) return;
   const title = S.mode === 'title';
-  if (!title && (S.mode !== 'explore' || S.cut || S.dialog || S.panel)) return; // 等到站著沒事的時候再問
+  if (!title && (S.mode !== 'explore' || S.cut || S.hold || S.dialog || S.panel)) return; // 等到站著沒事的時候再問
   if (!UI.modal.classList.contains('hide')) return;
   CLOUD.asking = true;
   const local = title ? loadGame() : G;
@@ -59,15 +63,17 @@ async function cloudAsk() {
   if (yes) {
     cloudAdopt(R);
     if (title) { showTitle(); toast('接上了另一台的進度。'); }
-    else { G = JSON.parse(JSON.stringify(R.g)); await fadeTo(1); enterZone(G.zone, null, G.pos); hudMode('explore'); await fadeTo(0); toast('接上了另一台的進度。'); }
+    else await switchSave(JSON.parse(JSON.stringify(R.g)), '接上了另一台的進度。');
   } else cloudPush(true);
 }
 // 存檔之後呼叫：過幾秒把這台的存檔寫上雲端
 function cloudPush(now) {
   if (!cloudOn() || CLOUD.ask) return; CLOUD.dirty = true;
-  if (CLOUD.busy || CLOUD.timer || Date.now() - CLOUD.failAt < 30000) return;
+  if (CLOUD.busy || CLOUD.timer || Date.now() - CLOUD.failAt < CLOUD.wait) return;
   CLOUD.timer = setTimeout(cloudFlush, now ? 50 : 4000);
 }
+// 頁面要被收起來了：等著寫的那一筆現在就送，不等那幾秒
+function cloudNow() { if (!cloudOn() || !CLOUD.dirty || CLOUD.busy || CLOUD.ask || Date.now() - CLOUD.failAt < CLOUD.wait) return; clearTimeout(CLOUD.timer); CLOUD.timer = 0; cloudFlush(); }
 async function cloudFlush() {
   CLOUD.timer = 0; if (!cloudOn() || CLOUD.busy || !CLOUD.dirty || CLOUD.ask) return;
   const s = store.get(SAVE_KEY); let g = null; try { g = JSON.parse(s); } catch (e) { /* ignore */ } if (!g) { CLOUD.dirty = false; return; }
@@ -76,11 +82,14 @@ async function cloudFlush() {
   CLOUD.busy = true;
   try {
     await CLOUD.doc.set({ v: 1, code: 'FC1.' + btoa(unescape(encodeURIComponent(s))), ts: g.ts || 0, lv: g.lv, zone: g.zone, sec: Math.round(g.stat.sec || 0) });
-    CLOUD.sig = sig; CLOUD.okAt = Date.now(); store.set(SYNC_KEY, String(g.ts || 0));
+    CLOUD.sig = sig; CLOUD.okAt = Date.now(); CLOUD.fails = 0; CLOUD.wait = 0; store.set(SYNC_KEY, String(g.ts || 0));
   } catch (e) {
     const c = e && e.code;
-    if (c === 'unavailable' || c === 'resource_exhausted' || !c) { CLOUD.failAt = Date.now(); CLOUD.dirty = true; } // 暫時的：下次存檔再試
-    else CLOUD.state = 'off'; // 沒有寫入的權限、被收回、太大……這次就不用雲端了
+    if (CLOUD_END[c]) CLOUD.state = 'off'; // 這次就不用雲端了：遊戲照常存在這台裝置
+    else { // 暫時的：頭一次隔幾秒自己再試一次；還是不行（或是被嫌太頻繁）就半分鐘後再說
+      CLOUD.dirty = true; CLOUD.failAt = Date.now(); CLOUD.wait = c === 'resource_exhausted' || CLOUD.fails++ ? 30000 : 2000 + Math.random() * 3000;
+      setTimeout(() => cloudPush(true), CLOUD.wait + 80);
+    }
   }
   CLOUD.busy = false; if (CLOUD.dirty) cloudPush();
 }

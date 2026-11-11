@@ -46,8 +46,10 @@ SCRIPTS.post_boss = async (g, res) => {
       else await lines([null, '鐵柵落下來，砸在你們身後。\n回頭的路還在。只是窄了。']);
     }
   }
-  await SCRIPTS.sc_reveal(); await SCRIPTS.sc_path(); await SCRIPTS.sc_epilogue();
+  await finale();
 };
+// 終幕的三幕。每演完一幕就存一次：之後在哪一幕關掉遊戲，回來就從那一幕接（每一幕自己記得演過了沒有）
+async function finale() { checkpoint('n_cutlink'); await SCRIPTS.sc_reveal(); checkpoint('n_cutlink'); await SCRIPTS.sc_path(); checkpoint('n_cutlink'); await SCRIPTS.sc_epilogue(); }
 function reforgeBlade() {
   flag('reforged'); const L0 = LEG.anchorblade; let it = Object.values(G.items).find(x => x.keep);
   if (it) { it.leg = 'anchorblade'; it.rar = 4; it.il = L0.il; it.base = L0.base; it.affs = L0.affs.map(a => ({ id: a[0], t: a[1] })); delete it.bn; it.isNew = true; G.lore.anchorblade = 1; }
@@ -113,12 +115,12 @@ SCRIPTS.sc_epilogue = async () => {
   const n = activeIds().length;
   await lines([null, n > 1 ? '你們開始往上爬。' : '你開始往上爬。', FULL], [null, '鏈很長。', FULL], [null, '那個光點，三百年來第一次，有人離它越來越近。', FULL]);
   if (has('yuan')) await lines([null, '爬到看不見底的時候，岑鳶問：\n「上面的人知道嗎？知道是誰斬的？」', FULL], [null, '你說：「到了就知道。」', FULL]);
-  flag('vol1_done'); saveGame(); sfx('win');
+  flag('vol1_done'); checkpoint(); sfx('win');
   await notice('第一卷　壓艙層　完', `<div class="end">${ep.map(a => `<h4>${a[0]}</h4>${a[1]}`).join('')}<h4>你走過的路</h4>${Math.floor(G.stat.sec / 60)} 分鐘・${G.stat.battles} 場戰鬥・墜擊 ${G.stat.slams} 次・連攜 ${G.stat.links} 次・殘窗 ${G.shards.length} / 12・金繼 ${Object.keys(G.lore).length} / ${Object.keys(LEG).length}</div><div class="hint" style="text-align:center">往上是中層。七席的殘黨，還在爭那幾塊浮石。<br>底層還留著：懸賞、沒開的箱子、沒找齊的殘窗。你做過的每一件事，都會跟著你上去。</div>`, '留在底層');
   await fadeTo(1); await sceneOff(); UI.dlg.classList.remove('full'); await fadeTo(0);
 };
 SCRIPTS.n_cutlink = async () => {
-  if (!G.flags.vol1_done) { await SCRIPTS.sc_reveal(); await SCRIPTS.sc_path(); await SCRIPTS.sc_epilogue(); return; }
+  if (!G.flags.vol1_done) { await finale(); return; }
   await lines([null, '切口還是那麼平。\n你的劍現在是一整把了。接縫是一道金線。'], [null, '鏈子在風裡輕輕地響。往上看，那個洞很亮。']);
 };
 
