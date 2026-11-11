@@ -1565,7 +1565,7 @@ SCRIPTS.t_scale = async () => {
   for (;;) {
     const opts = [{ t: '買賣' }, f.has_debtbook ? { t: '把債簿交給她。', key: true } : null, G.rep.ji >= 2 && !f.got_scale ? { t: '「妳那桿秤……」', key: true } : null, { t: '「上面有什麼？」' }, { t: '「城是怎麼掉下來的？」' }, { t: '走了' }];
     const k = await choose(opts, { prompt: '秤婆把秤桿擱平，等你開口。' });
-    if (k === 0) { endTalk(); await openShop(); }
+    if (k === 0) { endTalk(); await openShop(); saveHere(); }
     else if (k === 1) {
       await lines(['scale', '……這是算盤的簿子。'], ['scale', '你知道這上面是多少人的幾年嗎。'], [null, '她一頁一頁撕。撕下來的放進秤盤。\n秤盤沉到底。然後她把整盤倒進火盆。'], ['scale', '債沒了。繩幫會來要。\n讓他們來。']);
       f.has_debtbook = 0; flag('debt_cleared'); addRep('ji', 2); addRep('bang', -1); if (has('yuan')) addAff('yuan', 1); deed('他把繩幫的債簿交給秤婆燒了。集裡一半的人不欠了。');
@@ -1881,8 +1881,10 @@ SCRIPTS.post_boss = async (g, res) => {
       else await lines([null, '鐵柵落下來，砸在你們身後。\n回頭的路還在。只是窄了。']);
     }
   }
-  await SCRIPTS.sc_reveal(); await SCRIPTS.sc_path(); await SCRIPTS.sc_epilogue();
+  await finale();
 };
+// 終幕的三幕。每演完一幕就存一次：之後在哪一幕關掉遊戲，回來就從那一幕接（每一幕自己記得演過了沒有）
+async function finale() { checkpoint('n_cutlink'); await SCRIPTS.sc_reveal(); checkpoint('n_cutlink'); await SCRIPTS.sc_path(); checkpoint('n_cutlink'); await SCRIPTS.sc_epilogue(); }
 function reforgeBlade() {
   flag('reforged'); const L0 = LEG.anchorblade; let it = Object.values(G.items).find(x => x.keep);
   if (it) { it.leg = 'anchorblade'; it.rar = 4; it.il = L0.il; it.base = L0.base; it.affs = L0.affs.map(a => ({ id: a[0], t: a[1] })); delete it.bn; it.isNew = true; G.lore.anchorblade = 1; }
@@ -1948,12 +1950,12 @@ SCRIPTS.sc_epilogue = async () => {
   const n = activeIds().length;
   await lines([null, n > 1 ? '你們開始往上爬。' : '你開始往上爬。', FULL], [null, '鏈很長。', FULL], [null, '那個光點，三百年來第一次，有人離它越來越近。', FULL]);
   if (has('yuan')) await lines([null, '爬到看不見底的時候，岑鳶問：\n「上面的人知道嗎？知道是誰斬的？」', FULL], [null, '你說：「到了就知道。」', FULL]);
-  flag('vol1_done'); saveGame(); sfx('win');
+  flag('vol1_done'); checkpoint(); sfx('win');
   await notice('第一卷　壓艙層　完', `<div class="end">${ep.map(a => `<h4>${a[0]}</h4>${a[1]}`).join('')}<h4>你走過的路</h4>${Math.floor(G.stat.sec / 60)} 分鐘・${G.stat.battles} 場戰鬥・墜擊 ${G.stat.slams} 次・連攜 ${G.stat.links} 次・殘窗 ${G.shards.length} / 12・金繼 ${Object.keys(G.lore).length} / ${Object.keys(LEG).length}</div><div class="hint" style="text-align:center">往上是中層。七席的殘黨，還在爭那幾塊浮石。<br>底層還留著：懸賞、沒開的箱子、沒找齊的殘窗。你做過的每一件事，都會跟著你上去。</div>`, '留在底層');
   await fadeTo(1); await sceneOff(); UI.dlg.classList.remove('full'); await fadeTo(0);
 };
 SCRIPTS.n_cutlink = async () => {
-  if (!G.flags.vol1_done) { await SCRIPTS.sc_reveal(); await SCRIPTS.sc_path(); await SCRIPTS.sc_epilogue(); return; }
+  if (!G.flags.vol1_done) { await finale(); return; }
   await lines([null, '切口還是那麼平。\n你的劍現在是一整把了。接縫是一道金線。'], [null, '鏈子在風裡輕輕地響。往上看，那個洞很亮。']);
 };
 
@@ -2990,7 +2992,51 @@ function newGame() {
   for (const id of G.roster) G.party[id].hp = heroNow(id).hpMax;
   return G;
 }
-function saveGame() { if (!G) return; if (Z && Z.leader && S.mode !== 'battle') { G.zone = Z.id; G.pos = { x: Z.leader.x, y: Z.leader.y }; } G.ts = Date.now(); try { store.set(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ } if (typeof cloudPush === 'function') cloudPush(); }
+// 存檔只寫「接得下去」的狀態。
+// 劇情跑到一半（S.cut）、或一場遭遇從開打到戰後交代完之前（S.hold），要存也先記著不寫，等整段結束再存：
+// 不然在過場中途關掉遊戲，會留下「人已經打倒了、後面的事卻沒發生」的進度，主線就接不下去了。
+// force＝劇情自己確定可以存的點（見 checkpoint、saveHere、engageRun）。
+S.hold = 0; S.savePend = false;
+function saveGame(force) {
+  if (!G) return;
+  if (!force && (S.cut || S.hold)) { S.savePend = true; return; }
+  S.savePend = false;
+  if (Z && Z.leader && S.mode !== 'battle') { G.zone = Z.id; G.pos = { x: Z.leader.x, y: Z.leader.y }; }
+  G.ts = Date.now(); try { store.set(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ }
+  if (typeof cloudPush === 'function') cloudPush();
+}
+// 劇情裡確定可以存的地方。next＝在這之後關掉遊戲的話，回來要自動接著跑的那段劇情（沒有就清掉）
+function checkpoint(next) { if (next) G.pend = { run: next }; else delete G.pend; saveGame(true); }
+// 選單型的對話（買賣）每做完一輪就存；外面還包著別段劇情或戰鬥的時候不存
+function saveHere() { if (S.cut <= 1 && !S.hold && !G.pend) saveGame(true); }
+// 上次停在「還有一段劇情沒演完」（打贏之後的交代、終幕的某一幕）：讀進進度之後接著演
+async function resumePend() {
+  const p = G && G.pend; if (!p || !Z) return;
+  S.hold++;
+  try {
+    if (p.run) { if (SCRIPTS[p.run]) await runScript(p.run); }
+    else if (p.enc && zs(Z.id).enc[p.enc]) {
+      const e = Z.m.ents.find(x => x.k === 'enc' && x.id === p.enc), post = e && (e.post || (SCRIPTS['post_' + p.enc] ? 'post_' + p.enc : null));
+      if (post) await runScript(post, { id: p.enc, e, units: [] }, { over: 'win', win: true, pylons: p.pylons });
+    }
+  } finally { S.hold = Math.max(0, S.hold - 1); delete G.pend; if (!S.hold && !S.cut) saveGame(); }
+}
+// 讀進一份進度、站進區域之後：沒演完的接著演（戰後的交代、剛到這一區的那段話——它們都只演一次，演過的不會重來）
+async function afterLoad() { await resumePend(); const arr = 'arrive_' + Z.id; if (SCRIPTS[arr] && S.mode === 'explore' && !S.cut) await runScript(arr); }
+// 把手上這份進度（G）接起來：站進存檔時的區域、淡入、再把沒演完的接著演。
+// 淡入的那半秒先別讓世界動（S.cut）：不然站的地方剛好有敵人看得到，會跟要接著演的劇情撞在一起。
+async function resumeWorld(msg) {
+  enterZone(G.zone, null, G.pos); hudMode('explore'); S.cut++;
+  await fadeTo(0); S.cut = Math.max(0, S.cut - 1);
+  if (!zs(G.zone).seen) zs(G.zone).seen = 1; if (msg) toast(msg);
+  await afterLoad();
+}
+// 玩到一半換成另一份進度（讀存檔碼、接另一台裝置的）：先讓世界停住，再淡出、換、淡入
+async function switchSave(g, msg) {
+  S.cut++; await fadeTo(1); S.cut = Math.max(0, S.cut - 1);
+  G = g; try { store.set(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ }
+  await resumeWorld(msg);
+}
 function loadGame() { try { const s = store.get(SAVE_KEY); if (!s) return null; const g = JSON.parse(s); if (!g || g.v !== 1 || !g.party || !ZONES[g.zone]) return null; return g; } catch (e) { return null; } }
 function exportSave() { try { return 'FC1.' + btoa(unescape(encodeURIComponent(JSON.stringify(G)))); } catch (e) { return ''; } }
 function importSave(code) { const g = decodeSave(code); if (!g) return false; G = g; try { store.set(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ } return true; }
@@ -3125,7 +3171,15 @@ function worldUpdate(dt) {
   }
 }
 function useExit(e) { if (e.script) { runScript(e.script); return; } if (e.to === 'map') openLayerMap(); else travel(e.to); }
-async function travel(id, spawn) { saveGame(); await fadeTo(1); enterZone(id, spawn); saveGame(); await fadeTo(0); if (!zs(id).seen) { zs(id).seen = 1; if (typeof zoneTitle === 'function') zoneTitle(ZONES[id]); } const arr = 'arrive_' + id; if (SCRIPTS[arr]) await runScript(arr); }
+// 換區。淡出、淡入的那半秒世界先不動（S.cut）：不然淡出時被敵人看到會開打，人卻已經換到下一區了。
+async function travel(id, spawn) {
+  saveGame();
+  S.cut++; await fadeTo(1); S.cut = Math.max(0, S.cut - 1);
+  enterZone(id, spawn); saveGame();
+  S.cut++; await fadeTo(0); S.cut = Math.max(0, S.cut - 1);
+  if (!zs(id).seen) { zs(id).seen = 1; if (typeof zoneTitle === 'function') zoneTitle(ZONES[id]); }
+  const arr = 'arrive_' + id; if (SCRIPTS[arr]) await runScript(arr);
+}
 
 // ---------- 互動 ----------
 function entAt(sx, sy) { // 螢幕點附近可互動的東西
@@ -3166,14 +3220,30 @@ async function openChest(e) {
 function collectShard(e) { if (e.done) return; e.done = true; zs(Z.id).got[e.id] = 1; if (!G.shards.includes(e.id)) G.shards.push(e.id); sfx('shard'); for (let i = 0; i < 18; i++) part({ x: e.x, y: e.y, z: e.z + 1, vx: (Math.random() - .5) * 2.4, vy: (Math.random() - .5) * 2.4, vz: 1 + Math.random() * 2.4, life: 1.2, size: 3, col: GLASS[i % 5], k: 'shard', spin: 6, add: false }); saveGame(); runScript('sys_shard', e); }
 
 // ---------- 遭遇與戰鬥 ----------
+// 一場遭遇從戰前的話、打、戰利品到戰後的話，算一件事：中間不存檔（見 saveGame）
 async function engage(g, ambush, opts) {
-  if (S.mode !== 'explore') return; const E = ENC[g.id];
+  if (S.mode !== 'explore') return;
+  S.hold++;
+  try { return await engageRun(g, ambush, opts); }
+  finally { S.hold = Math.max(0, S.hold - 1); if (!S.hold && !S.cut && S.savePend) saveGame(); }
+}
+async function engageRun(g, ambush, opts) {
+  const E = ENC[g.id];
   const pre = g.e.pre || (SCRIPTS['pre_' + g.id] ? 'pre_' + g.id : null);
   if (pre && !G.flags['pre_' + g.id]) { const r = await runScript(pre, g); if (r === false) { g.cool = Z.t + 3; return; } flag('pre_' + g.id); }
   if (typeof encAmbush === 'function') ambush = encAmbush(g, ambush);
   { const fresh = mkGroup(g.e); if (fresh.units.length !== g.units.length) g.units = fresh.units; } // 隊伍人數變了，敵群跟著重排
   const res = await doBattle(g, Object.assign({ ambush }, opts || {}));
-  if (res.over === 'win') { zs(Z.id).enc[g.id] = 1; Z.groups = Z.groups.filter(x => x !== g); refreshBlocked(); await afterWin(g, res); const post = g.e.post || (SCRIPTS['post_' + g.id] ? 'post_' + g.id : null); if (post) await runScript(post, g, res); refreshBlocked(); if (typeof hudZone === 'function') hudZone(); saveGame(); }
+  if (res.over === 'win') {
+    zs(Z.id).enc[g.id] = 1; Z.groups = Z.groups.filter(x => x !== g); refreshBlocked();
+    // 打贏、戰利品一入袋就存一次：停在戰利品那一頁關掉遊戲，這一場也不用重打。
+    // 戰後還有話要交代的，記下「等著演」（G.pend）：在那段話中途關掉，回來會從它的開頭接著演。
+    // 從別段劇情裡打起來的那幾場不存：那一整段劇情是一件事，要嘛全有、要嘛全無。
+    const post = g.e.post || (SCRIPTS['post_' + g.id] ? 'post_' + g.id : null), mark = !S.cut && S.hold === 1;
+    await afterWin(g, res, () => { if (!mark) return; if (post) G.pend = { enc: g.id, pylons: res.pylons }; saveGame(true); });
+    if (post) { await runScript(post, g, res); if (mark) delete G.pend; }
+    refreshBlocked(); if (typeof hudZone === 'function') hudZone(); saveGame();
+  }
   else if (res.over === 'flee') { g.cool = Z.t + 4; const L = Z.leader, a = Math.atan2(L.y - g.e.y, L.x - g.e.x); const p = findPath(L.x, L.y, g.e.x + Math.cos(a) * 7, g.e.y + Math.sin(a) * 7); if (p && p.length) { const q = p[Math.min(p.length - 1, 6)]; L.x = q[0]; L.y = q[1]; refreshFollowers(); } }
   return res;
 }
@@ -3199,7 +3269,7 @@ async function doBattle(g, opts) {
     battleCleanup(); return r;
   }
 }
-async function afterWin(g, r) {
+async function afterWin(g, r, granted) {
   const E = ENC[g.id], zl = E.zl, items = [], mats = {};
   G.coin += r.coin;
   for (const t of r.kills) { const F = FOE[t]; if (F.minor) continue; const ch = F.elite || F.boss ? 1 : .34; if (Math.random() < ch) items.push(giveItem(rollDrop(F.elite || F.boss ? 'elite' : 'mob', zl))); if (F.elite || F.boss) { mats.dust = (mats.dust || 0) + 1; G.dust++; } if (Math.random() < .5) { const n = R.i(1, 2); mats.scrap = (mats.scrap || 0) + n; G.scrap += n; } }
@@ -3208,6 +3278,7 @@ async function afterWin(g, r) {
   if (E.elite) { mats.lacquer = (mats.lacquer || 0) + 1; G.lacquer++; }
   if (Math.random() < .3 && G.cons.potion < G.beltMax) { G.cons.potion++; mats.potion = 1; }
   const ups = gainXp(r.xp);
+  if (granted) granted(); // 東西都入袋了（下面只是把它們秀出來、選天賦）
   await showLoot({ items, coin: r.coin, mats, xp: r.xp, ups, title: E.boss ? '層主' : E.elite ? '精英' : '戰利品' });
   for (const t of pendingTalents()) await chooseTalent(t);
 }
@@ -3290,9 +3361,13 @@ function drawWindowFill(g, sx, sy, k) { // 營地的殘窗：撿到幾片就亮�
 // - 開機時兩邊比「最後存檔時間」(G.ts)。雲端比較新、而且這台的進度已經同步過 → 直接接上雲端那份。
 //   這台有還沒同步的進度、或是已經開始玩了雲端才回話 → 不自己決定，問玩家要哪一份。
 // - 雲端還沒回話之前，片頭的按鈕會先等它（最多 5 秒），免得一個新遊戲把雲端的舊進度蓋掉。
-// - 任何一步失敗都只是「這次沒有雲端」：遊戲照常用這台裝置的存檔。
+// - 頁面被收起來（切到別的 App、鎖螢幕）的時候，等著寫的那一筆馬上送出去，不等那幾秒。
+// - 寫失敗：暫時的狀況會自己再試（先隔幾秒、再不行每半分鐘一次）；沒有權限、被收回這一類就當「這次沒有雲端」。
+// - 任何一步失敗都只影響雲端那一份：遊戲照常用這台裝置的存檔。
 const SYNC_KEY = 'fallencourt.sync';
-const CLOUD = { state: 'off', doc: null, ready: null, remote: null, busy: false, dirty: false, timer: 0, failAt: 0, okAt: 0, sig: '', ask: null, asking: false };
+const CLOUD = { state: 'off', doc: null, ready: null, remote: null, busy: false, dirty: false, timer: 0, failAt: 0, wait: 0, fails: 0, okAt: 0, sig: '', ask: null, asking: false };
+// 寫不進去、而且再試也沒用的狀況（沒有寫入的權限、被收回、資料太大、額度滿了、這個畫面不給用）。其餘的——包含不認得的——都當成暫時的
+const CLOUD_END = { invalid_argument: 1, quota_exceeded: 1, revoked: 1, not_granted: 1, capability_disabled: 1, capability_removed: 1, transform_error: 1 };
 const cloudOn = () => CLOUD.state === 'on';
 function decodeSave(code) { try { code = String(code).trim(); if (!code.startsWith('FC1.')) return null; const g = JSON.parse(decodeURIComponent(escape(atob(code.slice(4))))); return g && g.v === 1 && g.party && ZONES[g.zone] ? g : null; } catch (e) { return null; } }
 // 存檔裡「會不會一直變但不重要」的欄位（位置、時鐘）拿掉之後的內容：只有這個變了才值得寫上雲端
@@ -3333,7 +3408,7 @@ const saveLine = g => `第 ${g.lv} 級・${ZONES[g.zone].n}・走了 ${Math.floo
 async function cloudAsk() {
   const R = CLOUD.ask; if (!R || CLOUD.asking) return;
   const title = S.mode === 'title';
-  if (!title && (S.mode !== 'explore' || S.cut || S.dialog || S.panel)) return; // 等到站著沒事的時候再問
+  if (!title && (S.mode !== 'explore' || S.cut || S.hold || S.dialog || S.panel)) return; // 等到站著沒事的時候再問
   if (!UI.modal.classList.contains('hide')) return;
   CLOUD.asking = true;
   const local = title ? loadGame() : G;
@@ -3342,15 +3417,17 @@ async function cloudAsk() {
   if (yes) {
     cloudAdopt(R);
     if (title) { showTitle(); toast('接上了另一台的進度。'); }
-    else { G = JSON.parse(JSON.stringify(R.g)); await fadeTo(1); enterZone(G.zone, null, G.pos); hudMode('explore'); await fadeTo(0); toast('接上了另一台的進度。'); }
+    else await switchSave(JSON.parse(JSON.stringify(R.g)), '接上了另一台的進度。');
   } else cloudPush(true);
 }
 // 存檔之後呼叫：過幾秒把這台的存檔寫上雲端
 function cloudPush(now) {
   if (!cloudOn() || CLOUD.ask) return; CLOUD.dirty = true;
-  if (CLOUD.busy || CLOUD.timer || Date.now() - CLOUD.failAt < 30000) return;
+  if (CLOUD.busy || CLOUD.timer || Date.now() - CLOUD.failAt < CLOUD.wait) return;
   CLOUD.timer = setTimeout(cloudFlush, now ? 50 : 4000);
 }
+// 頁面要被收起來了：等著寫的那一筆現在就送，不等那幾秒
+function cloudNow() { if (!cloudOn() || !CLOUD.dirty || CLOUD.busy || CLOUD.ask || Date.now() - CLOUD.failAt < CLOUD.wait) return; clearTimeout(CLOUD.timer); CLOUD.timer = 0; cloudFlush(); }
 async function cloudFlush() {
   CLOUD.timer = 0; if (!cloudOn() || CLOUD.busy || !CLOUD.dirty || CLOUD.ask) return;
   const s = store.get(SAVE_KEY); let g = null; try { g = JSON.parse(s); } catch (e) { /* ignore */ } if (!g) { CLOUD.dirty = false; return; }
@@ -3359,11 +3436,14 @@ async function cloudFlush() {
   CLOUD.busy = true;
   try {
     await CLOUD.doc.set({ v: 1, code: 'FC1.' + btoa(unescape(encodeURIComponent(s))), ts: g.ts || 0, lv: g.lv, zone: g.zone, sec: Math.round(g.stat.sec || 0) });
-    CLOUD.sig = sig; CLOUD.okAt = Date.now(); store.set(SYNC_KEY, String(g.ts || 0));
+    CLOUD.sig = sig; CLOUD.okAt = Date.now(); CLOUD.fails = 0; CLOUD.wait = 0; store.set(SYNC_KEY, String(g.ts || 0));
   } catch (e) {
     const c = e && e.code;
-    if (c === 'unavailable' || c === 'resource_exhausted' || !c) { CLOUD.failAt = Date.now(); CLOUD.dirty = true; } // 暫時的：下次存檔再試
-    else CLOUD.state = 'off'; // 沒有寫入的權限、被收回、太大……這次就不用雲端了
+    if (CLOUD_END[c]) CLOUD.state = 'off'; // 這次就不用雲端了：遊戲照常存在這台裝置
+    else { // 暫時的：頭一次隔幾秒自己再試一次；還是不行（或是被嫌太頻繁）就半分鐘後再說
+      CLOUD.dirty = true; CLOUD.failAt = Date.now(); CLOUD.wait = c === 'resource_exhausted' || CLOUD.fails++ ? 30000 : 2000 + Math.random() * 3000;
+      setTimeout(() => cloudPush(true), CLOUD.wait + 80);
+    }
   }
   CLOUD.busy = false; if (CLOUD.dirty) cloudPush();
 }
@@ -4742,7 +4822,7 @@ function removeItem(uid) { G.bag = G.bag.filter(x => x !== uid); delete G.items[
 // ---------- 主選單 ----------
 const MENU_TABS = [['party', '隊伍'], ['bag', '背包'], ['ledger', '秤簿'], ['window', '殘窗'], ['codex', '圖鑑'], ['set', '設定']];
 function openMenu(tab, hero) {
-  if (S.mode !== 'explore' || S.dialog || S.cut) return;
+  if (S.mode !== 'explore' || S.dialog || S.cut || S.hold) return;
   if (tab) PM.tab = tab; if (hero) PM.hero = hero; if (!G.party[PM.hero] || !G.party[PM.hero].active) PM.hero = activeIds()[0];
   const pb = panelShow({ party: '隊伍', bag: '背包', ledger: '秤簿', window: '殘窗', codex: '圖鑑', set: '設定' }[PM.tab], MENU_TABS, PM.tab, t => openMenu(t));
   ({ party: tabParty, bag: tabBag, ledger: tabLedger, window: tabWindow, codex: tabCodex, set: tabSet })[PM.tab](pb);
@@ -4862,7 +4942,12 @@ function tabSet(pb) {
   $$('#panel [data-sp]').forEach(b => b.onclick = () => { S.set.speed = +b.dataset.sp; saveSettings(); sfx('ui'); openMenu('set'); });
   saveGame(); $('#svout').value = exportSave();
   $('#svcopy').onclick = () => { const t = $('#svout'); t.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { /* ignore */ } if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(() => toast('複製好了。'), () => toast(ok ? '複製好了。' : '複製不了：請長按文字框自己全選複製。')); else toast(ok ? '複製好了。' : '請長按文字框自己全選複製。'); };
-  $('#svload').onclick = async () => { const code = $('#svin').value; if (!code.trim()) { toast('先把存檔碼貼進去。'); return; } const keep = JSON.stringify(G); if (!importSave(code)) { G = JSON.parse(keep); toast('這串存檔碼讀不出來。'); sfx('deny'); return; } panelClose(); await fadeTo(1); enterZone(G.zone, null, G.pos); hudMode('explore'); await fadeTo(0); toast('讀好了。'); };
+  // 讀存檔碼：先把選單關掉（關選單會存一次現在這份），再換成碼裡的那一份——順序反過來的話，碼裡的進度會被搬到現在站的地方
+  $('#svload').onclick = async () => {
+    const code = $('#svin').value; if (!code.trim()) { toast('先把存檔碼貼進去。'); return; }
+    const g = decodeSave(code); if (!g) { toast('這串存檔碼讀不出來。'); sfx('deny'); return; }
+    panelClose(); switchSave(g, '讀好了。');
+  };
   $('#totitle').onclick = async () => { panelClose(); await fadeTo(1); showTitle(); await fadeTo(0); };
 }
 
@@ -4978,8 +5063,19 @@ function boot() {
   let last = performance.now();
   const frame = now => { const raw = now - last, dt = Math.min(.05, Math.max(0, raw / 1000)); last = now; S.t += dt; S.dt = dt; try { tick(dt); } catch (e) { console.error(e); } perfWatch(raw); requestAnimationFrame(frame); };
   requestAnimationFrame(frame);
-  setInterval(() => { if (G && S.mode === 'explore' && !S.cut && !S.dialog && !S.panel) saveGame(); }, 20000);
-  addEventListener('pagehide', () => { if (G && S.mode !== 'title') saveGame(); });
+  // 站著沒事的時候每 20 秒存一次。
+  // 保險：「這一段先別存」（S.hold）不該在站著沒事的時候還掛著；真的卡了一分鐘就放掉它，不能讓遊戲從此不存檔。
+  let stale = 0;
+  setInterval(() => {
+    if (!G || S.mode !== 'explore' || S.cut || S.dialog || S.panel) { stale = 0; return; }
+    if (S.hold) { if (!UI.modal.classList.contains('hide') || ++stale < 3) return; S.hold = 0; }
+    stale = 0; saveGame();
+  }, 20000);
+  // 頁面被收起來（切到別的 App、鎖螢幕、關分頁）：把能存的存下來，等著上雲端的那一筆也馬上送。
+  // 手機上切走之後頁面常常直接被系統收掉，等不到下一次自動存檔。劇情或戰鬥中途不會存到一半（見 saveGame）。
+  const onHide = () => { if (!G || S.mode === 'title') return; saveGame(); if (typeof cloudNow === 'function') cloudNow(); };
+  addEventListener('pagehide', onHide);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) onHide(); });
 }
 // 「自動」畫質：連續好幾秒每秒不到 24 格，才把解析度降一級（不會自己升回去，免得忽高忽低）
 const PERF = { acc: 0, n: 0, bad: 0 };
@@ -5018,13 +5114,13 @@ function drawTitle(t) {
   const vg = cx.createRadialGradient(VW / 2, VH * .5, Math.min(VW, VH) * .3, VW / 2, VH * .5, Math.max(VW, VH) * .75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(2,3,8,.72)'); cx.fillStyle = vg; cx.fillRect(0, 0, VW, VH);
 }
 function showTitle() {
-  S.mode = 'title'; S.panel = false; S.dialog = false; S.cut = 0; hudMode('none'); UI.dlg.classList.add('hide'); UI.panel.classList.add('hide'); modalClose(); UI.scene.classList.remove('on');
+  S.mode = 'title'; S.panel = false; S.dialog = false; S.cut = 0; S.hold = 0; S.savePend = false; hudMode('none'); UI.dlg.classList.add('hide'); UI.panel.classList.add('hide'); modalClose(); UI.scene.classList.remove('on');
   const save = loadGame(); TITLE.lit = save && save.shards && save.shards.length ? save.shards.slice() : [2, 3, 6, 7, 10, 11]; TITLE.key = '';
   let t = $('#title'); if (t) t.remove();
   t = el('div', '', `<div class="lg"><b>墜庭</b><span>FALLEN COURT</span><em>所有人都盯著那個光點</em></div><div class="tb">${save ? '<button class="bt gold" data-k="cont">繼續</button>' : ''}<button class="bt ${save ? '' : 'gold'}" data-k="new">${save ? '重新開始' : '醒來'}</button><button class="bt" data-k="code">用存檔碼接續</button></div><div class="ver">第一卷　壓艙層</div>`);
   t.id = 'title'; $('#ui').appendChild(t);
   if (AU.ctx) { AU.mode = 'deep'; AU.battle = 0; audioMode(); }
-  const start = async fresh => { await fadeTo(1); t.remove(); if (fresh) { newGame(); enterZone('vault'); } else enterZone(G.zone, null, G.pos); hudMode('explore'); await fadeTo(0); if (fresh) runScript('intro'); else if (!zs(G.zone).seen) { zs(G.zone).seen = 1; } };
+  const start = async fresh => { await fadeTo(1); t.remove(); if (!fresh) { resumeWorld(); return; } newGame(); enterZone('vault'); hudMode('explore'); await fadeTo(0); runScript('intro'); };
   $$('#title .bt').forEach(b => b.onclick = async () => {
     audioInit(); sfx('confirm'); const k = b.dataset.k;
     // Claude 版：雲端的進度還沒回來就先等一下（最多 5 秒），免得開一個新遊戲把另一台裝置的進度蓋掉
