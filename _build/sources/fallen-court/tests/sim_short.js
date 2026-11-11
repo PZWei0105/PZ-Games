@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+// 少人隊伍（同伴離隊後）的平衡檢查：node tests/sim_short.js
+const path = require('path');
+const { load, LOGIC } = require('./load.js');
+const X = load(LOGIC.concat([path.join(__dirname, 'bot.js')]), ['ENC', 'HERO', 'FOE', 'genItem', 'calcHero', 'botBattle', 'heroSkillsAt']);
+const { ENC, HERO, genItem, calcHero, botBattle, heroSkillsAt } = X;
+function mk(ids, lv) { const items = {}, heroes = []; for (const id of ids) { const eq = {}, wb = id === 'wei' ? 'sword' : id === 'yuan' ? 'bow' : 'shield'; const add = (slot, o) => { const it = genItem(o); items[it.uid] = it; eq[slot] = it.uid; }; const r = lv >= 7 ? 2 : 1; add('weapon', { il: lv, rar: r, base: wb }); add('armor', { il: lv, rar: r, base: id === 'yuan' ? 'armor_l' : id === 'luo' ? 'armor_h' : 'armor_m' }); add('trinket', { il: lv, rar: 1, base: 'trinket' }); const tal = {}; for (const t of HERO[id].talents) if (lv >= t[0]) tal[t[1].id] = 1; const st = calcHero(id, { lv, eq, tal, wounds: 0 }, items); const learned = heroSkillsAt(id, lv), want = id === 'wei' ? ['w_lift', 'w_slam', 'w_dash', 'w_time'] : id === 'yuan' ? ['y_mark', 'y_hoist', 'y_yank', 'y_hook'] : ['l_oath', 'l_slam', 'l_mend', 'l_ram']; heroes.push({ id, stats: st, hp: st.hpMax, skills: want.filter(x => learned.includes(x)).concat(learned.filter(x => !want.includes(x))).slice(0, 4), ultOk: true }); } return heroes; }
+const K = { 0: [1, 1], 1: [+(process.env.H1 || .6), +(process.env.A1 || .68)], 2: [+(process.env.H2 || .36), +(process.env.A2 || .45)] };
+for (const [ids, lv, encs] of [[['wei', 'luo'], 8, ['r1', 'r3', 'boss']], [['wei', 'yuan'], 8, ['h5', 'r1', 'r3', 'boss']], [['wei'], 8, ['h5', 'r1', 'r2', 'r3', 'boss']]]) for (const id of encs) {
+  const E = ENC[id], n = 16, short = 3 - ids.length; let win = 0, rounds = 0, loss = 0;
+  for (let i = 0; i < n; i++) { const heroes = mk(ids, lv), hp0 = heroes.reduce((a, h) => a + h.hp, 0); const foes = E.foes.slice(); if (!E.boss) for (let k = 0; k < short && foes.length >= (k ? 3 : 4); k++) for (let j = foes.length - 1; j >= 0; j--) if (!X.FOE[foes[j]].elite && !X.FOE[foes[j]].boss) { foes.splice(j, 1); break; } const b = botBattle({ heroes, foes, zl: E.zl, scene: E.scene || [], seed: 500 + i * 7919, items: { potion: 3, fire: 0, float: 0 }, boss: E.boss, hpK: K[short][0], atkK: K[short][1] * (E.atkK || 1) }); if (b.over === 'win') win++; rounds += b.time / 100; loss += (hp0 - b.units.filter(u => u.side === 'hero').reduce((a, h) => a + Math.max(0, h.hp), 0)) / hp0; }
+  console.log(`${ids.join('+').padEnd(13)} lv${lv} ${id.padEnd(5)} 勝 ${(win / n * 100).toFixed(0).padStart(3)}%  輪 ${(rounds / n).toFixed(1).padStart(5)}  失血 ${(loss / n * 100).toFixed(0).padStart(3)}%`);
+}
