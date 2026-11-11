@@ -90,6 +90,7 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 | 深艙 UNDERTOW（深海搜打撤，完整版） | `_build/sources/undertow/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/undertow/`）；`tests/run.py bot 0` 自動玩、`tests/scenarios.py` 檢查核心規則（躲藏、憋氣、陷阱、震爆彈…）、`tests/fuzz_maps.py` 檢查地圖；收藏庫截圖步驟 `tests/shots_steps.py` |
 | 偷渡者 STOWAWAY（太空恐怖生存＋船員指揮，完整版） | `_build/sources/stowaway/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/stowaway/`）；`tests/run.py bot 1500` 自動玩一整航、`tests/flows.py all` 跑六條結局路線；收藏庫截圖步驟 `tests/shots_steps.py` |
 | 墜庭 FALLEN COURT（斜俯視日式回合制撿寶 RPG，第一卷） | `_build/sources/fallen-court/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`，發布後要宣告能力 `{db, user}` 才有雲端存檔）與獨立網頁版（`dist/web/`，複製到 `raw/fallen-court/`）；`node tests/sim.js all` 自動打每一場看平衡、`python3 tests/full.py all` 在瀏覽器裡把整條主線玩過五條分支、`python3 tests/cloud.py` 檢查雲端存檔、`node tests/maps.js` 檢查地圖；收藏庫截圖步驟 `tests/shots_steps.py`；完整企劃在 `DESIGN.md` |
+| 留一口 LEAVE ONE（冰河末回合制狩獵，試作：第一場狩獵） | `_build/sources/leave-one/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/leave-one/`）；`node tests/sim.js 60` 用六種打法各打 60 場看規則與收穫、`python3 tests/run.py flow ice|bleed` 在瀏覽器裡自動玩一整場、`python3 tests/icon.py` 用遊戲畫面重做圖示；收藏庫截圖步驟 `tests/shots_steps.py`；企劃在 `DESIGN.md` |
 
 ## 放在這個網站裡的專屬 App（`apps/`）
 

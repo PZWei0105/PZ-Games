@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0806">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="留一口">
+<title>留一口 LEAVE ONE</title>
+<!--PWA-->
+<style>
+/*FONTS*/
+:root{--char:#1d1511;--ochre:#d0803a;--red:#b2462c;--bone:#f0e3c6;--dim:rgba(240,227,198,.58);--stone:rgba(24,17,13,.78);
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0b0806;overflow:hidden;color:var(--bone);
+  font-family:'LOBody','Noto Serif TC','Songti TC','PingFang TC',serif;user-select:none;-webkit-user-select:none;
+  touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+#app{position:fixed;inset:0;overflow:hidden}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.off{display:none!important}
+.hid{opacity:0;pointer-events:none}
+.hid,.hid *{pointer-events:none!important}
+
+/* ---------- HUD ---------- */
+#hud{position:absolute;inset:0;pointer-events:none;transition:opacity .6s}
+#hud>*{pointer-events:auto}
+#wind{position:absolute;left:calc(12px + var(--sal));top:calc(10px + var(--sat));display:flex;align-items:center;gap:8px;
+  padding:6px 12px 6px 6px;border-radius:14px;background:var(--stone);box-shadow:0 0 0 1px rgba(240,227,198,.10),0 6px 18px rgba(0,0,0,.45);
+  pointer-events:none}
+#windc{width:84px;height:40px;display:block}
+#wind .wl{display:flex;flex-direction:column;line-height:1.15}
+#windTxt{font-family:'LOSerif',serif;font-size:17px;letter-spacing:.06em;color:var(--bone)}
+#windNext{font-size:11.5px;color:var(--dim);margin-top:2px}
+#wind.gust{animation:gust .9s ease-out}
+@keyframes gust{0%{transform:translateX(-6px);box-shadow:0 0 0 1px rgba(240,190,120,.6),0 0 26px rgba(240,150,60,.5)}100%{transform:none}}
+#turn{position:absolute;left:50%;top:calc(12px + var(--sat));transform:translateX(-50%);font-family:'LOSerif',serif;
+  font-size:13px;letter-spacing:.3em;color:var(--dim);pointer-events:none;text-shadow:0 1px 6px #000}
+#tools{position:absolute;left:50%;bottom:calc(12px + var(--sab));transform:translateX(-50%);display:flex;gap:10px}
+.tool{position:relative;width:76px;height:84px;border-radius:18px;background:var(--stone);display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;padding-top:6px;box-shadow:0 0 0 1px rgba(240,227,198,.10),0 8px 20px rgba(0,0,0,.5);
+  transition:transform .15s,box-shadow .2s,opacity .25s}
+.tool img{width:46px;height:46px;display:block;pointer-events:none}
+.tool .nm{font-family:'LOSerif',serif;font-size:14px;letter-spacing:.08em;margin-top:1px}
+.tool .tally{position:absolute;top:7px;right:9px;font-family:'LOSerif',serif;font-size:12px;color:var(--ochre);letter-spacing:-.02em}
+.tool.on{box-shadow:0 0 0 2px var(--ochre),0 0 22px rgba(220,120,50,.45),0 8px 20px rgba(0,0,0,.5);transform:translateY(-4px)}
+.tool.empty{opacity:.32}
+.tool:active{transform:translateY(-1px) scale(.97)}
+#hud.busy .tool{opacity:.35;pointer-events:none}
+@media (max-height:520px){.tool{width:66px;height:70px;border-radius:15px;padding-top:4px}.tool img{width:38px;height:38px}.tool .nm{font-size:12.5px}
+  #tools{gap:8px;bottom:calc(8px + var(--sab))}#hint{top:calc(56px + var(--sat));font-size:14px;padding:8px 14px}#wind{padding:4px 10px 4px 4px}#windc{width:70px;height:34px}#windTxt{font-size:15px}
+  #menuBtn{width:42px;height:42px;bottom:calc(10px + var(--sab))}#ffBtn{bottom:calc(10px + var(--sab));padding:10px 14px}}
+#ffBtn{position:absolute;right:calc(14px + var(--sar));bottom:calc(16px + var(--sab));padding:12px 16px;border-radius:14px;
+  background:var(--stone);font-family:'LOSerif',serif;font-size:14px;letter-spacing:.12em;box-shadow:0 0 0 1px rgba(240,227,198,.12);
+  opacity:0;pointer-events:none;transition:opacity .3s}
+#hud.busy #ffBtn{opacity:1;pointer-events:auto}
+#ffBtn.on{box-shadow:0 0 0 2px var(--ochre);color:#ffd9a8}
+#menuBtn{position:absolute;left:calc(12px + var(--sal));bottom:calc(16px + var(--sab));width:46px;height:46px;border-radius:14px;
+  background:var(--stone);box-shadow:0 0 0 1px rgba(240,227,198,.12);display:flex;align-items:center;justify-content:center}
+#menuBtn i{display:block;width:18px;height:2px;background:var(--bone);border-radius:2px;box-shadow:0 -6px 0 var(--bone),0 6px 0 var(--bone);opacity:.8}
+
+#hint{position:absolute;left:50%;top:calc(64px + var(--sat));transform:translate(-50%,-6px);max-width:min(86vw,520px);text-align:center;
+  padding:10px 18px;border-radius:14px;background:rgba(18,12,9,.82);box-shadow:0 0 0 1px rgba(208,128,58,.35),0 10px 30px rgba(0,0,0,.5);
+  font-size:15px;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s}
+#hint.show{opacity:1;transform:translate(-50%,0)}
+#hint.aimhide{opacity:0!important}
+@media (max-width:560px){#turn{display:none}}
+#hint b{color:#ffcf96;font-weight:normal;font-family:'LOSerif',serif}
+
+/* ---------- 標題 ---------- */
+#title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  transition:opacity 1.1s;cursor:pointer;padding:24px}
+#title h1{margin:0;font-family:'LOSerif',serif;font-weight:normal;font-size:clamp(64px,13vmin,124px);letter-spacing:.14em;
+  color:#e7c79a;text-shadow:0 0 28px rgba(230,120,40,.35),0 2px 0 rgba(0,0,0,.6);padding-left:.14em}
+#title .en{font-family:'LOSerif',serif;font-size:clamp(12px,2.2vmin,16px);letter-spacing:.9em;color:rgba(240,210,170,.6);margin-top:6px;padding-left:.9em}
+#title .tag{font-size:clamp(14px,2.7vmin,18px);line-height:1.8;color:rgba(240,227,198,.82);margin:clamp(18px,4vmin,34px) 0 0}
+#title .tap{margin-top:clamp(22px,6vmin,46px);font-family:'LOSerif',serif;font-size:15px;letter-spacing:.35em;color:#ffcf96;
+  animation:breathe 2.4s ease-in-out infinite;padding-left:.35em}
+@keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
+
+/* ---------- 結局 ---------- */
+#end{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;
+  padding:0 16px calc(18px + var(--sab));transition:opacity .9s}
+#end .card{pointer-events:auto;text-align:center;padding:16px 22px 16px;border-radius:20px;background:rgba(16,11,8,.80);
+  box-shadow:0 0 0 1px rgba(240,227,198,.12),0 16px 50px rgba(0,0,0,.6);max-width:520px;width:100%}
+#endK{font-family:'LOSerif',serif;font-size:12px;letter-spacing:.5em;color:var(--dim);padding-left:.5em}
+#endT{margin:2px 0 4px;font-family:'LOSerif',serif;font-weight:normal;font-size:44px;letter-spacing:.3em;padding-left:.3em;color:#efc58f}
+#end.lose #endT{color:#cdb7a0}
+#endL{margin:0;font-size:15.5px;line-height:1.6}
+#endS{margin:8px 0 0;font-size:12.5px;color:var(--dim);letter-spacing:.06em}
+#endH{display:flex;justify-content:center;gap:16px;margin:10px 0 2px;flex-wrap:wrap}
+#endH .hv{display:flex;align-items:center;gap:6px;font-family:'LOSerif',serif;font-size:15px}
+#endH .hv i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ochre);box-shadow:0 0 6px rgba(220,120,50,.5)}
+#endH .hv i.e{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(240,227,198,.3)}
+#endB{margin:6px 0 0;font-size:12px;color:#ffcf96;letter-spacing:.08em;min-height:1em}
+.tally i{display:inline-block;width:3px;height:13px;background:var(--ochre);margin-left:3px;border-radius:1px;transform:rotate(9deg)}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;transition:opacity .4s}
+.lbl{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;will-change:transform;transform:translate(-50%,-100%)}
+#tag{font-family:'LOSerif',serif;font-size:14px;letter-spacing:.14em;text-align:center;color:var(--bone);
+  text-shadow:0 1px 3px #000,0 0 10px rgba(0,0,0,.8);transition:opacity .3s}
+#tag .hp{display:flex;gap:3px;justify-content:center;margin-top:3px}
+#tag .hp i{width:6px;height:6px;border-radius:50%;background:#c4452a;box-shadow:0 0 4px rgba(200,60,30,.7)}
+#tag .hp i.e{background:rgba(240,227,198,.18);box-shadow:none}
+#tag.rage{color:#ffb08a}
+#aimLbl{font-family:'LOSerif',serif;font-size:13px;padding:3px 9px;border-radius:9px;background:rgba(16,11,8,.78);
+  box-shadow:0 0 0 1px rgba(240,190,120,.35);color:#ffe0b8;margin-top:-14px}
+.flt{font-family:'LOSerif',serif;font-size:19px;color:#ffd2a0;text-shadow:0 2px 6px #000,0 0 14px rgba(220,80,30,.6);opacity:0}
+.flt.big{font-size:24px;color:#ffb27c}
+#end .btns{display:flex;gap:10px;justify-content:center;margin-top:12px}
+#end .btns button{padding:11px 20px;border-radius:13px;background:rgba(240,227,198,.08);box-shadow:0 0 0 1px rgba(240,227,198,.16);
+  font-family:'LOSerif',serif;font-size:15px;letter-spacing:.14em}
+#end .btns button.main{background:#b4512a;box-shadow:0 0 18px rgba(220,110,40,.4)}
+#end.peek .card{opacity:0;pointer-events:none}
+@media (max-height:520px) and (orientation:landscape){
+  #end{align-items:center;justify-content:flex-end;padding:0 calc(14px + var(--sar)) 0 0}
+  #end .card{width:46%;max-width:430px;padding:12px 16px}
+  #endT{font-size:32px;margin:0 0 2px}#endL{font-size:13.5px;line-height:1.55}#endH{gap:10px;margin:8px 0 0}#endH .hv{font-size:13.5px}
+  #endH .hv i{width:7px;height:7px}#endS{font-size:11.5px;margin-top:6px}#endB{font-size:11px}
+  #end .btns{margin-top:8px}#end .btns button{padding:9px 14px;font-size:14px}}
+#peekBack{position:absolute;right:calc(14px + var(--sar));bottom:calc(16px + var(--sab));padding:10px 14px;border-radius:12px;
+  background:var(--stone);font-size:13px;pointer-events:auto;display:none}
+#end.peek #peekBack{display:block}
+
+/* ---------- 選單、說明 ---------- */
+.sheet{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,4,3,.62);padding:20px}
+.sheet .box{width:min(92vw,440px);max-height:86vh;overflow:auto;padding:18px 20px;border-radius:20px;background:rgba(22,15,11,.96);
+  box-shadow:0 0 0 1px rgba(240,227,198,.14),0 20px 60px rgba(0,0,0,.7);touch-action:pan-y}
+.sheet h3{margin:0 0 10px;font-family:'LOSerif',serif;font-weight:normal;font-size:22px;letter-spacing:.2em}
+.sheet .row{display:flex;flex-direction:column;gap:8px}
+.sheet .row button{padding:13px 14px;border-radius:13px;background:rgba(240,227,198,.07);box-shadow:0 0 0 1px rgba(240,227,198,.12);
+  text-align:left;font-size:15.5px}
+.sheet .row button b{font-family:'LOSerif',serif;font-weight:normal}
+.sheet p{font-size:14.5px;line-height:1.75;margin:0 0 10px;color:rgba(240,227,198,.9)}
+.sheet p em{font-style:normal;color:#ffcf96}
+
+#rotate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:rgba(8,6,4,.86);text-align:center;padding:30px}
+#rotate .ph{width:46px;height:80px;border-radius:9px;box-shadow:0 0 0 2px var(--bone);position:relative;animation:rot 2.2s ease-in-out infinite}
+#rotate .ph:after{content:'';position:absolute;left:50%;bottom:6px;width:12px;height:2px;margin-left:-6px;background:var(--bone);border-radius:2px}
+@keyframes rot{0%,20%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
+#rotate p{margin:0;font-size:16px;line-height:1.7}
+#rotate button{padding:10px 18px;border-radius:12px;box-shadow:0 0 0 1px rgba(240,227,198,.25);font-size:14px;color:var(--dim)}
+#err{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:16px;line-height:1.8}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="gl"></canvas>
+  <div id="hud" class="hid">
+    <div id="wind"><canvas id="windc" width="168" height="80"></canvas>
+      <div class="wl"><b id="windTxt">風</b><span id="windNext"></span></div></div>
+    <div id="turn"></div>
+    <div id="tools">
+      <button class="tool on" data-tool="spear" aria-label="矛"><img id="icSpear" alt=""><span class="nm">矛</span><span class="tally"></span></button>
+      <button class="tool" data-tool="fire" aria-label="火把"><img id="icFire" alt=""><span class="nm">火把</span><span class="tally"></span></button>
+      <button class="tool wait" id="waitBtn" aria-label="等一回"><img id="icWait" alt=""><span class="nm">等一回</span></button>
+    </div>
+    <button id="ffBtn">快轉 ▸▸</button>
+    <button id="menuBtn" aria-label="選單"><i></i></button>
+  </div>
+  <div id="labels"><div id="tag" class="lbl"></div><div id="aimLbl" class="lbl"></div></div>
+  <div id="hint"></div>
+  <div id="title">
+    <h1>留一口</h1>
+    <div class="en">LEAVE ONE</div>
+    <p class="tag">冰河末。你打不贏猛獁象——<br>所以，讓整座山替你動手。</p>
+    <div class="tap">點一下，點燃火把</div>
+  </div>
+  <div id="end" class="hid">
+    <div class="card">
+      <div id="endK"></div>
+      <h2 id="endT"></h2>
+      <p id="endL"></p>
+      <div id="endH"></div>
+      <p id="endS"></p>
+      <p id="endB"></p>
+      <div class="btns"><button id="againBtn" class="main">再獵一次</button><button id="peekBtn">看壁畫</button></div>
+    </div>
+    <button id="peekBack">回來</button>
+  </div>
+  <div id="menu" class="sheet off">
+    <div class="box">
+      <h3>歇一下</h3>
+      <div class="row">
+        <button id="mResume"><b>繼續狩獵</b></button>
+        <button id="mHow"><b>怎麼玩</b></button>
+        <button id="mSound"><b>聲音</b>：開</button>
+        <button id="mRestart"><b>重新開始</b>（換一頭猛獁、換一場風）</button>
+      </div>
+    </div>
+  </div>
+  <div id="how" class="sheet off">
+    <div class="box">
+      <h3>怎麼玩</h3>
+      <p>在畫面上<em>按住、往後拉，放手</em>就擲出去。拉得越遠擲得越遠，點點連成的線會告訴你落在哪裡、會打到什麼。</p>
+      <p><em>矛</em>：牠皮厚、頭骨硬，一支矛殺不了牠，被扎的猛獁還會<em>發狂衝過來</em>。但矛會一直扎在身上：牠<em>一跑就流血</em>。肩後畫著一顆心的地方是要害。矛落在牠身邊，會把牠嚇得走開。</p>
+      <p><em>火把</em>：落在草上就起火，火<em>順著風</em>燒，逆風幾乎不動。猛獁怕火：火逼近就沒命地逃，發狂衝過來時也不敢穿過火。被逼到石壁下或湖邊，牠會停下來；火燒到身上，牠會硬衝出去。</p>
+      <p><em>冰湖</em>：岸邊的冰厚，中間的冰薄。猛獁平常不會上冰，火逼到身後才會不顧一切衝上去。火把落在冰上會把冰燒薄。</p>
+      <p><em>收穫</em>：怎麼獵到的，決定部落拿回多少。沉進冰湖的撈不回來；被火燒過，肉會焦、皮會壞；身上扎太多矛，皮也會破。</p>
+      <p><em>風</em>：左上角是這一回的風，下面那行是下一回的風。風也會吹偏你擲出去的東西。</p>
+      <p>按「<em>等一回</em>」就不出手，看火和猛獁怎麼動。牠衝上你站的石台，或矛和火把都用完、火也熄了，這一場就結束了。</p>
+      <div class="row"><button id="howClose"><b>知道了</b></button></div>
+    </div>
+  </div>
+  <div id="rotate" class="off">
+    <div class="ph"></div>
+    <p>把手機<b>橫過來</b>，<br>整片草原和冰湖才看得完整。</p>
+    <button id="rotSkip">直接玩</button>
+  </div>
+  <div id="err" class="off"></div>
+</div>
+<script>
