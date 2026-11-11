@@ -61,7 +61,7 @@ function currentObjective() {
 SCRIPTS.intro = async () => {
   await sceneBlack();
   await lines([null, '黑。', FULL], [null, '很高的地方，有一個光點。', FULL], [null, '你記得的，只有這麼多。', FULL]);
-  await sceneOff(); toast('點地面：走過去。按住不放：一直走。');
+  await sceneOff(); toast('手指按住畫面拖動：搖桿移動。輕點東西：走過去。');
 };
 SCRIPTS.n_pod = async () => {
   await lines([null, '一口石棺，從中間裂開了。石頭是淡藍色的，摸起來比看起來輕。'], [null, '棺蓋內側有人用指甲刻過字，刮掉了大半。認得出來的只有最後幾個：\n「……為什麼不行。」']);

@@ -263,3 +263,9 @@ html.land #title .lg{top:9%}html.land #title .lg b{font-size:min(13vw,92px)}
 .end{font-family:var(--fs);font-size:15px;line-height:2;color:#d8d2c4;padding:4px 6px 12px}
 .end h4{font-size:13px;letter-spacing:.3em;color:var(--gold);margin:18px 0 4px;font-weight:900}
 .seg{display:flex;gap:4px}.seg .bt{padding:6px 10px;font-size:12.5px}.seg .bt.on{border-color:var(--gold);color:var(--gold)}
+
+/* 虛擬搖桿（按下去的地方才出現） */
+#joy{position:absolute;left:0;top:0;width:0;height:0;z-index:14;pointer-events:none;opacity:0;transition:opacity .12s}
+#joy.on{opacity:1}
+#joy::before{content:'';position:absolute;left:-54px;top:-54px;width:108px;height:108px;border-radius:50%;border:2px solid rgba(233,185,73,.55);background:radial-gradient(circle,rgba(10,12,22,.05) 40%,rgba(10,12,22,.38) 100%);box-shadow:0 0 18px rgba(0,0,0,.45),inset 0 0 14px rgba(233,185,73,.12)}
+#joy i{position:absolute;left:-23px;top:-23px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#fff3cf,#e9b949 52%,#8a6420);box-shadow:0 2px 10px rgba(0,0,0,.6),0 0 14px rgba(233,185,73,.45)}
