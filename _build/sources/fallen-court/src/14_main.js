@@ -1,5 +1,8 @@
 // ============ 主程式：開機、片頭、輸入、主迴圈 ============
 const IN = { ptrs: new Map(), hold: false, holdT: 0, moved: false, pinch: 0, zoom0: 1, keys: {} };
+// 虛擬搖桿：手指在畫面任何地方按下去拖，搖桿就出現在按下去的地方；往哪拖就往哪走，拖越遠走越快。
+// 手指拖出圈外時，整個搖桿跟著手指移過去（不用回頭找圓心）。輕點不拖＝走過去、互動。
+const JOY = { on: false, off: false, ox: 0, oy: 0, x: 0, y: 0, R: 54, el: null };
 const TITLE = { c: null, key: '' };
 
 function boot() {
@@ -83,17 +86,18 @@ function bindInput() {
   cv.addEventListener('pointerdown', e => {
     audioInit(); try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
     const p = pt(e); IN.ptrs.set(e.pointerId, { x: p.x, y: p.y, x0: p.x, y0: p.y, t0: performance.now() });
-    if (IN.ptrs.size === 1) { IN.moved = false; IN.hold = false; IN.holdT = performance.now(); }
-    if (IN.ptrs.size === 2) { const a = [...IN.ptrs.values()]; IN.pinch = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); IN.zoom0 = S.zoomK || 1; IN.hold = false; IN.moved = true; if (Z) Z.joy.x = Z.joy.y = 0; }
+    if (IN.ptrs.size === 1) { IN.moved = false; IN.hold = false; IN.holdT = performance.now(); JOY.on = false; JOY.off = false; JOY.ox = JOY.x = p.x; JOY.oy = JOY.y = p.y; }
+    if (IN.ptrs.size === 2) { const a = [...IN.ptrs.values()]; IN.pinch = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); IN.zoom0 = S.zoomK || 1; IN.hold = false; IN.moved = true; JOY.on = false; JOY.off = true; if (Z) Z.joy.x = Z.joy.y = 0; }
   });
   cv.addEventListener('pointermove', e => {
     const q = IN.ptrs.get(e.pointerId); if (!q) return; const p = pt(e); q.x = p.x; q.y = p.y;
     if (IN.ptrs.size === 2) { const a = [...IN.ptrs.values()], d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); if (IN.pinch > 10 && S.mode === 'explore' && !S.cut) { S.zoomK = clamp(IN.zoom0 * d / IN.pinch, .7, 1.5); Cam.tzoom = baseZoom(); } return; }
-    if (Math.hypot(q.x - q.x0, q.y - q.y0) > 14) { IN.moved = true; if (S.mode === 'explore') IN.hold = true; }
+    if (Math.hypot(q.x - q.x0, q.y - q.y0) > 10) { IN.moved = true; if (S.mode === 'explore' && !JOY.off) { IN.hold = true; JOY.on = true; } }
+    JOY.x = q.x; JOY.y = q.y;
   });
   const up = e => {
     const q = IN.ptrs.get(e.pointerId); if (!q) return; IN.ptrs.delete(e.pointerId);
-    if (IN.ptrs.size === 0) { const wasHold = IN.hold; IN.hold = false; if (Z) Z.joy.x = Z.joy.y = 0; if (!IN.moved && !wasHold && e.type === 'pointerup') tap(q.x, q.y); }
+    if (IN.ptrs.size === 0) { IN.hold = false; JOY.on = false; JOY.off = false; if (Z) Z.joy.x = Z.joy.y = 0; if (!IN.moved && e.type === 'pointerup') tap(q.x, q.y); }
   };
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('contextmenu', e => e.preventDefault());
@@ -106,16 +110,27 @@ function bindInput() {
     else if (e.key.toLowerCase() === 'm' && S.mode === 'explore' && !S.panel) openMenu('party');
   });
   addEventListener('keyup', e => { IN.keys[e.key.toLowerCase()] = 0; });
-  addEventListener('blur', () => { IN.keys = {}; IN.ptrs.clear(); IN.hold = false; if (Z) Z.joy.x = Z.joy.y = 0; });
+  addEventListener('blur', () => { IN.keys = {}; IN.ptrs.clear(); IN.hold = false; JOY.on = false; if (Z) Z.joy.x = Z.joy.y = 0; });
 }
 function tap(x, y) { if (S.mode === 'battle') battleTap(x, y); else if (S.mode === 'explore') tapWorld(x, y); }
 function inputUpdate() {
-  if (!Z || S.mode !== 'explore') return;
+  if (!Z || S.mode !== 'explore') { joyDraw(false); return; }
   const K = IN.keys; let jx = (K.d || K.arrowright ? 1 : 0) - (K.a || K.arrowleft ? 1 : 0), jy = (K.s || K.arrowdown ? 1 : 0) - (K.w || K.arrowup ? 1 : 0);
-  if (IN.ptrs.size === 1 && !S.cut && !S.dialog && !S.panel) {
-    const q = [...IN.ptrs.values()][0]; if (!IN.hold && !IN.moved && performance.now() - IN.holdT > 260) IN.hold = true;
-    if (IN.hold) { const L = Z.leader, [lx, ly] = w2s(L.x, L.y, L.z + .6), dx = q.x - lx, dy = q.y - ly, d = Math.hypot(dx, dy); if (d > 22) { const n = Math.hypot(dx, dy * 2); jx = dx / n; jy = dy * 2 / n; } else { jx = 0; jy = 0; } }
+  // 劇情、對話、選單一跳出來，這一次按住的搖桿就作廢（放手再按才會重新出現），免得對話一結束人自己衝出去
+  if (S.cut || S.dialog || S.panel) { if (JOY.on) { JOY.on = false; JOY.off = true; } }
+  if (JOY.on && IN.ptrs.size === 1) {
+    let dx = JOY.x - JOY.ox, dy = JOY.y - JOY.oy, d = Math.hypot(dx, dy);
+    if (d > JOY.R) { const k = (d - JOY.R) / d; JOY.ox += dx * k; JOY.oy += dy * k; dx = JOY.x - JOY.ox; dy = JOY.y - JOY.oy; d = JOY.R; }
+    if (d > 9) { const m = Math.min(1, (d - 9) / (JOY.R * .62)) * .55 + .45, n = Math.hypot(dx, dy * 2); jx = dx / n * m; jy = dy * 2 / n * m; }
   }
+  joyDraw(JOY.on && IN.ptrs.size === 1);
   Z.joy.x = jx; Z.joy.y = jy;
+}
+function joyDraw(show) {
+  if (!JOY.el) { if (!show) return; JOY.el = el('div', '', '<i></i>'); JOY.el.id = 'joy'; $('#ui').appendChild(JOY.el); }
+  JOY.el.classList.toggle('on', show); if (!show) return;
+  JOY.el.style.transform = `translate(${JOY.ox}px,${JOY.oy}px)`;
+  const kx = clamp(JOY.x - JOY.ox, -JOY.R, JOY.R), ky = clamp(JOY.y - JOY.oy, -JOY.R, JOY.R);
+  JOY.el.firstChild.style.transform = `translate(${kx}px,${ky}px)`;
 }
 window.addEventListener('load', boot);
