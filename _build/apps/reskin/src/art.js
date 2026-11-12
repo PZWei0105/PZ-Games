@@ -6,10 +6,11 @@ R.art = (() => {
 
   async function loadImage(blob) {
     if (window.createImageBitmap) { try { return await createImageBitmap(blob); } catch (e) { /* fall back */ } }
+    const u = await R.imageURL(blob);
     return new Promise((res, rej) => {
-      const u = URL.createObjectURL(blob); const im = new Image();
-      im.onload = () => { res(im); setTimeout(() => URL.revokeObjectURL(u), 2000); };
-      im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('image decode failed')); };
+      const im = new Image();
+      im.onload = () => { res(im); setTimeout(() => R.dropURL(u), 2000); };
+      im.onerror = () => { R.dropURL(u); rej(new Error('image decode failed')); };
       im.src = u;
     });
   }
@@ -96,11 +97,13 @@ R.art = (() => {
     const key = t.id + ':' + size;
     if (urls.has(key)) return urls.get(key);
     let blob = null;
-    if (t.cover) { try { blob = await R.db.get('covers', size === 'thumb' ? t.id + ':t' : t.id); } catch (e) { /* ignore */ } }
+    if (t.cover) { try { blob = await R.db.getBytes('covers', size === 'thumb' ? t.id + ':t' : t.id); } catch (e) { /* ignore */ } }
     if (!blob) blob = await toBlob(placeholder(t, size === 'thumb' ? 128 : 512), 'image/jpeg', 0.9);
     if (!blob) return null;
     if (urls.has(key)) return urls.get(key);
-    const u = URL.createObjectURL(blob); urls.set(key, u);
+    const u = await R.imageURL(blob);
+    if (urls.has(key)) { R.dropURL(u); return urls.get(key); }
+    urls.set(key, u);
     return u;
   }
   async function coverImage(t) {
@@ -113,7 +116,7 @@ R.art = (() => {
     return im;
   }
   function forget(id) {
-    for (const s of ['full', 'thumb']) { const k = id + ':' + s; if (urls.has(k)) { URL.revokeObjectURL(urls.get(k)); urls.delete(k); } }
+    for (const s of ['full', 'thumb']) { const k = id + ':' + s; if (urls.has(k)) { R.dropURL(urls.get(k)); urls.delete(k); } }
     imgs.delete(id);
   }
   return { processCover, coverUrl, coverImage, colorsOf, placeholder, forget, loadImage, toBlob };

@@ -96,6 +96,12 @@
       else if (e.target === modal) done(false);
     });
   };
+  // a message with one button, and optionally a plain link (pages inside Claude can only open other sites through a link)
+  R.ui.notice = (o) => {
+    const link = o.link ? `<a class="md-link" href="${esc(o.link.href)}" target="_blank" rel="noopener">${esc(o.link.label)}<small>${esc(o.link.href)}</small></a>` : '';
+    const html = `<div class="md"><div class="md-t">${esc(o.title || '')}</div>${o.sub ? `<div class="md-s">${esc(o.sub)}</div>` : ''}${link}<div class="md-b one"><button type="button" class="btn ${o.link ? 'sec' : 'pri'}" data-r="1">${esc(o.ok || '知道了')}</button></div></div>`;
+    return showModal(html, (e, done) => { if (e.target.closest('[data-r]') || e.target === modal) done(true); });
+  };
   R.ui.info = (title, rows) => {
     const html = `<div class="md"><div class="md-t">${esc(title)}</div><div class="md-s" style="padding-bottom:4px">${rows.map(([k, v]) => `<div style="display:flex;gap:12px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)"><span style="flex:none;width:84px;color:rgba(255,255,255,.45)">${esc(k)}</span><span style="color:#fff;word-break:break-all">${esc(v)}</span></div>`).join('')}</div><div class="md-b" style="grid-template-columns:1fr"><button type="button" class="btn sec" data-r="1">好</button></div></div>`;
     return showModal(html, (e, done) => { if (e.target.closest('[data-r]') || e.target === modal) done(true); });

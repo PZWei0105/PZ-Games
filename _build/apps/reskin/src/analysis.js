@@ -157,10 +157,11 @@ R.analysis = (() => {
     if (!t || t.an) return;
     const lim = R.isIOS ? 15 * 60 : 40 * 60;
     if (t.duration && t.duration > lim) { await R.lib.update(id, { an: 2 }); return; }
-    const blob = await R.db.getAudio(id);
-    if (!blob) return;
+    let raw;
+    try { raw = await R.db.getAudioRaw(id); } catch (e) { if (e && e.lost) { await R.lib.update(id, { lost: 1 }); return; } throw e; }
+    if (!raw) return;
     let dec;
-    try { dec = await decode(await blob.arrayBuffer()); }
+    try { dec = await decode(raw.buf); }
     catch (e) { console.warn('decode failed', t.title, e); await R.lib.update(id, { an: -1 }); R.bus.emit('analysis', id); return; }
     const { b, rate } = dec;
     if (b.duration > lim) { await R.lib.update(id, { an: 2, duration: b.duration }); return; }

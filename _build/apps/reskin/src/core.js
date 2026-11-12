@@ -81,6 +81,30 @@ R.canFolder = (() => {
   return true;
 })();
 R.CLAUDE = !!window.RESKIN_NO_SW; // the copy published on Claude (no service worker, storage may not last)
+
+/* ---------- blob: or data: links ----------
+   Some iPhone web views (the Claude app among them) refuse blob: links. Pictures: a tiny test at start decides
+   which kind to use. Music: the player retries a song as a data: link when its blob: link fails. */
+R.dataURL = (blob) => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result); r.onerror = () => rej(r.error || new Error('read failed'));
+  r.readAsDataURL(blob);
+});
+R.blobImages = new Promise((res) => {
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 2;
+    c.toBlob((b) => {
+      if (!b) { res(true); return; }
+      const u = URL.createObjectURL(b), im = new Image();
+      const done = (ok) => { clearTimeout(t); URL.revokeObjectURL(u); res(ok); };
+      const t = setTimeout(() => done(true), 2500); // no answer either way: keep blob: links
+      im.onload = () => done(true); im.onerror = () => done(false);
+      im.src = u;
+    }, 'image/png');
+  } catch (e) { res(true); }
+});
+R.imageURL = async (blob) => ((await R.blobImages) ? URL.createObjectURL(blob) : R.dataURL(blob));
+R.dropURL = (u) => { if (u && String(u).startsWith('blob:')) URL.revokeObjectURL(u); };
 R.WEB_URL = 'https://pzwei0105.github.io/PZ-Games/apps/reskin/';
 
 /* ---------- colors ---------- */

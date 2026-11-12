@@ -97,13 +97,14 @@ R.app = (() => {
     }
     const parts = [];
     if (res.added.length) parts.push(`加入 ${res.added.length} 首`);
+    if (res.fixed) parts.push(`補回 ${res.fixed} 首讀不到的歌`);
     if (res.dup) parts.push(`${res.dup} 首已經在歌庫`);
     if (res.failed.length) parts.push(`${res.failed.length} 首讀不了`);
     if (res.cant) parts.push(`${res.cant} 個 ${res.cantExt.slice(0, 3).join('、')} 檔這台裝置不能播，沒有放進來`);
     if (res.warn) parts.push(`${res.warn} 首這台裝置可能播不了`);
     let msg = parts.join('，') || '沒有加入新歌';
     if (res.stopped) msg = `已停止：${msg}。之後再匯入一次，放過的歌會自動跳過`;
-    R.sfx.play(res.added.length ? 'ok' : 'err');
+    R.sfx.play(res.added.length || res.fixed ? 'ok' : 'err');
     // a folder can become a playlist (the songs already in the library included), in folder order
     const action = opts.folder && res.ids.length && !res.full && !res.stopped ? { label: '存成歌單', fn: () => folderPlaylist(opts.folder, res.ids) } : null;
     if (res.full) {
@@ -175,7 +176,7 @@ R.app = (() => {
     const e = $('#empty');
     if (R.lib.count()) { e.hidden = true; return; }
     if (!e.hidden) return;
-    e.innerHTML = `<div class="em-ico">${I.lib}</div><h2>痞子葳，歌庫還是空的</h2><p>把手機或電腦裡的音樂檔放進來：<br>MP3、M4A、FLAC、WAV 都可以，Suno 下載的歌也行。<br>放進來之後，不用網路也能聽。</p><div class="btn-row"><div class="btn-pair"><button type="button" class="btn pri" data-act="import-files">${I.upload}選擇音樂檔</button>${R.canFolder ? `<button type="button" class="btn sec" data-act="import-folder">${I.folder}整個資料夾</button>` : ''}</div><button type="button" class="btn sec wide" data-act="demo">${I.sparkle}先聽示範曲，試穿 Skin</button></div><p class="hint">${R.isTouch ? '' : '也可以直接把檔案或資料夾拖進這個視窗。'}${R.isIOS && !R.canFolder ? '選音樂檔時可以一次選好幾首；iOS 18.4 以上還能直接選整個資料夾。' : ''}${R.isIOS && !R.standalone && !R.embedded ? '建議先在 Safari 按「分享 → 加入主畫面」再匯入：主畫面 App 的歌庫跟 Safari 是分開的。' : ''}${R.CLAUDE ? '這是 Claude 上的版本，歌可能不會一直留著；長期用請開網頁版加到主畫面。' : R.embedded && R.isIOS ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）。' : R.embedded && (R.isAndroid || R.isTouch) ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面。' : ''}</p>`;
+    e.innerHTML = `<div class="em-ico">${I.lib}</div><h2>痞子葳，歌庫還是空的</h2><p>把手機或電腦裡的音樂檔放進來：<br>MP3、M4A、FLAC、WAV 都可以，Suno 下載的歌也行。<br>放進來之後，不用網路也能聽。</p><div class="btn-row"><div class="btn-pair"><button type="button" class="btn pri" data-act="import-files">${I.upload}選擇音樂檔</button>${R.canFolder ? `<button type="button" class="btn sec" data-act="import-folder">${I.folder}整個資料夾</button>` : ''}</div><button type="button" class="btn sec wide" data-act="demo">${I.sparkle}先聽示範曲，試穿 Skin</button></div><p class="hint">${R.isTouch ? '' : '也可以直接把檔案或資料夾拖進這個視窗。'}${R.isIOS && !R.canFolder ? '選音樂檔時可以一次選好幾首；iOS 18.4 以上還能直接選整個資料夾。' : ''}${R.isIOS && !R.standalone && !R.embedded ? '建議先在 Safari 按「分享 → 加入主畫面」再匯入：主畫面 App 的歌庫跟 Safari 是分開的。' : ''}${R.CLAUDE ? `這是 Claude 上的試用版：歌可能不會一直留著，也不能鎖屏一直聽。長期聽歌請開 <a href="${R.WEB_URL}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">網頁版</a>，加到主畫面再匯入。` : R.embedded && R.isIOS ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）。' : R.embedded && (R.isAndroid || R.isTouch) ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面。' : ''}</p>`;
     e.hidden = false;
   }
   bus.on('library', updateEmpty);
