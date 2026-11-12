@@ -263,6 +263,55 @@ button{font-family:var(--sans);color:inherit;border:0;background:none;padding:0;
 .keyrow i{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.06);border:1px dashed rgba(255,201,60,.35)}
 .keyrow i.on{background:radial-gradient(circle at 35% 30%,#fff6c8,#ffcf4a 45%,#b8760a);border:0;box-shadow:0 0 12px rgba(255,190,60,.7)}
 .keyrow b{margin-left:6px;font-family:var(--pop);font-weight:400;color:var(--gold)}
+/* ---------- 第二波：夥伴、收藏房間、機台外觀 ---------- */
+#col .tabs{scrollbar-width:none}
+#col .tabs::-webkit-scrollbar,#den .tabs::-webkit-scrollbar{display:none}
+#col .tabs button,#den .tabs button{flex:0 0 auto;padding:9px 13px}
+#col header .roomchip,#den header .chip{color:#ffe7a3;border-color:rgba(255,201,60,.45);gap:5px}
+#col header .roomchip svg,#den header .chip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bub{position:absolute;left:0;top:0;z-index:8;pointer-events:none;max-width:200px}
+.bub span,#den .dbub span{display:block;padding:8px 12px;border-radius:14px;background:#fff;color:#1a1424;font-size:14px;font-weight:900;letter-spacing:.04em;line-height:1.35;box-shadow:0 6px 18px rgba(0,0,0,.45);position:relative}
+.bub span::after,#den .dbub span::after{content:'';position:absolute;left:68%;bottom:-6px;width:12px;height:12px;background:#fff;transform:rotate(45deg)}
+.bub.pop span,#den .dbub.pop span{animation:bubpop .32s cubic-bezier(.2,1.6,.4,1)}
+@keyframes bubpop{from{transform:scale(.4);opacity:0}}
+#den{position:fixed;inset:0;z-index:17;pointer-events:none}
+#den .pe{pointer-events:auto}
+#den header{position:absolute;left:0;right:0;top:0;padding:calc(10px + var(--sat)) calc(12px + var(--sar)) 6px calc(12px + var(--sal));display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(6,6,12,.78),rgba(6,6,12,0))}
+#den header h1{margin:0;flex:1;font-size:19px;font-weight:900;letter-spacing:.14em;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+#den header h1 small{font-family:var(--pop);font-size:11px;color:var(--muted);letter-spacing:.12em;margin-left:8px;font-weight:400}
+#den .tabs{position:absolute;left:0;right:0;top:calc(58px + var(--sat));display:flex;gap:6px;padding:2px 12px 8px;overflow-x:auto}
+#den .tabs button{white-space:nowrap;border-radius:12px;background:rgba(10,10,18,.72);border:1px solid rgba(255,255,255,.1);font-weight:900;font-size:13px;letter-spacing:.06em;color:var(--muted)}
+#den .tabs button.on{color:#fff;border-color:var(--sc);box-shadow:0 0 14px color-mix(in srgb,var(--sc) 45%,transparent);background:color-mix(in srgb,var(--sc) 22%,rgba(10,10,18,.8))}
+#den .dbub{position:absolute;left:0;top:0;max-width:220px;pointer-events:none}
+#den .dfoot{position:absolute;left:0;right:0;bottom:0;padding:10px 14px calc(14px + var(--sab));text-align:center;font-size:13px;color:#d8dcef;background:linear-gradient(0deg,rgba(6,6,12,.8),rgba(6,6,12,0));text-shadow:0 1px 6px rgba(0,0,0,.8)}
+#den .dfoot b{color:#ffe7a3}
+#den .dcard{position:absolute;left:0;right:0;bottom:0;padding:0 12px calc(12px + var(--sab));display:flex;justify-content:center}
+.cert.mini{padding:14px 16px 14px}
+.cert.mini h3{margin-top:6px;font-size:23px}
+.cert.mini .ln{margin-top:6px;font-size:13px}
+.cert.mini .btns{margin-top:12px}
+.cert.mini .x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center}
+.cert.mini .x svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round}
+.skin{flex:0 0 52px;height:52px;border-radius:14px;position:relative;box-shadow:inset 0 -6px 10px rgba(0,0,0,.35)}
+.skin.cab{background:var(--b)}
+.skin.cab::after{content:'';position:absolute;left:8px;right:8px;top:9px;height:5px;border-radius:3px;background:var(--t);box-shadow:0 0 10px var(--t)}
+.skin.cab::before{content:'';position:absolute;left:8px;right:8px;bottom:10px;height:16px;border-radius:5px;background:rgba(220,240,255,.18);border:1px solid rgba(255,255,255,.25)}
+.skin.claw{background:radial-gradient(circle at 35% 28%,#fff,var(--c) 38%,color-mix(in srgb,var(--c) 45%,#000) 85%);border-radius:50%}
+.skin.claw.iri{background:conic-gradient(from 30deg,#ffd6f0,#c8f0ff,#e8ffd0,#fff2c0,#f0d0ff,#ffd6f0)}
+.skin.room{background:linear-gradient(180deg,var(--w) 0 55%,var(--w2) 55% 62%,color-mix(in srgb,var(--c) 70%,#000) 62%);overflow:hidden}
+.skin.room::after{content:'';position:absolute;left:14px;right:14px;top:10px;bottom:8px;border-radius:4px;background:var(--c);box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--c) 70%,#000),0 0 8px var(--l)}
+.pi .buy.on{background:rgba(93,255,176,.16);color:var(--green)}
+@media (orientation:landscape){
+  #den .dcard{left:auto;right:0;top:0;width:min(420px,48vw);align-items:center;padding:calc(64px + var(--sat)) calc(12px + var(--sar)) calc(12px + var(--sab)) 0}
+  #den .tabs{right:auto;max-width:62vw}
+}
+@media (orientation:landscape) and (max-height:600px){
+  #detail .dl .cert{max-height:calc(100vh - 20px - var(--sat) - var(--sab));overflow-y:auto;touch-action:pan-y}
+  #den .dcard{padding-top:calc(54px + var(--sat))}
+  #den .dcard .cert{max-height:calc(100vh - 66px - var(--sat) - var(--sab));overflow-y:auto;touch-action:pan-y}
+  #den .tabs{top:calc(8px + var(--sat));left:calc(64px + var(--sal));max-width:calc(100vw - 260px)}
+  #den header h1{visibility:hidden}
+}
 /* ---------- 教學提示 ---------- */
 .coach{position:absolute;z-index:12;max-width:230px;padding:10px 14px;border-radius:14px;background:#fff;color:#14141f;font-size:14px;font-weight:700;line-height:1.5;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:auto;animation:cup .3s}
 .coach::after{content:'';position:absolute;width:14px;height:14px;background:#fff;transform:rotate(45deg)}

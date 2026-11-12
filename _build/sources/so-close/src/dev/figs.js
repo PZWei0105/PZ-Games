@@ -21,7 +21,7 @@ const vers = (q.get('v') || 'n').split(',');
 const ids = location.hash ? location.hash.slice(1).split(',') : CHARS.filter((c) => hasFigure(c.id)).map((c) => c.id);
 const items = [];
 const cols = +(q.get('cols') || Math.min(ids.length * vers.length, 4));
-const sp = 0.15;
+const sp = +(q.get('sp') || 0.15);
 let i = 0;
 for (const id of ids) for (const v of vers) {
   const b = buildFigure(id, v);
@@ -38,6 +38,7 @@ function resize() {
   const el = +(q.get('el') || 0.2);
   cam.position.set(cx, cy + Math.sin(el) * d, Math.cos(el) * d); cam.lookAt(cx, cy, 0);
   cam.updateProjectionMatrix();
+  cam.updateMatrixWorld(); window.__pos = items.map((b) => { const v = b.g.position.clone(); v.y += 0.055; v.project(cam); return [Math.round(((v.x + 1) / 2) * R.w), Math.round(((1 - v.y) / 2) * R.h)]; });
 }
 resize(); addEventListener('resize', resize);
 const act = q.get('act') === '1', spin = +(q.get('spin') || 0);

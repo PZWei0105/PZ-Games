@@ -7,7 +7,9 @@ import { Sound } from '../engine/audio.js';
 import { Sim } from './sim.js';
 import { MachineView, PrizeLayer, FLOOR_Y } from './cabinet.js';
 import { buildRoom } from './room.js';
-import { MACHINES, MACHINE, RARITY, VERSIONS, SERIES_ORDER, CHAR, ECON, ODDS, RANKS, rankOf, CAP_R, CAP_M, BOX_SIZE, MISSIONS, NEXT_TIER, OLD_PRIZE, charsOf, hiddenChar, seriesChars, colKey, parseKey, editionOf, starOf } from './data.js';
+import { MACHINES, MACHINE, RARITY, VERSIONS, SERIES_ORDER, CHAR, CHARS, ECON, ODDS, RANKS, rankOf, CAP_R, CAP_M, BOX_SIZE, MISSIONS, NEXT_TIER, OLD_PRIZE, charsOf, hiddenChar, seriesChars, colKey, parseKey, editionOf, starOf, CAB_SKINS, CLAW_SKINS, ROOM_THEMES } from './data.js';
+import { Buddy } from './buddy.js';
+import { CollectionRoom } from './den.js';
 import { store } from './store.js';
 import { UI } from './ui.js';
 import { RevealStage } from './reveal.js';
@@ -67,8 +69,14 @@ export class Game {
     this.layers = this.views.map((v) => new PrizeLayer(v));
     this.reveal = new RevealStage(this);
     this.showcase = new Showcase(this);
+    this.den = new CollectionRoom(this);
     this.active = Math.max(0, MACHINES.findIndex((m) => m.id === this.P.last));
     if (!this.unlocked(this.active)) this.active = 0;
+    this.applySkins();
+    this.buddy = new Buddy(this);
+    this.buddy.set(this.P.buddy);
+    this.buddy.attach(this.views[this.active]);
+    this.petted = new Set();
     this.cam.x = this.views[this.active].group.position.x;
     this.applyDailyAndRegen(true);
     for (let i = 0; i < MACHINES.length; i++) this.loadMachine(i);
@@ -94,7 +102,13 @@ export class Game {
     p.settings = { sfx: true, music: true, quality: 'auto', ...(p.settings || {}) };
     p.col = p.col || {}; p.ch = p.ch || {}; p.tickets = p.tickets || 0; p.keys = p.keys || 0; p.goldShot = p.goldShot || {};
     p.series = p.series || {}; p.seriesAll = p.seriesAll || {}; p.meter = p.meter || {}; p.flags = p.flags || {};
-    p.stats = { plays: 0, wins: 0, near: 0, multi: 0, hidden: 0, ssr: 0, mut: 0, ...(p.stats || {}) };
+    p.stats = { plays: 0, wins: 0, near: 0, multi: 0, hidden: 0, ssr: 0, mut: 0, pet: 0, ...(p.stats || {}) };
+    // 第二波：夥伴、機台外觀、房間佈置
+    p.buddy = p.buddy && parseKey(p.buddy) ? p.buddy : null;
+    const sk = p.skin || {};
+    p.skin = { own: Array.isArray(sk.own) ? sk.own : [], mach: sk.mach || {}, room: sk.room || 'wood' };
+    for (const base of ['cab:base', 'claw:chrome', 'room:wood']) if (!p.skin.own.includes(base)) p.skin.own.push(base);
+    if (p.flags.v21 == null) p.flags.v21 = p.stats.plays > 0 ? 1 : 2;
     this.P = p;
     this.snd.on = p.settings.sfx; this.snd.musicOn = p.settings.music;
   }
@@ -138,7 +152,66 @@ export class Game {
     for (const id of Object.keys(this.sims)) { this.sims[id].world.free?.(); delete this.sims[id]; }
     for (let i = 0; i < MACHINES.length; i++) this.loadMachine(i);
     this.ensureSim(this.active);
+    this.applySkins();
+    this.buddy?.set(this.P.buddy); this.buddy?.attach(this.views[this.active]);
     this.ui.refreshAll();
+  }
+
+  // ---------------- 第二波：夥伴、機台外觀、房間佈置 ----------------
+  setBuddy(key) {
+    this.P.buddy = key && parseKey(key) ? key : null;
+    this.saveProfile();
+    this.buddy.set(this.P.buddy);
+    this.buddy.attach(this.views[this.active]);
+    if (this.den.active) this.den.setBuddy(this.P.buddy);
+  }
+  skinList(kind) { return { cab: CAB_SKINS, claw: CLAW_SKINS, room: ROOM_THEMES }[kind]; }
+  skinOwned(kind, id) { return this.P.skin.own.includes(kind + ':' + id); }
+  needOk(need) {
+    if (!need) return true;
+    if (need === 'series') return Object.keys(this.P.series || {}).length > 0;
+    if (need === 'hidden') return CHARS.some((c) => c.tier === 'HID' && this.P.ch[c.id]?.got);
+    return false;
+  }
+  // 買（兌換券）或解鎖（達成條件）
+  getSkin(kind, id) {
+    const it = this.skinList(kind)?.find((x) => x.id === id);
+    if (!it || this.skinOwned(kind, id)) return false;
+    if (it.need) { if (!this.needOk(it.need)) return false; }
+    else { if ((this.P.tickets || 0) < it.price) return false; this.P.tickets -= it.price; }
+    this.P.skin.own.push(kind + ':' + id);
+    this.saveProfile();
+    this.snd.buy();
+    return true;
+  }
+  useSkin(kind, id, mid) {
+    if (!this.skinOwned(kind, id)) return false;
+    if (kind === 'room') { this.P.skin.room = id; if (this.den.active) this.den.applyTheme(id); }
+    else {
+      const u = this.P.skin.mach[mid] || (this.P.skin.mach[mid] = {});
+      u[kind] = id;
+      const i = MACHINES.findIndex((m) => m.id === mid);
+      if (i >= 0) this.applySkin(i);
+    }
+    this.saveProfile();
+    this.snd.paint();
+    return true;
+  }
+  applySkin(i) {
+    const u = this.P.skin.mach[MACHINES[i].id] || {};
+    const cab = CAB_SKINS.find((x) => x.id === u.cab && x.id !== 'base') || null;
+    const claw = CLAW_SKINS.find((x) => x.id === u.claw) || null;
+    this.views[i].applySkin(cab, claw);
+  }
+  applySkins() { for (let i = 0; i < MACHINES.length; i++) this.applySkin(i); }
+  // 收藏房間
+  openRoom(series) { if (this.turn) return false; this.mode = 'room'; this.den.open(series); return true; }
+  closeRoom() { this.den.close(); this.mode = 'collection'; }
+  pet(cid) {
+    if (this.petted.has(cid)) return;
+    this.petted.add(cid);
+    this.P.stats.pet = (this.P.stats.pet || 0) + 1;
+    this.mission('pet');
   }
 
   applyDailyAndRegen(boot) {
@@ -318,6 +391,8 @@ export class Game {
     this.ensureSim(n);
     if (this.pourQ.some((q) => q.i === n)) { const t0 = Math.min(...this.pourQ.filter((q) => q.i === n).map((q) => q.delay)); for (const q of this.pourQ) if (q.i === n) q.delay -= t0 - 0.2; this.pourT = 0; }
     this.cam.tyaw = 0; this.cam.tpitch = 0.36; this.cam.tzoom = 1;
+    this.buddy.attach(this.views[n]);
+    if (this.buddy.fig) setTimeout(() => this.buddy.react('hello'), 450);
     this.ui.refreshMachine();
     this.saveProfile();
   }
@@ -340,6 +415,7 @@ export class Game {
     this.snd.coin();
     if (gold) setTimeout(() => this.snd.goldShot(), 200); else if (power) setTimeout(() => this.snd.power(), 250);
     sim.start(power ? def.strong || def.power : def.power);
+    if (power) setTimeout(() => this.buddy.react('power'), 300);
     this.turn = { def, sim, power, gold, t: 0, aimLeft: AIM_TIME, wins: [], slips: 0, grabbed: false, lastTick: AIM_TIME, near: false };
     this.ui.onTurnStart(power, gold);
     this.saveProfile();
@@ -377,7 +453,7 @@ export class Game {
           s.slip(true);
           if (close) { this.timeScale = 0.3; this.slowT = 0.9; }
           this.ui.big('差一點！', 'near');
-          if (!T.near) { T.near = true; this.P.stats.near++; this.mission('near'); }
+          if (!T.near) { T.near = true; this.P.stats.near++; this.mission('near'); this.buddy.react('near'); }
         } else { s.slip(false); this.ui.status('滑掉了……', 'cold'); }
         s.duck(1);
         break;
@@ -405,18 +481,20 @@ export class Game {
       if (won.length > 1) { this.P.stats.multi++; this.mission('multi'); }
       for (const w of won) { this.mission('win'); if (w.kind === 'box') this.mission('box'); if (w.black || RARITY[w.rarity]?.order >= 1) this.mission('rare'); if (w.black || RARITY[w.rarity]?.order >= 2) this.mission('sr'); }
       if (T.power) this.mission('powerwin');
+      if (this.buddy.fig) { this.buddy.react('win', true); for (let k = 0; k < won.length; k++) this.mission('buddywin'); }
     }
     // 差一點：這局把哪顆推到出口邊上
     if (!won.length && !T.near) {
       const close = rep.moved.filter((m) => m.closer && m.after < 0.035);
-      if (close.length) { this.ui.big(close[0].after < 0.012 ? '就差一點點……' : '更近了', 'near-soft'); if (close[0].after < 0.012) { this.P.stats.near++; this.mission('near'); } }
+      if (close.length) { this.ui.big(close[0].after < 0.012 ? '就差一點點……' : '更近了', 'near-soft'); if (close[0].after < 0.012) { this.P.stats.near++; this.mission('near'); this.buddy.react('near'); } }
     }
     this.snd.duck(1);
     this.turn = null;
     this.saveMachine(i);
     this.saveProfile();
     this.ui.onTurnEnd(won.length > 0);
-    if (won.length) setTimeout(() => this.startReveals(won.map((it) => this.entryOf(it, def))), 650);
+    // 有夥伴的話，先讓牠歡呼一下再開獎
+    if (won.length) setTimeout(() => this.startReveals(won.map((it) => this.entryOf(it, def))), this.buddy.fig ? 1300 : 650);
     else this.afterTurn();
   }
   afterTurn() {
@@ -572,7 +650,8 @@ export class Game {
     const d = today();
     const seed = d.split('-').reduce((a, x) => a * 131 + +x, 7);
     const R = rng(seed >>> 0);
-    const pool = MISSIONS.filter((m) => !m.need || this.unlocked(MACHINES.findIndex((x) => x.id === m.need)));
+    const owned = Object.values(this.P.ch || {}).filter((c) => c.got).length;
+    const pool = MISSIONS.filter((m) => !m.need || (m.need === 'buddy' ? !!this.P.buddy : m.need === 'own3' ? owned >= 3 : this.unlocked(MACHINES.findIndex((x) => x.id === m.need))));
     const pick = [];
     while (pick.length < 3 && pool.length) pick.push(pool.splice(Math.floor(R() * pool.length), 1)[0]);
     this.P.missions = { day: d, list: pick.map((m) => ({ id: m.id, n: 0 })) };
@@ -616,6 +695,7 @@ export class Game {
   // ---------------- 每一幀 ----------------
   onResize() {
     this.R.resize();
+    this.den?.resize();
     this.camera.aspect = this.R.w / this.R.h;
     this.camera.updateProjectionMatrix();
     this.ui.layout?.();
@@ -658,7 +738,10 @@ export class Game {
     if (this.slowT > 0) { this.slowT -= dt; if (this.slowT <= 0) this.timeScale = 1; }
     else this.timeScale += (1 - this.timeScale) * Math.min(1, dt * 3);
     if (this.mode === 'reveal') { this.reveal.update(dt, t); return; }
-    if (this.mode === 'collection' && this.showcase.active) { this.showcase.update(dt, t); return; }
+    if (this.showcase.active) { this.showcase.update(dt, t); return; }
+    if (this.mode === 'room') { this.den.update(dt, t); this.ui.denFrame?.(dt, t); return; }
+    // 陳列櫃清單蓋住整個畫面：不用畫店裡
+    if (this.mode === 'collection') return;
     const def = MACHINES[this.active], sim = this.sims[def.id];
     if (sim) {
       const T = this.turn;
@@ -696,8 +779,10 @@ export class Game {
       if (!visible) continue;
       if (s) { v.syncClaw(s); this.layers[i].update((c) => { const pr = s.byId.get(c.uid); if (!pr || pr.state === 'gone') return null; return { p: pr.body.translation(), q: pr.body.rotation() }; }, t); }
       else this.layers[i].update((c) => (c.p ? { p: { x: c.p[0], y: c.p[1], z: c.p[2] }, q: { x: c.q[0], y: c.q[1], z: c.q[2], w: c.q[3] } } : null), t);
+      v.tickSkin(t);
       v.setMeter(this.meterOf(MACHINES[i]), MACHINES[i].meter, this.isPower(MACHINES[i]), t);
     }
+    this.buddy.update(dt, t);
     this.room.tick(t);
     this.updateCamera(dt);
     this.ui.frame(dt, t);

@@ -165,6 +165,14 @@ export class Sound {
   starUp(n) { [84, 88, 91, 96].slice(0, n + 1).forEach((m, i) => this.bell(m, i * 0.1, 0.12, 1.5)); }
   glowSpawn() { [88, 91, 95].forEach((m, i) => this.bell(m, i * 0.13, 0.08, 2)); this.noise(0.9, { vol: 0.04, f: 6000, q: 1, rev: 0.6 }); }
   egg() { this.pop(); this.tone(780, 0.14, { vol: 0.12, slide: 2.2, at: 0.12 }); [84, 91].forEach((m, i) => this.bell(m, 0.18 + i * 0.08, 0.09)); }
+  // ---------- 第二波：夥伴、收藏房間、外觀 ----------
+  // 軟膠公仔被捏一下的「啾」
+  squeak() { const f = 820 + Math.random() * 260; this.tone(f, 0.13, { type: 'triangle', vol: 0.07, slide: 1.45 }); this.tone(f * 1.5, 0.09, { vol: 0.03, at: 0.02, slide: 1.3 }); }
+  boing() { this.tone(260, 0.28, { type: 'sine', vol: 0.12, slide: 2.6 }); this.tone(520, 0.18, { type: 'triangle', vol: 0.04, at: 0.04, slide: 1.8 }); }
+  cheer() { [76, 81, 86].forEach((m, i) => this.tone(hz(m), 0.16, { type: 'triangle', vol: 0.06, at: 0.05 + i * 0.07 })); this.bell(93, 0.28, 0.06, 0.9); }
+  aww() { this.tone(hz(74), 0.22, { type: 'triangle', vol: 0.05 }); this.tone(hz(69), 0.42, { type: 'triangle', vol: 0.05, at: 0.18, slide: 0.94 }); }
+  buy() { this.coin(); [84, 88, 91].forEach((m, i) => this.bell(m, 0.15 + i * 0.07, 0.08, 1.1)); }
+  paint() { this.noise(0.35, { vol: 0.08, f: 5200, q: 0.8, slide: 0.7 }); this.tone(hz(84), 0.5, { vol: 0.05, at: 0.25, rev: 0.4 }); }
 
   // ---------- 背景音樂：輕快、柔和的店內循環 ----------
   // 木琴般的分解和弦＋柔和低音＋偶爾出現的鐵琴旋律，沒有重鼓、沒有方波

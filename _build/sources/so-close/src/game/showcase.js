@@ -60,7 +60,8 @@ export class Showcase {
     this.camera.updateProjectionMatrix();
     // 模型放在畫面上半部
     const off = portrait ? R.h * 0.2 : 0;
-    this.camera.setViewOffset(R.w, R.h, portrait ? 0 : -R.w * 0.2, off, R.w, R.h);
+    // 橫向：卡片在右邊，模型往左移
+    this.camera.setViewOffset(R.w, R.h, portrait ? 0 : R.w * 0.22, off, R.w, R.h);
   }
   update(dt, t) {
     this.spin += this.vel * dt; this.vel += (0.5 - this.vel) * Math.min(1, dt * 1.5);

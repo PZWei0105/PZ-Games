@@ -1,12 +1,14 @@
 // 介面：頂部資訊、操作台、搖桿、開獎卡、陳列櫃、設定、教學
-import { MACHINES, RARITY, SERIES, SERIES_ORDER, CHAR, CHARS, VERSIONS, RANKS, rankOf, ECON, ODDS, MISSIONS, OLD_PRIZES, OLD_PRIZE, OLD_SERIES, seriesChars, charsOf, versionsOf, colKey, parseKey, valueOf, editionOf, starOf, STAR_AT, CAP_R } from './data.js';
+import { MACHINES, MACHINE, RARITY, SERIES, SERIES_ORDER, CHAR, CHARS, VERSIONS, RANKS, rankOf, ECON, ODDS, MISSIONS, OLD_PRIZES, OLD_PRIZE, OLD_SERIES, seriesChars, charsOf, versionsOf, colKey, parseKey, valueOf, editionOf, starOf, STAR_AT, CAP_R, CAB_SKINS, CLAW_SKINS, ROOM_THEMES, NEED_TEXT, buddyLines } from './data.js';
 import { CAPSULE_COLORS } from './models.js';
 import { thumb } from './showcase.js';
+import { THEMES } from './den.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const h = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; };
 const fmt = (n) => n.toLocaleString('en-US');
 const pad = (n, k = 4) => String(n).padStart(k, '0');
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 export class UI {
   constructor(game) {
@@ -27,9 +29,13 @@ export class UI {
     const F = this.g.P.flags;
     if (F.opening === 1) { F.opening = 2; this.g.saveProfile(); setTimeout(() => this.toast(`開幕特惠：星砂扭蛋機的保夾燈先幫你點亮 ${ECON.openingMeter} 格`, 'gold'), 1600); }
     if (F.v2) {
-      const tk = F.v2.tickets || 0; delete F.v2; this.g.saveProfile();
-      setTimeout(() => this.toast('改版：獎品換成 27 隻角色公仔！', 'gold'), 1500);
+      const tk = F.v2.tickets || 0; delete F.v2; F.v21 = 2; this.g.saveProfile();
+      setTimeout(() => this.toast('改版：獎品換成 54 隻角色公仔！', 'gold'), 1500);
       setTimeout(() => this.toast(tk ? `以前夾到的留在陳列櫃「初代」分頁，重複的換成 ${tk} 張兌換券` : '以前夾到的獎品留在陳列櫃的「初代」分頁', 'gold'), 3600);
+    } else if (F.v21 === 1) {
+      F.v21 = 2; this.g.saveProfile();
+      setTimeout(() => this.toast('新系列：機甲核心、街頭英雄、睡衣派對，27 隻新角色！', 'gold'), 1500);
+      setTimeout(() => this.toast('新功能：收藏房間、夥伴、機台外觀（在陳列櫃和本台說明裡）', 'gold'), 3700);
     }
   }
 
@@ -99,6 +105,7 @@ export class UI {
       el.setPointerCapture(e.pointerId);
       if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
       last = { x: e.clientX, y: e.clientY };
+      this.tapStart = pts.size === 1 ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), moved: false } : null;
       if (g.mode === 'reveal') this.revealTap();
     });
     el.addEventListener('pointermove', (e) => {
@@ -106,6 +113,9 @@ export class UI {
       const p = pts.get(e.pointerId);
       const dx = e.clientX - p.x, dy = e.clientY - p.y;
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const ts = this.tapStart;
+      if (ts && ts.id === e.pointerId && Math.hypot(e.clientX - ts.x, e.clientY - ts.y) > 9) ts.moved = true;
+      if (g.mode === 'room') { if (ts?.moved) g.den.drag(dx); return; }
       if (g.mode !== 'shop') return;
       const C = g.cam;
       if (pts.size >= 2) {
@@ -117,7 +127,12 @@ export class UI {
       C.tpitch = Math.max(0.08, Math.min(1.2, C.tpitch + dy * 0.004));
       this.syncViewChips();
     });
-    const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; };
+    const up = (e) => {
+      pts.delete(e.pointerId); if (pts.size < 2) pinch = 0;
+      const ts = this.tapStart;
+      if (ts && ts.id === e.pointerId && !ts.moved && performance.now() - ts.t < 450 && e.type === 'pointerup') this.sceneTap(e.clientX, e.clientY);
+      if (ts && ts.id === e.pointerId) this.tapStart = null;
+    };
     el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
     el.addEventListener('wheel', (e) => { if (g.mode !== 'shop') return; e.preventDefault(); g.cam.tzoom = Math.min(1.25, Math.max(0.5, g.cam.tzoom * (1 + e.deltaY * 0.001))); }, { passive: false });
   }
@@ -226,6 +241,7 @@ export class UI {
     else b.innerHTML = `<span class="lb">${g.isPower(def) ? '強爪' : '投幣'}</span><span class="coin">S</span><span class="c">${def.cost}</span>`;
   }
   layout() {
+    this.layoutRoom?.();
     const top = $('#minfo'), deck = $('#deck');
     if (!top || !deck) return;
     const r1 = top.getBoundingClientRect(), r2 = deck.getBoundingClientRect();
@@ -283,10 +299,10 @@ export class UI {
     setTimeout(() => t.remove(), 3200);
   }
   rankUp(r, reward) {
-    const def = MACHINES.find((m) => m.unlock === r);
+    const defs = MACHINES.filter((m) => m.unlock === r);
     this.big(`升段！${RANKS[r].name}`, 'win');
     this.toast(`段位升到「${RANKS[r].name}」＋${reward} 代幣`, 'gold');
-    if (def) setTimeout(() => this.toast(`新機台解鎖：${def.name}`, 'gold'), 700);
+    if (defs.length) setTimeout(() => this.toast(`新機台解鎖：${defs.map((d) => d.name).join('、')}`, 'gold'), 700);
     this.setTokens(); this.setRank(); this.refreshMachine();
   }
   noTokens() {
@@ -375,6 +391,8 @@ export class UI {
     const el = $('#rv'); if (el) el.classList.add('hide');
     $('#ui').classList.remove('hide');
     this.refreshAll();
+    const P = this.g.P;
+    if (!P.buddy && !P.flags.buddyTip && Object.keys(P.ch).length >= 1) { P.flags.buddyTip = 1; this.g.saveProfile(); setTimeout(() => this.toast('到陳列櫃點一隻公仔，按「設為夥伴」，牠會坐在機台旁邊陪你夾', 'gold'), 900); }
   }
 
   // ---------------- 面板 ----------------
@@ -420,7 +438,7 @@ export class UI {
       ${blk ? `<div class="tier"><span class="sw" style="background:radial-gradient(circle at 35% 30%,#fff3c0,#e3b44a 30%,#1a1408 70%);box-shadow:0 0 12px rgba(255,180,60,.6)"></span><div class="tx"><div class="nm"><span class="rt HID">BLK</span>黑金蛋<em>×${blk}</em></div></div></div>` : ''}
       ${rows}
       <div class="odds"><h4>打開時</h4><ul>${odds}</ul><h4>加碼（每${unit}最多一個）</h4><p>${evs}</p></div>
-      <div class="btns"><button class="btn main" data-a="close">好</button></div></div>`);
+      <div class="btns"><button class="btn" data-a="skin">機台外觀</button><button class="btn main" data-a="close">好</button></div></div>`, (a) => { if (a === 'skin') { this.openSkins(def.id); return true; } });
     const imgs = [...sh.querySelectorAll('img[data-k]')];
     const run = () => { const im = imgs.shift(); if (!im) return; im.src = thumb(im.dataset.k, !!im.dataset.s); requestAnimationFrame(run); };
     requestAnimationFrame(run);
@@ -433,6 +451,7 @@ export class UI {
       <p><b>保夾燈</b>：沒夾到的每一局都會亮一格；全亮時，下一爪是<b>強爪</b>。夾到任何獎品，或強爪用掉了，燈就歸零。</p>
       <p>開蛋時偶爾有加碼：<b>鑰匙碎片</b>集滿 ${ODDS.keys} 片開祕密寶箱；<b>黃金一夾</b>讓下一夾免費又是強爪；還有<b>蛋中蛋</b>、<b>一次三隻</b>。</p>
       <p>重複的角色會換成<b>兌換券</b>，同一隻拿到第 ${STAR_AT[1]} 隻升 ★★（專屬動作）、第 ${STAR_AT[2]} 隻升 ★★★（金色底座）。</p>
+      <p><b>收藏房間</b>：陳列櫃右上的「房間」，公仔會擺在展示櫃裡，點牠會跳一下、說句話。<b>夥伴</b>：選一隻公仔坐在機台旁陪你夾。<b>機台外觀</b>：在「本台說明」裡換機殼顏色和夾爪。這些都只改外觀，不影響爪力和機率。</p>
       <div class="btns"><button class="btn main" data-a="close">開始夾</button></div></div>`);
   }
   openWallet() {
@@ -463,12 +482,12 @@ export class UI {
       <div class="row2"><span>背景音樂</span><button class="tog ${S.music ? 'on' : ''}" data-a="music"></button></div>
       <div class="row2"><span>畫質</span><div class="seg">${['auto', 'high', 'mid', 'low'].map((q) => `<button data-a="q:${q}" class="${S.quality === q ? 'on' : ''}">${{ auto: '自動', high: '高', mid: '中', low: '低' }[q]}</button>`).join('')}</div></div>
       <div class="row2"><span>操作教學</span><button class="chip" data-a="tut">重新提示</button></div>
-      <p style="font-size:12px;color:var(--dim);margin-top:12px">差一點 SO CLOSE · v2.0</p>
+      <p style="font-size:12px;color:var(--dim);margin-top:12px">差一點 SO CLOSE · v2.1</p>
       <div class="btns"><button class="btn main" data-a="close">完成</button></div></div>`, (a) => {
       if (a === 'sfx') { S.sfx = !S.sfx; g.snd.setOn(S.sfx); }
       else if (a === 'music') { S.music = !S.music; g.snd.setMusic(S.music); }
       else if (a.startsWith('q:')) { S.quality = a.slice(2); if (S.quality !== 'auto') g.R.setQuality(S.quality); else g.R.setQuality('high'); }
-      else if (a === 'tut') { g.P.flags = {}; g.saveProfile(); this.closeSheet(); this.coach('coin'); return false; }
+      else if (a === 'tut') { for (const k of Object.keys(g.P.flags)) if (k.startsWith('c_')) delete g.P.flags[k]; g.saveProfile(); this.closeSheet(); this.coach('coin'); return false; }
       g.saveProfile();
       this.openSettings();
       return true;
@@ -508,7 +527,7 @@ export class UI {
     const hasOld = OLD_PRIZES.some((p) => P.col[p.id]?.n);
     const tabs = [...SERIES_ORDER.map((k) => SERIES[k]), ...(hasOld ? [{ key: 'OLD', name: '初代', color: '#9aa3c0' }] : [])];
     if (this.colSeries === 'OLD' && !hasOld) this.colSeries = 'J';
-    el.innerHTML = `<header><h1>陳列櫃<small>COLLECTION</small></h1><button class="chip tkchip" data-a="ctr">兌換券 ${P.tickets || 0}</button><button class="ibtn" data-a="close" aria-label="關閉"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    el.innerHTML = `<header><h1>陳列櫃<small>COLLECTION</small></h1><button class="chip roomchip" data-a="room"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>房間</button><button class="chip tkchip" data-a="ctr">券 ${P.tickets || 0}</button><button class="ibtn" data-a="close" aria-label="關閉"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
       <div class="stats"><div>角色<b>${ownChars}/${CHARS.length}</b></div><div>版本<b>${ownKeys}/${allKeys.length}</b></div><div>隱藏版<b>${hidList.filter((c) => P.ch[c.id]?.got).length}/${hidList.length}</b></div></div>
       <div class="tabs">${tabs.map((s) => `<button data-s="${s.key}" class="${s.key === this.colSeries ? 'on' : ''}" style="--sc:${s.color}">${s.name}${P.series[s.key] ? ' ✦' : ''}</button>`).join('')}</div>
       <div class="grid"></div>`;
@@ -541,10 +560,12 @@ export class UI {
     }
     const run = () => { const f = pending.shift(); if (!f) return; f(); requestAnimationFrame(run); };
     requestAnimationFrame(run);
+    el.querySelector('.tabs button.on')?.scrollIntoView({ inline: 'center', block: 'nearest' });
     el.onclick = (e) => {
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (a === 'close') { g.snd.click(); this.closeCollection(); return; }
       if (a === 'ctr') { g.snd.click(); this.openCounter(); return; }
+      if (a === 'room') { g.snd.click(); this.openRoom(this.colSeries !== 'OLD' ? this.colSeries : 'J'); return; }
       const sb = e.target.closest('[data-s]');
       if (sb) { g.snd.click(); this.colSeries = sb.dataset.s; this.renderCollection(); return; }
       const so = e.target.closest('[data-o]');
@@ -552,7 +573,7 @@ export class UI {
       const sl = e.target.closest('[data-c]');
       if (sl) {
         const cid = sl.dataset.c;
-        if (P.ch[cid]?.got) { g.snd.soft(); this.openDetail(cid); }
+        if (P.ch[cid]?.got) { g.snd.soft(); this.openDetail(cid, undefined, 'grid'); }
         else { g.snd.deny(); this.toast(CHAR[cid].tier === 'HID' ? '隱藏版……只有在打開的瞬間才會出現' : '還沒拿到這一隻', 'warn'); }
       }
     };
@@ -565,18 +586,21 @@ export class UI {
     if (g.mode === 'collection') g.mode = 'shop';
     this.updateColDot();
   }
-  openDetail(cid, v) {
+  openDetail(cid, v, from) {
     const g = this.g, P = g.P, c = CHAR[cid], r = RARITY[c.tier], s = SERIES[c.s], ch = P.ch[cid];
+    this.detailFrom = from || this.detailFrom || 'grid';
+    if (from === 'room') $('#den')?.classList.add('hide');
     ch.seen = true; g.saveProfile();
     const owned = versionsOf(c).filter((q) => P.col[colKey(cid, q)]?.n);
     v = v && owned.includes(v) ? v : (this.bestKey(cid) || colKey(cid, 'n')).split('.')[1];
     const key = colKey(cid, v), col = P.col[key], star = starOf(ch.got), V = VERSIONS[v], isH = c.tier === 'HID';
-    $('#col').classList.add('hide');
+    $('#col')?.classList.add('hide');
     g.showcase.open(key, star);
     let el = $('#detail');
     if (!el) { el = h('<div id="detail"></div>'); document.body.appendChild(el); }
     el.classList.remove('hide');
     const ed = editionOf(c.tier, v), best = col.serials.length ? Math.min(...col.serials) : 0;
+    const isBud = P.buddy === key;
     const d = new Date(ch.first);
     const next = star < 3 ? `再 ${STAR_AT[star] - ch.got} 隻升 ${'★'.repeat(star + 1)}` : '已經滿星';
     const chips = isH ? '' : `<div class="vchips">${versionsOf(c).map((q) => { const o = P.col[colKey(cid, q)]?.n; return `<button data-v="${q}" class="${q === v ? 'on' : ''} ${o ? '' : 'off'}" style="--v:${VERSIONS[q].color}">${o ? VERSIONS[q].name : '？'}</button>`; }).join('')}</div>`;
@@ -593,19 +617,20 @@ export class UI {
           <div>第一次拿到<b class="zh">${d.getMonth() + 1} 月 ${d.getDate()} 日</b></div>
           <div>這個版本<b>×${col.n}</b></div>
         </div>
-        <div class="btns"><button class="btn main" data-a="back">返回陳列櫃</button></div>
+        <div class="btns"><button class="btn ${isBud ? '' : 'goldb'}" data-a="buddy">${isBud ? '✓ 夥伴' : '設為夥伴'}</button><button class="btn main" data-a="back">${this.detailFrom === 'room' ? '回到房間' : '返回陳列櫃'}</button></div>
       </div></div>`;
     this.bindDrag(el);
     el.onclick = (e) => {
       const a = e.target.closest('[data-a]')?.dataset.a;
-      if (a === 'back') { g.snd.click(); this.closeDetail(); $('#col').classList.remove('hide'); this.renderCollection(); return; }
+      if (a === 'back') { g.snd.click(); this.backFromDetail(); return; }
+      if (a === 'buddy') { g.snd.click(); this.toggleBuddy(key); this.openDetail(cid, v); return; }
       const vb = e.target.closest('[data-v]');
       if (vb) { if (vb.classList.contains('off')) { g.snd.deny(); this.toast(vb.dataset.v === 'm' ? '鍍金版只出在黑金庫' : '還沒開出這個版本', 'warn'); } else { g.snd.soft(); this.openDetail(cid, vb.dataset.v); } }
     };
   }
   openOldDetail(pid) {
     const g = this.g, P = g.P, pz = OLD_PRIZE[pid], r = RARITY[pz.rarity], c = P.col[pid];
-    $('#col').classList.add('hide');
+    $('#col')?.classList.add('hide');
     g.showcase.open(pid, 1);
     let el = $('#detail');
     if (!el) { el = h('<div id="detail"></div>'); document.body.appendChild(el); }
@@ -630,6 +655,12 @@ export class UI {
     drag.onpointerup = drag.onpointercancel = () => { lx = null; };
   }
   closeDetail() { $('#detail')?.classList.add('hide'); this.g.showcase.close(); }
+  backFromDetail() {
+    this.closeDetail();
+    if (this.detailFrom === 'room' && this.g.mode === 'room') { this.detailFrom = 'grid'; $('#den')?.classList.remove('hide'); this.renderRoomCard(); this.renderRoomFoot(); this.layoutRoom(); return; }
+    this.detailFrom = 'grid';
+    this.openCollection(this.colSeries);
+  }
 
   // ---------------- 兌換櫃台 ----------------
   openCounter() {
@@ -643,10 +674,13 @@ export class UI {
     const sh = this.sheet(`<div class="card"><h2>兌換櫃台<small>PRIZE COUNTER</small></h2>
       <p>你有 <b class="tkn">${tk}</b> 張兌換券。重複的角色會自動換成兌換券（普通 ${ECON.ticket.N}・稀有 ${ECON.ticket.R}・超稀有 ${ECON.ticket.SR}・傳說 ${ECON.ticket.SSR}・隱藏版 ${ECON.ticket.HID} 張）。</p>
       <div class="pi"><div class="coin" style="width:52px;height:52px;font-size:20px">S</div><div class="tx"><div class="nm">代幣 ×${E.tokens}</div><div class="sb">可以重複換</div></div><button class="buy" data-a="tok" ${tk >= E.cost ? '' : 'disabled'}>${E.cost} 張</button></div>
+      <div class="btns" style="margin-top:10px"><button class="btn" data-a="skin">機台外觀</button><button class="btn" data-a="theme">房間佈置</button></div>
       ${missing.length ? `<p style="margin-top:14px">還沒拿到的角色，可以直接指定換一隻普通版：</p><div class="plist">${rows}</div>` : '<p>所有角色的普通版都收齊了！</p>'}
       <p style="font-size:12px;color:var(--muted)">異色、夜光、鍍金和隱藏版只能自己開出來。</p>
       <div class="btns"><button class="btn main" data-a="close">好</button></div></div>`, (a) => {
       if (a === 'tok') { const v = g.ticketsToTokens(); if (v) this.toast(`換到 ${v} 枚代幣`, 'gold'); this.openCounter(); return true; }
+      if (a === 'skin') { this.openSkins(MACHINES[g.active].id); return true; }
+      if (a === 'theme') { this.openThemes(); return true; }
       if (a.startsWith('b:')) { if (!g.exchange(a.slice(2))) { g.snd.deny(); return true; } return true; }
     });
     const imgs = [...sh.querySelectorAll('img[data-k]')];
@@ -664,6 +698,163 @@ export class UI {
     });
   }
 
+  // ---------------- 點畫面（夥伴、收藏房間） ----------------
+  sceneTap(x, y) {
+    const g = this.g;
+    if (g.mode === 'shop') { if (!g.turn || g.turn.sim.state !== 'aim') { if (g.buddy.hit(x, y)) g.buddy.react('tap', true); } return; }
+    if (g.mode !== 'room') return;
+    const r = g.den.tap(x, y);
+    if (r.kind === 'slot') {
+      const c = r.slot.c;
+      g.pet(c.id);
+      this.roomSay(r.slot.i, pick(buddyLines(c).tap));
+      this.roomCard(r.slot);
+    } else if (r.kind === 'buddy') {
+      const k = parseKey(g.P.buddy);
+      if (k) this.roomSay('buddy', pick(buddyLines(k.c).tap));
+    } else if (r.kind === 'locked') {
+      this.toast(r.slot.c.tier === 'HID' ? '隱藏版……只有在打開的瞬間才會出現' : '還沒拿到這一隻', 'warn');
+    } else if (g.den.cam.focus >= 0) this.roomCard(null);
+  }
+
+  // ---------------- 收藏房間 ----------------
+  openRoom(series) {
+    const g = this.g;
+    if (g.turn) return;
+    $('#col')?.classList.add('hide');
+    this.closeDetail();
+    let el = $('#den');
+    if (!el) { el = h('<div id="den"></div>'); document.body.appendChild(el); }
+    el.classList.remove('hide');
+    $('#ui').classList.add('hide');
+    this.clearCoach();
+    this.roomSeries = series || this.roomSeries || (this.colSeries && this.colSeries !== 'OLD' ? this.colSeries : 'J');
+    g.openRoom(this.roomSeries);
+    this.renderRoom();
+    if (!g.P.flags.roomTip) { g.P.flags.roomTip = 1; g.saveProfile(); setTimeout(() => this.toast('點公仔：牠會跳一下、說句話；★★ 以上還會做專屬動作', 'gold'), 700); }
+  }
+  renderRoom() {
+    const g = this.g, P = g.P, el = $('#den');
+    const bk = P.buddy && parseKey(P.buddy);
+    el.innerHTML = `<header class="pe"><button class="ibtn" data-a="back" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h1>收藏房間<small>MY ROOM</small></h1><button class="chip" data-a="deco"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V9l6-5 6 5v11"/><path d="M10 20v-6h4v6"/></svg>佈置</button></header>
+      <div class="tabs pe">${SERIES_ORDER.map((k) => `<button data-s="${k}" class="${k === this.roomSeries ? 'on' : ''}" style="--sc:${SERIES[k].color}">${SERIES[k].name}${P.series[k] ? ' ✦' : ''}</button>`).join('')}</div>
+      <div class="dbub hide"><span></span></div>
+      <div class="dfoot pe"><span>${bk ? `夥伴：<b>${bk.c.name}</b>　` : ''}點公仔互動・左右拖曳換角度</span></div>
+      <div class="dcard pe hide"></div>`;
+    el.onclick = (e) => {
+      const a = e.target.closest('[data-a]')?.dataset.a;
+      if (a === 'back') { g.snd.click(); this.closeRoom(); return; }
+      if (a === 'deco') { g.snd.click(); this.openThemes(); return; }
+      if (a === 'buddy') { g.snd.click(); this.toggleBuddy(this.roomFocusKey); this.renderRoomCard(); this.renderRoomFoot(); return; }
+      if (a === 'detail') { g.snd.click(); const k = parseKey(this.roomFocusKey); if (k) this.openDetail(k.cid, k.v, 'room'); return; }
+      if (a === 'x') { g.snd.click(); this.roomCard(null); return; }
+      const sb = e.target.closest('[data-s]');
+      if (sb && sb.dataset.s !== this.roomSeries) { g.snd.click(); this.roomSeries = sb.dataset.s; this.roomCard(null); g.den.fill(this.roomSeries); el.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b.dataset.s === this.roomSeries)); }
+    };
+    el.querySelector('.tabs button.on')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+    requestAnimationFrame(() => this.layoutRoom());
+  }
+  renderRoomFoot() { const f = $('#den .dfoot span'); if (!f) return; const bk = this.g.P.buddy && parseKey(this.g.P.buddy); f.innerHTML = `${bk ? `夥伴：<b>${bk.c.name}</b>　` : ''}點公仔互動・左右拖曳換角度`; }
+  roomCard(slot) {
+    const g = this.g, card = $('#den .dcard'), foot = $('#den .dfoot');
+    if (!card) return;
+    if (!slot) { g.den.unfocus(); card.classList.add('hide'); foot.classList.remove('hide'); this.roomFocusKey = null; this.layoutRoom(); return; }
+    this.roomFocusKey = slot.key;
+    this.renderRoomCard();
+    card.classList.remove('hide'); foot.classList.add('hide');
+    this.layoutRoom();
+  }
+  renderRoomCard() {
+    const g = this.g, P = g.P, card = $('#den .dcard'), key = this.roomFocusKey;
+    const k = key && parseKey(key); if (!k || !card) return;
+    const c = k.c, r = RARITY[c.tier], V = VERSIONS[k.v], isH = c.tier === 'HID', star = starOf(P.ch[c.id]?.got || 0), isB = P.buddy && parseKey(P.buddy)?.cid === c.id;
+    card.innerHTML = `<div class="cert mini ${isH ? 'hid' : ''} ${k.v === 'g' ? 'glowv' : ''} ${k.v === 'm' ? 'gild' : ''}" style="--rc:${r.color}">
+      <button class="x" data-a="x" aria-label="關閉"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div class="rr"><span class="rbig">${isH ? 'SECRET' : c.tier}</span><span class="rname">${r.name}</span>${k.v !== 'n' && !isH ? `<span class="vtag" style="--vc:${V.color}">${V.name}</span>` : ''}</div>
+      <h3>${c.name}</h3>
+      <div class="stars">${'★'.repeat(star)}<i>${'★'.repeat(3 - star)}</i><small>${star >= 2 ? '會做專屬動作' : `再 ${STAR_AT[1] - (P.ch[c.id]?.got || 0)} 隻升 ★★，解鎖專屬動作`}</small></div>
+      <div class="ln">${c.line}</div>
+      <div class="btns"><button class="btn ${isB ? '' : 'goldb'}" data-a="buddy">${isB ? '✓ 牠是你的夥伴' : '設為夥伴'}</button><button class="btn main" data-a="detail">詳細</button></div>
+    </div>`;
+  }
+  roomSay(slot, text) {
+    const b = $('#den .dbub'); if (!b) return;
+    this.roomBub = { slot, until: performance.now() + 2400 };
+    $('span', b).textContent = text;
+    b.classList.remove('hide', 'pop'); void b.offsetWidth; b.classList.add('pop');
+  }
+  denFrame() {
+    const B = this.roomBub, b = $('#den .dbub');
+    if (!B || !b) return;
+    if (performance.now() > B.until) { b.classList.add('hide'); this.roomBub = null; return; }
+    const p = this.g.den.screenOf(B.slot); if (!p) return;
+    const w = b.offsetWidth || 120;
+    b.style.transform = `translate(${Math.max(8, Math.min(innerWidth - w - 8, p.x - w * 0.5))}px, ${Math.max(this.denTop || 60, p.y - 50)}px)`;
+  }
+  layoutRoom() {
+    const el = $('#den'); if (!el || el.classList.contains('hide')) return;
+    const tabs = $('.tabs', el), card = $('.dcard', el), foot = $('.dfoot', el);
+    this.denTop = tabs ? tabs.getBoundingClientRect().bottom + 4 : 100;
+    const open = card && !card.classList.contains('hide');
+    const land = innerWidth > innerHeight;
+    // 橫向：卡片在右邊，畫面往左讓；直向：卡片在下面
+    this.denSide = land && open ? card.getBoundingClientRect().width : 0;
+    const low = open && !land ? card : foot;
+    this.denBottom = low ? innerHeight - low.getBoundingClientRect().top + 4 : 60;
+    if (land) this.denBottom = Math.min(this.denBottom, 44);
+  }
+  closeRoom() {
+    const g = this.g;
+    $('#den')?.classList.add('hide');
+    this.roomBub = null;
+    g.closeRoom();
+    this.openCollection(this.roomSeries);
+  }
+  toggleBuddy(key) {
+    const g = this.g, k = key && parseKey(key);
+    if (!k) return;
+    const cur = g.P.buddy && parseKey(g.P.buddy);
+    if (cur && cur.cid === k.cid && cur.v === k.v) { g.setBuddy(null); this.toast(`${k.c.name}回陳列櫃休息了`, ''); return; }
+    g.setBuddy(key);
+    this.toast(`${k.c.name}會坐在機台旁邊陪你夾！`, 'gold');
+    g.snd.cheer();
+  }
+
+  // ---------------- 機台外觀、房間佈置 ----------------
+  skinBtn(kind, it, cur) {
+    const g = this.g, own = g.skinOwned(kind, it.id);
+    if (own) return cur === it.id ? '<button class="buy on" disabled>使用中</button>' : `<button class="buy" data-a="u:${kind}:${it.id}">套用</button>`;
+    if (it.need) return g.needOk(it.need) ? `<button class="buy" data-a="g:${kind}:${it.id}">解鎖</button>` : `<button class="buy" disabled>🔒</button>`;
+    return `<button class="buy" data-a="g:${kind}:${it.id}" ${(g.P.tickets || 0) >= it.price ? '' : 'disabled'}>${it.price} 張</button>`;
+  }
+  openSkins(mid) {
+    const g = this.g, P = g.P, def = MACHINE[mid] || MACHINES[g.active], u = P.skin.mach[def.id] || {};
+    const cabCur = u.cab || 'base', clawCur = u.claw || 'chrome';
+    const cabRow = (it) => { const body = it.body || def.theme.body, trim = it.trim === 'rainbow' ? 'conic-gradient(#ff3fb4,#ffd23a,#5dffb0,#3fe0ff,#9a5aff,#ff3fb4)' : it.trim || def.theme.trim; return `<div class="pi"><span class="skin cab" style="--b:${body};--t:${trim}"></span><div class="tx"><div class="nm">${it.name}</div><div class="sb">${it.need ? NEED_TEXT[it.need] : it.id === 'base' ? '這台機台原本的顏色' : '機殼＋霓虹燈'}</div></div>${this.skinBtn('cab', it, cabCur)}</div>`; };
+    const clawRow = (it) => `<div class="pi"><span class="skin claw ${it.iri ? 'iri' : ''}" style="--c:${it.color}"></span><div class="tx"><div class="nm">${it.name}</div><div class="sb">${it.need ? NEED_TEXT[it.need] : '夾爪的金屬材質'}</div></div>${this.skinBtn('claw', it, clawCur)}</div>`;
+    this.sheet(`<div class="card"><h2>機台外觀<small>${def.name}</small></h2>
+      <p>只換外觀，<b>不影響爪力和機率</b>。買過的顏色每一台都可以套用。你有 <b class="tkn">${P.tickets || 0}</b> 張兌換券。</p>
+      <h4>機殼配色</h4><div class="plist">${CAB_SKINS.map(cabRow).join('')}</div>
+      <h4>夾爪</h4><div class="plist">${CLAW_SKINS.map(clawRow).join('')}</div>
+      <div class="btns"><button class="btn main" data-a="close">好</button></div></div>`, (a) => {
+      const [op, kind, id] = a.split(':');
+      if (op === 'g') { if (!g.getSkin(kind, id)) { g.snd.deny(); return true; } g.useSkin(kind, id, def.id); this.toast('換好了！', 'gold'); this.openSkins(def.id); return true; }
+      if (op === 'u') { g.useSkin(kind, id, def.id); this.openSkins(def.id); return true; }
+    });
+  }
+  openThemes() {
+    const g = this.g, P = g.P, cur = P.skin.room || 'wood';
+    const row = (it) => { const T = THEMES[it.id]; return `<div class="pi"><span class="skin room" style="--w:${T.wall[1]};--w2:${T.wall[2] || T.wall[1]};--c:${T.cab};--l:${T.led}"></span><div class="tx"><div class="nm">${it.name}</div><div class="sb">${it.need ? NEED_TEXT[it.need] : '牆、地板、展示櫃、燈光'}</div></div>${this.skinBtn('room', it, cur)}</div>`; };
+    this.sheet(`<div class="card"><h2>房間佈置<small>ROOM THEME</small></h2>
+      <p>換一整套房間的佈置。你有 <b class="tkn">${P.tickets || 0}</b> 張兌換券。</p>
+      <div class="plist">${ROOM_THEMES.map(row).join('')}</div>
+      <div class="btns"><button class="btn main" data-a="close">好</button></div></div>`, (a) => {
+      const [op, kind, id] = a.split(':');
+      if (op === 'g') { if (!g.getSkin(kind, id)) { g.snd.deny(); return true; } g.useSkin(kind, id); this.toast('佈置好了！', 'gold'); this.openThemes(); return true; }
+      if (op === 'u') { g.useSkin(kind, id); this.openThemes(); return true; }
+    });
+  }
+
   // ---------------- 教學提示 ----------------
   coach(step) {
     const F = this.g.P.flags;
@@ -676,7 +867,7 @@ export class UI {
       drop: { el: '#drop', text: '對準了就按下爪。25 秒內要決定。', dir: 'down' },
       meter: { el: '#meter', text: '沒夾到也不虧：保夾燈亮一格。全亮時，下一爪是強爪。', dir: 'up' },
     }[step];
-    if (!T) return;
+    if (!T || this.g.mode !== 'shop' || this.modal) return;
     const target = $(T.el);
     if (!target || target.offsetParent === null) return;
     this.clearCoach();
