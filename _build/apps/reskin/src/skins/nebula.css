@@ -1,0 +1,44 @@
+/* ---------- 星雲 ---------- */
+.skin-nebula { --lv: 0; --bs: 0; color: #eef2ff; font-family: "Exo 2", var(--sans); }
+.skin-nebula .nb-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-nebula .nb-core { position: absolute; left: 50%; top: calc(var(--st) + 41%); width: min(50vw, 27vh, 300px); aspect-ratio: 1; transform: translate(-50%, -50%); }
+.skin-nebula .nb-art { position: absolute; inset: 9%; border-radius: 50%; overflow: hidden; background: #10102a; box-shadow: 0 0 0 1px rgba(255,255,255,.25), 0 0 calc(30px + var(--bs) * 40px) rgba(255,190,240,.45), 0 0 120px rgba(120,100,255,.35); transform: scale(calc(1 + var(--bs) * .025)); }
+.skin-nebula .nb-art img { width: 100%; height: 100%; object-fit: cover; display: block; animation: nb-spin 40s linear infinite; }
+.skin-nebula:not(.is-playing) .nb-art img { animation-play-state: paused; }
+.skin-nebula .nb-art img.blank { opacity: 0; }
+@keyframes nb-spin { to { transform: rotate(360deg); } }
+.skin-nebula .nb-ring { position: absolute; inset: -6%; width: 112%; height: 112%; overflow: visible; touch-action: none; cursor: pointer; }
+.skin-nebula .nb-ring circle { fill: none; }
+.skin-nebula .nb-ring .tr { stroke: rgba(255,255,255,.14); stroke-width: 1.2; }
+.skin-nebula .nb-ring .pg { stroke: #c9bfff; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 301.59; stroke-dashoffset: 301.59; }
+.skin-nebula .nb-ring .kn { fill: #fff; stroke: none; }
+.skin-nebula .nb-info { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 132px); padding: 0 28px; text-align: center; }
+.skin-nebula .nb-t { font-weight: 300; font-size: 27px; letter-spacing: .14em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 22px rgba(170,150,255,.65); }
+.skin-nebula .nb-a { margin-top: 8px; font-weight: 600; font-size: 12.5px; letter-spacing: .32em; color: #3ff0d0; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-nebula .nb-time { margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 12px; letter-spacing: .12em; color: rgba(238,242,255,.55); font-variant-numeric: tabular-nums; }
+.skin-nebula .nb-time i { width: 46px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent); }
+.skin-nebula .nb-ctrl { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 30px); gap: 18px; }
+.skin-nebula .nb-ctrl button { width: 50px; height: 50px; border-radius: 50%; font-size: 20px; color: #eef2ff; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.04); transition: transform .15s, background .2s; }
+.skin-nebula .nb-ctrl .c-play { width: 70px; height: 70px; font-size: 26px; border-color: rgba(201,191,255,.7); box-shadow: 0 0 calc(18px + var(--lv) * 24px) rgba(157,139,255,.55), inset 0 0 18px rgba(157,139,255,.35); background: rgba(157,139,255,.12); }
+.skin-nebula .nb-ctrl .c-shuf, .skin-nebula .nb-ctrl .c-rep { width: 40px; height: 40px; font-size: 16px; border-color: transparent; background: none; }
+.skin-nebula .nb-ctrl button:active { transform: scale(.88); background: rgba(255,255,255,.12); }
+.skin-nebula.enter .nb-art { animation: nb-in 1.4s cubic-bezier(.2,.9,.2,1) .35s both; }
+.skin-nebula.enter .nb-ring { animation: nb-ring 1.2s ease .7s both; }
+.skin-nebula.enter .nb-info { animation: nb-txt 1.2s ease .9s both; }
+.skin-nebula.enter .nb-ctrl { animation: nb-txt 1s ease 1.1s both; }
+@keyframes nb-in { from { transform: scale(0); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes nb-ring { from { opacity: 0; transform: rotate(-120deg) scale(1.3); } to { opacity: 1; transform: none; } }
+@keyframes nb-txt { from { opacity: 0; letter-spacing: .6em; } to { opacity: 1; } }
+@media (orientation: landscape) and (min-width: 640px) {
+  .skin-nebula .nb-core { top: 46%; left: 36%; width: min(46vh, 340px); }
+  .skin-nebula .nb-info { left: 56%; right: 4vw; bottom: auto; top: 40%; text-align: left; padding: 0; }
+  .skin-nebula .nb-t { font-size: clamp(26px, 3.2vw, 46px); white-space: normal; }
+  .skin-nebula .nb-time { justify-content: flex-start; }
+  .skin-nebula .nb-ctrl { left: 56%; right: auto; bottom: auto; top: 64%; justify-content: flex-start; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .skin-nebula .nb-core { top: 54%; width: 56vh; }
+  .skin-nebula .nb-info { top: 26%; }
+  .skin-nebula .nb-t { font-size: 22px; }
+  .skin-nebula .nb-ctrl { top: auto; bottom: calc(var(--sb) + 16px); }
+}
