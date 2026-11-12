@@ -7,7 +7,7 @@ import { Sound } from '../engine/audio.js';
 import { Sim } from './sim.js';
 import { MachineView, PrizeLayer, FLOOR_Y } from './cabinet.js';
 import { buildRoom } from './room.js';
-import { MACHINES, PRIZES, PRIZE, RARITY, SERIES, ECON, RANKS, rankOf, hiddenOf, seriesPrizes, CAP_R, CAP_M, MISSIONS } from './data.js';
+import { MACHINES, MACHINE, RARITY, VERSIONS, SERIES_ORDER, CHAR, ECON, ODDS, RANKS, rankOf, CAP_R, CAP_M, BOX_SIZE, MISSIONS, NEXT_TIER, OLD_PRIZE, charsOf, hiddenChar, seriesChars, colKey, parseKey, editionOf, starOf } from './data.js';
 import { store } from './store.js';
 import { UI } from './ui.js';
 import { RevealStage } from './reveal.js';
@@ -15,7 +15,6 @@ import { Showcase } from './showcase.js';
 import { rng } from './qmath.js';
 
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-const BOX_SIZE = { R: { sx: 0.185, sy: 0.14, sz: 0.12, mass: 0.32 }, SR: { sx: 0.2, sy: 0.15, sz: 0.128, mass: 0.38 }, SSR: { sx: 0.22, sy: 0.165, sz: 0.138, mass: 0.48 } };
 const AIM_TIME = 25;
 
 export class Game {
@@ -90,10 +89,29 @@ export class Game {
   loadProfile() {
     let p = null;
     try { p = JSON.parse(store.get('profile') || 'null'); } catch (e) { p = null; }
-    if (!p || p.v !== 1) p = { v: 1, tokens: ECON.start, xp: 0, regenAt: Date.now(), day: '', col: {}, stats: { plays: 0, wins: 0, near: 0, multi: 0, hidden: 0, ssr: 0 }, flags: { opening: 1 }, last: 'm1', uid: 1, meter: { m1: ECON.openingMeter }, series: {}, rank: 0, settings: { sfx: true, music: true, quality: 'auto' } };
+    if (p && p.v === 1) p = this.migrate(p);
+    if (!p || p.v !== 2) p = { v: 2, tokens: ECON.start, xp: 0, regenAt: Date.now(), day: '', col: {}, ch: {}, tickets: 0, keys: 0, goldShot: {}, stats: { plays: 0, wins: 0, near: 0, multi: 0, hidden: 0, ssr: 0, mut: 0 }, flags: { opening: 1 }, last: 'm1', uid: 1, meter: { m1: ECON.openingMeter }, series: {}, seriesAll: {}, rank: 0, settings: { sfx: true, music: true, quality: 'auto' } };
     p.settings = { sfx: true, music: true, quality: 'auto', ...(p.settings || {}) };
+    p.col = p.col || {}; p.ch = p.ch || {}; p.tickets = p.tickets || 0; p.keys = p.keys || 0; p.goldShot = p.goldShot || {};
+    p.series = p.series || {}; p.seriesAll = p.seriesAll || {}; p.meter = p.meter || {}; p.flags = p.flags || {};
+    p.stats = { plays: 0, wins: 0, near: 0, multi: 0, hidden: 0, ssr: 0, mut: 0, ...(p.stats || {}) };
     this.P = p;
     this.snd.on = p.settings.sfx; this.snd.musicOn = p.settings.music;
+  }
+  // v1 → v2：初代獎品留在陳列櫃，重複的換成兌換券
+  migrate(p) {
+    let tk = 0;
+    for (const [id, c] of Object.entries(p.col || {})) {
+      const op = OLD_PRIZE[id];
+      if (!op || !c) continue;
+      if (c.n > 1) { tk += (c.n - 1) * ECON.ticket[op.rarity]; c.n = 1; c.serials = (c.serials || []).slice(0, 1); }
+    }
+    p.oldSeries = p.series || {}; p.series = {}; p.seriesAll = {};
+    p.tickets = tk; p.keys = 0; p.goldShot = {}; p.ch = {};
+    p.flags = p.flags || {}; p.flags.v2 = { tickets: tk };
+    if (p.meter) p.meter.m3 = 0;
+    p.v = 2;
+    return p;
   }
   saveProfile() { store.set('profile', JSON.stringify(this.P)); }
   saveMachine(i) {
@@ -151,18 +169,17 @@ export class Game {
     const def = MACHINES[i];
     let st = null;
     try { st = JSON.parse(store.get('mach.' + def.id) || 'null'); } catch (e) { st = null; }
-    if (!st || !Array.isArray(st.items)) st = { items: [], day: '', fresh: true };
+    if (!st || !Array.isArray(st.items) || (def.kind === 'shelf' && st.v !== 2)) st = { items: [], day: '', fresh: true, v: 2 };
+    st.v = 2;
     this.mstate = this.mstate || [];
     this.mstate[i] = st;
     this.layers[i].set(st.items);
   }
   rollItem(def, rarity, R) {
     const uid = this.P.uid++;
-    if (rarity === 'BLK') return { uid, prize: null, rarity: 'BLK', black: true, series: def.series === 'X' ? 'ABC'[Math.floor(R() * 3)] : def.series, kind: 'cap', r: CAP_R.BLK, mass: CAP_M.BLK };
-    const pool = (def.series === 'X' ? PRIZES : seriesPrizes(def.series)).filter((p) => p.rarity === rarity);
-    const pz = pool[Math.floor(R() * pool.length)];
-    if (def.kind === 'shelf') { const s = BOX_SIZE[rarity]; return { uid, prize: pz.id, rarity, kind: 'box', size: { sx: s.sx, sy: s.sy, sz: s.sz }, mass: s.mass }; }
-    return { uid, prize: pz.id, rarity, kind: 'cap', r: CAP_R[rarity], mass: CAP_M[rarity] * (0.95 + R() * 0.1) };
+    if (rarity === 'BLK') return { uid, rarity: 'BLK', black: true, kind: 'cap', r: CAP_R.BLK, mass: CAP_M.BLK };
+    if (def.kind === 'shelf') { const s = BOX_SIZE[rarity]; return { uid, rarity, kind: 'box', size: { sx: s.sx, sy: s.sy, sz: s.sz }, mass: s.mass }; }
+    return { uid, rarity, kind: 'cap', r: CAP_R[rarity], mass: CAP_M[rarity] * (0.95 + R() * 0.1) };
   }
   pickRarity(mix, R) {
     const e = Object.entries(mix); let s = e.reduce((a, [, v]) => a + v, 0), x = R() * s;
@@ -233,7 +250,7 @@ export class Game {
         const used = st.items.map((o) => ({ x: o.p ? o.p[0] : 0, z: o.p ? o.p[2] : 0 }));
         let x = 0, z = -0.17;
         const zc = it.rarity === 'SSR' ? -0.15 : it.rarity === 'SR' ? -0.1 : -0.06;
-        for (let t = 0; t < 40; t++) { x = -0.22 + R() * 0.44; z = zc + (R() - 0.5) * 0.04; if (used.every((u) => Math.abs(u.x - x) > 0.25)) break; }
+        for (let t = 0; t < 60; t++) { x = -0.28 + R() * 0.56; z = zc + (R() - 0.5) * 0.04; if (used.every((u) => Math.abs(u.x - x) > 0.17)) break; }
         const y = L.shelfY + it.size.sy / 2 + 0.003;
         it.p = [x, y, z]; it.q = [0, Math.sin((R() - 0.5) * 0.4), 0, 1];
         const n = Math.hypot(it.q[1], it.q[3]); it.q[1] /= n; it.q[3] /= n;
@@ -241,7 +258,7 @@ export class Game {
         st.items.push(it);
       }
       this.layers[i].set(st.items);
-      if (this.ready) { this.ui.toast('店員補了一盒新的獎品', 'info'); }
+      if (this.ready) { this.ui.toast('店員補了新的盲盒', 'info'); }
       return;
     }
     if (this.ready && list.some((it) => it.black) && MACHINES[i].id !== 'm4') setTimeout(() => { this.ui.toast(`黑金蛋出現在「${MACHINES[i].name}」！`, 'gold'); this.snd.power(); }, 1200);
@@ -312,18 +329,19 @@ export class Game {
     if (this.turn || this.mode !== 'shop' || this.pourQ.some((q) => q.i === this.active)) return;
     const def = MACHINES[this.active];
     if (!this.unlocked(this.active)) { this.snd.deny(); this.ui.toast(`升到「${RANKS[def.unlock].name}」才能玩這台`, 'warn'); return; }
-    if (this.P.tokens < def.cost) { this.snd.deny(); this.ui.noTokens(); return; }
+    const gold = !!this.P.goldShot[def.id];
+    if (!gold && this.P.tokens < def.cost) { this.snd.deny(); this.ui.noTokens(); return; }
     const sim = this.ensureSim(this.active);
-    const power = this.isPower(def);
-    this.P.tokens -= def.cost;
+    const power = gold || this.isPower(def);
+    if (gold) delete this.P.goldShot[def.id]; else this.P.tokens -= def.cost;
     this.P.stats.plays++;
     this.mission('play'); this.mission('play:' + def.id);
     this.addXp(ECON.playXp);
     this.snd.coin();
-    if (power) setTimeout(() => this.snd.power(), 250);
-    sim.start(power ? def.strong : def.power);
-    this.turn = { def, sim, power, t: 0, aimLeft: AIM_TIME, wins: [], slips: 0, grabbed: false, lastTick: AIM_TIME, near: false };
-    this.ui.onTurnStart(power);
+    if (gold) setTimeout(() => this.snd.goldShot(), 200); else if (power) setTimeout(() => this.snd.power(), 250);
+    sim.start(power ? def.strong || def.power : def.power);
+    this.turn = { def, sim, power, gold, t: 0, aimLeft: AIM_TIME, wins: [], slips: 0, grabbed: false, lastTick: AIM_TIME, near: false };
+    this.ui.onTurnStart(power, gold);
     this.saveProfile();
   }
   dropClaw() {
@@ -380,12 +398,12 @@ export class Game {
     const wonIds = new Set(won.map((w) => w.uid));
     st.items = st.items.filter((it) => !wonIds.has(it.uid));
     this.layers[i].set(st.items);
-    if (T.power || won.length) this.P.meter[def.id] = 0;
-    else if (def.meter) this.P.meter[def.id] = Math.min(def.meter, this.meterOf(def) + 1);
+    if (won.length || (T.power && !T.gold)) this.P.meter[def.id] = 0;
+    else if (def.meter && !T.gold) this.P.meter[def.id] = Math.min(def.meter, this.meterOf(def) + 1);
     if (won.length) {
       this.P.stats.wins += won.length;
       if (won.length > 1) { this.P.stats.multi++; this.mission('multi'); }
-      for (const w of won) { this.mission('win'); if (w.kind === 'box') this.mission('box'); if (w.black || RARITY[w.rarity].order >= 1) this.mission('rare'); if (w.black || RARITY[w.rarity].order >= 2) this.mission('sr'); }
+      for (const w of won) { this.mission('win'); if (w.kind === 'box') this.mission('box'); if (w.black || RARITY[w.rarity]?.order >= 1) this.mission('rare'); if (w.black || RARITY[w.rarity]?.order >= 2) this.mission('sr'); }
       if (T.power) this.mission('powerwin');
     }
     // 差一點：這局把哪顆推到出口邊上
@@ -398,46 +416,156 @@ export class Game {
     this.saveMachine(i);
     this.saveProfile();
     this.ui.onTurnEnd(won.length > 0);
-    if (won.length) setTimeout(() => this.startReveals(won.slice()), 650);
+    if (won.length) setTimeout(() => this.startReveals(won.map((it) => this.entryOf(it, def))), 650);
     else this.afterTurn();
   }
   afterTurn() {
     this.restockCheck(this.active, false);
+    this.maybeGlow(this.active);
     if (this.cloudPending) this.reloadFromStore();
     this.ui.coachAfterTurn();
   }
 
   // ---------------- 開獎 ----------------
+  entryOf(it, def) {
+    if (it.kind === 'box') return { src: 'box', shell: 'box', tier: it.rarity, glow: !!it.glow, mid: def.id, uid: it.uid, size: it.size };
+    if (it.black) return { src: 'black', shell: 'black', tier: 'BLK', black: true, mid: def.id, uid: it.uid };
+    return { src: 'cap', shell: 'cap', tier: it.rarity, glow: !!it.glow, mid: def.id, uid: it.uid };
+  }
   startReveals(list) {
     this.revealList = list;
     this.mode = 'reveal';
     this.nextReveal();
   }
-  nextReveal() {
-    const it = this.revealList.shift();
-    if (!it) { this.mode = 'shop'; this.ui.closeReveal(); this.afterTurn(); return; }
-    // 決定開出什麼
-    let pid = it.prize, hidden = false, upgraded = false;
-    const R = Math.random;
-    if (it.black) {
-      if (R() < ECON.blackHidden) { pid = hiddenOf(it.series).id; hidden = true; }
-      else { const ss = PRIZES.filter((p) => p.series === it.series && p.rarity === 'SSR'); pid = ss[Math.floor(R() * ss.length)].id; }
-    } else if (this.forceHidden || R() < ECON.hiddenChance) { pid = hiddenOf(PRIZE[it.prize].series).id; hidden = true; upgraded = true; }
-    const pz = PRIZE[pid], rar = RARITY[pz.rarity];
-    const serial = rar.ed ? 1 + Math.floor(R() * rar.ed) : 0;
-    const col = this.P.col[pid] || { n: 0, first: Date.now(), serials: [] };
+  // 決定這一顆／這一盒開出什麼（含變異、加碼）
+  resolve(e) {
+    const R = Math.random, pick = (a) => a[Math.floor(R() * a.length)];
+    const def = MACHINE[e.mid] || MACHINES[0];
+    const vault = def.series === 'X';
+    const out = { entry: e, shell: e.shell, tier: e.tier, glow: !!e.glow, inner: null, from: null, key: null, morph: null, glitch: false, ev: null };
+    let s = vault ? pick(SERIES_ORDER) : def.series;
+    if (e.src === 'buy') { out.key = colKey(e.cid, 'n'); return out; }
+    if (e.src === 'chest') {
+      s = pick(SERIES_ORDER);
+      if (this.forceHidden || R() < ODDS.chest.HID) { out.key = colKey(hiddenChar(s).id, 'n'); return out; }
+      const c = charsOf(s, 'SSR')[0], v = R() < ODDS.chest.g ? 'g' : 'a';
+      out.from = colKey(c.id, 'n'); out.key = colKey(c.id, v); out.morph = v;
+      return out;
+    }
+    let tier = e.tier;
+    if (e.src === 'cap' || e.src === 'box') {
+      const table = e.src === 'box' ? ODDS.evBox : vault ? ODDS.evVault : ODDS.ev;
+      let x = R();
+      if (this.forceEv) { out.ev = this.forceEv; this.forceEv = null; }
+      else for (const [k, p] of Object.entries(table)) { if (x < p) { out.ev = k; break; } x -= p; }
+      if (out.ev === 'tri' && !['N', 'R'].includes(tier)) out.ev = null;
+      if (out.ev === 'egg') { out.inner = tier === 'SSR' ? 'BLK' : NEXT_TIER[tier]; tier = out.inner; }
+    }
+    if (e.black || tier === 'BLK') {
+      if (this.forceHidden || R() < ODDS.black) { out.key = colKey(hiddenChar(s).id, 'n'); out.blackHidden = true; return out; }
+      const c = charsOf(s, 'SSR')[0];
+      if (vault) { out.key = colKey(c.id, 'm'); return out; }
+      const v = R() < 0.3 ? 'g' : 'a';
+      out.from = colKey(c.id, 'n'); out.key = colKey(c.id, v); out.morph = v;
+      return out;
+    }
+    const pool = vault ? SERIES_ORDER.flatMap((q) => charsOf(q, tier)) : charsOf(s, tier);
+    const c = pick(pool); s = c.s;
+    const odds = e.glow ? ODDS.glow : e.src === 'box' ? ODDS.box : ODDS.cap;
+    if (this.forceHidden || R() < odds.HID) { out.from = colKey(c.id, vault ? 'm' : 'n'); out.key = colKey(hiddenChar(s).id, 'n'); out.glitch = true; return out; }
+    if (vault) { out.key = colKey(c.id, 'm'); return out; }
+    let v = 'n';
+    if (this.forceVersion) v = this.forceVersion;
+    else if (e.glow) v = R() < odds.g ? 'g' : 'a';
+    else { const y = R(); v = y < odds.g ? 'g' : y < odds.g + odds.a ? 'a' : 'n'; }
+    if (v !== 'n') { out.from = colKey(c.id, 'n'); out.morph = v; }
+    out.key = colKey(c.id, v);
+    return out;
+  }
+  // 收進陳列櫃：版本、星級、兌換券、系列獎勵
+  grant(key) {
+    const P = this.P, k = parseKey(key), c = k.c, v = k.v, now = Date.now();
+    const col = P.col[key] || { n: 0, first: now, serials: [] };
     const isNew = col.n === 0;
-    col.n++; if (serial) col.serials.push(serial); if (col.serials.length > 30) col.serials = col.serials.slice(-30);
-    this.P.col[pid] = col;
-    this.addXp(rar.xp);
-    if (pz.rarity === 'SSR') this.P.stats.ssr++;
-    if (pz.rarity === 'HID') this.P.stats.hidden++;
-    // 系列收齊
-    let complete = null;
-    const s = pz.series;
-    if (!this.P.series[s] && seriesPrizes(s).filter((p) => p.rarity !== 'HID').every((p) => this.P.col[p.id]?.n)) { this.P.series[s] = Date.now(); this.P.tokens += ECON.seriesReward; complete = s; }
+    col.n++;
+    const ed = editionOf(c.tier, v), serial = ed ? 1 + Math.floor(Math.random() * ed) : 0;
+    if (serial) { col.serials.push(serial); if (col.serials.length > 20) col.serials = col.serials.slice(-20); }
+    P.col[key] = col;
+    const ch = P.ch[k.cid] || { got: 0, first: now };
+    const before = starOf(ch.got); ch.got++; const after = starOf(ch.got);
+    P.ch[k.cid] = ch;
+    let tickets = 0;
+    if (!isNew) { tickets = ECON.ticket[c.tier]; P.tickets += tickets; }
+    this.addXp(RARITY[c.tier].xp + (VERSIONS[v]?.xp || 0));
+    if (c.tier === 'SSR') P.stats.ssr++;
+    if (c.tier === 'HID') P.stats.hidden++;
+    if (v === 'a' || v === 'g') { P.stats.mut++; this.mission('mut'); }
+    let complete = null, allv = null;
+    const list = seriesChars(c.s).filter((q) => q.tier !== 'HID');
+    if (!P.series[c.s] && list.every((q) => P.ch[q.id]?.got)) { P.series[c.s] = now; P.tokens += ECON.seriesReward; P.tickets += ECON.seriesTickets; complete = c.s; }
+    if (!P.seriesAll[c.s] && list.every((q) => ['n', 'a', 'g'].every((vv) => P.col[colKey(q.id, vv)]?.n))) { P.seriesAll[c.s] = now; P.tokens += ECON.allVersionsReward; allv = c.s; }
+    return { key, isNew, newChar: ch.got === 1, serial, ed, tickets, starUp: after > before && after >= 2 ? after : 0, star: after, got: ch.got, complete, allv };
+  }
+  nextReveal() {
+    const e = this.revealList.shift();
+    if (!e) { this.mode = 'shop'; this.ui.closeReveal(); this.afterTurn(); return; }
+    const res = this.resolve(e);
+    if (res.ev === 'key') this.P.keys++;
+    if (res.ev === 'gold') this.P.goldShot[e.mid] = 1;
+    if (res.ev === 'tri') for (let i = 0; i < 2; i++) this.revealList.unshift({ src: 'bonus', shell: 'cap', tier: e.tier, mid: e.mid, uid: e.uid + i + 1 });
+    res.grant = this.grant(res.key);
+    res.left = this.revealList.length;
     this.saveProfile();
-    this.reveal.play({ item: it, pid, hidden, upgraded, serial, isNew, complete, dupes: col.n - 1 });
+    this.reveal.play(res);
+  }
+  // 祕密寶箱：集滿鑰匙碎片
+  openChest() {
+    if (this.turn || this.mode === 'reveal' || this.P.keys < ODDS.keys) return false;
+    this.P.keys -= ODDS.keys;
+    this.saveProfile();
+    if (this.mode === 'collection') this.ui.closeCollection();
+    this.ui.closeSheet();
+    this.startReveals([{ src: 'chest', shell: 'chest', tier: 'SSR', uid: 0 }]);
+    return true;
+  }
+  // 兌換櫃台
+  exchange(cid) {
+    const c = CHAR[cid];
+    if (this.turn || !c || c.tier === 'HID' || this.P.col[colKey(cid, 'n')]?.n) return false;
+    const price = ECON.price[c.tier];
+    if (this.P.tickets < price) return false;
+    this.P.tickets -= price;
+    this.saveProfile();
+    if (this.mode === 'collection') this.ui.closeCollection();
+    this.ui.closeSheet();
+    this.startReveals([{ src: 'buy', shell: 'cap', tier: c.tier, cid, uid: 1 + Math.floor(Math.random() * 99) }]);
+    return true;
+  }
+  ticketsToTokens() {
+    const E = ECON.ticketToTokens;
+    if (this.P.tickets < E.cost) return false;
+    this.P.tickets -= E.cost; this.P.tokens += E.tokens;
+    this.saveProfile(); this.snd.coin(); this.ui.setTokens();
+    return E.tokens;
+  }
+  // 偶爾讓一顆扭蛋／一盒盲盒發光：夾到必定變異
+  maybeGlow(i) {
+    const def = MACHINES[i], st = this.mstate[i], sim = this.sims[def.id];
+    if (!def.glowChance || !sim || st.items.some((it) => it.glow)) return;
+    if (!this.forceGlow && Math.random() >= def.glowChance) return;
+    this.forceGlow = false;
+    let cand;
+    if (def.kind === 'shelf') cand = st.items.filter((it) => it.kind === 'box');
+    else {
+      const ys = st.items.filter((it) => it.kind === 'cap' && !it.black).map((it) => ({ it, y: sim.byId.get(it.uid)?.body.translation().y ?? -1 }));
+      ys.sort((a, b) => b.y - a.y);
+      cand = ys.slice(0, 10).map((q) => q.it);
+    }
+    if (!cand.length) return;
+    cand[Math.floor(Math.random() * cand.length)].glow = true;
+    this.layers[i].set(st.items);
+    this.saveMachine(i);
+    setTimeout(() => { this.ui.toast(def.kind === 'shelf' ? '有一盒盲盒開始發光了！夾到必定變異' : '有一顆扭蛋開始發光了！夾到必定變異', 'gold'); this.snd.glowSpawn(); }, 600);
   }
   // ---------------- 每日任務 ----------------
   rollMissions() {
@@ -473,17 +601,6 @@ export class Game {
     return def.reward;
   }
 
-  recycle(pid) {
-    const col = this.P.col[pid];
-    if (!col || col.n <= 1) return false;
-    const r = RARITY[PRIZE[pid].rarity];
-    col.n--; col.serials.pop();
-    this.P.tokens += r.recycle;
-    this.saveProfile();
-    this.snd.coin();
-    this.ui.setTokens();
-    return r.recycle;
-  }
   addXp(n) {
     const before = rankOf(this.P.xp);
     this.P.xp += n;

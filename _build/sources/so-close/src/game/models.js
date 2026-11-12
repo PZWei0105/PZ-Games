@@ -1,8 +1,10 @@
 // 獎品 3D 模型（全部用程式建出來）＋扭蛋殼、展示盒
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { tex } from '../engine/tex.js';
-import { RARITY } from './data.js';
+import { RARITY, OLD_PRIZE, parseKey } from './data.js';
+import { buildFigure } from './figures.js';
 
 const V = THREE.Vector3;
 const mats = new Map();
@@ -512,38 +514,188 @@ export const capMats = {
   blackSeam: () => cached('blkSeam', () => std('#ffcf5a', 1, 0.18, { emissive: '#ff9a1a', emissiveIntensity: 0.6 })),
 };
 
-// 推落台的展示盒（開窗彩盒）
-export function buildBox(prizeId, rarity, size) {
+// ---------------- v2：收藏品統一入口 ----------------
+// key：初代獎品 id（A1…）或「角色.版本」（J3.a）
+export function buildItem(key, opts = {}) {
+  if (OLD_PRIZE[key]) return buildPrize(key, opts);
+  const k = parseKey(key);
+  return buildFigure(k.cid, k.v, opts);
+}
+
+// 扭蛋裡的神祕小包（錫箔袋＋折起來的說明書）：扭蛋單位大小（半徑 1）
+const h3 = (x, y, z) => { const v = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return v - Math.floor(v); };
+export function bundleGeos() {
+  const foil = new THREE.IcosahedronGeometry(1, 3);
+  const P = foil.attributes.position;
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), y = P.getY(i), z = P.getZ(i);
+    const k = 1 + (h3(Math.round(x * 50), Math.round(y * 50), Math.round(z * 50)) - 0.5) * 0.22;
+    P.setXYZ(i, x * k * 0.56, y * k * 0.36, z * k * 0.3);
+  }
+  foil.computeVertexNormals();
+  foil.rotateZ(0.35); foil.rotateY(0.6); foil.translate(0.02, 0.06, 0);
+  const paper = new THREE.BoxGeometry(0.58, 0.025, 0.36);
+  paper.rotateX(0.5); paper.rotateY(-0.7); paper.rotateZ(-0.35); paper.translate(-0.08, 0.02, -0.14);
+  return { foil, paper };
+}
+export const bundleMats = {
+  foil: () => cached('bFoil', () => new THREE.MeshPhysicalMaterial({ color: '#e6eaf4', metalness: 1, roughness: 0.3, flatShading: true, iridescence: 0.7, iridescenceIOR: 1.5, iridescenceThicknessMinimum: 200, iridescenceThicknessMaximum: 600, envMapIntensity: 1.3 })),
+  paper: () => cached('bPaper', () => std('#f4f0e6', 0, 0.8)),
+};
+// 發光扭蛋：殼會跟著時間換顏色
+export const glowMats = {
+  top: () => cached('gTop', () => new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.05, transparent: true, opacity: 0.5, clearcoat: 1, emissive: '#ffffff', emissiveIntensity: 0.9, depthWrite: false })),
+  bot: () => cached('gBot', () => new THREE.MeshPhysicalMaterial({ color: '#ffffff', metalness: 0.1, roughness: 0.2, clearcoat: 1, emissive: '#ffffff', emissiveIntensity: 1.1 })),
+  seam: () => cached('gSeam', () => new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 2.2, 2.2) })),
+};
+
+// ---------------- 盲盒 ----------------
+const TIER_BAND = { R: ['#3aa0ff', '#1a5ad8'], SR: ['#c07bff', '#7a3ad8'], SSR: ['#ffe27a', '#e8a01a'] };
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function boxBg(g, w, h, seed) {
+  const lg = g.createLinearGradient(0, 0, 0, h);
+  lg.addColorStop(0, '#ff7ab8'); lg.addColorStop(0.55, '#b98aff'); lg.addColorStop(1, '#6fb8ff');
+  g.fillStyle = lg; g.fillRect(0, 0, w, h);
+  let s = seed;
+  const R = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+  for (let i = 0; i < 46; i++) {
+    const x = R() * w, y = R() * h, r = 4 + R() * 9;
+    g.globalAlpha = 0.35 + R() * 0.35; g.fillStyle = ['#ffffff', '#ffd0ea', '#d8f0ff', '#fff2a0'][i % 4];
+    if (i % 3 === 0) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+    else if (i % 3 === 1) { g.save(); g.translate(x, y); g.rotate(R() * 6); rr(g, -r, -r * 0.5, r * 2, r, r * 0.5); g.fill(); g.restore(); }
+    else { g.beginPath(); for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2, q = k % 2 ? r * 0.45 : r; g.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } g.fill(); }
+  }
+  g.globalAlpha = 1;
+}
+function qMark(g, x, y, s) {
+  g.save();
+  const rg = g.createRadialGradient(x, y, 0, x, y, s * 1.3); rg.addColorStop(0, 'rgba(255,255,255,.9)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = rg; g.beginPath(); g.arc(x, y, s * 1.3, 0, Math.PI * 2); g.fill();
+  g.font = `900 ${s * 1.7}px "Bungee", "Noto Sans TC", sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineWidth = s * 0.16; g.strokeStyle = '#ff5aa8'; g.strokeText('?', x, y + s * 0.08);
+  g.fillStyle = '#ffffff'; g.fillText('?', x, y + s * 0.08);
+  g.restore();
+}
+function boxTex(rarity, face) {
+  return tex.canvas('bbox' + rarity + face, face === 'top' ? 512 : 512, face === 'top' ? 420 : 640, (g, w, h) => {
+    boxBg(g, w, h, face === 'front' ? 3 : face === 'side' ? 7 : 11);
+    const band = TIER_BAND[rarity];
+    if (face === 'front') {
+      g.fillStyle = 'rgba(255,255,255,.92)'; rr(g, 34, 34, w - 68, 118, 26); g.fill();
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = '900 70px "Noto Sans TC", sans-serif'; g.lineWidth = 10; g.strokeStyle = '#ff6fb2'; g.strokeText('甜點盲盒', w / 2, 82); g.fillStyle = '#ffffff'; g.fillText('甜點盲盒', w / 2, 82);
+      g.font = '400 28px "Bungee", sans-serif'; g.fillStyle = '#b05ad8'; g.fillText('SWEET DREAMS', w / 2, 132);
+      qMark(g, w / 2, h * 0.5, 120);
+      for (const [x, y, r] of [[120, 250, 16], [400, 300, 12], [150, 420, 10], [380, 440, 18]]) { g.fillStyle = '#fffbe0'; g.beginPath(); for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2, q = k % 2 ? r * 0.3 : r; g.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } g.fill(); }
+      const lg = g.createLinearGradient(0, h - 120, 0, h); lg.addColorStop(0, band[0]); lg.addColorStop(1, band[1]);
+      g.fillStyle = lg; g.fillRect(0, h - 118, w, 118);
+      g.fillStyle = 'rgba(255,255,255,.95)'; g.font = '400 64px "Bungee", sans-serif'; g.fillText(rarity, w / 2, h - 66);
+      g.font = '700 22px "Noto Sans TC", sans-serif'; g.fillStyle = 'rgba(255,255,255,.85)'; g.fillText('一盒一隻・隨機出貨', w / 2, h - 22);
+    } else if (face === 'side') {
+      g.save(); g.translate(w / 2, h / 2 - 40); g.rotate(-Math.PI / 2);
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '400 60px "Bungee", sans-serif';
+      g.lineWidth = 8; g.strokeStyle = '#ff6fb2'; g.strokeText('SWEET DREAMS', 0, 0); g.fillStyle = '#ffffff'; g.fillText('SWEET DREAMS', 0, 0);
+      g.restore();
+      for (let i = 0; i < 3; i++) qMark(g, w / 2, 120 + i * 150, 34);
+      const lg = g.createLinearGradient(0, h - 90, 0, h); lg.addColorStop(0, band[0]); lg.addColorStop(1, band[1]);
+      g.fillStyle = lg; g.fillRect(0, h - 90, w, 90);
+      g.fillStyle = '#fff'; g.font = '400 40px "Bungee", sans-serif'; g.textAlign = 'center'; g.fillText('SO CLOSE', w / 2, h - 44);
+    } else {
+      g.strokeStyle = 'rgba(255,255,255,.9)'; g.setLineDash([16, 12]); g.lineWidth = 6; rr(g, 40, 40, w - 80, h - 80, 30); g.stroke(); g.setLineDash([]);
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '900 54px "Noto Sans TC", sans-serif'; g.fillStyle = '#ff6fb2'; g.fillText('從這裡打開', w / 2, h / 2 - 20);
+      g.font = '400 36px "Bungee", sans-serif'; g.fillStyle = '#b05ad8'; g.fillText('OPEN ▲', w / 2, h / 2 + 44);
+    }
+  });
+}
+// 推落台上的盲盒（openable：開盒演出用，蓋子會掀開）
+export function buildBlindBox(rarity, size, { glow = false, openable = false } = {}) {
   const { sx, sy, sz } = size;
   const g = new THREE.Group();
-  const rc = RARITY[rarity];
-  const tone = new THREE.Color(rc.color);
-  const boxMat = cached('box' + rarity, () => new THREE.MeshPhysicalMaterial({ color: tone.clone().multiplyScalar(0.55), metalness: 0.35, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.15, envMapIntensity: 1.2 }));
-  const trim = cached('trim' + rarity, () => std(rarity === 'SSR' ? '#ffd27a' : rarity === 'SR' ? '#e8d4ff' : '#cfe8ff', 1, 0.2));
-  const t = 0.004;
-  // 背板、頂、底、兩側；正面開窗
-  g.add(mesh(new THREE.BoxGeometry(sx, sy, t), boxMat, 0, 0, -sz / 2 + t / 2));
-  g.add(mesh(new THREE.BoxGeometry(sx, t, sz), boxMat, 0, sy / 2 - t / 2, 0));
-  g.add(mesh(new THREE.BoxGeometry(sx, t * 2, sz), boxMat, 0, -sy / 2 + t, 0));
-  for (const s of [-1, 1]) g.add(mesh(new THREE.BoxGeometry(t, sy, sz), boxMat, s * (sx / 2 - t / 2), 0, 0));
-  // 正面框
-  const fw = 0.016;
-  g.add(mesh(new THREE.BoxGeometry(sx, fw, t), boxMat, 0, sy / 2 - fw / 2, sz / 2 - t / 2));
-  g.add(mesh(new THREE.BoxGeometry(sx, fw * 1.6, t), boxMat, 0, -sy / 2 + fw * 0.8, sz / 2 - t / 2));
-  for (const s of [-1, 1]) g.add(mesh(new THREE.BoxGeometry(fw, sy, t), boxMat, s * (sx / 2 - fw / 2), 0, sz / 2 - t / 2));
-  // 金邊
-  for (const s of [-1, 1]) {
-    g.add(mesh(new THREE.BoxGeometry(sx + 0.002, 0.003, 0.003), trim, 0, s * (sy / 2), sz / 2));
-    g.add(mesh(new THREE.BoxGeometry(0.003, sy, 0.003), trim, s * (sx / 2), 0, sz / 2));
+  const mk = (face) => new THREE.MeshPhysicalMaterial({ map: boxTex(rarity, face), roughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.3, envMapIntensity: 0.45, emissive: glow ? '#ffffff' : '#000000', emissiveMap: glow ? boxTex(rarity, face) : null, emissiveIntensity: glow ? 0.35 : 0 });
+  const side = mk('side'), front = mk('front'), top = mk('top');
+  const bottom = new THREE.MeshStandardMaterial({ color: '#e8d8f0', roughness: 0.6 });
+  const hidden = new THREE.MeshBasicMaterial({ visible: false });
+  const geo = new RoundedBoxGeometry(sx, sy, sz, 3, 0.005);
+  const body = new THREE.Mesh(geo, [side, side, openable ? hidden : top, bottom, front, side]);
+  g.add(body);
+  const mats = [side, front, top];
+  let lid = null;
+  if (openable) {
+    const inner = new THREE.Mesh(new THREE.BoxGeometry(sx - 0.006, sy - 0.006, sz - 0.006), new THREE.MeshStandardMaterial({ color: '#2a1830', roughness: 0.9, side: THREE.BackSide }));
+    g.add(inner);
+    lid = new THREE.Group(); lid.position.set(0, sy / 2, -sz / 2); g.add(lid);
+    const lm = new THREE.Mesh(new RoundedBoxGeometry(sx, 0.005, sz, 2, 0.002), [side, side, top, bottom, side, side]); lm.position.set(0, 0.0025, sz / 2); lid.add(lm);
+    for (const s of [-1, 1]) { const fl = new THREE.Mesh(new THREE.BoxGeometry(0.002, 0.018, sz * 0.92), side); fl.position.set(s * (sx / 2 - 0.004), -0.009, sz / 2); lid.add(fl); }
   }
-  g.add(mesh(new THREE.PlaneGeometry(sx - fw * 2, sy - fw * 2.6), M.glass('#ffffff', 0.12), 0, fw * 0.3, sz / 2 - 0.001));
-  // 裡面的展示台與獎品
-  g.add(mesh(new THREE.BoxGeometry(sx - 0.02, 0.012, sz - 0.02), M.velvet(rarity === 'SSR' ? '#5a0d1c' : '#141c38'), 0, -sy / 2 + 0.014, 0));
-  const p = buildPrize(prizeId, { mini: true });
-  const s = Math.min((sy - 0.03) / 0.13, (sx - 0.03) / 0.11);
-  p.g.scale.setScalar(s); p.g.position.y = -sy / 2 + 0.02; g.add(p.g);
-  // 盒上的稀有度標
-  const tag = mesh(new THREE.PlaneGeometry(0.05, 0.012), M.glow(rc.color, 1.6), 0, -sy / 2 + fw * 0.8, sz / 2 + 0.0006); g.add(tag);
   g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  return { g, prize: p };
+  return { g, lid, mats };
+}
+
+// 盲盒裡的錫箔袋
+function foilLabel() {
+  return tex.canvas('foilLabel', 256, 256, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,.92)'; rr(g, 18, 40, w - 36, h - 80, 30); g.fill();
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '900 40px "Noto Sans TC", sans-serif'; g.fillStyle = '#ff5aa8'; g.fillText('甜點盲盒', w / 2, 84);
+    qMark(g, w / 2, 152, 44);
+    g.font = '400 18px "Bungee", sans-serif'; g.fillStyle = '#b05ad8'; g.fillText('SO CLOSE', w / 2, 204);
+  });
+}
+export function buildFoilBag(tint = '#ffb8de') {
+  const g = new THREE.Group();
+  const w = 0.07, h = 0.094, d = 0.022;
+  const geo = new THREE.SphereGeometry(1, 48, 32);
+  const P = geo.attributes.position;
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), y = P.getY(i), z = P.getZ(i);
+    const sx = Math.sign(x) * Math.pow(Math.abs(x), 0.42), sy = Math.sign(y) * Math.pow(Math.abs(y), 0.42);
+    const e = Math.max(Math.abs(sx), Math.abs(sy));
+    const crink = 1 + (h3(Math.round(x * 40), Math.round(y * 40), Math.round(z * 40)) - 0.5) * 0.06;
+    P.setXYZ(i, sx * w / 2 * crink, sy * h / 2 * crink, z * d / 2 * (1 - Math.pow(e, 10) * 0.85));
+  }
+  geo.computeVertexNormals();
+  const foil = new THREE.MeshPhysicalMaterial({ color: tint, metalness: 1, roughness: 0.22, iridescence: 0.8, iridescenceIOR: 1.6, iridescenceThicknessMinimum: 180, iridescenceThicknessMaximum: 650, envMapIntensity: 1.5 });
+  const body = new THREE.Group(); g.add(body);
+  body.add(new THREE.Mesh(geo, foil));
+  const lab = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.72, w * 0.72), new THREE.MeshStandardMaterial({ map: foilLabel(), transparent: true, roughness: 0.4 }));
+  lab.position.z = d / 2 + 0.0008; body.add(lab);
+  // 鋸齒封口
+  const zig = (n) => { const s = new THREE.Shape(); s.moveTo(-w / 2, 0); for (let i = 0; i <= n * 2; i++) s.lineTo(-w / 2 + (i / (n * 2)) * w, i % 2 ? 0.006 : 0.0105); s.lineTo(w / 2, 0); s.lineTo(-w / 2, 0); const ge = new THREE.ExtrudeGeometry(s, { depth: 0.003, bevelEnabled: false }); ge.translate(0, 0, -0.0015); return ge; };
+  const crimpM = new THREE.MeshPhysicalMaterial({ color: tint, metalness: 1, roughness: 0.35, envMapIntensity: 1.3 });
+  const topStrip = new THREE.Group(); topStrip.position.y = h / 2 - 0.004; g.add(topStrip);
+  topStrip.add(new THREE.Mesh(zig(12), crimpM));
+  const bot = new THREE.Mesh(zig(12), crimpM); bot.rotation.z = Math.PI; bot.position.y = -h / 2 + 0.004; body.add(bot);
+  for (let i = 0; i < 6; i++) { const ln = new THREE.Mesh(new THREE.BoxGeometry(w * 0.94, 0.0006, 0.0034), crimpM); ln.position.set(0, (i < 3 ? h / 2 - 0.006 - i * 0.0018 : -h / 2 + 0.006 + (i - 3) * 0.0018), 0); body.add(ln); }
+  return { g, body, top: topStrip, h };
+}
+
+// 祕密寶箱（方塊風）
+export function buildChest() {
+  const g = new THREE.Group();
+  const wood = cached('chestWood', () => new THREE.MeshStandardMaterial({ map: tex.wood('#8a5228'), roughness: 0.62, metalness: 0 }));
+  const woodD = cached('chestWoodD', () => new THREE.MeshStandardMaterial({ map: tex.wood('#5a3216'), roughness: 0.7 }));
+  const gold = M.gold();
+  const W = 0.15, H = 0.08, D = 0.1;
+  g.add(mesh(new THREE.BoxGeometry(W, H, D), wood, 0, H / 2, 0));
+  g.add(mesh(new THREE.BoxGeometry(W - 0.012, 0.004, D - 0.012), woodD, 0, H - 0.001, 0));
+  const tr = (w, h, d, x, y, z) => g.add(mesh(new THREE.BoxGeometry(w, h, d), gold, x, y, z));
+  for (const x of [-1, 1]) for (const z of [-1, 1]) tr(0.01, H + 0.002, 0.01, x * (W / 2 - 0.004), H / 2, z * (D / 2 - 0.004));
+  tr(W + 0.004, 0.009, D + 0.004, 0, 0.0045, 0);
+  for (const x of [-0.045, 0.045]) tr(0.012, H, D + 0.003, x, H / 2, 0);
+  const lid = new THREE.Group(); lid.position.set(0, H, -D / 2); g.add(lid);
+  const L = (w, h, d, y, z, m) => lid.add(mesh(new THREE.BoxGeometry(w, h, d), m, 0, y, z));
+  L(W + 0.004, 0.022, D + 0.004, 0.011, D / 2, wood);
+  L(W, 0.014, D * 0.78, 0.029, D / 2, wood);
+  L(W - 0.004, 0.01, D * 0.46, 0.041, D / 2, wood);
+  for (const x of [-0.045, 0.045]) { const b = mesh(new THREE.BoxGeometry(0.013, 0.047, D + 0.006), gold, x, 0.024, D / 2); lid.add(b); }
+  lid.add(mesh(new THREE.BoxGeometry(W + 0.008, 0.006, D + 0.008), gold, 0, 0.001, D / 2));
+  const lock = mesh(new THREE.BoxGeometry(0.026, 0.03, 0.008), gold, 0, H - 0.008, D / 2 + 0.004); g.add(lock);
+  g.add(mesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.004, 12), M.black(), 0, H - 0.004, D / 2 + 0.008).rotateX(Math.PI / 2));
+  g.add(mesh(new THREE.BoxGeometry(0.0026, 0.007, 0.004), M.black(), 0, H - 0.012, D / 2 + 0.008));
+  const gemM = M.gem('#ff3a6a', 1, 0.4, 0.4), gemB = M.gem('#3ab8ff', 1, 0.4, 0.4);
+  for (const [x, m] of [[-0.06, gemM], [0.06, gemB]]) { const gm = mesh(new THREE.OctahedronGeometry(0.0075, 0), m, x, 0.03, D + 0.004); lid.add(gm); }
+  const glowIn = mesh(new THREE.PlaneGeometry(W - 0.02, D - 0.02), M.add(tex.dot(), '#ffd36a', 2.4, 0), 0, H - 0.002, 0); glowIn.rotation.x = -Math.PI / 2; g.add(glowIn);
+  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  return { g, lid, glowIn, H };
 }

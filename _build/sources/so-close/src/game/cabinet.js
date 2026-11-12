@@ -1,7 +1,7 @@
 // 機台外觀、爪子、機台裡的獎品（扭蛋 instancing／展示盒）
 import * as THREE from 'three';
 import { tex, signTex } from '../engine/tex.js';
-import { M, flattenPrize, capsuleGeos, capMats, buildBox, CAPSULE_COLORS, N_COLORS } from './models.js';
+import { M, capsuleGeos, capMats, buildBlindBox, bundleGeos, bundleMats, glowMats, CAPSULE_COLORS, N_COLORS } from './models.js';
 import { CLAW, LAYOUTS } from './sim.js';
 
 const box = (w, h, d, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); return m; };
@@ -216,24 +216,23 @@ export class PrizeLayer {
     this.view = view;
     this.group = new THREE.Group();
     view.group.add(this.group);
-    this.items = []; // { uid, prize, rarity, black, r, pose:{p,q}, kind }
+    this.items = []; // { uid, rarity, black, glow, r, kind, size }
     this.dirty = true;
     this.inst = null;
-    this.miniCache = new Map();
     this.boxes = new Map();
-    this.tickers = [];
+    this.halos = [];
   }
   set(items) { this.items = items; this.dirty = true; }
   rebuild() {
     this.dirty = false;
-    // 清掉舊的
     if (this.inst) for (const m of this.inst.all) { this.group.remove(m); m.dispose(); }
     for (const [, b] of this.boxes) this.group.remove(b.g);
-    this.boxes.clear();
-    this.tickers = [];
+    for (const h of this.halos) { this.group.remove(h.s); for (const st of h.stars || []) this.group.remove(st); }
+    this.boxes.clear(); this.halos = [];
     const caps = this.items.filter((i) => i.kind === 'cap');
     const geos = this.capGeos || (this.capGeos = capsuleGeos());
-    const normal = caps.filter((c) => !c.black), black = caps.filter((c) => c.black);
+    const bund = this.bundGeos || (this.bundGeos = bundleGeos());
+    const normal = caps.filter((c) => !c.black && !c.glow), black = caps.filter((c) => c.black), glow = caps.filter((c) => c.glow && !c.black);
     const all = [];
     const mk = (geo, mat, n) => { const m = new THREE.InstancedMesh(geo, mat, Math.max(1, n)); m.count = n; m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; this.group.add(m); all.push(m); return m; };
     const top = mk(geos.top, capMats.top(), normal.length), bot = mk(geos.bot, capMats.bot(), normal.length), seam = mk(geos.seam, capMats.seam(), normal.length);
@@ -242,22 +241,25 @@ export class PrizeLayer {
     normal.forEach((c, i) => { const col = capColor(c); bot.setColorAt(i, col); top.setColorAt(i, tint.copy(col).lerp(WHITE, 0.35)); });
     if (bot.instanceColor) bot.instanceColor.needsUpdate = true;
     if (top.instanceColor) top.instanceColor.needsUpdate = true;
+    const foil = mk(bund.foil, bundleMats.foil(), normal.length + glow.length), paper = mk(bund.paper, bundleMats.paper(), normal.length + glow.length);
+    foil.castShadow = paper.castShadow = false;
     const btop = mk(geos.top, capMats.blackTop(), black.length), bbot = mk(geos.bot, capMats.blackBot(), black.length), bseam = mk(geos.seam, capMats.blackSeam(), black.length);
-    // 小模型（依獎品種類）
-    const byPrize = new Map();
-    for (const c of normal) { if (!byPrize.has(c.prize)) byPrize.set(c.prize, []); byPrize.get(c.prize).push(c); }
-    const minis = [];
-    for (const [pid, list] of byPrize) {
-      if (!this.miniCache.has(pid)) this.miniCache.set(pid, flattenPrize(pid));
-      const parts = this.miniCache.get(pid).map((pt) => { const m = mk(pt.geo, pt.mat, list.length); m.castShadow = false; return m; });
-      minis.push({ list, parts });
+    const gtop = mk(geos.top, glowMats.top(), glow.length), gbot = mk(geos.bot, glowMats.bot(), glow.length), gseam = mk(geos.seam, glowMats.seam(), glow.length);
+    gtop.castShadow = false;
+    glow.forEach((c, i) => { gbot.setColorAt(i, capColor(c)); });
+    if (gbot.instanceColor) gbot.instanceColor.needsUpdate = true;
+    const orbit = () => { const out = []; for (let k = 0; k < 5; k++) { const st = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex.star(), color: '#ffffff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); st.scale.setScalar(0.05); this.group.add(st); out.push(st); } return out; };
+    for (const c of glow) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex.dot(), color: '#ffffff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      s.scale.setScalar(c.r * 7.5); this.group.add(s);
+      this.halos.push({ uid: c.uid, s, r: c.r, stars: orbit() });
     }
-    this.inst = { all, top, bot, seam, btop, bbot, bseam, normal, black, minis };
-    // 展示盒
+    this.inst = { all, top, bot, seam, btop, bbot, bseam, gtop, gbot, gseam, foil, paper, normal, black, glow, packs: [...normal, ...glow] };
+    // 盲盒
     for (const it of this.items.filter((i) => i.kind === 'box')) {
-      const b = buildBox(it.prize, it.rarity, it.size);
+      const b = buildBlindBox(it.rarity, it.size, { glow: !!it.glow });
       this.group.add(b.g); this.boxes.set(it.uid, b);
-      if (b.prize.tick) this.tickers.push(b.prize.tick);
+      if (it.glow) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex.dot(), color: '#ffffff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); s.scale.setScalar(0.4); this.group.add(s); this.halos.push({ uid: it.uid, s, r: 0.08, box: b, stars: orbit() }); }
     }
   }
   // poseOf(uid) → { p:{x,y,z}, q:{x,y,z,w} }
@@ -276,18 +278,21 @@ export class PrizeLayer {
     };
     put(I.normal, [I.top, I.bot, I.seam]);
     put(I.black, [I.btop, I.bbot, I.bseam]);
-    // 小模型：放在扭蛋中心略偏上，縮小到裝得下
-    for (const { list, parts } of I.minis) {
-      list.forEach((c, i) => {
-        const P = poseOf(c);
-        if (!P) { for (const m of parts) m.setMatrixAt(i, ZERO); return; }
-        const ms = (c.r * 1.45) / 0.13;
-        _mini.makeScale(ms, ms, ms); _mini.setPosition(0, -0.062 * ms + c.r * 0.12, 0);
-        _p.set(P.p.x, P.p.y, P.p.z); _q.set(P.q.x, P.q.y, P.q.z, P.q.w); _s.setScalar(1);
-        _m.compose(_p, _q, _s).multiply(_mini);
-        for (const m of parts) m.setMatrixAt(i, _m);
-      });
-      for (const m of parts) m.instanceMatrix.needsUpdate = true;
+    put(I.glow, [I.gtop, I.gbot, I.gseam]);
+    put(I.packs, [I.foil, I.paper]);
+    if (I.glow.length || this.halos.length) {
+      const hue = (t * 0.12) % 1, k = 0.75 + 0.25 * Math.sin(t * 4);
+      const gm = glowMats.top(), bm = glowMats.bot();
+      gm.emissive.setHSL(hue, 0.9, 0.62); gm.emissiveIntensity = 1.3 * k;
+      bm.emissive.setHSL((hue + 0.15) % 1, 0.85, 0.55); bm.emissiveIntensity = 1.6 * k;
+      for (const h of this.halos) {
+        const P = poseOf({ uid: h.uid });
+        if (!P) { h.s.visible = false; for (const st of h.stars || []) st.visible = false; continue; }
+        h.s.visible = true; h.s.position.set(P.p.x, P.p.y, P.p.z);
+        h.s.material.color.setHSL((hue + 0.05) % 1, 0.9, 0.62).multiplyScalar(1.5 + 0.6 * Math.sin(t * 4));
+        (h.stars || []).forEach((st, i) => { const a = t * 1.6 + (i / 5) * Math.PI * 2, rr = h.r * 1.9; st.visible = true; st.position.set(P.p.x + Math.cos(a) * rr, P.p.y + h.r * 0.6 + Math.sin(t * 3 + i) * h.r * 0.5, P.p.z + Math.sin(a) * rr); st.material.color.setHSL((hue + i * 0.12) % 1, 0.8, 0.7).multiplyScalar(2.2); st.scale.setScalar(0.045 + 0.025 * Math.abs(Math.sin(t * 5 + i))); });
+        if (h.box) for (const m of h.box.mats) { m.emissiveIntensity = 0.25 + 0.25 * (0.5 + 0.5 * Math.sin(t * 4)); m.emissive.setHSL(hue, 0.7, 0.75); }
+      }
     }
     for (const [uid, b] of this.boxes) {
       const P = poseOf({ uid });
@@ -295,6 +300,5 @@ export class PrizeLayer {
       b.g.visible = true;
       b.g.position.set(P.p.x, P.p.y, P.p.z); b.g.quaternion.set(P.q.x, P.q.y, P.q.z, P.q.w);
     }
-    for (const tk of this.tickers) tk(t);
   }
 }

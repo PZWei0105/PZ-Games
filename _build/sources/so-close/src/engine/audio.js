@@ -144,6 +144,27 @@ export class Sound {
   rank() { [72, 76, 79, 84].forEach((m, i) => this.bell(m, i * 0.1, 0.12, 1.4)); }
   toast() { this.tone(1318, 0.12, { vol: 0.05 }); this.tone(1760, 0.18, { vol: 0.05, at: 0.07 }); }
   power() { this.tone(110, 0.6, { type: 'sawtooth', vol: 0.06, slide: 4 }); [79, 83, 86, 91].forEach((m, i) => this.tone(hz(m), 0.2, { type: 'square', vol: 0.05, at: 0.3 + i * 0.07 })); }
+  // ---------- 開蛋變異、盲盒、鑰匙、寶箱 ----------
+  morph(v) {
+    const seq = v === 'g' ? [72, 76, 79, 83, 86, 91] : [74, 78, 81, 85, 88, 93];
+    seq.forEach((m, i) => this.tone(hz(m), 0.32, { type: 'triangle', vol: 0.045, at: i * 0.07, rev: 0.45 }));
+    this.noise(1.0, { vol: 0.06, f: 2600, q: 2, slide: 2.6, attack: 0.6, rev: 0.4 });
+  }
+  morphHit(v) {
+    if (v === 'g') { this.tone(hz(43), 1.8, { vol: 0.14, attack: 0.02 }); [79, 84, 88, 91, 96].forEach((m, i) => this.bell(m, 0.05 + i * 0.06, 0.1, 2.4)); }
+    else [76, 80, 83, 88, 92].forEach((m, i) => this.bell(m, i * 0.06, 0.1, 1.8));
+    this.noise(0.3, { vol: 0.12, f: 5200, q: 0.7, rev: 0.4 });
+  }
+  dim() { this.tone(160, 0.9, { type: 'sine', vol: 0.09, slide: 0.45 }); this.noise(0.7, { vol: 0.05, f: 500, q: 1, type: 'lowpass', slide: 0.4 }); }
+  key() { this.tone(2093, 0.12, { type: 'triangle', vol: 0.06 }); this.tone(3136, 0.6, { vol: 0.05, at: 0.07, rev: 0.5 }); this.noise(0.05, { vol: 0.08, f: 7000, q: 3, at: 0.02 }); }
+  goldShot() { [67, 72, 76, 79, 84].forEach((m, i) => this.tone(hz(m), 0.22, { type: 'square', vol: 0.04, at: i * 0.07 })); this.bell(91, 0.42, 0.12, 1.8); }
+  boxOpen() { this.noise(0.16, { vol: 0.16, f: 700, q: 1.4 }); this.tone(140, 0.12, { type: 'triangle', vol: 0.1 }); this.noise(0.3, { vol: 0.06, f: 2400, q: 1.5, at: 0.14, slide: 1.5 }); }
+  crinkle() { for (let i = 0; i < 6; i++) this.noise(0.04, { vol: 0.05, f: 4200 + Math.random() * 3000, q: 3, at: i * 0.05 + Math.random() * 0.02 }); }
+  tear() { this.noise(0.3, { vol: 0.24, f: 3600, q: 0.9, slide: 0.55 }); this.noise(0.14, { vol: 0.1, f: 6800, q: 2, at: 0.04 }); this.tone(900, 0.08, { type: 'triangle', vol: 0.03 }); }
+  chest() { this.noise(0.7, { vol: 0.07, f: 320, q: 5, slide: 1.9 }); this.tone(hz(43), 1.3, { vol: 0.14 }); [60, 64, 67, 72, 76, 79].forEach((m, i) => this.tone(hz(m), 2.6, { type: 'sine', vol: 0.035, at: 0.35 + i * 0.05, attack: 0.35, rev: 0.6 })); }
+  starUp(n) { [84, 88, 91, 96].slice(0, n + 1).forEach((m, i) => this.bell(m, i * 0.1, 0.12, 1.5)); }
+  glowSpawn() { [88, 91, 95].forEach((m, i) => this.bell(m, i * 0.13, 0.08, 2)); this.noise(0.9, { vol: 0.04, f: 6000, q: 1, rev: 0.6 }); }
+  egg() { this.pop(); this.tone(780, 0.14, { vol: 0.12, slide: 2.2, at: 0.12 }); [84, 91].forEach((m, i) => this.bell(m, 0.18 + i * 0.08, 0.09)); }
 
   // ---------- 背景音樂：輕快、柔和的店內循環 ----------
   // 木琴般的分解和弦＋柔和低音＋偶爾出現的鐵琴旋律，沒有重鼓、沒有方波

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Renderer } from '../engine/render.js';
 import { makeEnv } from '../engine/env.js';
 import { buildPrize, flattenPrize } from '../game/models.js';
-import { PRIZES } from '../game/data.js';
+import { OLD_PRIZES as PRIZES } from '../game/data.js';
 const app = document.getElementById('app');
 const R = new Renderer(app);
 const scene = new THREE.Scene();
