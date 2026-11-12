@@ -47,18 +47,70 @@ R.player = (() => {
   function prime() { const el = cur(); if (!el._blessed && el.paused) blessSilently(el); }
   function clearSeek(el) { if (el._seekFn) { el.removeEventListener('loadedmetadata', el._seekFn); el._seekFn = null; } }
 
-  /* ---------- object URLs for the current, next and previous songs ---------- */
+  /* ---------- links for the current, next and previous songs ----------
+     blob: links normally; data: links once a blob: link has failed and the same song then played (some iPhone
+     web views, the Claude app among them, refuse blob: links for music) */
+  const srcMode = () => settings.get('srcMode') || 'blob';
   async function urlFor(id) {
     if (urls.has(id)) return urls.get(id);
     const blob = await R.db.getAudio(id);
     if (!blob) throw new Error('missing audio');
-    if (urls.has(id)) return urls.get(id);
-    const u = URL.createObjectURL(blob); urls.set(id, u);
+    const u = srcMode() === 'data' ? await R.dataURL(blob) : URL.createObjectURL(blob);
+    if (urls.has(id)) { R.dropURL(u); return urls.get(id); }
+    urls.set(id, u);
     return u;
   }
   function trimUrls() {
     const keep = new Set([S.tid, S.ids[nextIndex(true)], S.ids[prevIndex()], els[0].dataset.tid, els[1].dataset.tid]);
-    for (const [id, u] of urls) if (!keep.has(id)) { URL.revokeObjectURL(u); urls.delete(id); }
+    for (const [id, u] of urls) if (!keep.has(id)) { R.dropURL(u); urls.delete(id); }
+  }
+
+  /* ---------- songs that will not play ----------
+     A song that fails is skipped, but three failures in a row stop the music and explain, instead of running
+     through the whole library. auto: the player moved on by itself (true) or the song was picked (false). */
+  let fails = 0, explained = false;
+  const viaData = new Set();
+  function failed(id, err, auto) {
+    const t = R.lib.get(id), name = `《${(t && t.title) || '這首'}》`;
+    const lost = !!(err && err.lost);
+    if (t) R.lib.update(id, lost ? { lost: 1 } : { warn: 1 });
+    fails++;
+    const goOn = auto && fails < 3 && S.ids.length > 1;
+    if (!goOn) { S.playing = false; for (const el of els) el.pause(); emitState(); }
+    if (fails >= 3 && !explained) { explained = true; explain(lost); }
+    else R.toast(lost ? `${name}的檔案讀不到了${goOn ? '，跳下一首' : '：把它重新匯入一次就會補回'}` : `${name}這台裝置播不了${goOn ? '，跳下一首' : ''}`, { ms: goOn ? 3000 : 4500 });
+    return goOn;
+  }
+  function explain(lost) {
+    if (R.CLAUDE) {
+      R.ui.notice({
+        title: '這裡播不了存進來的歌',
+        sub: '連續好幾首都打不開。Claude App 裡的這一份常常讀不到存進來的音樂檔，也不能鎖屏一直聽。請改用網頁版：用 Safari 打開下面的網址，按「分享 → 加入主畫面」，再從主畫面打開、把資料夾匯入一次。',
+        link: { href: R.WEB_URL, label: '打開網頁版' },
+      });
+    } else if (lost) {
+      R.ui.notice({ title: '這些歌的檔案讀不到了', sub: '可能是系統清掉了一部分儲存空間。把同一個資料夾（或同幾首歌）再匯入一次就會補回來，原本好好的歌會自動跳過。' });
+    } else {
+      R.ui.notice({ title: '連續好幾首都播不了', sub: '可能是這台裝置不支援這些檔案的格式，或檔案本身壞了。可以換幾首試試，或先轉成 MP3、M4A 再匯入。' });
+    }
+  }
+  // a blob: link that would not play: open the same song as a data: link; if it plays, use data: links from now on
+  async function retryAsData(el, id) {
+    let du;
+    try { du = await R.dataURL(await R.db.getAudio(id)); } catch (e) { if (failed(id, e, S.playing)) setTimeout(() => advance('error'), 800); return; }
+    if (el.dataset.tid !== id || el !== cur()) return;
+    const ok = () => {
+      el.removeEventListener('loadedmetadata', ok);
+      if (el.dataset.tid !== id || srcMode() === 'data') return;
+      settings.set('srcMode', 'data');
+      for (const [k2, u] of urls) if (u.startsWith('blob:')) { R.dropURL(u); urls.delete(k2); }
+      const b = idle(); if (b.paused && b.dataset.tid && b.dataset.tid !== id) { b.removeAttribute('src'); delete b.dataset.tid; }
+      prepare();
+    };
+    el.addEventListener('loadedmetadata', ok);
+    const old = urls.get(id); urls.set(id, du); R.dropURL(old);
+    el.src = du;
+    if (S.playing) tryPlay(el);
   }
 
   /* ---------- queue ---------- */
@@ -111,7 +163,7 @@ R.player = (() => {
     const wasOther = idle();
     setTrack(id);
     let u;
-    try { u = await urlFor(id); } catch (e) { R.toast('找不到這首歌的檔案，可能被清掉了'); return; }
+    try { u = await urlFor(id); } catch (e) { if (my === tok) failed(id, e, false); return; }
     if (my !== tok) return;
     if (!wasOther.paused) wasOther.pause();
     const el = cur();
@@ -140,7 +192,7 @@ R.player = (() => {
     if (hidden) diag.begin(id, engine(), why);
     S.i = j;
     const u = urls.get(id);
-    if (!u) { urlFor(id).then((x) => handoff(id, x)).catch(() => { R.toast('下一首讀不到，跳過'); advance('skip'); }); setTrack(id); return; }
+    if (!u) { urlFor(id).then((x) => handoff(id, x)).catch((e) => { if (failed(id, e, true)) advance('skip'); }); setTrack(id); return; }
     setTrack(id);
     handoff(id, u);
   }
@@ -232,7 +284,7 @@ R.player = (() => {
     S.base = S.base.filter((x) => !gone.has(x));
     const before = S.ids.slice(0, S.i).filter((x) => !gone.has(x)).length;
     S.ids = S.ids.filter((x) => !gone.has(x));
-    for (const id of ids) if (urls.has(id)) { const u = urls.get(id); urls.delete(id); setTimeout(() => URL.revokeObjectURL(u), 3000); }
+    for (const id of ids) if (urls.has(id)) { const u = urls.get(id); urls.delete(id); setTimeout(() => R.dropURL(u), 3000); }
     if (wasCur) {
       for (const el of els) { el.pause(); el.removeAttribute('src'); delete el.dataset.tid; try { el.load(); } catch (e) { /* ignore */ } }
       S.tid = null; S.playing = false;
@@ -249,6 +301,8 @@ R.player = (() => {
       el._blessed = true;
       if (k !== act) return;
       S.playing = true; diag.ok(el.dataset.tid); emitState(); updatePos();
+      fails = 0;
+      { const t = R.lib.get(el.dataset.tid); if (t && (t.warn || t.lost)) R.lib.update(t.id, { warn: 0, lost: 0 }); }
       if (countedFor !== el.dataset.tid) { countedFor = el.dataset.tid; const t = R.lib.get(countedFor); if (t) R.lib.update(t.id, { plays: (t.plays || 0) + 1, last: Date.now() }); }
       prepare();
     });
@@ -275,10 +329,10 @@ R.player = (() => {
     el.addEventListener('loadedmetadata', () => { if (k !== act || el.src === SILENT) return; if (isFinite(el.duration)) { S.dur = el.duration; bus.emit('duration', S.dur); const t = R.lib.get(el.dataset.tid); if (t && Math.abs((t.duration || 0) - el.duration) > 2 && el.duration > 1) R.lib.update(t.id, { duration: el.duration }); } updatePos(); });
     el.addEventListener('error', () => {
       if (k !== act || !el.dataset.tid || el.src === SILENT || !el.getAttribute('src')) return;
-      const t = R.lib.get(el.dataset.tid);
-      R.toast(`《${(t && t.title) || '這首'}》這台裝置播不了，跳下一首`);
-      if (t) R.lib.update(t.id, { warn: 1 });
-      if (S.playing && S.ids.length > 1) setTimeout(() => advance('error'), 800); else { S.playing = false; emitState(); }
+      const id = el.dataset.tid;
+      if (el.src.startsWith('blob:') && !viaData.has(id)) { viaData.add(id); retryAsData(el, id); return; }
+      if (!S.playing) { failed(id, el.error, false); return; }
+      if (failed(id, el.error, true)) setTimeout(() => advance('error'), 800);
     });
   });
 

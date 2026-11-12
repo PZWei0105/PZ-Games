@@ -12,6 +12,8 @@
 資料夾    整個資料夾匯入（子資料夾、略過 ._ 檔／.DS_Store／文字檔、WMA 說明不能播、已在歌庫的跳過、資料夾裡的
           cover.jpg 當封面、去掉檔名前的曲序、照資料夾順序）、存成歌單、「匯入」選單開資料夾、沒有歌的資料夾、
           中途停止再匯入、空間不夠停下來不留殘檔、螢幕關著不分析節奏、上千首的歌庫邊捲邊畫
+讀不到時  歌存成純位元組、舊版 Blob 讀一次就轉存；blob: 連結被擋時改用 data: 連結（音樂、封面）；檔案讀不到
+          標記起來、重新匯入就補回；連續三首播不了就停下來說明（Claude 版附網頁版連結）
 每套 Skin 手機直拿、電腦各截一張（/tmp/reskin-check），沒有程式錯誤
 離線      網頁版關掉伺服器還打得開
 需要 Playwright、numpy、ffmpeg（雲端沙盒都有，不要執行 playwright install）。有 BAD 時 exit code 1。
@@ -341,6 +343,101 @@ def run_folders(url, out, fd, fx):
         ctx.close(); b.close()
 
 
+BLOCK_BLOBS = """(() => { const real = URL.createObjectURL.bind(URL);
+  URL.createObjectURL = (b) => (b && ((window.__noBlobAudio && /^audio\\//.test(b.type)) || (window.__noBlobImg && /^image\\//.test(b.type)))) ? 'blob:' + location.origin + '/refused-' + Math.random().toString(36).slice(2) : real(b); })();"""
+
+
+def run_fallbacks(url, claude_url, out, fx):
+    """iPhone web views that refuse blob: links or cannot read stored files back (the Claude app): the player must
+    still play, covers must still show, and when nothing works it must stop and explain instead of skipping on."""
+    from playwright.sync_api import sync_playwright
+    errs = []
+    with sync_playwright() as p:
+        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
+
+        def page(u, init=''):
+            ctx = b.new_context(**PHONE)
+            ctx.add_init_script(BLOCK_BLOBS + init)
+            pg = ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
+            pg.goto(u); pg.wait_for_function("!!window.RESKIN && !document.getElementById('splash')", timeout=20000); pg.wait_for_timeout(500)
+            return ctx, pg
+        files = [os.path.join(fx, f) for f in ('t1.mp3', 't3.flac', '痞子葳 - 雨天散步.wav')]
+        last = lambda pg: pg.evaluate('(() => { const t = document.querySelectorAll("#toasts .toast > span"); return t.length ? t[t.length - 1].textContent : ""; })()')
+
+        # 1) stored as plain bytes; an old Blob record is read once and stored as bytes from then on
+        ctx, pg = page(url); ev = pg.evaluate
+        five = files + [os.path.join(fx, 't2.m4a'), os.path.join(fx, 'big5.mp3')]
+        pg.set_input_files('#fileIn', five); pg.wait_for_function('document.getElementById("busy").hidden && RESKIN.lib.count() === 5', timeout=60000)
+        kinds = ev('Promise.all(RESKIN.lib.all().map(t => RESKIN.db.get("audio", t.id))).then(vs => vs.map(v => v instanceof Blob ? "blob" : (v && v.buf ? "bytes" : "none")))')
+        ok(kinds == ['bytes'] * 5, '存歌：用純位元組存，不存 Blob（%s）' % kinds)
+        ok(ev('RESKIN.db.keys("covers").then(ks => Promise.all(ks.map(k => RESKIN.db.get("covers", k)))).then(vs => vs.length > 0 && vs.every(v => v && v.buf && !(v instanceof Blob)))'), '存封面：也是純位元組')
+        moved = ev("""async () => { const t = RESKIN.lib.list()[0]; const raw = await RESKIN.db.getAudioRaw(t.id);
+            await RESKIN.db.put('audio', new Blob([raw.buf], { type: raw.type }), t.id);
+            const b = await RESKIN.db.getAudio(t.id); await new Promise(r => setTimeout(r, 400));
+            const v = await RESKIN.db.get('audio', t.id); return b.size === raw.buf.byteLength && !(v instanceof Blob) && v.buf.byteLength === raw.buf.byteLength; }""")
+        ok(moved, '舊版存的 Blob：讀一次就轉存成純位元組')
+        # 2) a stored file that cannot be read back: marked, explained, and repaired by importing it again
+        ev("""() => { const real = RESKIN.db.getRaw; window.__realRaw = real; RESKIN.db.getRaw = async (s, k) => { if (s === 'audio' && k === window.__lostId) { const e = new Error('unreadable'); e.lost = true; throw e; } return real(s, k); }; }""")
+        lid = ev('(() => { const q = RESKIN.player.queue(), i = RESKIN.player.index(); const id = q[(i + 2) % q.length]; window.__lostId = id; return id; })()')
+        lname = ev('(id) => RESKIN.lib.get(id).name', lid)
+        ev('(id) => RESKIN.player.playFrom(RESKIN.lib.list().map(t => t.id), id, { type: "library" })', lid); pg.wait_for_timeout(1200)
+        said = ev('Array.from(document.querySelectorAll("#toasts .toast > span")).some(t => t.textContent.includes("讀不到"))')
+        ok(ev('(id) => RESKIN.lib.get(id).lost === 1', lid) and said and not ev('RESKIN.player.isPlaying()'), '檔案讀不到：標記起來、說「重新匯入就會補回」、不亂跳')
+        ev('() => { RESKIN.db.getRaw = window.__realRaw; }')
+        pg.set_input_files('#fileIn', [os.path.join(fx, lname)]); pg.wait_for_function('document.getElementById("busy").hidden', timeout=30000); pg.wait_for_timeout(300)
+        ok('補回 1 首' in last(pg) and not ev('(id) => RESKIN.lib.get(id).lost', lid) and ev('RESKIN.lib.count()') == 5, '重新匯入同一首：補回來，不會多一首（%s）' % last(pg))
+        ev('(id) => RESKIN.player.playFrom(RESKIN.lib.list().map(t => t.id), id, { type: "library" })', lid)
+        try:
+            pg.wait_for_function('RESKIN.player.isPlaying() && RESKIN.player.time() > 0.3', timeout=15000); ok(True, '補回的歌：播得出來')
+        except Exception:
+            ok(False, '補回的歌：播得出來')
+        ctx.close()
+
+        # 3) blob: links refused for music and pictures: data: links take over
+        ctx, pg = page(url, 'window.__noBlobAudio = true; window.__noBlobImg = true;'); ev = pg.evaluate
+        pg.set_input_files('#fileIn', files); pg.wait_for_function('document.getElementById("busy").hidden && RESKIN.lib.count() === 3', timeout=60000)
+        ev('() => { const all = RESKIN.lib.list(); RESKIN.player.playFrom(all.map(t => t.id), all[0].id, { type: "library" }); }')
+        try:
+            pg.wait_for_function('RESKIN.player.isPlaying() && RESKIN.player.time() > 0.3', timeout=20000)
+            ok(ev('RESKIN.settings.get("srcMode")') == 'data' and ev('RESKIN.player.els[0].src.startsWith("data:") || RESKIN.player.els[1].src.startsWith("data:")'), 'blob: 連結被擋：自動改用 data: 連結，歌照樣播')
+        except Exception:
+            ok(False, 'blob: 連結被擋：自動改用 data: 連結，歌照樣播')
+        ev('RESKIN.player.next()')
+        try:
+            pg.wait_for_function('RESKIN.player.isPlaying() && RESKIN.player.time() > 0.3', timeout=20000); ok('播不了' not in last(pg), '下一首：直接用 data: 連結，不再先失敗一次')
+        except Exception:
+            ok(False, '下一首：直接用 data: 連結，不再先失敗一次')
+        cov = ev('RESKIN.art.coverUrl(RESKIN.player.current(), "thumb")')
+        ok(ev('RESKIN.blobImages') is False and str(cov).startswith('data:image'), '圖片的 blob: 連結被擋：封面改用 data: 連結')
+        pg.screenshot(path=os.path.join(out, 'fallback-data-links.png'))
+        ctx.close()
+
+        # 4) nothing plays at all: stop after three songs and explain (web copy, then the Claude copy with a link)
+        for u, tag in ((url, 'web'), (claude_url, 'claude')):
+            if not u:
+                continue
+            # every stored song comes back as noise, from the very start (so no good link is ever prepared)
+            ctx, pg = page(u, """const iv = setInterval(() => { if (window.RESKIN && RESKIN.db) { clearInterval(iv); RESKIN.db.getAudio = async () => new Blob([new Uint8Array(4096).map((_, i) => (i * 73) & 255)], { type: 'audio/mpeg' }); } }, 2);"""); ev = pg.evaluate
+            pg.set_input_files('#fileIn', files + [os.path.join(fx, 't2.m4a'), os.path.join(fx, 'big5.mp3')]); pg.wait_for_function('document.getElementById("busy").hidden && RESKIN.lib.count() === 5', timeout=60000)
+            ev('() => { const all = RESKIN.lib.list(); RESKIN.player.playFrom(all.map(t => t.id), all[0].id, { type: "library" }); }')
+            try:
+                pg.wait_for_selector('#modal:not([hidden]) .md', timeout=30000); pg.wait_for_timeout(1500)
+                box = pg.inner_text('#modal .md')
+                warned = ev('RESKIN.lib.all().filter(t => t.warn).length')
+                good = not ev('RESKIN.player.isPlaying()') and warned == 3
+                if tag == 'claude':
+                    good = good and '網頁版' in box and pg.get_attribute('#modal .md-link', 'href') == 'https://pzwei0105.github.io/PZ-Games/apps/reskin/'
+                    pg.screenshot(path=os.path.join(out, 'fallback-explain-claude.png'))
+                else:
+                    good = good and '連續好幾首都播不了' in box
+                ok(good, '%s：全都播不了時，第三首就停下來說明（不會一路跳完整個歌庫）' % ('Claude 版' if tag == 'claude' else '網頁版'))
+            except Exception as e:
+                ok(False, '%s：全都播不了時停下來說明：%s' % (tag, str(e)[:100]))
+            ctx.close()
+        ok(not errs, '讀不到時的處理：沒有程式錯誤' + ('' if not errs else '：' + ' | '.join(errs[:5])))
+        b.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--claude')
@@ -349,11 +446,12 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     fx = fixtures('/tmp/reskin-fixtures')
     srv = serve(REPO)
+    s2 = serve(a.claude) if a.claude else None
+    run_fallbacks(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', f'http://127.0.0.1:{s2.server_address[1]}/' if s2 else None, a.out, fx)
     run_folders(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', a.out, folder_fixtures('/tmp/reskin-folders', fx), fx)
     run(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', a.out, fx, srv)
     if a.claude:
         print('--- Claude 版 ---')
-        s2 = serve(a.claude)
         os.makedirs(os.path.join(a.out, 'claude'), exist_ok=True)
         run(f'http://127.0.0.1:{s2.server_address[1]}/', os.path.join(a.out, 'claude'), fx, None)
     print('\n截圖在', a.out)

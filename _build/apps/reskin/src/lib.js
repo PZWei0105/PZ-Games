@@ -61,7 +61,9 @@ R.lib = (() => {
   async function addOne(f, added, extra) {
     extra = extra || {};
     const key = await fingerprint(f);
-    if (byKey.has(key) && tracks.has(byKey.get(key))) return { dup: true, id: byKey.get(key) };
+    // already in the library: skip it, unless its stored copy could not be read back (then store it again, same song)
+    const old = byKey.has(key) ? tracks.get(byKey.get(key)) : null;
+    if (old && !old.lost) return { dup: true, id: old.id };
     const meta = await R.meta.read(f);
     if (extra.trackNo) {
       // "02 夜行.wav" in a folder where every song starts with its number: the number is the order, not the title
@@ -72,10 +74,9 @@ R.lib = (() => {
         if (fn.artist && meta.artist === fn.artist) meta.artist = fn2.artist || '';
       }
     }
-    const id = R.uid();
+    const id = old ? old.id : R.uid();
     const type = extra.type || mimeOf(f);
-    const data = new Blob([await f.arrayBuffer()], { type });
-    await R.db.putAudio(id, data);
+    await R.db.putAudio(id, await f.arrayBuffer(), type);
     try {
       let cover = 0, colors = null, c = null;
       const pic = extra.picture || meta.picture;
@@ -84,7 +85,7 @@ R.lib = (() => {
       }
       if (!c && extra.folderArt) c = await extra.folderArt(); // no picture inside the song: the album picture next to it
       if (c) {
-        try { await R.db.put('covers', c.full, id); await R.db.put('covers', c.thumb, id + ':t'); cover = 1; colors = c.colors; }
+        try { await R.db.putBytes('covers', id, c.full); await R.db.putBytes('covers', id + ':t', c.thumb); cover = 1; colors = c.colors; }
         catch (e) { if (R.db.isFull(e)) throw e; console.warn('cover', e); }
       }
       const t = {
@@ -94,12 +95,15 @@ R.lib = (() => {
       };
       if (extra.patch) Object.assign(t, extra.patch);
       if (!playable(type)) t.warn = 1;
+      // a repaired song keeps its place in the library, its play count and its rhythm analysis
+      if (old) for (const k of ['added', 'plays', 'an', 'bpm', 'energy']) if (old[k] != null) t[k] = old[k];
       await R.db.put('tracks', t);
       tracks.set(id, t); byKey.set(key, id);
-      return { id, t };
+      if (old) { R.art.forget(id); bus.emit('track:update', t); }
+      return { id, t, fixed: !!old };
     } catch (e) {
       // never leave the song's bytes behind without the song (they would only eat space)
-      await Promise.all([R.db.del('audio', id), R.db.del('covers', id), R.db.del('covers', id + ':t')]).catch(() => {});
+      if (!old) await Promise.all([R.db.del('audio', id), R.db.del('covers', id), R.db.del('covers', id + ':t')]).catch(() => {});
       throw e;
     }
   }
@@ -164,7 +168,7 @@ R.lib = (() => {
     const cant = audio.filter((x) => cantPlay(x.f));
     const list = audio.filter((x) => !cantPlay(x.f));
     if (list.some((x) => x.path.includes('/'))) list.sort((a, b) => coll.compare(a.path, b.path)); // folder order: 01, 02 … 10
-    const res = { added: [], ids: [], dup: 0, failed: [], warn: 0, total: list.length, cant: cant.length, cantExt: Array.from(new Set(cant.map((x) => extOf(x.f.name)))), stopped: 0, full: 0 };
+    const res = { added: [], ids: [], dup: 0, fixed: 0, failed: [], warn: 0, total: list.length, cant: cant.length, cantExt: Array.from(new Set(cant.map((x) => extOf(x.f.name)))), stopped: 0, full: 0 };
     if (!list.length) return res;
     const art = folderArt(vis);
     // folders whose songs are all named "01 …", "02 …": those numbers come off the titles
@@ -183,6 +187,7 @@ R.lib = (() => {
           const r = await addOne(f, t0 - k, { folderArt: art(path), trackNo: numbered.has(dirOf(path)) });
           res.ids.push(r.id);
           if (r.dup) { res.dup++; continue; }
+          if (r.fixed) { res.fixed++; continue; }
           res.added.push(r.id);
           if (r.t.warn) res.warn++;
           R.analysis.enqueue(r.id);

@@ -11,9 +11,9 @@
   async function photoUrl(id) {
     if (!id) return null;
     if (photoUrls.has(id)) return photoUrls.get(id);
-    const b = await R.db.get('images', id).catch(() => null);
+    const b = await R.db.getBytes('images', id).catch(() => null);
     if (!b) return null;
-    const u = URL.createObjectURL(b); photoUrls.set(id, u); return u;
+    const u = await R.imageURL(b); photoUrls.set(id, u); return u;
   }
   let preview = null;
 
@@ -169,7 +169,7 @@
       c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
       const blob = await R.art.toBlob(c, 'image/jpeg', 0.86);
       const pid = 'ph-' + R.uid();
-      await R.db.put('images', blob, pid);
+      await R.db.putBytes('images', pid, blob);
       cur.photo = pid; await rerender(); live();
       R.sfx.play('ok');
     } catch (e) { R.toast('這張照片讀不了，換一張試試'); }

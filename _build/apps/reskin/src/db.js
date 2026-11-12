@@ -58,22 +58,31 @@ R.db = (() => {
     clear: (s) => run(s, 'readwrite', (os) => os.clear()),
     // the device ran out of room for the app's storage (each browser words it differently)
     isFull: (e) => !!e && (e.name === 'QuotaExceededError' || e.code === 22 || /quota|disk is full|no space/i.test(String(e.message || ''))),
-    async putAudio(id, blob) {
-      try { await api.put('audio', blob, id); }
-      catch (e) {
-        if (api.isFull(e)) throw e;
-        // very old Safari could not keep Blobs in IndexedDB: keep the bytes instead
-        const buf = await blob.arrayBuffer();
-        await api.put('audio', { buf, type: blob.type }, id);
-      }
+    // Song files, covers and photos are stored as plain bytes ({ buf, type }), never as Blobs. WebKit keeps
+    // IndexedDB Blobs as separate files, and some iPhone web views (the Claude app among them) cannot read those
+    // back: every song then fails to play and every cover turns into a broken picture.
+    async putBytes(store, key, data, type) {
+      const buf = data instanceof ArrayBuffer ? data : await data.arrayBuffer();
+      await api.put(store, { buf, type: type || data.type || '' }, key);
     },
-    async getAudio(id) {
-      const v = await api.get('audio', id);
+    // { buf, type } or null. A Blob stored by an older version is read once and kept as bytes from then on;
+    // if it can no longer be read, the error carries .lost = true (importing the song again brings it back).
+    async getRaw(store, key) {
+      const v = await api.get(store, key);
       if (!v) return null;
-      if (v instanceof Blob) return v;
-      if (v.buf) return new Blob([v.buf], { type: v.type || 'audio/mpeg' });
+      if (v.buf) return { buf: v.buf, type: v.type || '' };
+      if (v instanceof Blob) {
+        let buf;
+        try { buf = await v.arrayBuffer(); } catch (e) { const err = new Error('stored file cannot be read'); err.lost = true; throw err; }
+        api.put(store, { buf, type: v.type || '' }, key).catch(() => {});
+        return { buf, type: v.type || '' };
+      }
       return null;
     },
+    async getBytes(store, key) { const r = await api.getRaw(store, key); return r ? new Blob([r.buf], { type: r.type }) : null; },
+    putAudio: (id, data, type) => api.putBytes('audio', id, data, type),
+    getAudio: (id) => api.getBytes('audio', id),
+    getAudioRaw: (id) => api.getRaw('audio', id),
     async estimate() {
       try { if (navigator.storage && navigator.storage.estimate) return await navigator.storage.estimate(); } catch (e) { /* ignore */ }
       return null;

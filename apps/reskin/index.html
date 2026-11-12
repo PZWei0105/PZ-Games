@@ -243,6 +243,9 @@ body.party .skin-glass .gl-card { background: none; border-color: transparent; b
 .md-in { width: calc(100% - 16px); margin: 4px 8px 10px; height: 46px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.07); color: #fff; font-size: 16px; outline: none; -webkit-user-select: text; user-select: text; }
 .md-in:focus { border-color: var(--accent); }
 .md-b { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 4px 8px 8px; }
+.md-b.one { grid-template-columns: 1fr; }
+.md-link { display: grid; gap: 3px; margin: 2px 8px 10px; padding: 13px 14px; border-radius: 14px; background: var(--accent); color: var(--onaccent); font-weight: 800; font-size: 15px; text-align: center; text-decoration: none; box-shadow: 0 8px 24px rgba(var(--accent-rgb),.35); }
+.md-link small { font-size: 11.5px; font-weight: 600; opacity: .75; word-break: break-all; }
 
 /* ---------- wardrobe ---------- */
 #wardrobe { position: fixed; z-index: 45; left: 0; right: 0; bottom: 0; padding: 0 0 calc(var(--sb) + 10px); background: linear-gradient(to top, rgba(4,4,10,.97) 70%, rgba(4,4,10,.82)); border-top: 1px solid rgba(255,255,255,.12); border-radius: 26px 26px 0 0; color: #fff; transform: translateY(105%); transition: transform .42s cubic-bezier(.2,.9,.2,1); box-shadow: 0 -20px 60px rgba(0,0,0,.5); }
@@ -954,7 +957,7 @@ body.party .skin-glass .gl-card { background: none; border-color: transparent; b
 'use strict';
 /* ---- core.js ---- */
 /* ===================== 耳目一新 RESKIN — core ===================== */
-const VERSION = '2026.11.13-0411';
+const VERSION = '2026.11.13-0437';
 const R = { VERSION };
 window.RESKIN = R;
 
@@ -1036,6 +1039,30 @@ R.canFolder = (() => {
   return true;
 })();
 R.CLAUDE = !!window.RESKIN_NO_SW; // the copy published on Claude (no service worker, storage may not last)
+
+/* ---------- blob: or data: links ----------
+   Some iPhone web views (the Claude app among them) refuse blob: links. Pictures: a tiny test at start decides
+   which kind to use. Music: the player retries a song as a data: link when its blob: link fails. */
+R.dataURL = (blob) => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result); r.onerror = () => rej(r.error || new Error('read failed'));
+  r.readAsDataURL(blob);
+});
+R.blobImages = new Promise((res) => {
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 2;
+    c.toBlob((b) => {
+      if (!b) { res(true); return; }
+      const u = URL.createObjectURL(b), im = new Image();
+      const done = (ok) => { clearTimeout(t); URL.revokeObjectURL(u); res(ok); };
+      const t = setTimeout(() => done(true), 2500); // no answer either way: keep blob: links
+      im.onload = () => done(true); im.onerror = () => done(false);
+      im.src = u;
+    }, 'image/png');
+  } catch (e) { res(true); }
+});
+R.imageURL = async (blob) => ((await R.blobImages) ? URL.createObjectURL(blob) : R.dataURL(blob));
+R.dropURL = (u) => { if (u && String(u).startsWith('blob:')) URL.revokeObjectURL(u); };
 R.WEB_URL = 'https://pzwei0105.github.io/PZ-Games/apps/reskin/';
 
 /* ---------- colors ---------- */
@@ -1232,22 +1259,31 @@ R.db = (() => {
     clear: (s) => run(s, 'readwrite', (os) => os.clear()),
     // the device ran out of room for the app's storage (each browser words it differently)
     isFull: (e) => !!e && (e.name === 'QuotaExceededError' || e.code === 22 || /quota|disk is full|no space/i.test(String(e.message || ''))),
-    async putAudio(id, blob) {
-      try { await api.put('audio', blob, id); }
-      catch (e) {
-        if (api.isFull(e)) throw e;
-        // very old Safari could not keep Blobs in IndexedDB: keep the bytes instead
-        const buf = await blob.arrayBuffer();
-        await api.put('audio', { buf, type: blob.type }, id);
-      }
+    // Song files, covers and photos are stored as plain bytes ({ buf, type }), never as Blobs. WebKit keeps
+    // IndexedDB Blobs as separate files, and some iPhone web views (the Claude app among them) cannot read those
+    // back: every song then fails to play and every cover turns into a broken picture.
+    async putBytes(store, key, data, type) {
+      const buf = data instanceof ArrayBuffer ? data : await data.arrayBuffer();
+      await api.put(store, { buf, type: type || data.type || '' }, key);
     },
-    async getAudio(id) {
-      const v = await api.get('audio', id);
+    // { buf, type } or null. A Blob stored by an older version is read once and kept as bytes from then on;
+    // if it can no longer be read, the error carries .lost = true (importing the song again brings it back).
+    async getRaw(store, key) {
+      const v = await api.get(store, key);
       if (!v) return null;
-      if (v instanceof Blob) return v;
-      if (v.buf) return new Blob([v.buf], { type: v.type || 'audio/mpeg' });
+      if (v.buf) return { buf: v.buf, type: v.type || '' };
+      if (v instanceof Blob) {
+        let buf;
+        try { buf = await v.arrayBuffer(); } catch (e) { const err = new Error('stored file cannot be read'); err.lost = true; throw err; }
+        api.put(store, { buf, type: v.type || '' }, key).catch(() => {});
+        return { buf, type: v.type || '' };
+      }
       return null;
     },
+    async getBytes(store, key) { const r = await api.getRaw(store, key); return r ? new Blob([r.buf], { type: r.type }) : null; },
+    putAudio: (id, data, type) => api.putBytes('audio', id, data, type),
+    getAudio: (id) => api.getBytes('audio', id),
+    getAudioRaw: (id) => api.getRaw('audio', id),
     async estimate() {
       try { if (navigator.storage && navigator.storage.estimate) return await navigator.storage.estimate(); } catch (e) { /* ignore */ }
       return null;
@@ -1590,10 +1626,11 @@ R.art = (() => {
 
   async function loadImage(blob) {
     if (window.createImageBitmap) { try { return await createImageBitmap(blob); } catch (e) { /* fall back */ } }
+    const u = await R.imageURL(blob);
     return new Promise((res, rej) => {
-      const u = URL.createObjectURL(blob); const im = new Image();
-      im.onload = () => { res(im); setTimeout(() => URL.revokeObjectURL(u), 2000); };
-      im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('image decode failed')); };
+      const im = new Image();
+      im.onload = () => { res(im); setTimeout(() => R.dropURL(u), 2000); };
+      im.onerror = () => { R.dropURL(u); rej(new Error('image decode failed')); };
       im.src = u;
     });
   }
@@ -1680,11 +1717,13 @@ R.art = (() => {
     const key = t.id + ':' + size;
     if (urls.has(key)) return urls.get(key);
     let blob = null;
-    if (t.cover) { try { blob = await R.db.get('covers', size === 'thumb' ? t.id + ':t' : t.id); } catch (e) { /* ignore */ } }
+    if (t.cover) { try { blob = await R.db.getBytes('covers', size === 'thumb' ? t.id + ':t' : t.id); } catch (e) { /* ignore */ } }
     if (!blob) blob = await toBlob(placeholder(t, size === 'thumb' ? 128 : 512), 'image/jpeg', 0.9);
     if (!blob) return null;
     if (urls.has(key)) return urls.get(key);
-    const u = URL.createObjectURL(blob); urls.set(key, u);
+    const u = await R.imageURL(blob);
+    if (urls.has(key)) { R.dropURL(u); return urls.get(key); }
+    urls.set(key, u);
     return u;
   }
   async function coverImage(t) {
@@ -1697,7 +1736,7 @@ R.art = (() => {
     return im;
   }
   function forget(id) {
-    for (const s of ['full', 'thumb']) { const k = id + ':' + s; if (urls.has(k)) { URL.revokeObjectURL(urls.get(k)); urls.delete(k); } }
+    for (const s of ['full', 'thumb']) { const k = id + ':' + s; if (urls.has(k)) { R.dropURL(urls.get(k)); urls.delete(k); } }
     imgs.delete(id);
   }
   return { processCover, coverUrl, coverImage, colorsOf, placeholder, forget, loadImage, toBlob };
@@ -1767,7 +1806,9 @@ R.lib = (() => {
   async function addOne(f, added, extra) {
     extra = extra || {};
     const key = await fingerprint(f);
-    if (byKey.has(key) && tracks.has(byKey.get(key))) return { dup: true, id: byKey.get(key) };
+    // already in the library: skip it, unless its stored copy could not be read back (then store it again, same song)
+    const old = byKey.has(key) ? tracks.get(byKey.get(key)) : null;
+    if (old && !old.lost) return { dup: true, id: old.id };
     const meta = await R.meta.read(f);
     if (extra.trackNo) {
       // "02 夜行.wav" in a folder where every song starts with its number: the number is the order, not the title
@@ -1778,10 +1819,9 @@ R.lib = (() => {
         if (fn.artist && meta.artist === fn.artist) meta.artist = fn2.artist || '';
       }
     }
-    const id = R.uid();
+    const id = old ? old.id : R.uid();
     const type = extra.type || mimeOf(f);
-    const data = new Blob([await f.arrayBuffer()], { type });
-    await R.db.putAudio(id, data);
+    await R.db.putAudio(id, await f.arrayBuffer(), type);
     try {
       let cover = 0, colors = null, c = null;
       const pic = extra.picture || meta.picture;
@@ -1790,7 +1830,7 @@ R.lib = (() => {
       }
       if (!c && extra.folderArt) c = await extra.folderArt(); // no picture inside the song: the album picture next to it
       if (c) {
-        try { await R.db.put('covers', c.full, id); await R.db.put('covers', c.thumb, id + ':t'); cover = 1; colors = c.colors; }
+        try { await R.db.putBytes('covers', id, c.full); await R.db.putBytes('covers', id + ':t', c.thumb); cover = 1; colors = c.colors; }
         catch (e) { if (R.db.isFull(e)) throw e; console.warn('cover', e); }
       }
       const t = {
@@ -1800,12 +1840,15 @@ R.lib = (() => {
       };
       if (extra.patch) Object.assign(t, extra.patch);
       if (!playable(type)) t.warn = 1;
+      // a repaired song keeps its place in the library, its play count and its rhythm analysis
+      if (old) for (const k of ['added', 'plays', 'an', 'bpm', 'energy']) if (old[k] != null) t[k] = old[k];
       await R.db.put('tracks', t);
       tracks.set(id, t); byKey.set(key, id);
-      return { id, t };
+      if (old) { R.art.forget(id); bus.emit('track:update', t); }
+      return { id, t, fixed: !!old };
     } catch (e) {
       // never leave the song's bytes behind without the song (they would only eat space)
-      await Promise.all([R.db.del('audio', id), R.db.del('covers', id), R.db.del('covers', id + ':t')]).catch(() => {});
+      if (!old) await Promise.all([R.db.del('audio', id), R.db.del('covers', id), R.db.del('covers', id + ':t')]).catch(() => {});
       throw e;
     }
   }
@@ -1870,7 +1913,7 @@ R.lib = (() => {
     const cant = audio.filter((x) => cantPlay(x.f));
     const list = audio.filter((x) => !cantPlay(x.f));
     if (list.some((x) => x.path.includes('/'))) list.sort((a, b) => coll.compare(a.path, b.path)); // folder order: 01, 02 … 10
-    const res = { added: [], ids: [], dup: 0, failed: [], warn: 0, total: list.length, cant: cant.length, cantExt: Array.from(new Set(cant.map((x) => extOf(x.f.name)))), stopped: 0, full: 0 };
+    const res = { added: [], ids: [], dup: 0, fixed: 0, failed: [], warn: 0, total: list.length, cant: cant.length, cantExt: Array.from(new Set(cant.map((x) => extOf(x.f.name)))), stopped: 0, full: 0 };
     if (!list.length) return res;
     const art = folderArt(vis);
     // folders whose songs are all named "01 …", "02 …": those numbers come off the titles
@@ -1889,6 +1932,7 @@ R.lib = (() => {
           const r = await addOne(f, t0 - k, { folderArt: art(path), trackNo: numbered.has(dirOf(path)) });
           res.ids.push(r.id);
           if (r.dup) { res.dup++; continue; }
+          if (r.fixed) { res.fixed++; continue; }
           res.added.push(r.id);
           if (r.t.warn) res.warn++;
           R.analysis.enqueue(r.id);
@@ -2119,10 +2163,11 @@ R.analysis = (() => {
     if (!t || t.an) return;
     const lim = R.isIOS ? 15 * 60 : 40 * 60;
     if (t.duration && t.duration > lim) { await R.lib.update(id, { an: 2 }); return; }
-    const blob = await R.db.getAudio(id);
-    if (!blob) return;
+    let raw;
+    try { raw = await R.db.getAudioRaw(id); } catch (e) { if (e && e.lost) { await R.lib.update(id, { lost: 1 }); return; } throw e; }
+    if (!raw) return;
     let dec;
-    try { dec = await decode(await blob.arrayBuffer()); }
+    try { dec = await decode(raw.buf); }
     catch (e) { console.warn('decode failed', t.title, e); await R.lib.update(id, { an: -1 }); R.bus.emit('analysis', id); return; }
     const { b, rate } = dec;
     if (b.duration > lim) { await R.lib.update(id, { an: 2, duration: b.duration }); return; }
@@ -2240,18 +2285,70 @@ R.player = (() => {
   function prime() { const el = cur(); if (!el._blessed && el.paused) blessSilently(el); }
   function clearSeek(el) { if (el._seekFn) { el.removeEventListener('loadedmetadata', el._seekFn); el._seekFn = null; } }
 
-  /* ---------- object URLs for the current, next and previous songs ---------- */
+  /* ---------- links for the current, next and previous songs ----------
+     blob: links normally; data: links once a blob: link has failed and the same song then played (some iPhone
+     web views, the Claude app among them, refuse blob: links for music) */
+  const srcMode = () => settings.get('srcMode') || 'blob';
   async function urlFor(id) {
     if (urls.has(id)) return urls.get(id);
     const blob = await R.db.getAudio(id);
     if (!blob) throw new Error('missing audio');
-    if (urls.has(id)) return urls.get(id);
-    const u = URL.createObjectURL(blob); urls.set(id, u);
+    const u = srcMode() === 'data' ? await R.dataURL(blob) : URL.createObjectURL(blob);
+    if (urls.has(id)) { R.dropURL(u); return urls.get(id); }
+    urls.set(id, u);
     return u;
   }
   function trimUrls() {
     const keep = new Set([S.tid, S.ids[nextIndex(true)], S.ids[prevIndex()], els[0].dataset.tid, els[1].dataset.tid]);
-    for (const [id, u] of urls) if (!keep.has(id)) { URL.revokeObjectURL(u); urls.delete(id); }
+    for (const [id, u] of urls) if (!keep.has(id)) { R.dropURL(u); urls.delete(id); }
+  }
+
+  /* ---------- songs that will not play ----------
+     A song that fails is skipped, but three failures in a row stop the music and explain, instead of running
+     through the whole library. auto: the player moved on by itself (true) or the song was picked (false). */
+  let fails = 0, explained = false;
+  const viaData = new Set();
+  function failed(id, err, auto) {
+    const t = R.lib.get(id), name = `《${(t && t.title) || '這首'}》`;
+    const lost = !!(err && err.lost);
+    if (t) R.lib.update(id, lost ? { lost: 1 } : { warn: 1 });
+    fails++;
+    const goOn = auto && fails < 3 && S.ids.length > 1;
+    if (!goOn) { S.playing = false; for (const el of els) el.pause(); emitState(); }
+    if (fails >= 3 && !explained) { explained = true; explain(lost); }
+    else R.toast(lost ? `${name}的檔案讀不到了${goOn ? '，跳下一首' : '：把它重新匯入一次就會補回'}` : `${name}這台裝置播不了${goOn ? '，跳下一首' : ''}`, { ms: goOn ? 3000 : 4500 });
+    return goOn;
+  }
+  function explain(lost) {
+    if (R.CLAUDE) {
+      R.ui.notice({
+        title: '這裡播不了存進來的歌',
+        sub: '連續好幾首都打不開。Claude App 裡的這一份常常讀不到存進來的音樂檔，也不能鎖屏一直聽。請改用網頁版：用 Safari 打開下面的網址，按「分享 → 加入主畫面」，再從主畫面打開、把資料夾匯入一次。',
+        link: { href: R.WEB_URL, label: '打開網頁版' },
+      });
+    } else if (lost) {
+      R.ui.notice({ title: '這些歌的檔案讀不到了', sub: '可能是系統清掉了一部分儲存空間。把同一個資料夾（或同幾首歌）再匯入一次就會補回來，原本好好的歌會自動跳過。' });
+    } else {
+      R.ui.notice({ title: '連續好幾首都播不了', sub: '可能是這台裝置不支援這些檔案的格式，或檔案本身壞了。可以換幾首試試，或先轉成 MP3、M4A 再匯入。' });
+    }
+  }
+  // a blob: link that would not play: open the same song as a data: link; if it plays, use data: links from now on
+  async function retryAsData(el, id) {
+    let du;
+    try { du = await R.dataURL(await R.db.getAudio(id)); } catch (e) { if (failed(id, e, S.playing)) setTimeout(() => advance('error'), 800); return; }
+    if (el.dataset.tid !== id || el !== cur()) return;
+    const ok = () => {
+      el.removeEventListener('loadedmetadata', ok);
+      if (el.dataset.tid !== id || srcMode() === 'data') return;
+      settings.set('srcMode', 'data');
+      for (const [k2, u] of urls) if (u.startsWith('blob:')) { R.dropURL(u); urls.delete(k2); }
+      const b = idle(); if (b.paused && b.dataset.tid && b.dataset.tid !== id) { b.removeAttribute('src'); delete b.dataset.tid; }
+      prepare();
+    };
+    el.addEventListener('loadedmetadata', ok);
+    const old = urls.get(id); urls.set(id, du); R.dropURL(old);
+    el.src = du;
+    if (S.playing) tryPlay(el);
   }
 
   /* ---------- queue ---------- */
@@ -2304,7 +2401,7 @@ R.player = (() => {
     const wasOther = idle();
     setTrack(id);
     let u;
-    try { u = await urlFor(id); } catch (e) { R.toast('找不到這首歌的檔案，可能被清掉了'); return; }
+    try { u = await urlFor(id); } catch (e) { if (my === tok) failed(id, e, false); return; }
     if (my !== tok) return;
     if (!wasOther.paused) wasOther.pause();
     const el = cur();
@@ -2333,7 +2430,7 @@ R.player = (() => {
     if (hidden) diag.begin(id, engine(), why);
     S.i = j;
     const u = urls.get(id);
-    if (!u) { urlFor(id).then((x) => handoff(id, x)).catch(() => { R.toast('下一首讀不到，跳過'); advance('skip'); }); setTrack(id); return; }
+    if (!u) { urlFor(id).then((x) => handoff(id, x)).catch((e) => { if (failed(id, e, true)) advance('skip'); }); setTrack(id); return; }
     setTrack(id);
     handoff(id, u);
   }
@@ -2425,7 +2522,7 @@ R.player = (() => {
     S.base = S.base.filter((x) => !gone.has(x));
     const before = S.ids.slice(0, S.i).filter((x) => !gone.has(x)).length;
     S.ids = S.ids.filter((x) => !gone.has(x));
-    for (const id of ids) if (urls.has(id)) { const u = urls.get(id); urls.delete(id); setTimeout(() => URL.revokeObjectURL(u), 3000); }
+    for (const id of ids) if (urls.has(id)) { const u = urls.get(id); urls.delete(id); setTimeout(() => R.dropURL(u), 3000); }
     if (wasCur) {
       for (const el of els) { el.pause(); el.removeAttribute('src'); delete el.dataset.tid; try { el.load(); } catch (e) { /* ignore */ } }
       S.tid = null; S.playing = false;
@@ -2442,6 +2539,8 @@ R.player = (() => {
       el._blessed = true;
       if (k !== act) return;
       S.playing = true; diag.ok(el.dataset.tid); emitState(); updatePos();
+      fails = 0;
+      { const t = R.lib.get(el.dataset.tid); if (t && (t.warn || t.lost)) R.lib.update(t.id, { warn: 0, lost: 0 }); }
       if (countedFor !== el.dataset.tid) { countedFor = el.dataset.tid; const t = R.lib.get(countedFor); if (t) R.lib.update(t.id, { plays: (t.plays || 0) + 1, last: Date.now() }); }
       prepare();
     });
@@ -2468,10 +2567,10 @@ R.player = (() => {
     el.addEventListener('loadedmetadata', () => { if (k !== act || el.src === SILENT) return; if (isFinite(el.duration)) { S.dur = el.duration; bus.emit('duration', S.dur); const t = R.lib.get(el.dataset.tid); if (t && Math.abs((t.duration || 0) - el.duration) > 2 && el.duration > 1) R.lib.update(t.id, { duration: el.duration }); } updatePos(); });
     el.addEventListener('error', () => {
       if (k !== act || !el.dataset.tid || el.src === SILENT || !el.getAttribute('src')) return;
-      const t = R.lib.get(el.dataset.tid);
-      R.toast(`《${(t && t.title) || '這首'}》這台裝置播不了，跳下一首`);
-      if (t) R.lib.update(t.id, { warn: 1 });
-      if (S.playing && S.ids.length > 1) setTimeout(() => advance('error'), 800); else { S.playing = false; emitState(); }
+      const id = el.dataset.tid;
+      if (el.src.startsWith('blob:') && !viaData.has(id)) { viaData.add(id); retryAsData(el, id); return; }
+      if (!S.playing) { failed(id, el.error, false); return; }
+      if (failed(id, el.error, true)) setTimeout(() => advance('error'), 800);
     });
   });
 
@@ -4677,9 +4776,9 @@ R.skins.def({
   async function photoUrl(id) {
     if (!id) return null;
     if (photoUrls.has(id)) return photoUrls.get(id);
-    const b = await R.db.get('images', id).catch(() => null);
+    const b = await R.db.getBytes('images', id).catch(() => null);
     if (!b) return null;
-    const u = URL.createObjectURL(b); photoUrls.set(id, u); return u;
+    const u = await R.imageURL(b); photoUrls.set(id, u); return u;
   }
   let preview = null;
 
@@ -4835,7 +4934,7 @@ R.skins.def({
       c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
       const blob = await R.art.toBlob(c, 'image/jpeg', 0.86);
       const pid = 'ph-' + R.uid();
-      await R.db.put('images', blob, pid);
+      await R.db.putBytes('images', pid, blob);
       cur.photo = pid; await rerender(); live();
       R.sfx.play('ok');
     } catch (e) { R.toast('這張照片讀不了，換一張試試'); }
@@ -4985,6 +5084,12 @@ R.skins.def({
       else if (e.target === modal) done(false);
     });
   };
+  // a message with one button, and optionally a plain link (pages inside Claude can only open other sites through a link)
+  R.ui.notice = (o) => {
+    const link = o.link ? `<a class="md-link" href="${esc(o.link.href)}" target="_blank" rel="noopener">${esc(o.link.label)}<small>${esc(o.link.href)}</small></a>` : '';
+    const html = `<div class="md"><div class="md-t">${esc(o.title || '')}</div>${o.sub ? `<div class="md-s">${esc(o.sub)}</div>` : ''}${link}<div class="md-b one"><button type="button" class="btn ${o.link ? 'sec' : 'pri'}" data-r="1">${esc(o.ok || '知道了')}</button></div></div>`;
+    return showModal(html, (e, done) => { if (e.target.closest('[data-r]') || e.target === modal) done(true); });
+  };
   R.ui.info = (title, rows) => {
     const html = `<div class="md"><div class="md-t">${esc(title)}</div><div class="md-s" style="padding-bottom:4px">${rows.map(([k, v]) => `<div style="display:flex;gap:12px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)"><span style="flex:none;width:84px;color:rgba(255,255,255,.45)">${esc(k)}</span><span style="color:#fff;word-break:break-all">${esc(v)}</span></div>`).join('')}</div><div class="md-b" style="grid-template-columns:1fr"><button type="button" class="btn sec" data-r="1">好</button></div></div>`;
     return showModal(html, (e, done) => { if (e.target.closest('[data-r]') || e.target === modal) done(true); });
@@ -5019,7 +5124,7 @@ R.library = (() => {
   const sub = (t) => {
     const parts = [t.artist || '未知歌手'];
     if (t.duration) parts.push(fmtTime(t.duration));
-    return esc(parts.join(' · ')) + (t.warn ? ' <span class="warn">· 這台可能播不了</span>' : '');
+    return esc(parts.join(' · ')) + (t.lost ? ' <span class="warn">· 檔案讀不到，重新匯入就會補回</span>' : t.warn ? ' <span class="warn">· 這台可能播不了</span>' : '');
   };
   const row = (t, o) => {
     o = o || {};
@@ -5666,13 +5771,14 @@ R.app = (() => {
     }
     const parts = [];
     if (res.added.length) parts.push(`加入 ${res.added.length} 首`);
+    if (res.fixed) parts.push(`補回 ${res.fixed} 首讀不到的歌`);
     if (res.dup) parts.push(`${res.dup} 首已經在歌庫`);
     if (res.failed.length) parts.push(`${res.failed.length} 首讀不了`);
     if (res.cant) parts.push(`${res.cant} 個 ${res.cantExt.slice(0, 3).join('、')} 檔這台裝置不能播，沒有放進來`);
     if (res.warn) parts.push(`${res.warn} 首這台裝置可能播不了`);
     let msg = parts.join('，') || '沒有加入新歌';
     if (res.stopped) msg = `已停止：${msg}。之後再匯入一次，放過的歌會自動跳過`;
-    R.sfx.play(res.added.length ? 'ok' : 'err');
+    R.sfx.play(res.added.length || res.fixed ? 'ok' : 'err');
     // a folder can become a playlist (the songs already in the library included), in folder order
     const action = opts.folder && res.ids.length && !res.full && !res.stopped ? { label: '存成歌單', fn: () => folderPlaylist(opts.folder, res.ids) } : null;
     if (res.full) {
@@ -5744,7 +5850,7 @@ R.app = (() => {
     const e = $('#empty');
     if (R.lib.count()) { e.hidden = true; return; }
     if (!e.hidden) return;
-    e.innerHTML = `<div class="em-ico">${I.lib}</div><h2>痞子葳，歌庫還是空的</h2><p>把手機或電腦裡的音樂檔放進來：<br>MP3、M4A、FLAC、WAV 都可以，Suno 下載的歌也行。<br>放進來之後，不用網路也能聽。</p><div class="btn-row"><div class="btn-pair"><button type="button" class="btn pri" data-act="import-files">${I.upload}選擇音樂檔</button>${R.canFolder ? `<button type="button" class="btn sec" data-act="import-folder">${I.folder}整個資料夾</button>` : ''}</div><button type="button" class="btn sec wide" data-act="demo">${I.sparkle}先聽示範曲，試穿 Skin</button></div><p class="hint">${R.isTouch ? '' : '也可以直接把檔案或資料夾拖進這個視窗。'}${R.isIOS && !R.canFolder ? '選音樂檔時可以一次選好幾首；iOS 18.4 以上還能直接選整個資料夾。' : ''}${R.isIOS && !R.standalone && !R.embedded ? '建議先在 Safari 按「分享 → 加入主畫面」再匯入：主畫面 App 的歌庫跟 Safari 是分開的。' : ''}${R.CLAUDE ? '這是 Claude 上的版本，歌可能不會一直留著；長期用請開網頁版加到主畫面。' : R.embedded && R.isIOS ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）。' : R.embedded && (R.isAndroid || R.isTouch) ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面。' : ''}</p>`;
+    e.innerHTML = `<div class="em-ico">${I.lib}</div><h2>痞子葳，歌庫還是空的</h2><p>把手機或電腦裡的音樂檔放進來：<br>MP3、M4A、FLAC、WAV 都可以，Suno 下載的歌也行。<br>放進來之後，不用網路也能聽。</p><div class="btn-row"><div class="btn-pair"><button type="button" class="btn pri" data-act="import-files">${I.upload}選擇音樂檔</button>${R.canFolder ? `<button type="button" class="btn sec" data-act="import-folder">${I.folder}整個資料夾</button>` : ''}</div><button type="button" class="btn sec wide" data-act="demo">${I.sparkle}先聽示範曲，試穿 Skin</button></div><p class="hint">${R.isTouch ? '' : '也可以直接把檔案或資料夾拖進這個視窗。'}${R.isIOS && !R.canFolder ? '選音樂檔時可以一次選好幾首；iOS 18.4 以上還能直接選整個資料夾。' : ''}${R.isIOS && !R.standalone && !R.embedded ? '建議先在 Safari 按「分享 → 加入主畫面」再匯入：主畫面 App 的歌庫跟 Safari 是分開的。' : ''}${R.CLAUDE ? `這是 Claude 上的試用版：歌可能不會一直留著，也不能鎖屏一直聽。長期聽歌請開 <a href="${R.WEB_URL}" target="_blank" rel="noopener" style="color:var(--accent);font-weight:700">網頁版</a>，加到主畫面再匯入。` : R.embedded && R.isIOS ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）。' : R.embedded && (R.isAndroid || R.isTouch) ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面。' : ''}</p>`;
     e.hidden = false;
   }
   bus.on('library', updateEmpty);

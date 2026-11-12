@@ -33,6 +33,9 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 - 第一次點畫面時，用無聲 WAV 喚醒兩個 `<audio>`（`unlock`）；非同步換歌前先 `prime()`。拿掉任何一步，iPhone 都會擋播放。
 - Media Session 只註冊 play、pause、previoustrack、nexttrack、seekto、stop。**不要加 seekbackward／seekforward**：iPhone 鎖屏會把上一首／下一首換成快退／快轉。
 - iPhone 不能用程式調音量，所以 iOS 不顯示音量條。
+- **歌、封面、DIY 照片一律存成純位元組 `{ buf, type }`，不要存 Blob**（`db.putBytes`／`getRaw`／`getBytes`）。WebKit 把 IndexedDB 裡的 Blob 存成另外的檔案，有些 iPhone 的 web view（Claude App 就是）讀不回來：2026-11-13 痞子葳在 Claude App 匯入 216 首，結果每首都播不了、封面全是「?」。舊版存的 Blob 第一次讀到時會轉存成位元組；讀不出來的標成 `lost`，重新匯入同一首就補回（同一首、同一個位置）。
+- 播放用 blob: 連結；某首的 blob: 連結打不開時，同一首改用 data: 連結再試，成功就從此都用 data:（設定 `srcMode`）。圖片開機時先試一張小圖（`R.blobImages`），不行就全用 data:。
+- 連續三首播不了就停下來說明（`player.js` 的 `failed`／`explain`），不要一路跳過整個歌庫。Claude 版的說明附網頁版連結。
 - 雲端沙盒測不了真的 iPhone 鎖屏。check.py 用「假裝螢幕關著」模擬；真機的狀況要看痞子葳回報和 `diag`。
 
 ## 匯入
@@ -53,7 +56,7 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 
 ## 資料
 
-- 全部存在使用者裝置的 IndexedDB `pz-reskin`，不連任何伺服器：
+- 全部存在使用者裝置的 IndexedDB `pz-reskin`，不連任何伺服器（音樂檔、封面、照片都是純位元組，見上面）：
   `tracks`（歌的資料）、`playlists`、`audio`（音樂檔本體）、`covers`、`analysis`（節奏分析）、`images`（DIY 照片）、`kv`（`settings`、`session` 上次播到哪、`diag`）。
 - 同一個網域的 App 共用儲存空間：資料庫名稱 `pz-reskin`、service worker 快取前綴 `pzrs-` 都是這個 App 專用，不要跟別的 App 撞名。這個 App 不用 localStorage。
 - 在 iPhone 上，每個加到主畫面的 App 都有自己的儲存空間：單獨加到主畫面的耳目一新、Safari、加到主畫面的收藏庫（在它裡面開的那份），歌庫互不相通（系統規定）。Android 和電腦在同一個瀏覽器裡是共用的。空歌庫畫面和設定頁最下面的提示，會照裝置換說法。

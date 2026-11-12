@@ -8,7 +8,7 @@ R.library = (() => {
   const sub = (t) => {
     const parts = [t.artist || '未知歌手'];
     if (t.duration) parts.push(fmtTime(t.duration));
-    return esc(parts.join(' · ')) + (t.warn ? ' <span class="warn">· 這台可能播不了</span>' : '');
+    return esc(parts.join(' · ')) + (t.lost ? ' <span class="warn">· 檔案讀不到，重新匯入就會補回</span>' : t.warn ? ' <span class="warn">· 這台可能播不了</span>' : '');
   };
   const row = (t, o) => {
     o = o || {};
