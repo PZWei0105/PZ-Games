@@ -1,5 +1,6 @@
 // 介面：頂部資訊、操作台、搖桿、開獎卡、陳列櫃、設定、教學
-import { MACHINES, PRIZES, PRIZE, RARITY, RARITY_ORDER, SERIES, RANKS, rankOf, ECON, seriesPrizes, MISSIONS } from './data.js';
+import { MACHINES, RARITY, SERIES, SERIES_ORDER, CHAR, CHARS, VERSIONS, RANKS, rankOf, ECON, ODDS, MISSIONS, OLD_PRIZES, OLD_PRIZE, OLD_SERIES, seriesChars, charsOf, versionsOf, colKey, parseKey, valueOf, editionOf, starOf, STAR_AT, CAP_R } from './data.js';
+import { CAPSULE_COLORS } from './models.js';
 import { thumb } from './showcase.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -23,7 +24,13 @@ export class UI {
     setTimeout(() => $('#boot').classList.add('out'), 250);
     setTimeout(() => $('#boot').remove(), 900);
     setTimeout(() => this.coach('coin'), 1200);
-    if (this.g.P.flags.opening === 1) { this.g.P.flags.opening = 2; this.g.saveProfile(); setTimeout(() => this.toast(`開幕特惠：星砂扭蛋機的保夾燈先幫你點亮 ${ECON.openingMeter} 格`, 'gold'), 1600); }
+    const F = this.g.P.flags;
+    if (F.opening === 1) { F.opening = 2; this.g.saveProfile(); setTimeout(() => this.toast(`開幕特惠：星砂扭蛋機的保夾燈先幫你點亮 ${ECON.openingMeter} 格`, 'gold'), 1600); }
+    if (F.v2) {
+      const tk = F.v2.tickets || 0; delete F.v2; this.g.saveProfile();
+      setTimeout(() => this.toast('改版：獎品換成 27 隻角色公仔！', 'gold'), 1500);
+      setTimeout(() => this.toast(tk ? `以前夾到的留在陳列櫃「初代」分頁，重複的換成 ${tk} 張兌換券` : '以前夾到的獎品留在陳列櫃的「初代」分頁', 'gold'), 3600);
+    }
   }
 
   bind() {
@@ -37,6 +44,7 @@ export class UI {
     $('#bNext').addEventListener('click', () => g.go(1));
     $('#bList').addEventListener('click', () => { g.snd.click(); this.openList(); });
     $('#bTip').addEventListener('click', () => { g.snd.click(); this.openTip(); });
+    $('#bKey').addEventListener('click', () => { g.snd.click(); this.openKeys(); });
     $('#bCol').addEventListener('click', () => { g.snd.click(); this.openCollection(); });
     $('#bMis').addEventListener('click', () => { g.snd.click(); this.openMissions(); });
     $('#bSet').addEventListener('click', () => { g.snd.click(); this.openSettings(); });
@@ -137,7 +145,13 @@ export class UI {
   }
 
   // ---------------- 頂部 ----------------
-  refreshAll() { this.setTokens(); this.setRank(); this.refreshMachine(); this.layout(); this.updateColDot(); this.updateMissionDot(); }
+  refreshAll() { this.setTokens(); this.setRank(); this.refreshMachine(); this.setKeys(); this.layout(); this.updateColDot(); this.updateMissionDot(); }
+  setKeys() {
+    const b = $('#bKey'); if (!b) return;
+    const k = this.g.P.keys || 0, full = k >= ODDS.keys;
+    b.classList.toggle('full', full);
+    b.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.2"/><path d="M11 11l9 9M16 16l2.5-2.5M18.5 18.5l2-2"/></svg>${full ? '開寶箱' : `${k}/${ODDS.keys}`}`;
+  }
   updateMissionDot() {
     const d = $('#bMis .dot'), M = this.g.P.missions;
     if (!d || !M) return;
@@ -204,8 +218,11 @@ export class UI {
     if (!b) return;
     const lock = !g.unlocked(g.active);
     b.classList.toggle('locked', lock);
-    b.classList.toggle('power', !lock && g.isPower(def));
+    const gold = !lock && !!g.P.goldShot[def.id];
+    b.classList.toggle('power', !lock && !gold && g.isPower(def));
+    b.classList.toggle('gold', gold);
     if (lock) b.innerHTML = `<span>🔒 升到「${RANKS[def.unlock].name}」解鎖</span>`;
+    else if (gold) b.innerHTML = `<span class="lb">黃金一夾</span><span class="c">FREE</span>`;
     else b.innerHTML = `<span class="lb">${g.isPower(def) ? '強爪' : '投幣'}</span><span class="coin">S</span><span class="c">${def.cost}</span>`;
   }
   layout() {
@@ -224,12 +241,12 @@ export class UI {
   }
 
   // ---------------- 一局 ----------------
-  onTurnStart(power) {
+  onTurnStart(power, gold) {
     $('#idle').classList.add('hide'); $('#aim').classList.remove('hide'); $('#busy').classList.add('hide');
     this.setTokens(); this.refreshMachine();
     this.setTimer(1);
     requestAnimationFrame(() => this.layout());
-    if (power) this.big('強爪！', 'win');
+    if (gold) this.big('黃金一夾！', 'win'); else if (power) this.big('強爪！', 'win');
     setTimeout(() => this.coach('joy'), 300);
   }
   onDrop() {
@@ -273,60 +290,83 @@ export class UI {
     this.setTokens(); this.setRank(); this.refreshMachine();
   }
   noTokens() {
-    const g = this.g, left = g.regenLeft();
-    const dupes = Object.entries(g.P.col).filter(([, c]) => c.n > 1).length;
+    const g = this.g, left = g.regenLeft(), tk = g.P.tickets || 0, E = ECON.ticketToTokens;
     this.sheet(`<div class="card"><h2>代幣不夠了<small>OUT OF COINS</small></h2>
       <p>代幣低於 ${ECON.regenCap} 枚時，每 ${ECON.regenEvery} 秒自動補 1 枚${left >= 0 ? `（下一枚 ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}）` : ''}。每天第一次打開還會送 ${ECON.daily} 枚。</p>
-      ${dupes ? `<p>你有 ${dupes} 種重複的獎品，可以到陳列櫃換成代幣。</p>` : ''}
-      <div class="btns">${dupes ? '<button class="btn goldb" data-a="col">去陳列櫃</button>' : ''}<button class="btn main" data-a="close">知道了</button></div></div>`, (a) => { if (a === 'col') this.openCollection(); });
+      ${tk >= E.cost ? `<p>你有 ${tk} 張兌換券，可以到兌換櫃台用 ${E.cost} 張換 ${E.tokens} 枚代幣。</p>` : ''}
+      <div class="btns">${tk >= E.cost ? '<button class="btn goldb" data-a="ctr">去兌換櫃台</button>' : ''}<button class="btn main" data-a="close">知道了</button></div></div>`, (a) => { if (a === 'ctr') { this.openCounter(); return true; } });
   }
 
   // ---------------- 開獎 ----------------
   openReveal(info) {
     this.closeSheet();
     let el = $('#rv');
-    if (!el) { el = h('<div id="rv"><div class="tap hide">點一下打開</div><div class="cardr"></div></div>'); document.body.appendChild(el); el.addEventListener('pointerdown', (e) => { if (e.target.closest('.cert')) return; this.revealTap(); }); }
+    if (!el) { el = h('<div id="rv"><div class="banner"><span></span></div><div class="tap hide">點一下打開</div><div class="cardr"></div></div>'); document.body.appendChild(el); el.addEventListener('pointerdown', (e) => { if (e.target.closest('.cert')) return; this.revealTap(); }); }
     el.classList.remove('hide');
     $('.cardr', el).innerHTML = '';
     $('.tap', el).classList.add('hide');
+    $('.banner span', el).className = '';
     $('#ui').classList.add('hide');
-    this.revealTapT = 0;
+    this.revealTapAt = 0;
+    this.clearCoach();
   }
-  tapHint(on) { const t = $('#rv .tap'); if (t) { t.classList.toggle('hide', !on); t.textContent = this.g.reveal.boxObj ? '點一下拆盒' : '點一下打開'; } }
+  tapHint(on, text) { const t = $('#rv .tap'); if (t) { t.classList.toggle('hide', !on); if (text) t.textContent = text; } }
   revealTap() {
-    const R = this.g.reveal;
-    if (this.revealTapT > 0) return;
-    if (R.phase === 'enter' || R.phase === 'bounce') { R.shell.position.y = R.sz / 2; R.phase = 'idle'; }
-    if (R.phase === 'idle') { if (R.open()) { this.tapHint(false); this.revealTapT = 0.3; } }
+    const now = performance.now();
+    if (now - (this.revealTapAt || 0) < 280) return;
+    if (this.g.reveal.tap()) this.revealTapAt = now;
   }
-  showCard(info, pid, final) {
-    const pz = PRIZE[pid], r = RARITY[pz.rarity], s = SERIES[pz.series];
-    const it = info.item;
+  revealBanner(text, kind = '') {
+    const s = $('#rv .banner span'); if (!s) return;
+    s.className = ''; void s.offsetWidth;
+    s.textContent = text; s.className = kind + ' go';
+  }
+  // 證書卡：final＝最後的結果（有按鈕、加碼說明）
+  showCard(info, final) {
+    const g = this.g, key = final ? info.key : (info.from || info.key);
+    const k = parseKey(key), c = k.c, v = k.v, r = RARITY[c.tier], s = SERIES[c.s], V = VERSIONS[v];
+    const G = info.grant || {}, e = info.entry || {};
     const box = $('#rv .cardr');
-    const serial = final ? info.serial : (r.ed ? 1 + Math.floor(Math.random() * r.ed) : 0);
-    const dup = final && info.dupes > 0;
-    const isHid = pz.rarity === 'HID';
-    let extra = '';
-    if (final && isHid && info.upgraded) extra = '<div class="extra">隱藏版！這一顆在打開的瞬間變身了。</div>';
-    else if (final && isHid) extra = '<div class="extra">黑金蛋開出了隱藏版！</div>';
-    if (final && info.complete) extra += `<div class="extra">「${SERIES[info.complete].name}」系列收齊！＋${ECON.seriesReward} 代幣</div>`;
-    const card = h(`<div class="cert ${isHid ? 'hid' : ''}" style="--rc:${r.color}">
-      <div class="rr"><span class="rbig">${pz.rarity === 'HID' ? 'SECRET' : pz.rarity}</span><span class="rname">${r.name}</span>${final && info.isNew ? '<span class="new">NEW</span>' : ''}</div>
-      <h3>${pz.name}</h3><div class="en">${pz.en.toUpperCase()} · ${s.name}</div>
-      <div class="ln">${pz.line}</div>
+    const isHid = c.tier === 'HID';
+    const ed = editionOf(c.tier, v);
+    const serial = final ? G.serial : (ed ? 1 + Math.floor(Math.random() * ed) : 0);
+    const extras = [];
+    if (final) {
+      if (info.glitch) extras.push(['hid', '隱藏版！這一顆在打開的瞬間變身了。']);
+      if (info.blackHidden) extras.push(['hid', '黑金蛋開出了隱藏版！']);
+      if (e.src === 'chest') extras.push(['gold', '祕密寶箱：必定是傳說以上。']);
+      if (e.src === 'buy') extras.push(['', '從兌換櫃台換來的。']);
+      if (info.inner) extras.push(['gold', '蛋中蛋：裡面那一顆升了一級。']);
+      if (G.starUp) extras.push(['star', `升星！${'★'.repeat(G.starUp)}${G.starUp >= 3 ? '　換上金色底座' : '　解鎖專屬動作'}`]);
+      if (!G.isNew) extras.push(['', `重複了，換成 ${G.tickets} 張兌換券（現在 ${g.P.tickets} 張）`]);
+      else if (!G.newChar) extras.push(['', `新版本！這隻角色多了一個「${V.name}」。`]);
+      if (info.ev === 'key') extras.push(['gold', `鑰匙碎片 ＋1（${Math.min(g.P.keys, ODDS.keys)}/${ODDS.keys}）${g.P.keys >= ODDS.keys ? '　可以打開祕密寶箱了！' : ''}`]);
+      if (info.ev === 'gold') extras.push(['gold', '黃金一夾！這台的下一夾免費，而且直接是強爪。']);
+      if (info.ev === 'tri') extras.push(['gold', '一次三隻！後面還有兩隻。']);
+      if (G.complete) extras.push(['gold', `「${SERIES[G.complete].name}」八隻收齊！＋${ECON.seriesReward} 代幣、＋${ECON.seriesTickets} 張兌換券`]);
+      if (G.allv) extras.push(['gold', `「${SERIES[G.allv].name}」普通、異色、夜光全部收齊！＋${ECON.allVersionsReward} 代幣`]);
+      if (info.ev === 'key') setTimeout(() => g.snd.key(), 500);
+      if (info.ev === 'gold') setTimeout(() => g.snd.goldShot(), 500);
+    }
+    const star = final ? G.star : starOf(g.P.ch[c.id]?.got || 0) || 1;
+    const vtag = v !== 'n' && !isHid ? `<span class="vtag" style="--vc:${V.color}">${V.name}</span>` : '';
+    const card = h(`<div class="cert ${isHid ? 'hid' : ''} ${v === 'g' ? 'glowv' : ''} ${v === 'm' ? 'gild' : ''} ${final && e.shell === 'box' ? 'flip' : ''}" style="--rc:${r.color}">
+      <div class="rr"><span class="rbig">${isHid ? 'SECRET' : c.tier}</span><span class="rname">${r.name}</span>${vtag}${final && G.isNew ? '<span class="new">NEW</span>' : ''}</div>
+      <h3>${c.name}</h3><div class="en">${c.en.toUpperCase()} · ${s.name}</div>
+      <div class="stars" aria-label="星級">${'★'.repeat(star)}<i>${'★'.repeat(3 - star)}</i></div>
+      <div class="ln">${c.line}</div>
       <div class="meta">
-        <div>收藏市價<b>NT$ ${fmt(pz.value)}</b></div>
-        <div>${r.ed ? `限量 ${fmt(r.ed)}・你的編號` : '版本'}<b class="${r.ed ? '' : 'zh'}">${r.ed ? 'No.' + pad(serial, String(r.ed).length) : '一般版'}</b></div>
+        <div>收藏市價<b>NT$ ${fmt(valueOf(c, v))}</b></div>
+        <div>${ed ? `限量 ${fmt(ed)}・你的編號` : '版本'}<b class="${ed ? '' : 'zh'}">${ed ? 'No.' + pad(serial, String(ed).length) : '一般版'}</b></div>
       </div>
-      ${extra}
-      ${final ? `<div class="btns">${dup ? `<button class="btn" data-a="rec">換成代幣 ＋${r.recycle}</button>` : ''}<button class="btn main" data-a="ok">${this.g.revealList.length ? '下一個' : '收下'}</button></div>` : ''}
+      ${extras.map(([k2, t]) => `<div class="extra ${k2}">${t}</div>`).join('')}
+      ${final ? `<div class="btns"><button class="btn main" data-a="ok">${info.left ? '下一個' : '收下'}</button></div>` : ''}
     </div>`);
     box.innerHTML = ''; box.appendChild(card);
-    card.addEventListener('click', (e) => {
-      const a = e.target.closest('[data-a]')?.dataset.a;
+    card.addEventListener('click', (ev) => {
+      const a = ev.target.closest('[data-a]')?.dataset.a;
       if (!a) return;
-      e.stopPropagation();
-      if (a === 'rec') { const v = this.g.recycle(pid); if (v) this.toast(`換到 ${v} 枚代幣`, 'gold'); }
+      ev.stopPropagation();
       this.g.snd.click();
       this.g.reveal.finish();
     });
@@ -340,6 +380,7 @@ export class UI {
   // ---------------- 面板 ----------------
   sheet(html, onAction) {
     this.closeSheet();
+    this.clearCoach();
     const s = h(`<div class="sheet">${html}</div>`);
     document.body.appendChild(s);
     this.modal = s;
@@ -351,39 +392,55 @@ export class UI {
     return s;
   }
   closeSheet() { if (this.modal) { this.modal.remove(); this.modal = null; } }
+  // 本台說明卡：角色、扭蛋顏色、機率
   openList() {
-    const g = this.g, i = g.active, def = MACHINES[i], st = g.mstate[i];
-    const count = {}; let blk = 0;
-    for (const it of st.items) { if (it.black) blk++; else count[it.prize] = (count[it.prize] || 0) + 1; }
-    const total = st.items.length || 1;
-    const pool = def.series === 'X' ? PRIZES.filter((p) => p.rarity !== 'N') : seriesPrizes(def.series);
-    const rows = pool.filter((p) => p.rarity !== 'HID' && (def.series !== 'X' || count[p.id])).sort((a, b) => RARITY[b.rarity].order - RARITY[a.rarity].order).map((p) => `
-      <div class="pi"><img src="${thumb(p.id)}" alt=""><div class="tx"><div class="nm"><span class="rt ${p.rarity}">${p.rarity}</span>${p.name}</div><div class="sb">市價 NT$ ${fmt(p.value)}</div></div><div class="ct">×${count[p.id] || 0}</div></div>`).join('');
+    const g = this.g, i = g.active, def = MACHINES[i], st = g.mstate[i], P = g.P;
+    const count = {}; let blk = 0, glow = 0;
+    for (const it of st.items) { if (it.black) blk++; else count[it.rarity] = (count[it.rarity] || 0) + 1; if (it.glow) glow++; }
     const unit = def.kind === 'shelf' ? '盒' : '顆';
-    this.sheet(`<div class="card"><h2>${def.name}<small>${def.en}</small></h2>
-      <p>${def.tip}</p><p style="color:var(--muted);font-size:13px">機台裡現在有 ${st.items.length} ${unit}・每次 ${def.cost} 代幣${def.meter ? `・保夾 ${def.meter} 次` : ''}</p>
-      <div class="plist">
-        ${blk ? `<div class="pi"><div style="width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3c0,#e3b44a 30%,#1a1408 70%);box-shadow:0 0 16px rgba(255,180,60,.6)"></div><div class="tx"><div class="nm"><span class="rt HID">BLK</span>黑金蛋</div><div class="sb">一定是傳說，三分之一機率是隱藏版</div></div><div class="ct">×${blk}</div></div>` : ''}
-        ${rows}
-        <div class="pi"><div style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-family:var(--pop);font-size:30px;color:#ffb85a">?</div><div class="tx"><div class="nm"><span class="rt HID">SECRET</span>隱藏版</div><div class="sb">每一${unit}打開時，都有約 1/150 的機率變成隱藏版</div></div></div>
-      </div>
+    const vault = def.series === 'X';
+    const tiers = Object.keys(def.mix).filter((t) => def.mix[t] > 0 || (t === 'SSR' && def.ssr));
+    if (!tiers.includes('SSR') && def.ssr) tiers.push('SSR');
+    const swatch = (t) => def.kind === 'shelf' ? `<span class="sw box ${t}"></span>` : `<span class="sw" style="background:radial-gradient(circle at 35% 30%,#fff,${t === 'N' ? '#ff9fba' : CAPSULE_COLORS[t]} 45%)"></span>`;
+    const thumbs = (list) => list.map((c) => { const own = P.ch[c.id]?.got; return `<img data-k="${colKey(c.id, vault ? 'm' : 'n')}" data-s="${own ? '' : '1'}" alt="" title="${own ? c.name : '？？？'}">`; }).join('');
+    const rows = tiers.map((t) => {
+      const list = vault ? SERIES_ORDER.flatMap((q) => charsOf(q, t)) : charsOf(def.series, t);
+      const label = def.kind === 'shelf' ? { R: '藍盒', SR: '紫盒', SSR: '金盒' }[t] : { N: '粉彩扭蛋', R: '藍扭蛋', SR: '紫扭蛋', SSR: '金色大扭蛋' }[t];
+      return `<div class="tier">${swatch(t)}<div class="tx"><div class="nm"><span class="rt ${t}">${t}</span>${label}<em>×${count[t] || 0}</em></div><div class="th">${thumbs(list)}</div></div></div>`;
+    }).join('');
+    const pct = (x) => (x >= 0.01 ? `${Math.round(x * 1000) / 10}%` : `1/${Math.round(1 / x)}`);
+    const O = def.kind === 'shelf' ? ODDS.box : ODDS.cap, EV = def.kind === 'shelf' ? ODDS.evBox : vault ? ODDS.evVault : ODDS.ev;
+    const hid = '隱藏版';
+    const odds = vault ? `<li>這台全部是<b>鍍金版</b></li><li>${hid}：每${unit} ${pct(O.HID)}</li><li>黑金蛋：${pct(ODDS.black)} 是隱藏版，其餘是鍍金的傳說角色</li>`
+      : `<li>普通版 ${pct(1 - O.a - O.g - O.HID)}・異色版 ${pct(O.a)}・夜光版 ${pct(O.g)}</li><li>${hid}：每${unit} ${pct(O.HID)}</li>
+         <li>發光的${def.kind === 'shelf' ? '盲盒' : '扭蛋'}：必定變異（夜光 ${pct(ODDS.glow.g)}，其餘異色），隱藏版 ${pct(ODDS.glow.HID)}</li>${blk || def.blackChance ? `<li>黑金蛋：${pct(ODDS.black)} 是隱藏版，其餘是必定變異的傳說角色</li>` : ''}`;
+    const evs = [EV.key && `鑰匙碎片 ${pct(EV.key)}`, EV.gold && `黃金一夾 ${pct(EV.gold)}`, EV.egg && `蛋中蛋 ${pct(EV.egg)}`, EV.tri && `一次三隻 ${pct(EV.tri)}`].filter(Boolean).join('・');
+    const sh = this.sheet(`<div class="card"><h2>${def.name}<small>${def.en}</small></h2>
+      <p>${def.tip}</p><p style="color:var(--muted);font-size:13px">機台裡現在有 ${st.items.length} ${unit}${glow ? `（${glow} ${unit}在發光）` : ''}・每次 ${def.cost} 代幣${def.meter ? `・保夾 ${def.meter} 次` : ''}</p>
+      ${blk ? `<div class="tier"><span class="sw" style="background:radial-gradient(circle at 35% 30%,#fff3c0,#e3b44a 30%,#1a1408 70%);box-shadow:0 0 12px rgba(255,180,60,.6)"></span><div class="tx"><div class="nm"><span class="rt HID">BLK</span>黑金蛋<em>×${blk}</em></div></div></div>` : ''}
+      ${rows}
+      <div class="odds"><h4>打開時</h4><ul>${odds}</ul><h4>加碼（每${unit}最多一個）</h4><p>${evs}</p></div>
       <div class="btns"><button class="btn main" data-a="close">好</button></div></div>`);
+    const imgs = [...sh.querySelectorAll('img[data-k]')];
+    const run = () => { const im = imgs.shift(); if (!im) return; im.src = thumb(im.dataset.k, !!im.dataset.s); requestAnimationFrame(run); };
+    requestAnimationFrame(run);
   }
   openTip() {
     this.sheet(`<div class="card"><h2>怎麼玩<small>HOW TO PLAY</small></h2>
       <p><b>投幣</b>之後，用左下的搖桿把爪子移到目標正上方，按右下的<b>下爪</b>。</p>
-      <p>爪子會張開、下降、收爪、上升。<b>到頂的那一瞬間爪子會鬆一點</b>——抓得歪就會在這裡掉下來。</p>
-      <p>畫面可以拖曳轉角度。切到<b>側面</b>看前後距離，是老手都會做的事。</p>
-      <p><b>保夾燈</b>：沒夾到的每一局都會亮一格；全亮時，下一爪是<b>強爪</b>，到頂也不會鬆。夾到任何獎品，或強爪用掉了，燈就歸零。</p>
-      <p>獎品被推到出口邊上不會跑掉——下一次就更接近了。</p>
+      <p>爪子會張開、下降、收爪、上升。<b>到頂的那一瞬間爪子會鬆一點</b>——抓得歪就會在這裡掉下來。畫面可以拖曳轉角度，切到<b>側面</b>看前後距離。</p>
+      <p><b>扭蛋的顏色就是稀有度</b>：粉彩是普通、藍是稀有、紫是超稀有、金色大顆是傳說。裡面是哪一隻、會不會變成<b>異色版、夜光版</b>，甚至變成<b>隱藏版</b>，打開才知道。<b>發光的扭蛋</b>必定變異。</p>
+      <p><b>保夾燈</b>：沒夾到的每一局都會亮一格；全亮時，下一爪是<b>強爪</b>。夾到任何獎品，或強爪用掉了，燈就歸零。</p>
+      <p>開蛋時偶爾有加碼：<b>鑰匙碎片</b>集滿 ${ODDS.keys} 片開祕密寶箱；<b>黃金一夾</b>讓下一夾免費又是強爪；還有<b>蛋中蛋</b>、<b>一次三隻</b>。</p>
+      <p>重複的角色會換成<b>兌換券</b>，同一隻拿到第 ${STAR_AT[1]} 隻升 ★★（專屬動作）、第 ${STAR_AT[2]} 隻升 ★★★（金色底座）。</p>
       <div class="btns"><button class="btn main" data-a="close">開始夾</button></div></div>`);
   }
   openWallet() {
     const g = this.g, left = g.regenLeft();
     this.sheet(`<div class="card"><h2>代幣 ${g.P.tokens}<small>COINS</small></h2>
       <p>低於 ${ECON.regenCap} 枚時每 ${ECON.regenEvery} 秒補 1 枚${left >= 0 ? `，下一枚 ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : ''}。</p>
-      <p>每天第一次打開送 ${ECON.daily} 枚；段位升級、收齊一整個系列也會送。重複的獎品可以在陳列櫃換成代幣。</p>
-      <div class="btns"><button class="btn main" data-a="close">好</button></div></div>`);
+      <p>每天第一次打開送 ${ECON.daily} 枚；段位升級、收齊一整個系列也會送。兌換櫃台可以用 ${ECON.ticketToTokens.cost} 張兌換券換 ${ECON.ticketToTokens.tokens} 枚。</p>
+      <div class="btns"><button class="btn goldb" data-a="ctr">兌換櫃台</button><button class="btn main" data-a="close">好</button></div></div>`, (a) => { if (a === 'ctr') { this.openCounter(); return true; } });
   }
   openRank() {
     const P = this.g.P, r = rankOf(P.xp), nx = RANKS[r + 1];
@@ -394,6 +451,7 @@ export class UI {
         <div>投幣次數<b>${s.plays}</b></div><div>夾到<b>${s.wins}</b></div>
         <div>差一點<b>${s.near}</b></div><div>一夾多<b>${s.multi}</b></div>
         <div>傳說<b>${s.ssr}</b></div><div>隱藏版<b>${s.hidden}</b></div>
+        <div>變異<b>${s.mut || 0}</b></div><div>兌換券<b>${P.tickets || 0}</b></div>
       </div></div>
       <p style="font-size:13px;color:var(--muted)">${MACHINES.map((m) => `${m.name}：${RANKS[m.unlock].name}`).join('　')}</p>
       <div class="btns"><button class="btn main" data-a="close">好</button></div></div>`);
@@ -405,7 +463,7 @@ export class UI {
       <div class="row2"><span>背景音樂</span><button class="tog ${S.music ? 'on' : ''}" data-a="music"></button></div>
       <div class="row2"><span>畫質</span><div class="seg">${['auto', 'high', 'mid', 'low'].map((q) => `<button data-a="q:${q}" class="${S.quality === q ? 'on' : ''}">${{ auto: '自動', high: '高', mid: '中', low: '低' }[q]}</button>`).join('')}</div></div>
       <div class="row2"><span>操作教學</span><button class="chip" data-a="tut">重新提示</button></div>
-      <p style="font-size:12px;color:var(--dim);margin-top:12px">差一點 SO CLOSE · v1.0</p>
+      <p style="font-size:12px;color:var(--dim);margin-top:12px">差一點 SO CLOSE · v2.0</p>
       <div class="btns"><button class="btn main" data-a="close">完成</button></div></div>`, (a) => {
       if (a === 'sfx') { S.sfx = !S.sfx; g.snd.setOn(S.sfx); }
       else if (a === 'music') { S.music = !S.music; g.snd.setMusic(S.music); }
@@ -420,8 +478,13 @@ export class UI {
 
   // ---------------- 陳列櫃 ----------------
   updateColDot() {
-    const d = $('#bCol .dot');
-    if (d) d.classList.toggle('hide', !Object.entries(this.g.P.col).some(([, c]) => c.n && !c.seen));
+    const d = $('#bCol .dot'), P = this.g.P;
+    if (d) d.classList.toggle('hide', !Object.values(P.ch).some((c) => c.got && !c.seen));
+  }
+  bestKey(cid) {
+    const P = this.g.P;
+    for (const v of ['m', 'g', 'a', 'n']) if (P.col[colKey(cid, v)]?.n) return colKey(cid, v);
+    return null;
   }
   openCollection(series) {
     const g = this.g;
@@ -432,47 +495,65 @@ export class UI {
     if (!el) { el = h('<div id="col"></div>'); document.body.appendChild(el); }
     el.classList.remove('hide');
     $('#ui').classList.add('hide');
-    this.colSeries = series || this.colSeries || 'A';
+    this.clearCoach();
+    this.colSeries = series || this.colSeries || MACHINES[g.active].series.replace('X', 'J');
     this.renderCollection();
   }
   renderCollection() {
     const g = this.g, P = g.P, el = $('#col');
-    const own = PRIZES.filter((p) => P.col[p.id]?.n);
-    const value = own.reduce((s, p) => s + p.value * P.col[p.id].n, 0);
-    const hid = PRIZES.filter((p) => p.rarity === 'HID');
-    el.innerHTML = `<header><h1>陳列櫃<small>COLLECTION</small></h1><button class="ibtn" data-a="close" aria-label="關閉"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
-      <div class="stats"><div>收集<b>${own.length}/${PRIZES.length}</b></div><div>隱藏版<b>${hid.filter((p) => P.col[p.id]?.n).length}/${hid.length}</b></div><div>收藏總值<b>NT$ ${value >= 1e6 ? (value / 1e6).toFixed(2) + 'M' : fmt(value)}</b></div></div>
-      <div class="tabs">${Object.values(SERIES).map((s) => `<button data-s="${s.key}" class="${s.key === this.colSeries ? 'on' : ''}" style="--sc:${s.color}">${s.name}${P.series[s.key] ? ' ✦' : ''}</button>`).join('')}</div>
+    const allKeys = CHARS.flatMap((c) => versionsOf(c).map((v) => colKey(c.id, v)));
+    const ownChars = CHARS.filter((c) => P.ch[c.id]?.got).length;
+    const ownKeys = allKeys.filter((k) => P.col[k]?.n).length;
+    const hidList = CHARS.filter((c) => c.tier === 'HID');
+    const hasOld = OLD_PRIZES.some((p) => P.col[p.id]?.n);
+    const tabs = [...SERIES_ORDER.map((k) => SERIES[k]), ...(hasOld ? [{ key: 'OLD', name: '初代', color: '#9aa3c0' }] : [])];
+    if (this.colSeries === 'OLD' && !hasOld) this.colSeries = 'J';
+    el.innerHTML = `<header><h1>陳列櫃<small>COLLECTION</small></h1><button class="chip tkchip" data-a="ctr">兌換券 ${P.tickets || 0}</button><button class="ibtn" data-a="close" aria-label="關閉"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+      <div class="stats"><div>角色<b>${ownChars}/${CHARS.length}</b></div><div>版本<b>${ownKeys}/${allKeys.length}</b></div><div>隱藏版<b>${hidList.filter((c) => P.ch[c.id]?.got).length}/${hidList.length}</b></div></div>
+      <div class="tabs">${tabs.map((s) => `<button data-s="${s.key}" class="${s.key === this.colSeries ? 'on' : ''}" style="--sc:${s.color}">${s.name}${P.series[s.key] ? ' ✦' : ''}</button>`).join('')}</div>
       <div class="grid"></div>`;
-    const grid = $('.grid', el);
-    const s = SERIES[this.colSeries];
-    grid.appendChild(h(`<div class="sb">${s.blurb}　${seriesPrizes(s.key).filter((p) => P.col[p.id]?.n).length}/${seriesPrizes(s.key).length}</div>`));
-    const list = seriesPrizes(s.key).sort((a, b) => RARITY[a.rarity].order - RARITY[b.rarity].order);
-    const pending = [];
-    for (const p of list) {
-      const c = P.col[p.id], have = c && c.n > 0, r = RARITY[p.rarity];
-      const isH = p.rarity === 'HID';
-      const slot = h(`<div class="slot ${have ? 'own' : 'no'} ${isH ? 'hid' : ''}" style="--rc:${r.color}" data-p="${p.id}">
-        ${!have && isH ? '<div class="q">?</div>' : '<img alt="">'}
-        <span class="rt ${p.rarity}">${isH ? 'SECRET' : p.rarity}</span>${have ? `<span class="ct">×${c.n}</span>` : ''}
-        <div class="nm">${have || !isH ? (have ? p.name : '？？？') : '隱藏版'}</div></div>`);
-      grid.appendChild(slot);
-      const img = $('img', slot);
-      if (img) pending.push(() => { img.src = thumb(p.id, !have); });
+    const grid = $('.grid', el), pending = [];
+    if (this.colSeries === 'OLD') {
+      grid.appendChild(h('<div class="sb">v1 的獎品已經停產，只留在陳列櫃裡。</div>'));
+      for (const p of OLD_PRIZES.filter((q) => P.col[q.id]?.n)) {
+        const r = RARITY[p.rarity];
+        const slot = h(`<div class="slot own ${p.rarity === 'HID' ? 'hid' : ''}" style="--rc:${r.color}" data-o="${p.id}"><img alt=""><span class="rt ${p.rarity}">${p.rarity === 'HID' ? 'SECRET' : p.rarity}</span><div class="nm">${p.name}</div><div class="vp sub">${OLD_SERIES[p.series].name}</div></div>`);
+        grid.appendChild(slot);
+        const img = $('img', slot); pending.push(() => { img.src = thumb(p.id); });
+      }
+    } else {
+      const S = SERIES[this.colSeries], list = seriesChars(S.key);
+      const keys = list.flatMap((c) => versionsOf(c).map((v) => colKey(c.id, v)));
+      const reg = list.filter((c) => c.tier !== 'HID'), hidC = list.find((c) => c.tier === 'HID');
+      grid.appendChild(h(`<div class="sb">${S.blurb}<br>角色 ${reg.filter((c) => P.ch[c.id]?.got).length}/${reg.length}・隱藏版 ${P.ch[hidC.id]?.got ? 1 : 0}/1・版本 ${keys.filter((k) => P.col[k]?.n).length}/${keys.length}${P.series[S.key] ? '・✦ 八隻收齊' : ''}${P.seriesAll[S.key] ? '・✦ 全版本' : ''}</div>`));
+      for (const c of list) {
+        const ch = P.ch[c.id], have = !!ch?.got, r = RARITY[c.tier], isH = c.tier === 'HID';
+        const best = this.bestKey(c.id), star = starOf(ch?.got || 0);
+        const pips = isH ? '' : versionsOf(c).map((v) => `<i class="${P.col[colKey(c.id, v)]?.n ? 'on' : ''}" style="--v:${VERSIONS[v].color}">${VERSIONS[v].short}</i>`).join('');
+        const slot = h(`<div class="slot ${have ? 'own' : 'no'} ${isH ? 'hid' : ''} ${have && !ch.seen ? 'fresh' : ''}" style="--rc:${r.color}" data-c="${c.id}">
+          ${!have && isH ? '<div class="q">?</div>' : '<img alt="">'}
+          <span class="rt ${c.tier}">${isH ? 'SECRET' : c.tier}</span>${have ? `<span class="st">${'★'.repeat(star)}<i>${'★'.repeat(3 - star)}</i></span>` : ''}
+          <div class="nm">${have ? c.name : isH ? '隱藏版' : '？？？'}</div><div class="vp">${pips}</div></div>`);
+        grid.appendChild(slot);
+        const img = $('img', slot);
+        if (img) pending.push(() => { img.src = thumb(best || colKey(c.id, 'n'), !have); });
+      }
     }
-    // 縮圖分批產生，避免卡頓
     const run = () => { const f = pending.shift(); if (!f) return; f(); requestAnimationFrame(run); };
     requestAnimationFrame(run);
     el.onclick = (e) => {
       const a = e.target.closest('[data-a]')?.dataset.a;
       if (a === 'close') { g.snd.click(); this.closeCollection(); return; }
+      if (a === 'ctr') { g.snd.click(); this.openCounter(); return; }
       const sb = e.target.closest('[data-s]');
       if (sb) { g.snd.click(); this.colSeries = sb.dataset.s; this.renderCollection(); return; }
-      const sl = e.target.closest('.slot');
+      const so = e.target.closest('[data-o]');
+      if (so) { g.snd.soft(); this.openOldDetail(so.dataset.o); return; }
+      const sl = e.target.closest('[data-c]');
       if (sl) {
-        const pid = sl.dataset.p;
-        if (P.col[pid]?.n) { g.snd.soft(); this.openDetail(pid); }
-        else { g.snd.deny(); this.toast(PRIZE[pid].rarity === 'HID' ? '隱藏版……只有在打開扭蛋的瞬間才會出現' : '還沒夾到這一個', 'warn'); }
+        const cid = sl.dataset.c;
+        if (P.ch[cid]?.got) { g.snd.soft(); this.openDetail(cid); }
+        else { g.snd.deny(); this.toast(CHAR[cid].tier === 'HID' ? '隱藏版……只有在打開的瞬間才會出現' : '還沒拿到這一隻', 'warn'); }
       }
     };
   }
@@ -481,44 +562,107 @@ export class UI {
     $('#col')?.classList.add('hide');
     this.closeDetail();
     $('#ui').classList.remove('hide');
-    g.mode = 'shop';
+    if (g.mode === 'collection') g.mode = 'shop';
     this.updateColDot();
   }
-  openDetail(pid) {
-    const g = this.g, P = g.P, pz = PRIZE[pid], r = RARITY[pz.rarity], c = P.col[pid], s = SERIES[pz.series];
-    c.seen = true; g.saveProfile();
+  openDetail(cid, v) {
+    const g = this.g, P = g.P, c = CHAR[cid], r = RARITY[c.tier], s = SERIES[c.s], ch = P.ch[cid];
+    ch.seen = true; g.saveProfile();
+    const owned = versionsOf(c).filter((q) => P.col[colKey(cid, q)]?.n);
+    v = v && owned.includes(v) ? v : (this.bestKey(cid) || colKey(cid, 'n')).split('.')[1];
+    const key = colKey(cid, v), col = P.col[key], star = starOf(ch.got), V = VERSIONS[v], isH = c.tier === 'HID';
     $('#col').classList.add('hide');
-    g.showcase.open(pid);
+    g.showcase.open(key, star);
     let el = $('#detail');
     if (!el) { el = h('<div id="detail"></div>'); document.body.appendChild(el); }
     el.classList.remove('hide');
-    const best = c.serials.length ? Math.min(...c.serials) : 0;
+    const ed = editionOf(c.tier, v), best = col.serials.length ? Math.min(...col.serials) : 0;
+    const d = new Date(ch.first);
+    const next = star < 3 ? `再 ${STAR_AT[star] - ch.got} 隻升 ${'★'.repeat(star + 1)}` : '已經滿星';
+    const chips = isH ? '' : `<div class="vchips">${versionsOf(c).map((q) => { const o = P.col[colKey(cid, q)]?.n; return `<button data-v="${q}" class="${q === v ? 'on' : ''} ${o ? '' : 'off'}" style="--v:${VERSIONS[q].color}">${o ? VERSIONS[q].name : '？'}</button>`; }).join('')}</div>`;
+    el.innerHTML = `<div class="drag"></div><button class="ibtn back" data-a="back" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="dl"><div class="cert ${isH ? 'hid' : ''} ${v === 'g' ? 'glowv' : ''} ${v === 'm' ? 'gild' : ''}" style="--rc:${r.color}">
+        <div class="rr"><span class="rbig">${isH ? 'SECRET' : c.tier}</span><span class="rname">${r.name}</span>${v !== 'n' ? `<span class="vtag" style="--vc:${V.color}">${V.name}</span>` : ''}<span class="new" style="background:rgba(255,255,255,.1);box-shadow:none">×${ch.got}</span></div>
+        <h3>${c.name}</h3><div class="en">${c.en.toUpperCase()} · ${s.name}</div>
+        <div class="stars">${'★'.repeat(star)}<i>${'★'.repeat(3 - star)}</i><small>${next}・★★ 專屬動作・★★★ 金色底座</small></div>
+        ${chips}
+        <div class="ln">${c.line}</div>
+        <div class="meta">
+          <div>收藏市價<b>NT$ ${fmt(valueOf(c, v))}</b></div>
+          <div>${ed ? `限量 ${fmt(ed)}・最小編號` : '版本'}<b class="${ed ? '' : 'zh'}">${ed && best ? 'No.' + pad(best, String(ed).length) : V.name}</b></div>
+          <div>第一次拿到<b class="zh">${d.getMonth() + 1} 月 ${d.getDate()} 日</b></div>
+          <div>這個版本<b>×${col.n}</b></div>
+        </div>
+        <div class="btns"><button class="btn main" data-a="back">返回陳列櫃</button></div>
+      </div></div>`;
+    this.bindDrag(el);
+    el.onclick = (e) => {
+      const a = e.target.closest('[data-a]')?.dataset.a;
+      if (a === 'back') { g.snd.click(); this.closeDetail(); $('#col').classList.remove('hide'); this.renderCollection(); return; }
+      const vb = e.target.closest('[data-v]');
+      if (vb) { if (vb.classList.contains('off')) { g.snd.deny(); this.toast(vb.dataset.v === 'm' ? '鍍金版只出在黑金庫' : '還沒開出這個版本', 'warn'); } else { g.snd.soft(); this.openDetail(cid, vb.dataset.v); } }
+    };
+  }
+  openOldDetail(pid) {
+    const g = this.g, P = g.P, pz = OLD_PRIZE[pid], r = RARITY[pz.rarity], c = P.col[pid];
+    $('#col').classList.add('hide');
+    g.showcase.open(pid, 1);
+    let el = $('#detail');
+    if (!el) { el = h('<div id="detail"></div>'); document.body.appendChild(el); }
+    el.classList.remove('hide');
     const d = new Date(c.first);
     el.innerHTML = `<div class="drag"></div><button class="ibtn back" data-a="back" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div class="dl"><div class="cert ${pz.rarity === 'HID' ? 'hid' : ''}" style="--rc:${r.color}">
-        <div class="rr"><span class="rbig">${pz.rarity === 'HID' ? 'SECRET' : pz.rarity}</span><span class="rname">${r.name}</span><span class="new" style="background:rgba(255,255,255,.1);box-shadow:none">×${c.n}</span></div>
-        <h3>${pz.name}</h3><div class="en">${pz.en.toUpperCase()} · ${s.name}</div>
+        <div class="rr"><span class="rbig">${pz.rarity === 'HID' ? 'SECRET' : pz.rarity}</span><span class="rname">${r.name}</span><span class="vtag" style="--vc:#9aa3c0">初代</span></div>
+        <h3>${pz.name}</h3><div class="en">${pz.en.toUpperCase()} · ${OLD_SERIES[pz.series].name}</div>
         <div class="ln">${pz.line}</div>
-        <div class="meta">
-          <div>收藏市價<b>NT$ ${fmt(pz.value)}</b></div>
-          <div>${r.ed ? `限量 ${fmt(r.ed)}・最小編號` : '版本'}<b class="${r.ed ? '' : 'zh'}">${r.ed ? 'No.' + pad(best, String(r.ed).length) : '一般版'}</b></div>
-          <div>第一次夾到<b class="zh">${d.getMonth() + 1} 月 ${d.getDate()} 日</b></div>
-          <div>回收價<b>${r.recycle} 代幣</b></div>
-        </div>
-        <div class="btns">${c.n > 1 ? `<button class="btn" data-a="rec">換一個成代幣 ＋${r.recycle}</button>` : ''}<button class="btn main" data-a="back">返回陳列櫃</button></div>
+        <div class="meta"><div>收藏市價<b>NT$ ${fmt(pz.value)}</b></div><div>第一次夾到<b class="zh">${d.getMonth() + 1} 月 ${d.getDate()} 日</b></div></div>
+        <div class="btns"><button class="btn main" data-a="back">返回陳列櫃</button></div>
       </div></div>`;
-    const drag = $('.drag', el);
+    this.bindDrag(el);
+    el.onclick = (e) => { if (e.target.closest('[data-a]')?.dataset.a === 'back') { g.snd.click(); this.closeDetail(); $('#col').classList.remove('hide'); this.renderCollection(); } };
+  }
+  bindDrag(el) {
+    const g = this.g, drag = $('.drag', el);
     let lx = null;
     drag.onpointerdown = (e) => { lx = e.clientX; drag.setPointerCapture(e.pointerId); };
     drag.onpointermove = (e) => { if (lx == null) return; g.showcase.drag(e.clientX - lx); lx = e.clientX; };
     drag.onpointerup = drag.onpointercancel = () => { lx = null; };
-    el.onclick = (e) => {
-      const a = e.target.closest('[data-a]')?.dataset.a;
-      if (a === 'back') { g.snd.click(); this.closeDetail(); $('#col').classList.remove('hide'); this.renderCollection(); }
-      if (a === 'rec') { const v = g.recycle(pid); if (v) { this.toast(`換到 ${v} 枚代幣`, 'gold'); this.openDetail(pid); } }
-    };
   }
   closeDetail() { $('#detail')?.classList.add('hide'); this.g.showcase.close(); }
+
+  // ---------------- 兌換櫃台 ----------------
+  openCounter() {
+    const g = this.g, P = g.P, E = ECON.ticketToTokens, tk = P.tickets || 0;
+    const missing = CHARS.filter((c) => c.tier !== 'HID' && !P.col[colKey(c.id, 'n')]?.n);
+    const rows = SERIES_ORDER.map((sk) => {
+      const list = missing.filter((c) => c.s === sk);
+      if (!list.length) return '';
+      return `<h4>${SERIES[sk].name}</h4>` + list.map((c) => { const pr = ECON.price[c.tier]; return `<div class="pi"><img data-k="${colKey(c.id, 'n')}" alt=""><div class="tx"><div class="nm"><span class="rt ${c.tier}">${c.tier}</span>${c.name}</div><div class="sb">普通版</div></div><button class="buy" data-a="b:${c.id}" ${tk >= pr ? '' : 'disabled'}>${pr} 張</button></div>`; }).join('');
+    }).join('');
+    const sh = this.sheet(`<div class="card"><h2>兌換櫃台<small>PRIZE COUNTER</small></h2>
+      <p>你有 <b class="tkn">${tk}</b> 張兌換券。重複的角色會自動換成兌換券（普通 ${ECON.ticket.N}・稀有 ${ECON.ticket.R}・超稀有 ${ECON.ticket.SR}・傳說 ${ECON.ticket.SSR}・隱藏版 ${ECON.ticket.HID} 張）。</p>
+      <div class="pi"><div class="coin" style="width:52px;height:52px;font-size:20px">S</div><div class="tx"><div class="nm">代幣 ×${E.tokens}</div><div class="sb">可以重複換</div></div><button class="buy" data-a="tok" ${tk >= E.cost ? '' : 'disabled'}>${E.cost} 張</button></div>
+      ${missing.length ? `<p style="margin-top:14px">還沒拿到的角色，可以直接指定換一隻普通版：</p><div class="plist">${rows}</div>` : '<p>所有角色的普通版都收齊了！</p>'}
+      <p style="font-size:12px;color:var(--muted)">異色、夜光、鍍金和隱藏版只能自己開出來。</p>
+      <div class="btns"><button class="btn main" data-a="close">好</button></div></div>`, (a) => {
+      if (a === 'tok') { const v = g.ticketsToTokens(); if (v) this.toast(`換到 ${v} 枚代幣`, 'gold'); this.openCounter(); return true; }
+      if (a.startsWith('b:')) { if (!g.exchange(a.slice(2))) { g.snd.deny(); return true; } return true; }
+    });
+    const imgs = [...sh.querySelectorAll('img[data-k]')];
+    const run = () => { const im = imgs.shift(); if (!im) return; im.src = thumb(im.dataset.k); requestAnimationFrame(run); };
+    requestAnimationFrame(run);
+  }
+  // ---------------- 祕密寶箱 ----------------
+  openKeys() {
+    const g = this.g, k = g.P.keys || 0, full = k >= ODDS.keys;
+    this.sheet(`<div class="card"><h2>祕密寶箱<small>SECRET CHEST</small></h2>
+      <p>開扭蛋、拆盲盒時有機會拿到<b>鑰匙碎片</b>。集滿 ${ODDS.keys} 片可以打開一次祕密寶箱：<b>必定是傳說以上</b>，而且一定是異色或夜光版；有 ${Math.round(ODDS.chest.HID * 100)}% 是隱藏版。</p>
+      <div class="keyrow">${Array.from({ length: ODDS.keys }, (_, i) => `<i class="${i < k ? 'on' : ''}"></i>`).join('')}<b>${k}/${ODDS.keys}</b></div>
+      <div class="btns">${full ? '<button class="btn goldb" data-a="open">打開寶箱</button>' : ''}<button class="btn main" data-a="close">${full ? '等一下' : '好'}</button></div></div>`, (a) => {
+      if (a === 'open') { if (!g.openChest()) g.snd.deny(); return true; }
+    });
+  }
 
   // ---------------- 教學提示 ----------------
   coach(step) {

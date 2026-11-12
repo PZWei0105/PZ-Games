@@ -203,6 +203,66 @@ button{font-family:var(--sans);color:inherit;border:0;background:none;padding:0;
   #detail .dl{left:auto;right:0;width:min(460px,50vw);top:0;align-items:center}
   #detail .drag{width:50%;height:100%}
 }
+/* ---------- v2：黃金一夾、鑰匙、開蛋橫幅、版本、星級 ---------- */
+.big.gold{background:linear-gradient(180deg,#fff6c0,#ffd23a 45%,#e89a00);box-shadow:0 8px 0 #7a4a00,0 0 34px rgba(255,210,60,.85),inset 0 2px 0 rgba(255,255,255,.7);color:#3a1c00;animation:goldpulse 1.1s infinite alternate}
+.big.gold .c{font-size:16px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.55)}
+@keyframes goldpulse{to{box-shadow:0 8px 0 #7a4a00,0 0 52px rgba(255,220,80,1),inset 0 2px 0 rgba(255,255,255,.7)}}
+#bKey svg{width:16px;height:16px;fill:none;stroke:var(--gold);stroke-width:2.2;stroke-linecap:round}
+#bKey{font-family:var(--pop);font-weight:400;letter-spacing:.04em}
+#bKey.full{border-color:rgba(255,201,60,.8);color:#3a1c00;background:linear-gradient(180deg,#ffe07a,#f0a81c);box-shadow:0 0 18px rgba(255,190,60,.7);font-family:var(--sans);font-weight:900}
+#bKey.full svg{stroke:#3a1c00}
+#rv .banner{position:absolute;left:0;right:0;top:calc(14% + var(--sat));text-align:center;pointer-events:none}
+#rv .banner span{display:inline-block;font-size:min(13vw,64px);font-weight:900;letter-spacing:.08em;padding-left:.08em;opacity:0}
+#rv .banner span.go{animation:bigin 2s ease-out forwards}
+#rv .banner .gold{background:linear-gradient(180deg,#fff7d0,#ffc93c 55%,#ff8a1a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #7a3a00) drop-shadow(0 0 24px rgba(255,190,60,.7))}
+#rv .banner .alt{background:linear-gradient(90deg,#ff8be0,#ffd36a,#7ad8ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 20px rgba(255,139,224,.8))}
+#rv .banner .glow{color:#e8fff6;text-shadow:0 0 18px #4dffc8,0 0 46px #2fd8a8}
+#rv .banner .hid{background:linear-gradient(90deg,#fff3c4,#ffc93c,#ff7a3a,#c46bff,#59c1ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 24px rgba(255,120,60,.8))}
+.cert .vtag{font-size:12px;font-weight:900;letter-spacing:.12em;padding:3px 9px;border-radius:8px;color:#05060b;background:var(--vc)}
+.cert .stars{margin-top:4px;font-size:16px;letter-spacing:.12em;color:#ffd36a;text-shadow:0 0 10px rgba(255,200,60,.6)}
+.cert .stars i{font-style:normal;color:rgba(255,255,255,.16);text-shadow:none}
+.cert .stars small{margin-left:8px;font-size:11px;letter-spacing:.04em;color:var(--muted);text-shadow:none}
+.cert .extra.hid{background:rgba(255,122,58,.14);color:#ffb08a;border-color:rgba(255,122,58,.35)}
+.cert .extra.star{background:rgba(255,211,106,.16);color:#ffe7a3}
+.cert .extra:not(.gold):not(.hid):not(.star){background:rgba(255,255,255,.06);color:#cfd4e6;border-color:rgba(255,255,255,.1)}
+.cert.glowv{background:linear-gradient(180deg,rgba(8,30,28,.95),rgba(4,10,12,.97))}
+.cert.glowv h3{color:#e8fff6;text-shadow:0 0 16px #4dffc8}
+.cert.gild h3{background:linear-gradient(90deg,#fff3c4,#ffcf6a,#e8a03a,#fff3c4);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200%;animation:shine 3s linear infinite}
+.cert.flip{animation:cardflip .7s ease-out}
+@keyframes cardflip{0%{transform:perspective(900px) rotateY(180deg) translateY(30px);opacity:0}45%{opacity:1}100%{transform:perspective(900px) rotateY(0) translateY(0)}}
+.slot .st{position:absolute;top:6px;right:7px;font-size:11px;color:#ffd36a;letter-spacing:.02em;text-shadow:0 0 8px rgba(255,200,60,.6)}
+.slot .st i{font-style:normal;color:rgba(255,255,255,.18);text-shadow:none}
+.slot .vp{position:relative;display:flex;gap:3px;justify-content:center;margin-top:3px;min-height:15px}
+.slot .vp i{font-style:normal;font-size:9px;font-weight:900;width:15px;height:15px;line-height:15px;border-radius:5px;text-align:center;background:rgba(255,255,255,.06);color:rgba(255,255,255,.25)}
+.slot .vp i.on{background:var(--v);color:#05060b;box-shadow:0 0 6px var(--v)}
+.slot .vp.sub{font-size:10px;color:var(--muted)}
+.slot.fresh::after{content:'NEW';position:absolute;left:6px;top:28px;font-family:var(--pop);font-size:9px;padding:1px 5px;border-radius:5px;background:var(--pink);color:#fff;box-shadow:0 0 8px var(--pink)}
+#col header .tkchip{color:var(--gold);border-color:rgba(255,201,60,.45)}
+#detail .vchips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+#detail .vchips button{padding:6px 10px;border-radius:10px;font-size:12px;font-weight:900;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted)}
+#detail .vchips button.on{background:var(--v);color:#05060b;border-color:transparent;box-shadow:0 0 12px var(--v)}
+#detail .vchips button.off{opacity:.45}
+.card h4{margin:14px 0 6px;font-size:13px;letter-spacing:.12em;color:var(--muted)}
+.tier{display:flex;gap:12px;align-items:center;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);margin-top:8px}
+.tier .sw{flex:0 0 34px;height:34px;border-radius:50%;box-shadow:inset 0 -4px 8px rgba(0,0,0,.35)}
+.tier .sw.box{border-radius:6px;background:linear-gradient(180deg,#ffd3ea,#e6d0ff 60%,var(--bc,#3aa0ff) 60%)}
+.tier .sw.box.R{--bc:#3aa0ff}.tier .sw.box.SR{--bc:#c07bff}.tier .sw.box.SSR{--bc:#ffc93c}
+.tier .tx{flex:1;min-width:0}
+.tier .nm{font-weight:900;font-size:14px;display:flex;align-items:center}
+.tier .nm em{font-style:normal;margin-left:auto;font-family:var(--pop);font-size:13px;color:var(--muted)}
+.tier .th{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.tier .th img{width:40px;height:40px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,.04)}
+.odds{margin-top:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.odds h4{margin:4px 0 4px}
+.odds ul{margin:0;padding-left:18px;color:#c8cde0;font-size:13px;line-height:1.75}
+.odds p{margin:0;font-size:13px}
+.pi .buy{height:36px;min-width:64px;padding:0 10px;border-radius:12px;font-weight:900;font-size:13px;background:linear-gradient(180deg,#ffe07a,#f0a81c);color:#3a1c00}
+.pi .buy[disabled]{background:rgba(255,255,255,.08);color:var(--dim)}
+.card .tkn{color:var(--gold);font-family:var(--pop);font-weight:400}
+.keyrow{display:flex;align-items:center;gap:8px;margin:14px 0 4px}
+.keyrow i{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.06);border:1px dashed rgba(255,201,60,.35)}
+.keyrow i.on{background:radial-gradient(circle at 35% 30%,#fff6c8,#ffcf4a 45%,#b8760a);border:0;box-shadow:0 0 12px rgba(255,190,60,.7)}
+.keyrow b{margin-left:6px;font-family:var(--pop);font-weight:400;color:var(--gold)}
 /* ---------- 教學提示 ---------- */
 .coach{position:absolute;z-index:12;max-width:230px;padding:10px 14px;border-radius:14px;background:#fff;color:#14141f;font-size:14px;font-weight:700;line-height:1.5;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:auto;animation:cup .3s}
 .coach::after{content:'';position:absolute;width:14px;height:14px;background:#fff;transform:rotate(45deg)}
@@ -252,7 +312,7 @@ button{font-family:var(--sans);color:inherit;border:0;background:none;padding:0;
         <button class="big" id="bCoin"><span class="lb">投幣</span><span class="coin">S</span><span class="c">10</span></button>
         <button class="arrow" id="bNext" aria-label="下一台"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
       </div>
-      <div class="row"><button class="chip" id="bList">本台獎品</button><button class="chip" id="bTip">玩法</button></div>
+      <div class="row"><button class="chip" id="bList">本台說明</button><button class="chip" id="bTip">玩法</button><button class="chip" id="bKey">0/5</button></div>
     </div>
     <div id="aim" class="hide">
       <div id="joy"><span class="ar" style="left:50%;top:6px;transform:translateX(-50%)">後</span><span class="ar" style="left:50%;bottom:6px;transform:translateX(-50%)">前</span><span class="ar" style="left:8px;top:50%;transform:translateY(-50%)">左</span><span class="ar" style="right:8px;top:50%;transform:translateY(-50%)">右</span><div class="k"></div></div>
