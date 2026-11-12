@@ -16,6 +16,7 @@ const rbox = (w, h, d, r, mat) => {
 };
 
 export const FLOOR_Y = 0.92; // 機台內地板離店內地面的高度
+const OFF_C = new THREE.Color('#25252e'), PW_C = new THREE.Color('#ff3060').multiplyScalar(2.6);
 
 export class MachineView {
   constructor(def, index) {
@@ -31,8 +32,9 @@ export class MachineView {
     const chrome = new THREE.MeshStandardMaterial({ color: '#dfe6ef', metalness: 1, roughness: 0.14 });
     const trimCol = new THREE.Color(th.trim);
     const neon = new THREE.MeshBasicMaterial({ color: trimCol.clone().multiplyScalar(1.7) });
-    const neonSoft = new THREE.MeshBasicMaterial({ color: trimCol.clone().multiplyScalar(1.2) });
-    this.neon = neon;
+    this.neon = neon; this.paint = paint; this.trimCol = trimCol.clone();
+    // 夾爪自己一個材質（機台外觀可以單獨換）
+    this.clawMat = new THREE.MeshPhysicalMaterial({ color: '#dfe6ef', metalness: 1, roughness: 0.14, iridescenceIOR: 1.8, iridescenceThicknessMinimum: 180, iridescenceThicknessMaximum: 900 });
     const W = 0.84, D = 0.72, H = 0.96;
     // 柱子
     for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
@@ -95,7 +97,8 @@ export class MachineView {
       this.goal = lbl;
     } else {
       const sy = this.L.shelfY, ez = this.L.edgeZ;
-      const shelf = box(W, sy, ez + D / 2, new THREE.MeshPhysicalMaterial({ color: th.body, metalness: 0.5, roughness: 0.3, clearcoat: 1 }), 0, sy / 2, (-D / 2 + ez) / 2); shelf.receiveShadow = true; g.add(shelf);
+      this.shelfMat = new THREE.MeshPhysicalMaterial({ color: th.body, metalness: 0.5, roughness: 0.3, clearcoat: 1 });
+      const shelf = box(W, sy, ez + D / 2, this.shelfMat, 0, sy / 2, (-D / 2 + ez) / 2); shelf.receiveShadow = true; g.add(shelf);
       const top = new THREE.Mesh(new THREE.PlaneGeometry(W, ez + D / 2), new THREE.MeshStandardMaterial({ map: tex.felt('#1a0a18', th.accent), roughness: 0.95 })); top.rotation.x = -Math.PI / 2; top.position.set(0, sy + 0.001, (-D / 2 + ez) / 2); top.receiveShadow = true; g.add(top);
       g.add(box(W, 0.008, 0.008, neon, 0, sy + 0.002, ez));
       // 邊緣警示條紋
@@ -137,9 +140,10 @@ export class MachineView {
     this.carriage.add(box(0.084, 0.006, 0.074, neon, 0, 0.866, 0));
     this.cable = new THREE.Mesh(new THREE.CylinderGeometry(0.0022, 0.0022, 1, 6), new THREE.MeshStandardMaterial({ color: '#c8ccd4', metalness: 1, roughness: 0.4 }));
     g.add(this.cable);
-    this.buildClaw(chrome);
+    this.buildClaw(this.clawMat);
     // 店內地面的光暈
-    const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.4), new THREE.MeshBasicMaterial({ map: tex.dot(), color: trimCol.clone().multiplyScalar(0.55), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    this.poolMat = new THREE.MeshBasicMaterial({ map: tex.dot(), color: trimCol.clone().multiplyScalar(0.55), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.4), this.poolMat);
     pool.rotation.x = -Math.PI / 2; pool.position.set(0, -FLOOR_Y + 0.002, 0.45); g.add(pool);
     g.traverse((o) => { if (o.isMesh && o.material !== glass && !o.material.transparent) { o.receiveShadow = true; } });
     this.prizes = null;
@@ -192,8 +196,26 @@ export class MachineView {
 
   setStick(x, z) { this.stick.rotation.set(z * 0.35, 0, -x * 0.35); }
 
+  // 機台外觀：機殼配色＋夾爪材質（只改外觀）
+  applySkin(cab, claw) {
+    const th = this.def.theme;
+    this.rainbow = !!cab && cab.trim === 'rainbow';
+    this.paint.color.set(cab && cab.body ? cab.body : th.body);
+    if (this.shelfMat) this.shelfMat.color.copy(this.paint.color);
+    this.setTrim(cab && cab.trim && cab.trim !== 'rainbow' ? cab.trim : th.trim);
+    const c = claw || { color: '#dfe6ef', rough: 0.14 };
+    const M = this.clawMat;
+    M.color.set(c.color); M.roughness = c.rough; M.iridescence = c.iri ? 1 : 0; M.needsUpdate = true;
+  }
+  setTrim(hex) {
+    if (hex) this.trimCol.set(hex);
+    this.neon.color.copy(this.trimCol).multiplyScalar(1.7);
+    this.poolMat.color.copy(this.trimCol).multiplyScalar(0.55);
+  }
+  tickSkin(t) { if (this.rainbow) { this.trimCol.setHSL((t * 0.07 + this.index * 0.13) % 1, 0.95, 0.6); this.setTrim(); } }
+
   setMeter(n, max, power, t) {
-    const lit = new THREE.Color(this.def.theme.trim).multiplyScalar(2.4), off = new THREE.Color('#25252e'), pw = new THREE.Color('#ff3060').multiplyScalar(2.6);
+    const lit = (this._lit || (this._lit = new THREE.Color())).copy(this.trimCol).multiplyScalar(2.4), off = OFF_C, pw = PW_C;
     this.bulbs.forEach((b, i) => {
       if (power) b.material.color.copy(Math.sin(t * 10 + i * 0.7) > 0 ? pw : lit);
       else b.material.color.copy(i < n ? lit : off);

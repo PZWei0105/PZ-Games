@@ -1,7 +1,7 @@
 // Claude 作品版：把存檔同步到玩家自己的私人雲端空間（換裝置也能接著玩）
 import { store } from './store.js';
 
-export const CLOUD_KEYS = ['profile', 'mach.m1', 'mach.m2', 'mach.m3', 'mach.m4'];
+export const CLOUD_KEYS = ['profile', 'mach.m1', 'mach.m2', 'mach.m3', 'mach.m4', 'mach.m5', 'mach.m6', 'mach.m7'];
 const timeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
 export function startCloud(onReady) {
