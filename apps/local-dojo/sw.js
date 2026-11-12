@@ -1,5 +1,5 @@
-/* 本機道場 service worker — version 2026.11.05-1057 */
-const V = 'pzdojo-2026.11.05-1057';
+/* 本機道場 service worker — version 2026.11.12-1320 */
+const V = 'pzdojo-2026.11.12-1320';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(V).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));

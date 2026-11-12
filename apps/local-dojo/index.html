@@ -1269,6 +1269,15 @@ DOJO.badges = [
 
 </script>
 <script>
+/* 本機道場 LOCAL DOJO — 更新紀錄
+   最新的放最前面。App 打開時，用一句提示告訴 PZ 最新這一筆（每筆只出現一次，不另外做大畫面）。
+   d：日期（YYYY-MM-DD，同一天有第二筆就加 -2），t：一句白話，說改了什麼、在哪裡。只修小 bug 就合併成一筆「修正」。 */
+DOJO.changelog = [
+  { d: '2026-11-12', t: '名稱解碼器認得 IQ3、IQ2、Q4_0 了，檔案大小算得更準；顯存計算機的溢出說明也跟速度對得上了。' }
+];
+
+</script>
+<script>
 /* 本機道場 — 互動元件與工具
    每個元件：W.name(el, api)，api = { done, get, set, full, sfx, go, toast, copy } */
 (function () {
@@ -1298,7 +1307,23 @@ DOJO.badges = [
     { k: 'Q3_K_M', b: 3.91, q: '開始變笨', s: 2 },
     { k: 'Q2_K', b: 2.96, q: '明顯變笨', s: 1 }
   ];
-  const Q = (k) => QUANTS.find((x) => x.k === k) || QUANTS[5];
+  /* 計算機清單以外、但下載模型時常看到的格式（名稱解碼器用）。
+     IQ 系列的位元數取自 llama.cpp 的 llama-quantize 說明；Q4_0 依它的區塊結構（每 32 個參數 18 bytes ＝ 4.5 位元） */
+  const QX = [
+    { k: 'Q4_0', b: 4.5, q: '還可以（舊式 4 位元）', s: 3 },
+    { k: 'IQ3_M', b: 3.66, q: '開始變笨', s: 2 },
+    { k: 'IQ3_S', b: 3.44, q: '開始變笨', s: 2 },
+    { k: 'IQ3_XS', b: 3.3, q: '開始變笨', s: 2 },
+    { k: 'IQ3_XXS', b: 3.06, q: '開始變笨', s: 2 },
+    { k: 'IQ2_M', b: 2.7, q: '明顯變笨', s: 1 },
+    { k: 'IQ2_S', b: 2.5, q: '明顯變笨', s: 1 },
+    { k: 'IQ2_XS', b: 2.31, q: '明顯變笨', s: 1 },
+    { k: 'IQ2_XXS', b: 2.06, q: '明顯變笨', s: 1 },
+    { k: 'IQ1_M', b: 1.75, q: '只為了硬塞，品質崩壞', s: 0 },
+    { k: 'IQ1_S', b: 1.56, q: '只為了硬塞，品質崩壞', s: 0 }
+  ];
+  const qinfo = D.qinfo = (k) => QUANTS.find((x) => x.k === k) || QX.find((x) => x.k === k) || null;
+  const Q = (k) => qinfo(k) || QUANTS[5];
   const KVP = D.KVP = [{ t: '很省（新架構）· 每 token 48KB', v: 48 }, { t: '省 · 64KB', v: 64 }, { t: '中 · 96KB', v: 96 }, { t: '一般 · 128KB', v: 128 }, { t: '重（舊架構）· 256KB', v: 256 }, { t: '很重 · 320KB', v: 320 }];
   /* 2026-11 的常見模型（大小為估算；以實際檔案為準） */
   const PRESETS = D.PRESETS = [
@@ -1337,6 +1362,7 @@ DOJO.badges = [
     if (r.fracV >= 1) return { c: 'ok', t: '整個放進顯存', d: '全速，' + (r.real >= 20 ? '比你閱讀還快' : '可以用') };
     if (!r.ramOk) return { c: 'no', t: '跑不動', d: '連系統記憶體都不夠放' };
     if (r.fracV > 0.8) return { c: 'mid', t: '小幅溢出', d: '能跑，但會明顯變慢' };
+    if (r.real >= 10) return { c: 'mid', t: '大量溢出', d: '慢了很多，但還堪用' + (r.moe ? '：MoE 每個字只讀一小部分，溢出的傷害比較小' : '') };
     return { c: 'no', t: '大量溢出', d: '能跑，但慢到難以使用' };
   };
   D.verdictOf = verdictOf;
@@ -2067,12 +2093,15 @@ DOJO.badges = [
   /* ═════════ 工具頁 ═════════ */
   W.vramTool = (el, api) => {
     const pre = api.get('calcIn', null);
-    const st = Object.assign({ p: 'q38', total: 27.8, active: 27.8, moe: false, q: 'Q4_K_M', ctx: 8192, kv: 64, w: 18 }, pre || {});
+    // 從名稱解碼器帶過來的模型沒有「實際檔案大小」，要用公式算，不能沿用預設模型的 18GB
+    const st = Object.assign({ p: 'q38', total: 27.8, active: 27.8, moe: false, q: 'Q4_K_M', ctx: 8192, kv: 64, w: 18 }, pre ? { w: undefined } : {}, pre || {});
     if (pre) api.set('calcIn', null);
+    if (!qinfo(st.q)) st.q = 'Q4_K_M';
+    const QL = QUANTS.some((x) => x.k === st.q) ? QUANTS : QUANTS.concat([qinfo(st.q)]); // 從名稱解碼器帶來的格式（例如 IQ3_XS）也放進選單
     const CT = [2048, 4096, 8192, 16384, 32768, 65536, 131072];
     el.innerHTML = '<div class="fld"><label>選一個模型（2026-11 常見款，或自訂）</label><select class="inp" data-f="p">' + PRESETS.map((p) => '<option value="' + p.id + '">' + esc(p.t) + '</option>').join('') + '<option value="custom">自訂</option></select></div>' +
       '<div class="grid2"><div class="fld"><label>總參數（B）</label><input class="inp" type="number" min="0.5" step="0.1" data-f="total"></div><div class="fld"><label>每次啟用（B）<span class="small">MoE 才不同</span></label><input class="inp" type="number" min="0.5" step="0.1" data-f="active"></div></div>' +
-      '<div class="fld"><label>量化</label><select class="inp" data-f="q">' + QUANTS.map((q) => '<option value="' + q.k + '">' + q.k + '（' + q.b + ' 位元 · ' + q.q + '）</option>').join('') + '</select></div>' +
+      '<div class="fld"><label>量化</label><select class="inp" data-f="q">' + QL.map((q) => '<option value="' + q.k + '">' + q.k + '（' + q.b + ' 位元 · ' + q.q + '）</option>').join('') + '</select></div>' +
       '<div class="grid2"><div class="fld"><label>上下文 <b data-o="ctx"></b></label><input type="range" min="0" max="' + (CT.length - 1) + '" data-f="ctxi"></div><div class="fld"><label>上下文佔用</label><select class="inp" data-f="kv">' + KVP.map((k) => '<option value="' + k.v + '">' + k.t + '</option>').join('') + '</select></div></div>' +
       '<div data-o="out"></div>';
     const f = (k) => $('[data-f=' + k + ']', el);
@@ -2111,7 +2140,7 @@ DOJO.badges = [
     const FAM = [[/qwen/i, 'Qwen', '阿里巴巴出品，中文最強的開源家族之一'], [/gemma/i, 'Gemma', 'Google 出品'], [/llama/i, 'Llama', 'Meta 出品'], [/gpt-oss/i, 'gpt-oss', 'OpenAI 的開源模型'], [/glm/i, 'GLM', '智譜 Z.ai 出品，中文不錯'], [/deepseek/i, 'DeepSeek', '深度求索出品'], [/mistral|devstral|codestral/i, 'Mistral', '法國 Mistral AI 出品'], [/phi/i, 'Phi', '微軟的小模型'], [/z[_-]?image/i, 'Z-Image', '阿里通義的出圖模型（6B）'], [/flux/i, 'FLUX', 'Black Forest Labs 的出圖模型'], [/wan/i, 'Wan', '阿里的影片模型'], [/hunyuan/i, 'Hunyuan', '騰訊混元'], [/sdxl|stable/i, 'Stable Diffusion', 'Stability AI 的出圖模型'], [/bge|embed/i, '嵌入模型', '給 RAG 用的，不能拿來聊天']];
     const TAG = [[/instruct|[-_]it\b|chat/i, '指令版', '已經教會聊天、聽指令，平常用的就是這種'], [/[-_]base\b/i, '基礎版', '還沒教會聊天，通常是拿來微調的底模'], [/coder|code/i, '寫程式特化', '專門練過寫程式'], [/vl\b|vision|omni/i, '看得懂圖', '可以丟圖片給它'], [/thinking|reason|r1\b/i, '思考型', '會先想一輪再回答，比較準但比較慢'], [/distill/i, '蒸餾版', '大模型教小模型做出來的'], [/turbo|lightning|schnell/i, '加速版', '少步數就能出圖，CFG 通常設 1'], [/abliterated|uncensored/i, '移除拒答版', '社群改過，品質與安全都沒有保證'], [/embed/i, '嵌入模型', '把文字變座標用，不能聊天']];
     const QR = /(UD-)?(IQ\d_[A-Z]+|Q\d_K_[SMLX]{1,2}|Q\d_K|Q\d_[01]|MXFP4|NVFP4|FP8|FP16|BF16|F16|INT8|INT4|AWQ|GPTQ|EXL2)/i;
-    const EX = ['Qwen3.8-27B-Instruct-Q4_K_M.gguf', 'Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf', 'gemma-4-26b-a4b-it-Q4_0.gguf', 'gpt-oss-20b-MXFP4.gguf', 'Llama-3.3-70B-Instruct-IQ3_XS.gguf', 'z_image_turbo_bf16.safetensors'];
+    const EX = ['Qwen3.8-27B-Q4_K_M.gguf', 'Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf', 'gemma-4-26b-a4b-it-Q4_0.gguf', 'gpt-oss-20b-MXFP4.gguf', 'Llama-3.3-70B-Instruct-IQ3_XS.gguf', 'z_image_turbo_bf16.safetensors'];
     let txt = api.get('dec', EX[1]);
     el.innerHTML = '<div class="fld"><label>貼上模型檔名或名稱</label><input class="inp" data-f="t" spellcheck="false" autocapitalize="off"></div><div class="opts2">' + EX.map((x) => '<button data-x="' + esc(x) + '">' + esc(x.replace(/\.(gguf|safetensors)$/, '')) + '</button>').join('') + '</div><div data-o="o"></div>';
     $('[data-f=t]', el).value = txt;
@@ -2124,7 +2153,7 @@ DOJO.badges = [
       else if (sz) { total = parseFloat(sz[1]); P.push([sz[1] + 'B', '大小', '總共 ' + sz[1] + 'B（' + fmt(total * 10, 0) + ' 億）個參數']); }
       const ac = !oss && s.match(/[-_]a(\d+(?:\.\d+)?)b/i); if (ac) { active = parseFloat(ac[1]); P.push(['A' + ac[1] + 'B', 'MoE', '混合專家：每個字只啟用 ' + ac[1] + 'B，所以速度像小模型']); }
       TAG.forEach((t) => { const m = s.match(t[0]); if (m && !P.some((p) => p[1] === t[1] || p[0] === t[1])) P.push([m[0].replace(/^[-_]/, ''), t[1], t[2]]); });
-      const qmap = (k) => QUANTS.find((x) => x.k === k) || (k === 'BF16' ? QUANTS[0] : /^Q8/.test(k) ? QUANTS[2] : /^Q6/.test(k) ? QUANTS[3] : /^Q5/.test(k) ? QUANTS[4] : /^IQ4/.test(k) ? QUANTS[8] : /^Q4/.test(k) ? QUANTS[5] : /^I?Q3/.test(k) ? QUANTS[9] : /^I?Q2/.test(k) ? QUANTS[10] : /^INT8/.test(k) ? QUANTS[2] : /^(INT4|AWQ|GPTQ)/.test(k) ? QUANTS[5] : null);
+      const qmap = (k) => qinfo(k) || (k === 'BF16' ? Q('FP16') : /^Q8/.test(k) ? Q('Q8_0') : /^Q6/.test(k) ? Q('Q6_K') : /^Q5/.test(k) ? Q('Q5_K_M') : /^IQ4/.test(k) ? Q('IQ4_XS') : /^Q4/.test(k) ? Q('Q4_K_M') : /^I?Q3/.test(k) ? Q('Q3_K_M') : /^I?Q2/.test(k) ? Q('Q2_K') : /^INT8/.test(k) ? Q('Q8_0') : /^(INT4|AWQ|GPTQ)/.test(k) ? Q('Q4_K_M') : null);
       const q = s.match(QR); if (q) { qk = q[2].toUpperCase().replace(/^F16$/, 'FP16'); const known = qmap(qk); P.push([q[0], '量化', (q[1] ? 'Unsloth 的動態量化（重要的層保留較高精度）；' : '') + (known ? '約 ' + known.b + ' 位元：' + known.q : '一種量化格式')]); qk = known ? known.k : ''; }
       if (/\.gguf$/i.test(s)) P.push(['.gguf', '格式', '給 Ollama、LM Studio、llama.cpp 用']);
       if (/\.safetensors$/i.test(s)) P.push(['.safetensors', '格式', '原始權重格式，ComfyUI、訓練工具用']);
@@ -2159,7 +2188,7 @@ DOJO.badges = [
   const { esc, fmt } = D.util;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const VERSION = '2026.11.05-1057';
+  const VERSION = '2026.11.12-1320';
 
   /* ───────── 圖示 ───────── */
   const sv = (p, f) => '<svg viewBox="0 0 24 24" fill="' + (f ? 'currentColor' : 'none') + '" stroke="' + (f ? 'none' : 'currentColor') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
@@ -2252,7 +2281,9 @@ DOJO.badges = [
       let remote = null; try { remote = d && typeof d.s === 'string' ? JSON.parse(d.s) : null; } catch (e) { remote = null; }
       const lx = S.xp || 0, rx = remote && remote.v === 1 ? (remote.xp || 0) : -1;
       if (rx >= 0 && (rx > lx || (rx === lx && (remote.upd || 0) > (S.upd || 0)))) {
+        const seen = S.seenLog || '';
         S = Object.assign(fresh(), remote); this.last = d.s;
+        if (seen > (S.seenLog || '')) S.seenLog = seen; // 這台裝置已經看過的更新提示，不要再跳一次
         try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { mem = S; }
         $('#sheet').classList.remove('on'); route(); toast('已載入你在其他裝置的進度', '☁');
       } else { if (S.upd) this.push(); if (location.hash === '#me') renderMe(); }
@@ -2324,10 +2355,10 @@ DOJO.badges = [
   document.addEventListener('pointerdown', () => { Sound.ensure(); }, true);
 
   /* ───────── 回饋 ───────── */
-  function toast(msg, x) {
+  function toast(msg, x, ms) {
     const box = $('#toasts'); const t = document.createElement('div'); t.className = 'toast';
     t.innerHTML = (x ? '<span class="x">' + esc(x) + '</span>' : '') + '<span>' + esc(msg) + '</span>';
-    box.appendChild(t); setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 2400);
+    box.appendChild(t); setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, ms || 2400);
   }
   let lastPt = null;
   document.addEventListener('pointerup', (e) => { lastPt = { x: e.clientX, y: e.clientY, t: Date.now() }; }, true);
@@ -2693,8 +2724,9 @@ DOJO.badges = [
     LESSONS.forEach((l) => { if (learned(l.id)) l.quiz.forEach((q, i) => pool.push(l.id + ':' + i)); });
     D.stages.forEach((st) => { if (examPassed(st.id)) st.exam.forEach((q, i) => pool.push('E' + st.id + ':' + i)); });
     if (pool.length < 3) { box.innerHTML = '<div class="empty"><div class="ic">🎲</div><b>題庫還太少</b>先學懂幾課，這裡就會從學過的內容隨機出題。</div>'; return; }
-    box.innerHTML = '<div class="empty"><div class="ic">🎲</div><b>從學過的 ' + pool.length + ' 題裡隨機抽 5 題</b>考考自己還記得多少。答錯的會進錯題本。<br><br><button class="btn" data-a="go">開始抽考</button></div>';
-    $('[data-a=go]', box).onclick = () => runQuiz(box, shuffle(pool).slice(0, 5).map(qget), {
+    const n = Math.min(5, pool.length);
+    box.innerHTML = '<div class="empty"><div class="ic">🎲</div><b>從學過的 ' + pool.length + ' 題裡隨機抽 ' + n + ' 題</b>考考自己還記得多少。答錯的會進錯題本。<br><br><button class="btn" data-a="go">開始抽考</button></div>';
+    $('[data-a=go]', box).onclick = () => runQuiz(box, shuffle(pool).slice(0, n).map(qget), {
       title: '隨機抽考', showFrom: true,
       end: (res) => { const sc = res.filter(Boolean).length; gain(sc * 3); box.innerHTML = '<div class="quiz qres"><div class="score">' + sc + ' / ' + res.length + '</div><p>' + (sc === res.length ? '全對，記得很牢！' : '錯的題目收進錯題本了。') + '</p><div class="row" style="justify-content:center"><button class="btn" data-go="#review-test">再抽一次</button></div></div>'; }
     });
@@ -2794,10 +2826,10 @@ DOJO.badges = [
       sheet('<h3>匯入備份碼</h3><p>貼上以 DOJO1: 開頭的備份碼。<b>這台裝置目前的進度會被取代。</b></p><textarea class="note" id="impc" style="font:12px/1.5 var(--mono);min-height:120px" placeholder="DOJO1:..."></textarea><div class="acts" style="margin-top:12px"><button class="btn" data-s="go">匯入</button><button class="btn ghost" data-x>取消</button></div>');
       $('#sheet [data-s=go]').onclick = (ev) => {
         ev.stopPropagation(); const v = ($('#impc').value || '').trim();
-        try { if (!v.startsWith('DOJO1:')) throw 0; const o = JSON.parse(decodeURIComponent(escape(atob(v.slice(6))))); if (!o || o.v !== 1) throw 0; S = Object.assign(fresh(), o); save(); $('#sheet').classList.remove('on'); toast('匯入成功，歡迎回來'); Sound.play('win'); renderMe(); } catch (err) { toast('備份碼看起來不對，請確認有完整複製'); Sound.play('bad'); }
+        try { if (!v.startsWith('DOJO1:')) throw 0; const o = JSON.parse(decodeURIComponent(escape(atob(v.slice(6))))); if (!o || o.v !== 1) throw 0; const seen = S.seenLog || ''; S = Object.assign(fresh(), o); if (seen > (S.seenLog || '')) S.seenLog = seen; save(); $('#sheet').classList.remove('on'); toast('匯入成功，歡迎回來'); Sound.play('win'); renderMe(); } catch (err) { toast('備份碼看起來不對，請確認有完整複製'); Sound.play('bad'); }
       };
     }
-    if (a.dataset.a === 'reset') sheet('<h3>確定要重新開始？</h3><p>這台裝置上的修為、段位、筆記、成果牆都會清除，而且無法復原。建議先產生備份碼。</p><div class="acts"><button class="btn" data-s="y" style="background:var(--bad);color:#fff">確定清除</button><button class="btn ghost" data-x>取消</button></div>', (s) => { if (s === 'y') { S = fresh(); S.intro = true; save(); toast('已重新開始'); go('#home'); } });
+    if (a.dataset.a === 'reset') sheet('<h3>確定要重新開始？</h3><p>這台裝置上的修為、段位、筆記、成果牆都會清除，而且無法復原。建議先產生備份碼。</p><div class="acts"><button class="btn" data-s="y" style="background:var(--bad);color:#fff">確定清除</button><button class="btn ghost" data-x>取消</button></div>', (s) => { if (s === 'y') { S = fresh(); S.intro = true; S.seenLog = LOG_ID; save(); toast('已重新開始'); go('#home'); } });
   });
 
   /* ───────── 路由 ───────── */
@@ -2837,7 +2869,7 @@ DOJO.badges = [
       return go('#l-' + l.id);
     }
     const x = e.target.closest('[data-exam]');
-    if (x) { const st = D.stages.find((s) => s.id === x.dataset.exam); Sound.play('tap'); if (!stageOpen(st.si) || !examOpen(st)) return sheet('<h3>關主考驗還沒開放</h3><p>這一關四課都學懂（看完卡片＋通過驗收）後才開放。也可以先試試看，不影響進度。</p><div class="acts"><button class="btn ghost" data-s="go">先試試看</button><button class="btn" data-x>好，先回去</button></div>', () => go('#exam-' + st.id)); return go('#exam-' + st.id); }
+    if (x) { const st = D.stages.find((s) => s.id === x.dataset.exam); Sound.play('tap'); if (!stageOpen(st.si) || !examOpen(st)) return sheet('<h3>關主考驗還沒開放</h3><p>這一關四課都學懂（看完卡片＋通過驗收）後才開放。想先挑戰也可以：答錯的題目會收進錯題本，通過的話一樣算晉升。</p><div class="acts"><button class="btn ghost" data-s="go">先試試看</button><button class="btn" data-x>好，先回去</button></div>', () => go('#exam-' + st.id)); return go('#exam-' + st.id); }
   });
 
   /* ───────── 第一次打開 ───────── */
@@ -2856,8 +2888,18 @@ DOJO.badges = [
     if (window.DOJO_WEB && 'serviceWorker' in navigator && ((location.protocol === 'https:' && /github\.io$/.test(host)) || host === 'localhost' || host === '127.0.0.1')) navigator.serviceWorker.register('sw.js').catch(() => {});
   } catch (e) { /* ignore */ }
 
+  /* ───────── 更新提示：打開時用一句話說最新改了什麼（每筆只說一次） ───────── */
+  const LOG = D.changelog || [];
+  const LOG_ID = LOG.length ? LOG[0].d : '';
+  function whatsNew() {
+    if (!LOG_ID || (S.seenLog || '') >= LOG_ID) return;
+    S.seenLog = LOG_ID; save();
+    setTimeout(() => toast('更新：' + LOG[0].t, '新', 7000), 900);
+  }
+
   route();
-  if (!S.intro) setTimeout(() => { if (!S.intro) intro(); }, window.DOJO_WEB ? 350 : 1200);
+  if (!S.intro) { S.seenLog = LOG_ID; setTimeout(() => { if (!S.intro) intro(); }, window.DOJO_WEB ? 350 : 1200); }
+  else whatsNew();
   checkBadges();
   Cloud.init();
 })();

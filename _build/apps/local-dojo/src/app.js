@@ -98,7 +98,9 @@
       let remote = null; try { remote = d && typeof d.s === 'string' ? JSON.parse(d.s) : null; } catch (e) { remote = null; }
       const lx = S.xp || 0, rx = remote && remote.v === 1 ? (remote.xp || 0) : -1;
       if (rx >= 0 && (rx > lx || (rx === lx && (remote.upd || 0) > (S.upd || 0)))) {
+        const seen = S.seenLog || '';
         S = Object.assign(fresh(), remote); this.last = d.s;
+        if (seen > (S.seenLog || '')) S.seenLog = seen; // 這台裝置已經看過的更新提示，不要再跳一次
         try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { mem = S; }
         $('#sheet').classList.remove('on'); route(); toast('已載入你在其他裝置的進度', '☁');
       } else { if (S.upd) this.push(); if (location.hash === '#me') renderMe(); }
@@ -170,10 +172,10 @@
   document.addEventListener('pointerdown', () => { Sound.ensure(); }, true);
 
   /* ───────── 回饋 ───────── */
-  function toast(msg, x) {
+  function toast(msg, x, ms) {
     const box = $('#toasts'); const t = document.createElement('div'); t.className = 'toast';
     t.innerHTML = (x ? '<span class="x">' + esc(x) + '</span>' : '') + '<span>' + esc(msg) + '</span>';
-    box.appendChild(t); setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, 2400);
+    box.appendChild(t); setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, ms || 2400);
   }
   let lastPt = null;
   document.addEventListener('pointerup', (e) => { lastPt = { x: e.clientX, y: e.clientY, t: Date.now() }; }, true);
@@ -539,8 +541,9 @@
     LESSONS.forEach((l) => { if (learned(l.id)) l.quiz.forEach((q, i) => pool.push(l.id + ':' + i)); });
     D.stages.forEach((st) => { if (examPassed(st.id)) st.exam.forEach((q, i) => pool.push('E' + st.id + ':' + i)); });
     if (pool.length < 3) { box.innerHTML = '<div class="empty"><div class="ic">🎲</div><b>題庫還太少</b>先學懂幾課，這裡就會從學過的內容隨機出題。</div>'; return; }
-    box.innerHTML = '<div class="empty"><div class="ic">🎲</div><b>從學過的 ' + pool.length + ' 題裡隨機抽 5 題</b>考考自己還記得多少。答錯的會進錯題本。<br><br><button class="btn" data-a="go">開始抽考</button></div>';
-    $('[data-a=go]', box).onclick = () => runQuiz(box, shuffle(pool).slice(0, 5).map(qget), {
+    const n = Math.min(5, pool.length);
+    box.innerHTML = '<div class="empty"><div class="ic">🎲</div><b>從學過的 ' + pool.length + ' 題裡隨機抽 ' + n + ' 題</b>考考自己還記得多少。答錯的會進錯題本。<br><br><button class="btn" data-a="go">開始抽考</button></div>';
+    $('[data-a=go]', box).onclick = () => runQuiz(box, shuffle(pool).slice(0, n).map(qget), {
       title: '隨機抽考', showFrom: true,
       end: (res) => { const sc = res.filter(Boolean).length; gain(sc * 3); box.innerHTML = '<div class="quiz qres"><div class="score">' + sc + ' / ' + res.length + '</div><p>' + (sc === res.length ? '全對，記得很牢！' : '錯的題目收進錯題本了。') + '</p><div class="row" style="justify-content:center"><button class="btn" data-go="#review-test">再抽一次</button></div></div>'; }
     });
@@ -640,10 +643,10 @@
       sheet('<h3>匯入備份碼</h3><p>貼上以 DOJO1: 開頭的備份碼。<b>這台裝置目前的進度會被取代。</b></p><textarea class="note" id="impc" style="font:12px/1.5 var(--mono);min-height:120px" placeholder="DOJO1:..."></textarea><div class="acts" style="margin-top:12px"><button class="btn" data-s="go">匯入</button><button class="btn ghost" data-x>取消</button></div>');
       $('#sheet [data-s=go]').onclick = (ev) => {
         ev.stopPropagation(); const v = ($('#impc').value || '').trim();
-        try { if (!v.startsWith('DOJO1:')) throw 0; const o = JSON.parse(decodeURIComponent(escape(atob(v.slice(6))))); if (!o || o.v !== 1) throw 0; S = Object.assign(fresh(), o); save(); $('#sheet').classList.remove('on'); toast('匯入成功，歡迎回來'); Sound.play('win'); renderMe(); } catch (err) { toast('備份碼看起來不對，請確認有完整複製'); Sound.play('bad'); }
+        try { if (!v.startsWith('DOJO1:')) throw 0; const o = JSON.parse(decodeURIComponent(escape(atob(v.slice(6))))); if (!o || o.v !== 1) throw 0; const seen = S.seenLog || ''; S = Object.assign(fresh(), o); if (seen > (S.seenLog || '')) S.seenLog = seen; save(); $('#sheet').classList.remove('on'); toast('匯入成功，歡迎回來'); Sound.play('win'); renderMe(); } catch (err) { toast('備份碼看起來不對，請確認有完整複製'); Sound.play('bad'); }
       };
     }
-    if (a.dataset.a === 'reset') sheet('<h3>確定要重新開始？</h3><p>這台裝置上的修為、段位、筆記、成果牆都會清除，而且無法復原。建議先產生備份碼。</p><div class="acts"><button class="btn" data-s="y" style="background:var(--bad);color:#fff">確定清除</button><button class="btn ghost" data-x>取消</button></div>', (s) => { if (s === 'y') { S = fresh(); S.intro = true; save(); toast('已重新開始'); go('#home'); } });
+    if (a.dataset.a === 'reset') sheet('<h3>確定要重新開始？</h3><p>這台裝置上的修為、段位、筆記、成果牆都會清除，而且無法復原。建議先產生備份碼。</p><div class="acts"><button class="btn" data-s="y" style="background:var(--bad);color:#fff">確定清除</button><button class="btn ghost" data-x>取消</button></div>', (s) => { if (s === 'y') { S = fresh(); S.intro = true; S.seenLog = LOG_ID; save(); toast('已重新開始'); go('#home'); } });
   });
 
   /* ───────── 路由 ───────── */
@@ -683,7 +686,7 @@
       return go('#l-' + l.id);
     }
     const x = e.target.closest('[data-exam]');
-    if (x) { const st = D.stages.find((s) => s.id === x.dataset.exam); Sound.play('tap'); if (!stageOpen(st.si) || !examOpen(st)) return sheet('<h3>關主考驗還沒開放</h3><p>這一關四課都學懂（看完卡片＋通過驗收）後才開放。也可以先試試看，不影響進度。</p><div class="acts"><button class="btn ghost" data-s="go">先試試看</button><button class="btn" data-x>好，先回去</button></div>', () => go('#exam-' + st.id)); return go('#exam-' + st.id); }
+    if (x) { const st = D.stages.find((s) => s.id === x.dataset.exam); Sound.play('tap'); if (!stageOpen(st.si) || !examOpen(st)) return sheet('<h3>關主考驗還沒開放</h3><p>這一關四課都學懂（看完卡片＋通過驗收）後才開放。想先挑戰也可以：答錯的題目會收進錯題本，通過的話一樣算晉升。</p><div class="acts"><button class="btn ghost" data-s="go">先試試看</button><button class="btn" data-x>好，先回去</button></div>', () => go('#exam-' + st.id)); return go('#exam-' + st.id); }
   });
 
   /* ───────── 第一次打開 ───────── */
@@ -702,8 +705,18 @@
     if (window.DOJO_WEB && 'serviceWorker' in navigator && ((location.protocol === 'https:' && /github\.io$/.test(host)) || host === 'localhost' || host === '127.0.0.1')) navigator.serviceWorker.register('sw.js').catch(() => {});
   } catch (e) { /* ignore */ }
 
+  /* ───────── 更新提示：打開時用一句話說最新改了什麼（每筆只說一次） ───────── */
+  const LOG = D.changelog || [];
+  const LOG_ID = LOG.length ? LOG[0].d : '';
+  function whatsNew() {
+    if (!LOG_ID || (S.seenLog || '') >= LOG_ID) return;
+    S.seenLog = LOG_ID; save();
+    setTimeout(() => toast('更新：' + LOG[0].t, '新', 7000), 900);
+  }
+
   route();
-  if (!S.intro) setTimeout(() => { if (!S.intro) intro(); }, window.DOJO_WEB ? 350 : 1200);
+  if (!S.intro) { S.seenLog = LOG_ID; setTimeout(() => { if (!S.intro) intro(); }, window.DOJO_WEB ? 350 : 1200); }
+  else whatsNew();
   checkBadges();
   Cloud.init();
 })();

@@ -22,7 +22,7 @@ REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 sys.path.insert(0, os.path.join(REPO, '_build', 'tools'))
 from smoke import DESK, PHONE, serve, short, stop  # noqa: E402  (standard library only)
 
-SKIP_INTRO = "try { if (!localStorage.getItem('pzdojo.v1')) localStorage.setItem('pzdojo.v1', JSON.stringify({ v: 1, intro: true })); } catch (e) {}"
+SKIP_INTRO = "try { if (!localStorage.getItem('pzdojo.v1')) localStorage.setItem('pzdojo.v1', JSON.stringify({ v: 1, intro: true, seenLog: '9999' })); } catch (e) {}"  # 跳過歡迎畫面和更新提示，截圖才不會被蓋住
 LINT = r"""(() => {
   const D = window.DOJO, bad = [];
   if (!D || !D.stages) return ['讀不到課程資料（window.DOJO）'];
@@ -45,6 +45,8 @@ LINT = r"""(() => {
     (s.exam || []).forEach((x, i) => opts('第 ' + s.n + ' 關關主考驗', x, i));
     if (!(s.exam || []).length) bad.push('第 ' + s.n + ' 關沒有關主考驗');
   }
+  const log = D.changelog || [];
+  if (log.length && !(log[0].d && log[0].t)) bad.push('更新紀錄最前面那筆少了日期或說明');
   return bad;
 })()"""
 

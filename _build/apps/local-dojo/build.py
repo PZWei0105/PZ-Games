@@ -29,6 +29,7 @@ def compose(web, version):
         '/*CSS*/': read('style.css'),
         '/*DATA1*/': read('data1.js'),
         '/*DATA2*/': read('data2.js'),
+        '/*LOG*/': read('changelog.js'),
         '/*WIDGETS*/': read('widgets.js'),
         '/*APP*/': read('app.js'),
     }
