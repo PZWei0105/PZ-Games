@@ -27,7 +27,23 @@
     { k: 'Q3_K_M', b: 3.91, q: '開始變笨', s: 2 },
     { k: 'Q2_K', b: 2.96, q: '明顯變笨', s: 1 }
   ];
-  const Q = (k) => QUANTS.find((x) => x.k === k) || QUANTS[5];
+  /* 計算機清單以外、但下載模型時常看到的格式（名稱解碼器用）。
+     IQ 系列的位元數取自 llama.cpp 的 llama-quantize 說明；Q4_0 依它的區塊結構（每 32 個參數 18 bytes ＝ 4.5 位元） */
+  const QX = [
+    { k: 'Q4_0', b: 4.5, q: '還可以（舊式 4 位元）', s: 3 },
+    { k: 'IQ3_M', b: 3.66, q: '開始變笨', s: 2 },
+    { k: 'IQ3_S', b: 3.44, q: '開始變笨', s: 2 },
+    { k: 'IQ3_XS', b: 3.3, q: '開始變笨', s: 2 },
+    { k: 'IQ3_XXS', b: 3.06, q: '開始變笨', s: 2 },
+    { k: 'IQ2_M', b: 2.7, q: '明顯變笨', s: 1 },
+    { k: 'IQ2_S', b: 2.5, q: '明顯變笨', s: 1 },
+    { k: 'IQ2_XS', b: 2.31, q: '明顯變笨', s: 1 },
+    { k: 'IQ2_XXS', b: 2.06, q: '明顯變笨', s: 1 },
+    { k: 'IQ1_M', b: 1.75, q: '只為了硬塞，品質崩壞', s: 0 },
+    { k: 'IQ1_S', b: 1.56, q: '只為了硬塞，品質崩壞', s: 0 }
+  ];
+  const qinfo = D.qinfo = (k) => QUANTS.find((x) => x.k === k) || QX.find((x) => x.k === k) || null;
+  const Q = (k) => qinfo(k) || QUANTS[5];
   const KVP = D.KVP = [{ t: '很省（新架構）· 每 token 48KB', v: 48 }, { t: '省 · 64KB', v: 64 }, { t: '中 · 96KB', v: 96 }, { t: '一般 · 128KB', v: 128 }, { t: '重（舊架構）· 256KB', v: 256 }, { t: '很重 · 320KB', v: 320 }];
   /* 2026-11 的常見模型（大小為估算；以實際檔案為準） */
   const PRESETS = D.PRESETS = [
@@ -66,6 +82,7 @@
     if (r.fracV >= 1) return { c: 'ok', t: '整個放進顯存', d: '全速，' + (r.real >= 20 ? '比你閱讀還快' : '可以用') };
     if (!r.ramOk) return { c: 'no', t: '跑不動', d: '連系統記憶體都不夠放' };
     if (r.fracV > 0.8) return { c: 'mid', t: '小幅溢出', d: '能跑，但會明顯變慢' };
+    if (r.real >= 10) return { c: 'mid', t: '大量溢出', d: '慢了很多，但還堪用' + (r.moe ? '：MoE 每個字只讀一小部分，溢出的傷害比較小' : '') };
     return { c: 'no', t: '大量溢出', d: '能跑，但慢到難以使用' };
   };
   D.verdictOf = verdictOf;
@@ -796,12 +813,15 @@
   /* ═════════ 工具頁 ═════════ */
   W.vramTool = (el, api) => {
     const pre = api.get('calcIn', null);
-    const st = Object.assign({ p: 'q38', total: 27.8, active: 27.8, moe: false, q: 'Q4_K_M', ctx: 8192, kv: 64, w: 18 }, pre || {});
+    // 從名稱解碼器帶過來的模型沒有「實際檔案大小」，要用公式算，不能沿用預設模型的 18GB
+    const st = Object.assign({ p: 'q38', total: 27.8, active: 27.8, moe: false, q: 'Q4_K_M', ctx: 8192, kv: 64, w: 18 }, pre ? { w: undefined } : {}, pre || {});
     if (pre) api.set('calcIn', null);
+    if (!qinfo(st.q)) st.q = 'Q4_K_M';
+    const QL = QUANTS.some((x) => x.k === st.q) ? QUANTS : QUANTS.concat([qinfo(st.q)]); // 從名稱解碼器帶來的格式（例如 IQ3_XS）也放進選單
     const CT = [2048, 4096, 8192, 16384, 32768, 65536, 131072];
     el.innerHTML = '<div class="fld"><label>選一個模型（2026-11 常見款，或自訂）</label><select class="inp" data-f="p">' + PRESETS.map((p) => '<option value="' + p.id + '">' + esc(p.t) + '</option>').join('') + '<option value="custom">自訂</option></select></div>' +
       '<div class="grid2"><div class="fld"><label>總參數（B）</label><input class="inp" type="number" min="0.5" step="0.1" data-f="total"></div><div class="fld"><label>每次啟用（B）<span class="small">MoE 才不同</span></label><input class="inp" type="number" min="0.5" step="0.1" data-f="active"></div></div>' +
-      '<div class="fld"><label>量化</label><select class="inp" data-f="q">' + QUANTS.map((q) => '<option value="' + q.k + '">' + q.k + '（' + q.b + ' 位元 · ' + q.q + '）</option>').join('') + '</select></div>' +
+      '<div class="fld"><label>量化</label><select class="inp" data-f="q">' + QL.map((q) => '<option value="' + q.k + '">' + q.k + '（' + q.b + ' 位元 · ' + q.q + '）</option>').join('') + '</select></div>' +
       '<div class="grid2"><div class="fld"><label>上下文 <b data-o="ctx"></b></label><input type="range" min="0" max="' + (CT.length - 1) + '" data-f="ctxi"></div><div class="fld"><label>上下文佔用</label><select class="inp" data-f="kv">' + KVP.map((k) => '<option value="' + k.v + '">' + k.t + '</option>').join('') + '</select></div></div>' +
       '<div data-o="out"></div>';
     const f = (k) => $('[data-f=' + k + ']', el);
@@ -840,7 +860,7 @@
     const FAM = [[/qwen/i, 'Qwen', '阿里巴巴出品，中文最強的開源家族之一'], [/gemma/i, 'Gemma', 'Google 出品'], [/llama/i, 'Llama', 'Meta 出品'], [/gpt-oss/i, 'gpt-oss', 'OpenAI 的開源模型'], [/glm/i, 'GLM', '智譜 Z.ai 出品，中文不錯'], [/deepseek/i, 'DeepSeek', '深度求索出品'], [/mistral|devstral|codestral/i, 'Mistral', '法國 Mistral AI 出品'], [/phi/i, 'Phi', '微軟的小模型'], [/z[_-]?image/i, 'Z-Image', '阿里通義的出圖模型（6B）'], [/flux/i, 'FLUX', 'Black Forest Labs 的出圖模型'], [/wan/i, 'Wan', '阿里的影片模型'], [/hunyuan/i, 'Hunyuan', '騰訊混元'], [/sdxl|stable/i, 'Stable Diffusion', 'Stability AI 的出圖模型'], [/bge|embed/i, '嵌入模型', '給 RAG 用的，不能拿來聊天']];
     const TAG = [[/instruct|[-_]it\b|chat/i, '指令版', '已經教會聊天、聽指令，平常用的就是這種'], [/[-_]base\b/i, '基礎版', '還沒教會聊天，通常是拿來微調的底模'], [/coder|code/i, '寫程式特化', '專門練過寫程式'], [/vl\b|vision|omni/i, '看得懂圖', '可以丟圖片給它'], [/thinking|reason|r1\b/i, '思考型', '會先想一輪再回答，比較準但比較慢'], [/distill/i, '蒸餾版', '大模型教小模型做出來的'], [/turbo|lightning|schnell/i, '加速版', '少步數就能出圖，CFG 通常設 1'], [/abliterated|uncensored/i, '移除拒答版', '社群改過，品質與安全都沒有保證'], [/embed/i, '嵌入模型', '把文字變座標用，不能聊天']];
     const QR = /(UD-)?(IQ\d_[A-Z]+|Q\d_K_[SMLX]{1,2}|Q\d_K|Q\d_[01]|MXFP4|NVFP4|FP8|FP16|BF16|F16|INT8|INT4|AWQ|GPTQ|EXL2)/i;
-    const EX = ['Qwen3.8-27B-Instruct-Q4_K_M.gguf', 'Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf', 'gemma-4-26b-a4b-it-Q4_0.gguf', 'gpt-oss-20b-MXFP4.gguf', 'Llama-3.3-70B-Instruct-IQ3_XS.gguf', 'z_image_turbo_bf16.safetensors'];
+    const EX = ['Qwen3.8-27B-Q4_K_M.gguf', 'Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf', 'gemma-4-26b-a4b-it-Q4_0.gguf', 'gpt-oss-20b-MXFP4.gguf', 'Llama-3.3-70B-Instruct-IQ3_XS.gguf', 'z_image_turbo_bf16.safetensors'];
     let txt = api.get('dec', EX[1]);
     el.innerHTML = '<div class="fld"><label>貼上模型檔名或名稱</label><input class="inp" data-f="t" spellcheck="false" autocapitalize="off"></div><div class="opts2">' + EX.map((x) => '<button data-x="' + esc(x) + '">' + esc(x.replace(/\.(gguf|safetensors)$/, '')) + '</button>').join('') + '</div><div data-o="o"></div>';
     $('[data-f=t]', el).value = txt;
@@ -853,7 +873,7 @@
       else if (sz) { total = parseFloat(sz[1]); P.push([sz[1] + 'B', '大小', '總共 ' + sz[1] + 'B（' + fmt(total * 10, 0) + ' 億）個參數']); }
       const ac = !oss && s.match(/[-_]a(\d+(?:\.\d+)?)b/i); if (ac) { active = parseFloat(ac[1]); P.push(['A' + ac[1] + 'B', 'MoE', '混合專家：每個字只啟用 ' + ac[1] + 'B，所以速度像小模型']); }
       TAG.forEach((t) => { const m = s.match(t[0]); if (m && !P.some((p) => p[1] === t[1] || p[0] === t[1])) P.push([m[0].replace(/^[-_]/, ''), t[1], t[2]]); });
-      const qmap = (k) => QUANTS.find((x) => x.k === k) || (k === 'BF16' ? QUANTS[0] : /^Q8/.test(k) ? QUANTS[2] : /^Q6/.test(k) ? QUANTS[3] : /^Q5/.test(k) ? QUANTS[4] : /^IQ4/.test(k) ? QUANTS[8] : /^Q4/.test(k) ? QUANTS[5] : /^I?Q3/.test(k) ? QUANTS[9] : /^I?Q2/.test(k) ? QUANTS[10] : /^INT8/.test(k) ? QUANTS[2] : /^(INT4|AWQ|GPTQ)/.test(k) ? QUANTS[5] : null);
+      const qmap = (k) => qinfo(k) || (k === 'BF16' ? Q('FP16') : /^Q8/.test(k) ? Q('Q8_0') : /^Q6/.test(k) ? Q('Q6_K') : /^Q5/.test(k) ? Q('Q5_K_M') : /^IQ4/.test(k) ? Q('IQ4_XS') : /^Q4/.test(k) ? Q('Q4_K_M') : /^I?Q3/.test(k) ? Q('Q3_K_M') : /^I?Q2/.test(k) ? Q('Q2_K') : /^INT8/.test(k) ? Q('Q8_0') : /^(INT4|AWQ|GPTQ)/.test(k) ? Q('Q4_K_M') : null);
       const q = s.match(QR); if (q) { qk = q[2].toUpperCase().replace(/^F16$/, 'FP16'); const known = qmap(qk); P.push([q[0], '量化', (q[1] ? 'Unsloth 的動態量化（重要的層保留較高精度）；' : '') + (known ? '約 ' + known.b + ' 位元：' + known.q : '一種量化格式')]); qk = known ? known.k : ''; }
       if (/\.gguf$/i.test(s)) P.push(['.gguf', '格式', '給 Ollama、LM Studio、llama.cpp 用']);
       if (/\.safetensors$/i.test(s)) P.push(['.safetensors', '格式', '原始權重格式，ComfyUI、訓練工具用']);
