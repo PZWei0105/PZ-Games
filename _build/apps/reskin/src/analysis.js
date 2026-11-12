@@ -119,7 +119,7 @@ R.analysis = (() => {
   const SR = 22050, FPS = 30;
   const cache = new Map();
   const queue = [];
-  let busy = false, worker = null, wfail = false, seq = 0;
+  let busy = false, running = false, worker = null, wfail = false, seq = 0;
   const pending = new Map();
 
   function getWorker() {
@@ -185,20 +185,33 @@ R.analysis = (() => {
   }
   function trim() { while (cache.size > 5) cache.delete(cache.keys().next().value); }
 
+  // Decoding is heavy. With the screen off (lock-screen listening) it would drain the battery, and iOS may stop a page
+  // that works hard in the background, music included. So it waits for the screen, and for an import to finish.
+  const shown = () => new Promise((res) => {
+    const f = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', f); res(); } };
+    document.addEventListener('visibilitychange', f);
+  });
   async function pump() {
     if (busy) return;
     busy = true;
     try {
       while (queue.length) {
-        const id = queue.shift();
+        if (document.hidden) await shown();
+        while (R.lib.importing()) await R.sleep(500);
+        if (!queue.length) break;
+        const id = queue.shift(); inQ.delete(id);
         R.bus.emit('analysis:progress', { left: queue.length + 1 });
+        running = true;
         try { await run(id); } catch (e) { console.warn('analysis', e); try { await R.lib.update(id, { an: -1 }); } catch (e2) { /* ignore */ } }
-        await R.sleep(document.hidden ? 400 : 60);
+        running = false;
+        await R.sleep(60);
       }
     } finally { busy = false; R.bus.emit('analysis:progress', { left: 0 }); }
   }
+  const inQ = new Set();
   function enqueue(id, front) {
-    if (queue.includes(id)) { if (front) { queue.splice(queue.indexOf(id), 1); queue.unshift(id); } return; }
+    if (inQ.has(id)) { if (front) { queue.splice(queue.indexOf(id), 1); queue.unshift(id); } return; }
+    inQ.add(id);
     if (front) queue.unshift(id); else queue.push(id);
     setTimeout(pump, 50);
   }
@@ -211,6 +224,6 @@ R.analysis = (() => {
     if (r) { cache.set(id, r); trim(); }
     return r || null;
   }
-  const left = () => queue.length + (busy ? 1 : 0);
+  const left = () => queue.length + (running ? 1 : 0);
   return { enqueue, resume, get, left, core: analyzeCore };
 })();
