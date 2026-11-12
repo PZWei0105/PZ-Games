@@ -56,9 +56,12 @@ R.db = (() => {
     all: (s) => run(s, 'readonly', (os) => os.getAll()),
     keys: (s) => run(s, 'readonly', (os) => os.getAllKeys()),
     clear: (s) => run(s, 'readwrite', (os) => os.clear()),
+    // the device ran out of room for the app's storage (each browser words it differently)
+    isFull: (e) => !!e && (e.name === 'QuotaExceededError' || e.code === 22 || /quota|disk is full|no space/i.test(String(e.message || ''))),
     async putAudio(id, blob) {
       try { await api.put('audio', blob, id); }
       catch (e) {
+        if (api.isFull(e)) throw e;
         // very old Safari could not keep Blobs in IndexedDB: keep the bytes instead
         const buf = await blob.arrayBuffer();
         await api.put('audio', { buf, type: blob.type }, id);

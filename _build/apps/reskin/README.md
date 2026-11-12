@@ -10,7 +10,7 @@ App 裡稱呼使用者一律用「痞子葳」。
 
 ```bash
 python3 _build/apps/reskin/build.py --claude-out /tmp/reskin-claude   # 網頁版輸出到 apps/reskin/，Claude 版另外輸出
-python3 _build/apps/reskin/check.py --claude /tmp/reskin-claude       # 全流程檢查，手機＋電腦，約 3 分鐘，要看到「全部 OK」
+python3 _build/apps/reskin/check.py --claude /tmp/reskin-claude       # 全流程檢查（資料夾匯入、手機、電腦），約 4 分鐘，要看到「全部 OK」
 python3 _build/apps/reskin/build.py --icons                            # 只有改圖示才需要（要 playwright、pillow）
 ```
 
@@ -23,6 +23,7 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 
 - **歌一律用 `<audio>` 播，不能接進 Web Audio**（`createMediaElementSource`）。iPhone 鎖屏後 Web Audio 會被暫停，接進去的歌就跟著沒聲音。
   所以畫面上的頻譜、波形、節拍都是匯入時先分析好的（`analysis.js`，在 Worker 裡跑：22050 Hz 解碼、每秒 30 格、32 個頻帶、48 點波形、起音、BPM），播放時照時間查表（`viz.js`）。還沒分析完的歌，畫面先用合成的律動（`v.synthetic`）。
+- **螢幕關著（鎖屏聽歌）和匯入中都不分析節奏**，等畫面打開、匯入結束才接著做。解碼很吃電，iPhone 也可能把在背景拚命做事的頁面停掉，連音樂一起停。不要拿掉這個等待。
 - 介面音效（`sfx.js`）才用 Web Audio，跟歌分開；iOS 從背景回來會重建 AudioContext。
 - 鎖屏連播（`player.js`）有三種方式，設定頁「鎖屏連播方式」可以切：
   - 單軌換帶 `single`：一首播完，同一個 `<audio>` 換下一首。
@@ -33,6 +34,22 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 - Media Session 只註冊 play、pause、previoustrack、nexttrack、seekto、stop。**不要加 seekbackward／seekforward**：iPhone 鎖屏會把上一首／下一首換成快退／快轉。
 - iPhone 不能用程式調音量，所以 iOS 不顯示音量條。
 - 雲端沙盒測不了真的 iPhone 鎖屏。check.py 用「假裝螢幕關著」模擬；真機的狀況要看痞子葳回報和 `diag`。
+
+## 匯入
+
+- 三個入口：空歌庫卡片的「選擇音樂檔」「整個資料夾」、歌庫的「匯入」（選單二選一）、電腦上直接拖檔案或資料夾進視窗。
+- 「整個資料夾」用 `<input webkitdirectory>`：iPhone 要 iOS 18.4 以上、Android 的 Chrome 要 132 以上、電腦都可以。不支援的裝置不顯示這個按鈕（`R.canFolder`，判斷寫在 `core.js`；iOS 26 的 Safari 在 user agent 裡把系統版本寫成 18_6，照樣算支援）。
+  開檔案選擇器一定要在點擊的當下呼叫（iPhone 的規定），所以選單用 `now` 在點的那一下開，不要改成等選單關掉再開。
+- 匯入一首一首做（`lib.importFiles`）：
+  - 略過 `._` 開頭的檔、`.DS_Store`、隱藏資料夾、`__MACOSX`、不是音樂的檔；資料夾裡的影片（`video/*`）也略過。
+  - 這台裝置播不了的格式（WMA、APE、DSF……，以及 `canPlayType` 說不行的）不放進來，最後的提示會說幾個、什麼格式。
+  - 已經在歌庫的歌（看檔案內容的指紋，不看檔名）直接跳過，所以同一個資料夾可以放心重複匯入，只會補上新的。
+  - 有資料夾路徑時照資料夾順序（數字照大小：2 在 10 前面）；同一個資料夾的檔名全都以曲序開頭（`01 `、`1-03 `）時，標題去掉曲序。
+  - 歌裡沒有封面時，用同一個資料夾（或上一層，給 CD1／CD2 用）的 `cover.jpg`、`folder.jpg`、`AlbumArt_…_Large.jpg`；資料夾裡只有一張圖也算。
+  - 超過 4 首會出現「停止匯入」，30 首以上提醒畫面保持開著，匯入中會申請畫面不要自動關（Wake Lock）。
+  - 空間不夠（`R.db.isFull`）就停下來跳對話框，剛寫一半的那首會刪乾淨，不留殘檔。
+  - 匯入資料夾後的提示有「存成歌單」：用資料夾名稱建歌單（已經有同名歌單就把缺的補進去），已經在歌庫的歌也算。
+- 歌庫、歌單、播放佇列都是先畫 150 首，捲到底再一次補 250 首（`library.js` 的 `rowsHTML`、`watchMore`），上千首也開得快。
 
 ## 資料
 
@@ -85,7 +102,7 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 | `src/sw.js` | service worker：頁面網路優先，離線用存好的那份 |
 | `src/fonts/` | 內嵌字型（見下面） |
 | `build.py` | 組建 |
-| `check.py` | 全流程檢查：自己產生測試音檔（含 Big5 標籤、壞檔），跑手機和電腦，最後測離線 |
+| `check.py` | 全流程檢查：自己產生測試音檔（含 Big5 標籤、壞檔）和測試資料夾，先跑資料夾匯入，再跑手機和電腦，最後測離線 |
 
 ## 字型
 

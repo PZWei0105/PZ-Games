@@ -124,6 +124,9 @@ body.party .skin-glass .gl-card { background: none; border-color: transparent; b
 .btn.dng { background: rgba(255,70,70,.14); color: #ff7b7b; border: 1px solid rgba(255,90,90,.3); }
 .btn.wide { width: 100%; }
 .btn-row { display: grid; gap: 10px; }
+.more-rows { height: 1px; }
+.btn-pair { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
+.btn-pair .btn { padding: 0 10px; white-space: nowrap; }
 
 /* ---------- busy (import progress) ---------- */
 #busy { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(0,0,0,.55); }
@@ -133,6 +136,8 @@ body.party .skin-glass .gl-card { background: none; border-color: transparent; b
 .busy-box span { font-size: 13px; color: rgba(255,255,255,.65); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .busy-bar { width: 100%; height: 6px; border-radius: 6px; background: rgba(255,255,255,.1); overflow: hidden; margin-top: 6px; }
 .busy-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 6px; transition: width .3s; }
+#busyNote { font-size: 12px; line-height: 1.5; color: rgba(255,255,255,.5); }
+#busyStop { margin-top: 6px; color: #fff; }
 
 /* ---------- drop zone ---------- */
 #drop { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; background: rgba(0,0,0,.6); pointer-events: none; }
@@ -231,6 +236,7 @@ body.party .skin-glass .gl-card { background: none; border-color: transparent; b
 .md-s { padding: 0 12px 10px; font-size: 13px; color: rgba(255,255,255,.6); line-height: 1.6; }
 .md-i { width: 100%; display: flex; align-items: center; gap: 12px; padding: 13px 12px; border-radius: 14px; font-size: 15px; text-align: left; }
 .md-i svg { font-size: 20px; opacity: .85; }
+.md-i small { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 500; line-height: 1.4; color: rgba(255,255,255,.5); }
 .md-i:active { background: rgba(255,255,255,.08); }
 .md-i.dng { color: #ff7b7b; }
 .md-i.on { color: var(--accent); }
@@ -934,8 +940,8 @@ body.party .skin-glass .gl-card { background: none; border-color: transparent; b
   </div>
   <section id="wardrobe" hidden aria-label="衣櫃"></section>
   <div id="modal" hidden></div>
-  <div id="busy" hidden><div class="busy-box"><div class="busy-ring"><i></i></div><b id="busyTitle"></b><span id="busyText"></span><div class="busy-bar"><i id="busyBar"></i></div></div></div>
-  <div id="drop" hidden><div><b>放開就匯入</b><span>MP3、M4A、FLAC、WAV</span></div></div>
+  <div id="busy" hidden><div class="busy-box"><div class="busy-ring"><i></i></div><b id="busyTitle"></b><span id="busyText"></span><div class="busy-bar"><i id="busyBar"></i></div><small id="busyNote" hidden></small><button type="button" id="busyStop" class="chipb" hidden>停止匯入</button></div></div>
+  <div id="drop" hidden><div><b>放開就匯入</b><span>音樂檔或整個資料夾都可以</span></div></div>
   <div id="toasts" aria-live="polite"></div>
   <div id="splash" aria-hidden="true"><div class="sp-logo"><i></i><b>耳目一新</b><small>RESKIN</small></div></div>
   <input type="file" id="fileIn" hidden multiple accept="audio/*,.mp3,.m4a,.aac,.flac,.wav,.aif,.aiff,.ogg,.oga,.opus,.webm,.caf">
@@ -948,7 +954,7 @@ body.party .skin-glass .gl-card { background: none; border-color: transparent; b
 'use strict';
 /* ---- core.js ---- */
 /* ===================== 耳目一新 RESKIN — core ===================== */
-const VERSION = '2026.11.13-0334';
+const VERSION = '2026.11.13-0411';
 const R = { VERSION };
 window.RESKIN = R;
 
@@ -1019,6 +1025,16 @@ R.isTouch = matchMedia('(pointer: coarse)').matches;
 R.standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 R.embedded = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 R.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// picking a whole folder (<input webkitdirectory>): iPhone from iOS 18.4, Chrome on Android from 132, every computer browser.
+// Older systems open the normal file picker instead, so the button is only offered where it really picks folders.
+// (Safari on iOS 26 reports its OS as 18_6 in the user agent; that still reads as supported.)
+R.canFolder = (() => {
+  if (!('webkitdirectory' in document.createElement('input'))) return false;
+  const v = (re) => { const m = re.exec(UA); return m ? +m[1] + (+m[2] || 0) / 100 : 0; };
+  if (/iP(hone|ad|od)/.test(UA)) return v(/OS (\d+)_(\d+)/) >= 18.04;
+  if (/Android/.test(UA)) return !/Firefox|SamsungBrowser/.test(UA) && v(/Chrome\/(\d+)()/) >= 132;
+  return true;
+})();
 R.CLAUDE = !!window.RESKIN_NO_SW; // the copy published on Claude (no service worker, storage may not last)
 R.WEB_URL = 'https://pzwei0105.github.io/PZ-Games/apps/reskin/';
 
@@ -1214,9 +1230,12 @@ R.db = (() => {
     all: (s) => run(s, 'readonly', (os) => os.getAll()),
     keys: (s) => run(s, 'readonly', (os) => os.getAllKeys()),
     clear: (s) => run(s, 'readwrite', (os) => os.clear()),
+    // the device ran out of room for the app's storage (each browser words it differently)
+    isFull: (e) => !!e && (e.name === 'QuotaExceededError' || e.code === 22 || /quota|disk is full|no space/i.test(String(e.message || ''))),
     async putAudio(id, blob) {
       try { await api.put('audio', blob, id); }
       catch (e) {
+        if (api.isFull(e)) throw e;
         // very old Safari could not keep Blobs in IndexedDB: keep the bytes instead
         const buf = await blob.arrayBuffer();
         await api.put('audio', { buf, type: blob.type }, id);
@@ -1746,50 +1765,140 @@ R.lib = (() => {
   }
 
   async function addOne(f, added, extra) {
+    extra = extra || {};
     const key = await fingerprint(f);
     if (byKey.has(key) && tracks.has(byKey.get(key))) return { dup: true, id: byKey.get(key) };
     const meta = await R.meta.read(f);
+    if (extra.trackNo) {
+      // "02 夜行.wav" in a folder where every song starts with its number: the number is the order, not the title
+      const base = f.name.replace(/\.[^.]+$/, '');
+      const fn = R.meta.fromName(f.name), fn2 = R.meta.fromName(base.replace(TRACK_NO, '') + f.name.slice(base.length));
+      if (meta.title === fn.title && fn2.title !== '未命名') {
+        meta.title = fn2.title;
+        if (fn.artist && meta.artist === fn.artist) meta.artist = fn2.artist || '';
+      }
+    }
     const id = R.uid();
-    const type = (extra && extra.type) || mimeOf(f);
+    const type = extra.type || mimeOf(f);
     const data = new Blob([await f.arrayBuffer()], { type });
     await R.db.putAudio(id, data);
-    let cover = 0, colors = null;
-    const pic = (extra && extra.picture) || meta.picture;
-    if (pic && pic.data && pic.data.size !== 0 && (pic.data.length || pic.data.size) > 64) {
-      try {
-        const c = await R.art.processCover(pic.data instanceof Blob ? pic.data : new Blob([pic.data], { type: pic.mime || 'image/jpeg' }));
-        await R.db.put('covers', c.full, id); await R.db.put('covers', c.thumb, id + ':t');
-        cover = 1; colors = c.colors;
-      } catch (e) { console.warn('cover', e); }
+    try {
+      let cover = 0, colors = null, c = null;
+      const pic = extra.picture || meta.picture;
+      if (pic && pic.data && pic.data.size !== 0 && (pic.data.length || pic.data.size) > 64) {
+        try { c = await R.art.processCover(pic.data instanceof Blob ? pic.data : new Blob([pic.data], { type: pic.mime || 'image/jpeg' })); } catch (e) { console.warn('cover', e); }
+      }
+      if (!c && extra.folderArt) c = await extra.folderArt(); // no picture inside the song: the album picture next to it
+      if (c) {
+        try { await R.db.put('covers', c.full, id); await R.db.put('covers', c.thumb, id + ':t'); cover = 1; colors = c.colors; }
+        catch (e) { if (R.db.isFull(e)) throw e; console.warn('cover', e); }
+      }
+      const t = {
+        id, key, title: meta.title, artist: meta.artist || '', album: meta.album || '', year: meta.year || '', genre: meta.genre || '',
+        duration: meta.duration || 0, size: f.size, type, name: f.name || '', added, cover, colors,
+        lyrics: meta.lyrics ? String(meta.lyrics).slice(0, 20000) : '', bpm: 0, energy: 0, an: 0, plays: 0,
+      };
+      if (extra.patch) Object.assign(t, extra.patch);
+      if (!playable(type)) t.warn = 1;
+      await R.db.put('tracks', t);
+      tracks.set(id, t); byKey.set(key, id);
+      return { id, t };
+    } catch (e) {
+      // never leave the song's bytes behind without the song (they would only eat space)
+      await Promise.all([R.db.del('audio', id), R.db.del('covers', id), R.db.del('covers', id + ':t')]).catch(() => {});
+      throw e;
     }
-    const t = {
-      id, key, title: meta.title, artist: meta.artist || '', album: meta.album || '', year: meta.year || '', genre: meta.genre || '',
-      duration: meta.duration || 0, size: f.size, type, name: f.name || '', added, cover, colors,
-      lyrics: meta.lyrics ? String(meta.lyrics).slice(0, 20000) : '', bpm: 0, energy: 0, an: 0, plays: 0,
-    };
-    if (extra && extra.patch) Object.assign(t, extra.patch);
-    if (!playable(type)) t.warn = 1;
-    await R.db.put('tracks', t);
-    tracks.set(id, t); byKey.set(key, id);
-    return { id, t };
   }
 
-  async function importFiles(files, onProgress) {
-    const list = Array.from(files || []).filter(isAudio);
-    const res = { added: [], dup: 0, failed: [], warn: 0, skipped: Array.from(files || []).length - list.length };
-    const t0 = Date.now() + list.length;
-    for (let k = 0; k < list.length; k++) {
-      const f = list[k];
-      if (onProgress) onProgress({ i: k, n: list.length, name: f.name });
-      try {
-        const r = await addOne(f, t0 - k);
-        if (r.dup) { res.dup++; continue; }
-        res.added.push(r.id);
-        if (r.t.warn) res.warn++;
-        R.analysis.enqueue(r.id);
-        if (k % 3 === 2) bus.emit('library');
-      } catch (e) { console.error('import failed', f.name, e); res.failed.push(f.name); }
+  /* ---------- import ---------- */
+  // a picked folder carries webkitRelativePath ("Album/CD1/01.mp3"); dropped folders come as { f, path }
+  const junk = (p) => p.split('/').some((s) => s[0] === '.' || s === '__MACOSX'); // macOS "._" twins, .DS_Store, hidden folders, zip leftovers
+  const extOf = (n) => (String(n || '').split('.').pop() || '').toUpperCase();
+  const TRACK_NO = /^(\d{1,2}-)?\d{1,3}[\s._-]+(?=\S)/; // "02 ", "1-03 ", "07. "
+  const OTHER = /\.(wma|ape|dsf|dff|wv|mka|tta|ac3|dts|mpc|ra|rm|amr|mid|midi)$/i; // music formats browsers cannot play at all
+  const dirOf = (p) => (p.lastIndexOf('/') > 0 ? p.slice(0, p.lastIndexOf('/')) : '');
+
+  // album pictures kept next to the songs (cover.jpg, folder.jpg, AlbumArt_…_Large.jpg …), for songs without a picture inside.
+  // Looks in the song's folder, then one level up (Album/CD1 and Album/CD2 share Album/cover.jpg).
+  function folderArt(items) {
+    const IMG = /\.(jpe?g|png|webp)$/i;
+    const rank = (name) => {
+      const b = name.replace(/\.[^.]+$/, '').toLowerCase();
+      if (/^(cover|folder|front)$/.test(b)) return 0;
+      if (/^(album|albumart|artwork|art)$/.test(b) || /^albumart.*large$/.test(b)) return 1;
+      if (/cover|front|folder/.test(b)) return 2;
+      if (/^albumart.*small$/.test(b)) return 4;
+      return 3;
+    };
+    const by = new Map();
+    for (const x of items) {
+      if (!IMG.test(x.f.name) || x.f.size < 1024 || x.f.size > 25e6) continue;
+      const d = dirOf(x.path); if (!d) continue;
+      if (!by.has(d)) by.set(d, []);
+      by.get(d).push(x.f);
     }
+    const best = new Map();
+    for (const [d, fs] of by) {
+      const r = fs.map((f) => [rank(f.name), f]).sort((a, b) => a[0] - b[0]);
+      if (r[0][0] !== 3 || fs.length === 1) best.set(d, r[0][1]); // an unnamed picture only counts when it is the only one
+    }
+    const made = new Map(); // a few folders at a time: songs arrive folder by folder
+    return (path) => {
+      for (let d = dirOf(path), up = 0; d && up < 2; d = dirOf(d), up++) {
+        if (!best.has(d)) continue;
+        return () => {
+          if (!made.has(d)) {
+            made.set(d, R.art.processCover(best.get(d)).catch(() => null));
+            while (made.size > 6) made.delete(made.keys().next().value);
+          }
+          return made.get(d);
+        };
+      }
+      return null;
+    };
+  }
+
+  let importing = false;
+  // opts.signal.stop = true stops before the next song; running out of storage stops too (res.full = songs left)
+  async function importFiles(files, onProgress, opts) {
+    opts = opts || {};
+    const items = Array.from(files || []).filter(Boolean).map((x) => (x.f ? x : { f: x, path: x.webkitRelativePath || x.name || '' }));
+    const vis = items.filter((x) => !junk(x.path || x.f.name || ''));
+    // inside a folder, video files (music videos, clips) are not songs even when they end in .mp4/.webm
+    const audio = vis.filter((x) => (isAudio(x.f) || OTHER.test(x.f.name || '')) && !(x.path.includes('/') && /^video\//.test(x.f.type || '')));
+    const cantPlay = (f) => OTHER.test(f.name || '') || !playable(mimeOf(f)); // formats this device cannot play: not worth the space
+    const cant = audio.filter((x) => cantPlay(x.f));
+    const list = audio.filter((x) => !cantPlay(x.f));
+    if (list.some((x) => x.path.includes('/'))) list.sort((a, b) => coll.compare(a.path, b.path)); // folder order: 01, 02 … 10
+    const res = { added: [], ids: [], dup: 0, failed: [], warn: 0, total: list.length, cant: cant.length, cantExt: Array.from(new Set(cant.map((x) => extOf(x.f.name)))), stopped: 0, full: 0 };
+    if (!list.length) return res;
+    const art = folderArt(vis);
+    // folders whose songs are all named "01 …", "02 …": those numbers come off the titles
+    const names = new Map();
+    for (const x of list) { const d = dirOf(x.path); if (d) { if (!names.has(d)) names.set(d, []); names.get(d).push(x.f.name); } }
+    const numbered = new Set(Array.from(names).filter(([, ns]) => ns.length >= 2 && ns.every((n) => /^(\d{1,2}-)?\d{1,3}[\s._-]+\S/.test(n.replace(/\.[^.]+$/, '')))).map(([d]) => d));
+    const t0 = Date.now() + list.length;
+    let shown = 0;
+    importing = true;
+    try {
+      for (let k = 0; k < list.length; k++) {
+        if (opts.signal && opts.signal.stop) { res.stopped = list.length - k; break; }
+        const { f, path } = list[k];
+        if (onProgress) onProgress({ i: k, n: list.length, name: f.name });
+        try {
+          const r = await addOne(f, t0 - k, { folderArt: art(path), trackNo: numbered.has(dirOf(path)) });
+          res.ids.push(r.id);
+          if (r.dup) { res.dup++; continue; }
+          res.added.push(r.id);
+          if (r.t.warn) res.warn++;
+          R.analysis.enqueue(r.id);
+          if (Date.now() - shown > 800) { shown = Date.now(); bus.emit('library'); }
+        } catch (e) {
+          if (R.db.isFull(e)) { res.full = list.length - k; break; }
+          console.error('import failed', f.name, e); res.failed.push(f.name);
+        }
+      }
+    } finally { importing = false; }
     if (res.added.length) { R.db.persist(); bus.emit('library'); }
     return res;
   }
@@ -1847,7 +1956,7 @@ R.lib = (() => {
     bus.emit('library'); bus.emit('playlists');
   }
 
-  return { load, get, count, list, update, importFiles, addDemo, remove, pl, isAudio, wipe, all: () => Array.from(tracks.values()) };
+  return { load, get, count, list, update, importFiles, addDemo, remove, pl, isAudio, wipe, importing: () => importing, all: () => Array.from(tracks.values()) };
 })();
 
 /* ---- analysis.js ---- */
@@ -1972,7 +2081,7 @@ R.analysis = (() => {
   const SR = 22050, FPS = 30;
   const cache = new Map();
   const queue = [];
-  let busy = false, worker = null, wfail = false, seq = 0;
+  let busy = false, running = false, worker = null, wfail = false, seq = 0;
   const pending = new Map();
 
   function getWorker() {
@@ -2038,20 +2147,33 @@ R.analysis = (() => {
   }
   function trim() { while (cache.size > 5) cache.delete(cache.keys().next().value); }
 
+  // Decoding is heavy. With the screen off (lock-screen listening) it would drain the battery, and iOS may stop a page
+  // that works hard in the background, music included. So it waits for the screen, and for an import to finish.
+  const shown = () => new Promise((res) => {
+    const f = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', f); res(); } };
+    document.addEventListener('visibilitychange', f);
+  });
   async function pump() {
     if (busy) return;
     busy = true;
     try {
       while (queue.length) {
-        const id = queue.shift();
+        if (document.hidden) await shown();
+        while (R.lib.importing()) await R.sleep(500);
+        if (!queue.length) break;
+        const id = queue.shift(); inQ.delete(id);
         R.bus.emit('analysis:progress', { left: queue.length + 1 });
+        running = true;
         try { await run(id); } catch (e) { console.warn('analysis', e); try { await R.lib.update(id, { an: -1 }); } catch (e2) { /* ignore */ } }
-        await R.sleep(document.hidden ? 400 : 60);
+        running = false;
+        await R.sleep(60);
       }
     } finally { busy = false; R.bus.emit('analysis:progress', { left: 0 }); }
   }
+  const inQ = new Set();
   function enqueue(id, front) {
-    if (queue.includes(id)) { if (front) { queue.splice(queue.indexOf(id), 1); queue.unshift(id); } return; }
+    if (inQ.has(id)) { if (front) { queue.splice(queue.indexOf(id), 1); queue.unshift(id); } return; }
+    inQ.add(id);
     if (front) queue.unshift(id); else queue.push(id);
     setTimeout(pump, 50);
   }
@@ -2064,7 +2186,7 @@ R.analysis = (() => {
     if (r) { cache.set(id, r); trim(); }
     return r || null;
   }
-  const left = () => queue.length + (busy ? 1 : 0);
+  const left = () => queue.length + (running ? 1 : 0);
   return { enqueue, resume, get, left, core: analyzeCore };
 })();
 
@@ -4771,8 +4893,10 @@ R.skins.def({
   const sheet = $('#sheet'), body = $('#sheetBody'), panel = sheet.querySelector('.sheet-panel');
   let onClose = null, kind = null;
 
+  let hideT = 0;
   R.ui.openSheet = (html, opts) => {
     opts = opts || {};
+    clearTimeout(hideT); // reopened while the last one was still sliding away
     if (onClose) { const f = onClose; onClose = null; try { f(); } catch (e) { console.error(e); } }
     kind = opts.kind || null;
     body.innerHTML = html;
@@ -4791,7 +4915,8 @@ R.skins.def({
     panel.style.transform = '';
     if (!silent) R.sfx.play('close');
     const f = onClose; onClose = null; kind = null;
-    setTimeout(() => { if (!sheet.classList.contains('on')) { sheet.hidden = true; body.innerHTML = ''; } }, 420);
+    clearTimeout(hideT);
+    hideT = setTimeout(() => { if (!sheet.classList.contains('on')) { sheet.hidden = true; body.innerHTML = ''; } }, 420);
     if (f) { try { f(); } catch (e) { console.error(e); } }
   };
   R.ui.sheetKind = () => (sheet.hidden || !sheet.classList.contains('on') ? null : kind);
@@ -4833,11 +4958,12 @@ R.skins.def({
   }
   R.ui.menu = (items, opts) => {
     opts = opts || {};
-    const html = `<div class="md" role="menu">${opts.title ? `<div class="md-t">${esc(opts.title)}</div>` : ''}${opts.sub ? `<div class="md-s">${esc(opts.sub)}</div>` : ''}${items.map((it, i) => `<button type="button" class="md-i${it.danger ? ' dng' : ''}${it.on ? ' on' : ''}" data-i="${i}">${it.icon || ''}<span>${esc(it.label)}</span></button>`).join('')}<button type="button" class="md-i" data-i="-1" style="justify-content:center;color:rgba(255,255,255,.6)">取消</button></div>`;
+    const html = `<div class="md" role="menu">${opts.title ? `<div class="md-t">${esc(opts.title)}</div>` : ''}${opts.sub ? `<div class="md-s">${esc(opts.sub)}</div>` : ''}${items.map((it, i) => `<button type="button" class="md-i${it.danger ? ' dng' : ''}${it.on ? ' on' : ''}" data-i="${i}">${it.icon || ''}<span>${esc(it.label)}${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</span></button>`).join('')}<button type="button" class="md-i" data-i="-1" style="justify-content:center;color:rgba(255,255,255,.6)">取消</button></div>`;
     R.sfx.play('tap');
     return showModal(html, (e, done) => {
       const b = e.target.closest('[data-i]');
-      if (b) { const i = +b.dataset.i; R.sfx.play('tap'); done(i < 0 ? null : items[i].key); }
+      // it.now runs inside the tap itself: opening a file picker only works straight from a tap on iPhone
+      if (b) { const i = +b.dataset.i; R.sfx.play('tap'); if (i >= 0 && items[i].now) items[i].now(); done(i < 0 ? null : items[i].key); }
       else if (e.target === modal) done(null);
     });
   };
@@ -4866,13 +4992,19 @@ R.skins.def({
   R.ui.modalOpen = () => !modal.hidden;
 
   const busy = $('#busy');
-  R.ui.busy = (title, text, frac) => {
-    if (title == null) { busy.hidden = true; return; }
+  // opts.stop: show a stop button that calls it; opts.note: a small line under the progress bar
+  R.ui.busy = (title, text, frac, opts) => {
+    const stop = $('#busyStop'), note = $('#busyNote');
+    if (title == null) { busy.hidden = true; stop.hidden = true; stop.onclick = null; note.hidden = true; return; }
+    opts = opts || {};
     busy.hidden = false;
     $('#busyTitle').textContent = title;
     $('#busyText').textContent = text || '';
     $('#busyBar').style.width = frac == null ? '0%' : Math.round(frac * 100) + '%';
     $('#busyBar').parentNode.style.visibility = frac == null ? 'hidden' : 'visible';
+    note.textContent = opts.note || ''; note.hidden = !opts.note;
+    stop.hidden = !opts.stop;
+    stop.onclick = opts.stop ? () => { R.sfx.play('tap'); opts.stop(); } : null;
   };
 })();
 
@@ -4909,6 +5041,43 @@ R.library = (() => {
     return `<div class="pl-art ${cls || ''}">${a.map((id) => `<i data-art="${id}"></i>`).join('')}</div>`;
   };
 
+  // Long lists (a folder of thousands of songs) draw their first rows right away and the rest as they scroll into view.
+  const FIRST = 150, MORE = 250;
+  let lazy = null, keepRows = 0, moreIO = null;
+  function rowsHTML(items, make) {
+    const n = Math.min(items.length, Math.max(FIRST, keepRows));
+    let h = '';
+    for (let k = 0; k < n; k++) h += make(items[k], k);
+    lazy = n < items.length ? { items, make, done: n } : null;
+    return h + (lazy ? '<div class="more-rows" data-more-rows></div>' : '');
+  }
+  function watchMore(root) {
+    if (moreIO) { moreIO.disconnect(); moreIO = null; }
+    const s = $('[data-more-rows]', root), L = lazy;
+    if (!s || !L) return;
+    const sc = s.closest('.sc') || root;
+    const add = () => {
+      if (lazy !== L || !s.isConnected) return false;
+      const end = Math.min(L.items.length, L.done + MORE);
+      let h = '';
+      for (let k = L.done; k < end; k++) h += L.make(L.items[k], k);
+      s.insertAdjacentHTML('beforebegin', h);
+      L.done = end;
+      watchArts(sc);
+      if (end < L.items.length) return true;
+      s.remove(); lazy = null;
+      if (moreIO) { moreIO.disconnect(); moreIO = null; }
+      return false;
+    };
+    if (!('IntersectionObserver' in window)) { while (add()); return; }
+    // keep adding while the end of the list is still near the bottom of the screen
+    const near = () => s.isConnected && s.getBoundingClientRect().top < sc.getBoundingClientRect().bottom + 1500;
+    const go = () => { if (add() && near()) requestAnimationFrame(go); };
+    moreIO = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) go(); }, { root: sc, rootMargin: '0px 0px 1500px 0px' });
+    moreIO.observe(s);
+  }
+  const pickRow = (t, inP) => `<div class="row${st.pick.has(t.id) ? ' sel' : ''}${inP.has(t.id) ? ' in' : ''}" data-pick="${t.id}" style="grid-template-columns:26px 48px 1fr" role="button" tabindex="0"><div class="r-chk">${I.check}</div><div class="r-art" data-art="${t.id}"></div><div class="r-tx"><div class="r-t">${esc(t.title)}</div><div class="r-s">${inP.has(t.id) ? '已在歌單裡' : sub(t)}</div></div></div>`;
+
   function songsHTML() {
     const all = R.lib.list(null, st.q);
     const n = R.lib.count();
@@ -4918,8 +5087,8 @@ R.library = (() => {
       ? `<div class="tools"><button type="button" class="chipb" data-l="sel-all">${I.check}全選</button><button type="button" class="chipb" data-l="sel-pl">${I.playlist}加入歌單</button><button type="button" class="chipb" data-l="sel-del" style="color:#ff8a8a">${I.trash}刪除</button><button type="button" class="chipb pri" data-l="sel-end">完成（${st.sel.size}）</button></div>`
       : `<div class="tools"><button type="button" class="chipb pri" data-l="play-all">${I.play}全部播放</button><button type="button" class="chipb" data-l="shuf-all">${I.shuffle}隨機</button><button type="button" class="chipb" data-l="import">${I.upload}匯入</button><button type="button" class="chipb" data-l="sort">${I.sort}${esc(sortL)}</button>${n ? `<button type="button" class="chipb" data-l="sel">${I.check}選取</button>` : ''}</div>`;
     const list = !n
-      ? `<div class="blank">歌庫還是空的。<br>按「匯入」把手機或電腦裡的音樂檔放進來，<br>放進來之後不用網路也能聽。<br><br><button type="button" class="btn pri" data-l="import">${I.upload}選擇音樂檔</button>${R.isTouch ? '' : ` <button type="button" class="btn sec" data-l="folder">${I.folder}整個資料夾</button>`}<br><br><button type="button" class="btn sec" data-l="demo">${I.sparkle}先放示範曲進來</button></div>`
-      : all.length ? all.map((t) => row(t, { check: selMode })).join('') : `<div class="blank">找不到「${esc(st.q)}」</div>`;
+      ? `<div class="blank">歌庫還是空的。<br>把手機或電腦裡的音樂檔放進來，<br>${R.canFolder ? '一首首選或整個資料夾都可以，' : ''}放進來之後不用網路也能聽。<br><br><button type="button" class="btn pri" data-l="files">${I.upload}選擇音樂檔</button>${R.canFolder ? ` <button type="button" class="btn sec" data-l="folder">${I.folder}整個資料夾</button>` : ''}<br><br><button type="button" class="btn sec" data-l="demo">${I.sparkle}先放示範曲進來</button></div>`
+      : all.length ? rowsHTML(all, (t) => row(t, { check: selMode })) : `<div class="blank">找不到「${esc(st.q)}」</div>`;
     return head(`歌庫 <small style="font-size:13px;color:rgba(255,255,255,.5);font-weight:600">${n} 首</small>`) + tabs() + tools + (n ? `<div class="search">${I.search}<input type="search" placeholder="搜尋歌名、歌手、專輯" value="${esc(st.q)}" data-l="q" enterkeyhint="search"></div>` : '') + `<div class="sc" data-list>${list}</div>`;
   }
   function listsHTML() {
@@ -4939,7 +5108,7 @@ R.library = (() => {
     if (!cur) body = `<div class="blank">現在沒有在播的歌。</div>`;
     else {
       const rest = ids.slice(i + 1).map(R.lib.get).filter(Boolean);
-      body = `<div class="sec-t">正在播放 · 來自${esc(srcName)}</div>${row(cur)}<div class="sec-t">接下來（${rest.length}）</div>${rest.length ? rest.map((t, k) => row(t, { idx: i + 1 + k })).join('') : '<div class="blank" style="padding:16px">這是最後一首' + (R.player.S.repeat === 'all' ? '，播完會從頭再來' : '') + '</div>'}`;
+      body = `<div class="sec-t">正在播放 · 來自${esc(srcName)}</div>${row(cur)}<div class="sec-t">接下來（${rest.length}）</div>${rest.length ? rowsHTML(rest, (t, k) => row(t, { idx: i + 1 + k })) : '<div class="blank" style="padding:16px">這是最後一首' + (R.player.S.repeat === 'all' ? '，播完會從頭再來' : '') + '</div>'}`;
     }
     return head('播放佇列') + tabs() + `<div class="sc">${body}</div>`;
   }
@@ -4951,15 +5120,15 @@ R.library = (() => {
     return head(esc(p.name), `<button type="button" class="ib" data-l="back" aria-label="返回">${I.back}</button>`, `<button type="button" class="ib" data-l="pl-more" aria-label="歌單選項">${I.more}</button>`)
       + `<div class="pl-hero">${mosaic(p.ids)}<div><b>${esc(p.name)}</b><small>${ts.length} 首 · ${fmtTime(R.lib.pl.duration(id))}</small><div style="margin-top:8px"><button type="button" class="chipb" data-l="pl-skin">${I.hanger}${sk ? '綁定：' + esc(sk.name) : '綁定 Skin'}</button></div></div></div>`
       + `<div class="tools"><button type="button" class="chipb pri" data-l="pl-play" ${ts.length ? '' : 'disabled'}>${I.play}播放</button><button type="button" class="chipb" data-l="pl-shuf" ${ts.length ? '' : 'disabled'}>${I.shuffle}隨機</button><button type="button" class="chipb" data-l="pl-add">${I.plus}加歌</button></div>`
-      + `<div class="sc" data-plist="${id}">${ts.length ? ts.map((t, k) => row(t, { grip: true, idx: k })).join('') : '<div class="blank">這個歌單還是空的，按「加歌」挑幾首進來。</div>'}</div>`;
+      + `<div class="sc" data-plist="${id}">${ts.length ? rowsHTML(ts, (t, k) => row(t, { grip: true, idx: k })) : '<div class="blank">這個歌單還是空的，按「加歌」挑幾首進來。</div>'}</div>`;
   }
   function pickHTML(id) {
     const p = R.lib.pl.get(id);
-    const all = R.lib.list(null, st.q);
+    const all = R.lib.list(null, st.q), inP = new Set(p ? p.ids : []);
     return head('加歌到「' + esc(p ? p.name : '') + '」', `<button type="button" class="ib" data-l="pick-cancel" aria-label="返回">${I.back}</button>`)
       + `<div class="tools"><button type="button" class="chipb pri" data-l="pick-done">${I.check}加入（${st.pick.size}）</button></div>`
       + `<div class="search">${I.search}<input type="search" placeholder="搜尋" value="${esc(st.q)}" data-l="q"></div>`
-      + `<div class="sc">${all.map((t) => `<div class="row${st.pick.has(t.id) ? ' sel' : ''}${p && p.ids.includes(t.id) ? ' in' : ''}" data-pick="${t.id}" style="grid-template-columns:26px 48px 1fr" role="button" tabindex="0"><div class="r-chk">${I.check}</div><div class="r-art" data-art="${t.id}"></div><div class="r-tx"><div class="r-t">${esc(t.title)}</div><div class="r-s">${p && p.ids.includes(t.id) ? '已在歌單裡' : sub(t)}</div></div></div>`).join('')}</div>`;
+      + `<div class="sc">${rowsHTML(all, (t) => pickRow(t, inP))}</div>`;
   }
 
   function html() {
@@ -4968,35 +5137,47 @@ R.library = (() => {
     return st.tab === 'lists' ? listsHTML() : st.tab === 'queue' ? queueHTML() : songsHTML();
   }
 
+  const loadArt = (el) => {
+    const id = el.dataset.art; if (!id) return;
+    const t = R.lib.get(id); if (!t) return;
+    R.art.coverUrl(t, 'thumb').then((u) => { if (u) el.style.backgroundImage = `url("${u}")`; });
+  };
   function arts(root) {
-    if (io) io.disconnect();
-    const load = (el) => {
-      const id = el.dataset.art; if (!id) return;
-      const t = R.lib.get(id); if (!t) return;
-      R.art.coverUrl(t, 'thumb').then((u) => { if (u) el.style.backgroundImage = `url("${u}")`; });
-    };
-    const els = $$('[data-art]', root);
-    if ('IntersectionObserver' in window) {
-      io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) { io.unobserve(e.target); load(e.target); } }, { root: $('.sc', root), rootMargin: '300px' });
-      els.forEach((el) => (el.closest('.sc') ? io.observe(el) : load(el)));
-    } else els.forEach(load);
+    if (io) { io.disconnect(); io = null; }
+    watchArts(root);
+  }
+  // covers load as their rows come near the screen
+  function watchArts(root) {
+    const els = $$('[data-art]:not([data-aw])', root);
+    for (const el of els) el.setAttribute('data-aw', '');
+    if (!('IntersectionObserver' in window)) { els.forEach(loadArt); return; }
+    if (!io) {
+      const sc = $('.sc', R.ui.body());
+      io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) { io.unobserve(e.target); loadArt(e.target); } }, { root: sc, rootMargin: '300px' });
+    }
+    els.forEach((el) => (el.closest('.sc') ? io.observe(el) : loadArt(el)));
   }
 
   let scrollKeep = 0;
   function render(first, keepScroll) {
     const sc0 = $('.sc', R.ui.body());
     scrollKeep = keepScroll && sc0 ? sc0.scrollTop : 0;
+    keepRows = keepScroll && sc0 ? $$('.row', sc0).length : 0;
+    lazy = null;
     const h = html();
+    keepRows = 0;
     if (first || R.ui.sheetKind() !== 'lib') R.ui.openSheet(h, { kind: 'lib', onClose });
     else R.ui.body().innerHTML = h;
     const b = R.ui.body();
     const sc = $('.sc', b); if (sc && scrollKeep) sc.scrollTop = scrollKeep;
-    arts(b);
+    arts(b); watchMore(b);
     if (st.view && st.view.type === 'playlist') grips($('[data-plist]', b));
   }
   function onClose() {
     for (const f of offs) f(); offs = [];
     if (io) { io.disconnect(); io = null; }
+    if (moreIO) { moreIO.disconnect(); moreIO = null; }
+    lazy = null;
     st.sel = null; st.pick = null;
     if (st.view && st.view.type === 'pick') st.view = { type: 'playlist', id: st.view.id };
   }
@@ -5099,7 +5280,8 @@ R.library = (() => {
     if (l) {
       const a = l.dataset.l;
       if (a === 'q') return;
-      if (a === 'import' || a === 'folder') { R.app.pickFiles(a === 'folder'); return; }
+      if (a === 'import') { R.app.importMenu(); return; }
+      if (a === 'files' || a === 'folder') { R.app.pickFiles(a === 'folder'); return; }
       if (a === 'demo') { R.ui.closeSheet(true); R.app.addDemo(); return; }
       if (a === 'play-all' || a === 'shuf-all') {
         const all = R.lib.list(null, st.q); if (!all.length) return;
@@ -5162,14 +5344,17 @@ R.library = (() => {
     if (R.ui.sheetKind() !== 'lib' || !e.target.matches('[data-l="q"]')) return;
     st.q = e.target.value;
     const b = R.ui.body(); const sc = $('.sc', b);
+    keepRows = 0;
     if (st.view && st.view.type === 'pick') {
-      const all = R.lib.list(null, st.q); const p = R.lib.pl.get(st.view.id);
-      sc.innerHTML = all.map((t) => `<div class="row${st.pick.has(t.id) ? ' sel' : ''}" data-pick="${t.id}" style="grid-template-columns:26px 48px 1fr" role="button" tabindex="0"><div class="r-chk">${I.check}</div><div class="r-art" data-art="${t.id}"></div><div class="r-tx"><div class="r-t">${esc(t.title)}</div><div class="r-s">${p && p.ids.includes(t.id) ? '已在歌單裡' : sub(t)}</div></div></div>`).join('');
+      const all = R.lib.list(null, st.q), p = R.lib.pl.get(st.view.id), inP = new Set(p ? p.ids : []);
+      sc.innerHTML = rowsHTML(all, (t) => pickRow(t, inP));
     } else {
       const all = R.lib.list(null, st.q);
-      sc.innerHTML = all.length ? all.map((t) => row(t, { check: !!st.sel })).join('') : `<div class="blank">找不到「${esc(st.q)}」</div>`;
+      lazy = null;
+      sc.innerHTML = all.length ? rowsHTML(all, (t) => row(t, { check: !!st.sel })) : `<div class="blank">找不到「${esc(st.q)}」</div>`;
     }
-    arts(b);
+    sc.scrollTop = 0;
+    arts(b); watchMore(b);
   });
 
   return { open, trackMenu, addToPlaylist };
@@ -5409,7 +5594,9 @@ R.app = (() => {
     party() { party.toggle(); },
     settings() { if (R.wardrobe.isOpen()) R.wardrobe.close(true); if (R.ui.sheetKind() === 'settings') R.ui.closeSheet(); else R.settingsUI.show(); },
     'sheet-close'() { R.ui.closeSheet(); },
-    import() { pickFiles(false); },
+    import() { importMenu(); },
+    'import-files'() { pickFiles(false); },
+    'import-folder'() { pickFiles(true); },
     demo() { R.player.prime(); addDemo(); },
   };
   R.actions = A;
@@ -5425,31 +5612,91 @@ R.app = (() => {
 
   /* ---------- import ---------- */
   const fileIn = $('#fileIn'), folderIn = $('#folderIn');
-  function pickFiles(folder) { (folder ? folderIn : fileIn).click(); }
-  for (const inp of [fileIn, folderIn]) inp.addEventListener('change', () => { const fs = Array.from(inp.files || []); inp.value = ''; if (fs.length) importFiles(fs); });
+  function pickFiles(folder) { (folder && R.canFolder ? folderIn : fileIn).click(); }
+  // the picked folder's name ("Suno/01.mp3" → "Suno"), or '' when the files are not from one folder
+  const topFolder = (items) => {
+    const ps = items.map((x) => (x.f ? x.path : x.webkitRelativePath) || '');
+    if (!ps.length || !ps.every((p) => p.includes('/'))) return '';
+    const t = ps[0].split('/')[0];
+    return ps.every((p) => p.split('/')[0] === t) ? t : '';
+  };
+  for (const inp of [fileIn, folderIn]) inp.addEventListener('change', () => { const fs = Array.from(inp.files || []); inp.value = ''; if (fs.length) importFiles(fs, { folder: topFolder(fs) }); });
+  // 「匯入」: songs or a whole folder (the picker has to open inside the tap, so the menu calls it right away)
+  function importMenu() {
+    if (!R.canFolder) { pickFiles(false); return; }
+    R.ui.menu([
+      { key: 'files', label: '選擇音樂檔', sub: '一首或一次選好幾首', icon: I.upload, now: () => pickFiles(false) },
+      { key: 'folder', label: '整個資料夾', sub: '裡面的歌全部放進來，子資料夾也算', icon: I.folder, now: () => pickFiles(true) },
+    ], { title: '匯入音樂' });
+  }
 
-  async function importFiles(files) {
+  let importing = null;
+  async function importFiles(files, opts) {
+    opts = opts || {};
+    if (importing) { R.toast('上一批還在匯入，等它好了再放'); return; }
     if (R.ui.sheetKind()) R.ui.closeSheet(true);
-    const n = files.filter(R.lib.isAudio).length;
-    if (!n) { R.toast('沒有找到音樂檔（支援 MP3、M4A、FLAC、WAV）'); R.sfx.play('err'); return; }
+    const signal = { stop: false };
+    importing = signal;
     const wasEmpty = R.lib.count() === 0;
-    R.ui.busy('匯入中', `0 / ${n}`, 0);
+    const title = opts.folder ? `匯入「${opts.folder}」` : '匯入中';
+    R.ui.busy(title, '整理檔案中…', null);
+    // a long import must not be cut off by the screen going dark
+    let wake = null;
+    try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) { wake = null; }
     let res;
-    try { res = await R.lib.importFiles(files, (p) => R.ui.busy('匯入中', `${p.i + 1} / ${p.n}　${p.name}`, p.i / p.n)); }
-    catch (e) { R.ui.busy(null); R.toast('匯入失敗：' + (e && e.message ? e.message : e)); return; }
-    R.ui.busy(null);
+    try {
+      res = await R.lib.importFiles(files, (p) => {
+        if (signal.stop) return;
+        R.ui.busy(title, `${p.i + 1} / ${p.n}　${p.name}`, p.i / p.n, p.n < 5 ? null : {
+          note: p.n >= 30 ? '歌很多會花幾分鐘，匯入時畫面請保持開著' : '',
+          stop: () => { signal.stop = true; R.ui.busy(title, '這首放好就停…', p.i / p.n); },
+        });
+      }, { signal });
+    } catch (e) {
+      R.toast('匯入失敗：' + (e && e.message ? e.message : e)); R.sfx.play('err'); return;
+    } finally {
+      importing = null; R.ui.busy(null);
+      if (wake) wake.release().catch(() => {});
+    }
+    updateEmpty();
+    if (!res.total) {
+      R.toast(res.cant ? `這些檔案這台裝置不能播（${res.cantExt.slice(0, 3).join('、')}），沒有放進來`
+        : opts.folder ? `「${opts.folder}」裡沒有音樂檔（支援 MP3、M4A、FLAC、WAV）` : '沒有找到音樂檔（支援 MP3、M4A、FLAC、WAV）', { ms: 5000 });
+      R.sfx.play('err'); return;
+    }
     const parts = [];
     if (res.added.length) parts.push(`加入 ${res.added.length} 首`);
     if (res.dup) parts.push(`${res.dup} 首已經在歌庫`);
     if (res.failed.length) parts.push(`${res.failed.length} 首讀不了`);
+    if (res.cant) parts.push(`${res.cant} 個 ${res.cantExt.slice(0, 3).join('、')} 檔這台裝置不能播，沒有放進來`);
     if (res.warn) parts.push(`${res.warn} 首這台裝置可能播不了`);
-    R.toast(parts.join('，') || '沒有加入新歌');
+    let msg = parts.join('，') || '沒有加入新歌';
+    if (res.stopped) msg = `已停止：${msg}。之後再匯入一次，放過的歌會自動跳過`;
     R.sfx.play(res.added.length ? 'ok' : 'err');
+    // a folder can become a playlist (the songs already in the library included), in folder order
+    const action = opts.folder && res.ids.length && !res.full && !res.stopped ? { label: '存成歌單', fn: () => folderPlaylist(opts.folder, res.ids) } : null;
+    if (res.full) {
+      R.ui.confirm({
+        title: '儲存空間不夠了',
+        sub: `${msg}。還有 ${res.full} 首沒放進來：可以刪掉不聽的歌，或清出手機空間後再匯入一次（已經在歌庫的歌會自動跳過）。`,
+        ok: '看儲存空間', cancel: '知道了',
+      }).then((go) => { if (go) R.settingsUI.show(); });
+    } else R.toast(msg, action ? { action, ms: 9000 } : { ms: 5000 });
     if (res.added.length && (wasEmpty || !R.player.current())) {
       R.player.playFrom(R.lib.list().map((t) => t.id), res.added[0], { type: 'library' }, { autoplay: false });
       setTimeout(() => { if (!R.player.wants()) R.toast('準備好了，按播放鍵開始 ▶'); }, 1800);
     }
-    updateEmpty();
+  }
+  async function folderPlaylist(name, ids) {
+    const p = R.lib.pl.all().find((x) => x.name === name);
+    if (p) {
+      const n = await R.lib.pl.add(p.id, ids);
+      R.toast(n ? `歌單「${name}」多了 ${n} 首` : `歌單「${name}」裡已經都有了`);
+    } else {
+      await R.lib.pl.create(name, ids);
+      R.toast(`存好了：歌單「${name}」，${ids.length} 首。在歌庫的「歌單」裡`);
+    }
+    R.sfx.play('ok');
   }
   async function addDemo() {
     R.ui.busy('正在合成示範曲', '在你的裝置上現場合成，幾秒鐘就好', null);
@@ -5462,7 +5709,7 @@ R.app = (() => {
     } catch (e) { console.error(e); R.ui.busy(null); R.toast('示範曲沒有做成功'); }
   }
 
-  /* drag & drop (computer) */
+  /* drag & drop (computer): songs or whole folders */
   let dragN = 0;
   const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
   window.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragN++; $('#drop').hidden = false; });
@@ -5471,20 +5718,25 @@ R.app = (() => {
   window.addEventListener('drop', async (e) => {
     if (!hasFiles(e)) return;
     e.preventDefault(); dragN = 0; $('#drop').hidden = true;
-    const items = Array.from(e.dataTransfer.items || []);
-    const out = [];
+    if (importing) { R.toast('上一批還在匯入，等它好了再放'); return; }
+    // take every entry now: the dropped data is gone as soon as this handler waits for anything
+    const entries = Array.from(e.dataTransfer.items || []).map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null)).filter(Boolean);
+    const out = entries.length ? [] : Array.from(e.dataTransfer.files || []).map((f) => ({ f, path: f.name }));
     const walk = (entry) => new Promise((res) => {
-      if (!entry) return res();
-      if (entry.isFile) entry.file((f) => { out.push(f); res(); }, () => res());
+      if (entry.isFile) entry.file((f) => { out.push({ f, path: entry.fullPath.replace(/^\//, '') }); res(); }, () => res());
       else if (entry.isDirectory) {
         const rd = entry.createReader(); const all = [];
         const more = () => rd.readEntries(async (es) => { if (!es.length) { for (const x of all) await walk(x); res(); } else { all.push(...es); more(); } }, () => res());
         more();
       } else res();
     });
-    if (items.length && items[0].webkitGetAsEntry) { for (const it of items) await walk(it.webkitGetAsEntry()); }
-    else out.push(...Array.from(e.dataTransfer.files || []));
-    if (out.length) importFiles(out);
+    if (entries.length) {
+      if (entries.some((x) => x.isDirectory)) R.ui.busy('整理檔案中', '正在找資料夾裡的歌…', null);
+      for (const en of entries) await walk(en);
+      R.ui.busy(null);
+    }
+    const folder = entries.length === 1 && entries[0].isDirectory ? entries[0].name : '';
+    if (out.length) importFiles(out, { folder });
   });
 
   /* ---------- empty library ---------- */
@@ -5492,7 +5744,7 @@ R.app = (() => {
     const e = $('#empty');
     if (R.lib.count()) { e.hidden = true; return; }
     if (!e.hidden) return;
-    e.innerHTML = `<div class="em-ico">${I.lib}</div><h2>痞子葳，歌庫還是空的</h2><p>把手機或電腦裡的音樂檔放進來：<br>MP3、M4A、FLAC、WAV 都可以，Suno 下載的歌也行。<br>放進來之後，不用網路也能聽。</p><div class="btn-row"><button type="button" class="btn pri wide" data-act="import">${I.upload}選擇音樂檔</button><button type="button" class="btn sec wide" data-act="demo">${I.sparkle}先聽示範曲，試穿 Skin</button></div><p class="hint">${R.isTouch ? '' : '也可以直接把檔案拖進這個視窗。'}${R.isIOS && !R.standalone && !R.embedded ? '建議先在 Safari 按「分享 → 加入主畫面」再匯入：主畫面 App 的歌庫跟 Safari 是分開的。' : ''}${R.CLAUDE ? '這是 Claude 上的版本，歌可能不會一直留著；長期用請開網頁版加到主畫面。' : R.embedded && R.isIOS ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）。' : R.embedded && (R.isAndroid || R.isTouch) ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面。' : ''}</p>`;
+    e.innerHTML = `<div class="em-ico">${I.lib}</div><h2>痞子葳，歌庫還是空的</h2><p>把手機或電腦裡的音樂檔放進來：<br>MP3、M4A、FLAC、WAV 都可以，Suno 下載的歌也行。<br>放進來之後，不用網路也能聽。</p><div class="btn-row"><div class="btn-pair"><button type="button" class="btn pri" data-act="import-files">${I.upload}選擇音樂檔</button>${R.canFolder ? `<button type="button" class="btn sec" data-act="import-folder">${I.folder}整個資料夾</button>` : ''}</div><button type="button" class="btn sec wide" data-act="demo">${I.sparkle}先聽示範曲，試穿 Skin</button></div><p class="hint">${R.isTouch ? '' : '也可以直接把檔案或資料夾拖進這個視窗。'}${R.isIOS && !R.canFolder ? '選音樂檔時可以一次選好幾首；iOS 18.4 以上還能直接選整個資料夾。' : ''}${R.isIOS && !R.standalone && !R.embedded ? '建議先在 Safari 按「分享 → 加入主畫面」再匯入：主畫面 App 的歌庫跟 Safari 是分開的。' : ''}${R.CLAUDE ? '這是 Claude 上的版本，歌可能不會一直留著；長期用請開網頁版加到主畫面。' : R.embedded && R.isIOS ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）。' : R.embedded && (R.isAndroid || R.isTouch) ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面。' : ''}</p>`;
     e.hidden = false;
   }
   bus.on('library', updateEmpty);
@@ -5607,7 +5859,7 @@ R.app = (() => {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   }
-  return { boot, pickFiles, importFiles, addDemo, updateEmpty };
+  return { boot, pickFiles, importMenu, importFiles, addDemo, updateEmpty };
 })();
 R.app.boot();
 

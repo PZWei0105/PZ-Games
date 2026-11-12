@@ -30,6 +30,43 @@ R.library = (() => {
     return `<div class="pl-art ${cls || ''}">${a.map((id) => `<i data-art="${id}"></i>`).join('')}</div>`;
   };
 
+  // Long lists (a folder of thousands of songs) draw their first rows right away and the rest as they scroll into view.
+  const FIRST = 150, MORE = 250;
+  let lazy = null, keepRows = 0, moreIO = null;
+  function rowsHTML(items, make) {
+    const n = Math.min(items.length, Math.max(FIRST, keepRows));
+    let h = '';
+    for (let k = 0; k < n; k++) h += make(items[k], k);
+    lazy = n < items.length ? { items, make, done: n } : null;
+    return h + (lazy ? '<div class="more-rows" data-more-rows></div>' : '');
+  }
+  function watchMore(root) {
+    if (moreIO) { moreIO.disconnect(); moreIO = null; }
+    const s = $('[data-more-rows]', root), L = lazy;
+    if (!s || !L) return;
+    const sc = s.closest('.sc') || root;
+    const add = () => {
+      if (lazy !== L || !s.isConnected) return false;
+      const end = Math.min(L.items.length, L.done + MORE);
+      let h = '';
+      for (let k = L.done; k < end; k++) h += L.make(L.items[k], k);
+      s.insertAdjacentHTML('beforebegin', h);
+      L.done = end;
+      watchArts(sc);
+      if (end < L.items.length) return true;
+      s.remove(); lazy = null;
+      if (moreIO) { moreIO.disconnect(); moreIO = null; }
+      return false;
+    };
+    if (!('IntersectionObserver' in window)) { while (add()); return; }
+    // keep adding while the end of the list is still near the bottom of the screen
+    const near = () => s.isConnected && s.getBoundingClientRect().top < sc.getBoundingClientRect().bottom + 1500;
+    const go = () => { if (add() && near()) requestAnimationFrame(go); };
+    moreIO = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) go(); }, { root: sc, rootMargin: '0px 0px 1500px 0px' });
+    moreIO.observe(s);
+  }
+  const pickRow = (t, inP) => `<div class="row${st.pick.has(t.id) ? ' sel' : ''}${inP.has(t.id) ? ' in' : ''}" data-pick="${t.id}" style="grid-template-columns:26px 48px 1fr" role="button" tabindex="0"><div class="r-chk">${I.check}</div><div class="r-art" data-art="${t.id}"></div><div class="r-tx"><div class="r-t">${esc(t.title)}</div><div class="r-s">${inP.has(t.id) ? '已在歌單裡' : sub(t)}</div></div></div>`;
+
   function songsHTML() {
     const all = R.lib.list(null, st.q);
     const n = R.lib.count();
@@ -39,8 +76,8 @@ R.library = (() => {
       ? `<div class="tools"><button type="button" class="chipb" data-l="sel-all">${I.check}全選</button><button type="button" class="chipb" data-l="sel-pl">${I.playlist}加入歌單</button><button type="button" class="chipb" data-l="sel-del" style="color:#ff8a8a">${I.trash}刪除</button><button type="button" class="chipb pri" data-l="sel-end">完成（${st.sel.size}）</button></div>`
       : `<div class="tools"><button type="button" class="chipb pri" data-l="play-all">${I.play}全部播放</button><button type="button" class="chipb" data-l="shuf-all">${I.shuffle}隨機</button><button type="button" class="chipb" data-l="import">${I.upload}匯入</button><button type="button" class="chipb" data-l="sort">${I.sort}${esc(sortL)}</button>${n ? `<button type="button" class="chipb" data-l="sel">${I.check}選取</button>` : ''}</div>`;
     const list = !n
-      ? `<div class="blank">歌庫還是空的。<br>按「匯入」把手機或電腦裡的音樂檔放進來，<br>放進來之後不用網路也能聽。<br><br><button type="button" class="btn pri" data-l="import">${I.upload}選擇音樂檔</button>${R.isTouch ? '' : ` <button type="button" class="btn sec" data-l="folder">${I.folder}整個資料夾</button>`}<br><br><button type="button" class="btn sec" data-l="demo">${I.sparkle}先放示範曲進來</button></div>`
-      : all.length ? all.map((t) => row(t, { check: selMode })).join('') : `<div class="blank">找不到「${esc(st.q)}」</div>`;
+      ? `<div class="blank">歌庫還是空的。<br>把手機或電腦裡的音樂檔放進來，<br>${R.canFolder ? '一首首選或整個資料夾都可以，' : ''}放進來之後不用網路也能聽。<br><br><button type="button" class="btn pri" data-l="files">${I.upload}選擇音樂檔</button>${R.canFolder ? ` <button type="button" class="btn sec" data-l="folder">${I.folder}整個資料夾</button>` : ''}<br><br><button type="button" class="btn sec" data-l="demo">${I.sparkle}先放示範曲進來</button></div>`
+      : all.length ? rowsHTML(all, (t) => row(t, { check: selMode })) : `<div class="blank">找不到「${esc(st.q)}」</div>`;
     return head(`歌庫 <small style="font-size:13px;color:rgba(255,255,255,.5);font-weight:600">${n} 首</small>`) + tabs() + tools + (n ? `<div class="search">${I.search}<input type="search" placeholder="搜尋歌名、歌手、專輯" value="${esc(st.q)}" data-l="q" enterkeyhint="search"></div>` : '') + `<div class="sc" data-list>${list}</div>`;
   }
   function listsHTML() {
@@ -60,7 +97,7 @@ R.library = (() => {
     if (!cur) body = `<div class="blank">現在沒有在播的歌。</div>`;
     else {
       const rest = ids.slice(i + 1).map(R.lib.get).filter(Boolean);
-      body = `<div class="sec-t">正在播放 · 來自${esc(srcName)}</div>${row(cur)}<div class="sec-t">接下來（${rest.length}）</div>${rest.length ? rest.map((t, k) => row(t, { idx: i + 1 + k })).join('') : '<div class="blank" style="padding:16px">這是最後一首' + (R.player.S.repeat === 'all' ? '，播完會從頭再來' : '') + '</div>'}`;
+      body = `<div class="sec-t">正在播放 · 來自${esc(srcName)}</div>${row(cur)}<div class="sec-t">接下來（${rest.length}）</div>${rest.length ? rowsHTML(rest, (t, k) => row(t, { idx: i + 1 + k })) : '<div class="blank" style="padding:16px">這是最後一首' + (R.player.S.repeat === 'all' ? '，播完會從頭再來' : '') + '</div>'}`;
     }
     return head('播放佇列') + tabs() + `<div class="sc">${body}</div>`;
   }
@@ -72,15 +109,15 @@ R.library = (() => {
     return head(esc(p.name), `<button type="button" class="ib" data-l="back" aria-label="返回">${I.back}</button>`, `<button type="button" class="ib" data-l="pl-more" aria-label="歌單選項">${I.more}</button>`)
       + `<div class="pl-hero">${mosaic(p.ids)}<div><b>${esc(p.name)}</b><small>${ts.length} 首 · ${fmtTime(R.lib.pl.duration(id))}</small><div style="margin-top:8px"><button type="button" class="chipb" data-l="pl-skin">${I.hanger}${sk ? '綁定：' + esc(sk.name) : '綁定 Skin'}</button></div></div></div>`
       + `<div class="tools"><button type="button" class="chipb pri" data-l="pl-play" ${ts.length ? '' : 'disabled'}>${I.play}播放</button><button type="button" class="chipb" data-l="pl-shuf" ${ts.length ? '' : 'disabled'}>${I.shuffle}隨機</button><button type="button" class="chipb" data-l="pl-add">${I.plus}加歌</button></div>`
-      + `<div class="sc" data-plist="${id}">${ts.length ? ts.map((t, k) => row(t, { grip: true, idx: k })).join('') : '<div class="blank">這個歌單還是空的，按「加歌」挑幾首進來。</div>'}</div>`;
+      + `<div class="sc" data-plist="${id}">${ts.length ? rowsHTML(ts, (t, k) => row(t, { grip: true, idx: k })) : '<div class="blank">這個歌單還是空的，按「加歌」挑幾首進來。</div>'}</div>`;
   }
   function pickHTML(id) {
     const p = R.lib.pl.get(id);
-    const all = R.lib.list(null, st.q);
+    const all = R.lib.list(null, st.q), inP = new Set(p ? p.ids : []);
     return head('加歌到「' + esc(p ? p.name : '') + '」', `<button type="button" class="ib" data-l="pick-cancel" aria-label="返回">${I.back}</button>`)
       + `<div class="tools"><button type="button" class="chipb pri" data-l="pick-done">${I.check}加入（${st.pick.size}）</button></div>`
       + `<div class="search">${I.search}<input type="search" placeholder="搜尋" value="${esc(st.q)}" data-l="q"></div>`
-      + `<div class="sc">${all.map((t) => `<div class="row${st.pick.has(t.id) ? ' sel' : ''}${p && p.ids.includes(t.id) ? ' in' : ''}" data-pick="${t.id}" style="grid-template-columns:26px 48px 1fr" role="button" tabindex="0"><div class="r-chk">${I.check}</div><div class="r-art" data-art="${t.id}"></div><div class="r-tx"><div class="r-t">${esc(t.title)}</div><div class="r-s">${p && p.ids.includes(t.id) ? '已在歌單裡' : sub(t)}</div></div></div>`).join('')}</div>`;
+      + `<div class="sc">${rowsHTML(all, (t) => pickRow(t, inP))}</div>`;
   }
 
   function html() {
@@ -89,35 +126,47 @@ R.library = (() => {
     return st.tab === 'lists' ? listsHTML() : st.tab === 'queue' ? queueHTML() : songsHTML();
   }
 
+  const loadArt = (el) => {
+    const id = el.dataset.art; if (!id) return;
+    const t = R.lib.get(id); if (!t) return;
+    R.art.coverUrl(t, 'thumb').then((u) => { if (u) el.style.backgroundImage = `url("${u}")`; });
+  };
   function arts(root) {
-    if (io) io.disconnect();
-    const load = (el) => {
-      const id = el.dataset.art; if (!id) return;
-      const t = R.lib.get(id); if (!t) return;
-      R.art.coverUrl(t, 'thumb').then((u) => { if (u) el.style.backgroundImage = `url("${u}")`; });
-    };
-    const els = $$('[data-art]', root);
-    if ('IntersectionObserver' in window) {
-      io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) { io.unobserve(e.target); load(e.target); } }, { root: $('.sc', root), rootMargin: '300px' });
-      els.forEach((el) => (el.closest('.sc') ? io.observe(el) : load(el)));
-    } else els.forEach(load);
+    if (io) { io.disconnect(); io = null; }
+    watchArts(root);
+  }
+  // covers load as their rows come near the screen
+  function watchArts(root) {
+    const els = $$('[data-art]:not([data-aw])', root);
+    for (const el of els) el.setAttribute('data-aw', '');
+    if (!('IntersectionObserver' in window)) { els.forEach(loadArt); return; }
+    if (!io) {
+      const sc = $('.sc', R.ui.body());
+      io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) { io.unobserve(e.target); loadArt(e.target); } }, { root: sc, rootMargin: '300px' });
+    }
+    els.forEach((el) => (el.closest('.sc') ? io.observe(el) : loadArt(el)));
   }
 
   let scrollKeep = 0;
   function render(first, keepScroll) {
     const sc0 = $('.sc', R.ui.body());
     scrollKeep = keepScroll && sc0 ? sc0.scrollTop : 0;
+    keepRows = keepScroll && sc0 ? $$('.row', sc0).length : 0;
+    lazy = null;
     const h = html();
+    keepRows = 0;
     if (first || R.ui.sheetKind() !== 'lib') R.ui.openSheet(h, { kind: 'lib', onClose });
     else R.ui.body().innerHTML = h;
     const b = R.ui.body();
     const sc = $('.sc', b); if (sc && scrollKeep) sc.scrollTop = scrollKeep;
-    arts(b);
+    arts(b); watchMore(b);
     if (st.view && st.view.type === 'playlist') grips($('[data-plist]', b));
   }
   function onClose() {
     for (const f of offs) f(); offs = [];
     if (io) { io.disconnect(); io = null; }
+    if (moreIO) { moreIO.disconnect(); moreIO = null; }
+    lazy = null;
     st.sel = null; st.pick = null;
     if (st.view && st.view.type === 'pick') st.view = { type: 'playlist', id: st.view.id };
   }
@@ -220,7 +269,8 @@ R.library = (() => {
     if (l) {
       const a = l.dataset.l;
       if (a === 'q') return;
-      if (a === 'import' || a === 'folder') { R.app.pickFiles(a === 'folder'); return; }
+      if (a === 'import') { R.app.importMenu(); return; }
+      if (a === 'files' || a === 'folder') { R.app.pickFiles(a === 'folder'); return; }
       if (a === 'demo') { R.ui.closeSheet(true); R.app.addDemo(); return; }
       if (a === 'play-all' || a === 'shuf-all') {
         const all = R.lib.list(null, st.q); if (!all.length) return;
@@ -283,14 +333,17 @@ R.library = (() => {
     if (R.ui.sheetKind() !== 'lib' || !e.target.matches('[data-l="q"]')) return;
     st.q = e.target.value;
     const b = R.ui.body(); const sc = $('.sc', b);
+    keepRows = 0;
     if (st.view && st.view.type === 'pick') {
-      const all = R.lib.list(null, st.q); const p = R.lib.pl.get(st.view.id);
-      sc.innerHTML = all.map((t) => `<div class="row${st.pick.has(t.id) ? ' sel' : ''}" data-pick="${t.id}" style="grid-template-columns:26px 48px 1fr" role="button" tabindex="0"><div class="r-chk">${I.check}</div><div class="r-art" data-art="${t.id}"></div><div class="r-tx"><div class="r-t">${esc(t.title)}</div><div class="r-s">${p && p.ids.includes(t.id) ? '已在歌單裡' : sub(t)}</div></div></div>`).join('');
+      const all = R.lib.list(null, st.q), p = R.lib.pl.get(st.view.id), inP = new Set(p ? p.ids : []);
+      sc.innerHTML = rowsHTML(all, (t) => pickRow(t, inP));
     } else {
       const all = R.lib.list(null, st.q);
-      sc.innerHTML = all.length ? all.map((t) => row(t, { check: !!st.sel })).join('') : `<div class="blank">找不到「${esc(st.q)}」</div>`;
+      lazy = null;
+      sc.innerHTML = all.length ? rowsHTML(all, (t) => row(t, { check: !!st.sel })) : `<div class="blank">找不到「${esc(st.q)}」</div>`;
     }
-    arts(b);
+    sc.scrollTop = 0;
+    arts(b); watchMore(b);
   });
 
   return { open, trackMenu, addToPlaylist };

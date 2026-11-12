@@ -70,6 +70,16 @@ R.isTouch = matchMedia('(pointer: coarse)').matches;
 R.standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 R.embedded = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 R.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// picking a whole folder (<input webkitdirectory>): iPhone from iOS 18.4, Chrome on Android from 132, every computer browser.
+// Older systems open the normal file picker instead, so the button is only offered where it really picks folders.
+// (Safari on iOS 26 reports its OS as 18_6 in the user agent; that still reads as supported.)
+R.canFolder = (() => {
+  if (!('webkitdirectory' in document.createElement('input'))) return false;
+  const v = (re) => { const m = re.exec(UA); return m ? +m[1] + (+m[2] || 0) / 100 : 0; };
+  if (/iP(hone|ad|od)/.test(UA)) return v(/OS (\d+)_(\d+)/) >= 18.04;
+  if (/Android/.test(UA)) return !/Firefox|SamsungBrowser/.test(UA) && v(/Chrome\/(\d+)()/) >= 132;
+  return true;
+})();
 R.CLAUDE = !!window.RESKIN_NO_SW; // the copy published on Claude (no service worker, storage may not last)
 R.WEB_URL = 'https://pzwei0105.github.io/PZ-Games/apps/reskin/';
 

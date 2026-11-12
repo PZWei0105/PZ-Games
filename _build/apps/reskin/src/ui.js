@@ -4,8 +4,10 @@
   const sheet = $('#sheet'), body = $('#sheetBody'), panel = sheet.querySelector('.sheet-panel');
   let onClose = null, kind = null;
 
+  let hideT = 0;
   R.ui.openSheet = (html, opts) => {
     opts = opts || {};
+    clearTimeout(hideT); // reopened while the last one was still sliding away
     if (onClose) { const f = onClose; onClose = null; try { f(); } catch (e) { console.error(e); } }
     kind = opts.kind || null;
     body.innerHTML = html;
@@ -24,7 +26,8 @@
     panel.style.transform = '';
     if (!silent) R.sfx.play('close');
     const f = onClose; onClose = null; kind = null;
-    setTimeout(() => { if (!sheet.classList.contains('on')) { sheet.hidden = true; body.innerHTML = ''; } }, 420);
+    clearTimeout(hideT);
+    hideT = setTimeout(() => { if (!sheet.classList.contains('on')) { sheet.hidden = true; body.innerHTML = ''; } }, 420);
     if (f) { try { f(); } catch (e) { console.error(e); } }
   };
   R.ui.sheetKind = () => (sheet.hidden || !sheet.classList.contains('on') ? null : kind);
@@ -66,11 +69,12 @@
   }
   R.ui.menu = (items, opts) => {
     opts = opts || {};
-    const html = `<div class="md" role="menu">${opts.title ? `<div class="md-t">${esc(opts.title)}</div>` : ''}${opts.sub ? `<div class="md-s">${esc(opts.sub)}</div>` : ''}${items.map((it, i) => `<button type="button" class="md-i${it.danger ? ' dng' : ''}${it.on ? ' on' : ''}" data-i="${i}">${it.icon || ''}<span>${esc(it.label)}</span></button>`).join('')}<button type="button" class="md-i" data-i="-1" style="justify-content:center;color:rgba(255,255,255,.6)">取消</button></div>`;
+    const html = `<div class="md" role="menu">${opts.title ? `<div class="md-t">${esc(opts.title)}</div>` : ''}${opts.sub ? `<div class="md-s">${esc(opts.sub)}</div>` : ''}${items.map((it, i) => `<button type="button" class="md-i${it.danger ? ' dng' : ''}${it.on ? ' on' : ''}" data-i="${i}">${it.icon || ''}<span>${esc(it.label)}${it.sub ? `<small>${esc(it.sub)}</small>` : ''}</span></button>`).join('')}<button type="button" class="md-i" data-i="-1" style="justify-content:center;color:rgba(255,255,255,.6)">取消</button></div>`;
     R.sfx.play('tap');
     return showModal(html, (e, done) => {
       const b = e.target.closest('[data-i]');
-      if (b) { const i = +b.dataset.i; R.sfx.play('tap'); done(i < 0 ? null : items[i].key); }
+      // it.now runs inside the tap itself: opening a file picker only works straight from a tap on iPhone
+      if (b) { const i = +b.dataset.i; R.sfx.play('tap'); if (i >= 0 && items[i].now) items[i].now(); done(i < 0 ? null : items[i].key); }
       else if (e.target === modal) done(null);
     });
   };
@@ -99,12 +103,18 @@
   R.ui.modalOpen = () => !modal.hidden;
 
   const busy = $('#busy');
-  R.ui.busy = (title, text, frac) => {
-    if (title == null) { busy.hidden = true; return; }
+  // opts.stop: show a stop button that calls it; opts.note: a small line under the progress bar
+  R.ui.busy = (title, text, frac, opts) => {
+    const stop = $('#busyStop'), note = $('#busyNote');
+    if (title == null) { busy.hidden = true; stop.hidden = true; stop.onclick = null; note.hidden = true; return; }
+    opts = opts || {};
     busy.hidden = false;
     $('#busyTitle').textContent = title;
     $('#busyText').textContent = text || '';
     $('#busyBar').style.width = frac == null ? '0%' : Math.round(frac * 100) + '%';
     $('#busyBar').parentNode.style.visibility = frac == null ? 'hidden' : 'visible';
+    note.textContent = opts.note || ''; note.hidden = !opts.note;
+    stop.hidden = !opts.stop;
+    stop.onclick = opts.stop ? () => { R.sfx.play('tap'); opts.stop(); } : null;
   };
 })();

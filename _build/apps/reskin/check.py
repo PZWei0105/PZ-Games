@@ -9,6 +9,9 @@
 播放      單軌換帶：播完接下一首；雙軌接力：螢幕關著時提前交棒、記成功；鎖屏沒接上 → 自動改雙軌＋「繼續播放」；
           單曲循環、上一首重頭、隨機保留目前這首、刪掉正在播的歌、壞掉的檔案跳過
 介面      空歌庫→示範曲、衣櫃左右滑試穿＋就穿這套、歌單綁 Skin、每首換一套、DIY 存檔、派對模式、重新整理後接著上次
+資料夾    整個資料夾匯入（子資料夾、略過 ._ 檔／.DS_Store／文字檔、WMA 說明不能播、已在歌庫的跳過、資料夾裡的
+          cover.jpg 當封面、去掉檔名前的曲序、照資料夾順序）、存成歌單、「匯入」選單開資料夾、沒有歌的資料夾、
+          中途停止再匯入、空間不夠停下來不留殘檔、螢幕關著不分析節奏、上千首的歌庫邊捲邊畫
 每套 Skin 手機直拿、電腦各截一張（/tmp/reskin-check），沒有程式錯誤
 離線      網頁版關掉伺服器還打得開
 需要 Playwright、numpy、ffmpeg（雲端沙盒都有，不要執行 playwright install）。有 BAD 時 exit code 1。
@@ -215,6 +218,129 @@ def run(url, out, fx, web):
         ctx.close(); b.close()
 
 
+def folder_fixtures(d, fx):
+    """Folders for the folder-import checks: an album (nested, with junk and a cover), 40 songs, a folder without songs."""
+    import numpy as np
+    from PIL import Image
+    shutil.rmtree(d, ignore_errors=True)
+    sr = 22050
+
+    def wav(path, freq, secs, seed):
+        rng = np.random.default_rng(seed); t = np.arange(int(secs * sr)) / sr
+        x = 0.4 * np.sin(2 * np.pi * freq * t) * (0.6 + 0.4 * np.sin(2 * np.pi * 2 * t)) + 0.02 * rng.standard_normal(t.size)
+        d16 = (np.clip(np.stack([x, x], 1), -1, 1) * 32767).astype('<i2')
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'wb') as f:
+            f.write(b'RIFF' + struct.pack('<I', 36 + d16.nbytes) + b'WAVEfmt ' + struct.pack('<IHHIIHH', 16, 1, 2, sr, sr * 4, 4, 16) + b'data' + struct.pack('<I', d16.nbytes) + d16.tobytes())
+    A = os.path.join(d, 'album', '專輯資料夾')
+    os.makedirs(A)
+    shutil.copy(os.path.join(fx, 't1.mp3'), os.path.join(A, '01 開場.mp3'))  # the same song as t1.mp3: already in the library
+    wav(os.path.join(A, 'disc2', '02 夜行.wav'), 330, 6, 1)
+    wav(os.path.join(A, 'disc2', '10 尾聲.wav'), 392, 5, 2)
+    wav(os.path.join(A, 'disc2', '3 中場.wav'), 262, 5, 3)
+    rng = np.random.default_rng(9)
+    img = (np.stack([np.full((400, 400), 20), np.full((400, 400), 200), np.full((400, 400), 190)], 2) + rng.integers(0, 40, (400, 400, 3))).astype('uint8')
+    Image.fromarray(img).save(os.path.join(A, 'cover.jpg'), quality=90)
+    open(os.path.join(A, '._01 開場.mp3'), 'wb').write(os.urandom(4096))
+    open(os.path.join(A, '.DS_Store'), 'wb').write(os.urandom(6148))
+    open(os.path.join(A, 'notes.txt'), 'w').write('liner notes')
+    open(os.path.join(A, 'old song.wma'), 'wb').write(os.urandom(20000))
+    M = os.path.join(d, 'many', '一大批')
+    for i in range(40):
+        wav(os.path.join(M, 'part%d' % (i // 10), 'song %02d.wav' % i), 200 + i * 7, 8, 100 + i)
+    E = os.path.join(d, 'empty', '只有圖片')
+    os.makedirs(E); Image.fromarray(img).save(os.path.join(E, 'photo.jpg'))
+    return d
+
+
+def run_folders(url, out, fd, fx):
+    from playwright.sync_api import sync_playwright
+    errs = []
+    with sync_playwright() as p:
+        b = p.chromium.launch()
+        ctx = b.new_context(**PHONE)
+        pg = ctx.new_page()
+        pg.add_init_script(HIDE)
+        pg.on('pageerror', lambda e: errs.append(str(e)))
+        ev = pg.evaluate
+        done = lambda t=90000: pg.wait_for_function('document.getElementById("busy").hidden', timeout=t)
+        last = lambda: ev('(() => { const t = document.querySelectorAll("#toasts .toast > span"); return t.length ? t[t.length - 1].textContent : ""; })()')
+        pg.goto(url); pg.wait_for_function("!!window.RESKIN && !document.getElementById('splash')", timeout=20000); pg.wait_for_timeout(800)
+        ok(pg.is_visible('#empty [data-act="import-folder"]'), '空歌庫：有「整個資料夾」按鈕')
+        pg.screenshot(path=os.path.join(out, 'ui-empty.png'))
+        pg.set_input_files('#fileIn', [os.path.join(fx, 't1.mp3')]); done()
+        pg.set_input_files('#folderIn', os.path.join(fd, 'album', '專輯資料夾')); done(); pg.wait_for_timeout(300)
+        L = ev('RESKIN.lib.list().map(t => ({ title: t.title, name: t.name, cover: t.cover }))')
+        msg = last()
+        ok(len(L) == 4 and '加入 3 首' in msg and '1 首已經在歌庫' in msg, '資料夾：子資料夾的歌也進來，已在歌庫的跳過（%s）' % msg)
+        ok('WMA' in msg and not any(x['name'].startswith('.') or x['name'].endswith(('.txt', '.wma')) for x in L), '資料夾：略過 ._ 檔、.DS_Store、文字檔，WMA 說明這台不能播')
+        ok([x['title'] for x in L[:3]] == ['夜行', '中場', '尾聲'], '資料夾：照資料夾順序，去掉檔名前的曲序（%s）' % [x['title'] for x in L[:3]])
+        ok(all(x['cover'] == 1 for x in L), '資料夾：沒有內嵌封面的歌用資料夾裡的 cover.jpg')
+        btn = pg.locator('#toasts .toast button', has_text='存成歌單')
+        ok(btn.count() == 1, '資料夾：提示上有「存成歌單」')
+        if btn.count():
+            btn.first.click(); pg.wait_for_timeout(500)
+        P = ev('RESKIN.lib.pl.all().map(p => ({ name: p.name, titles: p.ids.map(id => RESKIN.lib.get(id).title) }))')
+        ok(P == [{'name': '專輯資料夾', 'titles': ['霓虹夜奔', '夜行', '中場', '尾聲']}], '存成歌單：用資料夾名稱、照資料夾順序、已在歌庫的也算')
+        ev("RESKIN.library.open('songs')"); pg.wait_for_timeout(600)
+        pg.click('[data-l="import"]'); pg.wait_for_timeout(450)
+        pg.screenshot(path=os.path.join(out, 'ui-import-menu.png'))
+        try:
+            with pg.expect_file_chooser(timeout=5000) as fc:
+                pg.click('#modal .md-i:has-text("整個資料夾")')
+            ok(fc.value.element.get_attribute('id') == 'folderIn', '「匯入」選單：選「整個資料夾」打開的是資料夾選擇器')
+            fc.value.set_files(os.path.join(fd, 'empty', '只有圖片')); pg.wait_for_timeout(1200)
+            ok('沒有音樂檔' in last() and ev('RESKIN.lib.count()') == 4, '沒有歌的資料夾：說清楚、什麼都不加')
+        except Exception as e:
+            ok(False, '「匯入」選單：' + str(e)[:120])
+        # a big folder: stop halfway, then import it again
+        pg.set_input_files('#folderIn', os.path.join(fd, 'many', '一大批'))
+        pg.wait_for_function('/^[3-9] \\//.test(document.getElementById("busyText").textContent)', timeout=30000)
+        pg.screenshot(path=os.path.join(out, 'ui-import-busy.png'))
+        pg.click('#busyStop'); done()
+        n1 = ev('RESKIN.lib.count()') - 4
+        ok(0 < n1 < 40 and '已停止' in last(), '大量匯入：按「停止匯入」會停（停在第 %d 首）' % n1)
+        pg.set_input_files('#folderIn', os.path.join(fd, 'many', '一大批')); done()
+        ok(ev('RESKIN.lib.count()') == 44 and ('%d 首已經在歌庫' % n1) in last(), '再匯入一次：補上沒放的，放過的跳過')
+        pg.wait_for_function('RESKIN.analysis.left() === 0', timeout=180000)
+        # storage runs out halfway
+        ev('() => RESKIN.lib.remove(RESKIN.lib.list().slice(0, 20).map(t => t.id))'); pg.wait_for_timeout(300)
+        ev("""() => { const real = RESKIN.db.putAudio; let n = 0; window.__realPut = real; RESKIN.db.putAudio = async (id, blob) => { if (++n > 6) throw new DOMException('The quota has been exceeded.', 'QuotaExceededError'); return real(id, blob); }; }""")
+        ev('window.__hid = true; document.dispatchEvent(new Event("visibilitychange"))')
+        pg.set_input_files('#folderIn', os.path.join(fd, 'many', '一大批'))
+        try:
+            pg.wait_for_selector('#modal:not([hidden]) .md', timeout=60000); pg.wait_for_timeout(300)
+            box = pg.inner_text('#modal .md')
+            counts = ev('Promise.all([RESKIN.db.keys("audio"), RESKIN.db.keys("tracks")]).then(([a, t]) => [a.length, t.length])')
+            ok('儲存空間不夠了' in box and '加入 6 首' in box and counts[0] == counts[1], '空間不夠：停下來說清楚，沒有留下只有一半的歌')
+            pg.click('#modal [data-r="0"]'); pg.wait_for_timeout(300)
+        except Exception as e:
+            ok(False, '空間不夠：' + str(e)[:120])
+        ev('() => { RESKIN.db.putAudio = window.__realPut; }')
+        a0 = ev('RESKIN.lib.all().filter(t => !t.an).length'); pg.wait_for_timeout(2500)
+        a1 = ev('RESKIN.lib.all().filter(t => !t.an).length')
+        ok(a0 == a1 == 6, '螢幕關著：不分析節奏（等畫面打開）')
+        ev('window.__hid = false; document.dispatchEvent(new Event("visibilitychange"))')
+        try:
+            pg.wait_for_function('RESKIN.lib.all().every(t => t.an)', timeout=60000); ok(True, '畫面打開：接著分析')
+        except Exception:
+            ok(False, '畫面打開：接著分析')
+        # a library of 1,000 songs (records only): the list draws the first rows, the rest while scrolling
+        ev("""async () => { const db = await RESKIN.db.open(); await new Promise((res, rej) => { const tx = db.transaction('tracks', 'readwrite'); const os = tx.objectStore('tracks');
+          for (let i = 0; i < 1000; i++) os.put({ id: 'big' + i, key: 'bigk' + i, title: '大量測試 ' + i, artist: '', album: '', duration: 180, size: 1, type: 'audio/mpeg', name: 'b' + i + '.mp3', added: 1000 - i, cover: 0, colors: null, an: 1, bpm: 0, energy: .5, plays: 0 });
+          tx.oncomplete = res; tx.onerror = rej; }); }""")
+        pg.reload(); pg.wait_for_function("!!window.RESKIN && !document.getElementById('splash')", timeout=30000)
+        ev("RESKIN.library.open('songs')"); pg.wait_for_timeout(600)
+        rows = lambda: ev("document.querySelectorAll('#sheetBody .sc .row').length")
+        r0 = rows()
+        for _ in range(15):
+            ev("document.querySelector('#sheetBody .sc').scrollTop = 1e9"); pg.wait_for_timeout(200)
+        n = ev('RESKIN.lib.count()')
+        ok(r0 == 150 and rows() == n, '上千首的歌庫：先畫 150 首，捲到底全部都在（%d／%d）' % (rows(), n))
+        ok(not errs, '資料夾匯入：沒有程式錯誤' + ('' if not errs else '：' + ' | '.join(errs[:5])))
+        ctx.close(); b.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--claude')
@@ -223,6 +349,7 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     fx = fixtures('/tmp/reskin-fixtures')
     srv = serve(REPO)
+    run_folders(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', a.out, folder_fixtures('/tmp/reskin-folders', fx), fx)
     run(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', a.out, fx, srv)
     if a.claude:
         print('--- Claude 版 ---')

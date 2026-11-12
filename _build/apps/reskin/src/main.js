@@ -25,7 +25,9 @@ R.app = (() => {
     party() { party.toggle(); },
     settings() { if (R.wardrobe.isOpen()) R.wardrobe.close(true); if (R.ui.sheetKind() === 'settings') R.ui.closeSheet(); else R.settingsUI.show(); },
     'sheet-close'() { R.ui.closeSheet(); },
-    import() { pickFiles(false); },
+    import() { importMenu(); },
+    'import-files'() { pickFiles(false); },
+    'import-folder'() { pickFiles(true); },
     demo() { R.player.prime(); addDemo(); },
   };
   R.actions = A;
@@ -41,31 +43,91 @@ R.app = (() => {
 
   /* ---------- import ---------- */
   const fileIn = $('#fileIn'), folderIn = $('#folderIn');
-  function pickFiles(folder) { (folder ? folderIn : fileIn).click(); }
-  for (const inp of [fileIn, folderIn]) inp.addEventListener('change', () => { const fs = Array.from(inp.files || []); inp.value = ''; if (fs.length) importFiles(fs); });
+  function pickFiles(folder) { (folder && R.canFolder ? folderIn : fileIn).click(); }
+  // the picked folder's name ("Suno/01.mp3" → "Suno"), or '' when the files are not from one folder
+  const topFolder = (items) => {
+    const ps = items.map((x) => (x.f ? x.path : x.webkitRelativePath) || '');
+    if (!ps.length || !ps.every((p) => p.includes('/'))) return '';
+    const t = ps[0].split('/')[0];
+    return ps.every((p) => p.split('/')[0] === t) ? t : '';
+  };
+  for (const inp of [fileIn, folderIn]) inp.addEventListener('change', () => { const fs = Array.from(inp.files || []); inp.value = ''; if (fs.length) importFiles(fs, { folder: topFolder(fs) }); });
+  // 「匯入」: songs or a whole folder (the picker has to open inside the tap, so the menu calls it right away)
+  function importMenu() {
+    if (!R.canFolder) { pickFiles(false); return; }
+    R.ui.menu([
+      { key: 'files', label: '選擇音樂檔', sub: '一首或一次選好幾首', icon: I.upload, now: () => pickFiles(false) },
+      { key: 'folder', label: '整個資料夾', sub: '裡面的歌全部放進來，子資料夾也算', icon: I.folder, now: () => pickFiles(true) },
+    ], { title: '匯入音樂' });
+  }
 
-  async function importFiles(files) {
+  let importing = null;
+  async function importFiles(files, opts) {
+    opts = opts || {};
+    if (importing) { R.toast('上一批還在匯入，等它好了再放'); return; }
     if (R.ui.sheetKind()) R.ui.closeSheet(true);
-    const n = files.filter(R.lib.isAudio).length;
-    if (!n) { R.toast('沒有找到音樂檔（支援 MP3、M4A、FLAC、WAV）'); R.sfx.play('err'); return; }
+    const signal = { stop: false };
+    importing = signal;
     const wasEmpty = R.lib.count() === 0;
-    R.ui.busy('匯入中', `0 / ${n}`, 0);
+    const title = opts.folder ? `匯入「${opts.folder}」` : '匯入中';
+    R.ui.busy(title, '整理檔案中…', null);
+    // a long import must not be cut off by the screen going dark
+    let wake = null;
+    try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) { wake = null; }
     let res;
-    try { res = await R.lib.importFiles(files, (p) => R.ui.busy('匯入中', `${p.i + 1} / ${p.n}　${p.name}`, p.i / p.n)); }
-    catch (e) { R.ui.busy(null); R.toast('匯入失敗：' + (e && e.message ? e.message : e)); return; }
-    R.ui.busy(null);
+    try {
+      res = await R.lib.importFiles(files, (p) => {
+        if (signal.stop) return;
+        R.ui.busy(title, `${p.i + 1} / ${p.n}　${p.name}`, p.i / p.n, p.n < 5 ? null : {
+          note: p.n >= 30 ? '歌很多會花幾分鐘，匯入時畫面請保持開著' : '',
+          stop: () => { signal.stop = true; R.ui.busy(title, '這首放好就停…', p.i / p.n); },
+        });
+      }, { signal });
+    } catch (e) {
+      R.toast('匯入失敗：' + (e && e.message ? e.message : e)); R.sfx.play('err'); return;
+    } finally {
+      importing = null; R.ui.busy(null);
+      if (wake) wake.release().catch(() => {});
+    }
+    updateEmpty();
+    if (!res.total) {
+      R.toast(res.cant ? `這些檔案這台裝置不能播（${res.cantExt.slice(0, 3).join('、')}），沒有放進來`
+        : opts.folder ? `「${opts.folder}」裡沒有音樂檔（支援 MP3、M4A、FLAC、WAV）` : '沒有找到音樂檔（支援 MP3、M4A、FLAC、WAV）', { ms: 5000 });
+      R.sfx.play('err'); return;
+    }
     const parts = [];
     if (res.added.length) parts.push(`加入 ${res.added.length} 首`);
     if (res.dup) parts.push(`${res.dup} 首已經在歌庫`);
     if (res.failed.length) parts.push(`${res.failed.length} 首讀不了`);
+    if (res.cant) parts.push(`${res.cant} 個 ${res.cantExt.slice(0, 3).join('、')} 檔這台裝置不能播，沒有放進來`);
     if (res.warn) parts.push(`${res.warn} 首這台裝置可能播不了`);
-    R.toast(parts.join('，') || '沒有加入新歌');
+    let msg = parts.join('，') || '沒有加入新歌';
+    if (res.stopped) msg = `已停止：${msg}。之後再匯入一次，放過的歌會自動跳過`;
     R.sfx.play(res.added.length ? 'ok' : 'err');
+    // a folder can become a playlist (the songs already in the library included), in folder order
+    const action = opts.folder && res.ids.length && !res.full && !res.stopped ? { label: '存成歌單', fn: () => folderPlaylist(opts.folder, res.ids) } : null;
+    if (res.full) {
+      R.ui.confirm({
+        title: '儲存空間不夠了',
+        sub: `${msg}。還有 ${res.full} 首沒放進來：可以刪掉不聽的歌，或清出手機空間後再匯入一次（已經在歌庫的歌會自動跳過）。`,
+        ok: '看儲存空間', cancel: '知道了',
+      }).then((go) => { if (go) R.settingsUI.show(); });
+    } else R.toast(msg, action ? { action, ms: 9000 } : { ms: 5000 });
     if (res.added.length && (wasEmpty || !R.player.current())) {
       R.player.playFrom(R.lib.list().map((t) => t.id), res.added[0], { type: 'library' }, { autoplay: false });
       setTimeout(() => { if (!R.player.wants()) R.toast('準備好了，按播放鍵開始 ▶'); }, 1800);
     }
-    updateEmpty();
+  }
+  async function folderPlaylist(name, ids) {
+    const p = R.lib.pl.all().find((x) => x.name === name);
+    if (p) {
+      const n = await R.lib.pl.add(p.id, ids);
+      R.toast(n ? `歌單「${name}」多了 ${n} 首` : `歌單「${name}」裡已經都有了`);
+    } else {
+      await R.lib.pl.create(name, ids);
+      R.toast(`存好了：歌單「${name}」，${ids.length} 首。在歌庫的「歌單」裡`);
+    }
+    R.sfx.play('ok');
   }
   async function addDemo() {
     R.ui.busy('正在合成示範曲', '在你的裝置上現場合成，幾秒鐘就好', null);
@@ -78,7 +140,7 @@ R.app = (() => {
     } catch (e) { console.error(e); R.ui.busy(null); R.toast('示範曲沒有做成功'); }
   }
 
-  /* drag & drop (computer) */
+  /* drag & drop (computer): songs or whole folders */
   let dragN = 0;
   const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
   window.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragN++; $('#drop').hidden = false; });
@@ -87,20 +149,25 @@ R.app = (() => {
   window.addEventListener('drop', async (e) => {
     if (!hasFiles(e)) return;
     e.preventDefault(); dragN = 0; $('#drop').hidden = true;
-    const items = Array.from(e.dataTransfer.items || []);
-    const out = [];
+    if (importing) { R.toast('上一批還在匯入，等它好了再放'); return; }
+    // take every entry now: the dropped data is gone as soon as this handler waits for anything
+    const entries = Array.from(e.dataTransfer.items || []).map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null)).filter(Boolean);
+    const out = entries.length ? [] : Array.from(e.dataTransfer.files || []).map((f) => ({ f, path: f.name }));
     const walk = (entry) => new Promise((res) => {
-      if (!entry) return res();
-      if (entry.isFile) entry.file((f) => { out.push(f); res(); }, () => res());
+      if (entry.isFile) entry.file((f) => { out.push({ f, path: entry.fullPath.replace(/^\//, '') }); res(); }, () => res());
       else if (entry.isDirectory) {
         const rd = entry.createReader(); const all = [];
         const more = () => rd.readEntries(async (es) => { if (!es.length) { for (const x of all) await walk(x); res(); } else { all.push(...es); more(); } }, () => res());
         more();
       } else res();
     });
-    if (items.length && items[0].webkitGetAsEntry) { for (const it of items) await walk(it.webkitGetAsEntry()); }
-    else out.push(...Array.from(e.dataTransfer.files || []));
-    if (out.length) importFiles(out);
+    if (entries.length) {
+      if (entries.some((x) => x.isDirectory)) R.ui.busy('整理檔案中', '正在找資料夾裡的歌…', null);
+      for (const en of entries) await walk(en);
+      R.ui.busy(null);
+    }
+    const folder = entries.length === 1 && entries[0].isDirectory ? entries[0].name : '';
+    if (out.length) importFiles(out, { folder });
   });
 
   /* ---------- empty library ---------- */
@@ -108,7 +175,7 @@ R.app = (() => {
     const e = $('#empty');
     if (R.lib.count()) { e.hidden = true; return; }
     if (!e.hidden) return;
-    e.innerHTML = `<div class="em-ico">${I.lib}</div><h2>痞子葳，歌庫還是空的</h2><p>把手機或電腦裡的音樂檔放進來：<br>MP3、M4A、FLAC、WAV 都可以，Suno 下載的歌也行。<br>放進來之後，不用網路也能聽。</p><div class="btn-row"><button type="button" class="btn pri wide" data-act="import">${I.upload}選擇音樂檔</button><button type="button" class="btn sec wide" data-act="demo">${I.sparkle}先聽示範曲，試穿 Skin</button></div><p class="hint">${R.isTouch ? '' : '也可以直接把檔案拖進這個視窗。'}${R.isIOS && !R.standalone && !R.embedded ? '建議先在 Safari 按「分享 → 加入主畫面」再匯入：主畫面 App 的歌庫跟 Safari 是分開的。' : ''}${R.CLAUDE ? '這是 Claude 上的版本，歌可能不會一直留著；長期用請開網頁版加到主畫面。' : R.embedded && R.isIOS ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）。' : R.embedded && (R.isAndroid || R.isTouch) ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面。' : ''}</p>`;
+    e.innerHTML = `<div class="em-ico">${I.lib}</div><h2>痞子葳，歌庫還是空的</h2><p>把手機或電腦裡的音樂檔放進來：<br>MP3、M4A、FLAC、WAV 都可以，Suno 下載的歌也行。<br>放進來之後，不用網路也能聽。</p><div class="btn-row"><div class="btn-pair"><button type="button" class="btn pri" data-act="import-files">${I.upload}選擇音樂檔</button>${R.canFolder ? `<button type="button" class="btn sec" data-act="import-folder">${I.folder}整個資料夾</button>` : ''}</div><button type="button" class="btn sec wide" data-act="demo">${I.sparkle}先聽示範曲，試穿 Skin</button></div><p class="hint">${R.isTouch ? '' : '也可以直接把檔案或資料夾拖進這個視窗。'}${R.isIOS && !R.canFolder ? '選音樂檔時可以一次選好幾首；iOS 18.4 以上還能直接選整個資料夾。' : ''}${R.isIOS && !R.standalone && !R.embedded ? '建議先在 Safari 按「分享 → 加入主畫面」再匯入：主畫面 App 的歌庫跟 Safari 是分開的。' : ''}${R.CLAUDE ? '這是 Claude 上的版本，歌可能不會一直留著；長期用請開網頁版加到主畫面。' : R.embedded && R.isIOS ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）。' : R.embedded && (R.isAndroid || R.isTouch) ? '想鎖屏也一直聽，建議把「耳目一新」單獨加到主畫面。' : ''}</p>`;
     e.hidden = false;
   }
   bus.on('library', updateEmpty);
@@ -223,6 +290,6 @@ R.app = (() => {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   }
-  return { boot, pickFiles, importFiles, addDemo, updateEmpty };
+  return { boot, pickFiles, importMenu, importFiles, addDemo, updateEmpty };
 })();
 R.app.boot();
