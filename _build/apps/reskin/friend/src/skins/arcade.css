@@ -1,0 +1,34 @@
+/* ---------- 像素街機 ---------- */
+.skin-arcade { --px: 2px; color: #fff; font-family: "Press Start 2P", var(--sans); background: #0a0618; }
+.skin-arcade .ar-cv { position: absolute; left: 0; top: 0; image-rendering: pixelated; image-rendering: crisp-edges; }
+.skin-arcade .ar-crt { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(0,0,0,.16) 0 1px, transparent 1px var(--px)), radial-gradient(140% 100% at 50% 45%, transparent 62%, rgba(0,0,0,.45) 100%); }
+.skin-arcade .ar-probe { position: absolute; left: 0; top: calc(var(--st) + 64px); width: 1px; height: 1px; pointer-events: none; }
+.skin-arcade .ar-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skin-arcade .ar-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px calc(var(--sr) + 18px) calc(var(--sb) + 14px) calc(var(--sl) + 18px); background: linear-gradient(#2a2250, #1a1533 30%, #14102a); border-top: 4px solid #000; box-shadow: inset 0 4px 0 #4a3f86, 0 -4px 0 rgba(255,255,255,.06); }
+.skin-arcade .ar-panel::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(135deg, rgba(255,255,255,.025) 0 6px, transparent 6px 12px); }
+.skin-arcade .ar-seek { position: relative; max-width: 560px; margin: 0 auto; padding: 6px 4px 0; }
+.skin-arcade .ar-seek .seek-track { height: 10px; background: #0c0a1a; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
+.skin-arcade .ar-seek .seek-fill { background: repeating-linear-gradient(90deg, #5ef1ff 0 6px, #2fb7ff 6px 8px); }
+.skin-arcade .ar-seek .seek-knob { width: 14px; height: 14px; background: #ffd75e; box-shadow: 0 0 0 2px #000, inset -3px -3px 0 #e0a420; }
+.skin-arcade .ar-seek .seek-times { margin-top: 12px; font-size: 9px; color: #cfc8ff; letter-spacing: .05em; }
+.skin-arcade .ar-ctrl { position: relative; max-width: 440px; margin: 10px auto 0; justify-content: space-between; }
+.skin-arcade .ar-ctrl button { width: 54px; height: 54px; border-radius: 50%; color: #fff; font-size: 20px; background: radial-gradient(circle at 36% 30%, #9ad9ff, #2f8fff 46%, #1b4fb3); box-shadow: 0 4px 0 #0e2a66, 0 6px 0 #000, inset 0 -3px 0 rgba(0,0,0,.22); transition: transform .06s, box-shadow .06s; }
+.skin-arcade .ar-ctrl .c-play { width: 74px; height: 74px; font-size: 26px; background: radial-gradient(circle at 36% 30%, #ffa3b8, #ff3d6e 46%, #b0123f); box-shadow: 0 5px 0 #6e0a27, 0 8px 0 #000, inset 0 -4px 0 rgba(0,0,0,.22); }
+.skin-arcade .ar-ctrl .c-shuf, .skin-arcade .ar-ctrl .c-rep { width: 40px; height: 34px; border-radius: 4px; font-size: 15px; background: #4a4466; box-shadow: 0 3px 0 #24203a, 0 5px 0 #000; }
+.skin-arcade .ar-ctrl button:active { transform: translateY(4px); box-shadow: 0 0 0 #0e2a66, 0 2px 0 #000; }
+.skin-arcade .ar-ctrl .c-play:active { transform: translateY(5px); box-shadow: 0 0 0 #6e0a27, 0 3px 0 #000; }
+.skin-arcade.enter .ar-panel { animation: ar-panel .6s steps(6, end) .9s both; }
+@keyframes ar-panel { from { transform: translateY(100%); } to { transform: none; } }
+@media (orientation: landscape) and (min-width: 640px) {
+  .skin-arcade .ar-panel { padding-top: 12px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .skin-arcade .ar-panel { left: auto; top: 0; width: min(40vw, 360px); display: flex; flex-direction: column; justify-content: flex-end; padding: 0 calc(var(--sr) + 16px) calc(var(--sb) + 16px) 16px; border-top: 0; border-left: 4px solid #000; box-shadow: inset 4px 0 0 #4a3f86; }
+  .skin-arcade .ar-seek { width: 100%; }
+  .skin-arcade .ar-ctrl { width: 100%; margin-top: 14px; }
+  .skin-arcade .ar-ctrl button { width: 48px; height: 48px; font-size: 18px; }
+  .skin-arcade .ar-ctrl .c-play { width: 62px; height: 62px; font-size: 22px; }
+  .skin-arcade .ar-ctrl .c-shuf, .skin-arcade .ar-ctrl .c-rep { width: 34px; height: 30px; }
+  .skin-arcade.enter .ar-panel { animation-name: ar-panel-side; }
+  @keyframes ar-panel-side { from { transform: translateX(100%); } to { transform: none; } }
+}

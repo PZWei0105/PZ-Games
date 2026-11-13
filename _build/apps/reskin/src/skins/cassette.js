@@ -1,6 +1,6 @@
 /* ===================== skin: 卡帶隨身聽 — reels shrink and grow with the song; hold FF/REW to wind ===================== */
 R.skins.def({
-  id: 'cassette', name: '卡帶隨身聽', group: '復古', en: 'TAPE DECK',
+  id: 'cassette', punch: 0.6, name: '卡帶隨身聽', group: '復古', en: 'TAPE DECK',
   desc: '磁帶捲軸跟著轉，按住快轉鍵兩個捲軸一起狂轉',
   bloom: { s: 0.22, th: 0.82 }, trans: 'shatter',
   theme: { bg: '#ffb84d', fg: '#2b2230', accent: '#ff5a36', accent2: '#1fb5a6', ui: 'rgba(43,34,48,.98)', dock: 'rgba(255,255,255,.5)', dockfg: '#2b2230' },
@@ -109,7 +109,7 @@ R.skins.def({
         const p = Math.min(1, v.progress);
         // cassette shell
         const slide = R.ease.out(Math.min(1, Math.max(0, (enterT - 0.2) / 0.5)));
-        ctx.save(); ctx.translate(0, (1 - slide) * -h * 1.1);
+        ctx.save(); ctx.translate(0, (1 - slide) * -h * 1.1 + (R.reduced ? 0 : v.pump * 2.2));
         const sx = w * 0.04, sy = h * 0.06, sw = w * 0.92, sh = h * 0.9;
         ctx.fillStyle = '#26262b'; rr(ctx, sx, sy, sw, sh, 10); ctx.fill();
         ctx.fillStyle = '#9aa0a8'; for (const [px, py] of [[sx + 10, sy + 10], [sx + sw - 10, sy + 10], [sx + 10, sy + sh - 10], [sx + sw - 10, sy + sh - 10]]) { ctx.beginPath(); ctx.arc(px, py, 3, 0, R.TAU); ctx.fill(); }
@@ -153,7 +153,8 @@ R.skins.def({
         const c = Math.floor(R.player.time() * 1.7) % 1000;
         const ds = [Math.floor(c / 100), Math.floor(c / 10) % 10, c % 10];
         for (let i = 0; i < 3; i++) ctrCols[i].style.transform = `translateY(${(-ds[i] * 10).toFixed(2)}%)`;
-        const L = Math.min(1, v.level * 0.95 + v.bass * 0.1), Rr = Math.min(1, v.level * 0.9 + v.high * 0.2);
+        // the LED meters jump with the kick (left) and the snare (right)
+        const L = Math.min(1, v.level * 0.85 + v.bass * 0.06 + v.kickE * 0.22), Rr = Math.min(1, v.level * 0.82 + v.high * 0.12 + v.snareE * 0.22);
         vuEls[0].style.setProperty('--h', (v.playing ? L : 0).toFixed(3)); vuEls[1].style.setProperty('--h', (v.playing ? Rr : 0).toFixed(3));
       },
     };

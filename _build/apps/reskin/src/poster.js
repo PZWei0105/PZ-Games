@@ -4,7 +4,7 @@
    soft copy of what the skin looks like right now. The lock screen (Media Session artwork) shows it. */
 R.poster = (() => {
   const { color, settings, bus } = R;
-  const FAM = { neon: 'hud', mecha: 'hud', scope: 'hud', fighter: 'hud', supercar: 'hud', neoncity: 'hud', nebula: 'cosmic', blackhole: 'cosmic', aurora: 'cosmic', fireworks: 'cosmic', stage: 'cosmic', vinyl: 'vinyl', cassette: 'cassette', arcade: 'pixel', ink: 'ink', jelly: 'cute', gacha: 'cute', catdj: 'cute', glass: 'glass', liquid: 'chrome' };
+  const FAM = { neon: 'hud', mecha: 'hud', scope: 'hud', fighter: 'hud', supercar: 'hud', neoncity: 'hud', nebula: 'cosmic', blackhole: 'cosmic', aurora: 'cosmic', fireworks: 'cosmic', stage: 'cosmic', vinyl: 'vinyl', cassette: 'cassette', arcade: 'pixel', ink: 'ink', jelly: 'cute', gacha: 'cute', catdj: 'cute', glass: 'glass', liquid: 'chrome', rhythm: 'hud', particles: 'cosmic', woofer: 'chrome' };
   const famOf = (def) => (def ? FAM[def.base || def.id] || (def.diy ? 'glass' : 'glass') : 'glass');
   const SANS = '-apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif';
   const rr = (x, l, t, w, h, r) => R.snap.rrect(x, l, t, w, h, [r, r, r, r]);

@@ -1,0 +1,48 @@
+/* ---------- 粒子封面 PARTICLE ART ---------- */
+.skin-particles { --lv: 0; color: #f3f0ff; font-family: "Exo 2", var(--sans); background: radial-gradient(120% 80% at 50% 38%, #0d0a1f 0%, #030308 62%); }
+.skin-particles .pa-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-particles .pa-vig { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, transparent 58%, rgba(3,3,8,.55) 76%, rgba(3,3,8,.9)); }
+.skin-particles .pa-flatart { display: none; }
+.skin-particles.pa-flat .pa-flatart { display: block; position: absolute; left: 50%; top: 36%; width: min(70vw, 42vh, 420px); aspect-ratio: 1; transform: translate(-50%, -50%) scale(calc(1 + var(--rp, 0) * .05)); border-radius: 18px; overflow: hidden; box-shadow: 0 0 calc(40px + var(--rp, 0) * 50px) rgba(185,140,255,.55); }
+.skin-particles .pa-flatart img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-particles .pa-hud { position: absolute; left: calc(var(--sl) + 18px); top: calc(var(--st) + 18px); pointer-events: none; }
+.skin-particles .pa-hud b { display: block; font-family: "Orbitron", sans-serif; font-weight: 700; font-size: 12px; letter-spacing: .3em; color: #e3d6ff; text-shadow: 0 0 12px rgba(185,140,255,.7); }
+.skin-particles .pa-hud b i { font-style: normal; color: #4fe3ff; }
+.skin-particles .pa-hud span { display: block; margin-top: 6px; font-family: "Share Tech Mono", monospace; font-size: 10.5px; letter-spacing: .2em; color: rgba(243,240,255,.45); }
+.skin-particles .pa-hud em { font-style: normal; color: #b9f3ff; }
+@media (max-width: 460px) { .skin-particles .pa-hud b { font-size: 10.5px; letter-spacing: .22em; } }
+.skin-particles .pa-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 calc(var(--sr) + 22px) calc(var(--sb) + 14px) calc(var(--sl) + 22px); max-width: 620px; margin: 0 auto; }
+.skin-particles .pa-row { display: flex; align-items: center; gap: 14px; }
+.skin-particles .pa-art { flex: none; width: 60px; height: 60px; border-radius: 14px; overflow: hidden; background: #120d24; box-shadow: 0 0 0 1px rgba(220,203,255,.5), 0 0 calc(16px + var(--rp, 0) * 22px) rgba(185,140,255,.5); }
+.skin-particles .pa-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-particles .pa-art img.blank { opacity: 0; }
+.skin-particles .pa-tx { min-width: 0; flex: 1; }
+.skin-particles .pa-t { font-weight: 600; font-size: 22px; line-height: 1.22; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: 0 0 22px rgba(185,140,255,.45); }
+.skin-particles .pa-a { margin-top: 4px; font-size: 13px; letter-spacing: .1em; color: #a7f0ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-particles .pa-seek { margin-top: 16px; padding: 10px 0 2px; }
+.skin-particles .pa-seek .seek-track { height: 2px; background: rgba(243,240,255,.14); }
+.skin-particles .pa-seek .seek-fill { background: linear-gradient(90deg, #ff5fb0, #b98cff 50%, #4fe3ff); }
+.skin-particles .pa-seek .seek-knob { width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(185,140,255,.2), 0 0 14px 3px rgba(185,140,255,.8); }
+.skin-particles .pa-seek .seek-times { margin-top: 9px; font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: .12em; color: rgba(243,240,255,.5); }
+.skin-particles .pa-ctrl { margin-top: 8px; justify-content: space-between; }
+.skin-particles .pa-ctrl button { width: 50px; height: 50px; border-radius: 50%; font-size: 21px; color: #f3f0ff; transition: transform .15s, background .2s; }
+.skin-particles .pa-ctrl button:active { transform: scale(.88); background: rgba(185,140,255,.15); }
+.skin-particles .pa-ctrl .c-shuf, .skin-particles .pa-ctrl .c-rep { font-size: 17px; }
+.skin-particles .pa-ctrl .c-play { width: 72px; height: 72px; font-size: 27px; color: #fff; background: radial-gradient(circle at 50% 40%, rgba(185,140,255,.35), rgba(79,227,255,.12) 70%); box-shadow: inset 0 0 0 1.5px rgba(220,203,255,.75), 0 0 calc(16px + var(--rp, 0) * 26px) rgba(185,140,255,.55); }
+/* enter: the HUD fades up while the particles fall into place; the panel rises */
+.skin-particles.enter .pa-hud { animation: pa-fade .8s ease .5s both; }
+.skin-particles.enter .pa-panel { animation: pa-rise 1s cubic-bezier(.2,.8,.2,1) .8s both; }
+@keyframes pa-fade { from { opacity: 0; letter-spacing: .6em; } to { opacity: 1; } }
+@keyframes pa-rise { from { opacity: 0; transform: translateY(28px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+/* next song: the title scatters into dots and comes back */
+.skin-particles.swap .pa-t, .skin-particles.swap .pa-a { animation: pa-scatter 1.1s cubic-bezier(.2,.8,.2,1) both; }
+.skin-particles.swap .pa-a { animation-delay: .1s; }
+@keyframes pa-scatter { 0% { opacity: 0; filter: blur(10px); transform: scale(1.15); } 100% { opacity: 1; filter: none; transform: none; } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-particles .pa-panel { max-width: 560px; padding-bottom: calc(var(--sb) + 8px); }
+  .skin-particles .pa-art { width: 46px; height: 46px; }
+  .skin-particles .pa-t { font-size: 18px; }
+  .skin-particles .pa-seek { margin-top: 6px; }
+  .skin-particles .pa-ctrl { margin-top: 0; }
+  .skin-particles .pa-ctrl .c-play { width: 58px; height: 58px; }
+}

@@ -89,13 +89,15 @@ R.skins.def({
     const hop = (p, k) => { p.jv = -Math.sqrt(1800 * 11 * p.sc * k); };
     const jumpAll = (pow) => { for (const p of crowd) if (rnd() < 0.85) hop(p, (0.8 + rnd() * 0.7) * pow); };
     api.on('hot', (on) => { if (on) { pyro(true); strobe = api.flash() ? 0.6 : 0; jumpAll(1); } });
-    api.beat((s) => {
-      for (const hd of heads) hd.inten = Math.min(1.4, hd.inten + s);
-      if (R.viz.beatN % 8 === 0) colShift++;
-      if (R.viz.beatN % 2) hitL = s; else hitR = s;
+    let barN = 0;
+    api.beat((s, i) => {
+      for (const hd of heads) hd.inten = Math.min(1.4, hd.inten + s * (i.down ? 1.2 : 0.8));
+      // the light desk changes colour every two bars, on the bar's first beat
+      if (i.down && ++barN % 2 === 0) colShift++;
+      if (i.bpos % 2) hitL = s; else hitR = s;
       strum = 1;
-      if ((R.viz.mood === 'hype' || R.viz.hot > 0.5) && s > 0.55) for (const p of crowd) if (rnd() < 0.45 && !p.jump) hop(p, 0.3 + s * 0.6);
-      if (R.viz.hot > 0.6 && s > 0.75) { jet(cv.w * (R.viz.beatN % 2 ? 0.28 : 0.72), low ? 10 : 20, false); if (api.flash() && s > 0.95) strobe = Math.max(strobe, 0.35); }
+      if ((R.viz.mood === 'hype' || R.viz.hot > 0.5) && s > 0.5) for (const p of crowd) if (rnd() < (i.down ? 0.7 : 0.4) && !p.jump) hop(p, 0.3 + s * 0.6);
+      if (R.viz.hot > 0.6 && (i.down || i.bpos === 2)) { jet(cv.w * (i.down ? 0.28 : 0.72), low ? 10 : 20, false); if (api.flash() && i.down) strobe = Math.max(strobe, 0.35); }
     });
     // ---- the band: thick round-capped strokes read as backlit silhouettes ----
     const seg = (ctx, pts, wd) => { ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); ctx.stroke(); };
@@ -214,7 +216,9 @@ R.skins.def({
           const hd = heads[i];
           hd.inten += (0.35 - hd.inten) * (1 - Math.exp(-dt * 2.5));
           const x0 = w * (0.08 + (i / (heads.length - 1)) * 0.84);
-          const ang = Math.sin(t * (0.5 + v.mid * 0.8) + hd.ph) * 0.55 + (i < 3 ? 0.18 : -0.18);
+          // the heads swing on the beat: a quick move on each beat, held until the next
+          const bp = v.playing ? v.stepT * Math.PI * 0.5 : t * 0.6;
+          const ang = Math.sin(bp + hd.ph) * 0.55 + (i < 3 ? 0.18 : -0.18);
           ctx.save(); ctx.translate(x0, trussY); ctx.rotate(ang);
           ctx.globalAlpha = Math.min(1, 0.18 + hd.inten * 0.32 + v.hot * 0.25) * lit;
           ctx.drawImage(beamOf(pal[(colShift + i) % pal.length]), -L * 0.11, 0, L * 0.22, L);
@@ -227,7 +231,7 @@ R.skins.def({
           const ox = w / 2, oy = deckTop + 4;
           ctx.lineWidth = 1.6;
           for (let i = 0; i < 9; i++) {
-            const a = Math.PI / 2 + Math.sin(t * 1.3 + i * 0.7) * 0.9 + (i - 4) * 0.12;
+            const a = Math.PI / 2 + Math.sin((v.playing ? v.stepT * Math.PI * 0.5 : t * 1.3) + i * 0.7) * 0.9 + (i - 4) * 0.12;
             ctx.strokeStyle = i % 2 ? `rgba(57,255,143,${0.55 * las})` : `rgba(80,220,255,${0.5 * las})`;
             ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + Math.cos(a) * h * 1.5, oy + Math.abs(Math.sin(a)) * h * 1.2 * (i % 3 === 0 ? 0.6 : -1)); ctx.stroke();
           }

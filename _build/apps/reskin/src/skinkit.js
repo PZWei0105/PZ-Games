@@ -136,6 +136,7 @@ R.stage = (() => {
       root, def,
       on(e, f) { const off = bus.on(e, f); offs.push(off); return off; },
       beat(f) { const off = R.viz.onBeat(f); offs.push(off); return off; },
+      hit(f) { const off = R.viz.onHit(f); offs.push(off); return off; },
       canvas: (cv, o) => R.kit.canvas(cv, o),
       glow: R.kit.glow,
       sfx: (n) => R.sfx.play(n, def.sfx),
@@ -221,6 +222,23 @@ R.stage = (() => {
       try { L.inst.frame && L.inst.frame(dt, t, R.viz); } catch (e) { console.error('frame', L.def.id, e); L.inst.frame = null; }
       L.b.tick(false);
     }
+    punch(dt);
+  }
+  // the whole skin gives a small push on every beat, a bigger one on the bar's first (def.punch scales it, 0 = none)
+  let pk = 0;
+  function punch(dt) {
+    const L = top(); if (!L || L.dead) return;
+    const v = R.viz, b = document.body.classList;
+    const amt = L.def.punch === undefined ? 1 : +L.def.punch || 0;
+    const want = R.reduced || !v.playing || amt <= 0 || b.contains('deep') || b.contains('ly-open') || R.trans.active() ? 0 : amt * (0.0055 * Math.min(1.2, v.beat) + 0.0045 * v.down);
+    pk = want > pk ? want : pk + (want - pk) * Math.min(1, dt * 12);
+    const s = pk > 0.0003 ? (1 + pk).toFixed(4) : '';
+    if (L.root.style.scale !== s) L.root.style.scale = s;
+    // the beat for stylesheets: every skin's hero (def.hero) pumps with --rp / --rd; skins use the rest as they like
+    const st = L.root.style, q = (x) => (x < 0.004 ? '0' : x.toFixed(3));
+    const on = v.playing && !R.reduced;
+    st.setProperty('--rp', on ? q(v.pump) : '0'); st.setProperty('--rd', on ? q(v.down) : '0');
+    st.setProperty('--rk', on ? q(v.kickE) : '0'); st.setProperty('--rs', on ? q(v.snareE) : '0'); st.setProperty('--rh', on ? q(v.hatE) : '0');
   }
 
   // song change: every skin gets a .swap class for its own change animation (CSS), and inst.swap(t) for canvas effects

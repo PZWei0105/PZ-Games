@@ -1,6 +1,6 @@
 /* ===================== skin: 貓咪 DJ — a cat in big headphones spins your song: head bobbing on the beat, paw on the record, the cover glowing on the booth; paws up in the chorus, asleep when you pause ===================== */
 R.skins.def({
-  id: 'catdj', name: '貓咪 DJ', group: '可愛', en: 'DJ MEOW',
+  id: 'catdj', punch: 0.8, name: '貓咪 DJ', group: '可愛', en: 'DJ MEOW',
   desc: '戴耳機的貓咪 DJ 跟著節拍點頭刷碟，封面亮在 DJ 台上；副歌舉雙手，暫停就睡著',
   bloom: { s: 0.45, th: 0.6 },
   theme: { bg: '#2b1a4f', fg: '#ffffff', accent: '#ff7eb6', accent2: '#5ce1e6', ui: 'rgba(43,26,79,.97)', dock: 'rgba(255,255,255,.16)', dockfg: '#ffffff' },
@@ -50,8 +50,10 @@ R.skins.def({
     for (let i = 0; i < 18; i++) bokeh.push({ x: rnd(), y: rnd() * 0.7, r: 8 + rnd() * 26, sp: 3 + rnd() * 8, ph: rnd() * 6, c: ['#ff7eb6', '#5ce1e6', '#ffd36b', '#b98cff', '#7dffb0'][i % 5] });
     const say = (txt, ms) => { bub.textContent = txt; bub.classList.remove('on'); void bub.offsetWidth; bub.classList.add('on'); clearTimeout(say.t); say.t = setTimeout(() => bub.classList.remove('on'), ms || 1400); };
     api.on('hot', (on) => { if (on) say('NYA~♪', 1800); });
-    api.beat((s) => {
-      if (s > 0.6) { earV = -(4 + s * 6); scratch = 1; }
+    // the ears twitch on every beat; the bar's first beat gets a scratch
+    api.beat((s, i) => {
+      earV = -(2.5 + s * (i.down ? 7 : 3.5));
+      if (i.down) scratch = 1;
       if (rnd() < 0.55 + R.viz.hot * 0.4) notes.push({ x: G.cx + (rnd() < 0.5 ? -1 : 1) * (60 + rnd() * 140) * G.s, y: G.deskY - 20 * G.s, vx: (rnd() - 0.5) * 30, vy: -(40 + rnd() * 40), life: 2.2, c: ['#ff7eb6', '#5ce1e6', '#ffd36b', '#b98cff'][Math.floor(rnd() * 4)], k: rnd() < 0.5 ? 1 : 2, rot: (rnd() - 0.5) * 0.6 });
       if (notes.length > 40) notes.shift();
     });
@@ -181,13 +183,14 @@ R.skins.def({
         frameScene(ctx, t, v, dt);
         // the cat: pops up from behind the booth when the skin opens
         const pop = enterT < 1.2 ? R.ease.elastic(Math.min(1, Math.max(0, (enterT - 0.25) / 0.95))) : 1;
-        const bl = 60 / (v.bpm || 110), ph = (v.t / bl) % 1, bob = Math.abs(Math.sin(ph * Math.PI)) * (v.playing ? 1 : 0);
+        // the head nods on the song's own beat grid: down on every beat
+        const ph = v.phase, bob = Math.abs(Math.sin(ph * Math.PI)) * (v.playing ? 1 : 0);
         earV += (-earL * 120 - earV * 9) * dt; earL += earV * dt; earR = earL * 0.8;
         blinkT -= dt; if (blinkT < 0) { blink = 1; blinkT = 2.5 + rnd() * 3.5; } blink = Math.max(0, blink - dt * 7);
         scratch = Math.max(0, scratch - dt * 2.5);
         const pose = {
           headY: -bob * 8 + sleepK * 14 - (v.hot > 0.5 ? bob * 6 : 0),
-          tilt: (v.playing ? (Math.floor(v.t / bl) % 2 ? 1 : -1) * 0.07 * bob * (0.5 + v.level) : 0) + sleepK * 0.18,
+          tilt: (v.playing ? (Math.floor(v.beatT) % 2 ? 1 : -1) * 0.07 * bob * (0.5 + v.level) : 0) + sleepK * 0.18,
           eyes: sleepK > 0.5 ? 'sleep' : hotK > 0.5 ? 'happy' : 'open',
           mouth: hotK > 0.5 || swapT < 0.6 ? 'open' : 'w',
           blink: blink > 0.5 ? 1 : 0,

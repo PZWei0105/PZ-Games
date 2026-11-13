@@ -1,6 +1,6 @@
 /* ===================== skin: 煙火夜 — a fireworks show over the harbour, every shell timed to burst on a beat; the chorus is the finale ===================== */
 R.skins.def({
-  id: 'fireworks', name: '煙火夜', group: '夢幻', en: 'FIREWORKS',
+  id: 'fireworks', punch: 0.6, name: '煙火夜', group: '夢幻', en: 'FIREWORKS',
   desc: '港灣夜空的煙火秀，每一發都剛好在節拍上炸開；副歌就是壓軸連發',
   bloom: { s: 0.72, th: 0.48 }, hero: '.fw-moon', trans: 'portal',
   theme: { bg: '#070a1f', fg: '#ffffff', accent: '#ffd36b', accent2: '#ff4f7b', ui: 'rgba(12,14,36,.97)', dock: 'rgba(14,16,44,.5)', dockfg: '#ffe9b0' },
@@ -113,11 +113,13 @@ R.skins.def({
       lastSongT = t;
       if (!v.playing) { schedTo = Math.max(schedTo, t + 0.85); return; }
       const to = t + 1.25; if (to <= schedTo) return;
-      R.viz.upcoming(schedTo, to, ahead); schedTo = to;
-      for (let i = 0; i < ahead.length; i += 2) {
-        const bt = ahead[i], s = ahead[i + 1], F = Math.max(0.6, bt - t);
-        if (inHot(bt)) { launch(F, s, true); if (s > 0.45) launch(F, s * 0.85, true); if (!low && rnd() < 0.45) launch(F, 0.5, true, 'glitter'); }
-        else if (s > 0.62 || (s > 0.38 && rnd() < 0.4)) launch(F, s, false);
+      // shells are fired early so they burst exactly on the beat: the bar's first beat always, the third on a strong
+      // bar, the rest now and then; in the chorus every beat, doubled on the bar's first, with glitter
+      R.viz.upcomingBeats(schedTo, to, ahead); schedTo = to;
+      for (let i = 0; i < ahead.length; i += 3) {
+        const bt = ahead[i], s = ahead[i + 1], pos = ahead[i + 2], F = Math.max(0.6, bt - t);
+        if (inHot(bt)) { launch(F, s, true); if (pos === 0) launch(F, s * 0.85, true); if (!low && (pos === 2 || rnd() < 0.3)) launch(F, 0.5, true, 'glitter'); }
+        else if (pos === 0 || (pos === 2 && s > 0.75) || (s > 0.9 && rnd() < 0.3)) launch(F, s, false);
       }
     }
     const salvo = (n, kind) => { for (let i = 0; i < n; i++) launch(0.95 + i * 0.12, 0.85, true, kind || (i === 2 ? 'heart' : null)); };

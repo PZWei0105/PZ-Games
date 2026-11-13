@@ -8,6 +8,8 @@
 
 標籤      MP3（ID3v2.3＋封面）、M4A（封面）、FLAC（Vorbis＋圖片）、WAV（從檔名猜歌手）、Big5 編碼的舊 MP3 標籤
 分析      每首都算出節奏（BPM 誤差 ±3）與頻譜
+節拍      節拍引擎（第 3 版）：合成的舞曲、流行、抒情、嘻哈四首（已知每一拍），速度、每一拍、每小節第一拍都要對；
+          示範曲的節拍格線、拍子事件準時、對拍滑桿方向、對拍測試、「正在對拍」提示、節奏大師計分、粒子封面的 WebGL
 播放      單軌換帶：播完接下一首；雙軌接力：螢幕關著時提前交棒、記成功；鎖屏沒接上 → 自動改雙軌＋「繼續播放」；
           單曲循環、上一首重頭、隨機保留目前這首、刪掉正在播的歌、壞掉的檔案跳過
 介面      空歌庫→示範曲、衣櫃左右滑試穿＋就穿這套、歌單綁 Skin、每首換一套、DIY 存檔、派對模式、重新整理後接著上次
@@ -27,7 +29,7 @@ import argparse, functools, http.server, json, os, shutil, socketserver, struct,
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
-SKINS = ['neon', 'blackhole', 'neoncity', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+SKINS = ['neon', 'rhythm', 'blackhole', 'particles', 'neoncity', 'woofer', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
 GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']  # WebGL in headless Chromium (the 3D skins, the bloom)
 PHONE = {'viewport': {'width': 390, 'height': 844}, 'device_scale_factor': 2, 'has_touch': True, 'is_mobile': True}
 DESK = {'viewport': {'width': 1280, 'height': 800}}
@@ -361,9 +363,10 @@ def run_features(url, out, folder):
         ev('RESKIN.settings.set("transFx", "auto")')
         sizes = ev('async (ids) => { const out = []; for (const id of ids) { await RESKIN.stage.show(id, { instant: true, silent: true }); const c = await RESKIN.poster.card(RESKIN.player.current(), RESKIN.stage.current(), 300); out.push(c.width + "x" + c.height); } return out; }', SKINS)
         ok(len(sizes) == len(SKINS) and all(x == '300x300' for x in sizes), '鎖屏封面換膚：每套 Skin 都畫得出自己的封面卡（%d 套）' % len(sizes))
-        # --- analysis v2, song intel, smart playlists ---
+        # --- analysis v3 (beat grid), the beat clock, sync, song intel, smart playlists ---
         A = ev('RESKIN.lib.all().filter(t => t.an === 1).map(t => ({ av: t.av, k: t.mkey, loud: t.loud }))')
-        ok(A and all(x['av'] == 2 and x['loud'] is not None for x in A) and sum(1 for x in A if x['k']) >= len(A) - 1, '分析升級：每首都量出調性、響度、亮度（%s）' % [x['k'] for x in A])
+        ok(A and all(x['av'] == 3 and x['loud'] is not None for x in A) and sum(1 for x in A if x['k']) >= len(A) - 1, '分析第 3 版：每首都量出節拍格線、調性、響度、亮度（%s）' % [x['k'] for x in A])
+        check_beat_clock(pg, ev, out)
         ev('() => { const t = RESKIN.lib.list().find(t => t.demo); RESKIN.player.playFrom([t.id], t.id, { type: "library" }); }'); pg.wait_for_timeout(900)
         ev('RESKIN.insight.open()'); pg.wait_for_timeout(1200)
         ok(pg.is_visible('.in-grid') and 'BPM' in pg.inner_text('.in-grid'), '歌曲情報：BPM、調性、能量一目了然')
@@ -410,6 +413,149 @@ def run_features(url, out, folder):
         ev('RESKIN.ui.closeSheet(true)')
         ok(not errs, '新功能：沒有程式錯誤' + ('' if not errs else '：' + ' | '.join(errs[:5])))
         ctx.close(); b.close()
+
+
+def beat_songs(d):
+    """Four synthesized songs with known beats (22050 Hz mono float32): EDM 128, syncopated pop 100, ballad 72 (piano
+    intro, drums later), hip-hop 90 with an 808. The kind of songs the old onset detector got wrong."""
+    import numpy as np
+    os.makedirs(d, exist_ok=True)
+    SR = 22050; rng = np.random.default_rng(7)
+    def kick(g=1.0):
+        n = int(SR * 0.35); t = np.arange(n) / SR; f = 45 + 110 * np.exp(-t * 28)
+        return g * np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 9)
+    def snare(g=0.6):
+        n = int(SR * 0.22); t = np.arange(n) / SR; x = np.convolve(rng.standard_normal(n), [1, -0.8], 'same')
+        return g * (0.6 * x * np.exp(-t * 18) + 0.5 * np.sin(2 * np.pi * 185 * t) * np.exp(-t * 25))
+    def hat(g=0.18):
+        n = int(SR * 0.05); t = np.arange(n) / SR; x = rng.standard_normal(n); x = x - np.convolve(x, np.ones(4) / 4, 'same')
+        return g * x * np.exp(-t * 90)
+    def tone(freq, dur, g, a=0.01, dk=None, harm=(1, .5, .33, .25), vib=0):
+        n = int(SR * dur); t = np.arange(n) / SR; f = freq * (1 + vib * np.sin(2 * np.pi * 5.5 * t)); ph = 2 * np.pi * np.cumsum(f) / SR
+        x = sum(h * np.sin((i + 1) * ph) for i, h in enumerate(harm))
+        return g * x * np.minimum(1, t / a) * (np.exp(-t / dk) if dk else 1) * np.minimum(1, (dur - t) / 0.03)
+    def place(buf, x, t):
+        i = int(t * SR); j = min(len(buf), i + len(x))
+        if i < len(buf): buf[i:j] += x[: j - i]
+    NOTE = lambda m: 440 * 2 ** ((m - 69) / 12)
+    PROG = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]]
+    spec = {'edm': (128, 40, 4), 'pop': (100, 36, 4), 'ballad': (72, 24, 4), 'hiphop': (90, 30, 2)}
+    out = {}
+    for kind, (bpm, bars, intro) in spec.items():
+        bl = 60 / bpm; buf = np.zeros(int(SR * (bars * 4 * bl + 2))); beats = []
+        for bar in range(bars):
+            t0 = bar * 4 * bl; ch = PROG[bar % 4]; drums = bar >= intro; chorus = (bar // 8) % 2 == 1
+            if drums: beats += [t0 + k * bl for k in range(4)]
+            if kind == 'edm':
+                for k in range(4):
+                    if drums: place(buf, kick(1.0), t0 + k * bl)
+                    if drums and k in (1, 3): place(buf, snare(0.45), t0 + k * bl)
+                    for e in range(2): place(buf, hat(0.15 if e else 0.08), t0 + (k + e / 2) * bl)
+                    place(buf, tone(NOTE(ch[0] - 24), bl * 0.45, 0.35, a=0.005, dk=0.2), t0 + (k + 0.5) * bl)
+                for m in ch: place(buf, tone(NOTE(m), 4 * bl, 0.06, a=0.3, harm=(1, .6, .4, .3, .2)), t0)
+            if kind == 'pop':
+                for p in (0, 1.5, 2):
+                    if drums: place(buf, kick(0.8), t0 + p * bl)
+                for p in (1, 3):
+                    if drums: place(buf, snare(0.55), t0 + p * bl)
+                for e in range(8):
+                    if drums: place(buf, hat(0.12 if e % 2 else 0.17), t0 + e * bl / 2)
+                for p, Ln in [(0, 1.4), (1.5, 1.0), (2.75, 1.2)]: place(buf, tone(NOTE(ch[0] - 24), Ln * bl, 0.45, a=0.008, dk=0.9, harm=(1, .7, .3, .15)), t0 + p * bl)
+                for p in (0, 1.5, 3):
+                    for m in ch: place(buf, tone(NOTE(m), 1.2 * bl, 0.07, a=0.004, dk=0.5), t0 + p * bl)
+                for i, m in enumerate([ch[2], ch[1], ch[2], ch[0]]): place(buf, tone(NOTE(m), bl * 0.95, 0.22 if chorus else 0.14, a=0.06, harm=(1, .6, .5, .3, .2), vib=0.012), t0 + (i + 0.25) * bl)
+            if kind == 'ballad':
+                for k in range(4):
+                    for m in ch: place(buf, tone(NOTE(m), 1.05 * bl, 0.09, a=0.004, dk=0.9), t0 + k * bl)
+                    if drums and k in (0, 2): place(buf, kick(0.45), t0 + k * bl)
+                    if drums and k in (1, 3): place(buf, snare(0.3), t0 + k * bl)
+                place(buf, tone(NOTE(ch[0] - 24), 4 * bl, 0.35, a=0.05, dk=3.0, harm=(1, .5, .2)), t0)
+                for m in ch: place(buf, tone(NOTE(m + 12), 4 * bl, 0.035, a=0.8, harm=(1, .5, .4, .3)), t0)
+                for i, m in enumerate([ch[2] + 12, ch[1] + 12]): place(buf, tone(NOTE(m), 2 * bl * 0.95, 0.12, a=0.1, harm=(1, .5, .4, .2), vib=0.01), t0 + i * 2 * bl + 0.1)
+            if kind == 'hiphop':
+                for p in (0, 1.75, 2.5):
+                    if drums: place(buf, kick(0.5), t0 + p * bl)
+                    place(buf, tone(NOTE(ch[0] - 24), 0.9 * bl, 0.55, a=0.004, dk=1.4, harm=(1, .25)), t0 + p * bl)
+                for p in (1, 3):
+                    if drums: place(buf, snare(0.6), t0 + p * bl)
+                for e in range(8):
+                    if drums: place(buf, hat(0.14), t0 + e * bl / 2 + (0.08 * bl if e % 2 else 0))
+                for m in ch: place(buf, tone(NOTE(m), 4 * bl, 0.05, a=0.02, dk=2.5), t0)
+        buf /= np.max(np.abs(buf)) * 1.05
+        f = os.path.join(d, kind + '.f32'); buf.astype(np.float32).tofile(f)
+        out[kind] = {'file': f, 'bpm': bpm, 'beats': beats, 'bar': 4 * bl}
+    return out
+
+
+def run_beats(analysis_js=None):
+    """The beat engine on its own (Node runs analysis.js): tempo, every beat, the bar's first beat."""
+    node = shutil.which('node')
+    if not node:
+        print('（略過節拍引擎離線測試：這台沒有 node）'); return
+    songs = beat_songs('/tmp/reskin-beats')
+    js = """const fs = require('fs'); const src = fs.readFileSync(process.argv[2], 'utf8');
+      const beatCore = new Function(src.slice(src.indexOf('function beatCore'), src.indexOf('function analyzeCore')) + ';return beatCore')();
+      const out = {}; for (const f of process.argv.slice(3)) { const b = fs.readFileSync(f); const x = new Float32Array(b.buffer, b.byteOffset, b.length / 4).slice();
+        const r = beatCore(x, 22050); out[f] = { bpm: r.bpm, beats: Array.from(r.beats), bpos: Array.from(r.bpos), kicks: r.kicks.length, tones: r.tones.length }; }
+      console.log(JSON.stringify(out));"""
+    jf = '/tmp/reskin-beats/run.js'; open(jf, 'w').write(js)
+    res = json.loads(subprocess.check_output([node, jf, analysis_js or os.path.join(HERE, 'src', 'analysis.js')] + [v['file'] for v in songs.values()], timeout=300))
+    names = {'edm': '舞曲 128', 'pop': '切分流行 100', 'ballad': '抒情 72', 'hiphop': '嘻哈 90'}
+    for kind, v in songs.items():
+        r = res[v['file']]; T = v['beats']; B = r['beats']; tol = 0.07
+        D = [t for t in B if T[0] - 0.2 <= t <= T[-1] + 0.2]
+        hit = sum(1 for t in T if any(abs(u - t) <= tol for u in D))
+        P = hit / max(1, len(D)); Rc = hit / len(T); F = 2 * P * Rc / max(1e-9, P + Rc)
+        good = tot = 0
+        for i, t in enumerate(B):
+            m = [u for u in T if abs(u - t) <= tol]
+            if not m: continue
+            tot += 1; k = (m[0] - T[0]) / v['bar']; good += (abs(k - round(k)) < 0.01) == (r['bpos'][i] == 0)
+        ok(abs(r['bpm'] / v['bpm'] - 1) < 0.015 and F >= 0.95 and good >= 0.9 * tot,
+           '節拍引擎（%s）：速度 %.1f、每一拍 F=%.0f%%、每小節第一拍 %d/%d' % (names[kind], r['bpm'], F * 100, good, tot))
+
+
+def check_beat_clock(pg, ev, out, new_skins=True):
+    """The beat clock in the app: the demo's grid, beats firing on time, the latency setting, the sync test, the chip
+    (and, in the main edition, the rhythm-game and particle skins)."""
+    ev('() => { const t = RESKIN.lib.list().find(t => t.demo); RESKIN.player.playFrom([t.id], t.id, { type: "library" }); }'); pg.wait_for_timeout(900)
+    g = ev('(async () => { const r = await RESKIN.analysis.get(RESKIN.player.current().id); const B = Array.from(r.beats), P = Array.from(r.bpos); return { v: r.v, bpm: r.bpm, gaps: B.slice(1).map((x, i) => x - B[i]), down: B.filter((x, i) => P[i] === 0), tones: (r.tones || []).length }; })()')
+    ok(g['v'] == 3 and abs(g['bpm'] - 120) < 0.6 and max(abs(x - 0.5) for x in g['gaps']) < 0.02 and all(abs(x / 2 - round(x / 2)) < 0.02 for x in g['down']) and g['tones'] > 0,
+       '節拍格線：示範曲 120 BPM、每拍 0.5 秒、每小節第一拍都在 2 秒的倍數上')
+    ev('RESKIN.player.seek(20)'); ev('RESKIN.player.play()'); pg.wait_for_timeout(600)
+    ev('() => { window.__bt = []; RESKIN.viz.onBeat((s, i) => window.__bt.push([RESKIN.player.time(), i.bpos, i.down])); }')
+    pg.wait_for_timeout(3200)
+    bt = ev('window.__bt')
+    ph = [((t + 0.035) % 0.5) for t, _, _ in bt]
+    late = [min(x, 0.5 - x) for x in ph]
+    ok(ev('RESKIN.viz.synced') and 5 <= len(bt) <= 8 and max(late) < 0.09 and all(d == (p == 0) for _, p, d in bt),
+       '拍子事件：照節拍格線準時發出（3 秒 %d 拍、最晚 %.0f 毫秒）' % (len(bt), max(late) * 1000 if late else -1))
+    ev('RESKIN.settings.set("latency", 200)'); pg.wait_for_timeout(200)
+    d = ev('RESKIN.viz.t - RESKIN.player.time()')
+    ev('RESKIN.settings.set("latency", 0)')
+    ok(abs(d - (0.035 - 0.2)) < 0.05, '對拍滑桿：往右調（藍牙耳機比較慢）畫面就晚一點（%.0f 毫秒）' % (d * 1000))
+    ev('() => { RESKIN.viz.synced = false; }'); pg.wait_for_timeout(2300)
+    chip = ev('(document.getElementById("syncChip") || {}).className')
+    ev('() => { RESKIN.viz.synced = true; }'); pg.wait_for_timeout(600)
+    chip2 = ev('(document.getElementById("syncChip") || {}).className')
+    ok(chip == 'wait' and chip2 == 'ok', '「正在對拍」提示：還沒對上拍時出現，對上後說一聲就收起來（%s → %s）' % (chip, chip2))
+    ev('RESKIN.sync.open()'); pg.wait_for_timeout(500)
+    pg.click('[data-sy="play"]'); pg.wait_for_timeout(1400)
+    flashed = ev('!!document.querySelector(".sy-ring.on")')
+    pg.click('[data-sy="+10"]'); lat = ev('RESKIN.settings.get("latency")')
+    pg.screenshot(path=os.path.join(out, 'ui-sync.png'))
+    pg.click('[data-sy="zero"]'); ev('RESKIN.ui.closeSheet()'); pg.wait_for_timeout(700)
+    ok(flashed and lat == 10 and ev('RESKIN.player.isPlaying()'), '對拍測試：滴答聲配閃光、可以微調，關掉後音樂接著播')
+    if not new_skins:
+        return
+    ev('RESKIN.stage.show("rhythm", { instant: true, silent: true })'); ev('RESKIN.player.seek(24)'); pg.wait_for_timeout(3500)
+    sc = ev('parseInt(document.querySelector(".skin-rhythm [data-rr=score]").textContent, 10)')
+    lv = ev('document.querySelector(".skin-rhythm [data-rr=lv]").textContent')
+    pg.screenshot(path=os.path.join(out, 'ui-rhythm.png'))
+    ok(sc > 0 and lv.startswith('LV ') and lv != 'LV --', '節奏大師：音符照這首的鼓聲寫成譜，打中就計分（%s、%d 分）' % (lv, sc))
+    ev('RESKIN.stage.show("particles", { instant: true, silent: true })'); pg.wait_for_timeout(1200)
+    ok(not ev('RESKIN.stage.root().classList.contains("pa-flat")'), '粒子封面：WebGL 粒子啟動（不是退回靜態封面）')
+    ev('RESKIN.stage.show("neon", { instant: true, silent: true })'); pg.wait_for_timeout(300)
 
 
 def folder_fixtures(d, fx):
@@ -641,6 +787,7 @@ def main():
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     fx = fixtures('/tmp/reskin-fixtures')
+    run_beats()
     srv = serve(REPO)
     s2 = serve(a.claude) if a.claude else None
     run_fallbacks(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', f'http://127.0.0.1:{s2.server_address[1]}/' if s2 else None, a.out, fx)

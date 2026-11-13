@@ -168,7 +168,8 @@ R.player = (() => {
     bus.emit('track', t);
     msMeta(t);
     saveSession();
-    if (t && !t.an) R.analysis.enqueue(id, true);
+    // the song being played is measured first (also when it was measured by an older version: the new beat grid)
+    if (t && (!t.an || R.analysis.stale(t))) R.analysis.enqueue(id, true);
   }
 
   async function playIndex(i, opts) {

@@ -1,6 +1,6 @@
 /* ===================== skin: 綠光示波器 — green phosphor CRT: waveform, Lissajous and spectrum modes ===================== */
 R.skins.def({
-  id: 'scope', name: '綠光示波器', group: '復古', en: 'OSCILLOSCOPE',
+  id: 'scope', punch: 0.8, name: '綠光示波器', group: '復古', en: 'OSCILLOSCOPE',
   desc: '聲音直接畫成磷光波形，還能切李薩如和頻譜',
   bloom: { s: 0.85, th: 0.42, tint: '#7cff9b' }, trans: 'pixel',
   theme: { bg: '#1c201d', fg: '#c9f7d2', accent: '#6dff8f', accent2: '#ffd36b', ui: 'rgba(16,22,18,.98)', dock: 'rgba(10,14,11,.6)', dockfg: '#6dff8f' },
@@ -71,7 +71,8 @@ R.skins.def({
       x.putImageData(d, 0, 0);
     }
     const loadArt = (t) => { dither(null); if (t) api.coverImage(t).then((im) => { if (api.track() && api.track().id === t.id) dither(im); }); };
-    api.beat((s) => { if (s > 0.5) { glowT = 0.12; trig.classList.remove('on'); void trig.offsetWidth; trig.classList.add('on'); } });
+    // the trigger lamp fires on every beat; the bar's first beat flares the phosphor longer
+    api.beat((s, i) => { glowT = i.down ? 0.16 : 0.09; trig.classList.remove('on'); void trig.offsetWidth; trig.classList.add('on'); });
     const pts = new Float32Array(200);
     function smooth(src, n, out) {
       const m = src.length;
@@ -108,7 +109,7 @@ R.skins.def({
           trace(ctx, () => { ctx.beginPath(); for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * w, y = cy - (pts[i] + (Math.random() - 0.5) * noise * 40) * amp; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } }, boost);
         } else if (mode === 1) {
           const W = v.wave, m = W.length, k = 11;
-          rotK += dt * 0.25;
+          rotK = v.playing ? v.stepT * 0.35 : rotK + dt * 0.25;
           const ca = Math.cos(rotK * 0.3), sa = Math.sin(rotK * 0.3), A = Math.min(w, h) * 0.38 * (v.playing ? 1 : 0.12);
           trace(ctx, () => { ctx.beginPath(); for (let i = 0; i <= m; i++) { const a = W[i % m], b = W[(i + k) % m]; const x0 = a * A, y0 = b * A; const x = w / 2 + x0 * ca - y0 * sa, y = cy + x0 * sa + y0 * ca; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } }, boost);
         } else {
@@ -118,7 +119,7 @@ R.skins.def({
           for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * w, y = base - v.peaks[i] * (base - top); ctx.fillRect(x - 2, y - 1, 4, 2); }
         }
         knobs[0].style.transform = `rotate(${(-130 + Math.min(1, v.level) * 260).toFixed(1)}deg)`;
-        knobs[1].style.transform = `rotate(${((t * (v.bpm || 100) * 0.5) % 360).toFixed(1)}deg)`;
+        knobs[1].style.transform = `rotate(${((v.playing ? v.stepT * 45 : t * 30) % 360).toFixed(1)}deg)`;
         knobs[2].style.transform = `rotate(${(-130 + Math.min(1, v.bass) * 260).toFixed(1)}deg)`;
       },
     };

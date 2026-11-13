@@ -187,7 +187,8 @@ R.skins.def({
       resize,
       frame(dt, t, v) {
         t0 += dt; enterT += dt; flash *= Math.exp(-dt * 3);
-        const spd = v.playing ? 16 + Math.min(150, v.bpm || 110) * 0.16 + v.level * 10 + v.hot * 18 : 3;
+        // the camera surges forward on every beat and glides until the next one
+        const spd = v.playing ? (13 + Math.min(150, v.bpm || 110) * 0.13 + v.level * 6) * (0.42 + 1.75 * v.pump) + v.hot * 16 : 3;
         const ez = Math.min(1, enterT / 2);
         camZ += dt * spd * (0.3 + ez * 0.7) + dt * flash * 60;
         rise += ((v.hot > 0.5 && !R.reduced ? 1 : 0) - rise) * (1 - Math.exp(-dt * 0.8));
@@ -198,12 +199,12 @@ R.skins.def({
         for (const b of B) if (b.z + b.d / 2 < camZ - 12) { b.z += b.span; reseed(b); }
         B.forEach((b, i) => { inst.set([b.x, b.z, b.w, b.d, b.h, b.seed, b.kind, 0], i * 8); });
         // camera: down the avenue, or high over the roofs in the chorus
-        const tl = R.tilt, ey = 6.5 + rise * 30 + (1 - ez) * 40, ex = Math.sin(t0 * 0.23) * 1.4;
+        const tl = R.tilt, ey = 6.5 + rise * 30 + (1 - ez) * 40 - (R.reduced ? 0 : v.kickE * 0.35), ex = Math.sin(t0 * 0.23) * 1.4;
         const eye = [ex, ey, camZ];
         const yaw = tl.x * 0.5 + Math.sin(t0 * 0.17) * 0.06, pit = -0.04 - rise * 0.42 - tl.y * 0.25 - (1 - ez) * 0.5;
         const ctr = [ex + Math.sin(yaw) * 10, ey + Math.sin(pit) * 10, camZ + Math.cos(yaw) * 10];
         const aspect = cvEl.width / cvEl.height;
-        const fovy = aspect < 1 ? 1.25 : 0.95;
+        const fovy = (aspect < 1 ? 1.25 : 0.95) * (1 + (R.reduced ? 0 : v.down * 0.05 + v.kickE * 0.025));
         const VP = mul(persp(fovy, aspect, 0.5, 900), look(eye, ctr));
         gl.viewport(0, 0, cvEl.width, cvEl.height);
         gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -218,12 +219,13 @@ R.skins.def({
         const gv = new Float32Array([-400, 0, gz0, 400, 0, gz0, 400, 0, gz1, -400, 0, gz0, 400, 0, gz1, -400, 0, gz1]);
         P.g.use(); gl.uniformMatrix4fv(P.g.u.uVP, false, VP); gl.uniform3f(P.g.u.uCam, eye[0], eye[1], eye[2]);
         gl.uniform3f(P.g.u.uHaze, haze[0], haze[1], haze[2]); gl.uniform3f(P.g.u.uC1, c1[0], c1[1], c1[2]); gl.uniform3f(P.g.u.uC2, c2[0], c2[1], c2[2]);
-        gl.uniform1f(P.g.u.uTime, t0); gl.uniform1f(P.g.u.uBeat, v.beat);
+        const nb = Math.min(1.6, v.pump * 0.75 + v.down * 0.7 + v.snareE * 0.25);
+        gl.uniform1f(P.g.u.uTime, t0); gl.uniform1f(P.g.u.uBeat, nb);
         gl.bindBuffer(gl.ARRAY_BUFFER, buf.ground); gl.bufferData(gl.ARRAY_BUFFER, gv, gl.DYNAMIC_DRAW);
         attr(P.g, 'aP', 3, 12, 0); gl.drawArrays(gl.TRIANGLES, 0, 6); off(P.g);
         // towers
         P.b.use(); gl.uniformMatrix4fv(P.b.u.uVP, false, VP); gl.uniform3f(P.b.u.uCam, eye[0], eye[1], eye[2]);
-        gl.uniform1f(P.b.u.uPPU, cvEl.height / (2 * Math.tan(fovy / 2))); gl.uniform1f(P.b.u.uTime, t0); gl.uniform1f(P.b.u.uLit, 0.42 + v.level * 0.38 + v.hot * 0.15); gl.uniform1f(P.b.u.uBeat, v.beat + flash * 0.8);
+        gl.uniform1f(P.b.u.uPPU, cvEl.height / (2 * Math.tan(fovy / 2))); gl.uniform1f(P.b.u.uTime, t0); gl.uniform1f(P.b.u.uLit, 0.4 + v.level * 0.34 + v.hot * 0.15 + v.hatE * 0.08); gl.uniform1f(P.b.u.uBeat, nb + flash * 0.8);
         gl.uniform3f(P.b.u.uHaze, haze[0], haze[1], haze[2]); gl.uniform3f(P.b.u.uC1, c1[0], c1[1], c1[2]); gl.uniform3f(P.b.u.uC2, c2[0], c2[1], c2[2]);
         gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(P.b.u.uCover, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, buf.cube); attr(P.b, 'aP', 3, 24, 0); attr(P.b, 'aN', 3, 24, 12);
@@ -239,7 +241,7 @@ R.skins.def({
         // traffic lights and rain, added on top
         gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.depthMask(false);
         cars.forEach((c, i) => {
-          c.z += c.v * dt * (v.playing ? 1 : 0.3);
+          c.z += c.v * dt * (v.playing ? 0.55 + 1.3 * v.pump : 0.3);
           if (c.z < camZ - 20) c.z += 460; if (c.z > camZ + 440) c.z -= 460;
           const col = c.toward ? [1, 0.95, 0.85] : [1, 0.12, 0.2];
           carBuf.set([c.x, c.y, c.z, col[0], col[1], col[2], c.y > 2 ? 2.6 : 1.8], i * 7);

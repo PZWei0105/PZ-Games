@@ -43,9 +43,11 @@ R.hype = (() => {
     cannons(m === 'full' ? 110 : 70);
     live = true;
   });
-  R.viz.onBeat((s) => {
-    if (R.viz.hot < 0.6 || s < 0.6 || mode() !== 'full') return;
-    cannons(4 + Math.round(s * 6));
+  // in the chorus the confetti cannons fire on the bar's 1 and 3 (more on the 1)
+  R.viz.onBeat((s, i) => {
+    if (R.viz.hot < 0.6 || mode() !== 'full') return;
+    if (i && i.bpos >= 0 ? !(i.down || i.bpos === 2) : s < 0.6) return;
+    cannons((i && i.down ? 6 : 3) + Math.round(s * 5));
     live = true;
   });
   // one soft light beam, drawn once and reused

@@ -58,8 +58,9 @@ R.skins.def({
     let enterT = 0, glitch = 0, gridOff = 0, lastClock = 0;
     const hash = (a, b, c) => { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x632be5ab, 0xc2b2ae35) ^ Math.imul(c + 0x27d4eb2f, 0x165667b1); h ^= h >>> 15; h = Math.imul(h, 0x2c1b3c6d); h ^= h >>> 12; return (h >>> 0) / 4294967296; };
 
-    api.beat((s) => {
-      if (s > 0.62 && api.flash()) { glitch = 0.18; root.classList.add('glitch'); api.later(() => root.classList.remove('glitch'), 150); }
+    api.beat((s, i) => {
+      // the bar's first beat glitches the screen (a hard accent elsewhere too)
+      if ((i.down || s > 1.05) && api.flash()) { glitch = 0.18; root.classList.add('glitch'); api.later(() => root.classList.remove('glitch'), 150); }
       const sy = root.querySelector('.nx-sync'); if (sy) { sy.classList.remove('hit'); void sy.offsetWidth; sy.classList.add('hit'); }
     });
     return {
@@ -76,7 +77,7 @@ R.skins.def({
         ctx.fillStyle = g; ctx.fillRect(0, 0, w, horizon);
         ctx.fillStyle = '#05020c'; ctx.fillRect(0, horizon, w, h - horizon);
         ctx.fillStyle = '#c8e6ff';
-        for (const s of stars) { ctx.globalAlpha = Math.max(0, Math.min(1, 0.35 + 0.35 * Math.sin(t * 1.7 + s.p) + v.high * 0.3)); ctx.fillRect(s.x * w, s.y * horizon, s.r, s.r); }
+        for (const s of stars) { ctx.globalAlpha = Math.max(0, Math.min(1, 0.32 + 0.32 * Math.sin(t * 1.7 + s.p) + v.high * 0.2 + v.hatE * (s.p > 3 ? 0.5 : 0.15))); ctx.fillRect(s.x * w, s.y * horizon, s.r, s.r); }
         ctx.globalAlpha = 1;
         // horizon haze
         const hz = ctx.createLinearGradient(0, horizon - cityH * 0.9, 0, horizon);
@@ -115,7 +116,7 @@ R.skins.def({
             for (; k < W.length && W[k][0] < lit; k++) { const [, r, c] = W[k]; if (r < rows && (!low || r % 2 === 0)) ctx.fillRect(gx + 2 + c * 4, top + 4 + r * 5, 2, 2); }
           }
           // neon roof
-          ctx.fillStyle = R.color.rgba(b.roof, 0.25 + band * 0.5); ctx.fillRect(gx - 1, top - 2, gw + 2, 5);
+          ctx.fillStyle = R.color.rgba(b.roof, Math.min(1, 0.2 + band * 0.45 + v.pump * 0.35)); ctx.fillRect(gx - 1, top - 2, gw + 2, 5);
           ctx.fillStyle = b.roof; ctx.fillRect(gx, top, gw, 1.5);
           if (b.ant) { ctx.fillStyle = '#5a3a7a'; ctx.fillRect(gx + gw / 2, top - 14, 1, 14); ctx.fillStyle = v.beat > 0.4 ? '#ff4060' : '#661826'; ctx.fillRect(gx + gw / 2 - 1.5, top - 16, 4, 3); }
           // reflection
@@ -124,10 +125,11 @@ R.skins.def({
           x += bw;
         }
         // horizon line + grid floor
-        ctx.fillStyle = `rgba(255,43,214,${0.35 + v.bass * 0.4})`; ctx.fillRect(0, horizon - 1, w, 4);
+        ctx.fillStyle = `rgba(255,43,214,${Math.min(1, 0.3 + v.bass * 0.25 + v.pump * 0.45)})`; ctx.fillRect(0, horizon - 1, w, 4);
         ctx.fillStyle = '#ff6af0'; ctx.fillRect(0, horizon, w, 1.2);
-        gridOff = (gridOff + dt * ((v.bpm || 110) / 60) * (v.playing ? 1 : 0.15)) % 1;
-        ctx.strokeStyle = `rgba(255,43,214,${0.25 + v.level * 0.25})`; ctx.lineWidth = 1;
+        // the floor grid rolls one line per beat, lurching forward on the beat
+        gridOff = v.playing ? ((v.stepT % 1) + 1) % 1 : (gridOff + dt * 0.3) % 1;
+        ctx.strokeStyle = `rgba(255,43,214,${Math.min(1, 0.22 + v.level * 0.18 + v.pump * 0.3)})`; ctx.lineWidth = 1;
         ctx.beginPath();
         const vx = w / 2, fh = h - horizon;
         for (let k = -10; k <= 10; k++) { ctx.moveTo(vx + k * w * 0.02, horizon); ctx.lineTo(vx + k * w * 0.32, h); }

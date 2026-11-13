@@ -49,9 +49,11 @@ R.skins.def({
     let t0 = 0, enterT = 0, roll = 0, pitch = 0, hdg = 270, hdgAim = 270, gload = 1, msgT = 9, msg = '', grid = 0;
     let lockT = 0, enemy = { x: 0.1, y: -0.18, alive: true, respawn: 0, ph: 0 }, missiles = [], booms = [], pings = [];
     const up = [];
-    api.beat((s) => {
-      gload = Math.min(6.5, gload + s * 1.6);
-      if (R.viz.hot > 0.5 && lockT > 1 && enemy.alive && s > 0.7 && missiles.length < 2 && !R.reduced) missiles.push({ t: 0, sx: (rnd() < 0.5 ? -0.12 : 0.12), dur: 0.55 + rnd() * 0.15, trail: [] });
+    // every beat: a radar ping and a jolt on the g-meter; in the chorus, once locked, the bar's beats fire missiles
+    api.beat((s, i) => {
+      gload = Math.min(6.5, gload + s * 1.4);
+      pings.push({ r: 2, a: i.down ? 1 : 0.6 });
+      if (R.viz.hot > 0.5 && lockT > 1 && enemy.alive && (i.down || i.bpos === 2) && missiles.length < 2 && !R.reduced) missiles.push({ t: 0, sx: (rnd() < 0.5 ? -0.12 : 0.12), dur: 0.55 + rnd() * 0.15, trail: [] });
     });
     function say(m) { msg = m; msgT = 0; }
     function line(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
@@ -67,8 +69,9 @@ R.skins.def({
         t0 += dt; enterT += dt; msgT += dt;
         const { ctx, w, h } = cv;
         const port = h > w;
-        const hudCY = h * (port ? 0.36 : 0.42);
         const k = Math.max(0.8, Math.min(1.5, Math.min(w, h) / 390));
+        // the airframe shudders a little with the kick drum
+        const hudCY = h * (port ? 0.36 : 0.42) + (R.reduced ? 0 : (v.kickE * 2.4 + v.down * 1.6) * k);
         // the aircraft: a slow banking pattern on the phrase, the phone's roll on top
         const auto = Math.sin(t0 * 0.21) * 0.35 + Math.sin(t0 * 0.53 + 1) * 0.12;
         const want = auto + R.tilt.x * 0.6;
@@ -77,8 +80,9 @@ R.skins.def({
         gload += (1 + Math.abs(roll) * 0.9 - gload) * Math.min(1, dt * 2.5);
         hdgAim = (hdgAim - roll * dt * 9 + 360) % 360;
         let dh = ((hdgAim - hdg + 540) % 360) - 180; hdg = (hdg + dh * Math.min(1, dt * 1.2) + 360) % 360;
-        const spd = v.playing ? 420 + v.level * 190 + v.hot * 140 : 380;
-        grid = (grid + dt * spd * 0.004) % 1;
+        // the sea grid moves by exactly one line per beat (eased, so it lurches forward on the beat); clouds surge with it
+        const spd = v.playing ? (300 + v.level * 140 + v.hot * 120) * (0.6 + 1.1 * v.pump) : 380;
+        grid = v.playing ? (v.stepT % 1 + 1) % 1 : (grid + dt * 1.5) % 1;
         const pxDeg = h * 0.012; // screen pixels per degree of pitch
         const pOff = (pitch * 57.3) * pxDeg;
         // --- the world, rotated with the bank ---
@@ -182,26 +186,25 @@ R.skins.def({
         ctx.strokeStyle = 'rgba(124,255,155,.45)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.arc(rx, ry, rr, 0, R.TAU); ctx.stroke(); ctx.beginPath(); ctx.arc(rx, ry, rr * 0.5, 0, R.TAU); ctx.stroke();
         line(ctx, rx - rr, ry, rx + rr, ry); line(ctx, rx, ry - rr, rx, ry + rr);
-        const bars = ((v.t || 0) * ((v.bpm || 110) / 60)) / 4;
-        const sw = (bars % 1) * R.TAU - Math.PI / 2;
+        // the sweep is the bar itself: straight up on the bar's first beat
+        const sw = v.bar * R.TAU - Math.PI / 2;
         const sweep = ctx.createRadialGradient(rx, ry, 0, rx, ry, rr);
         sweep.addColorStop(0, 'rgba(124,255,155,.0)'); sweep.addColorStop(1, 'rgba(124,255,155,.28)');
         ctx.fillStyle = sweep; ctx.beginPath(); ctx.moveTo(rx, ry); ctx.arc(rx, ry, rr, sw - 0.5, sw); ctx.closePath(); ctx.fill();
         ctx.strokeStyle = G; line(ctx, rx, ry, rx + Math.cos(sw) * rr, ry + Math.sin(sw) * rr);
-        R.viz.upcoming(v.t, v.t + 2.4, up);
-        for (let i = 0; i < up.length; i += 2) {
-          const dtb = up[i] - v.t, s = up[i + 1], f = dtb / 2.4;
+        R.viz.upcomingBeats(v.t, v.t + 2.4, up);
+        for (let i = 0; i < up.length; i += 3) {
+          const dtb = up[i] - v.t, s = up[i + 1], down = up[i + 2] === 0, f = dtb / 2.4;
           const hh = Math.sin(up[i] * 12.9898 + 78.233) * 43758.5453, ang = (hh - Math.floor(hh)) * R.TAU;
           const px = rx + Math.cos(ang) * rr * f, py = ry + Math.sin(ang) * rr * f;
-          ctx.fillStyle = s > 0.7 ? RED : s > 0.45 ? A : G;
-          const sz = (2 + s * 3) * k;
-          if (s > 0.7) { ctx.beginPath(); ctx.moveTo(px, py - sz); ctx.lineTo(px + sz, py); ctx.lineTo(px, py + sz); ctx.lineTo(px - sz, py); ctx.closePath(); ctx.fill(); }
+          ctx.fillStyle = down ? RED : s > 0.75 ? A : G;
+          const sz = (2 + s * 2.5 + (down ? 1.5 : 0)) * k;
+          if (down) { ctx.beginPath(); ctx.moveTo(px, py - sz); ctx.lineTo(px + sz, py); ctx.lineTo(px, py + sz); ctx.lineTo(px - sz, py); ctx.closePath(); ctx.fill(); }
           else ctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
         }
-        if (v.beat > 0.5 && (!pings.length || pings[pings.length - 1].a < 0.7)) pings.push({ r: 2, a: 1 });
         for (let i = pings.length - 1; i >= 0; i--) { const p = pings[i]; p.r += dt * rr * 2.2; p.a -= dt * 2.2; if (p.a <= 0) { pings.splice(i, 1); continue; } ctx.strokeStyle = `rgba(124,255,155,${p.a})`; ctx.beginPath(); ctx.arc(rx, ry, p.r, 0, R.TAU); ctx.stroke(); }
         ctx.fillStyle = G; ctx.font = `${Math.round(9 * k)}px "Share Tech Mono", monospace`; ctx.textAlign = 'center';
-        ctx.fillText('RDR · ' + (up.length / 2) + ' CONTACTS', rx, ry + rr + 12 * k); ctx.textAlign = 'left';
+        ctx.fillText('RDR · ' + (up.length / 3) + ' CONTACTS', rx, ry + rr + 12 * k); ctx.textAlign = 'left';
         // lock-on and missiles (chorus)
         ctx.globalAlpha = 1;
         if (v.hot > 0.3 && enemy.alive && enemy.sx != null) {

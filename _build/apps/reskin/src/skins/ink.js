@@ -1,6 +1,6 @@
 /* ===================== skin: 水墨山水 — the song as an ink-wash landscape: misty peaks, a boat on the river, ink blooming on the beat; the chorus brings the colour (and the plum blossom) back ===================== */
 R.skins.def({
-  id: 'ink', name: '水墨山水', group: '雅致', en: 'INK & MIST',
+  id: 'ink', punch: 0.35, name: '水墨山水', group: '雅致', en: 'INK & MIST',
   desc: '宣紙上的遠山雲霧，墨隨節拍暈開；副歌時梅花紛飛、封面染回彩色',
   bloom: 0, hero: '.ik-art', glare: false, trans: 'portal',
   theme: { bg: '#efe6d2', fg: '#1c1a17', accent: '#c8312b', accent2: '#3e5c5a', ui: 'rgba(30,27,23,.97)', dock: 'rgba(255,250,238,.62)', dockfg: '#1c1a17' },
@@ -164,11 +164,14 @@ R.skins.def({
       for (let i = 0; i < 26; i++) { const a = rnd() * R.TAU, sp = 80 + rnd() * 260; spatter.push({ x: sx, y: sy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 1 + rnd() * 3.2, life: 1 }); }
       flock(7, cv.h * 0.2);
     });
-    api.beat((s) => {
+    // an ink drop blooms on each bar's first beat (and on the 3rd in the chorus); birds cross every eight bars
+    let barN = 0;
+    api.beat((s, i) => {
       const { w } = cv;
-      if (s > 0.62 && blooms.length < 8) bloom(w * rnd(), skyB * (0.15 + rnd() * 0.75), Math.min(w, cv.h) * (0.1 + s * 0.16), 0.22 + s * 0.16);
+      if (i.down) barN++;
+      if ((i.down || (R.viz.hot > 0.5 && i.bpos === 2)) && blooms.length < 8) bloom(w * rnd(), skyB * (0.15 + rnd() * 0.75), Math.min(w, cv.h) * (0.1 + s * 0.16), 0.22 + s * 0.16);
       if (R.viz.hot > 0.5) blow(low ? 2 : 4);
-      if (R.viz.beatN % 32 === 16) flock(2 + Math.floor(rnd() * 3), cv.h * (0.12 + rnd() * 0.12));
+      if (i.down && barN % 8 === 4) flock(2 + Math.floor(rnd() * 3), cv.h * (0.12 + rnd() * 0.12));
     });
     let lastHot = -1;
     return {

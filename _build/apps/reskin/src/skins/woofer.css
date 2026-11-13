@@ -1,0 +1,54 @@
+/* ---------- 重低音 SUBWOOFER ---------- */
+.skin-woofer { --lv: 0; color: #eef3fa; font-family: "Chakra Petch", var(--sans); background: #07080b; }
+.skin-woofer .wf-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-woofer .wf-hud { position: absolute; left: calc(var(--sl) + 16px); top: calc(var(--st) + 17px); pointer-events: none; }
+.skin-woofer .wf-hud b { display: block; font-family: "Orbitron", sans-serif; font-weight: 900; font-size: 13px; letter-spacing: .26em; color: #eef3fa; text-shadow: 0 0 12px rgba(47,209,255,.6); }
+.skin-woofer .wf-hud b i { font-style: normal; color: #2fd1ff; margin: 0 .08em; }
+.skin-woofer .wf-hud span { display: block; margin-top: 6px; font-family: "Share Tech Mono", monospace; font-size: 10.5px; letter-spacing: .16em; color: rgba(238,243,250,.48); white-space: nowrap; }
+.skin-woofer .wf-hud em { font-style: normal; color: #8fe6ff; }
+.skin-woofer .wf-hud .wf-spec { font-style: normal; }
+@media (max-width: 400px) { .skin-woofer .wf-hud .wf-spec { display: none; } }
+@media (max-width: 460px) { .skin-woofer .wf-hud b { font-size: 11.5px; letter-spacing: .2em; } .skin-woofer .wf-hud span { font-size: 9.5px; letter-spacing: .1em; } }
+.skin-woofer .wf-drop { position: absolute; left: 0; right: 0; top: calc(var(--st) + 62px); text-align: center; font-family: "Orbitron", sans-serif; font-weight: 900; font-size: 22px; letter-spacing: .32em; color: #fff; text-shadow: 0 0 18px #ff3b5c, 0 0 36px #2fd1ff; opacity: 0; transform: scale(.8); transition: opacity .3s, transform .3s; pointer-events: none; }
+.skin-woofer.drop .wf-drop { opacity: calc(.55 + var(--rp, 0) * .45); transform: scale(calc(1 + var(--rd, 0) * .12)); }
+.skin-woofer .wf-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 calc(var(--sr) + 22px) calc(var(--sb) + 12px) calc(var(--sl) + 22px); max-width: 620px; margin: 0 auto; }
+.skin-woofer .wf-row { display: flex; align-items: center; gap: 13px; }
+.skin-woofer .wf-art { flex: none; width: 54px; height: 54px; border-radius: 50%; overflow: hidden; background: #15171c; box-shadow: 0 0 0 3px #2a2d34, 0 0 0 4.5px rgba(47,209,255,.6), 0 0 calc(12px + var(--rp, 0) * 20px) rgba(47,209,255,.5); }
+.skin-woofer .wf-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-woofer .wf-art img.blank { opacity: 0; }
+.skin-woofer .wf-tx { min-width: 0; flex: 1; }
+.skin-woofer .wf-t { font-weight: 700; font-size: 19px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+.skin-woofer .wf-a { margin-top: 3px; font-size: 12.5px; letter-spacing: .08em; color: #8fe6ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-woofer .wf-bpm { flex: none; text-align: center; padding: 6px 10px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid rgba(47,209,255,.35); }
+.skin-woofer .wf-bpm b { display: block; font-family: "Orbitron", sans-serif; font-weight: 900; font-size: 18px; color: #fff; text-shadow: 0 0 10px rgba(47,209,255,calc(.3 + var(--rp, 0) * .6)); }
+.skin-woofer .wf-bpm small { display: block; font-family: "Share Tech Mono", monospace; font-size: 9px; letter-spacing: .2em; color: rgba(238,243,250,.5); }
+.skin-woofer .wf-seek { margin-top: 14px; padding: 10px 0 2px; }
+.skin-woofer .wf-seek .seek-track { height: 4px; border-radius: 2px; background: rgba(238,243,250,.1); box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+.skin-woofer .wf-seek .seek-fill { border-radius: 2px; background: linear-gradient(90deg, #2fd1ff, #ff3b5c); }
+.skin-woofer .wf-seek .seek-knob { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f2f5fa, #8a929e 60%, #3a3f48); box-shadow: 0 2px 6px rgba(0,0,0,.6); }
+.skin-woofer .wf-seek .seek-times { margin-top: 8px; font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: .12em; color: rgba(238,243,250,.5); }
+.skin-woofer .wf-ctrl { margin-top: 6px; justify-content: space-between; }
+.skin-woofer .wf-ctrl button { width: 50px; height: 50px; border-radius: 50%; font-size: 21px; color: #eef3fa; background: radial-gradient(circle at 40% 30%, #2b2f37, #121418); box-shadow: 0 3px 8px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08); transition: transform .12s; }
+.skin-woofer .wf-ctrl button:active { transform: scale(.88); }
+.skin-woofer .wf-ctrl .c-shuf, .skin-woofer .wf-ctrl .c-rep { font-size: 17px; background: none; box-shadow: none; }
+.skin-woofer .wf-ctrl .c-play { width: 74px; height: 74px; font-size: 27px; color: #fff; background: radial-gradient(circle at 40% 30%, #3a3f49, #14161b 70%); box-shadow: 0 0 0 3px #2a2d34, 0 0 0 5px rgba(47,209,255,.7), 0 0 calc(14px + var(--rp, 0) * 26px) rgba(47,209,255,.55), 0 6px 14px rgba(0,0,0,.6); }
+/* enter: the HUD flicks on, the deck slides up like a drawer */
+.skin-woofer.enter .wf-hud { animation: wf-on .6s steps(4) .5s both; }
+.skin-woofer.enter .wf-panel { animation: wf-rise .8s cubic-bezier(.2,.8,.2,1) .75s both; }
+@keyframes wf-on { 0% { opacity: 0; } 50% { opacity: 1; } 75% { opacity: .3; } 100% { opacity: 1; } }
+@keyframes wf-rise { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+/* next song: the title thumps in with the cone */
+.skin-woofer.swap .wf-t, .skin-woofer.swap .wf-a { animation: wf-thump .7s cubic-bezier(.3,1.6,.4,1) both; }
+.skin-woofer.swap .wf-a { animation-delay: .08s; }
+@keyframes wf-thump { 0% { opacity: 0; transform: scale(1.25); } 100% { opacity: 1; transform: none; } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-woofer .wf-drop { top: calc(var(--st) + 14px); font-size: 16px; }
+  .skin-woofer .wf-panel { max-width: 560px; padding-bottom: calc(var(--sb) + 6px); }
+  .skin-woofer .wf-art { width: 42px; height: 42px; }
+  .skin-woofer .wf-t { font-size: 16px; }
+  .skin-woofer .wf-bpm { display: none; }
+  .skin-woofer .wf-seek { margin-top: 4px; }
+  .skin-woofer .wf-ctrl { margin-top: 0; }
+  .skin-woofer .wf-ctrl button { height: 44px; width: 44px; }
+  .skin-woofer .wf-ctrl .c-play { width: 58px; height: 58px; }
+}

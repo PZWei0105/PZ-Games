@@ -1,0 +1,48 @@
+/* ---------- 貓咪 DJ ---------- */
+.skin-catdj { --lv: 0; --bt: 0; color: #fff; font-family: "Fredoka", var(--sans); }
+.skin-catdj .cd-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-catdj .cd-sign { position: absolute; left: 50%; top: calc(var(--st) + 66px); width: min(84vw, 420px); margin-left: calc(min(84vw, 420px) / -2); padding: 10px 18px 12px; text-align: center; color: #4a2a5e; background: #fff6fb; border-radius: 22px; box-shadow: 0 0 0 4px #ff7eb6, 0 0 0 8px rgba(255,126,182,.25), 0 10px 26px rgba(0,0,0,.35); transform-origin: 50% 0; }
+.skin-catdj .cd-np { font-size: 10.5px; font-weight: 700; letter-spacing: .22em; color: #ff5fa2; }
+.skin-catdj .cd-t { margin-top: 3px; font-size: 22px; font-weight: 700; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-catdj .cd-a { margin-top: 1px; font-size: 13px; font-weight: 500; color: #8a5fa8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-catdj.cd-hot .cd-sign { animation: cd-wiggle .5s ease-in-out infinite alternate; }
+@keyframes cd-wiggle { from { transform: rotate(-2.5deg) scale(1.02); } to { transform: rotate(2.5deg) scale(1.02); } }
+.skin-catdj .cd-bub { position: absolute; padding: 7px 13px; border-radius: 16px 16px 16px 4px; background: #fff; color: #ff4f98; font-weight: 700; font-size: 17px; letter-spacing: .04em; white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,.3); opacity: 0; transform: scale(.4); transform-origin: 0 100%; pointer-events: none; transition: opacity .2s, transform .25s cubic-bezier(.3,1.6,.5,1); }
+.skin-catdj .cd-bub.on { opacity: 1; transform: none; }
+.skin-catdj .cd-dock { position: absolute; left: calc(var(--sl) + 22px); right: calc(var(--sr) + 22px); bottom: calc(var(--sb) + 16px); }
+.skin-catdj .cd-seek { padding: 8px 0 2px; }
+.skin-catdj .cd-seek .seek-track { height: 9px; border-radius: 5px; background: rgba(255,255,255,.16); }
+.skin-catdj .cd-seek .seek-fill { border-radius: 5px; background: linear-gradient(90deg, #5ce1e6, #b98cff 55%, #ff7eb6); }
+.skin-catdj .cd-seek .seek-knob { width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 50% 62%, #ff8fab 0 26%, transparent 27%), radial-gradient(circle at 28% 34%, #ff8fab 0 10%, transparent 11%), radial-gradient(circle at 50% 24%, #ff8fab 0 10%, transparent 11%), radial-gradient(circle at 72% 34%, #ff8fab 0 10%, transparent 11%), #fff6fb; box-shadow: 0 0 0 3px #4a3046, 0 4px 10px rgba(0,0,0,.3); }
+.skin-catdj .cd-seek .seek-times { margin-top: 9px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,.75); }
+.skin-catdj .cd-ctrl { justify-content: space-between; margin-top: 6px; }
+.skin-catdj .cd-ctrl button { width: 52px; height: 52px; border-radius: 50%; font-size: 21px; color: #6b4bd8; background: #fff6fb; box-shadow: 0 4px 0 #c9a8e8, 0 6px 14px rgba(0,0,0,.25); transition: transform .1s, box-shadow .1s; }
+.skin-catdj .cd-ctrl .c-play { position: relative; width: 72px; height: 72px; font-size: 27px; color: #fff; background: #ff7eb6; box-shadow: 0 5px 0 #d1468a, 0 0 calc(10px + var(--lv) * 22px) rgba(255,126,182,.6); }
+.skin-catdj .cd-ctrl .c-play::before, .skin-catdj .cd-ctrl .c-play::after { content: ""; position: absolute; top: -9px; width: 22px; height: 22px; background: #ff7eb6; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.skin-catdj .cd-ctrl .c-play::before { left: 8px; transform: rotate(-18deg); }
+.skin-catdj .cd-ctrl .c-play::after { right: 8px; transform: rotate(18deg); }
+.skin-catdj .cd-ctrl .c-shuf, .skin-catdj .cd-ctrl .c-rep { width: 40px; height: 40px; font-size: 16px; color: #fff; background: rgba(255,255,255,.14); box-shadow: none; }
+.skin-catdj .cd-ctrl button:active { transform: translateY(3px); box-shadow: 0 1px 0 #c9a8e8; }
+.skin-catdj .cd-ctrl .c-play:active { box-shadow: 0 2px 0 #d1468a; }
+.skin-catdj .cd-ctrl .c-shuf:active, .skin-catdj .cd-ctrl .c-rep:active { box-shadow: none; }
+/* opening: the sign drops in on its string */
+.skin-catdj.enter .cd-sign { animation: cd-drop 1s cubic-bezier(.3,1.5,.5,1) .3s both; }
+.skin-catdj.enter .cd-dock { animation: cd-pop .7s cubic-bezier(.3,1.5,.5,1) .9s both; }
+@keyframes cd-drop { from { opacity: 0; transform: translateY(-80px) rotate(-6deg); } to { opacity: 1; transform: none; } }
+@keyframes cd-pop { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: none; } }
+/* next song: the sign flips over */
+.skin-catdj.swap .cd-sign { animation: cd-flip .7s cubic-bezier(.3,1.3,.5,1) both; }
+.skin-catdj.swap .cd-sign [data-bind] { animation: none; }
+@keyframes cd-flip { 0% { transform: perspective(600px) rotateX(0); } 45% { transform: perspective(600px) rotateX(90deg); } 100% { transform: perspective(600px) rotateX(0); } }
+@media (orientation: landscape) and (min-width: 640px) {
+  .skin-catdj .cd-sign { top: calc(var(--st) + 22px); width: min(40vw, 420px); margin-left: calc(min(40vw, 420px) / -2); }
+  .skin-catdj .cd-dock { left: 0; right: 0; margin: 0 auto; width: min(560px, 76vw); bottom: calc(var(--sb) + 18px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .skin-catdj .cd-sign { left: auto; right: calc(var(--sr) + 22px); margin: 0; top: calc(var(--st) + 66px); width: min(36vw, 340px); padding: 8px 14px 10px; }
+  .skin-catdj .cd-t { font-size: 19px; }
+  .skin-catdj .cd-dock { left: auto; right: calc(var(--sr) + 22px); width: min(36vw, 340px); margin: 0; bottom: calc(var(--sb) + 10px); }
+  .skin-catdj .cd-ctrl button { width: 44px; height: 44px; font-size: 18px; }
+  .skin-catdj .cd-ctrl .c-play { width: 58px; height: 58px; font-size: 23px; }
+  .skin-catdj .cd-ctrl .c-shuf, .skin-catdj .cd-ctrl .c-rep { width: 34px; height: 34px; }
+}

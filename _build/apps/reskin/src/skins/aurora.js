@@ -1,6 +1,6 @@
 /* ===================== skin: 極光 — northern lights over a frozen lake: the curtains ripple with the music and mirror in the ice; the chorus opens a corona overhead ===================== */
 R.skins.def({
-  id: 'aurora', name: '極光', group: '夢幻', en: 'AURORA',
+  id: 'aurora', punch: 0.5, name: '極光', group: '夢幻', en: 'AURORA',
   desc: '冰湖上的北極光，光幕隨音樂起伏、倒映在湖面；副歌時頭頂綻開極光冠',
   bloom: { s: 0.5, th: 0.5 }, hero: '.au-card', trans: 'portal',
   theme: { bg: '#03101a', fg: '#e9fbff', accent: '#5dffc4', accent2: '#b48cff', ui: 'rgba(6,18,30,.97)', dock: 'rgba(10,30,44,.5)', dockfg: '#d8fff3' },
@@ -103,7 +103,9 @@ R.skins.def({
     let enterT = 9, sweep = -1, corona = 0;
     const meteor = () => { const { w } = fg; meteors.push({ x: w * (0.2 + rnd() * 0.9), y: Y0 * (0.05 + rnd() * 0.3), vx: -(260 + rnd() * 200) * K, vy: (90 + rnd() * 80) * K, life: 0.7 + rnd() * 0.4 }); };
     api.on('hot', (on) => { if (on) { for (let i = 0; i < 3; i++) api.later(meteor, i * 260); } });
-    api.beat((s) => { if (R.viz.hot > 0.5 && s > 0.8 && rnd() < 0.35) meteor(); });
+    // a soft glow sweeps across the curtains on each bar's first beat; in the chorus it brings a shooting star
+    let bsw = -1;
+    api.beat((s, i) => { if (i.down) { bsw = 0; if (R.viz.hot > 0.5 && rnd() < 0.6) meteor(); } });
     return {
       enter() { enterT = 0; },
       swap() { sweep = 0; },
@@ -111,13 +113,14 @@ R.skins.def({
       frame(dt, t, v) {
         enterT += dt;
         if (sweep >= 0) { sweep += dt * 0.9; if (sweep > 1.4) sweep = -1; }
+        if (bsw >= 0) { bsw += dt / Math.max(0.5, v.ibi * 2.2); if (bsw > 1.4) bsw = -1; }
         corona += ((v.hot > 0.5 ? 1 : 0) - corona) * (1 - Math.exp(-dt * 1.5));
         const fin = Math.min(1, Math.max(0, (enterT - 0.15) / 1.2));
         const c = sky.ctx, w = sky.w, h = sky.h;
         sky.clear();
         // curtains: one ray per column, the lower edge rippling, brightness from the spectrum
         c.globalCompositeOperation = 'lighter';
-        const step = low ? 6 : 4, lv = 0.35 + v.level * 0.55;
+        const step = low ? 6 : 4, lv = (0.32 + v.level * 0.45) * (0.82 + 0.4 * v.pump);
         for (const rb of ribbons) {
           const amp = rb.amp * Y0, len = rb.len * Y0 * (1 + v.hot * 0.35);
           for (let x = -step; x < w + step; x += step) {
@@ -126,6 +129,7 @@ R.skins.def({
             const e = v.bands[4 + Math.floor(u * 20) % 20];
             let I = (0.2 + 0.8 * R.noise1(u * 6 - t * 0.3, rb.seed + 9)) * (lv + e * 0.6) * rb.a * fin;
             if (sweep >= 0) I *= 1 + 1.6 * Math.exp(-Math.pow((u - (sweep * 1.4 - 0.2)) / 0.12, 2));
+            if (bsw >= 0) I *= 1 + 0.75 * Math.exp(-Math.pow((u - (bsw * 1.4 - 0.2)) / 0.16, 2));
             const L = len * (0.55 + 0.6 * R.noise1(u * 5 + t * 0.18, rb.seed + 4)) * (1 + e * 0.35);
             const fl = 0.82 + 0.18 * Math.sin(x * 1.3 + t * 7);
             c.globalAlpha = Math.min(1, I * fl * (1 - v.hot * 0.5));
@@ -149,7 +153,7 @@ R.skins.def({
         const g = fg.ctx, W2 = fg.w, H2 = fg.h;
         fg.clear();
         g.fillStyle = '#ffffff';
-        for (const [sx, sy, ph, b, big] of stars) { g.globalAlpha = b * (0.5 + 0.5 * Math.sin(t * (0.8 + b) + ph)) * (1 - corona * 0.4) * Math.min(1, enterT); g.fillRect(sx * W2, sy * Y0 * 0.95, big ? 1.8 : 1.1, big ? 1.8 : 1.1); }
+        for (const [sx, sy, ph, b, big] of stars) { g.globalAlpha = Math.min(1, b * (0.5 + 0.5 * Math.sin(t * (0.8 + b) + ph)) * (1 - corona * 0.4) * Math.min(1, enterT) + (ph > 4.5 ? v.hatE * 0.45 : 0)); g.fillRect(sx * W2, sy * Y0 * 0.95, big ? 1.8 : 1.1, big ? 1.8 : 1.1); }
         for (let i = meteors.length - 1; i >= 0; i--) {
           const m = meteors[i]; m.life -= dt; if (m.life <= 0) { meteors.splice(i, 1); continue; }
           m.x += m.vx * dt; m.y += m.vy * dt;

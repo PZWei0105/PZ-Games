@@ -41,7 +41,7 @@ R.skins.def({
     const FS = `precision highp float;
       varying vec2 uv;
       uniform vec2 res; uniform vec2 ctr; uniform float fov;
-      uniform float time, spin, bass, level, hot, flare, ripT, ripA;
+      uniform float time, spin, bass, level, hot, flare, ripT, ripA, beat, bt;
       uniform vec3 cam; uniform sampler2D cover; uniform vec3 c2;
       #define TAU 6.2831853
       float h21(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
@@ -88,7 +88,7 @@ R.skins.def({
           if (hot > .01) {
             float ay = abs(pos.y);
             if (ay > 1.1) { float d = length(pos.xz), w = .22 + ay*.07;
-              jet += vec3(.45, .74, 1.)*exp(-d*d/(w*w))*dt*hot*(.6 + .4*sin(ay*1.4 - time*16.))*smoothstep(1.1, 3., ay)*exp(-ay*.06)*.55; }
+              jet += vec3(.45, .74, 1.)*exp(-d*d/(w*w))*dt*hot*(.55 + .45*sin(ay*1.1 - bt*TAU))*(1. + beat*.8)*smoothstep(1.1, 3., ay)*exp(-ay*.06)*.55; }
           }
           if (pp.y*pos.y < 0. && acc < .985) {
             vec3 hp = mix(pp, pos, pp.y/(pp.y - pos.y));
@@ -106,7 +106,7 @@ R.skins.def({
               float vk = .62*sqrt(.5/(hr - 1.));
               float dop = clamp(1./(1. - vk*dot(tng, -normalize(vel))), .35, 2.2);
               float dens = smoothstep(rin, rin + .55, hr)*smoothstep(rout, rout - 3.2, hr)*(.3 + .95*n)*(.72 + .55*sk);
-              float I = (1.05 + bass*1.5 + flare*2.6)*temp*dop*dop;
+              float I = (1. + bass*1.1 + beat*1.7 + flare*2.6)*temp*dop*dop;
               float al = clamp(dens*1.35, 0., 1.);
               col += (1. - acc)*bb*I*al;
               acc += (1. - acc)*al;
@@ -114,7 +114,7 @@ R.skins.def({
           }
         }
         if (!hole) col += (1. - acc)*sky(normalize(vel));
-        if (!hole) col += vec3(1., .78, .5)*exp(-(minr - 1.47)*7.)*(.3 + level*.5 + flare*1.2);
+        if (!hole) col += vec3(1., .78, .5)*exp(-(minr - 1.47)*7.)*(.28 + level*.4 + beat*1.1 + flare*1.2);
         col += jet;
         col = 1. - exp(-col*1.15);
         gl_FragColor = vec4(col, 1.);
@@ -144,7 +144,8 @@ R.skins.def({
       c2 = R.glk.hex3(col.vibrant).map((v) => v * 0.9);
     }
     let t0 = 0, spin = 0, flare = 0.8, ripT = 9, ripA = 0, zoom = 0, az = 0.35, enterT = 0, lastRead = 0;
-    api.beat((s) => { if (s > 0.62) { ripT = 0; ripA = Math.min(1, s * 0.8); } });
+    // every bar's first beat sends a gravitational wave across the screen
+    api.beat((s, i) => { if (i.down || s > 1.1) { ripT = 0; ripA = Math.min(1, 0.45 + s * 0.5); } });
     return {
       enter() { enterT = 0; zoom = 0; flare = 1.2; },
       swap() { flare = 1.6; ripT = 0; ripA = 1; },
@@ -152,7 +153,8 @@ R.skins.def({
       resize,
       frame(dt, t, v) {
         t0 += dt; enterT += dt;
-        spin += dt * (0.35 + v.bass * 1.4 + v.hot * 0.9 + flare * 1.5) * (v.playing ? 1 : 0.25);
+        // the disk whips round on every beat and coasts until the next one
+        spin += dt * (0.3 + v.bass * 0.8 + v.pump * 2.6 + v.hot * 0.9 + flare * 1.5) * (v.playing ? 1 : 0.25);
         flare *= Math.exp(-dt * 1.6);
         ripT += dt; ripA *= Math.exp(-dt * 1.4);
         zoom = Math.min(1, enterT / 1.9);
@@ -160,7 +162,7 @@ R.skins.def({
         az += dt * (0.045 + v.hot * 0.08);
         const tl = R.tilt;
         const aspect = W / H;
-        const dist = 24 + (1 - ez) * 60;
+        const dist = 24 + (1 - ez) * 60 - (R.reduced ? 0 : v.kickE * 0.7 + v.down * 0.9);
         const fov = Math.max(9 / (24 * 1.22 * aspect), 0.46);
         const port = aspect < 1;
         // readouts
@@ -181,6 +183,7 @@ R.skins.def({
         gl.uniform1f(P.u.time, t0 % 1000); gl.uniform1f(P.u.spin, spin % 10000);
         gl.uniform1f(P.u.bass, v.bass); gl.uniform1f(P.u.level, v.level); gl.uniform1f(P.u.hot, R.reduced ? 0 : v.hot);
         gl.uniform1f(P.u.flare, flare); gl.uniform1f(P.u.ripT, ripT); gl.uniform1f(P.u.ripA, R.reduced ? 0 : ripA);
+        gl.uniform1f(P.u.beat, v.pump); gl.uniform1f(P.u.bt, v.beatT % 1000);
         gl.uniform3f(P.u.cam, az + tl.x * 0.42, 0.13 - tl.y * 0.1 + (1 - ez) * 0.25, dist);
         gl.uniform3f(P.u.c2, c2[0], c2[1], c2[2]);
         gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(P.u.cover, 0);

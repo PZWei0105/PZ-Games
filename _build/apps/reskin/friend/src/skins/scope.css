@@ -1,0 +1,70 @@
+/* ---------- 綠光示波器 ---------- */
+.skin-scope { --g: #6dff8f; color: #c9f7d2; font-family: "VT323", var(--mono); }
+.skin-scope .sc-case { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px), radial-gradient(120% 80% at 50% 30%, #333a35 0%, #1f2420 55%, #141714 100%); }
+.skin-scope .sc-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: calc(var(--st) + 66px) 14px calc(var(--sb) + 16px); }
+.skin-scope .sc-label { position: absolute; left: calc(var(--sl) + 16px); top: calc(var(--st) + 18px); font-family: var(--sans); font-size: 11px; letter-spacing: .14em; color: #aeb6ad; }
+.skin-scope .sc-label b { color: #e8ece6; font-size: 14px; letter-spacing: .08em; }
+.skin-scope .sc-label span { display: block; font-size: 8.5px; color: #7b847a; letter-spacing: .18em; margin-top: 2px; }
+.skin-scope .sc-bezel { flex: none; width: min(94vw, 560px); width: min(94vw, 560px, 100dvh - var(--st) - var(--sb) - 330px); padding: 14px; border-radius: 22px; background: linear-gradient(180deg, #2b2f2c, #121412); box-shadow: 0 2px 0 #3d443e inset, 0 16px 34px rgba(0,0,0,.55); }
+.skin-scope .sc-screen { position: relative; aspect-ratio: 1; border-radius: 18px / 22px; overflow: hidden; background: #021006; box-shadow: inset 0 0 30px rgba(0,0,0,.9); }
+.skin-scope .sc-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-scope .sc-grat { position: absolute; inset: 0; pointer-events: none; background:
+  linear-gradient(90deg, transparent calc(50% - .5px), rgba(109,255,143,.28) calc(50% - .5px) calc(50% + .5px), transparent calc(50% + .5px)),
+  linear-gradient(0deg, transparent calc(50% - .5px), rgba(109,255,143,.28) calc(50% - .5px) calc(50% + .5px), transparent calc(50% + .5px)),
+  repeating-linear-gradient(90deg, rgba(109,255,143,.13) 0 1px, transparent 1px 10%),
+  repeating-linear-gradient(0deg, rgba(109,255,143,.13) 0 1px, transparent 1px 12.5%); }
+.skin-scope .sc-curve { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(130% 120% at 50% 50%, transparent 60%, rgba(0,0,0,.55) 100%), repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px), linear-gradient(160deg, rgba(255,255,255,.08), transparent 35%); }
+.skin-scope .sc-art { position: absolute; right: 4%; top: 15%; width: 22%; aspect-ratio: 1; image-rendering: pixelated; opacity: .85; }
+.skin-scope .sc-ro { position: absolute; font-size: 17px; line-height: 1.05; color: var(--g); text-shadow: 0 0 6px rgba(109,255,143,.75); white-space: nowrap; max-width: 70%; overflow: hidden; text-overflow: ellipsis; }
+.skin-scope .sc-ro.tl { left: 4%; top: 3.5%; max-width: 68%; }
+.skin-scope .sc-ro.tl > div { overflow: hidden; text-overflow: ellipsis; }
+.skin-scope .sc-ro .dim { opacity: .7; }
+.skin-scope .sc-ro.tr { right: 4%; top: 3.5%; }
+.skin-scope .sc-ro.bl { left: 4%; bottom: 3.5%; }
+.skin-scope .sc-ro.br { right: 4%; bottom: 3.5%; }
+.skin-scope .sc-trig { font-weight: 400; margin-left: 6px; opacity: .2; }
+.skin-scope .sc-trig.on { animation: sc-trig .3s steps(1); }
+@keyframes sc-trig { 0% { opacity: 1; } 100% { opacity: .2; } }
+.skin-scope .sc-boot { position: absolute; inset: 0; background: radial-gradient(ellipse at center, #eaffef 0%, #6dff8f 40%, transparent 70%); opacity: 0; pointer-events: none; }
+.skin-scope.enter .sc-boot { animation: sc-boot .75s ease-out both; }
+@keyframes sc-boot { 0% { opacity: 1; transform: scale(1.2, .004); } 40% { opacity: 1; transform: scale(1.2, .01); } 70% { opacity: .9; transform: scale(1, 1); } 100% { opacity: 0; transform: scale(1, 1); } }
+.skin-scope.enter .sc-ro, .skin-scope.enter .sc-grat, .skin-scope.enter .sc-art { animation: sc-fade .5s ease .55s both; }
+@keyframes sc-fade { from { opacity: 0; } to { opacity: 1; } }
+.skin-scope .sc-panel { flex: none; width: min(94vw, 560px); padding: 12px 14px 14px; border-radius: 14px; background: linear-gradient(180deg, #cdd1c9, #a9ada5); color: #1b1d1a; font-family: var(--sans); box-shadow: 0 2px 0 #e8ebe5 inset, 0 10px 24px rgba(0,0,0,.45); display: grid; gap: 12px; }
+.skin-scope .sc-knobs { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.skin-scope .kn { display: grid; justify-items: center; gap: 4px; font-size: 8px; font-weight: 800; letter-spacing: .12em; color: #2c2f2b; }
+.skin-scope .kn i { position: relative; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #4a4f4a, #141614 70%); box-shadow: 0 3px 0 #6c7068, 0 4px 8px rgba(0,0,0,.4), 0 0 0 4px #bcc0b8, 0 0 0 5px #8d918a; }
+.skin-scope .kn i::after { content: ""; position: absolute; left: 50%; top: 4px; width: 3px; height: 13px; margin-left: -1.5px; border-radius: 2px; background: #f3f5f0; }
+.skin-scope .sc-pwr { display: grid; justify-items: center; gap: 4px; font-size: 8px; font-weight: 800; letter-spacing: .12em; }
+.skin-scope .sc-pwr i { width: 14px; height: 14px; border-radius: 50%; background: var(--g); box-shadow: 0 0 10px var(--g), inset 0 -2px 3px rgba(0,0,0,.3); margin-bottom: 14px; }
+.skin-scope .sc-seek { padding: 0; }
+.skin-scope .sc-sl { display: flex; justify-content: space-between; font-size: 8.5px; font-weight: 800; letter-spacing: .14em; margin-bottom: 7px; font-variant-numeric: tabular-nums; }
+.skin-scope .sc-seek .seek-track { height: 8px; border-radius: 2px; background: #1b1d1a; box-shadow: inset 0 1px 2px #000; }
+.skin-scope .sc-seek .seek-track::before { content: ""; position: absolute; left: 0; right: 0; top: -6px; height: 4px; background: repeating-linear-gradient(90deg, #2c2f2b 0 1px, transparent 1px 10%); }
+.skin-scope .sc-seek .seek-fill { background: #3f8f52; }
+.skin-scope .sc-seek .seek-knob { width: 14px; height: 24px; border-radius: 2px; background: linear-gradient(90deg, #2b2e2a, #565b55 50%, #2b2e2a); box-shadow: 0 2px 4px rgba(0,0,0,.5); }
+.skin-scope .sc-btns { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; }
+.skin-scope .sb { position: relative; height: 54px; border-radius: 6px; display: grid; justify-items: center; align-content: center; gap: 2px; font-size: 17px; color: #1b1d1a; background: linear-gradient(180deg, #e9ece6, #b9bdb5); box-shadow: 0 3px 0 #6c7068, 0 4px 6px rgba(0,0,0,.25), inset 0 1px 0 #fff; transition: transform .05s, box-shadow .05s; }
+.skin-scope .sb:active { transform: translateY(3px); box-shadow: 0 0 0 #6c7068, inset 0 1px 0 #fff; }
+.skin-scope .sb > span:not([class^="i-"]) { font-size: 7.5px; font-weight: 800; letter-spacing: .1em; color: #3a3d39; }
+.skin-scope .sb b { font-family: "VT323", monospace; font-weight: 400; font-size: 18px; line-height: 1; color: #1b5a2a; }
+.skin-scope .sb .led { position: absolute; top: 5px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: #2c3a2e; }
+.skin-scope.is-playing .sb-run .led, .skin-scope.is-shuffle .c-shuf .led, .skin-scope:not([data-repeat="off"]) .c-rep .led { background: var(--g); box-shadow: 0 0 6px var(--g); }
+.skin-scope .sb-run { background: linear-gradient(180deg, #b9f3c6, #78c48c); }
+.skin-scope .ctrl .c-shuf, .skin-scope .sc-btns .c-shuf, .skin-scope .sc-btns .c-rep { opacity: 1; }
+/* next song: the tube collapses to a line and opens up again */
+.skin-scope.swap .sc-screen { animation: sc-crt .8s cubic-bezier(.6,0,.3,1) both; }
+@keyframes sc-crt { 0% { transform: none; filter: none; } 28% { transform: scaleY(.012); filter: brightness(3.5); } 40% { transform: scale(.02, .012); filter: brightness(5); } 52% { transform: scaleY(.012); filter: brightness(3); } 100% { transform: none; filter: none; } }
+@media (orientation: landscape) and (min-width: 640px) {
+  .skin-scope .sc-wrap { flex-direction: row; gap: 3vw; }
+  .skin-scope .sc-bezel { width: min(58vw, (100vh - 90px) * 1.25); }
+  .skin-scope .sc-screen { aspect-ratio: 5 / 4; }
+  .skin-scope .sc-panel { width: min(32vw, 380px); }
+  .skin-scope .sc-btns { grid-template-columns: repeat(3, 1fr); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .skin-scope .sc-wrap { padding-top: calc(var(--st) + 54px); }
+  .skin-scope .sc-knobs { display: none; }
+  .skin-scope .sb { height: 44px; }
+  .skin-scope .sc-ro { font-size: 14px; }
+}

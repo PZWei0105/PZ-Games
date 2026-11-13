@@ -1,6 +1,6 @@
 /* ===================== skin: 毛玻璃 FROSTED — calm, colours taken from the album art ===================== */
 R.skins.def({
-  id: 'glass', name: '毛玻璃', group: '極簡', en: 'FROSTED',
+  id: 'glass', punch: 0.7, name: '毛玻璃', group: '極簡', en: 'FROSTED',
   desc: '自動從專輯封面取色，清爽耐看',
   bloom: { s: 0.2, th: 0.82 }, hero: '.gl-art', trans: 'shatter',
   theme: { bg: '#10131c', fg: '#ffffff', accent: '#9cc2ff', accent2: '#ffc4e6', ui: 'rgba(22,24,34,.97)', dock: 'rgba(255,255,255,.14)', dockfg: '#fff' },
@@ -76,7 +76,7 @@ R.skins.def({
         for (let i = 0; i < 4; i++) {
           const b = B[i];
           const x = w * (0.2 + 0.6 * R.noise1(t * 0.05 + b.s, 1)), y = h * (0.15 + 0.7 * R.noise1(t * 0.04 + b.s, 2));
-          const r = Math.max(w, h) * (0.32 + 0.1 * i / 3) * (1 + v.level * 0.18 + (i === 0 ? v.beat * 0.08 : 0));
+          const r = Math.max(w, h) * (0.32 + 0.1 * i / 3) * (1 + v.level * 0.12 + (i === 0 ? v.pump * 0.12 + v.down * 0.05 : i === 1 ? v.kickE * 0.05 : 0));
           const g = ctx.createRadialGradient(x, y, 0, x, y, r);
           g.addColorStop(0, R.color.rgba(cols[i], 0.32 + v.level * 0.12)); g.addColorStop(1, R.color.rgba(cols[i], 0));
           ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
@@ -100,7 +100,7 @@ R.skins.def({
         const g = sx.createLinearGradient(0, 0, W, 0);
         g.addColorStop(0, 'rgba(255,255,255,.15)'); g.addColorStop(0.5, 'rgba(255,255,255,.85)'); g.addColorStop(1, 'rgba(255,255,255,.15)');
         sx.fillStyle = g; sx.fill();
-        root.style.setProperty('--gl-pulse', (v.level * 0.6 + v.beat * 0.4).toFixed(3));
+        root.style.setProperty('--gl-pulse', Math.min(1, v.level * 0.5 + v.pump * 0.45 + v.down * 0.2).toFixed(3));
       },
     };
   },

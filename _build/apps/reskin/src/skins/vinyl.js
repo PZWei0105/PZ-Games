@@ -1,6 +1,6 @@
 /* ===================== skin: 黑膠唱盤 — spin it, drop the needle, scratch the record to seek ===================== */
 R.skins.def({
-  id: 'vinyl', name: '黑膠唱盤', group: '復古', en: 'TURNTABLE',
+  id: 'vinyl', punch: 0.5, name: '黑膠唱盤', group: '復古', en: 'TURNTABLE',
   desc: '手指撥唱片就能快轉倒轉，唱臂跟著進度走',
   bloom: { s: 0.22, th: 0.82 }, trans: 'shatter',
   theme: { bg: '#2a170e', fg: '#f3e6d3', accent: '#d9a441', accent2: '#e2583e', ui: 'rgba(36,22,14,.98)', dock: 'rgba(30,16,8,.55)', dockfg: '#f0d9a8' },
@@ -147,7 +147,7 @@ R.skins.def({
         ctx.fillStyle = '#1b1b1d'; ctx.beginPath(); ctx.arc(cx, cy + PR * 0.025, PR, 0, R.TAU); ctx.fill();
         const pg = ctx.createLinearGradient(cx - PR, cy - PR, cx + PR, cy + PR); pg.addColorStop(0, '#e9ecef'); pg.addColorStop(0.5, '#9aa0a8'); pg.addColorStop(1, '#d5d9de');
         ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(cx, cy, PR, 0, R.TAU); ctx.fill();
-        const dots = 72, flash = Math.min(1, 0.35 + v.beat * 0.9);
+        const dots = 72, flash = Math.min(1, 0.3 + v.pump * 0.7 + v.down * 0.3);
         ctx.fillStyle = `rgba(40,40,44,${0.55 + flash * 0.4})`;
         for (let i = 0; i < dots; i++) { const a = ang + (i / dots) * R.TAU; const rx = cx + Math.cos(a) * PR * 0.972, ry = cy + Math.sin(a) * PR * 0.972; ctx.fillRect(rx - 1.2, ry - 1.2, 2.4, 2.4); }
         // record (drops in)
@@ -181,7 +181,7 @@ R.skins.def({
         deck.style.setProperty('--lift', armLift.toFixed(3));
         if (!armShown && enterT > 0.7 && has && playing) { armShown = true; }
         // VU meters
-        const lv = [v.level * 0.92 + v.bass * 0.12, v.level * 0.88 + v.high * 0.18];
+        const lv = [v.level * 0.86 + v.bass * 0.1 + v.kickE * 0.12, v.level * 0.84 + v.high * 0.12 + v.snareE * 0.12];
         for (let i = 0; i < 2; i++) { const m = VU[i]; const tg = -45 + 90 * Math.min(1.05, lv[i] * (playing ? 1 : 0)); m.v += ((tg - m.a) * 120 - m.v * 14) * dt; m.a += m.v * dt; vu[i].style.transform = `rotate(${Math.max(-48, Math.min(50, m.a)).toFixed(1)}deg)`; }
       },
     };

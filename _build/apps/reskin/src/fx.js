@@ -181,8 +181,10 @@ R.fx = (() => {
     if (tired) { if (ok && !cv.hidden) cv.hidden = true; if (css && !gather.hidden) gather.hidden = true; return; }
     const v = R.viz, c = cfg();
     const lyr = document.body.classList.contains('ly-open') || document.body.classList.contains('deep');
-    const want = enabled() && !lyr && c.s > 0 ? c.s * (0.78 + 0.42 * v.level + 0.55 * v.kick + 0.4 * v.hot) : 0;
-    str += (want - str) * (1 - Math.exp(-dt * (want > str ? 14 : 5)));
+    // the glow breathes with the beat: up on every beat (more on the bar's first), back down before the next one
+    const fl = settings.get('flash') ? 1 : 0.55;
+    const want = enabled() && !lyr && c.s > 0 ? c.s * (0.72 + 0.36 * v.level + fl * (0.5 * v.pump + 0.3 * v.down + 0.22 * v.kickE) + 0.4 * v.hot) : 0;
+    str += (want - str) * (1 - Math.exp(-dt * (want > str ? 26 : 7)));
     const k = enabled() && c.ca > 0 && v.hot > 0.4 && settings.get('flash') ? v.kick * v.hot * c.ca : 0;
     kickA = Math.max(kickA * Math.exp(-dt * 9), k);
     if (str < 0.012 && kickA < 0.01) {

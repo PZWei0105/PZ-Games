@@ -71,9 +71,10 @@ R.skins.def({
     let pos = 0, speed = 0, playerX = 0, rpm = 900, gear = 1, gearT = 9, shiftFlash = 0, enterT = 0, nos = 0, bgX = 0, shake = 0, lastWhere = 0;
     let signZ = -1, signText = '', signT = 0;
     const W0 = () => cv.w, H0 = () => cv.h;
-    api.beat((s) => {
-      rpm = Math.min(8600, rpm + 500 * s);
-      if (s > 0.7) shake = Math.min(1, shake + s * 0.6);
+    // every beat kicks the revs; the bar's first beat jolts the car
+    api.beat((s, i) => {
+      rpm = Math.min(8600, rpm + 650 * s);
+      if (i.down) shake = Math.min(1, shake + s * 0.55);
     });
     function plateAt(z, text) { signZ = z; signText = text; signT = 0; }
     function project(wx, wy, z, camX, camY, w, h, hor) {
@@ -99,7 +100,7 @@ R.skins.def({
         const target = v.playing ? (150 + Math.min(150, (v.bpm || 110)) * 0.55 + v.level * 70 + nos * 90) : 0;
         const ramp = Math.min(1, enterT / 1.8);
         speed += (target * ramp - speed) * (1 - Math.exp(-dt * (target > speed ? 1.1 : 0.6)));
-        const ups = speed * 32; // world units per second
+        const ups = speed * 32 * (0.7 + 0.65 * v.pump); // world units per second — a surge on every beat
         pos += ups * dt;
         const g2 = speed < 4 ? 1 : Math.max(1, Math.min(6, 1 + Math.floor(speed / 56)));
         if (g2 !== gear) { if (g2 > gear) shiftFlash = 1; gear = g2; gearT = 0; }
@@ -143,7 +144,8 @@ R.skins.def({
         const tunnel = nos;
         const hsK = Math.max(0.8, Math.min(1.35, Math.min(w, h) / 390));
         const fogC = nos > 0.3 ? [18, 14, 48] : [32, 12, 46];
-        const beatGlow = 0.35 + v.beat * 0.65;
+        // LED edges: the whole line pulses on the beat and a flash races from the car to the horizon every beat
+        const beatGlow = 0.28 + v.pump * 0.6 + v.down * 0.25, wavePos = v.playing ? v.phase : -1;
         const sprites = [];
         for (let n = DRAW - 1; n >= 0; n--) {
           const a = pts[n], b = pts[n + 1];
@@ -161,11 +163,12 @@ R.skins.def({
           poly(ctx, a.x, a.y, rw1, b.x, b.y, rw2, alt ? mixc(28, 28, 36) : mixc(24, 24, 31));
           // LED edges along the road, pulsing on the beat
           const near = (1 - fog) * (1 - fog), tall = a.y - b.y;
+          const wave = wavePos < 0 ? 0 : Math.exp(-Math.pow(n / DRAW - wavePos * 0.9, 2) * 140) * (0.6 + 0.6 * v.acc);
           ctx.globalCompositeOperation = 'lighter';
           if (tall > 0.6) {
-          ctx.fillStyle = R.color.rgba('#29e3ff', near * beatGlow);
+          ctx.fillStyle = R.color.rgba('#29e3ff', Math.min(1, near * beatGlow + wave * (0.35 + near)));
           ctx.beginPath(); ctx.moveTo(a.x - rw1 * 1.02, a.y); ctx.lineTo(b.x - rw2 * 1.02, b.y); ctx.lineTo(b.x - rw2 * 0.98, b.y); ctx.lineTo(a.x - rw1 * 0.98, a.y); ctx.fill();
-          ctx.fillStyle = R.color.rgba('#ff2d55', near * beatGlow);
+          ctx.fillStyle = R.color.rgba('#ff2d55', Math.min(1, near * beatGlow + wave * (0.35 + near)));
           ctx.beginPath(); ctx.moveTo(a.x + rw1 * 0.98, a.y); ctx.lineTo(b.x + rw2 * 0.98, b.y); ctx.lineTo(b.x + rw2 * 1.02, b.y); ctx.lineTo(a.x + rw1 * 1.02, a.y); ctx.fill();
           }
           ctx.globalCompositeOperation = 'source-over';
@@ -174,7 +177,7 @@ R.skins.def({
           if (tunnel > 0.05 && a.i % 6 === 0) {
             const top = a.y - ROADW * 2.4 * a.s;
             ctx.globalCompositeOperation = 'lighter'; ctx.lineWidth = Math.max(1, a.s * 70);
-            ctx.strokeStyle = R.color.rgba(a.i % 12 === 0 ? '#29e3ff' : '#ff4fd8', tunnel * (1 - fog) * (0.55 + v.beat * 0.45));
+            ctx.strokeStyle = R.color.rgba(a.i % 12 === 0 ? '#29e3ff' : '#ff4fd8', Math.min(1, tunnel * ((1 - fog) * (0.45 + v.pump * 0.5) + wave * 0.9)));
             ctx.beginPath(); ctx.moveTo(a.x - rw1 * 1.4, a.y); ctx.lineTo(a.x - rw1 * 1.4, top + rw1 * 0.5); ctx.quadraticCurveTo(a.x - rw1 * 1.4, top, a.x - rw1 * 0.9, top); ctx.lineTo(a.x + rw1 * 0.9, top); ctx.quadraticCurveTo(a.x + rw1 * 1.4, top, a.x + rw1 * 1.4, top + rw1 * 0.5); ctx.lineTo(a.x + rw1 * 1.4, a.y); ctx.stroke();
             ctx.globalCompositeOperation = 'source-over';
           }
@@ -186,7 +189,7 @@ R.skins.def({
             ctx.globalCompositeOperation = 'lighter';
             // the head glows, small and hot; very close lamps fade so they never fill the screen
             const closeK = Math.min(1, n / 5);
-            glowDot(ctx, lx - side * rw1 * 0.22, a.y - hh, Math.min(46 * hsK, Math.max(3, a.s * 520)), '#ffc46b', near * (1 - tunnel) * closeK);
+            glowDot(ctx, lx - side * rw1 * 0.22, a.y - hh, Math.min(46 * hsK, Math.max(3, a.s * 520)), '#ffc46b', Math.min(1, near * (1 - tunnel) * closeK * (0.7 + 0.55 * v.pump)));
             if (n > 3 && rw1 < w * 1.2) {
               const pool = ctx.createRadialGradient(lx - side * rw1 * 0.3, a.y, 0, lx - side * rw1 * 0.3, a.y, rw1 * 0.6);
               pool.addColorStop(0, `rgba(255,190,110,${0.12 * near * (1 - tunnel)})`); pool.addColorStop(1, 'rgba(255,190,110,0)');
@@ -224,7 +227,7 @@ R.skins.def({
         for (const c of cars) { c.z += ups * c.v * dt; if (c.z < pos - SEG * 2) { c.z = pos + SEG * (DRAW - 5 - rnd() * 30); c.lane = [-0.62, 0, 0.62][Math.floor(rnd() * 3)]; } if (c.z > pos + SEG * DRAW) c.z = pos + SEG * (DRAW - 2); }
         if (signZ > 0 && signZ < pos - SEG) signZ = -1;
         // speed lines at full throttle
-        const rush = Math.max(nos * 0.9, Math.min(0.5, (speed - 230) / 200));
+        const rush = Math.max(nos * (0.6 + 0.5 * v.pump), Math.min(0.5, (speed - 230) / 200));
         if (rush > 0.03) {
           ctx.globalCompositeOperation = 'lighter';
           const vx = w / 2, vy = hor;
@@ -245,7 +248,7 @@ R.skins.def({
         const lit = Math.round(Math.min(1, Math.max(0, (rpm - 3500) / 4600)) * 10);
         for (let k = 0; k < 10; k++) {
           const lx = w / 2 + (k - 4.5) * 15 * hs, ly = hudY - 70 * hs;
-          const col = rpm > 7700 && Math.floor(t * 12) % 2 ? '#29e3ff' : k < 4 ? '#3dff7a' : k < 7 ? '#ffd23d' : '#ff2d55';
+          const col = (rpm > 7700 && Math.floor(t * 12) % 2) || v.down > 0.55 ? '#29e3ff' : k < 4 ? '#3dff7a' : k < 7 ? '#ffd23d' : '#ff2d55';
           ctx.fillStyle = k < lit ? col : 'rgba(255,255,255,.08)';
           ctx.beginPath(); ctx.arc(lx, ly, 4.2 * hs, 0, R.TAU); ctx.fill();
           if (k < lit) glowDot(ctx, lx, ly, 12 * hs, col, 0.55 * on);

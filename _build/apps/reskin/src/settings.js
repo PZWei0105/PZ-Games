@@ -22,7 +22,7 @@ R.settingsUI = (() => {
       <div class="set-g">
         <div class="set-r set-col"><div class="lb"><b>鎖屏連播方式</b><small>iPhone 鎖住螢幕時換下一首比較容易斷。「自動」會先用單軌換帶，偵測到沒接上就自己改成雙軌接力。目前使用：<b style="display:inline;color:var(--accent)">${ENG[eng]}</b></small></div>${seg('engine', [['auto', '自動（推薦）'], ['single', '單軌換帶'], ['dual', '雙軌接力']])}</div>
         <div class="set-r set-col"><div class="lb"><b>鎖屏換歌紀錄</b><small>${ds.total ? `背景換歌 ${ds.total} 次：接上 ${ds.ok} 次、沒接上 ${ds.fail} 次${ds.bgpause ? `；被系統暫停 ${ds.bgpause} 次` : ''}` : '還沒有鎖屏換歌的紀錄。鎖住螢幕聽完一首，這裡就會記下有沒有接上。'}</small></div></div>
-        <div class="set-r set-col"><div class="lb"><b>畫面跟聲音對拍</b><small>戴藍牙耳機時，如果畫面比聲音快，往右調。現在：${lat > 0 ? '+' : ''}${lat} 毫秒</small></div><input type="range" min="-200" max="400" step="10" value="${lat}" data-range="latency" aria-label="畫面延遲"></div>
+        <div class="set-r set-col"><div class="lb"><b>畫面跟聲音對拍</b><small>戴藍牙耳機時，如果畫面比聲音快，往右調。現在：${lat > 0 ? '+' : ''}${lat} 毫秒</small></div><input type="range" min="-200" max="400" step="5" value="${lat}" data-range="latency" aria-label="畫面延遲"><button type="button" class="chipb sy-open" data-s="sync">對拍測試：聽滴答聲調到剛好</button></div>
         ${R.isIOS ? '' : `<div class="set-r set-col"><div class="lb"><b>音量</b></div><input type="range" min="0" max="1" step="0.01" value="${settings.get('volume')}" data-range="volume" aria-label="音量"></div>`}
       </div>
       <div class="sec-t">聲光</div>
@@ -93,6 +93,7 @@ R.settingsUI = (() => {
     if (a.dataset.s === 'boot') { const on = !R.boot.enabled(); R.boot.setEnabled(on); a.classList.toggle('on', on); a.setAttribute('aria-checked', String(on)); R.sfx.play('toggle'); return; }
     if (a.dataset.s === 'persist') { const ok = await R.db.persist(); R.toast(ok ? '已開啟，瀏覽器不會自動清掉你的歌' : (R.isIOS && !R.standalone ? '先加到主畫面，iPhone 才會保留' : '瀏覽器沒有答應，常用它就會比較穩')); refresh(); }
     else if (a.dataset.s === 'demo') { R.ui.closeSheet(true); R.app.addDemo(); }
+    else if (a.dataset.s === 'sync') { R.ui.closeSheet(true); setTimeout(() => R.sync.open(), 30); }
     else if (a.dataset.s === 'wipe') {
       if (await R.ui.confirm({ title: '清空整個歌庫？', sub: '所有歌、歌單和設定都會刪掉，無法復原。手機或電腦裡的原始檔不會受影響。', ok: '全部清空', danger: true })) {
         R.player.pause(); await R.lib.wipe(); location.reload();
