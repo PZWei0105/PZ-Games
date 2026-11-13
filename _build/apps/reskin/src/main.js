@@ -326,7 +326,8 @@ R.app = (() => {
       else if (R.embedded && (R.isIOS || R.isAndroid || R.isTouch) && !settings.get('embedHint')) { settings.set('embedHint', true); setTimeout(() => R.toast('想鎖屏也一直聽：把「耳目一新」單獨加到主畫面，鎖屏控制更完整', { ms: 6500 }), 2500); }
       else if (R.isIOS && !R.standalone && !R.embedded && !settings.get('homeHint')) { settings.set('homeHint', true); setTimeout(() => R.toast('用 Safari「分享 → 加入主畫面」，就能鎖屏一直聽', { ms: 6000 }), 2500); }
     }
-    if ('serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) && !R.CLAUDE) {
+    // the one-file friend edition has no sw.js next to it
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) && !R.CLAUDE && !window.RESKIN_ONEFILE) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   }

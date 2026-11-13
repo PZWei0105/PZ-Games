@@ -141,5 +141,8 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 
 ## 朋友版
 
-- 給痞子葳的朋友用的獨立網頁版：沒有痞子葳的名字、沒有收藏庫的網址和按鈕。用 `build.py --friend-out DIR --friend-zip ZIP` 輸出，內容跟網頁版同一份，只是換掉 `FRIEND_SUBS` 列的字；`FRIEND_NEVER` 列的字只要還在，組建就會失敗（改了原本的字，要一起改這兩張表）。
-- 壓縮檔的檔案直接放在最上層（index.html、manifest、sw.js、icons）。放到 Netlify Drop：先解壓縮，把有 index.html 的那個資料夾拖進 https://app.netlify.com/drop（要先登入，網站才不會一小時後消失）；之後改版到同一個網站的「Deploys」頁再拖一次，網址不變。
+- **2026-11-13 起凍結**：痞子葳決定朋友那份就停在 2026-11-13 這版（他自己放上網的單一檔案），之後的改版只更新他自己的網頁版和 Claude 版。不要再做、也不要主動給他新的朋友版，除非他自己說要。朋友版是他放在別的網站上的一份拷貝，我們推上 PZ-Games 的更新不會碰到它。
+- 給痞子葳的朋友用的獨立網頁版：沒有痞子葳的名字、沒有收藏庫的網址和按鈕。內容跟網頁版同一份，只是換掉 `FRIEND_SUBS` 列的字；`FRIEND_NEVER` 列的字只要還在，組建就會失敗（改了原本的字，要一起改這兩張表）。
+- **給他的是單一檔案**（`build.py --friend-one /home/claude/out/朋友版/index.html`）：一個 index.html 就是整個網站，manifest 和主畫面圖示都內嵌（data: 網址），不註冊 service worker（`window.RESKIN_ONEFILE`），所以要有網路才打得開，打開後歌照樣從裝置裡播。放上網：登入後把這個檔案拖進 https://app.netlify.com/drop（可以只拖一個 HTML 檔），或上傳到一個 GitHub repo 再開 Pages。檔名要維持 index.html。check.py `--one` 會把它單獨放成一個網站（旁邊沒有任何其他檔案）跑完整流程。
+- 為什麼不給壓縮檔：2026-11-13 先給的壓縮檔版（`--friend-out`／`--friend-zip`：index.html＋manifest＋sw.js＋icons，能離線開）他回報「無法用」，原因沒查到（多半卡在解壓縮或拖檔）。這個選項還留著，需要離線開的版本時再用：先解壓縮，把有 index.html 的那個資料夾整個拖進 Netlify Drop。
+- 以後改版：Netlify 到同一個網站的「Deploys」頁再拖一次新檔；GitHub 就上傳覆蓋 index.html。網址不變。

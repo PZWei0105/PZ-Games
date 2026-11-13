@@ -4,6 +4,7 @@
   python3 _build/apps/reskin/check.py                      # 網頁版（apps/reskin/）
   python3 _build/apps/reskin/check.py --claude /tmp/rs-c   # 另外檢查 build.py --claude-out 輸出的 Claude 版
   python3 _build/apps/reskin/check.py --friend /tmp/rs-f   # 另外檢查 build.py --friend-out 輸出的朋友版
+  python3 _build/apps/reskin/check.py --one /home/claude/out/朋友版/index.html   # 朋友版單一檔案：只放這一個檔案上網也能用
 
 標籤      MP3（ID3v2.3＋封面）、M4A（封面）、FLAC（Vorbis＋圖片）、WAV（從檔名猜歌手）、Big5 編碼的舊 MP3 標籤
 分析      每首都算出節奏（BPM 誤差 ±3）與頻譜
@@ -573,6 +574,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--claude')
     ap.add_argument('--friend')
+    ap.add_argument('--one')
     ap.add_argument('--out', default='/tmp/reskin-check')
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -594,6 +596,16 @@ def main():
         s3 = serve(a.friend)
         os.makedirs(os.path.join(a.out, 'friend'), exist_ok=True)
         run(f'http://127.0.0.1:{s3.server_address[1]}/', os.path.join(a.out, 'friend'), fx, s3)
+    if a.one:
+        print('--- 朋友版（單一檔案）---')
+        page = open(a.one, encoding='utf-8').read()
+        ok(not any(w in page for w in ('痞子葳', '收藏庫', 'PZ 遊戲收藏', 'pzwei0105', 'PZ-Games')), '單一檔案：沒有痞子葳的名字、沒有收藏庫的網址或字樣')
+        ok('rel="manifest" href="data:' in page and 'rel="apple-touch-icon" href="data:' in page and 'window.RESKIN_ONEFILE = true;' in page, '單一檔案：主畫面圖示和 manifest 都在檔案裡，不另外抓 sw.js')
+        d1 = '/tmp/reskin-onefile-site'
+        shutil.rmtree(d1, ignore_errors=True); os.makedirs(d1); shutil.copy(a.one, os.path.join(d1, 'index.html'))   # the site is this one file and nothing else
+        s4 = serve(d1)
+        os.makedirs(os.path.join(a.out, 'one'), exist_ok=True)
+        run(f'http://127.0.0.1:{s4.server_address[1]}/', os.path.join(a.out, 'one'), fx, None)
     print('\n截圖在', a.out)
     if BAD:
         print('BAD', len(BAD)); sys.exit(1)
