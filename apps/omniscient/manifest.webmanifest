@@ -1,0 +1,30 @@
+{
+ "name": "全知 OMNISCIENT",
+ "short_name": "全知",
+ "description": "痞子葳的戰情看板：冷眼的官方一手資料，攤開來演給你看。盤中即時、收盤後回放當天。",
+ "lang": "zh-Hant-TW",
+ "start_url": "./",
+ "scope": "./",
+ "display": "fullscreen",
+ "orientation": "landscape",
+ "background_color": "#03060d",
+ "theme_color": "#03060d",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
