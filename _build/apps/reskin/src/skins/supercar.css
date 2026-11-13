@@ -1,0 +1,49 @@
+/* ---------- 超跑夜奔 NIGHT RUN ---------- */
+.skin-supercar { --lv: 0; --r: #ff2d55; --c: #29e3ff; color: #f4f1ff; font-family: "Chakra Petch", var(--sans); background: #05040c; }
+.skin-supercar .sc-road { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-supercar .scr-top { position: absolute; left: calc(var(--sl) + 16px); top: calc(var(--st) + 18px); pointer-events: none; }
+.skin-supercar .scr-top b { display: block; font-family: "Orbitron", sans-serif; font-weight: 900; font-style: italic; font-size: 15px; letter-spacing: .18em; color: #fff; text-shadow: 0 0 10px rgba(255,45,85,.9), 2px 0 0 rgba(41,227,255,.6); }
+.skin-supercar .scr-top span { display: block; margin-top: 5px; font-family: "Share Tech Mono", monospace; font-size: 10px; letter-spacing: .2em; color: rgba(244,241,255,.55); }
+.skin-supercar .scr-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px calc(var(--sr) + 16px) calc(var(--sb) + 12px) calc(var(--sl) + 16px);
+  background: linear-gradient(to bottom, rgba(5,4,12,0), rgba(5,4,12,.82) 26%, rgba(5,4,12,.95)),
+    repeating-linear-gradient(45deg, rgba(255,255,255,.025) 0 3px, rgba(0,0,0,.05) 3px 6px); }
+.skin-supercar .scr-panel::before { content: ""; position: absolute; left: 16px; right: 16px; top: 22%; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,45,85,.6), rgba(41,227,255,.6), transparent); }
+.skin-supercar .scr-head { position: relative; display: flex; align-items: center; gap: 13px; margin-top: 22px; padding: 10px; border-radius: 16px; background: linear-gradient(135deg, rgba(30,24,46,.85), rgba(12,10,22,.85)); border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 30px rgba(0,0,0,.5); }
+.skin-supercar .scr-art { flex: none; width: 56px; height: 56px; border-radius: 10px; overflow: hidden; background: #111; box-shadow: 0 0 0 1px rgba(41,227,255,.35), 0 0 18px rgba(41,227,255,calc(.15 + var(--lv) * .3)); }
+.skin-supercar .scr-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-supercar .scr-art img.blank { opacity: 0; }
+.skin-supercar .scr-tx { flex: 1; min-width: 0; }
+.skin-supercar .scr-t { font-weight: 700; font-size: 19px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+.skin-supercar .scr-a { margin-top: 3px; font-size: 12.5px; letter-spacing: .08em; color: var(--c); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-supercar .scr-trk { flex: none; text-align: right; font-family: "Share Tech Mono", monospace; }
+.skin-supercar .scr-trk small { display: block; font-size: 9px; letter-spacing: .2em; color: rgba(244,241,255,.45); }
+.skin-supercar .scr-trk b { font-weight: 400; font-size: 14px; color: #ffd23d; }
+.skin-supercar .scr-seek { margin-top: 12px; padding: 8px 2px 0; }
+.skin-supercar .scr-seek .seek-track { height: 3px; background: rgba(255,255,255,.1); transform: skewX(-20deg); }
+.skin-supercar .scr-seek .seek-fill { background: linear-gradient(90deg, var(--c), var(--r)); box-shadow: 0 0 10px rgba(255,45,85,.6); }
+.skin-supercar .scr-seek .seek-knob { width: 6px; height: 14px; background: #fff; transform: translate(-50%, -50%) skewX(-20deg); box-shadow: 0 0 10px var(--r); }
+.skin-supercar .scr-seek .seek-times { margin-top: 8px; font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: .1em; color: rgba(244,241,255,.55); }
+.skin-supercar .scr-ctrl { margin-top: 8px; justify-content: space-between; }
+.skin-supercar .scr-ctrl button { width: 50px; height: 46px; border-radius: 12px; font-size: 20px; color: #e8e4ff; background: linear-gradient(#1c1830, #0e0c18); border: 1px solid rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); transition: transform .12s; }
+.skin-supercar .scr-ctrl button:active { transform: scale(.9); }
+.skin-supercar .scr-ctrl .c-shuf, .skin-supercar .scr-ctrl .c-rep { width: 44px; font-size: 16px; }
+/* the play button is the engine start / stop button */
+.skin-supercar .scr-ctrl .c-play { width: 78px; height: 78px; border-radius: 50%; display: grid; place-content: center; gap: 1px; font-family: "Orbitron", sans-serif; font-weight: 900; color: #fff; text-align: center;
+  background: radial-gradient(circle at 50% 35%, #ff5c7c, #d6153d 55%, #7a0a22); border: 3px solid #2a2433; box-shadow: 0 0 0 3px #4b4458, 0 8px 22px rgba(0,0,0,.6), 0 0 calc(14px + var(--lv) * 30px) rgba(255,45,85,.6); }
+.skin-supercar .scr-ctrl .c-play b { font-size: 8px; letter-spacing: .2em; font-weight: 700; opacity: .85; }
+.skin-supercar .scr-ctrl .c-play .i-play, .skin-supercar .scr-ctrl .c-play .i-pause { font-size: 13px; letter-spacing: .12em; }
+.skin-supercar.is-playing .scr-ctrl .c-play { background: radial-gradient(circle at 50% 35%, #ff7a92, #ff2d55 55%, #9c0d2c); }
+.skin-supercar.nos .scr-art { box-shadow: 0 0 0 1px #29e3ff, 0 0 26px rgba(41,227,255,.8); }
+.skin-supercar.enter .scr-top { animation: scr-flick .8s steps(1) .5s both; }
+.skin-supercar.enter .scr-panel { animation: scr-up .9s cubic-bezier(.2,.8,.2,1) .35s both; }
+@keyframes scr-flick { 0% { opacity: 0; } 20% { opacity: 1; } 30% { opacity: .2; } 45% { opacity: 1; } 100% { opacity: 1; } }
+@keyframes scr-up { from { transform: translateY(60%); opacity: 0; } to { transform: none; opacity: 1; } }
+.skin-supercar.swap .scr-head { animation: scr-swap .9s cubic-bezier(.2,.9,.2,1) both; }
+@keyframes scr-swap { 0% { transform: translateX(-30px) skewX(-12deg); opacity: 0; filter: blur(4px); } 60% { transform: translateX(4px) skewX(2deg); opacity: 1; filter: none; } 100% { transform: none; } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-supercar .scr-panel { left: auto; width: min(380px, 46vw); top: 0; padding-top: calc(var(--st) + 56px); background: linear-gradient(to right, rgba(5,4,12,0), rgba(5,4,12,.9) 18%); }
+  .skin-supercar .scr-panel::before { display: none; }
+  .skin-supercar .scr-head { margin-top: 0; }
+  .skin-supercar .scr-ctrl .c-play { width: 64px; height: 64px; }
+}
+@media (orientation: landscape) and (min-height: 521px) { .skin-supercar .scr-panel { max-width: 640px; margin: 0 auto; background: none; } .skin-supercar .scr-panel::before { display: none; } }

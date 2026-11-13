@@ -1,0 +1,55 @@
+/* ---------- 黑洞 EVENT HORIZON ---------- */
+.skin-blackhole { --lv: 0; --o: #ff9d42; --b: #8fd8ff; color: #f6efe4; font-family: "Exo 2", var(--sans); background: #020207; }
+.skin-blackhole .bh-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-blackhole.bh-flat .bh-cv { display: none; }
+.skin-blackhole.bh-flat { background: radial-gradient(circle at 50% 40%, #000 0 9vmin, #fff3d6 9.6vmin, #ff9d42 11vmin, rgba(90,28,6,.5) 22vmin, #020207 46vmin), #020207; }
+.skin-blackhole .bh-vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(130% 85% at 50% 40%, transparent 55%, rgba(0,0,0,.6) 100%), linear-gradient(to bottom, transparent 56%, rgba(2,2,7,.62) 78%, rgba(2,2,7,.9)); }
+.skin-blackhole .bh-hud { position: absolute; left: calc(var(--sl) + 18px); top: calc(var(--st) + 19px); pointer-events: none; }
+.skin-blackhole .bh-hud b { display: block; font-family: "Orbitron", sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: .34em; color: #ffd9a8; text-shadow: 0 0 12px rgba(255,157,66,.65); }
+@media (max-width: 460px) { .skin-blackhole .bh-hud b { font-size: 10px; letter-spacing: .2em; } }
+.skin-blackhole .bh-hud span { display: block; margin-top: 6px; font-family: "Share Tech Mono", monospace; font-size: 10.5px; letter-spacing: .22em; color: rgba(246,239,228,.45); }
+.skin-blackhole .bh-read { position: absolute; left: 0; right: 0; top: 63%; display: flex; justify-content: center; gap: 18px; font-family: "Share Tech Mono", monospace; font-size: 10px; letter-spacing: .14em; color: rgba(246,239,228,.42); pointer-events: none; white-space: nowrap; }
+.skin-blackhole .bh-read b { font-weight: 400; color: #ffcf8f; text-shadow: 0 0 8px rgba(255,157,66,.5); }
+.skin-blackhole .bh-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 calc(var(--sr) + 22px) calc(var(--sb) + 14px) calc(var(--sl) + 22px); max-width: 620px; margin: 0 auto; }
+.skin-blackhole .bh-row { display: flex; align-items: center; gap: 15px; }
+.skin-blackhole .bh-art { flex: none; width: 62px; height: 62px; border-radius: 50%; overflow: hidden; background: #110a06; box-shadow: 0 0 0 1.5px rgba(255,217,168,.75), 0 0 26px rgba(255,157,66,calc(.3 + var(--lv) * .5)); }
+.skin-blackhole .bh-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-blackhole .bh-art img.blank { opacity: 0; }
+.skin-blackhole.is-playing .bh-art img { animation: bh-rot 18s linear infinite; }
+@keyframes bh-rot { to { transform: rotate(360deg); } }
+.skin-blackhole .bh-tx { min-width: 0; flex: 1; }
+.skin-blackhole .bh-t { font-weight: 300; font-size: 23px; letter-spacing: .05em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff8ee; text-shadow: 0 0 20px rgba(255,157,66,.35); }
+.skin-blackhole .bh-a { margin-top: 5px; font-family: "Share Tech Mono", var(--sans); font-size: 12.5px; letter-spacing: .16em; color: #ffb366; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-blackhole .bh-seek { margin-top: 18px; padding: 10px 0 2px; }
+.skin-blackhole .bh-seek .seek-track { height: 1.5px; background: rgba(246,239,228,.16); }
+.skin-blackhole .bh-seek .seek-fill { background: linear-gradient(90deg, rgba(255,157,66,.4), #ffb366 70%, #fff3d6); }
+.skin-blackhole .bh-seek .seek-knob { width: 9px; height: 9px; border-radius: 50%; background: #fff6e6; box-shadow: 0 0 0 4px rgba(255,157,66,.18), 0 0 16px 3px rgba(255,157,66,.75); }
+.skin-blackhole .bh-seek .seek-times { margin-top: 9px; font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: .12em; color: rgba(246,239,228,.5); }
+.skin-blackhole .bh-ctrl { margin-top: 8px; justify-content: space-between; }
+.skin-blackhole .bh-ctrl button { width: 50px; height: 50px; border-radius: 50%; font-size: 21px; color: #f6efe4; transition: transform .15s, background .2s; }
+.skin-blackhole .bh-ctrl button:active { transform: scale(.88); background: rgba(255,157,66,.14); }
+.skin-blackhole .bh-ctrl .c-shuf, .skin-blackhole .bh-ctrl .c-rep { font-size: 17px; }
+.skin-blackhole .bh-ctrl .c-play { width: 74px; height: 74px; font-size: 27px; color: #fff; background: radial-gradient(circle, rgba(255,157,66,calc(.12 + var(--lv) * .2)), rgba(0,0,0,.2) 70%); box-shadow: inset 0 0 0 1.5px rgba(255,217,168,.8), 0 0 calc(18px + var(--lv) * 24px) rgba(255,157,66,.55); }
+/* enter: the HUD types in, the panel rises out of the dark */
+.skin-blackhole.enter .bh-hud b { animation: bh-type .9s steps(15) .35s both; }
+.skin-blackhole.enter .bh-hud span, .skin-blackhole.enter .bh-read { animation: bh-fade .7s ease 1s both; }
+.skin-blackhole.enter .bh-panel { animation: bh-rise 1s cubic-bezier(.2,.8,.2,1) .95s both; }
+@keyframes bh-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes bh-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bh-rise { from { opacity: 0; transform: translateY(30px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+/* next song: the old title is pulled into the hole, the new one condenses out of light */
+.skin-blackhole.swap .bh-t, .skin-blackhole.swap .bh-a { animation: bh-cond 1.1s cubic-bezier(.2,.8,.2,1) both; }
+.skin-blackhole.swap .bh-a { animation-delay: .12s; }
+.skin-blackhole.swap .bh-art { animation: bh-pulse 1.2s ease-out both; }
+@keyframes bh-cond { 0% { opacity: 0; letter-spacing: .6em; filter: blur(8px); } 100% { opacity: 1; filter: none; } }
+@keyframes bh-pulse { 0% { box-shadow: 0 0 0 1.5px #fff, 0 0 70px 20px rgba(255,200,140,.9); } 100% { box-shadow: 0 0 0 1.5px rgba(255,217,168,.75), 0 0 26px rgba(255,157,66,.4); } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-blackhole .bh-read { display: none; }
+  .skin-blackhole .bh-panel { max-width: 560px; padding-bottom: calc(var(--sb) + 8px); }
+  .skin-blackhole .bh-art { width: 48px; height: 48px; }
+  .skin-blackhole .bh-t { font-size: 18px; }
+  .skin-blackhole .bh-seek { margin-top: 8px; }
+  .skin-blackhole .bh-ctrl { margin-top: 0; }
+  .skin-blackhole .bh-ctrl .c-play { width: 58px; height: 58px; }
+}
+@media (orientation: landscape) and (min-height: 521px) { .skin-blackhole .bh-read { top: 66%; } }

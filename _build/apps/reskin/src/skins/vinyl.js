@@ -2,6 +2,7 @@
 R.skins.def({
   id: 'vinyl', name: '黑膠唱盤', group: '復古', en: 'TURNTABLE',
   desc: '手指撥唱片就能快轉倒轉，唱臂跟著進度走',
+  bloom: { s: 0.22, th: 0.82 }, trans: 'shatter',
   theme: { bg: '#2a170e', fg: '#f3e6d3', accent: '#d9a441', accent2: '#e2583e', ui: 'rgba(36,22,14,.98)', dock: 'rgba(30,16,8,.55)', dockfg: '#f0d9a8' },
   enterMs: 1500,
   emblem: `<svg class="em" viewBox="0 0 116 150"><defs><linearGradient id="vnw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a4528"/><stop offset="1" stop-color="#3a2012"/></linearGradient></defs><rect width="116" height="150" fill="url(#vnw)"/><g stroke="#2a150b" stroke-width="1" opacity=".35"><path d="M0 20q58 10 116 0M0 46q58-8 116 4M0 104q58 10 116-2M0 130q58-6 116 4"/></g><circle cx="54" cy="66" r="44" fill="#c9ccd1"/><circle cx="54" cy="66" r="41" fill="#111"/><g fill="none" stroke="#2b2b2b" stroke-width="1"><circle cx="54" cy="66" r="36"/><circle cx="54" cy="66" r="31"/><circle cx="54" cy="66" r="26"/><circle cx="54" cy="66" r="21"/></g><path d="M54 66L22 38A42 42 0 0 1 40 26z" fill="#fff" opacity=".12"/><circle cx="54" cy="66" r="14" fill="#e2583e"/><circle cx="54" cy="66" r="2.5" fill="#ddd"/><circle cx="100" cy="22" r="7" fill="#c9ccd1" stroke="#555"/><path d="M100 22L84 74l-6 6" stroke="#d6d9de" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="72" y="76" width="10" height="7" rx="1.5" fill="#333" transform="rotate(30 77 79)"/><rect x="14" y="122" width="40" height="14" rx="3" fill="#d6d9de" stroke="#555"/><circle cx="74" cy="129" r="5" fill="#59d36b"/></svg>`,

@@ -15,9 +15,10 @@ R.library = (() => {
     const cur = R.player.current();
     const isCur = cur && cur.id === t.id;
     const lead = o.check ? `<div class="r-chk">${I.check}</div>` : '';
+    const bpmTag = o.bpm && t.bpm ? `<span class="r-bpm">${Math.round(t.bpm < 92 && R.smart.feats(t).rb > t.bpm ? t.bpm * 2 : t.bpm)}</span>` : '';
     return `<div class="row${isCur ? ' cur' : ''}${o.check && st.sel && st.sel.has(t.id) ? ' sel' : ''}" data-tid="${t.id}" ${o.idx != null ? `data-idx="${o.idx}"` : ''} role="button" tabindex="0" style="${o.check ? 'grid-template-columns:26px 48px 1fr auto' : o.grip ? 'grid-template-columns:48px 1fr auto auto' : ''}">
       ${lead}<div class="r-art" data-art="${t.id}"></div>
-      <div class="r-tx"><div class="r-t">${t.fav ? `<i class="r-fav">${I.heartF}</i>` : ''}${esc(t.title)}</div><div class="r-s">${sub(t)}</div></div>
+      <div class="r-tx"><div class="r-t">${bpmTag}${t.fav ? `<i class="r-fav">${I.heartF}</i>` : ''}${esc(t.title)}</div><div class="r-s">${sub(t)}</div></div>
       ${o.check ? '' : `<button type="button" class="r-m" data-more="${t.id}" aria-label="更多">${I.more}</button>`}
       ${o.grip ? `<div class="r-g" data-grip aria-label="拖動排序">${I.grip}</div>` : ''}
     </div>`;
@@ -88,7 +89,10 @@ R.library = (() => {
     const body = favCard + (pls.length
       ? pls.map((p) => `<div class="pl-card" data-pl="${p.id}" role="button" tabindex="0">${mosaic(p.ids)}<div style="min-width:0"><b>${esc(p.name)}</b><small>${p.ids.length} 首${p.ids.length ? ' · ' + fmtTime(R.lib.pl.duration(p.id)) : ''}${p.skin && skinName(p.skin) ? `<span class="badge">${I.hanger}${esc(skinName(p.skin))}</span>` : ''}</small></div><span style="color:rgba(255,255,255,.4);font-size:18px">${I.chev}</span></div>`).join('')
       : `<div class="blank">還沒有自己的歌單。<br>做一個歌單，還可以幫它綁一套 Skin：<br>一播這個歌單，播放器就自動換上那套衣服。</div>`);
-    return head('歌單') + tabs() + `<div class="tools"><button type="button" class="chipb pri" data-l="pl-new">${I.plus}新歌單</button></div><div class="sc">${body}</div>`;
+    // smart playlists: sorted by the songs' own measurements
+    const pend = R.smart.pending();
+    const smart = `<div class="sec-t">智慧歌單 · 自動分類${pend ? `<small class="sm-pend">還有 ${pend} 首在分析</small>` : ''}</div><div class="sm-grid">${R.smart.all().map((p) => `<div class="sm-card" data-pl="${p.id}" role="button" tabindex="0" style="--g1:${p.smart.g[0]};--g2:${p.smart.g[1]}"><i>${p.smart.icon}</i><b>${p.smart.name}</b><small>${p.ids.length} 首${p.skin && skinName(p.skin) ? ' · ' + esc(skinName(p.skin)) : ''}</small></div>`).join('')}</div><div class="sec-t">我的歌單</div>`;
+    return head('歌單') + tabs() + `<div class="tools"><button type="button" class="chipb pri" data-l="pl-new">${I.plus}新歌單</button><button type="button" class="chipb" data-l="report">${I.sparkle}聽歌報告</button></div><div class="sc">${smart}${body}</div>`;
   }
   function queueHTML() {
     const ids = R.player.queue(), i = R.player.index();
@@ -108,10 +112,11 @@ R.library = (() => {
     if (!p) { st.view = null; return listsHTML(); }
     const ts = R.lib.pl.tracks(id);
     const sk = p.skin ? R.skins.get(p.skin) : null;
+    const smartNote = p.smart ? `<div class="sm-note">${esc(p.smart.sub)}。歌曲分析完會自動分進來${p.smart.id === 'run' ? '，照節奏由慢到快排好' : ''}。</div>` : '';
     return head(esc(p.name), `<button type="button" class="ib" data-l="back" aria-label="返回">${I.back}</button>`, p.virtual ? '' : `<button type="button" class="ib" data-l="pl-more" aria-label="歌單選項">${I.more}</button>`)
       + `<div class="pl-hero">${mosaic(p.ids)}<div><b>${esc(p.name)}</b><small>${ts.length} 首 · ${fmtTime(R.lib.pl.duration(id))}</small><div style="margin-top:8px"><button type="button" class="chipb" data-l="pl-skin">${I.hanger}${sk ? '綁定：' + esc(sk.name) : '綁定 Skin'}</button></div></div></div>`
-      + `<div class="tools"><button type="button" class="chipb pri" data-l="pl-play" ${ts.length ? '' : 'disabled'}>${I.play}播放</button><button type="button" class="chipb" data-l="pl-shuf" ${ts.length ? '' : 'disabled'}>${I.shuffle}隨機</button><button type="button" class="chipb" data-l="pl-add">${I.plus}加歌</button></div>`
-      + `<div class="sc" data-plist="${id}">${ts.length ? rowsHTML(ts, (t, k) => row(t, { grip: !p.virtual, idx: k })) : p.virtual ? '<div class="blank">還沒有最愛的歌。<br>播歌時按右上角的 ♡，或在歌曲的「⋯」選單裡加入。</div>' : '<div class="blank">這個歌單還是空的，按「加歌」挑幾首進來。</div>'}</div>`;
+      + `<div class="tools"><button type="button" class="chipb pri" data-l="pl-play" ${ts.length ? '' : 'disabled'}>${I.play}播放</button><button type="button" class="chipb" data-l="pl-shuf" ${ts.length ? '' : 'disabled'}>${I.shuffle}隨機</button>${p.smart ? '' : `<button type="button" class="chipb" data-l="pl-add">${I.plus}加歌</button>`}</div>`
+      + `<div class="sc" data-plist="${id}">${smartNote}${ts.length ? rowsHTML(ts, (t, k) => row(t, { grip: !p.virtual, idx: k, bpm: p.smart && p.smart.id === 'run' })) : p.smart ? '<div class="blank">現在還沒有符合的歌。<br>歌多一點、分析完，就會自動分進來。</div>' : p.virtual ? '<div class="blank">還沒有最愛的歌。<br>播歌時按右上角的 ♡，或在歌曲的「⋯」選單裡加入。</div>' : '<div class="blank">這個歌單還是空的，按「加歌」挑幾首進來。</div>'}</div>`;
   }
   function pickHTML(id) {
     const p = R.lib.pl.get(id);
@@ -213,17 +218,15 @@ R.library = (() => {
     const t = R.lib.get(id); if (!t) return;
     const items = [{ key: 'next', label: '下一首播放', icon: I.next2 }, { key: 'fav', label: t.fav ? '移出我的最愛' : '加入我的最愛', icon: t.fav ? I.heartF : I.heart }, { key: 'pl', label: '加入歌單…', icon: I.playlist }];
     if (ctx && ctx.pl && ctx.pl !== 'fav') items.push({ key: 'unpl', label: '移出這個歌單', icon: I.close });
-    items.push({ key: 'edit', label: '改歌名、歌手、封面、歌詞', icon: I.edit }, { key: 'info', label: '歌曲資訊', icon: I.info }, { key: 'del', label: '從歌庫刪除', icon: I.trash, danger: true });
+    items.push({ key: 'edit', label: '改歌名、歌手、封面、歌詞', icon: I.edit }, { key: 'info', label: '歌曲情報', sub: 'BPM、調性、能量曲線、副歌在哪', icon: I.info }, { key: 'del', label: '從歌庫刪除', icon: I.trash, danger: true });
     const k = await R.ui.menu(items, { title: t.title, sub: t.artist || '' });
     if (k === 'next') { R.player.playNext(id); R.toast('會在這首之後播放'); }
     else if (k === 'fav') { await R.lib.setFav(id, !t.fav); R.toast(t.fav ? '加入我的最愛 ♥' : '移出我的最愛', { ms: 1600 }); }
     else if (k === 'edit') R.extras.editTrack(id);
     else if (k === 'pl') addToPlaylist([id]);
     else if (k === 'unpl') { const p = R.lib.pl.get(ctx.pl); if (p) { p.ids = p.ids.filter((x) => x !== id); await R.lib.pl.save(p); } }
-    else if (k === 'info') {
-      const an = t.an === 1 ? `${t.bpm ? Math.round(t.bpm) + ' BPM' : '完成'}` : t.an === -1 ? '這個格式讀不出節奏（畫面用模擬律動）' : t.an === 2 ? '太長了，跳過（畫面用模擬律動）' : '分析中…';
-      R.ui.info(t.title, [['歌手', t.artist || '—'], ['專輯', t.album || '—'], ['長度', t.duration ? fmtTime(t.duration) : '—'], ['節奏', an], ['格式', (t.type || '').replace('audio/', '').toUpperCase() + (t.warn ? '（這台裝置可能播不了）' : '')], ['大小', (t.size / 1048576).toFixed(1) + ' MB'], ['檔名', t.name || '—'], ['播放', (t.plays || 0) + ' 次']]);
-    } else if (k === 'del') {
+    else if (k === 'info') R.insight.open(id);
+    else if (k === 'del') {
       if (await R.ui.confirm({ title: `刪除《${t.title}》？`, sub: '只會從這個 App 的歌庫刪掉，不會動到你手機或電腦裡的原始檔。', ok: '刪除', danger: true })) { await R.lib.remove([id]); R.toast('已刪除'); }
     }
   }
@@ -299,6 +302,7 @@ R.library = (() => {
         if (await R.ui.confirm({ title: `刪除 ${st.sel.size} 首歌？`, sub: '只會從這個 App 的歌庫刪掉，不會動到原始檔。', ok: '刪除', danger: true })) { const ids = Array.from(st.sel); st.sel = null; await R.lib.remove(ids); R.toast(`已刪除 ${ids.length} 首`); }
         return;
       }
+      if (a === 'report') { R.ui.closeSheet(true); R.report.open(); return; }
       if (a === 'pl-new') { const name = await R.ui.prompt({ title: '新歌單', placeholder: '例如：開車聽、深夜、健身', ok: '建立' }); if (name != null) { const p = await R.lib.pl.create(name); st.view = { type: 'playlist', id: p.id }; render(false); } return; }
       if (a === 'back') { st.view = null; st.tab = 'lists'; R.sfx.play('tap'); render(false); return; }
       if (a === 'pl-more') { playlistMenu(st.view.id); return; }

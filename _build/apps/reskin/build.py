@@ -20,9 +20,9 @@ SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'reskin')
 
-SKINS = ['neon', 'stage', 'mecha', 'nebula', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
-JS_ORDER = ['core.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'skinkit.js', 'hype.js'] \
-    + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'lyrics.js', 'share.js', 'extras.js', 'main.js']
+SKINS = ['neon', 'blackhole', 'neoncity', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+JS_ORDER = ['core.js', 'boot.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'glkit.js', 'tilt.js', 'skinkit.js', 'snap.js', 'fx.js', 'trans.js', 'hype.js'] \
+    + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'lyrics.js', 'share.js', 'poster.js', 'insight.js', 'stats.js', 'report.js', 'clip.js', 'extras.js', 'main.js']
 CSS_ORDER = ['style.css'] + ['skins/%s.css' % s for s in SKINS] + ['skins/diy.css']
 FONTS = [  # file, family, weight, style
     ('orbitron-latin-700-normal.woff2', 'Orbitron', 700, 'normal'),
@@ -95,7 +95,7 @@ FRIEND_SUBS = [
 FRIEND_NEVER = ['痞子葳', '收藏庫', 'PZ 遊戲收藏', 'pzwei0105', 'PZ-Games']
 # the Claude version hands out files only through the artifact's downloads capability: no plain download links in it
 CLAUDE_SUBS = [
-    ("const webLink = (u, name) => `<a class=\"btn pri wide\" href=\"${u}\" download=\"${esc(name)}\">${I.upload}存成圖片</a>`;", "const webLink = () => '';"),
+    ("const webLink = (u, name, label) => `<a class=\"btn pri wide\" href=\"${u}\" download=\"${esc(name)}\">${I.upload}${label || '存成圖片'}</a>`;", "const webLink = () => '';"),
 ]
 
 
@@ -132,7 +132,7 @@ def friendly(html):
 MANIFEST = {
     'name': '耳目一新 RESKIN',
     'short_name': '耳目一新',
-    'description': '痞子葳的換膚音樂播放器：十五套 Skin 一鍵換裝，副歌全開特效、歌詞、睡眠定時，播自己的音樂檔，離線也能聽。',
+    'description': '痞子葳的換膚音樂播放器：二十套 Skin 一鍵換裝，GPU 泛光、陀螺儀立體感、卡拉 OK 歌詞、音樂短片、聽歌報告，播自己的音樂檔，離線也能聽。',
     'lang': 'zh-Hant-TW',
     'start_url': './',
     'scope': './',

@@ -106,5 +106,5 @@ R.wardrobe = (() => {
     const it = e.target.closest('.wd-item');
     if (it) { center(it, true); R.sfx.play('tick'); }
   });
-  return { open, close, isOpen: () => isOpen };
+  return { open, close, isOpen: () => isOpen, emblemOf };
 })();

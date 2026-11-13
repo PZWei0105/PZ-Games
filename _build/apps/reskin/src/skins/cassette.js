@@ -2,6 +2,7 @@
 R.skins.def({
   id: 'cassette', name: '卡帶隨身聽', group: '復古', en: 'TAPE DECK',
   desc: '磁帶捲軸跟著轉，按住快轉鍵兩個捲軸一起狂轉',
+  bloom: { s: 0.22, th: 0.82 }, trans: 'shatter',
   theme: { bg: '#ffb84d', fg: '#2b2230', accent: '#ff5a36', accent2: '#1fb5a6', ui: 'rgba(43,34,48,.98)', dock: 'rgba(255,255,255,.5)', dockfg: '#2b2230' },
   enterMs: 1500,
   emblem: `<svg class="em" viewBox="0 0 116 150"><rect width="116" height="150" fill="#ffc35c"/><g fill="#1fb5a6"><circle cx="16" cy="18" r="5"/><circle cx="100" cy="132" r="7"/></g><path d="M86 10l12 8-12 8" fill="none" stroke="#ff5a36" stroke-width="4"/><rect x="12" y="40" width="92" height="62" rx="7" fill="#2b2b31"/><rect x="18" y="46" width="80" height="34" rx="3" fill="#f4ead2"/><rect x="18" y="46" width="80" height="7" fill="#ff5a36"/><rect x="18" y="53" width="80" height="4" fill="#ffc35c"/><rect x="34" y="62" width="48" height="16" rx="8" fill="#3b2a22"/><circle cx="44" cy="70" r="6" fill="#f2f2f2"/><circle cx="72" cy="70" r="6" fill="#f2f2f2"/><g fill="#555"><circle cx="44" cy="70" r="2"/><circle cx="72" cy="70" r="2"/></g><path d="M40 98h36l-4-10H44z" fill="#4a4a52"/><path d="M26 114q16-8 32 0t32 0" fill="none" stroke="#2b2230" stroke-width="3" stroke-linecap="round"/></svg>`,

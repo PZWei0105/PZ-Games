@@ -1,7 +1,9 @@
 # 耳目一新 RESKIN（維護說明）
 
-痞子葳的換膚音樂播放器：播自己的音樂檔，十五套 Skin 加 DIY，一鍵換裝；副歌一到每套都全開，換歌有各自的轉場。
-另有歌詞、我的最愛、睡眠定時、改歌曲資訊、分享卡片、DIY 分享碼。
+痞子葳的換膚音樂播放器：播自己的音樂檔，二十套 Skin 加 DIY，一鍵換裝；副歌一到每套都全開，換歌有各自的轉場。
+整個 App 有 GPU 泛光、陀螺儀立體感、科幻開機動畫、換 Skin 轉場（傳送門／玻璃碎裂／像素溶解）、鎖屏封面換膚。
+功能：卡拉 OK 逐字歌詞、歌曲情報（BPM、調性、能量曲線、跳到副歌）、智慧歌單、聽歌報告、一鍵音樂短片，
+還有我的最愛、睡眠定時、改歌曲資訊、分享卡片、DIY 分享碼。
 App 裡稱呼使用者一律用「痞子葳」。
 
 - 網頁版：https://pzwei0105.github.io/PZ-Games/apps/reskin/（可加到主畫面、離線聽、鎖屏連播；收藏庫「專屬 App」分頁有入口）
@@ -16,7 +18,8 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 ```
 
 - 網頁版輸出到 `apps/reskin/`；`--claude-out` 另外輸出 Claude 版；`--friend-out`／`--friend-zip` 輸出朋友版（見最下面）。
-- check.py 依序跑：讀不到檔時的備援、資料夾匯入、新功能（歌詞、最愛、睡眠定時、改資訊、分享卡片、分享碼、副歌）、網頁版全流程（手機直、手機橫、電腦，每套 Skin 都換一次歌），再對 Claude 版、朋友版各跑一次全流程。
+- check.py 依序跑：讀不到檔時的備援、資料夾匯入、新功能（歌詞、最愛、睡眠定時、改資訊、分享卡片、分享碼、副歌、泛光、三種轉場、鎖屏卡、分析升級、歌曲情報、智慧歌單、卡拉 OK、景深、聽歌報告、音樂短片）、網頁版全流程（開機動畫、手機直、手機橫、電腦，每套 Skin 都換一次歌），再對 Claude 版跑一次全流程。朋友版已凍結，不用再跑 `--friend`／`--one`。
+- check.py 開 Chromium 時帶 SwiftShader 參數（`GL`），3D Skin 和泛光才畫得出來；軟體算圖很慢，畫質會被自動調低，截圖比真機糊是正常的。
 
 - 截圖在 `/tmp/reskin-check`，改到畫面就逐套看過再上線：手機直、手機橫（844×390）、電腦（1280×800）。
 - 發布 Claude 版：`publish_files` 不收 `/tmp` 底下的檔，先把 `/tmp/reskin-claude/index.html` 複製到 `/home/claude/` 底下再發布。
@@ -29,6 +32,7 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
   所以畫面上的頻譜、波形、節拍都是匯入時先分析好的（`analysis.js`，在 Worker 裡跑：22050 Hz 解碼、每秒 30 格、32 個頻帶、48 點波形、起音、BPM），播放時照時間查表（`viz.js`）。還沒分析完的歌，畫面先用合成的律動（`v.synthetic`）。
 - **螢幕關著（鎖屏聽歌）和匯入中都不分析節奏**，等畫面打開、匯入結束才接著做。解碼很吃電，iPhone 也可能把在背景拚命做事的頁面停掉，連音樂一起停。不要拿掉這個等待。
 - 介面音效（`sfx.js`）才用 Web Audio，跟歌分開；iOS 從背景回來會重建 AudioContext。
+- 音樂短片（`clip.js`）也用 Web Audio，但**不碰在播的 `<audio>`**：把歌檔另外解碼一次，只取要錄的那一段餵進錄影（`createMediaStreamDestination`），不接喇叭。聽到的還是 `<audio>`。
 - 鎖屏連播（`player.js`）有三種方式，設定頁「鎖屏連播方式」可以切：
   - 單軌換帶 `single`：一首播完，同一個 `<audio>` 換下一首。
   - 雙軌接力 `dual`：下一首先在另一個 `<audio>` 預載；螢幕關著時，在剩不到 0.42 秒時交棒。
@@ -76,6 +80,30 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 - 要「剛好在拍上」發生的效果（例如煙火：發射到炸開要 1 秒），用 `R.viz.upcoming(a, b)` 先讀接下來的拍點（`[時間, 強度, …]`），提前開始。
 - 歌名、歌手被改掉時，`data-bind` 的字會自己更新；自己在 canvas 上畫字的 Skin（卡帶標籤、水墨的印章、像素街機的關卡卡片）實作 `onMeta(t)`。
 
+## 光、深度、轉場、開機、鎖屏（全部 Skin 共用）
+
+- **GPU 泛光**（`fx.js`）：每格把 Skin 的 canvas（含副歌層、轉場層）縮小畫進一張小圖（手機約 195×422），上傳成貼圖，在 WebGL 裡門檻（soft knee）→ dual Kawase 模糊（4～5 層）→ 視需要加水平鏡頭光紋 → 合成時加鏡頭色散與抖色，畫在 `#fx`，用 `mix-blend-mode: plus-lighter`（不支援就 `screen`）疊上去，**只會加光**，字和按鈕不會糊。沒有 WebGL 時改成 CSS 濾鏡版（`.fx-css`）。副歌裡重拍會有一瞬間的 RGB 錯位（尊重「閃光特效」開關）。歌詞或聽歌報告打開時泛光會收掉。手機已經降到最低畫質還一直掉格，泛光這次開啟就先關掉（`tired`）。設定「霓虹泛光」可關。
+- **景深**：`R.fx.focus(key, on)` 讓 `#stage` 失焦（模糊、變暗、微微放大）；歌詞、聽歌報告用它。歌詞的背景因此變半透明，看得到糊掉的 Skin。
+- **陀螺儀立體感**（`tilt.js`）：iPhone 要從點擊裡呼叫 `DeviceOrientationEvent.requestPermission()`，所以第一次開 App 6 秒後會跳一個提示（「打開」按鈕），設定頁也有開關；同意過的話之後每次開 App 的第一下點擊會再要一次（iOS 每次載入都要）。量的是「跟平常拿手機的角度差多少」（慢慢跟上的基準），不用擺正。電腦用滑鼠位置；兩者都沒有時畫面自己輕輕晃。3D Skin（黑洞、液態金屬、霓虹城市、超跑、戰機）直接讀 `R.tilt` 轉鏡頭或打方向盤。嵌在收藏庫或 Claude 裡拿不到陀螺儀（iframe），會說明。
+- **換 Skin 轉場**（`trans.js`）：`R.stage.show()` 把舊的那層交給 `R.trans.run()`。傳送門：新 Skin 從光圈裡展開、舊的被吸進去；玻璃碎裂：舊 Skin 先拍成照片（`R.snap`），從點的地方裂開、碎片翻滾掉落；像素溶解：故障閃一下、變大像素、一格一格閃掉；經典：原本的圓形展開。衣櫃試穿（`fast`）只用快的兩種。設定「換 Skin 轉場」可指定。
+- **開機動畫**（`boot.js`）：掃描線開機 → 八色環飛入鎖上 → 名字解碼 → 狀態列 → 光環變成傳送門打開。App 還沒好會停在最後一段等，點一下跳過。設定「開機動畫」可關（存在 localStorage `rs-boot`，因為開機時設定還沒讀出來）。
+- **鎖屏封面換膚**（`poster.js`）：換歌 1.9 秒後（Skin 的換歌動畫跑完）把 Media Session 的封面換成這套 Skin 風格的卡片（HUD 角框、光環、黑膠封套、卡帶、大像素、宣紙印章、拍立得、毛玻璃、鉻框），背景是 Skin 當下畫面的柔焦。換 Skin 2.6 秒後也會重畫。設定「鎖屏封面換膚」可關。
+- **畫面快照**（`snap.js`）：把 Skin 的 canvas、封面、背景色與漸層（含條紋）、邊框、文字（含光暈）、clip-path（polygon／circle／inset）、SVG 畫到一張 canvas。轉場、短片（每格都畫）、鎖屏卡共用。偽元素和 CSS 濾鏡畫不到。
+- **WebGL 的 Skin**（黑洞、液態金屬、霓虹城市）開 context 時 `preserve: true`，快照才讀得到畫面；`destroy()` 一定要 `loseContext()`（iPhone 同時能開的 WebGL 有限，衣櫃來回滑會一直開新的）。解析度跟著 `R.quality()`。著色器一律寫 GLSL ES 1.00（WebGL 2、1 都能跑）。
+
+## 分析第 2 版、歌曲情報、智慧歌單
+
+- `analysis.js` 第 2 版多量：調性（4096 點 FFT 的 12 音級 chroma，對 Krumhansl 大小調輪廓，存成 `mkey`，例如 `Am`；**不要用 `key`**，那是檔案指紋）、響度 `loud`（dB）、亮度 `bright`（頻譜重心 Hz）、鼓點衝擊 `punch`（0～1）。歌的資料記 `av: 2`；舊版分析過的歌開 App 後會在新歌後面慢慢補量（只在畫面開著時）。
+- 歌曲情報（`R.insight.open(id)`）：BPM、調性（中文、記號、Camelot）、能量、響度、音色、鼓點；能量曲線（點一下跳過去）標出副歌；「跳到副歌」跳到現在之後的下一段副歌；「做成短片」。「更多」選單和歌的「⋯」選單都進得去。
+- 智慧歌單（`R.smart`）：嗨歌、運動（照 BPM 由慢到快，慢歌但很嗨的算兩倍速）、放鬆、深夜，門檻用整個歌庫的百分位（歌少於 8 首時用固定門檻）。是虛擬歌單（id `smart:hype` 這樣），不能加歌、改名；可以綁 Skin，預設綁好：嗨歌→演唱會舞台、運動→超跑夜奔、放鬆→極光、深夜→黑洞（存在設定 `smartSkins`）。
+
+## 卡拉 OK、聽歌報告、音樂短片
+
+- 卡拉 OK（`lyrics.js`）：有時間標記的歌詞，唱到的那一句一個字一個字亮。enhanced LRC 的逐字時間（`<01:02.50>`）照用；沒有就把那句的時間照字的份量分（中文字 1、英文字母約一半、空白和標點更少）。正在唱的那個字用 `::after` 疊一份亮色、用 clip-path 擦過去（不要改回 `background-clip: text`，在某些字型下會變成方塊）。歌詞外觀跟著 Skin（`#lyrics[data-look]`：hud、cosmic、pixel、ink、cute、glass、chrome、retro），水墨是宣紙底黑字。**歌詞框本身的屬性不要叫 `data-ly`**，點歌詞的處理會把它當成按鈕。
+- 聽歌紀錄（`stats.js`）：照 `<audio>` 自己的時間算（`timeupdate` 鎖屏也有），每天存一筆：秒數、聽完幾首（聽滿 30 秒或短歌的一半算一首）、24 小時分布、每首、每套 Skin。存在 `kv` 的 `stats`。刪掉的歌會從紀錄裡拿掉。
+- 聽歌報告（`report.js`）：本週／本月／今年／全部；總時數、主打歌、前五名、最愛歌手、最愛 Skin、聽歌時鐘、音樂人格、1080×1920 分享圖。點右邊下一張、左邊上一張、左右滑也行，按住暫停。
+- 音樂短片（`clip.js`）：選副歌（自動）／從現在／從頭、15 或 30 秒、要不要卡拉 OK 歌詞、1080p。倒數 3 秒後播放器跳到那一段播放，每格用 `R.snap` 把 Skin（不含按鈕）畫進 720×1280（或 1080×1920；橫螢幕錄 16:9）的 canvas，疊上歌詞和小浮水印，`captureStream(30)` 加解碼出來的那段音訊，`MediaRecorder` 錄。iPhone 不指定格式（Safari 自己用 MP4：H.264＋AAC），錄好用分享選單存到相簿或傳 IG；電腦 Chrome 能錄 MP4 就錄 MP4，不行才是 WebM（會提示）。錄的時候切走 App 會中斷。**iPhone 真機能不能錄，要看痞子葳實測回報。**
+
 ## 歌詞、我的最愛、睡眠定時、改資訊、分享
 
 - 歌詞（`lyrics.js`）：存在歌的 `lrc` 欄位。來源：資料夾匯入時同一個資料夾、同檔名的 `.lrc`（UTF-8、UTF-16、Big5／GBK 都認得）；歌曲檔裡的歌詞標籤（ID3 的 USLT、TXXX:LYRICS／USLT、M4A 的 ©lyr、FLAC 的 LYRICS）；改歌曲資訊時直接貼上。有時間標記的會跟著唱亮、點一句就跳過去。已在歌庫的歌，重新匯入時有新的 .lrc 就補上。
@@ -94,7 +122,8 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 - canvas 一律用 `R.kit.canvas`（限制 DPR，手機變慢時自動降畫質）。`frame(dt, t, v)` 每一格都拿得到現在的頻譜、節拍、心情（`v`）。
 - 換裝是從點的地方用 clip-path 擴散開；衣櫃試穿用 `R.stage.show(id, { fast: true })`。
 - DIY（`skins/diy.js`）：底圖（照片或封面）、配色、視覺化樣式、字型，存在 `settings.diy`，照片存在 `images`。
-- 加新 Skin：照現有十五套的寫法；三種畫面都要截圖看過，check.py 要全過；閃光類效果要尊重設定頁的「閃光特效」開關（`api.flash()`）。
+- 加新 Skin：照現有二十套的寫法；三種畫面都要截圖看過，check.py 要全過；閃光類效果要尊重設定頁的「閃光特效」開關（`api.flash()`）。
+- Skin 定義裡還可以寫：`bloom`（泛光強度，數字或 `{ s, th, streak, tint, ca }`，0 就不發光；水墨是 0）、`hero`（陀螺儀時會 3D 傾斜、有反光的元素）、`glare: false`（不要反光）、`depth`（`[選擇器, 深度]`，正的跟著傾斜方向、負的反方向）、`trans`（「自動」轉場時偏好的那一種）。
 - 例外：像素街機自己管 canvas（用很低的解析度畫，CSS `image-rendering: pixelated` 放大），沒有用 `R.kit.canvas`；水墨、極光、煙火夜的山、城市、湖面在換尺寸時先畫好，每格只疊動的東西。
 
 ## Claude 版
@@ -113,17 +142,28 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 | `src/meta.js` | 讀標籤：歌名、歌手、封面、長度 |
 | `src/art.js` | 封面縮圖、取色，沒有封面時畫一張 |
 | `src/lib.js` | 歌庫、歌單、匯入 |
-| `src/analysis.js` | 每首歌只分析一次：頻譜、波形、節拍、BPM |
+| `src/analysis.js` | 每首歌只分析一次：頻譜、波形、節拍、BPM、調性、響度、亮度、鼓點衝擊（第 2 版） |
 | `src/player.js` | 播放器：兩個 `<audio>`、三種鎖屏連播方式、Media Session、診斷紀錄 |
 | `src/viz.js` | 照播放時間查分析結果，給 Skin 用 |
 | `src/sfx.js` | 介面音效（每套 Skin 不一樣） |
 | `src/demo.js` | 示範曲：在裝置上現場合成的 56 秒電子樂 |
-| `src/skinkit.js` | Skin 框架：註冊、換裝轉場、canvas、共用控制鈕 |
-| `src/skins/` | 十五套 Skin 和 DIY |
+| `src/boot.js` | 開機動畫（取代原本的 splash；`#splash` 跑完才拿掉，check.py 靠這個判斷開好了） |
+| `src/glkit.js` | WebGL 小工具：開 context（WebGL 2，不行就 1）、編譯、全螢幕三角形、貼圖、封面貼圖 |
+| `src/tilt.js` | 陀螺儀立體感：`R.tilt.x/y`、CSS 變數 `--tx/--ty`、`def.depth`／`def.hero` |
+| `src/skinkit.js` | Skin 框架：註冊、換裝（交給 trans.js）、canvas、共用控制鈕、主迴圈 |
+| `src/snap.js` | 把 Skin 畫成一張圖（轉場、短片、鎖屏卡共用） |
+| `src/fx.js` | GPU 泛光層、副歌鏡頭色散、景深（`R.fx.focus`） |
+| `src/trans.js` | 換 Skin 轉場：傳送門、玻璃碎裂、像素溶解、經典 |
+| `src/skins/` | 二十套 Skin 和 DIY |
 | `src/hype.js` | 副歌全開的共用特效（彩帶、光束、衝擊波） |
-| `src/lyrics.js` | 歌詞：解析 LRC、讀 .lrc 檔、跟著唱的歌詞畫面 |
+| `src/lyrics.js` | 歌詞：解析 LRC（含逐字時間）、讀 .lrc 檔、卡拉 OK 逐字亮、每套 Skin 的歌詞外觀 |
 | `src/extras.js` | 我的最愛、睡眠定時、「更多」選單、改歌曲資訊 |
-| `src/share.js` | 分享卡片 |
+| `src/share.js` | 分享卡片；`R.share.present()` 是圖片和影片共用的「存起來／分享」抽屜 |
+| `src/poster.js` | Skin 風格的封面卡（鎖屏、控制中心） |
+| `src/insight.js` | 歌曲情報（`R.insight`）、智慧歌單（`R.smart`） |
+| `src/stats.js` | 聽歌紀錄（鎖屏聽也算） |
+| `src/report.js` | 聽歌報告（故事卡片＋分享圖） |
+| `src/clip.js` | 一鍵音樂短片 |
 | `src/ui.js` | 抽屜、選單、對話框 |
 | `src/library.js` | 歌庫畫面：歌曲、歌單（含綁 Skin）、播放佇列 |
 | `src/wardrobe.js` | 衣櫃：左右滑，用正在播的歌試穿 |

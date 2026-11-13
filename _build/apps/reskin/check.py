@@ -27,7 +27,8 @@ import argparse, functools, http.server, json, os, shutil, socketserver, struct,
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
-SKINS = ['neon', 'stage', 'mecha', 'nebula', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+SKINS = ['neon', 'blackhole', 'neoncity', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']  # WebGL in headless Chromium (the 3D skins, the bloom)
 PHONE = {'viewport': {'width': 390, 'height': 844}, 'device_scale_factor': 2, 'has_touch': True, 'is_mobile': True}
 DESK = {'viewport': {'width': 1280, 'height': 800}}
 LAND = {'width': 844, 'height': 390}
@@ -104,14 +105,16 @@ def run(url, out, fx, web):
     from playwright.sync_api import sync_playwright
     errs = []
     with sync_playwright() as p:
-        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
+        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'] + GL)
         ctx = b.new_context(**PHONE)
         pg = ctx.new_page()
         pg.add_init_script(HIDE)
         pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
         ev = pg.evaluate
-        pg.goto(url); pg.wait_for_timeout(1500)
+        pg.goto(url); pg.wait_for_timeout(350)
+        ok(ev('!!document.querySelector("#splash.boot .bt-cv")'), '開機動畫：打開 App 先跑科幻啟動')
+        pg.wait_for_function("!document.getElementById('splash')", timeout=20000); pg.wait_for_timeout(300)
         ok(pg.is_visible('#empty'), '空歌庫：看得到匯入卡片')
         pg.click('#empty [data-act="demo"]')
         pg.wait_for_function('RESKIN.lib.count() === 1 && RESKIN.player.isPlaying()', timeout=30000)
@@ -171,7 +174,7 @@ def run(url, out, fx, web):
         ok(ev('RESKIN.settings.get("skin")') == 'jelly', '衣櫃：就穿這套')
         ev('async () => { const p = await RESKIN.lib.pl.create("開車聽", RESKIN.lib.list().slice(0, 3).map(t => t.id)); p.skin = "vinyl"; await RESKIN.lib.pl.save(p); }')
         ev('RESKIN.library.open("lists")'); pg.wait_for_timeout(700)
-        pg.click('[data-pl]:not([data-pl="fav"])'); pg.wait_for_timeout(600)
+        pg.click('[data-pl]:not([data-pl="fav"]):not([data-pl^="smart:"])'); pg.wait_for_timeout(600)
         pg.screenshot(path=os.path.join(out, 'ui-playlist.png'))
         pg.click('[data-l="pl-play"]'); pg.wait_for_timeout(1600)
         ok(ev('RESKIN.stage.current().id') == 'vinyl', '歌單綁 Skin：播這個歌單自動換上黑膠')
@@ -244,7 +247,7 @@ def feature_fixtures(d, fx):
     A, B = os.path.join(d, '合輯', 'A面'), os.path.join(d, '合輯', 'B面')
     os.makedirs(A); os.makedirs(B)
     shutil.copy(os.path.join(fx, 't1.mp3'), os.path.join(A, '01 第一首.mp3'))
-    open(os.path.join(A, '01 第一首.lrc'), 'w', encoding='utf-8').write('[ti:第一首]\n[00:00.40]第一句歌詞\n[00:02.50]第二句歌詞\n[00:05.00]第三句歌詞\n[00:08.00]第四句歌詞\n[00:12.00]第五句歌詞\n')
+    open(os.path.join(A, '01 第一首.lrc'), 'w', encoding='utf-8').write('[ti:第一首]\n[00:00.40]<00:00.40>第一 <00:01.00>句歌 <00:01.80>詞\n[00:02.50]第二句歌詞\n[00:05.00]第三句歌詞\n[00:08.00]第四句歌詞\n[00:12.00]第五句歌詞\n')
     sr = 22050
 
     def wav(path, freq, secs):
@@ -263,7 +266,7 @@ def run_features(url, out, folder):
     from playwright.sync_api import sync_playwright
     errs = []
     with sync_playwright() as p:
-        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
+        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'] + GL)
         ctx = b.new_context(**PHONE)
         pg = ctx.new_page()
         pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -293,7 +296,7 @@ def run_features(url, out, folder):
         ev('RESKIN.player.seek(2.7)'); pg.wait_for_timeout(900)
         ok(ev('(document.querySelector("#lyrics .ly-list p.on") || {}).textContent') == '第二句歌詞', '歌詞：唱到哪句亮哪句')
         pg.screenshot(path=os.path.join(out, 'ui-lyrics.png'))
-        pg.click('#lyrics .ly-list p:has-text("第四句歌詞")'); pg.wait_for_timeout(500)
+        pg.click('#lyrics .ly-list p[data-i="3"]'); pg.wait_for_timeout(500)
         ok(7.8 <= ev('RESKIN.player.time()') < 9.5, '歌詞：點一句就跳到那裡')
         pg.keyboard.press('y'); pg.wait_for_timeout(300)
         # favourites
@@ -301,7 +304,7 @@ def run_features(url, out, folder):
         ok(ev('!!RESKIN.player.current().fav') and 'on' in ev('document.querySelector("#dock [data-act=fav]").className'), '我的最愛：H 鍵（或愛心）加進去，愛心變色')
         ok(ev('(id) => RESKIN.lib.pl.get("fav").ids.includes(id)', first), '我的最愛：自動出現在「我的最愛」歌單')
         ev("RESKIN.library.open('lists')"); pg.wait_for_timeout(600)
-        ok(ev('(document.querySelector("#sheetBody [data-pl]") || {}).dataset.pl') == 'fav', '歌單頁：「我的最愛」排第一個')
+        ok(ev('(document.querySelector("#sheetBody [data-pl]:not([data-pl^=\'smart:\'])") || {}).dataset.pl') == 'fav', '歌單頁：「我的最愛」排在自己的歌單第一個')
         pg.screenshot(path=os.path.join(out, 'ui-lists.png'))
         ev('RESKIN.ui.closeSheet(true)'); pg.wait_for_timeout(400)
         # sleep timer: minutes, then "end of this song"
@@ -346,6 +349,65 @@ def run_features(url, out, folder):
             ev('(t) => RESKIN.player.seek(t)', spans[0][0] - 1.2); pg.wait_for_timeout(2600)
             ok(ev('RESKIN.viz.hot') > 0.5 and ev('RESKIN.hype.count()') > 0, '副歌全開：進副歌時彩帶炮、光束一起來')
             pg.screenshot(path=os.path.join(out, 'ui-chorus.png'))
+        # --- the light layer, depth, transitions, lock-screen cards ---
+        ok(ev('RESKIN.fx.ok()'), 'GPU 泛光：WebGL 泛光層啟動')
+        for k in ('portal', 'shatter', 'pixel'):
+            ev('(k) => RESKIN.settings.set("transFx", k)', k)
+            nxt = 'neon' if ev('RESKIN.stage.current().id') != 'neon' else 'aurora'
+            ev('(id) => RESKIN.stage.show(id, { silent: true })', nxt); pg.wait_for_timeout(250)
+            mid = ev('RESKIN.trans.kind()')
+            pg.screenshot(path=os.path.join(out, 'ui-trans-%s.png' % k)); pg.wait_for_timeout(1500)
+            ok(mid == k and ev('document.querySelectorAll("#stage .skin").length') == 1 and not ev('RESKIN.trans.active()'), '換 Skin 轉場「%s」：跑完、舊的 Skin 收掉（%s）' % ({'portal': '傳送門', 'shatter': '玻璃碎裂', 'pixel': '像素溶解'}[k], mid))
+        ev('RESKIN.settings.set("transFx", "auto")')
+        sizes = ev('async (ids) => { const out = []; for (const id of ids) { await RESKIN.stage.show(id, { instant: true, silent: true }); const c = await RESKIN.poster.card(RESKIN.player.current(), RESKIN.stage.current(), 300); out.push(c.width + "x" + c.height); } return out; }', SKINS)
+        ok(len(sizes) == len(SKINS) and all(x == '300x300' for x in sizes), '鎖屏封面換膚：每套 Skin 都畫得出自己的封面卡（%d 套）' % len(sizes))
+        # --- analysis v2, song intel, smart playlists ---
+        A = ev('RESKIN.lib.all().filter(t => t.an === 1).map(t => ({ av: t.av, k: t.mkey, loud: t.loud }))')
+        ok(A and all(x['av'] == 2 and x['loud'] is not None for x in A) and sum(1 for x in A if x['k']) >= len(A) - 1, '分析升級：每首都量出調性、響度、亮度（%s）' % [x['k'] for x in A])
+        ev('() => { const t = RESKIN.lib.list().find(t => t.demo); RESKIN.player.playFrom([t.id], t.id, { type: "library" }); }'); pg.wait_for_timeout(900)
+        ev('RESKIN.insight.open()'); pg.wait_for_timeout(1200)
+        ok(pg.is_visible('.in-grid') and 'BPM' in pg.inner_text('.in-grid'), '歌曲情報：BPM、調性、能量一目了然')
+        pg.screenshot(path=os.path.join(out, 'ui-intel.png'))
+        if spans:
+            ev('RESKIN.player.seek(2)'); pg.click('[data-in="chorus"]'); pg.wait_for_timeout(700)
+            ok(spans[0][0] - 1 <= ev('RESKIN.player.time()') <= spans[0][1], '歌曲情報：一鍵跳到副歌')
+        ev('RESKIN.ui.closeSheet(true)'); pg.wait_for_timeout(300)
+        sm = ev('RESKIN.smart.all().map(p => ({ id: p.id, n: p.ids.length, bpm: p.ids.map(id => RESKIN.smart.feats(RESKIN.lib.get(id)).rb) }))')
+        run = [x for x in sm if x['id'] == 'smart:run'][0]
+        ok(len(sm) == 4 and run['bpm'] == sorted(run['bpm']), '智慧歌單：嗨歌／運動／放鬆／深夜，運動照 BPM 由慢到快（%s）' % [(x['id'], x['n']) for x in sm])
+        ev("RESKIN.library.open('lists')"); pg.wait_for_timeout(600); pg.screenshot(path=os.path.join(out, 'ui-smart.png')); ev('RESKIN.ui.closeSheet(true)')
+        # --- karaoke ---
+        ev('(id) => RESKIN.player.playFrom(RESKIN.lib.list().map(t => t.id), id, { type: "library" })', first); pg.wait_for_timeout(500)
+        ev('RESKIN.stage.show("ink", { instant: true, silent: true })'); pg.wait_for_timeout(400)
+        pg.keyboard.press('y'); ev('RESKIN.player.seek(1.6)'); pg.wait_for_timeout(700)
+        k1 = ev('document.querySelectorAll("#lyrics p.on .kc.k1").length')
+        ok(k1 >= 1 and ev('!!document.querySelector("#lyrics p.on .kc.kn")') and ev('document.getElementById("lyrics").dataset.look') == 'ink', '卡拉 OK 歌詞：一個字一個字亮起，字體特效跟著 Skin（水墨：%d 字）' % k1)
+        ok(ev('document.getElementById("stage").classList.contains("defocus")'), '景深：歌詞打開時 Skin 對焦到後面')
+        pg.screenshot(path=os.path.join(out, 'ui-karaoke.png'))
+        pg.keyboard.press('y'); pg.wait_for_timeout(300)
+        # --- listening report ---
+        ev('() => { RESKIN.lib.list().forEach((t, i) => { for (let k = 0; k < 40 + i * 30; k++) RESKIN.stats._add(t.id, 1); }); }')
+        ev('RESKIN.report.open()'); pg.wait_for_timeout(700)
+        nsl = ev('document.querySelectorAll("#report .rp-s").length')
+        for _ in range(nsl - 1):
+            pg.mouse.click(340, 400); pg.wait_for_timeout(250)
+        pg.wait_for_selector('#report .rp-card img', timeout=15000)
+        pg.screenshot(path=os.path.join(out, 'ui-report.png'))
+        ok(nsl >= 7, '聽歌報告：總時數、主打歌、最愛歌手、最愛 Skin、時鐘、音樂人格、分享圖（%d 張）' % nsl)
+        ev('RESKIN.report.close()'); pg.wait_for_timeout(500)
+        # --- music video ---
+        ev('() => { const t = RESKIN.lib.list().find(t => t.demo); RESKIN.player.playFrom([t.id], t.id, { type: "library" }); }'); pg.wait_for_timeout(700)
+        ev('RESKIN.clip.open()'); pg.wait_for_timeout(600)
+        pg.click('[data-cl-len="15"]'); pg.click('[data-cl="go"]')
+        try:
+            pg.wait_for_function('RESKIN.ui.sheetKind() === "share" && !!document.querySelector(".share-vid")', timeout=60000)
+            pg.wait_for_function('document.querySelector(".share-vid").readyState >= 1', timeout=10000)
+            v = ev('(() => { const x = document.querySelector(".share-vid"); return [x.videoWidth, x.videoHeight, x.duration]; })()')
+            ok(v[0] == 720 and v[1] == 1280 and 13 <= (v[2] if v[2] == v[2] else 15) <= 17, '音樂短片：錄出 9:16、15 秒的影片（%s）' % v)
+            pg.screenshot(path=os.path.join(out, 'ui-clip.png'))
+        except Exception as e:
+            ok(False, '音樂短片：' + str(e)[:120])
+        ev('RESKIN.ui.closeSheet(true)')
         ok(not errs, '新功能：沒有程式錯誤' + ('' if not errs else '：' + ' | '.join(errs[:5])))
         ctx.close(); b.close()
 
@@ -389,7 +451,7 @@ def run_folders(url, out, fd, fx):
     from playwright.sync_api import sync_playwright
     errs = []
     with sync_playwright() as p:
-        b = p.chromium.launch()
+        b = p.chromium.launch(args=GL)
         ctx = b.new_context(**PHONE)
         pg = ctx.new_page()
         pg.add_init_script(HIDE)
@@ -485,7 +547,7 @@ def run_fallbacks(url, claude_url, out, fx):
     from playwright.sync_api import sync_playwright
     errs = []
     with sync_playwright() as p:
-        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
+        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'] + GL)
 
         def page(u, init=''):
             ctx = b.new_context(**PHONE)

@@ -1,5 +1,5 @@
-/* 耳目一新 RESKIN service worker — version 2026.11.13-0853 */
-const V = 'pzrs-2026.11.13-0853';
+/* 耳目一新 RESKIN service worker — version 2026.11.13-2001 */
+const V = 'pzrs-2026.11.13-2001';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(V).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));

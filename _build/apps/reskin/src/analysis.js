@@ -24,6 +24,7 @@ function analyzeCore(x, sr, fps) {
   const db = new Float32Array(frames * NB), lv = new Float32Array(frames), flux = new Float32Array(frames);
   const wave = new Int8Array(frames * NW);
   const prev = new Float32Array(NB);
+  const cen = new Float32Array(frames);
   for (let f = 0; f < frames; f++) {
     const c = Math.floor(f * hop), s0 = c - N / 2;
     let e2 = 0;
@@ -49,6 +50,8 @@ function analyzeCore(x, sr, fps) {
     }
     flux[f] = fl;
     lv[f] = Math.sqrt(e2 / N);
+    // brightness: the spectral centroid of this frame
+    { let sw = 0, sm = 0; for (let k = 2; k < N / 2; k++) { const m = Math.sqrt(re[k] * re[k] + im[k] * im[k]); sw += m * k; sm += m; } cen[f] = sm > 1e-6 ? (sw / sm) * (sr / N) : 0; }
     const W = 384, ws = c - W / 2, st = W / NW;
     for (let i = 0; i < NW; i++) { const j = Math.floor(ws + i * st); const v = j >= 0 && j < x.length ? x[j] / peak : 0; wave[f * NW + i] = Math.max(-127, Math.min(127, Math.round(v * 127))); }
   }
@@ -109,14 +112,56 @@ function analyzeCore(x, sr, fps) {
       }
     }
   }
+  // key: a 12-note chroma from a longer FFT (fine enough to tell notes apart), matched against the Krumhansl profiles
+  let key = -1, minor = false, keyConf = 0;
+  {
+    const N2 = 4096, b2 = 12, rv = new Uint16Array(N2);
+    for (let i = 0; i < N2; i++) { let r = 0; for (let b = 0; b < b2; b++) r |= ((i >> b) & 1) << (b2 - 1 - b); rv[i] = r; }
+    const c2 = new Float32Array(N2 / 2), s2 = new Float32Array(N2 / 2), w2 = new Float32Array(N2), R2 = new Float32Array(N2), I2 = new Float32Array(N2);
+    for (let i = 0; i < N2 / 2; i++) { c2[i] = Math.cos((-2 * Math.PI * i) / N2); s2[i] = Math.sin((-2 * Math.PI * i) / N2); }
+    for (let i = 0; i < N2; i++) w2[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (N2 - 1));
+    const pc = new Int8Array(N2 / 2).fill(-1), pw = new Float32Array(N2 / 2);
+    for (let k = 1; k < N2 / 2; k++) { const fq = (k * sr) / N2; if (fq < 60 || fq > 2100) continue; const mi = 69 + 12 * Math.log2(fq / 440); pc[k] = ((Math.round(mi) % 12) + 12) % 12; pw[k] = 1 - Math.min(1, Math.abs(mi - Math.round(mi)) * 1.6); }
+    const chroma = new Float64Array(12), one = new Float64Array(12);
+    const stepF = Math.max(1, Math.round(fps / 6));
+    for (let f = 0; f < frames; f += stepF) {
+      const c = Math.floor(f * hop), s0 = c - N2 / 2;
+      for (let i = 0; i < N2; i++) { const j = s0 + i; R2[rv[i]] = (j >= 0 && j < x.length ? x[j] : 0) * w2[i]; I2[rv[i]] = 0; }
+      for (let size = 2; size <= N2; size <<= 1) {
+        const half = size >> 1, step = N2 / size;
+        for (let i = 0; i < N2; i += size) for (let j = 0, k = 0; j < half; j++, k += step) {
+          const a = i + j, b = a + half, tr = R2[b] * c2[k] - I2[b] * s2[k], ti = R2[b] * s2[k] + I2[b] * c2[k];
+          R2[b] = R2[a] - tr; I2[b] = I2[a] - ti; R2[a] += tr; I2[a] += ti;
+        }
+      }
+      one.fill(0); let tot = 0;
+      for (let k = 1; k < N2 / 2; k++) if (pc[k] >= 0) { const m = Math.sqrt(R2[k] * R2[k] + I2[k] * I2[k]) * pw[k]; one[pc[k]] += m; tot += m; }
+      if (tot > 1e-4) for (let q = 0; q < 12; q++) chroma[q] += one[q] / tot;
+    }
+    const MAJ = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88], MIN = [6.33, 2.68, 3.52, 5.38, 2.6, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
+    const corr = (prof, t0) => { let ma = 0, mb = 0; for (let q = 0; q < 12; q++) { ma += chroma[(q + t0) % 12]; mb += prof[q]; } ma /= 12; mb /= 12; let n = 0, da = 0, db2 = 0; for (let q = 0; q < 12; q++) { const a = chroma[(q + t0) % 12] - ma, b = prof[q] - mb; n += a * b; da += a * a; db2 += b * b; } return da > 0 ? n / Math.sqrt(da * db2) : 0; };
+    let best = -2, second = -2;
+    for (let t0 = 0; t0 < 12; t0++) for (const mn of [false, true]) { const c = corr(mn ? MIN : MAJ, t0); if (c > best) { second = best; best = c; key = t0; minor = mn; } else if (c > second) second = c; }
+    keyConf = Math.max(0, Math.min(1, (best - second) * 4 + (best - 0.5)));
+    if (best < 0.3) key = -1;
+  }
+  // loudness (dB of the average level while something is playing), brightness, attack, how steady the beat is
+  let ls = 0, ln = 0, csum = 0, cnum = 0;
+  for (let f = 0; f < frames; f++) { if (lv[f] > 0.003) { ls += lv[f] * lv[f]; ln++; } if (cen[f] > 0 && lv[f] > 0.003) { csum += cen[f]; cnum++; } }
+  const loud = ln ? Math.round(20 * Math.log10(Math.sqrt(ls / ln)) * 10) / 10 : -60;
+  const bright = cnum ? Math.round(csum / cnum) : 0;
+  let bsum = 0; for (let i = 0; i < bs.length; i++) bsum += bs[i] / 255;
+  const durS = x.length / sr;
+  const punch = Math.round(Math.min(1, bsum / Math.max(1, durS) / 2.2) * 1000) / 1000;
   const ov = new Uint8Array(240);
   const seg = Math.max(1, Math.floor(x.length / 240));
   for (let i = 0; i < 240; i++) { let mx = 0; const o = i * seg; for (let j = 0; j < seg && o + j < x.length; j += 2) { const a = x[o + j] < 0 ? -x[o + j] : x[o + j]; if (a > mx) mx = a; } ov[i] = Math.round(Math.min(1, mx / peak) * 255); }
-  return { fps, frames, bands, level, wave, beats: new Float32Array(bt), beatStr: new Uint8Array(bs), bpm: Math.round(bpm * 10) / 10, energy, overview: ov, duration: x.length / sr };
+  return { v: 2, fps, frames, bands, level, wave, beats: new Float32Array(bt), beatStr: new Uint8Array(bs), bpm: Math.round(bpm * 10) / 10, energy, overview: ov, duration: x.length / sr, key, minor, keyConf, loud, bright, punch };
 }
 
 R.analysis = (() => {
-  const SR = 22050, FPS = 30;
+  const SR = 22050, FPS = 30, AV = 2;
+  const stale = (t) => !!t && t.an === 1 && (t.av || 1) < AV;
   const cache = new Map();
   const queue = [];
   let busy = false, running = false, worker = null, wfail = false, seq = 0;
@@ -154,7 +199,7 @@ R.analysis = (() => {
 
   async function run(id) {
     const t = R.lib.get(id);
-    if (!t || t.an) return;
+    if (!t || (t.an && !stale(t))) return;
     const lim = R.isIOS ? 15 * 60 : 40 * 60;
     if (t.duration && t.duration > lim) { await R.lib.update(id, { an: 2 }); return; }
     let raw;
@@ -179,7 +224,7 @@ R.analysis = (() => {
     const r = await measure(x);
     await R.db.put('analysis', r, id);
     cache.set(id, r); trim();
-    const patch = { an: 1, bpm: r.bpm, energy: Math.round(r.energy * 1000) / 1000 };
+    const patch = { an: 1, av: AV, bpm: r.bpm, energy: Math.round(r.energy * 1000) / 1000, loud: r.loud, bright: r.bright, punch: r.punch, mkey: R.analysis.keyName(r.key, r.minor), kc: Math.round((r.keyConf || 0) * 100) / 100 };
     if (!t.duration || Math.abs(t.duration - dur) > 1.5) patch.duration = dur;
     await R.lib.update(id, patch);
     R.bus.emit('analysis', id);
@@ -218,6 +263,18 @@ R.analysis = (() => {
   }
   function resume() {
     for (const t of R.lib.all()) if (!t.an) enqueue(t.id);
+    // songs measured by an older version get the new measurements (key, loudness …) after the new songs
+    for (const t of R.lib.all()) if (stale(t)) enqueue(t.id);
+  }
+  // musical key: 'Am', 'E♭' … ; Chinese name; Camelot wheel code (8A, 8B …)
+  const NOTE = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
+  function keyName(k, mn) { return k == null || k < 0 ? '' : NOTE[k] + (mn ? 'm' : ''); }
+  function keyInfo(mkey) {
+    const m = /^([A-G][♯♭]?)(m?)$/.exec(mkey || ''); if (!m) return null;
+    const k = NOTE.indexOf(m[1]); if (k < 0) return null;
+    const minor = !!m[2], maj = minor ? (k + 3) % 12 : k;
+    const cam = (((maj * 7) % 12) + 7) % 12 + 1;
+    return { k, minor, zh: NOTE[k] + (minor ? ' 小調' : ' 大調'), camelot: cam + (minor ? 'A' : 'B') };
   }
   async function get(id) {
     if (cache.has(id)) return cache.get(id);
@@ -226,5 +283,5 @@ R.analysis = (() => {
     return r || null;
   }
   const left = () => queue.length + (running ? 1 : 0);
-  return { enqueue, resume, get, left, core: analyzeCore };
+  return { enqueue, resume, get, left, core: analyzeCore, stale, keyName, keyInfo, AV };
 })();
