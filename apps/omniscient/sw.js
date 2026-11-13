@@ -1,7 +1,7 @@
-/* 全知 OMNISCIENT service worker — version 2026.11.13-1443
+/* 全知 OMNISCIENT service worker — version 2026.11.13-1549
    只存看板本身（讓它離線也打得開）；冷眼的資料不經過這裡，一律直接向網路要最新的。 */
-const V = 'pzomni-2026.11.13-1443';
-const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
+const V = 'pzomni-2026.11.13-1549';
+const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'audio/theme.json'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(V).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
@@ -10,7 +10,7 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request;
-  if (req.method !== 'GET') return;
+  if (req.method !== 'GET' || req.headers.has('range')) return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
   const scope = new URL(self.registration.scope).pathname;

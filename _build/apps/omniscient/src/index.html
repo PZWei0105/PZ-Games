@@ -6,13 +6,13 @@
 <title>全知 OMNISCIENT</title>
 <meta name="description" content="痞子葳的戰情看板：冷眼的官方一手資料，攤開來演給你看。">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<meta name="theme-color" content="#03060d">
+<meta name="theme-color" content="#02040a">
 <meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="全知">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2303060d'/%3E%3Cpath d='M6 32C14 18 22 13 32 13s18 5 26 19c-8 14-16 19-26 19S14 46 6 32z' fill='none' stroke='%2346d4ff' stroke-width='3.5'/%3E%3Ccircle cx='32' cy='32' r='10' fill='none' stroke='%23ffbf3c' stroke-width='3.5'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2302040a'/%3E%3Cpath d='M6 32C14 18 22 13 32 13s18 5 26 19c-8 14-16 19-26 19S14 46 6 32z' fill='none' stroke='%2300e5ff' stroke-width='3.5'/%3E%3Ccircle cx='32' cy='32' r='10' fill='none' stroke='%23ffc23d' stroke-width='3.5' stroke-dasharray='4 2'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
@@ -22,58 +22,59 @@
 </head>
 <body>
 <noscript><p style="color:#eee;padding:24px;font-family:sans-serif">全知需要開啟 JavaScript 才能使用。</p></noscript>
-<canvas id="bg" aria-hidden="true"></canvas>
+<canvas id="gl" aria-hidden="true"></canvas>
+<canvas id="fallback" aria-hidden="true" hidden></canvas>
 <div id="board" aria-label="全知 戰情看板">
   <header id="top">
     <div class="brand">
-      <svg class="eye" viewBox="0 0 64 40" aria-hidden="true"><path d="M2 20C10 7 20 2 32 2s22 5 30 18c-8 13-18 18-30 18S10 33 2 20z"/><circle cx="32" cy="20" r="10.5"/><circle class="pupil" cx="32" cy="20" r="4.4"/></svg>
-      <div class="bt"><b>全知</b><i>OMNISCIENT</i><small id="brandSub">冷眼資料核心 · 只收官方一手來源</small></div>
+      <svg class="eye" viewBox="0 0 64 40" aria-hidden="true"><path d="M2 20C10 7 20 2 32 2s22 5 30 18c-8 13-18 18-30 18S10 33 2 20z"/><circle class="ir" cx="32" cy="20" r="10.5"/><circle class="pupil" cx="32" cy="20" r="4.2"/></svg>
+      <div class="bt"><b>全知</b><i>OMNISCIENT</i><small id="brandSub">COLDEYE DATA CORE · 官方一手來源</small></div>
     </div>
     <div class="rings" id="rings"></div>
     <div class="stats" id="stats"></div>
+    <div class="heat" id="heat"></div>
     <div class="mode" id="mode"></div>
   </header>
-  <nav id="stages" aria-label="處理流程"></nav>
+  <nav id="tabs" aria-label="處理流程"></nav>
   <main id="cols">
-    <section class="col panel" id="c0" data-col="0"></section>
-    <section class="col panel" id="c1" data-col="1"></section>
-    <section class="col panel" id="c2" data-col="2"></section>
-    <section class="col panel" id="c3" data-col="3"></section>
-    <section class="col panel" id="c4" data-col="4"></section>
+    <section class="col" id="c0" data-col="0"></section>
+    <section class="col" id="c1" data-col="1"></section>
+    <section class="col" id="c2" data-col="2"></section>
+    <section class="col" id="c3" data-col="3"></section>
+    <section class="col" id="c4" data-col="4"></section>
+    <section class="col" id="c5" data-col="5"></section>
   </main>
   <section id="bottom">
-    <section class="panel" id="pLog"></section>
-    <section class="panel" id="pAgents"></section>
-    <section class="panel" id="pPulse"></section>
+    <section class="pn" id="pLog"></section>
+    <section class="pn" id="pBook"></section>
+    <section class="pn" id="pTape"></section>
   </section>
   <footer id="foot">
     <div class="rp" id="rp"></div>
     <div class="fnote" id="fnote"></div>
     <div class="tools">
       <button type="button" class="tb" data-act="fs" title="全螢幕（F）" aria-label="全螢幕"><svg viewBox="0 0 20 20"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"/></svg></button>
-      <button type="button" class="tb" data-act="snd" title="音效（M）" aria-label="音效"><svg viewBox="0 0 20 20"><path d="M3.5 7.6h3l4.2-3.4v11.6l-4.2-3.4h-3z"/><path class="w" d="M13.6 7.2a4 4 0 0 1 0 5.6M15.8 5a7 7 0 0 1 0 10"/></svg></button>
+      <button type="button" class="tb" data-act="snd" title="聲音（M）" aria-label="聲音"><svg viewBox="0 0 20 20"><path d="M3.5 7.6h3l4.2-3.4v11.6l-4.2-3.4h-3z"/><path class="w" d="M13.6 7.2a4 4 0 0 1 0 5.6M15.8 5a7 7 0 0 1 0 10"/></svg></button>
       <button type="button" class="tb" data-act="set" title="設定（S）" aria-label="設定"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/></svg></button>
     </div>
   </footer>
 </div>
-<canvas id="fg" aria-hidden="true"></canvas>
 <div id="beam" aria-hidden="true"></div>
 <section id="report" hidden aria-live="polite"></section>
 <aside id="drawer" hidden aria-label="設定"></aside>
 <div id="toast" aria-live="polite"></div>
 <div id="gate">
   <div class="gwrap">
-    <svg class="geye" viewBox="0 0 200 120" aria-hidden="true"><path d="M6 60C34 18 66 6 100 6s66 12 94 54c-28 42-60 54-94 54S34 102 6 60z"/><circle cx="100" cy="60" r="30"/><circle class="gp" cx="100" cy="60" r="11"/></svg>
     <h1>全知<span>OMNISCIENT</span></h1>
-    <p class="gl">輕觸以喚醒 · TAP TO AWAKEN</p>
-    <p class="gs" id="gateSub">冷眼的官方一手資料，攤開來演給你看</p>
+    <p class="gl">TAP TO AWAKEN · 輕觸喚醒</p>
+    <p class="gs" id="gateSub">冷眼的官方一手資料　攤開來演給你看</p>
   </div>
 </div>
 <div id="boot" hidden>
-  <canvas id="bootcv"></canvas>
   <div class="bt1" id="bootTitle"></div>
   <ol class="blog" id="bootLog"></ol>
-  <p class="bskip">輕觸略過</p>
+  <div class="bbar"><i id="bootBar"></i></div>
+  <p class="bskip">TAP TO SKIP · 輕觸略過</p>
 </div>
 <script>
 /*JS*/

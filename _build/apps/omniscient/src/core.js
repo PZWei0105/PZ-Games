@@ -17,7 +17,7 @@ const STORE_KEY = 'omni.v1.settings';
 const DEFAULTS = {
   watchMode: 'coldeye',      // coldeye＝跟這台裝置上冷眼的自選；custom＝自己挑
   watch: ['0050', '00878', '00662', '0056', '00919', '00679B'],
-  sound: true, vol: 0.7, ambient: true,
+  sound: true, music: true, musicVol: 0.55, sfxVol: 0.8,
   fx: 'full',                // full / std / low
   speed: 1,                  // 回放速度（1＝整個交易時段約 3 分鐘）
   loop: true,                // 回放完自動重播
