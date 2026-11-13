@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """全知 OMNISCIENT — 組建腳本
 
+配樂與音效的原始程式在 audio/（theme.py、sfx.py），錄好的 MP3 放在 src/audio/。
+
 把 src/ 的 HTML、CSS、JS、字型內嵌成單一檔案，輸出到 <repo>/apps/omniscient/（含 manifest、service worker、圖示）。
 
 用法：
@@ -17,14 +19,15 @@ SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'omniscient')
 
-JS_ORDER = ['core.js', 'data.js', 'sfx.js', 'ui.js', 'fx.js', 'replay.js', 'main.js']
+JS_ORDER = ['core.js', 'data.js', 'audio.js', 'charts.js', 'gl.js', 'ui.js', 'replay.js', 'main.js']
 CSS_ORDER = ['style.css']
 FONTS = [  # file, family, weight, style
-    ('orbitron-latin-700-normal.woff2', 'Orbitron', 700, 'normal'),
     ('orbitron-latin-900-normal.woff2', 'Orbitron', 900, 'normal'),
-    ('share-tech-mono-latin-400-normal.woff2', 'Share Tech Mono', 400, 'normal'),
-    ('chakra-petch-latin-600-normal.woff2', 'Chakra Petch', 600, 'normal'),
-    ('chakra-petch-latin-700-normal.woff2', 'Chakra Petch', 700, 'normal'),
+    ('jetbrains-mono-latin-400-normal.woff2', 'JetBrains Mono', 400, 'normal'),
+    ('jetbrains-mono-latin-500-normal.woff2', 'JetBrains Mono', 500, 'normal'),
+    ('jetbrains-mono-latin-700-normal.woff2', 'JetBrains Mono', 700, 'normal'),
+    ('oxanium-latin-600-normal.woff2', 'Oxanium', 600, 'normal'),
+    ('oxanium-latin-800-normal.woff2', 'Oxanium', 800, 'normal'),
 ]
 
 
@@ -39,7 +42,6 @@ def fonts_css():
         with open(os.path.join(SRC, 'fonts', fn), 'rb') as f:
             b64 = base64.b64encode(f.read()).decode('ascii')
         out.append('@font-face{font-family:"%s";font-style:%s;font-weight:%d;font-display:swap;src:url(data:font/woff2;base64,%s) format("woff2")}' % (fam, st, w, b64))
-    # Chakra Petch 沒有 400：一般字重也用 600 那一份（中文字走系統字型）
     return '\n'.join(out)
 
 
@@ -63,7 +65,7 @@ MANIFEST = {
     'start_url': './',
     'scope': './',
     'display': 'fullscreen',
-    'orientation': 'landscape',
+    'orientation': 'any',
     'background_color': '#03060d',
     'theme_color': '#03060d',
     'icons': [
@@ -129,6 +131,12 @@ def main():
         json.dump(MANIFEST, f, ensure_ascii=False, indent=1)
     with open(os.path.join(a.out, 'sw.js'), 'w', encoding='utf-8') as f:
         f.write(read('sw.js').replace('__VERSION__', version))
+    # 配樂與音效（audio/theme.mp3 約 4MB；第一次播放時才下載）
+    import shutil
+    ad = os.path.join(a.out, 'audio')
+    if os.path.isdir(ad):
+        shutil.rmtree(ad)
+    shutil.copytree(os.path.join(SRC, 'audio'), ad)
     icons = os.path.join(a.out, 'icons')
     if a.icons or not os.path.exists(os.path.join(icons, 'icon-512.png')):
         make_icons(icons)

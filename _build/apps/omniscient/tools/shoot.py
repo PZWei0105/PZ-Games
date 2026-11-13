@@ -4,17 +4,19 @@
 import sys, json, time, subprocess, os
 from playwright.sync_api import sync_playwright
 url = sys.argv[1]; out = sys.argv[2]; w = int(sys.argv[3]); h = int(sys.argv[4]); steps = json.loads(sys.argv[5])
+dpr = float(sys.argv[6]) if len(sys.argv) > 6 else 1  # 手機用 3
 os.makedirs(out, exist_ok=True)
 with sync_playwright() as p:
     b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
-    pg = b.new_page(viewport={'width': w, 'height': h}, device_scale_factor=1)
+    pg = b.new_page(viewport={'width': w, 'height': h}, device_scale_factor=dpr, is_mobile=dpr > 2, has_touch=dpr > 2)
     logs = []
     pg.on('console', lambda m: logs.append(f'{m.type}: {m.text}'))
     pg.on('pageerror', lambda e: logs.append(f'PAGEERROR: {e}'))
     pg.goto(url)
     for s in steps:
         if 'wait' in s: pg.wait_for_timeout(s['wait'])
-        if 'shot' in s: pg.screenshot(path=f"{out}/{s['shot']}.png")
+        if 'shot' in s: pg.screenshot(path=f"{out}/{s['shot']}.png", full_page=bool(s.get('full')))
+        if 'scroll' in s: pg.evaluate(f"window.scrollTo(0, {s['scroll']})")
         if 'eval' in s: print('EVAL', s['eval'][:60], '->', pg.evaluate(s['eval']))
         if 'click' in s: pg.click(s['click'])
         if 'key' in s: pg.keyboard.press(s['key'])

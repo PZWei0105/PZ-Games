@@ -23,6 +23,7 @@ so = pathlib.Path(a.state) / 'out'
 for f in ('summary', 'news', 'track', 'cal', 'divs', 'rules'):
     shutil.copy(so / f'{f}.json', out / f'{f}.json')
 shutil.copytree(so / 'etf', out / 'etf', dirs_exist_ok=True)
+shutil.copytree(so / 'k', out / 'k', dirs_exist_ok=True)
 sys.path.insert(0, a.ce)
 from pipeline.state import State
 from pipeline import globalmkt, tape
@@ -31,6 +32,9 @@ st = State(pathlib.Path(a.state))
 json.dump(globalmkt.build_out(st, now=now_tw()), open(out / 'global.json', 'w'), ensure_ascii=False)
 t = json.load(gzip.open(pathlib.Path(a.tape) / 'tape.json.gz', 'rt'))
 sp = tape.make_spark(t['cur'])
+(out / 'tape').mkdir(exist_ok=True)
+for c in set(t['cur']['codes']) | set((t.get('prev') or {}).get('codes', {})):
+    json.dump(tape._code_file(t['cur'], t.get('prev'), c), open(out / 'tape' / f'{c}.json', 'w'))
 json.dump(sp, open(out / 'spark.json', 'w'))
 s = json.load(open(out / 'summary.json'))
 pr = {e['c']: e.get('pr') for e in s['etfs']}

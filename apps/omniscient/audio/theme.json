@@ -1,0 +1,1 @@
+{"bpm": 100, "bar": 2.4, "beat": 0.6, "length": 177.8, "music_end": 172.8, "sections": [{"name": "intro", "t": 0.0, "bars": 8}, {"name": "A", "t": 19.2, "bars": 16}, {"name": "B", "t": 57.6, "bars": 16}, {"name": "break", "t": 96.0, "bars": 8}, {"name": "drop", "t": 115.2, "bars": 16}, {"name": "outro", "t": 153.6, "bars": 8}], "lufs": -16.0}

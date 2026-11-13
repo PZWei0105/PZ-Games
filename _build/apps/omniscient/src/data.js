@@ -106,6 +106,45 @@ async function loadEtf(code) {
   } catch { return have || null; }
 }
 
+/** 當天每一輪的整股快照（價、高低、累積量、最佳五檔）：跟著今日走勢檔一起換 */
+D.tape = {}; D.k = {};
+async function loadTape(code) {
+  const key = 's=' + encodeURIComponent((D.spark && D.spark.at) || (D.live && D.live.at) || '');
+  const have = D.tape[code];
+  if (have && have._key === key) return have;
+  try { const r = await fetchJSON('tape/' + code + '.json', key); r.js._key = key; r.js._offline = r.offline; D.tape[code] = r.js; return r.js; } catch { return have || null; }
+}
+/** 日 K 線（跟著收盤批次） */
+async function loadK(code) {
+  const key = 'b=' + encodeURIComponent((D.summary && D.summary.generated) || '');
+  const have = D.k[code];
+  if (have && have._key === key) return have;
+  try { const r = await fetchJSON('k/' + code + '.json', key); r.js._key = key; D.k[code] = r.js; return r.js; } catch { return have || null; }
+}
+/** 某一天的盤中快照：[{m（距 09:00 分鐘）, p, h, l, v（累積股數）, dv（這一輪新增）, a, b（五檔）, q}] */
+function tapeSnaps(code, day) {
+  const T = D.tape[code];
+  if (!T) return [];
+  const rec = [T.cur, T.prev].find((r) => r && r.d === day);
+  if (!rec || !rec.reg) return [];
+  const R = rec.reg, out = [];
+  const base = ymdToMs(day, 9, 0) / 1000;
+  let pv = 0;
+  for (let i = 0; i < (R.z || []).length; i++) {
+    const p = R.z[i] != null ? R.z[i] : R.pz && R.pz[i];
+    if (!isNum(p)) continue;
+    const q = (R.q && R.q[i]) || (R.t && R.t[i]);
+    const m = (q - base) / 60;
+    if (!isFinite(m) || m < -5 || m > SESSION_MIN + 10) continue;
+    const v = R.v && R.v[i];
+    out.push({ m: Math.max(0, m), p, h: R.h && R.h[i], l: R.l && R.l[i], v, dv: isNum(v) ? Math.max(0, v - pv) : 0, a: R.a && R.a[i], b: R.b && R.b[i], q });
+    if (isNum(v)) pv = v;
+  }
+  out.sort((x, y) => x.m - y.m);
+  return out;
+}
+function tapeRef(code, day) { const T = D.tape[code]; const rec = T && [T.cur, T.prev].find((r) => r && r.d === day); return rec && isNum(rec.y) ? rec.y : refClose(code, day); }
+
 /** 開機：先版本檔，再其他（任何一份失敗都照實回報，不擋住其他份） */
 async function initialLoad(report) {
   const v = await loadFile('version');
@@ -324,7 +363,7 @@ function freshness(name) {
   return { level, label, ms };
 }
 
-// ================================================================ 交叉核對（全部用看板手上的真資料當場算）
+// ================================================================ 交叉核對（全部用看板手上的真資料當場算；rows＝每一檔／每一份的明細，畫成長條）
 function verifyChecks() {
   const out = [];
   const codes = watchCodes();
@@ -332,6 +371,7 @@ function verifyChecks() {
   // 1. 盤中價：冷眼的兩條行情線（證交所 ETF 即時淨值檔、證交所整股行情）各自的最新價互相比對
   {
     let n = 0, okN = 0, worst = 0, worstC = null;
+    const rows = [];
     if (L && L.etfs && sp && sp.s) {
       for (const c of codes) {
         const a = L.etfs[c], pts = sparkOf(c);
@@ -340,65 +380,80 @@ function verifyChecks() {
         const diff = Math.abs(a[0] - b) / b * 100;
         n++; if (diff <= 0.5) okN++;
         if (diff > worst) { worst = diff; worstC = c; }
+        rows.push({ k: c, f: Math.min(1, diff / 0.5), v: diff.toFixed(2) + '%', bad: diff > 0.5 });
       }
     }
-    out.push({ id: 'dual', title: '盤中價雙來源', org: '證交所 ETF 淨值檔 × 整股行情',
+    out.push({ id: 'dual', title: '盤中價雙來源', org: 'TWSE 淨值檔 × 整股行情', rows,
       st: n === 0 ? 'wait' : okN === n ? 'pass' : 'warn',
       big: n ? `${okN}/${n}` : '—',
-      detail: n === 0 ? '今天還沒有兩邊都有的盤中價' : okN === n ? `自選 ${n} 檔兩邊價格一致（差距 ≤ 0.5%）` : `${worstC} 兩邊差 ${worst.toFixed(2)}%（兩邊抓取時間不同），以官方收盤為準`,
+      detail: n === 0 ? '今天還沒有兩邊都有的盤中價' : okN === n ? `自選 ${n} 檔兩邊價格一致（差距 ≤ 0.5%）` : `${worstC} 兩邊差 ${worst.toFixed(2)}%（抓取時間不同），以官方收盤為準`,
     });
   }
   // 2. 收盤價對帳：證交所官方收盤 vs 當天整股行情最後一筆
   {
     let n = 0, okN = 0, bad = null;
+    const rows = [];
     const same = S && sp && sp.d === S.asof;
     if (same) {
       for (const c of codes) {
         const e = D.map[c], pts = sparkOf(c);
         if (!e || !pts.length) continue;
         const last = pts[pts.length - 1][1];
-        n++; if (Math.abs(last - e.p) < 0.0051) okN++; else bad = `${c} 收盤 ${fmtPx(e.p)}／最後一筆 ${fmtPx(last)}`;
+        const d = Math.abs(last - e.p);
+        n++; if (d < 0.0051) okN++; else bad = `${c} 收盤 ${fmtPx(e.p)}／最後一筆 ${fmtPx(last)}`;
+        rows.push({ k: c, f: d < 0.0051 ? 1 : 0.3, v: fmtPx(e.p), bad: d >= 0.0051 });
       }
+    } else {
+      for (const c of codes.slice(0, 3)) { const e = D.map[c]; if (e) rows.push({ k: c, f: 0, v: dateText(e.d), wait: true }); }
     }
-    out.push({ id: 'close', title: '收盤價對帳', org: '證交所每日收盤行情',
+    out.push({ id: 'close', title: '收盤價對帳', org: 'TWSE 每日收盤行情', rows,
       st: !same ? 'wait' : n === 0 ? 'wait' : okN === n ? 'pass' : 'warn',
-      big: same && n ? `${okN}/${n}` : '等待',
-      detail: !same ? `官方收盤批次是 ${dateText(S && S.asof)}，今天的收盤出來後（約 14:30 以後）自動對帳` : okN === n ? `自選 ${n} 檔官方收盤＝當天最後一筆成交` : bad,
+      big: same && n ? `${okN}/${n}` : 'WAIT',
+      detail: !same ? `官方收盤批次是 ${dateText(S && S.asof)}；${dateText(sp && sp.d)} 的收盤出來後（約 14:30 以後）自動對帳` : okN === n ? `自選 ${n} 檔官方收盤＝當天最後一筆成交` : bad,
     });
   }
   // 3. 折溢價重算：拿市價與投信預估淨值自己算一次，和冷眼給的數字比
   {
     let n = 0, okN = 0;
+    const rows = [];
     if (L && L.etfs) {
       for (const c of codes) {
         const a = L.etfs[c];
         if (!a || !isNum(a[0]) || !isNum(a[1]) || !isNum(a[2]) || !a[1]) continue;
         const mine = (a[0] - a[1]) / a[1] * 100;
-        n++; if (Math.abs(mine - a[2]) <= 0.03) okN++;
+        const ok = Math.abs(mine - a[2]) <= 0.03;
+        n++; if (ok) okN++;
+        rows.push({ k: c, f: Math.min(1, Math.abs(a[2]) / 1.5), v: (a[2] >= 0 ? '+' : '') + a[2].toFixed(2) + '%', bad: !ok, sign: a[2] });
       }
     }
-    out.push({ id: 'prem', title: '折溢價重算', org: '投信預估淨值',
+    out.push({ id: 'prem', title: '折溢價重算', org: 'SITCA 投信預估淨值', rows,
       st: n === 0 ? 'wait' : okN === n ? 'pass' : 'warn', big: n ? `${okN}/${n}` : '—',
-      detail: n === 0 ? '還沒有盤中預估淨值' : okN === n ? `自選 ${n} 檔重算結果與冷眼一致` : `有 ${n - okN} 檔重算結果對不上，以投信公告為準`,
+      detail: n === 0 ? '還沒有盤中預估淨值' : okN === n ? `自選 ${n} 檔自己重算的折溢價與冷眼一致` : `有 ${n - okN} 檔重算結果對不上，以投信公告為準`,
     });
   }
   // 4. 加權指數：收盤批次的指數 vs 全球市場檔裡的指數（兩條管線各自讀證交所）
   {
     const m = S && S.market, g = D.global && D.global.tw && D.global.tw.taiex;
-    let st = 'wait', detail = '兩份資料的日期還不一樣，等同一天再比', big = '等待';
+    let st = 'wait', detail = '兩份資料的日期還不一樣，等同一天再比', big = 'WAIT';
+    const rows = [];
+    if (m) rows.push({ k: '收盤批次', zh: true, f: 1, v: fmtPx(m.close, 0) });
+    if (g) rows.push({ k: '市場溫度', zh: true, f: m && m.d === g.d ? (Math.abs(m.close - g.c) < 0.5 ? 1 : 0.3) : 0.5, v: fmtPx(g.c, 0), bad: m && m.d === g.d && Math.abs(m.close - g.c) >= 0.5 });
     if (m && g && m.d === g.d) {
       const ok = Math.abs(m.close - g.c) < 0.5;
-      st = ok ? 'pass' : 'warn'; big = ok ? '一致' : '不一致';
-      detail = ok ? `${dateText(m.d)} 收 ${fmtPx(m.close)}，兩邊相同` : `收盤批次 ${fmtPx(m.close)}／市場溫度 ${fmtPx(g.c)}`;
+      st = ok ? 'pass' : 'warn'; big = ok ? 'MATCH' : 'DIFF';
+      detail = ok ? `${dateText(m.d)} 收 ${fmtPx(m.close)}，兩條管線完全相同` : `收盤批次 ${fmtPx(m.close)}／市場溫度 ${fmtPx(g.c)}`;
     }
-    out.push({ id: 'taiex', title: '加權指數核對', org: '證交所加權指數', st, big, detail });
+    out.push({ id: 'taiex', title: '加權指數核對', org: 'TWSE 加權指數', st, big, detail, rows });
   }
   // 5. 官方來源健康
   {
     const h = sourceHealth();
-    out.push({ id: 'src', title: '官方來源健康', org: '冷眼後台抓取紀錄',
+    const by = {};
+    for (const s of h.list) { if (s.st === 'idle') continue; const o = by[s.org] || (by[s.org] = { ok: 0, n: 0 }); o.n++; if (s.st === 'ok') o.ok++; }
+    const rows = Object.entries(by).sort((a, b) => b[1].n - a[1].n).slice(0, 4).map(([k, o]) => ({ k, zh: true, f: o.ok / o.n, v: `${o.ok}/${o.n}`, bad: o.ok < o.n }));
+    out.push({ id: 'src', title: '官方來源健康', org: 'COLDEYE 抓取紀錄', rows,
       st: h.total === 0 ? 'wait' : h.err ? 'warn' : h.ok === h.total ? 'pass' : 'warn', big: h.total ? `${h.ok}/${h.total}` : '—',
-      detail: h.err ? `${h.err} 個來源最近一次抓取失敗，其餘正常` : h.ok === h.total ? '每個官方來源最近都抓取成功' : `${h.total - h.ok} 個來源超過 4 天沒有新資料（可能是那份資料本來就不常更新）`,
+      detail: h.err ? `${h.err} 個來源最近一次抓取失敗，其餘正常` : h.ok === h.total ? '每個官方來源最近都抓取成功' : `${h.total - h.ok} 個來源超過 4 天沒有新資料（那份資料本來就不常更新）`,
     });
   }
   // 6. 版本同步：版本檔說的時間戳 = 看板手上那一份
@@ -407,10 +462,11 @@ function verifyChecks() {
     const names = Object.keys(STAMP).filter((n) => f[n]);
     const same = names.filter((n) => f[n] === stampOf(n));
     const down = D.link === 'down';
-    out.push({ id: 'ver', title: '資料版本同步', org: '冷眼版本檔',
+    const rows = names.slice(0, 5).map((n) => { const age = now() - parseTs(stampOf(n)); return { k: n, f: f[n] === stampOf(n) ? 1 : 0.2, v: isFinite(age) ? (age < 3600e3 ? Math.round(age / 60e3) + 'm' : Math.round(age / 3600e3) + 'h') : '—', bad: f[n] !== stampOf(n) }; });
+    out.push({ id: 'ver', title: '資料版本同步', org: 'COLDEYE version.json', rows,
       st: down ? 'fail' : !names.length ? 'wait' : same.length === names.length ? 'pass' : 'warn',
-      big: down ? '斷線' : names.length ? `${same.length}/${names.length}` : '—',
-      detail: D.link === 'down' ? '連不上冷眼，顯示的是上次的資料' : same.length === names.length ? '看板手上的每一份都是最新版' : '有新版本，正在下載',
+      big: down ? 'OFFLINE' : names.length ? `${same.length}/${names.length}` : '—',
+      detail: down ? '連不上冷眼，顯示的是上次的資料' : same.length === names.length ? '看板手上的每一份都是最新版' : '有新版本，正在下載',
     });
   }
   return out;
