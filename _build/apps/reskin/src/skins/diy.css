@@ -36,3 +36,5 @@
   .skin-diy.dy-card .dy-seek { grid-column: 2; grid-row: 3; }
   .skin-diy.dy-card .dy-ctrl { grid-column: 2; grid-row: 4; }
 }
+
+.dy-code { display: flex; flex-wrap: wrap; gap: 8px; }

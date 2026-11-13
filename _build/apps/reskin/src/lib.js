@@ -63,7 +63,12 @@ R.lib = (() => {
     const key = await fingerprint(f);
     // already in the library: skip it, unless its stored copy could not be read back (then store it again, same song)
     const old = byKey.has(key) ? tracks.get(byKey.get(key)) : null;
-    if (old && !old.lost) return { dup: true, id: old.id };
+    const lrc = extra.lrcFile ? String(await R.lyrics.readFile(extra.lrcFile).catch(() => '')).slice(0, 60000) : '';
+    if (old && !old.lost) {
+      // already here: only bring in a lyric file it did not have yet
+      if (lrc && !old.lrc) { await update(old.id, { lrc }); return { dup: true, id: old.id, lyr: true }; }
+      return { dup: true, id: old.id };
+    }
     const meta = await R.meta.read(f);
     if (extra.trackNo) {
       // "02 夜行.wav" in a folder where every song starts with its number: the number is the order, not the title
@@ -93,10 +98,11 @@ R.lib = (() => {
         duration: meta.duration || 0, size: f.size, type, name: f.name || '', added, cover, colors,
         lyrics: meta.lyrics ? String(meta.lyrics).slice(0, 20000) : '', bpm: 0, energy: 0, an: 0, plays: 0,
       };
+      if (lrc) t.lrc = lrc;
       if (extra.patch) Object.assign(t, extra.patch);
       if (!playable(type)) t.warn = 1;
       // a repaired song keeps its place in the library, its play count and its rhythm analysis
-      if (old) for (const k of ['added', 'plays', 'an', 'bpm', 'energy']) if (old[k] != null) t[k] = old[k];
+      if (old) for (const k of ['added', 'plays', 'an', 'bpm', 'energy', 'fav', 'lrc']) if (old[k] != null && !(k === 'lrc' && t.lrc)) t[k] = old[k];
       await R.db.put('tracks', t);
       tracks.set(id, t); byKey.set(key, id);
       if (old) { R.art.forget(id); bus.emit('track:update', t); }
@@ -168,9 +174,13 @@ R.lib = (() => {
     const cant = audio.filter((x) => cantPlay(x.f));
     const list = audio.filter((x) => !cantPlay(x.f));
     if (list.some((x) => x.path.includes('/'))) list.sort((a, b) => coll.compare(a.path, b.path)); // folder order: 01, 02 … 10
-    const res = { added: [], ids: [], dup: 0, fixed: 0, failed: [], warn: 0, total: list.length, cant: cant.length, cantExt: Array.from(new Set(cant.map((x) => extOf(x.f.name)))), stopped: 0, full: 0 };
+    const res = { added: [], ids: [], paths: [], dup: 0, fixed: 0, lyr: 0, failed: [], warn: 0, total: list.length, cant: cant.length, cantExt: Array.from(new Set(cant.map((x) => extOf(x.f.name)))), stopped: 0, full: 0 };
     if (!list.length) return res;
     const art = folderArt(vis);
+    // .lrc lyric files beside the songs: same folder, same name
+    const lrcs = new Map();
+    for (const x of vis) if (/\.lrc$/i.test(x.f.name) && x.f.size < 600e3) lrcs.set(x.path.replace(/\.lrc$/i, '').toLowerCase(), x.f);
+    const lrcOf = (path) => lrcs.get(path.replace(/\.[^./]+$/, '').toLowerCase()) || null;
     // folders whose songs are all named "01 …", "02 …": those numbers come off the titles
     const names = new Map();
     for (const x of list) { const d = dirOf(x.path); if (d) { if (!names.has(d)) names.set(d, []); names.get(d).push(x.f.name); } }
@@ -184,8 +194,9 @@ R.lib = (() => {
         const { f, path } = list[k];
         if (onProgress) onProgress({ i: k, n: list.length, name: f.name });
         try {
-          const r = await addOne(f, t0 - k, { folderArt: art(path), trackNo: numbered.has(dirOf(path)) });
-          res.ids.push(r.id);
+          const r = await addOne(f, t0 - k, { folderArt: art(path), trackNo: numbered.has(dirOf(path)), lrcFile: lrcOf(path) });
+          res.ids.push(r.id); res.paths.push(path);
+          if (r.lyr) res.lyr++;
           if (r.dup) { res.dup++; continue; }
           if (r.fixed) { res.fixed++; continue; }
           res.added.push(r.id);
@@ -229,16 +240,29 @@ R.lib = (() => {
     bus.emit('library'); bus.emit('playlists');
   }
 
+  /* ---------- 我的最愛: every song with a heart, newest heart first; behaves like a playlist ---------- */
+  const favIds = () => Array.from(tracks.values()).filter((t) => t.fav).sort((a, b) => b.fav - a.fav).map((t) => t.id);
+  const favPL = () => ({ id: 'fav', name: '我的最愛', ids: favIds(), skin: R.settings.get('favSkin') || null, created: 0, virtual: true });
+  async function setFav(id, on) {
+    const t = tracks.get(id); if (!t) return;
+    await update(id, { fav: on ? Date.now() : 0 });
+    bus.emit('fav', t); bus.emit('playlists');
+  }
+
   const pl = {
     all: () => playlists.slice(),
-    get: (id) => playlists.find((p) => p.id === id) || null,
+    get: (id) => (id === 'fav' ? favPL() : playlists.find((p) => p.id === id) || null),
     async create(name, ids) {
       const p = { id: R.uid(), name: (name || '').trim() || '新歌單', ids: (ids || []).slice(), skin: null, created: Date.now() };
       playlists.push(p); await R.db.put('playlists', p); bus.emit('playlists'); return p;
     },
-    async save(p) { await R.db.put('playlists', p); bus.emit('playlists'); },
-    async remove(id) { playlists = playlists.filter((p) => p.id !== id); await R.db.del('playlists', id).catch(() => {}); bus.emit('playlists'); },
+    async save(p) {
+      if (p.id === 'fav') { R.settings.set('favSkin', p.skin || null); bus.emit('playlists'); return; }
+      await R.db.put('playlists', p); bus.emit('playlists');
+    },
+    async remove(id) { if (id === 'fav') return; playlists = playlists.filter((p) => p.id !== id); await R.db.del('playlists', id).catch(() => {}); bus.emit('playlists'); },
     async add(id, trackIds) {
+      if (id === 'fav') { let n = 0; for (const t of trackIds) { const x = tracks.get(t); if (x && !x.fav) { await setFav(t, true); n++; } } return n; }
       const p = pl.get(id); if (!p) return 0;
       let n = 0;
       for (const t of trackIds) if (tracks.has(t) && !p.ids.includes(t)) { p.ids.push(t); n++; }
@@ -255,5 +279,5 @@ R.lib = (() => {
     bus.emit('library'); bus.emit('playlists');
   }
 
-  return { load, get, count, list, update, importFiles, addDemo, remove, pl, isAudio, wipe, importing: () => importing, all: () => Array.from(tracks.values()) };
+  return { load, get, count, list, update, importFiles, addDemo, remove, pl, isAudio, wipe, setFav, importing: () => importing, all: () => Array.from(tracks.values()) };
 })();

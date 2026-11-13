@@ -3,7 +3,7 @@ R.app = (() => {
   const { $, $$, bus, settings, I, esc } = R;
 
   // dock icons
-  const DOCK = { lib: I.lib, wardrobe: I.hanger, party: I.party, settings: I.gear };
+  const DOCK = { lib: I.lib, wardrobe: I.hanger, fav: I.heart, party: I.party, more: I.more, settings: I.gear };
   $$('#dock .dk').forEach((b) => { b.innerHTML = DOCK[b.dataset.act]; });
 
   /* ---------- first tap unlocks audio (iPhone) ---------- */
@@ -25,6 +25,9 @@ R.app = (() => {
     party() { party.toggle(); },
     settings() { if (R.wardrobe.isOpen()) R.wardrobe.close(true); if (R.ui.sheetKind() === 'settings') R.ui.closeSheet(); else R.settingsUI.show(); },
     'sheet-close'() { R.ui.closeSheet(); },
+    fav() { R.extras.toggleFav(); },
+    more() { R.extras.moreMenu(); },
+    sleep() { R.extras.sleepMenu(); },
     import() { importMenu(); },
     'import-files'() { pickFiles(false); },
     'import-folder'() { pickFiles(true); },
@@ -99,6 +102,7 @@ R.app = (() => {
     if (res.added.length) parts.push(`加入 ${res.added.length} 首`);
     if (res.fixed) parts.push(`補回 ${res.fixed} 首讀不到的歌`);
     if (res.dup) parts.push(`${res.dup} 首已經在歌庫`);
+    if (res.lyr) parts.push(`${res.lyr} 首補上了歌詞`);
     if (res.failed.length) parts.push(`${res.failed.length} 首讀不了`);
     if (res.cant) parts.push(`${res.cant} 個 ${res.cantExt.slice(0, 3).join('、')} 檔這台裝置不能播，沒有放進來`);
     if (res.warn) parts.push(`${res.warn} 首這台裝置可能播不了`);
@@ -106,7 +110,7 @@ R.app = (() => {
     if (res.stopped) msg = `已停止：${msg}。之後再匯入一次，放過的歌會自動跳過`;
     R.sfx.play(res.added.length || res.fixed ? 'ok' : 'err');
     // a folder can become a playlist (the songs already in the library included), in folder order
-    const action = opts.folder && res.ids.length && !res.full && !res.stopped ? { label: '存成歌單', fn: () => folderPlaylist(opts.folder, res.ids) } : null;
+    const action = opts.folder && res.ids.length && !res.full && !res.stopped ? { label: '存成歌單', fn: () => savePlaylists(opts.folder, res.ids, res.paths) } : null;
     if (res.full) {
       R.ui.confirm({
         title: '儲存空間不夠了',
@@ -119,15 +123,49 @@ R.app = (() => {
       setTimeout(() => { if (!R.player.wants()) R.toast('準備好了，按播放鍵開始 ▶'); }, 1800);
     }
   }
-  async function folderPlaylist(name, ids) {
+  // a playlist with this name gets the missing songs; otherwise a new one is made
+  async function upsertPlaylist(name, ids) {
     const p = R.lib.pl.all().find((x) => x.name === name);
-    if (p) {
-      const n = await R.lib.pl.add(p.id, ids);
-      R.toast(n ? `歌單「${name}」多了 ${n} 首` : `歌單「${name}」裡已經都有了`);
-    } else {
-      await R.lib.pl.create(name, ids);
-      R.toast(`存好了：歌單「${name}」，${ids.length} 首。在歌庫的「歌單」裡`);
+    if (p) return { made: false, added: await R.lib.pl.add(p.id, ids) };
+    await R.lib.pl.create(name, ids);
+    return { made: true, added: ids.length };
+  }
+  async function folderPlaylist(name, ids) {
+    const r = await upsertPlaylist(name, ids);
+    R.toast(r.made ? `存好了：歌單「${name}」，${ids.length} 首。在歌庫的「歌單」裡` : r.added ? `歌單「${name}」多了 ${r.added} 首` : `歌單「${name}」裡已經都有了`);
+    R.sfx.play('ok');
+  }
+  // the songs of a folder grouped by the folder they sit in (an album per folder), named after that folder
+  function groupsOf(top, ids, paths) {
+    const by = new Map();
+    ids.forEach((id, i) => {
+      const parts = String(paths[i] || '').split('/'); parts.pop();
+      const k = parts.slice(1).join('/');
+      if (!by.has(k)) by.set(k, []);
+      if (!by.get(k).includes(id)) by.get(k).push(id);
+    });
+    const keys = Array.from(by.keys());
+    const name = (k) => {
+      if (!k) return top;
+      const seg = k.split('/'), last = seg[seg.length - 1];
+      return seg.length > 1 && keys.filter((o) => o && o.split('/').pop() === last).length > 1 ? seg[seg.length - 2] + '／' + last : last;
+    };
+    return keys.map((k) => ({ name: name(k), ids: by.get(k) }));
+  }
+  async function savePlaylists(top, ids, paths) {
+    const groups = groupsOf(top, ids, paths);
+    let k = 'one';
+    if (groups.length > 1) {
+      k = await R.ui.menu([
+        { key: 'one', label: `整個「${top}」存成一個歌單`, sub: `${ids.length} 首`, icon: I.playlist },
+        { key: 'each', label: '每個資料夾各存一個歌單', sub: `${groups.length} 個歌單：${groups.slice(0, 3).map((g) => g.name).join('、')}${groups.length > 3 ? '……' : ''}`, icon: I.folder },
+      ], { title: '存成歌單', sub: '一張專輯放一個資料夾的話，選「每個資料夾各存一個」' });
+      if (!k) return;
     }
+    if (k === 'one') { await folderPlaylist(top, ids); return; }
+    let made = 0, more = 0;
+    for (const g of groups) { const r = await upsertPlaylist(g.name, g.ids); if (r.made) made++; else more += r.added; }
+    R.toast(`存好了：${made} 個新歌單${more ? `，另外 ${more} 首補進原本的歌單` : ''}。在歌庫的「歌單」裡`, { ms: 4000 });
     R.sfx.play('ok');
   }
   async function addDemo() {
@@ -274,6 +312,7 @@ R.app = (() => {
     await R.lib.load();
     try { await R.player.restore(); } catch (e) { console.warn('restore', e); }
     lastTid = R.player.S.tid;
+    R.extras.paint();
     const want = wantedSkin() || settings.get('skin');
     await R.stage.show(R.skins.get(want) ? want : R.skins.builtin()[0].id, { silent: true, instant: true });
     booted = true;

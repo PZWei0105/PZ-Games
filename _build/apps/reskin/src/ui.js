@@ -79,7 +79,7 @@
     });
   };
   R.ui.prompt = (o) => {
-    const html = `<div class="md"><div class="md-t">${esc(o.title || '')}</div>${o.sub ? `<div class="md-s">${esc(o.sub)}</div>` : ''}<input class="md-in" type="text" maxlength="60" value="${esc(o.value || '')}" placeholder="${esc(o.placeholder || '')}" enterkeyhint="done"><div class="md-b"><button type="button" class="btn sec" data-r="0">取消</button><button type="button" class="btn pri" data-r="1">${esc(o.ok || '確定')}</button></div></div>`;
+    const html = `<div class="md"><div class="md-t">${esc(o.title || '')}</div>${o.sub ? `<div class="md-s">${esc(o.sub)}</div>` : ''}<input class="md-in" type="text" maxlength="${o.max || 60}" value="${esc(o.value || '')}" placeholder="${esc(o.placeholder || '')}" enterkeyhint="done"><div class="md-b"><button type="button" class="btn sec" data-r="0">取消</button><button type="button" class="btn pri" data-r="1">${esc(o.ok || '確定')}</button></div></div>`;
     const p = showModal(html, (e, done) => {
       const b = e.target.closest('[data-r]');
       if (b) done(b.dataset.r === '1' ? modal.querySelector('input').value.trim() : null);

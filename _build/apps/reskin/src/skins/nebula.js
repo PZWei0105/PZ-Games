@@ -3,7 +3,7 @@ R.skins.def({
   id: 'nebula', name: '星雲', group: '酷炫', en: 'NEBULA',
   desc: '星雲粒子繞著封面轉，鼓點一下就炸開',
   theme: { bg: '#03030c', fg: '#eef2ff', accent: '#9d8bff', accent2: '#3ff0d0', ui: 'rgba(10,10,28,.97)', dock: 'rgba(20,18,50,.45)', dockfg: '#dcd6ff' },
-  enterMs: 1600,
+  enterMs: 2150,
   emblem: `<svg class="em" viewBox="0 0 116 150"><defs><radialGradient id="nbg" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#ffe6f6"/><stop offset=".12" stop-color="#ff7ac8"/><stop offset=".35" stop-color="#5a3fc0" stop-opacity=".8"/><stop offset="1" stop-color="#03030c" stop-opacity="0"/></radialGradient></defs><rect width="116" height="150" fill="#03030c"/><circle cx="58" cy="62" r="58" fill="url(#nbg)"/><g fill="#bfe9ff"><circle cx="20" cy="20" r=".9"/><circle cx="96" cy="30" r="1.1"/><circle cx="12" cy="110" r=".8"/><circle cx="102" cy="128" r="1"/><circle cx="80" cy="12" r=".7"/></g><g fill="none" stroke-linecap="round"><path d="M58 62c14-2 22 10 16 22s-30 12-40 0" stroke="#9d8bff" stroke-width="3" opacity=".8"/><path d="M58 62c-14 2-22-10-16-22s30-12 40 0" stroke="#3ff0d0" stroke-width="3" opacity=".8"/></g><circle cx="58" cy="62" r="9" fill="#fff"/><path d="M30 128h56" stroke="#eef2ff" stroke-width="2" opacity=".6"/></svg>`,
   sfx: {
     tap(s, t) { s.tone(t, { f: 2600, dur: 0.12, v: 0.03, type: 'sine' }); s.tone(t + 0.06, { f: 3900, dur: 0.12, v: 0.015 }); },
@@ -45,7 +45,7 @@ R.skins.def({
     const stars = []; for (let i = 0; i < (lowQ ? 120 : 240); i++) stars.push({ x: rnd(), y: rnd(), z: 0.2 + rnd() * 0.8, p: rnd() * 6 });
     const cloudCv = document.createElement('canvas');
     const clouds = [['#7b5cff', 0.0], ['#2ee6c5', 1.7], ['#ff5fb0', 3.1], ['#3646ff', 4.4], ['#9d8bff', 5.6]];
-    let burst = 0, enterT = 9, rot = 0, drag = null;
+    let burst = 0, enterT = 9, rot = 0, drag = null, jumpT = 9;
     api.beat((s) => { burst = Math.min(1.4, burst + s * (s > 0.5 ? 0.9 : 0.4)); });
     // drag along the ring to seek
     const fracAt = (e) => { const a = Math.atan2(e.clientY - C.y, e.clientX - C.x) + Math.PI / 2; return ((a / R.TAU) % 1 + 1) % 1; };
@@ -55,11 +55,13 @@ R.skins.def({
     ring.addEventListener('pointerup', () => end(true)); ring.addEventListener('pointercancel', () => end(false));
     return {
       enter() { enterT = 0; },
+      swap() { jumpT = 0; },
       resize() { cv.resize(); measure(); },
       frame(dt, t, v) {
-        enterT += dt;
+        enterT += dt; jumpT += dt;
         const { ctx, w, h } = cv;
-        const warp = Math.max(0, 1 - enterT / 1.1);
+        // warp streaks: when the skin opens, and a short jump between songs
+        const warp = Math.max(0, 1 - enterT / 1.1, jumpT < 0.9 ? Math.sin((jumpT / 0.9) * Math.PI) * 0.75 : 0);
         const inE = R.ease.out(Math.min(1, enterT / 1.5));
         ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = `rgba(3,3,12,${warp > 0 ? 0.55 : 1})`; ctx.fillRect(0, 0, w, h);

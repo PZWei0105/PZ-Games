@@ -131,6 +131,7 @@ R.skins.def({
       onTrack(t) { loadArt(t); },
       onState() { syncCrackle(); },
       enter() { enterT = 0; armShown = false; },
+      swap() { enterT = 0; },
       resize() { cv.resize(); measure(); discKey = ''; },
       destroy() { if (crk) { try { crk.src.stop(); } catch (e) { /* ignore */ } crk = null; } document.removeEventListener('visibilitychange', onVis); },
       frame(dt, t, v) {

@@ -6,19 +6,44 @@ R.viz = (() => {
     bands: new Float32Array(NB), peaks: new Float32Array(NB), wave: new Float32Array(NW),
     level: 0, bass: 0, mid: 0, high: 0, beat: 0, kick: 0, beatN: 0, bpm: 0, energy: 0.6, local: 0,
     playing: false, t: 0, dur: 0, progress: 0, synthetic: true, mood: 'idle', moodT: 0, overview: null,
+    hot: 0, hotOn: false, hotT: 0, hotSpans: [],
   };
   let data = null, dataId = null, lastT = -1, bi = 0, loadTok = 0;
   const beatFns = new Set();
   const onBeat = (f) => { beatFns.add(f); return () => beatFns.delete(f); };
 
+  // The song's most intense stretches (choruses, drops), found from its loudness curve: a stretch has to stay
+  // clearly louder than the song's usual level for at least 6 seconds. Songs that are equally loud throughout get none.
+  function hotSpans(r) {
+    const L = r.level, fps = r.fps || 30, n = Math.min(r.frames | 0, L ? L.length : 0);
+    if (!L || n < fps * 20) return [];
+    const half = Math.round(fps * 1.5), pre = new Float64Array(n + 1);
+    for (let i = 0; i < n; i++) pre[i + 1] = pre[i] + L[i];
+    const E = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const a = Math.max(0, i - half), b = Math.min(n, i + half + 1); E[i] = (pre[b] - pre[a]) / (b - a); }
+    const sorted = Array.from(E).sort((a, b) => a - b), q = (p) => sorted[Math.min(n - 1, Math.floor(p * n))];
+    const med = q(0.5), top = q(0.97);
+    if (top - med < 12) return [];
+    const thr = Math.max(q(0.78), med + (top - med) * 0.55);
+    const spans = []; let s0 = -1;
+    for (let i = 0; i <= n; i++) {
+      const on = i < n && E[i] >= thr;
+      if (on && s0 < 0) s0 = i;
+      if (!on && s0 >= 0) { const last = spans[spans.length - 1]; if (last && s0 - last[1] < fps * 2.5) last[1] = i; else spans.push([s0, i]); s0 = -1; }
+    }
+    return spans.filter(([a, b]) => b - a >= fps * 6 && a > fps * 6).slice(0, 6).map(([a, b]) => [a / fps, b / fps]);
+  }
+
   async function load(id) {
     const my = ++loadTok;
-    data = null; dataId = id; v.synthetic = true; v.overview = null;
+    data = null; dataId = id; v.synthetic = true; v.overview = null; v.hotSpans = [];
     if (!id) return;
     const r = await R.analysis.get(id);
     if (my !== loadTok) return;
     if (r && r.bands && r.frames) {
       data = r; v.synthetic = false; v.bpm = r.bpm || v.bpm; v.energy = r.energy || 0.6; v.overview = r.overview || null;
+      if (!r.hot) r.hot = hotSpans(r);
+      v.hotSpans = r.hot;
       seekTo(R.player.time());
       R.bus.emit('viz:data', id);
     }
@@ -35,6 +60,7 @@ R.viz = (() => {
     bi = lo;
   }
   function fire(s) {
+    s = Math.min(1.5, s * (1 + v.hot * 0.45)); // in the chorus every beat lands harder
     v.beat = Math.max(v.beat, s);
     if (s > 0.42) v.kick = Math.max(v.kick, s);
     v.beatN++;
@@ -90,6 +116,12 @@ R.viz = (() => {
     v.bass = s0 / 6; v.mid = s1 / 12; v.high = s2 / 14;
     for (let b = 0; b < NB; b++) v.peaks[b] = Math.max(v.bands[b], v.peaks[b] - dt * 0.5);
     v.beat *= Math.exp(-dt * 7.5); v.kick *= Math.exp(-dt * 10);
+    // chorus / drop: v.hot eases towards 1 inside a hot stretch; 'hot' fires when one starts and ends
+    let inHot = false;
+    if (playing) for (const [a, b] of v.hotSpans) if (t >= a - 0.12 && t < b) { inHot = true; break; }
+    v.hot += ((inHot ? 1 : 0) - v.hot) * (1 - Math.exp(-dt * (inHot ? 5 : 1.6)));
+    if (inHot !== v.hotOn) { v.hotOn = inHot; v.hotT = 0; R.bus.emit('hot', inHot); }
+    else v.hotT += dt;
     v.local += ((playing ? v.level : 0) - v.local) * (1 - Math.exp(-dt / 2.2));
     let m;
     if (!playing) m = 'idle';
@@ -102,5 +134,18 @@ R.viz = (() => {
     if (m !== v.mood) { v.moodT += dt; if (v.moodT > (m === 'idle' ? 2.2 : 1.4)) { v.mood = m; v.moodT = 0; R.bus.emit('mood', m); } }
     else v.moodT = 0;
   }
-  return Object.assign(v, { update, onBeat, has: () => !!data });
+  // beats due in (a, b] of song time, as [time, strength, ...] — for effects that must start early to land on the beat
+  function upcoming(a, b, out) {
+    out = out || []; out.length = 0;
+    if (data && data.beats) {
+      const B = data.beats, S = data.beatStr; let lo = 0, hi = B.length;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (B[m] <= a) lo = m + 1; else hi = m; }
+      for (let i = lo; i < B.length && B[i] <= b; i++) out.push(B[i], S[i] / 255);
+    } else {
+      const bl = 60 / (v.bpm || 112);
+      for (let k = Math.floor(a / bl) + 1; k * bl <= b; k++) out.push(k * bl, k % 4 === 0 ? 0.9 : 0.55);
+    }
+    return out;
+  }
+  return Object.assign(v, { update, onBeat, upcoming, has: () => !!data });
 })();

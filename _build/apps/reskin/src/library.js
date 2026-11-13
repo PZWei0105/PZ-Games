@@ -17,7 +17,7 @@ R.library = (() => {
     const lead = o.check ? `<div class="r-chk">${I.check}</div>` : '';
     return `<div class="row${isCur ? ' cur' : ''}${o.check && st.sel && st.sel.has(t.id) ? ' sel' : ''}" data-tid="${t.id}" ${o.idx != null ? `data-idx="${o.idx}"` : ''} role="button" tabindex="0" style="${o.check ? 'grid-template-columns:26px 48px 1fr auto' : o.grip ? 'grid-template-columns:48px 1fr auto auto' : ''}">
       ${lead}<div class="r-art" data-art="${t.id}"></div>
-      <div class="r-tx"><div class="r-t">${esc(t.title)}</div><div class="r-s">${sub(t)}</div></div>
+      <div class="r-tx"><div class="r-t">${t.fav ? `<i class="r-fav">${I.heartF}</i>` : ''}${esc(t.title)}</div><div class="r-s">${sub(t)}</div></div>
       ${o.check ? '' : `<button type="button" class="r-m" data-more="${t.id}" aria-label="更多">${I.more}</button>`}
       ${o.grip ? `<div class="r-g" data-grip aria-label="拖動排序">${I.grip}</div>` : ''}
     </div>`;
@@ -83,9 +83,11 @@ R.library = (() => {
   function listsHTML() {
     const pls = R.lib.pl.all();
     const skinName = (id) => { const d = id && R.skins.get(id); return d ? d.name : ''; };
-    const body = pls.length
+    const fv = R.lib.pl.get('fav');
+    const favCard = `<div class="pl-card fav" data-pl="fav" role="button" tabindex="0"><div class="pl-art one fav-art"><i>${I.heartF}</i></div><div style="min-width:0"><b>我的最愛</b><small>${fv.ids.length ? `${fv.ids.length} 首 · ${fmtTime(R.lib.pl.duration('fav'))}` : '播歌時按右上角的 ♡ 就會收進來'}${fv.skin && skinName(fv.skin) ? `<span class="badge">${I.hanger}${esc(skinName(fv.skin))}</span>` : ''}</small></div><span style="color:rgba(255,255,255,.4);font-size:18px">${I.chev}</span></div>`;
+    const body = favCard + (pls.length
       ? pls.map((p) => `<div class="pl-card" data-pl="${p.id}" role="button" tabindex="0">${mosaic(p.ids)}<div style="min-width:0"><b>${esc(p.name)}</b><small>${p.ids.length} 首${p.ids.length ? ' · ' + fmtTime(R.lib.pl.duration(p.id)) : ''}${p.skin && skinName(p.skin) ? `<span class="badge">${I.hanger}${esc(skinName(p.skin))}</span>` : ''}</small></div><span style="color:rgba(255,255,255,.4);font-size:18px">${I.chev}</span></div>`).join('')
-      : `<div class="blank">還沒有歌單。<br>做一個歌單，還可以幫它綁一套 Skin：<br>一播這個歌單，播放器就自動換上那套衣服。</div>`;
+      : `<div class="blank">還沒有自己的歌單。<br>做一個歌單，還可以幫它綁一套 Skin：<br>一播這個歌單，播放器就自動換上那套衣服。</div>`);
     return head('歌單') + tabs() + `<div class="tools"><button type="button" class="chipb pri" data-l="pl-new">${I.plus}新歌單</button></div><div class="sc">${body}</div>`;
   }
   function queueHTML() {
@@ -106,10 +108,10 @@ R.library = (() => {
     if (!p) { st.view = null; return listsHTML(); }
     const ts = R.lib.pl.tracks(id);
     const sk = p.skin ? R.skins.get(p.skin) : null;
-    return head(esc(p.name), `<button type="button" class="ib" data-l="back" aria-label="返回">${I.back}</button>`, `<button type="button" class="ib" data-l="pl-more" aria-label="歌單選項">${I.more}</button>`)
+    return head(esc(p.name), `<button type="button" class="ib" data-l="back" aria-label="返回">${I.back}</button>`, p.virtual ? '' : `<button type="button" class="ib" data-l="pl-more" aria-label="歌單選項">${I.more}</button>`)
       + `<div class="pl-hero">${mosaic(p.ids)}<div><b>${esc(p.name)}</b><small>${ts.length} 首 · ${fmtTime(R.lib.pl.duration(id))}</small><div style="margin-top:8px"><button type="button" class="chipb" data-l="pl-skin">${I.hanger}${sk ? '綁定：' + esc(sk.name) : '綁定 Skin'}</button></div></div></div>`
       + `<div class="tools"><button type="button" class="chipb pri" data-l="pl-play" ${ts.length ? '' : 'disabled'}>${I.play}播放</button><button type="button" class="chipb" data-l="pl-shuf" ${ts.length ? '' : 'disabled'}>${I.shuffle}隨機</button><button type="button" class="chipb" data-l="pl-add">${I.plus}加歌</button></div>`
-      + `<div class="sc" data-plist="${id}">${ts.length ? rowsHTML(ts, (t, k) => row(t, { grip: true, idx: k })) : '<div class="blank">這個歌單還是空的，按「加歌」挑幾首進來。</div>'}</div>`;
+      + `<div class="sc" data-plist="${id}">${ts.length ? rowsHTML(ts, (t, k) => row(t, { grip: !p.virtual, idx: k })) : p.virtual ? '<div class="blank">還沒有最愛的歌。<br>播歌時按右上角的 ♡，或在歌曲的「⋯」選單裡加入。</div>' : '<div class="blank">這個歌單還是空的，按「加歌」挑幾首進來。</div>'}</div>`;
   }
   function pickHTML(id) {
     const p = R.lib.pl.get(id);
@@ -209,11 +211,13 @@ R.library = (() => {
 
   async function trackMenu(id, ctx) {
     const t = R.lib.get(id); if (!t) return;
-    const items = [{ key: 'next', label: '下一首播放', icon: I.next2 }, { key: 'pl', label: '加入歌單…', icon: I.playlist }];
-    if (ctx && ctx.pl) items.push({ key: 'unpl', label: '移出這個歌單', icon: I.close });
-    items.push({ key: 'info', label: '歌曲資訊', icon: I.info }, { key: 'del', label: '從歌庫刪除', icon: I.trash, danger: true });
+    const items = [{ key: 'next', label: '下一首播放', icon: I.next2 }, { key: 'fav', label: t.fav ? '移出我的最愛' : '加入我的最愛', icon: t.fav ? I.heartF : I.heart }, { key: 'pl', label: '加入歌單…', icon: I.playlist }];
+    if (ctx && ctx.pl && ctx.pl !== 'fav') items.push({ key: 'unpl', label: '移出這個歌單', icon: I.close });
+    items.push({ key: 'edit', label: '改歌名、歌手、封面、歌詞', icon: I.edit }, { key: 'info', label: '歌曲資訊', icon: I.info }, { key: 'del', label: '從歌庫刪除', icon: I.trash, danger: true });
     const k = await R.ui.menu(items, { title: t.title, sub: t.artist || '' });
     if (k === 'next') { R.player.playNext(id); R.toast('會在這首之後播放'); }
+    else if (k === 'fav') { await R.lib.setFav(id, !t.fav); R.toast(t.fav ? '加入我的最愛 ♥' : '移出我的最愛', { ms: 1600 }); }
+    else if (k === 'edit') R.extras.editTrack(id);
     else if (k === 'pl') addToPlaylist([id]);
     else if (k === 'unpl') { const p = R.lib.pl.get(ctx.pl); if (p) { p.ids = p.ids.filter((x) => x !== id); await R.lib.pl.save(p); } }
     else if (k === 'info') {

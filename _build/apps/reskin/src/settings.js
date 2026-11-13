@@ -46,7 +46,7 @@ R.settingsUI = (() => {
       </div>
       <div class="sec-t">加到主畫面</div>
       <div class="set-g"><div class="set-r"><div class="lb"><small style="font-size:13.5px;color:rgba(255,255,255,.75)">${esc(where)}</small></div></div></div>
-      <div class="about"><b>耳目一新 RESKIN</b><br>痞子葳的換膚音樂播放器 · 版本 ${esc(R.VERSION)}<br>空白鍵播放／暫停 · ← → 快轉 · Shift + ← → 換歌 · S 衣櫃 · L 歌庫 · F 派對</div>
+      <div class="about"><b>耳目一新 RESKIN</b><br>痞子葳的換膚音樂播放器 · 版本 ${esc(R.VERSION)}<br>空白鍵播放／暫停 · ← → 快轉 · Shift + ← → 換歌 · S 衣櫃 · L 歌庫 · F 派對 · H 最愛 · Y 歌詞</div>
     </div>`;
   }
   let open = false;

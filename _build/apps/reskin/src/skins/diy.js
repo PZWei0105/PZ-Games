@@ -112,6 +112,29 @@
     };
   }
 
+  /* ---------- share code: the colours and styles of a skin as one line of text (the photo stays on this device) ---------- */
+  const PREFIX = '耳目一新Skin:';
+  function toCode(c) {
+    const j = JSON.stringify({ v: 1, n: c.name, a: c.accent, b: c.accent2, z: c.viz, l: c.layout, f: c.font, d: +(+c.dim).toFixed(2), r: +(+c.blur).toFixed(2) });
+    let bin = ''; for (const x of new TextEncoder().encode(j)) bin += String.fromCharCode(x);
+    return PREFIX + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function fromCode(text) {
+    // the code can arrive wrapped in a chat message (and broken over lines): take what follows the label, else the longest run that looks like one
+    const s = String(text || '').replace(/\s+/g, '');
+    const m = /耳目一新Skin:([A-Za-z0-9_-]{24,})/.exec(s) || (s.match(/[A-Za-z0-9_-]{24,}/g) || []).sort((x, y) => y.length - x.length).map((x) => [x, x])[0];
+    if (!m) return null;
+    try {
+      let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+      const bin = atob(b), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      const o = JSON.parse(new TextDecoder().decode(u));
+      const hex = (x) => (/^#[0-9a-f]{6}$/i.test(x) ? x : null), pick = (x, list) => (list.some(([k]) => k === x) ? x : list[0][0]);
+      if (!hex(o.a) || !hex(o.b)) return null;
+      return { name: String(o.n || '朋友的 Skin').slice(0, 16), accent: o.a, accent2: o.b, viz: pick(o.z, VIZ), layout: pick(o.l, LAYOUT), font: pick(o.f, FONT_L),
+        dim: Math.min(0.85, Math.max(0, +o.d || 0)), blur: Math.min(1, Math.max(0, +o.r || 0)) };
+    } catch (e) { return null; }
+  }
+
   /* ---------- editor ---------- */
   let cur = null, isNew = false;
   const segH = (k, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-dk="${k}" data-v="${v}" class="${cur[k] === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
@@ -135,6 +158,7 @@
           <div class="set-r set-col"><div class="lb"><b>版面</b></div>${segH('layout', LAYOUT)}</div>
           <div class="set-r set-col"><div class="lb"><b>字體</b><small>只影響英數字；中文用系統字型</small></div>${segH('font', FONT_L)}</div>
         </div>
+        <div class="set-g"><div class="set-r set-col"><div class="lb"><b>分享碼</b><small>把這套的配色和樣式變成一串字，貼給朋友就能穿一樣的（照片不會一起過去）</small></div><div class="dy-code"><button type="button" class="chipb" data-dy="copy">${I.copy}複製這套的分享碼</button><button type="button" class="chipb" data-dy="paste">${I.link}貼上朋友的分享碼</button></div></div></div>
         <div class="btn-row" style="padding:4px 4px 14px">
           <button type="button" class="btn pri wide" data-dy="save">${I.check}存好，就穿這套</button>
           ${isNew ? '' : `<button type="button" class="btn dng wide" data-dy="del">${I.trash}刪掉這套</button>`}
@@ -185,6 +209,23 @@
     const act = a.dataset.dy;
     if (act === 'photo') { photoIn.click(); return; }
     if (act === 'nophoto') { cur.photo = null; await rerender(); live(); return; }
+    if (act === 'copy') {
+      const code = toCode(cur);
+      let ok = false;
+      try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(code); ok = true; } } catch (err) { ok = false; }
+      if (ok) { R.sfx.play('ok'); R.toast('分享碼複製好了，貼給朋友就行', { ms: 2600 }); }
+      else await R.ui.prompt({ title: '分享碼', sub: '長按下面這串字選取、複製，再貼給朋友。', value: code, ok: '好了', max: 4000 });
+      return;
+    }
+    if (act === 'paste') {
+      const txt = await R.ui.prompt({ title: '貼上分享碼', sub: '朋友傳來的那串「耳目一新Skin:……」整段貼進來。', placeholder: '耳目一新Skin:…', ok: '套用', max: 4000 });
+      if (txt == null) return;
+      const c = fromCode(txt);
+      if (!c) { R.toast('這串分享碼看不懂，請整段重新複製一次'); R.sfx.play('err'); return; }
+      Object.assign(cur, c); await rerender(); live();
+      R.sfx.play('ok'); R.toast(`套用了「${c.name}」，可以再調整，按「存好」就穿上`, { ms: 3200 });
+      return;
+    }
     if (act === 'cancel') { R.ui.closeSheet(); return; }
     if (act === 'save') {
       cur.name = (cur.name || '').trim() || '我的 Skin';
@@ -217,5 +258,5 @@
     const r = e.target.closest('[data-dr]'); if (r) { cur[r.dataset.dr] = parseFloat(r.value); live(); return; }
     const cc = e.target.closest('[data-dcc]'); if (cc) { cur[cc.dataset.dcc] = cc.value; R.$$(`[data-dc="${cc.dataset.dcc}"]`, R.ui.body()).forEach((x) => x.classList.remove('on')); live(); }
   });
-  R.diy = { edit, isPreview: (id) => id === PREV };
+  R.diy = { edit, isPreview: (id) => id === PREV, toCode, fromCode };
 })();
