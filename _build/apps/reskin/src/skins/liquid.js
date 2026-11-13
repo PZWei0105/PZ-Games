@@ -140,7 +140,9 @@ R.skins.def({
       const sp = 1.7 + s * 1.6;
       drops.push({ x: dir[0] * coreR, y: dir[1] * coreR, z: dir[2] * coreR, vx: dir[0] * sp, vy: dir[1] * sp + 0.6, vz: dir[2] * sp, r: 0.11 + Math.random() * 0.1, life: 2.6 });
     }
-    api.beat((s) => { if (s > 0.68 && !R.reduced) { spawn(s); if (s > 0.9) spawn(s * 0.8); } });
+    // the bar's first beat throws droplets off the core, the snare flicks one more
+    api.beat((s, i) => { if (R.reduced) return; if (i.down) { spawn(s); spawn(s * 0.8); } else if (s > 1.05) spawn(s); });
+    api.hit((k, s) => { if (k === 'snare' && s > 0.85 && !R.reduced && R.viz.hot > 0.4) spawn(s * 0.7); });
     return {
       enter() { enterT = 0; },
       swap() { swapT = 0; flash = 0.35; for (let i = 0; i < 3; i++) spawn(1); },
@@ -153,9 +155,10 @@ R.skins.def({
         // song change: everything is sucked into the core, then flung back out
         const sw = swapT < 1.1 ? (swapT < 0.35 ? 1 - swapT / 0.35 : Math.sin(((swapT - 0.35) / 0.75) * Math.PI) * 0.6 + (swapT - 0.35) / 0.75) : 1;
         orbitK += ((swapT < 0.35 ? 0.05 : sw) - orbitK) * Math.min(1, dt * 10);
-        coreR += ((0.92 + v.level * 0.14 + v.beat * 0.07) * (0.55 + ez * 0.45) - coreR) * Math.min(1, dt * 12);
-        const R0 = (1.32 + v.bass * 0.38 + v.hot * 0.32) * orbitK;
-        const spd = v.playing ? 1 + v.level * 0.6 + v.hot * 0.8 : 0.25;
+        // the core pumps on every beat (like a sidechained bass), the moons are flung out by the kick and whip round
+        coreR += ((0.88 + v.level * 0.08 + v.pump * 0.17 + v.kickE * 0.05) * (0.55 + ez * 0.45) - coreR) * Math.min(1, dt * 18);
+        const R0 = (1.3 + v.bass * 0.22 + v.kickE * 0.22 + v.hot * 0.32) * orbitK;
+        const spd = v.playing ? (0.8 + v.level * 0.4 + v.hot * 0.7) * (0.45 + 1.35 * v.pump) : 0.25;
         Bu[0] = 0; Bu[1] = (1 - ez) * 4.5 + Math.sin(t0 * 0.9) * 0.06; Bu[2] = 0; Bu[3] = coreR;
         sat.forEach((s, i) => {
           s.ph += dt * s.w * spd;
@@ -179,7 +182,7 @@ R.skins.def({
         gl.uniform2f(P.u.res, cvEl.width, cvEl.height);
         gl.uniform2f(P.u.ctr, 0, port ? 0.2 : 0.16);
         gl.uniform1f(P.u.fov, port ? Math.max(0.5, 1.25 / (aspect * 3.0)) : 0.5);
-        gl.uniform1f(P.u.time, t0 % 1000); gl.uniform1f(P.u.bass, v.bass); gl.uniform1f(P.u.hot, R.reduced ? 0 : v.hot); gl.uniform1f(P.u.flash, flash);
+        gl.uniform1f(P.u.time, t0 % 1000); gl.uniform1f(P.u.bass, Math.min(1, v.bass * 0.55 + v.pump * 0.55)); gl.uniform1f(P.u.hot, R.reduced ? 0 : v.hot); gl.uniform1f(P.u.flash, flash);
         gl.uniform4fv(P.u.B, Bu); gl.uniform4fv(P.u.D, Du);
         const tl = R.tilt;
         gl.uniform3f(P.u.cam, Math.sin(t0 * 0.13) * 0.25 + tl.x * 0.55, 0.12 - tl.y * 0.3, 5.6);

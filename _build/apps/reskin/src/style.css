@@ -49,11 +49,12 @@ svg.fi { fill: currentColor; stroke: none; }
 /* tilt: layers drift with the phone (--dz: + toward you, - behind), the hero picture turns in 3D and catches the light */
 .rs-depth { translate: calc(var(--tx, 0) * var(--dz, 0) * 9px) calc(var(--ty, 0) * var(--dz, 0) * 9px); }
 .rs-persp { perspective: 900px; }
-.rs-hero { rotate: var(--hx, 0) var(--hy, 1) 0 var(--ha, 0deg); }
+.rs-hero { rotate: var(--hx, 0) var(--hy, 1) 0 var(--ha, 0deg); scale: calc(1 + var(--rp, 0) * var(--hp, .045) + var(--rd, 0) * var(--hp, .045) * .6); }
+/* the beat on every skin: --rp pump (1 on the beat → 0 by the next), --rd bar's first beat, --rk kick, --rs snare, --rh hats */
 .rs-glare { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; mix-blend-mode: soft-light;
   background: radial-gradient(120% 90% at calc(30% + var(--tx, 0) * 55%) calc(18% + var(--ty, 0) * 50%), rgba(255,255,255,.6), rgba(255,255,255,0) 55%),
     linear-gradient(calc(110deg + var(--tx, 0) * 40deg), transparent 34%, rgba(255,255,255,.26) 47%, transparent 60%); }
-@media (prefers-reduced-motion: reduce) { .rs-hero { rotate: none; } .rs-depth { translate: none; } }
+@media (prefers-reduced-motion: reduce) { .rs-hero { rotate: none; scale: none; } .rs-depth { translate: none; } }
 /* lyrics */
 #lyrics { position: fixed; inset: 0; z-index: 9; display: flex; flex-direction: column; color: #fff; opacity: 0; transition: opacity .3s;
   --ku: rgba(255,255,255,.4); --ks: #fff; --kg: 0 0 18px rgba(var(--accent-rgb),.9), 0 0 2px rgba(255,255,255,.6); font-family: var(--sans);
@@ -513,3 +514,42 @@ body.party .skin-glass .gl-card { background: none; border-color: transparent; b
 body.rec #dock, body.rec #sleepPill, body.rec #toasts { opacity: 0; pointer-events: none; }
 body.deep #dock, body.deep #sleepPill { opacity: 0; pointer-events: none; }
 .share-vid { width: min(100%, 300px); aspect-ratio: 9 / 16; background: #000; object-fit: contain; }
+
+/* ---------- beat sync: chip + sync test ---------- */
+#syncChip { position: fixed; z-index: 30; top: calc(var(--st) + 60px); left: calc(var(--sl, 0px) + 14px); display: flex; align-items: center; gap: 7px; padding: 5px 12px 5px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: var(--dockfg); background: var(--dock); border: 1px solid rgba(255,255,255,.14); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); animation: scIn .35s cubic-bezier(.2,.9,.3,1.2) both; pointer-events: none; }
+#syncChip.ok { border-color: rgba(120,255,190,.5); box-shadow: 0 0 18px rgba(80,255,170,.25); }
+#syncChip .sc-ok { font-style: normal; color: #7dffc0; font-size: 14px; }
+.sc-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.sc-eq b { width: 3px; border-radius: 2px; background: var(--accent); animation: scEq .9s ease-in-out infinite; }
+.sc-eq b:nth-child(2) { animation-delay: -.3s; } .sc-eq b:nth-child(3) { animation-delay: -.6s; }
+@keyframes scEq { 0%,100% { height: 3px; } 50% { height: 12px; } }
+@keyframes scIn { from { opacity: 0; transform: translateY(-6px) scale(.9); } to { opacity: 1; transform: none; } }
+body.party #syncChip, body.rec #syncChip, body.deep #syncChip { opacity: 0; }
+.sy-open { margin-top: 10px; align-self: flex-start; }
+.sy { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
+.sy-tip { font-size: 14px; line-height: 1.65; color: rgba(255,255,255,.82); }
+.sy-tip b { color: #fff; }
+.sy-stage { position: relative; height: 210px; display: grid; place-items: center; }
+.sy-ring { width: 150px; height: 150px; border-radius: 50%; border: 3px solid rgba(255,255,255,.18); display: grid; place-items: center; }
+.sy-ring i { width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, #fff 0%, var(--accent) 45%, transparent 72%); opacity: 0; transform: scale(.6); }
+.sy-ring.on i { animation: syFlash .32s ease-out; }
+.sy-ring.on.down i { animation: syFlashD .38s ease-out; }
+.sy-ring.on { animation: syRing .32s ease-out; }
+@keyframes syFlash { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.7); } }
+@keyframes syFlashD { 0% { opacity: 1; transform: scale(1.28); filter: brightness(1.4); } 100% { opacity: 0; transform: scale(.75); } }
+@keyframes syRing { 0% { border-color: #fff; box-shadow: 0 0 40px rgba(var(--accent-rgb),.8); } 100% { border-color: rgba(255,255,255,.18); box-shadow: none; } }
+.sy-dots { position: absolute; bottom: 4px; display: flex; gap: 10px; }
+.sy-dots b { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.2); transition: background .1s; }
+.sy-dots b.on { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+.sy-dots b:first-child.on { background: #fff; }
+.sy-val { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.sy-out { min-width: 110px; text-align: center; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sy-b { min-height: 40px; padding: 0 14px; border-radius: 12px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14); color: #fff; font-weight: 700; }
+.sy-row { display: flex; gap: 10px; justify-content: center; }
+.sy-go { min-height: 46px; padding: 0 30px; border-radius: 14px; background: var(--accent); color: var(--onaccent); font-weight: 800; font-size: 16px; box-shadow: 0 8px 24px rgba(var(--accent-rgb),.35); }
+.sy-note { font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,.55); text-align: center; }
+/* how much each skin's hero pumps on the beat (the default .045 suits most) */
+.skin-ink, .skin-fireworks { --hp: .018; }
+.skin-aurora { --hp: .025; }
+.skin-glass, .skin-nebula { --hp: .035; }
+.skin-jelly, .skin-gacha { --hp: .055; }

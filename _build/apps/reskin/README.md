@@ -1,6 +1,6 @@
 # 耳目一新 RESKIN（維護說明）
 
-痞子葳的換膚音樂播放器：播自己的音樂檔，二十套 Skin 加 DIY，一鍵換裝；副歌一到每套都全開，換歌有各自的轉場。
+痞子葳的換膚音樂播放器：播自己的音樂檔，二十三套 Skin 加 DIY，一鍵換裝；每套都踩著這首歌真正的拍子動（節拍追蹤），副歌一到全開，換歌有各自的轉場。
 整個 App 有 GPU 泛光、陀螺儀立體感、科幻開機動畫、換 Skin 轉場（傳送門／玻璃碎裂／像素溶解）、鎖屏封面換膚。
 功能：卡拉 OK 逐字歌詞、歌曲情報（BPM、調性、能量曲線、跳到副歌）、智慧歌單、聽歌報告、一鍵音樂短片，
 還有我的最愛、睡眠定時、改歌曲資訊、分享卡片、DIY 分享碼。
@@ -12,13 +12,16 @@ App 裡稱呼使用者一律用「痞子葳」。
 ## 組建與檢查
 
 ```bash
-python3 _build/apps/reskin/build.py --claude-out /tmp/reskin-claude --friend-out /tmp/reskin-friend --friend-zip /home/claude/out/耳目一新-朋友版.zip
-python3 _build/apps/reskin/check.py --claude /tmp/reskin-claude --friend /tmp/reskin-friend   # 全流程檢查，要看到「全部 OK」
+python3 _build/apps/reskin/build.py --claude-out /tmp/reskin-claude
+python3 _build/apps/reskin/check.py --claude /tmp/reskin-claude        # 全流程檢查，要看到「全部 OK」（約 25 分鐘）
 python3 _build/apps/reskin/build.py --icons                            # 只有改圖示才需要（要 playwright、pillow）
+python3 _build/apps/reskin/friend/build.py --friend-one /home/claude/out/朋友版/index.html   # 朋友版（凍結、只收除錯，見最下面）
+python3 _build/apps/reskin/friend/check.py                             # 朋友版自己的完整檢查
+python3 _build/apps/reskin/lockmeter.py [網站資料夾] [標籤] [skin,…] [歌檔 拍長 起 迄]   # 量每套 Skin 跟拍的程度（見「節拍」）
 ```
 
-- 網頁版輸出到 `apps/reskin/`；`--claude-out` 另外輸出 Claude 版；`--friend-out`／`--friend-zip` 輸出朋友版（見最下面）。
-- check.py 依序跑：讀不到檔時的備援、資料夾匯入、新功能（歌詞、最愛、睡眠定時、改資訊、分享卡片、分享碼、副歌、泛光、三種轉場、鎖屏卡、分析升級、歌曲情報、智慧歌單、卡拉 OK、景深、聽歌報告、音樂短片）、網頁版全流程（開機動畫、手機直、手機橫、電腦，每套 Skin 都換一次歌），再對 Claude 版跑一次全流程。朋友版已凍結，不用再跑 `--friend`／`--one`。
+- 網頁版輸出到 `apps/reskin/`；`--claude-out` 另外輸出 Claude 版。主版本的 build.py 不再做朋友版（`--friend-*` 會叫你改用 `friend/build.py`）。
+- check.py 依序跑：節拍引擎離線測試（node 跑 analysis.js：合成的舞曲 128、切分流行 100、抒情 72、嘻哈 90，速度、每一拍、每小節第一拍都要對）、讀不到檔時的備援、資料夾匯入、新功能（歌詞、最愛、睡眠定時、改資訊、分享卡片、分享碼、副歌、泛光、三種轉場、鎖屏卡、分析第 3 版、節拍格線、拍子事件準時、對拍滑桿方向、「正在對拍」提示、對拍測試、節奏大師計分、粒子封面 WebGL、歌曲情報、智慧歌單、卡拉 OK、景深、聽歌報告、音樂短片）、網頁版全流程（開機動畫、手機直、手機橫、電腦，每套 Skin 都換一次歌），再對 Claude 版跑一次全流程。
 - check.py 開 Chromium 時帶 SwiftShader 參數（`GL`），3D Skin 和泛光才畫得出來；軟體算圖很慢，畫質會被自動調低，截圖比真機糊是正常的。
 
 - 截圖在 `/tmp/reskin-check`，改到畫面就逐套看過再上線：手機直、手機橫（844×390）、電腦（1280×800）。
@@ -91,6 +94,20 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 - **畫面快照**（`snap.js`）：把 Skin 的 canvas、封面、背景色與漸層（含條紋）、邊框、文字（含光暈）、clip-path（polygon／circle／inset）、SVG 畫到一張 canvas。轉場、短片（每格都畫）、鎖屏卡共用。偽元素和 CSS 濾鏡畫不到。
 - **WebGL 的 Skin**（黑洞、液態金屬、霓虹城市）開 context 時 `preserve: true`，快照才讀得到畫面；`destroy()` 一定要 `loseContext()`（iPhone 同時能開的 WebGL 有限，衣櫃來回滑會一直開新的）。解析度跟著 `R.quality()`。著色器一律寫 GLSL ES 1.00（WebGL 2、1 都能跑）。
 
+## 節拍（分析第 3 版）與跟拍
+
+2026-11-13 痞子葳回報「畫面跟音樂各做各的」。原因：舊版把「低音一冒出來」當一拍（`beats` 其實是起音），速度也常抓錯（流行 100 抓成 80、抒情 72 抓成 109、嘻哈 90 抓成 120），一半的反應落在拍子外；很多 Skin 的主要動作又照固定速度或抓錯的 BPM 跑。現在：
+
+- **節拍引擎**（`analysis.js` 的 `beatCore`，在 Worker 裡跟 `analyzeCore` 一起跑）：1024 點 FFT、每 256 個取樣一格（約 86 格／秒），40 個對數頻帶分四組（低：大鼓；中低：貝斯、鋼琴、吉他；中：小鼓、拍手、人聲；高：鈸），各組先除以自己的 95 百分位，再照 1、0.7、0.55、0.15 加起來（大鼓最重、鈸最輕：鈸跟大鼓一樣響時，速度會被拉到錯的 3:2）。速度：自相關的峰值（加上 ×2、½、×1.5、⅔）逐一用「8 秒窗內穩定脈衝對不對得上起音」評分，乘上以 116 BPM 為中心的先驗；拍子：動態規劃（Ellis 2007，tightness 120）；整首在一條穩定格線上的歌（大多數錄音室作品）直接用那條線（前奏只有反拍鈸也不會走掉）；每小節第一拍：大鼓＋和弦變化＋起音最多的那個相位；每拍的力度跟附近的拍比（大部分落在 0.45～1）；另存四組「打點」：`kicks`、`snares`、`hats`、`tones`（中低音的音符）。結果記 `v: 3`，歌記 `av: 3`。
+- **舊歌會自己重量**：`av` 比 3 小的歌，開 App 後在新歌後面慢慢重量；**正在播的那首插隊先量**（`player.js` 的 `setTrack`），通常幾秒就換上新格線。解碼失敗的歌每個版本再試一次（`afv`）。
+- **畫面的拍子時鐘**（`viz.js`，`R.viz`）：`beat`（每拍的閃光包絡）、`down`（每小節第一拍）、`phase`（這拍走了多少 0→1）、`bpos`（這小節第幾拍，0 是第一拍）、`bar`（這小節走了多少）、`beatT`（從頭算第幾拍，連續）、`stepT`（同上但每拍先快後慢：拿來移動東西會「踩著拍子」一步一步走）、`pump`（拍上 1、到下一拍前歸 0，乘上力度：拿來做縮放、亮度）、`kickE／snareE／hatE／toneE`（各樂器的打點包絡）、`ibi`（一拍幾秒）、`synced`（是不是用這首自己的格線）。事件：`R.viz.onBeat((s, { down, bpos, idx }) => …)`、`R.viz.onHit((kind, s) => …)`；提前讀：`upcoming(a, b)`、`upcomingBeats(a, b)`（含 bpos）、`upcomingHits(kind, a, b)`。Skin 裡用 `api.beat`、`api.hit`（換 Skin 時自動解除）。
+- **全部 Skin 共用的跟拍**：泛光跟著 `pump`／`down` 一明一暗（`fx.js`）；每拍整個 Skin 微微推一下、小節第一拍多一點（`skinkit.js` 的 `punch`，用 `scale` 屬性；`def.punch` 調整、0 關掉；安靜的 Skin 調小）；`def.hero` 的主角每拍放大一點（CSS 變數 `--rp`、`--rd`，量用 `--hp` 調，預設 .045）。Skin 的根元素上另有 `--rk`、`--rs`、`--rh`（大鼓、小鼓、鈸）。系統「減少動態效果」時這些都關掉。
+- **對拍滑桿**：正值＝畫面晚一點（給藍牙耳機）。舊版方向寫反了（往右調反而更快），2026-11-13 修正：`t = 播放時間 + 0.035 − latency`。
+- **對拍測試**（`sync.js`，設定頁的按鈕）：用 `<audio>` 播 120 BPM 的滴答聲（跟音樂同一條路，所以藍牙延遲算得進去），圓圈照畫面用的同一個時鐘閃；左右調到「滴」跟「閃」同時。會先暫停音樂、關掉再接著播。
+- **「正在對拍這首歌…」提示**（`#syncChip`）：在播的歌還沒有新格線時出現（1.5 秒後），格線一到就說「拍子對上了」再收起來。
+- **量跟拍程度**：`lockmeter.py` 用 CDP screencast 抓真正合成後的畫面，把亮度與畫面變化量照「真實拍子相位」折疊成 8 格，看拍上與拍間的差距（%）。2026-11-13 用切分節奏的流行測試曲量：二十套的畫面變化量差距中位數 27% → 108%。SwiftShader 下 WebGL 畫面會晚幾格，峰值位置不準，只看差距。
+- **做會跟拍的 Skin**：移動用 `stepT`（或速度乘上 `0.5 + 1.5 × pump`）、縮放亮度用 `pump`、大動作放在 `down`（或 `bpos === 2`）、細碎的閃爍給 `hatE`；**不要用 `s > 0.6` 之類的門檻挑拍子**：新的力度是跟附近的拍比的，大部分拍子都會超過。
+
 ## 分析第 2 版、歌曲情報、智慧歌單
 
 - `analysis.js` 第 2 版多量：調性（4096 點 FFT 的 12 音級 chroma，對 Krumhansl 大小調輪廓，存成 `mkey`，例如 `Am`；**不要用 `key`**，那是檔案指紋）、響度 `loud`（dB）、亮度 `bright`（頻譜重心 Hz）、鼓點衝擊 `punch`（0～1）。歌的資料記 `av: 2`；舊版分析過的歌開 App 後會在新歌後面慢慢補量（只在畫面開著時）。
@@ -122,7 +139,8 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 - canvas 一律用 `R.kit.canvas`（限制 DPR，手機變慢時自動降畫質）。`frame(dt, t, v)` 每一格都拿得到現在的頻譜、節拍、心情（`v`）。
 - 換裝是從點的地方用 clip-path 擴散開；衣櫃試穿用 `R.stage.show(id, { fast: true })`。
 - DIY（`skins/diy.js`）：底圖（照片或封面）、配色、視覺化樣式、字型，存在 `settings.diy`，照片存在 `images`。
-- 加新 Skin：照現有二十套的寫法；三種畫面都要截圖看過，check.py 要全過；閃光類效果要尊重設定頁的「閃光特效」開關（`api.flash()`）。
+- 加新 Skin：照現有二十三套的寫法；三種畫面都要截圖看過，check.py 要全過；閃光類效果要尊重設定頁的「閃光特效」開關（`api.flash()`）；主要動作要踩拍子（見「節拍」最後一點）。
+- 2026-11-13 加的三套都是圍著拍子設計的：**節奏大師**（`rhythm`：把這首的 kicks／tones／snares／hats 寫成四條軌道的譜，音符剛好在聲音響起時落到判定線，拍子格線也跟著捲動；副歌 FEVER；舊分析沒有打點時用拍子格線排譜）、**粒子封面**（`particles`：封面每個像素一顆 WebGL 點，形狀在頂點著色器裡算；每八小節的第一拍換形狀：封面→球→星系→甜甜圈→雙螺旋；GLSL 裡 `flat` 是保留字，別拿來當變數）、**重低音**（`woofer`：錐盆是被大鼓踢動的阻尼彈簧，上面的珠子被彈起來；LED 環每拍跑一格、副歌變彩虹，顏色量化成 15° 一階，光暈圖才能快取）。
 - Skin 定義裡還可以寫：`bloom`（泛光強度，數字或 `{ s, th, streak, tint, ca }`，0 就不發光；水墨是 0）、`hero`（陀螺儀時會 3D 傾斜、有反光的元素）、`glare: false`（不要反光）、`depth`（`[選擇器, 深度]`，正的跟著傾斜方向、負的反方向）、`trans`（「自動」轉場時偏好的那一種）。
 - 例外：像素街機自己管 canvas（用很低的解析度畫，CSS `image-rendering: pixelated` 放大），沒有用 `R.kit.canvas`；水墨、極光、煙火夜的山、城市、湖面在換尺寸時先畫好，每格只疊動的東西。
 
@@ -142,9 +160,9 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 | `src/meta.js` | 讀標籤：歌名、歌手、封面、長度 |
 | `src/art.js` | 封面縮圖、取色，沒有封面時畫一張 |
 | `src/lib.js` | 歌庫、歌單、匯入 |
-| `src/analysis.js` | 每首歌只分析一次：頻譜、波形、節拍、BPM、調性、響度、亮度、鼓點衝擊（第 2 版） |
+| `src/analysis.js` | 每首歌只分析一次：頻譜、波形、節拍格線（第 3 版：速度、每一拍、每小節第一拍、四組打點）、調性、響度、亮度、鼓點衝擊 |
 | `src/player.js` | 播放器：兩個 `<audio>`、三種鎖屏連播方式、Media Session、診斷紀錄 |
-| `src/viz.js` | 照播放時間查分析結果，給 Skin 用 |
+| `src/viz.js` | 照播放時間查分析結果，給 Skin 用；拍子時鐘（phase、stepT、pump、down、各樂器打點） |
 | `src/sfx.js` | 介面音效（每套 Skin 不一樣） |
 | `src/demo.js` | 示範曲：在裝置上現場合成的 56 秒電子樂 |
 | `src/boot.js` | 開機動畫（取代原本的 splash；`#splash` 跑完才拿掉，check.py 靠這個判斷開好了） |
@@ -154,7 +172,8 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 | `src/snap.js` | 把 Skin 畫成一張圖（轉場、短片、鎖屏卡共用） |
 | `src/fx.js` | GPU 泛光層、副歌鏡頭色散、景深（`R.fx.focus`） |
 | `src/trans.js` | 換 Skin 轉場：傳送門、玻璃碎裂、像素溶解、經典 |
-| `src/skins/` | 二十套 Skin 和 DIY |
+| `src/skins/` | 二十三套 Skin 和 DIY |
+| `src/sync.js` | 「正在對拍」提示、對拍測試 |
 | `src/hype.js` | 副歌全開的共用特效（彩帶、光束、衝擊波） |
 | `src/lyrics.js` | 歌詞：解析 LRC（含逐字時間）、讀 .lrc 檔、卡拉 OK 逐字亮、每套 Skin 的歌詞外觀 |
 | `src/extras.js` | 我的最愛、睡眠定時、「更多」選單、改歌曲資訊 |
@@ -173,6 +192,8 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 | `src/sw.js` | service worker：頁面網路優先，離線用存好的那份 |
 | `src/fonts/` | 內嵌字型（見下面） |
 | `build.py` | 組建 |
+| `lockmeter.py` | 量每套 Skin 跟拍的程度（畫面照拍子相位折疊） |
+| `friend/` | 朋友版（凍結的十五套版本，只收除錯）：`src/`、`build.py`、`check.py` |
 | `check.py` | 全流程檢查：自己產生測試音檔（含 Big5 標籤、壞檔、內嵌歌詞）和測試資料夾（含 .lrc、子資料夾），跑讀不到時的備援、資料夾匯入、新功能、手機直橫和電腦，最後測離線 |
 
 ## 字型
@@ -181,8 +202,10 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 
 ## 朋友版
 
-- **2026-11-13 起凍結**：痞子葳決定朋友那份就停在 2026-11-13 這版（他自己放上網的單一檔案），之後的改版只更新他自己的網頁版和 Claude 版。不要再做、也不要主動給他新的朋友版，除非他自己說要。朋友版是他放在別的網站上的一份拷貝，我們推上 PZ-Games 的更新不會碰到它。
-- 給痞子葳的朋友用的獨立網頁版：沒有痞子葳的名字、沒有收藏庫的網址和按鈕。內容跟網頁版同一份，只是換掉 `FRIEND_SUBS` 列的字；`FRIEND_NEVER` 列的字只要還在，組建就會失敗（改了原本的字，要一起改這兩張表）。
-- **給他的是單一檔案**（`build.py --friend-one /home/claude/out/朋友版/index.html`）：一個 index.html 就是整個網站，manifest 和主畫面圖示都內嵌（data: 網址），不註冊 service worker（`window.RESKIN_ONEFILE`），所以要有網路才打得開，打開後歌照樣從裝置裡播。放上網：登入後把這個檔案拖進 https://app.netlify.com/drop（可以只拖一個 HTML 檔），或上傳到一個 GitHub repo 再開 Pages。檔名要維持 index.html。check.py `--one` 會把它單獨放成一個網站（旁邊沒有任何其他檔案）跑完整流程。
+- **2026-11-13 起凍結在十五套 Skin 的版本，只收除錯**：痞子葳決定朋友那份停在 2026-11-13 那版（commit 360fb9f，他自己放上網的單一檔案），之後的新 Skin、新功能都不給朋友；同一天他又說「朋友那一版，請妳除錯就好」：**修正要一起修進朋友版，新東西不要**。朋友版是他放在別的網站上的一份拷貝，我們推上 PZ-Games 的更新不會碰到它，所以每次除錯後要把新的單一檔案傳給他，請他重新上傳。
+- **原始碼在 `_build/apps/reskin/friend/`**：`src/` 是 360fb9f 的十五套版本加上修正（字型借用 `../src/fonts`，主畫面圖示借用 `apps/reskin/icons`）；`build.py` 只輸出朋友版（`--friend-one`、`--friend-out`、`--friend-zip`），不會碰 `apps/reskin/`；`check.py` 組好兩種、跑完整流程（含共用的節拍引擎測試）。主版本修了什麼共用的東西（`analysis.js`、`viz.js`、`sync.js`、Skin 的修正），要判斷是不是「除錯」，是的話一起改進朋友版、跑 `friend/check.py`。
+- 2026-11-13 第一次除錯：節拍引擎（`analysis.js`、`viz.js` 跟主版本同一份）、十五套 Skin 重新接上拍子、整個 Skin 每拍微推、副歌彩帶在第 1、3 拍、對拍滑桿方向、對拍測試與「正在對拍」提示。主版本的泛光、陀螺儀、新 Skin、新功能都沒有放進去。
+- 給痞子葳的朋友用的獨立網頁版：沒有痞子葳的名字、沒有收藏庫的網址和按鈕。換掉 `FRIEND_SUBS` 列的字；`FRIEND_NEVER` 列的字只要還在，組建就會失敗（改了原本的字，要一起改這兩張表）。
+- **給他的是單一檔案**（`friend/build.py --friend-one /home/claude/out/朋友版/index.html`）：一個 index.html 就是整個網站，manifest 和主畫面圖示都內嵌（data: 網址），不註冊 service worker（`window.RESKIN_ONEFILE`），所以要有網路才打得開，打開後歌照樣從裝置裡播。放上網：登入後把這個檔案拖進 https://app.netlify.com/drop（可以只拖一個 HTML 檔），或上傳到一個 GitHub repo 再開 Pages。檔名要維持 index.html。
 - 為什麼不給壓縮檔：2026-11-13 先給的壓縮檔版（`--friend-out`／`--friend-zip`：index.html＋manifest＋sw.js＋icons，能離線開）他回報「無法用」，原因沒查到（多半卡在解壓縮或拖檔）。這個選項還留著，需要離線開的版本時再用：先解壓縮，把有 index.html 的那個資料夾整個拖進 Netlify Drop。
-- 以後改版：Netlify 到同一個網站的「Deploys」頁再拖一次新檔；GitHub 就上傳覆蓋 index.html。網址不變。
+- 改版上線：Netlify 到同一個網站的「Deploys」頁再拖一次新檔；GitHub 就上傳覆蓋 index.html。網址不變。朋友手機上已經有的歌庫不受影響，舊歌會在打開時慢慢重量節拍。

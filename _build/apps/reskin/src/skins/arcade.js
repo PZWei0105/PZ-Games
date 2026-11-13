@@ -129,8 +129,10 @@ R.skins.def({
     const burst = (x, y, n, cols, sp) => { for (let i = 0; i < n; i++) { const a = rnd() * R.TAU, s = (sp || 50) * (0.4 + rnd() * 0.8); parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 20, life: 0.5 + rnd() * 0.6, c: cols[i % cols.length], g: 1 }); } if (parts.length > 500) parts.splice(0, parts.length - 500); };
     const jump = (hgt) => { H0.vy = -Math.sqrt(2 * 420 * S * hgt); H0.air = true; };
     api.on('hot', (on) => { if (on) { shake = 1; for (let i = 0; i < 4; i++) api.later(() => burst(visW * (0.2 + rnd() * 0.6), ground * (0.15 + rnd() * 0.35), low ? 18 : 30, ['#ffd75e', '#ff4d8d', '#5ef1ff', '#b8ff5e', '#ffffff'], 70), i * 140); } });
-    api.beat((s) => {
-      if (!H0.air) jump(((R.viz.hot > 0.5 ? 24 : 12) + s * 10) * S);
+    // the hero jumps on a beat and lands exactly on the next one (or two beats later when the song is fast or in FEVER)
+    api.beat((s, i) => {
+      const ib = Math.max(0.25, Math.min(1.1, R.viz.ibi)), n = ib < 0.36 || R.viz.hot > 0.5 ? 2 : 1;
+      if (!H0.air || (H0.vy > 0 && H0.y > -4 * S)) { H0.y = 0; H0.vy = -(420 * S * n * ib * 0.985) / 2; H0.air = true; }
       score += 10;
       if (rnd() < 0.75) notes.push({ x: visW + 4, y: ground - (14 + Math.floor(rnd() * 20)) * S, ph: rnd() * 6 });
       if (R.viz.hot > 0.5 && rnd() < 0.7) burst(visW * (0.15 + rnd() * 0.7), ground * (0.12 + rnd() * 0.4), low ? 14 : 24, [['#ffd75e', '#ff4d8d'], ['#5ef1ff', '#ffffff'], ['#b8ff5e', '#ff79c6']][Math.floor(rnd() * 3)], 55);

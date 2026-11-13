@@ -1,0 +1,47 @@
+/* ---------- 極光 ---------- */
+.skin-aurora { --lv: 0; --hot: 0; color: #e9fbff; font-family: "Exo 2", var(--sans); background: linear-gradient(#01050c, #041422 40%, #08263a 62%, #061624); }
+.skin-aurora .au-sky, .skin-aurora .au-fg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-aurora .au-card { position: absolute; left: 50%; top: calc(var(--st) + 78px); width: min(56vw, 29vh, 300px); aspect-ratio: 1; margin-left: calc(min(56vw, 29vh, 300px) / -2); border-radius: 20px; overflow: hidden; background: #0b2030; box-shadow: 0 0 0 1px rgba(220,255,245,.32), 0 0 0 6px rgba(200,255,240,.06), 0 0 calc(30px + var(--lv) * 30px) rgba(93,255,196,calc(.22 + var(--hot) * .2)), 0 0 calc(60px + var(--hot) * 50px) rgba(180,140,255,calc(.12 + var(--hot) * .3)), 0 24px 50px rgba(0,0,0,.45); }
+.skin-aurora .au-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-aurora .au-card img.blank { opacity: 0; }
+.skin-aurora .au-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(155deg, rgba(255,255,255,.22), transparent 38%, transparent 70%, rgba(125,255,200,.12)); }
+.skin-aurora .au-info { position: absolute; left: 0; right: 0; top: calc(var(--st) + 78px + min(56vw, 29vh, 300px) + 22px); padding: 0 28px; text-align: center; }
+.skin-aurora .au-t { font-weight: 300; font-size: 26px; letter-spacing: .08em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 20px rgba(93,255,196,.4), 0 2px 14px rgba(0,0,0,.7), 0 0 3px rgba(0,0,0,.5); }
+.skin-aurora .au-a { margin-top: 8px; font-weight: 600; font-size: 12px; letter-spacing: .36em; color: #8affd6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 8px rgba(0,0,0,.6); }
+.skin-aurora .au-dock { position: absolute; left: calc(var(--sl) + 24px); right: calc(var(--sr) + 24px); bottom: calc(var(--sb) + 16px); }
+.skin-aurora .au-seek { padding: 8px 0 2px; }
+.skin-aurora .au-seek .seek-track { height: 3px; border-radius: 2px; background: rgba(220,255,245,.16); }
+.skin-aurora .au-seek .seek-fill { border-radius: 2px; background: linear-gradient(90deg, #5dffc4, #4ab8ff 60%, #b48cff); box-shadow: 0 0 10px rgba(93,255,196,.5); }
+.skin-aurora .au-seek .seek-knob { width: 12px; height: 12px; border-radius: 50%; background: #effffa; box-shadow: 0 0 0 4px rgba(93,255,196,.2), 0 0 14px #5dffc4; }
+.skin-aurora .au-seek .seek-times { margin-top: 8px; font-size: 12px; letter-spacing: .1em; color: rgba(233,251,255,.6); }
+.skin-aurora .au-ctrl { justify-content: space-between; margin-top: 6px; }
+.skin-aurora .au-ctrl button { width: 50px; height: 50px; border-radius: 50%; font-size: 21px; color: #e9fbff; transition: transform .15s, background .2s; }
+.skin-aurora .au-ctrl .c-play { width: 70px; height: 70px; font-size: 26px; color: #03101a; background: linear-gradient(135deg, #8affd6, #6ec8ff 55%, #c3a2ff); box-shadow: 0 0 calc(18px + var(--lv) * 22px) rgba(93,255,196,.45), 0 8px 24px rgba(0,0,0,.35); }
+.skin-aurora .au-ctrl .c-shuf, .skin-aurora .au-ctrl .c-rep { width: 40px; height: 40px; font-size: 16px; }
+.skin-aurora .au-ctrl button:active { transform: scale(.88); background: rgba(200,255,240,.1); }
+.skin-aurora .au-ctrl .c-play:active { background: linear-gradient(135deg, #6ee8bd, #58aee6 55%, #a98ae6); }
+/* opening: the card forms out of frost */
+.skin-aurora.enter .au-card { animation: au-frost 1.4s cubic-bezier(.2,.8,.2,1) .2s both; }
+.skin-aurora.enter .au-info { animation: au-up 1s ease .7s both; }
+.skin-aurora.enter .au-dock { animation: au-up .9s ease .85s both; }
+@keyframes au-frost { from { opacity: 0; transform: translateY(14px) scale(.94); filter: blur(14px) brightness(1.6); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes au-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+/* next song: a wave of light runs through the curtains while the card frosts over and clears */
+.skin-aurora.swap .au-card img[data-bind] { animation: au-clear 1.1s ease both; }
+.skin-aurora.swap .au-info [data-bind] { animation: au-glide .9s cubic-bezier(.2,.8,.2,1) .25s both; }
+@keyframes au-clear { 0% { filter: blur(16px) brightness(1.7) saturate(.5); opacity: .4; } 100% { filter: none; opacity: 1; } }
+@keyframes au-glide { from { opacity: 0; transform: translateY(12px); letter-spacing: .3em; } to { opacity: 1; transform: none; } }
+@media (orientation: landscape) and (min-width: 640px) {
+  .skin-aurora .au-card { left: calc(var(--sl) + 12vw); margin-left: 0; top: calc(var(--st) + 70px); width: min(40vh, 340px); }
+  .skin-aurora .au-info { left: calc(var(--sl) + 12vw + min(40vh, 340px) + 44px); right: calc(var(--sr) + 6vw); top: calc(var(--st) + 70px + min(40vh, 340px) / 2 - 36px); padding: 0; text-align: left; }
+  .skin-aurora .au-t { font-size: clamp(28px, 3vw, 42px); }
+  .skin-aurora .au-dock { left: 0; right: 0; margin: 0 auto; width: min(560px, 76vw); bottom: calc(var(--sb) + 18px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .skin-aurora .au-card { left: calc(var(--sl) + 5vw); top: calc(var(--st) + 50% - min(58vh, 230px) / 2 - 6vh); width: min(58vh, 230px); border-radius: 16px; }
+  .skin-aurora .au-info { left: calc(var(--sl) + 5vw + min(58vh, 230px) + 30px); right: calc(var(--sr) + 24px); top: calc(var(--st) + 76px); }
+  .skin-aurora .au-t { font-size: 24px; }
+  .skin-aurora .au-dock { left: calc(var(--sl) + 5vw + min(58vh, 230px) + 30px); right: calc(var(--sr) + 22px); width: auto; margin: 0; bottom: calc(var(--sb) + 8px); }
+  .skin-aurora .au-ctrl button { width: 44px; height: 44px; font-size: 19px; }
+  .skin-aurora .au-ctrl .c-play { width: 58px; height: 58px; font-size: 23px; }
+}

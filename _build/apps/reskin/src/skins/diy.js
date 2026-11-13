@@ -21,7 +21,7 @@
     if (!cfg) return null;
     const dark = R.color.mix(cfg.accent, '#000000', 0.82);
     return {
-      id: cfg.id, base: 'diy', diy: true, name: cfg.name || '我的 Skin', group: 'DIY', en: 'CUSTOM',
+      id: cfg.id, base: 'diy', diy: true, hero: '.dy-art', name: cfg.name || '我的 Skin', group: 'DIY', en: 'CUSTOM',
       desc: '你自己做的 Skin' + (cfg.photo ? '（用了你的照片）' : ''),
       theme: { bg: dark, fg: '#ffffff', accent: cfg.accent, accent2: cfg.accent2, ui: 'rgba(18,18,26,.97)', line: 'rgba(255,255,255,.12)', dock: 'rgba(0,0,0,.35)', dockfg: '#ffffff' },
       enterMs: 1100,
@@ -70,7 +70,7 @@
     }
     paintBg();
     if (cfg.photo) photoUrl(cfg.photo).then((u) => { if (!u) return; const im = new Image(); im.onload = () => { photo = im; bake(); paintBg(); }; im.src = u; });
-    api.beat((s) => { if (cfg.viz === 'particles' && s > 0.4) for (let i = 0; i < 14 * s; i++) { const a = Math.random() * R.TAU, sp = 60 + Math.random() * 220 * s; parts.push({ x: A.x, y: A.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1 + Math.random() * 0.8, s: 1.5 + Math.random() * 3 }); } });
+    api.beat((s, i0) => { if (cfg.viz === 'particles') for (let i = 0; i < (i0.down ? 16 : 8) * s; i++) { const a = Math.random() * R.TAU, sp = 60 + Math.random() * 220 * s; parts.push({ x: A.x, y: A.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1 + Math.random() * 0.8, s: 1.5 + Math.random() * 3 }); } });
     const rr = (ctx, x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
     return {
       resize() { bg.resize(); vz.resize(); measure(); bake(); paintBg(); },
@@ -104,7 +104,7 @@
           for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.life -= dt; if (p.life <= 0) { parts.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.985; p.vy *= 0.985; const s = p.s * 4 * p.life; ctx.globalAlpha = Math.min(1, p.life); ctx.drawImage(gl, p.x - s / 2, p.y - s / 2, s, s); }
           ctx.globalAlpha = 1;
           if (parts.length > 400) parts.splice(0, parts.length - 400);
-          const s = A.r * (2.6 + v.bass * 1.2); ctx.globalAlpha = 0.25 + v.level * 0.3; ctx.drawImage(api.glow(ca, 64), A.x - s / 2, A.y - s / 2, s, s); ctx.globalAlpha = 1;
+          const s = A.r * (2.6 + v.bass * 0.6 + v.pump * 0.9); ctx.globalAlpha = Math.min(1, 0.22 + v.level * 0.2 + v.pump * 0.3); ctx.drawImage(api.glow(ca, 64), A.x - s / 2, A.y - s / 2, s, s); ctx.globalAlpha = 1;
         }
         ctx.globalCompositeOperation = 'source-over';
         root.style.setProperty('--lv', v.level.toFixed(3));

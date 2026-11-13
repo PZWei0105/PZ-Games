@@ -7,11 +7,8 @@
   python3 build.py                          # 網頁版 → apps/reskin/
   python3 build.py --claude-out /tmp/rs-c   # 另外輸出 Claude 版（不註冊 service worker）
   python3 build.py --icons                  # 重新產生圖示（需要 playwright、pillow）
-  python3 build.py --friend-one /home/claude/out/朋友版/index.html
-                                            # 給朋友的版本，一個檔案就是整個網站（推薦）：沒有痞子葳的名字、
-                                            # 沒有收藏庫的網址或字樣；manifest、主畫面圖示都內嵌，沒有 service worker
-  python3 build.py --friend-out /tmp/rs-f --friend-zip /tmp/耳目一新-朋友版.zip
-                                            # 同一個朋友版的多檔案包（index.html＋manifest＋sw.js＋icons，能離線開）
+
+朋友版不在這裡組：它凍結在十五套 Skin、只收除錯，原始碼和組建在 friend/（friend/build.py --friend-one …）。
 """
 import argparse, base64, datetime, json, os, shutil, zipfile
 
@@ -20,9 +17,9 @@ SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'reskin')
 
-SKINS = ['neon', 'blackhole', 'neoncity', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+SKINS = ['neon', 'rhythm', 'blackhole', 'particles', 'neoncity', 'woofer', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
 JS_ORDER = ['core.js', 'boot.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'glkit.js', 'tilt.js', 'skinkit.js', 'snap.js', 'fx.js', 'trans.js', 'hype.js'] \
-    + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'lyrics.js', 'share.js', 'poster.js', 'insight.js', 'stats.js', 'report.js', 'clip.js', 'extras.js', 'main.js']
+    + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'lyrics.js', 'share.js', 'poster.js', 'insight.js', 'stats.js', 'report.js', 'clip.js', 'sync.js', 'extras.js', 'main.js']
 CSS_ORDER = ['style.css'] + ['skins/%s.css' % s for s in SKINS] + ['skins/diy.css']
 FONTS = [  # file, family, weight, style
     ('orbitron-latin-700-normal.woff2', 'Orbitron', 700, 'normal'),
@@ -132,7 +129,7 @@ def friendly(html):
 MANIFEST = {
     'name': '耳目一新 RESKIN',
     'short_name': '耳目一新',
-    'description': '痞子葳的換膚音樂播放器：二十套 Skin 一鍵換裝，GPU 泛光、陀螺儀立體感、卡拉 OK 歌詞、音樂短片、聽歌報告，播自己的音樂檔，離線也能聽。',
+    'description': '痞子葳的換膚音樂播放器：二十三套 Skin 踩著拍子換裝，GPU 泛光、陀螺儀立體感、卡拉 OK 歌詞、音樂短片、聽歌報告，播自己的音樂檔，離線也能聽。',
     'lang': 'zh-Hant-TW',
     'start_url': './',
     'scope': './',
@@ -198,6 +195,8 @@ def main():
     ap.add_argument('--friend-zip')
     ap.add_argument('--friend-one')   # 朋友版單一檔案（一個 index.html 就能放上網）
     a = ap.parse_args()
+    if a.friend_out or a.friend_zip or a.friend_one:
+        ap.error('朋友版凍結在十五套 Skin、只收除錯：改用 friend/build.py（見 README「朋友版」）')
     version = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y.%m.%d-%H%M')
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, 'index.html'), 'w', encoding='utf-8') as f:

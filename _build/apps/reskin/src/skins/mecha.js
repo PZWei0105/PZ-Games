@@ -49,11 +49,13 @@ R.skins.def({
     const N = [{ a: -120, v: 0 }, { a: -120, v: 0 }];
     let art = null, spin = 0, spin2 = 0, enterT = 9, bolts = [];
     const loadArt = (t) => { art = null; if (t) api.coverImage(t).then((im) => { if (api.track() && t && api.track().id === t.id) art = im; }); };
-    api.beat((s) => {
+    api.beat((s, i) => {
       lampSync.classList.remove('on'); void lampSync.offsetWidth; lampSync.classList.add('on');
-      if (s > 0.55) { const n = s > 0.8 ? 3 : 2; for (let i = 0; i < n; i++) bolts.push({ a: Math.random() * R.TAU, life: 0.16 + Math.random() * 0.08, seed: Math.random() * 1000 }); }
+      const n = i.down ? 3 : s > 0.7 ? 1 : 0; for (let k = 0; k < n; k++) bolts.push({ a: Math.random() * R.TAU, life: 0.16 + Math.random() * 0.08, seed: Math.random() * 1000 });
       for (const nd of N) nd.v += 260 * s;
     });
+    // the snare cracks a small arc across the core
+    api.hit((k, s) => { if (k === 'snare' && s > 0.7 && bolts.length < 6) bolts.push({ a: Math.random() * R.TAU, life: 0.1, seed: Math.random() * 1000 }); });
     const cel = (ctx, x, y, r, c1, c2, ang) => {
       ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(x, y, r, 0, R.TAU); ctx.fill();
       ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, R.TAU); ctx.clip();
@@ -72,8 +74,9 @@ R.skins.def({
         const cx = w / 2, cy = h / 2, R0 = Math.min(w, h) / 2 * 0.98;
         const ign = Math.min(1, Math.max(0, (enterT - 0.55) / 0.6));
         const on = v.playing ? 1 : 0.15;
-        spin += dt * (0.25 + v.level * 2.4 * on) * ign;
-        spin2 -= dt * (0.4 + v.bass * 3 * on) * ign;
+        // the hazard ring ratchets one notch per beat; the energy channel surges on the beat
+        if (v.playing) spin += ((v.stepT * R.TAU) / 24 - spin) * Math.min(1, dt * 20) * ign; else spin += dt * 0.25 * ign;
+        spin2 -= dt * (0.3 + v.bass * 1.6 + v.pump * 3.2) * on * ign;
         const OUT = '#0d0f12';
         ctx.lineJoin = 'round';
         // housing
@@ -108,13 +111,13 @@ R.skins.def({
         ctx.lineWidth = 3; ctx.strokeStyle = OUT;
         ctx.beginPath(); ctx.arc(cx, cy, e1, 0, R.TAU); ctx.stroke();
         // core
-        const pump = 1 + v.bass * 0.07 * on + v.kick * 0.05;
+        const pump = 1 + (v.pump * 0.08 + v.kickE * 0.04 + v.bass * 0.03) * on;
         const cr = R0 * 0.44 * pump;
         ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, cr, 0, R.TAU); ctx.clip();
         ctx.fillStyle = '#0b2a35'; ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
         if (art) { ctx.globalAlpha = 0.25 + 0.75 * ign; ctx.drawImage(art, cx - cr, cy - cr, cr * 2, cr * 2); ctx.globalAlpha = 1; }
         const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
-        cg.addColorStop(0, `rgba(200,250,255,${(0.15 + v.beat * 0.45) * ign})`); cg.addColorStop(0.6, 'rgba(63,227,255,0)'); cg.addColorStop(1, `rgba(63,227,255,${0.35 + v.level * 0.3})`);
+        cg.addColorStop(0, `rgba(200,250,255,${Math.min(1, (0.12 + v.pump * 0.5 + v.down * 0.2) * ign)})`); cg.addColorStop(0.6, 'rgba(63,227,255,0)'); cg.addColorStop(1, `rgba(63,227,255,${0.35 + v.level * 0.3})`);
         ctx.fillStyle = cg; ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
         // cel shadow on the core glass
         ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.moveTo(cx - cr, cy + cr * 0.2); ctx.lineTo(cx + cr, cy - cr * 0.6); ctx.lineTo(cx + cr, cy + cr); ctx.lineTo(cx - cr, cy + cr); ctx.fill();
@@ -125,7 +128,7 @@ R.skins.def({
         // glow
         ctx.globalCompositeOperation = 'lighter';
         const gsz = cr * 3.2 * (0.8 + v.level * 0.5);
-        ctx.globalAlpha = (0.18 + v.kick * 0.5) * ign * on;
+        ctx.globalAlpha = Math.min(1, (0.15 + v.pump * 0.45 + v.kickE * 0.25) * ign * on);
         ctx.drawImage(api.glow('#3fe3ff', 128), cx - gsz / 2, cy - gsz / 2, gsz, gsz);
         ctx.globalAlpha = 1;
         // lightning bolts on hits

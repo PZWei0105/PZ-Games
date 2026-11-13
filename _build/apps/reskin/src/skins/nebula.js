@@ -47,7 +47,8 @@ R.skins.def({
     const cloudCv = document.createElement('canvas');
     const clouds = [['#7b5cff', 0.0], ['#2ee6c5', 1.7], ['#ff5fb0', 3.1], ['#3646ff', 4.4], ['#9d8bff', 5.6]];
     let burst = 0, enterT = 9, rot = 0, drag = null, jumpT = 9;
-    api.beat((s) => { burst = Math.min(1.4, burst + s * (s > 0.5 ? 0.9 : 0.4)); });
+    // every beat breathes the galaxy out; the bar's first beat a little further
+    api.beat((s, i) => { burst = Math.min(1.4, burst + s * (i.down ? 1 : 0.6)); });
     // drag along the ring to seek
     const fracAt = (e) => { const a = Math.atan2(e.clientY - C.y, e.clientX - C.x) + Math.PI / 2; return ((a / R.TAU) % 1 + 1) % 1; };
     ring.addEventListener('pointerdown', (e) => { if (!R.player.current()) return; drag = fracAt(e); try { ring.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } R.bus.emit('scrub', drag); e.preventDefault(); });
@@ -75,7 +76,7 @@ R.skins.def({
             ctx.strokeStyle = `rgba(200,220,255,${0.6 * s.z})`; ctx.lineWidth = s.z * 1.3;
             ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - dx * k, y - dy * k); ctx.stroke();
           } else {
-            const a = (0.25 + 0.5 * s.z) * (0.7 + 0.3 * Math.sin(t * 2 + s.p)) + v.high * 0.3 * s.z;
+            const a = (0.25 + 0.5 * s.z) * (0.7 + 0.3 * Math.sin(t * 2 + s.p)) + (v.high * 0.2 + (s.p > 4 ? v.hatE * 0.5 : 0)) * s.z;
             ctx.fillStyle = `rgba(210,225,255,${a})`; ctx.fillRect(x, y, s.z * 1.5, s.z * 1.5);
           }
         }
@@ -96,7 +97,7 @@ R.skins.def({
         ctx.drawImage(cloudCv, 0, 0, w, h);
         // galaxy
         burst *= Math.exp(-dt * 3.2);
-        const speed = (v.playing ? 0.35 + v.level * 0.9 : 0.08);
+        const speed = (v.playing ? (0.25 + v.level * 0.6) * (0.45 + 1.4 * v.pump) : 0.08);
         rot += dt * speed;
         const R0 = Math.max(C.r * 2.2, Math.min(w, h * 0.9) * 0.64) * (1 + (1 - inE) * 2.5), inner = C.r * 0.86;
         const tilt = 0.44, ca = Math.cos(-0.38), sa = Math.sin(-0.38);
@@ -114,8 +115,8 @@ R.skins.def({
           }
         }
         // bright bulge
-        const gs = C.r * (3.2 + v.bass * 1.2 + burst * 0.8);
-        ctx.globalAlpha = 0.35 + v.bass * 0.3; ctx.drawImage(api.glow('#ffd6f0', 128), C.x - gs / 2, C.y - gs / 2, gs, gs);
+        const gs = C.r * (3.2 + v.bass * 0.7 + v.pump * 0.9 + burst * 0.8);
+        ctx.globalAlpha = Math.min(1, 0.3 + v.bass * 0.15 + v.pump * 0.35); ctx.drawImage(api.glow('#ffd6f0', 128), C.x - gs / 2, C.y - gs / 2, gs, gs);
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
         // progress ring

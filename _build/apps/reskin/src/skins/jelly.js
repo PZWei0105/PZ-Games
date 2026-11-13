@@ -1,6 +1,6 @@
 /* ===================== skin: 果凍小怪 — an original jelly critter that dances; fast songs headbang, slow ones doze ===================== */
 R.skins.def({
-  id: 'jelly', name: '果凍小怪', group: '可愛', en: 'JELLY PAL',
+  id: 'jelly', punch: 0.8, name: '果凍小怪', group: '可愛', en: 'JELLY PAL',
   desc: '原創果凍小怪：快歌甩頭蹦跳、慢歌打瞌睡，戳它會笑',
   bloom: { s: 0.22, th: 0.78 }, hero: '.jl-pol', trans: 'pixel',
   theme: { bg: '#ffe8f1', fg: '#5b3a5e', accent: '#ff6fae', accent2: '#7fe0c4', ui: 'rgba(60,34,70,.97)', dock: 'rgba(255,255,255,.55)', dockfg: '#7a4a86' },
@@ -52,12 +52,13 @@ R.skins.def({
     const talk = (m) => { const a = LINES[m] || LINES.idle; say.textContent = a[Math.floor(Math.random() * a.length)]; say.classList.remove('on'); void say.offsetWidth; say.classList.add('on'); sayT = 3; };
     api.on('mood', (m) => { talk(m); if (m !== 'idle' && J.asleep > 0.5) { J.vy = -380; J.ground = false; } });
     api.on('track', (t) => { setColor(t); J.Sv -= 3; J.w2v += 3; });
-    api.beat((s) => {
+    // it squashes on every beat; when the song is lively it hops on the bar's 1 and 3
+    api.beat((s, i) => {
       const m = R.viz.mood;
-      if (m === 'hype' && s > 0.5 && J.ground && J.jumpCd <= 0) { const Rb = size(); J.vy = -(Rb * 3.4 + s * Rb * 2.4); J.ground = false; J.Sv += 2.6; J.jumpCd = 0.18; J.happy = 0.4; }
-      else if (m === 'groove' || m === 'hype') { J.Sv -= 2.2 * s; J.w2v += 1.2 * s; }
-      else if (m === 'sleepy') { J.Sv -= 0.7 * s; }
-      if (s > 0.75 && m === 'hype') fx.push({ k: 'star', x: (Math.random() - 0.5) * 2.4, y: -1.2 - Math.random(), life: 0.6, vx: (Math.random() - 0.5) * 60, vy: -60 });
+      if (m === 'hype' && (i.down || i.bpos === 2) && J.ground && J.jumpCd <= 0) { const Rb = size(); J.vy = -(Rb * 3.2 + s * Rb * 2.2); J.ground = false; J.Sv += 2.6; J.jumpCd = 0.18; J.happy = 0.4; }
+      else if (m === 'groove' || m === 'hype') { J.Sv -= 2.4 * s; J.w2v += 1.2 * s; }
+      else if (m === 'sleepy') { J.Sv -= 0.9 * s; }
+      if (i.down && m === 'hype') fx.push({ k: 'star', x: (Math.random() - 0.5) * 2.4, y: -1.2 - Math.random(), life: 0.6, vx: (Math.random() - 0.5) * 60, vy: -60 });
     });
     stage.addEventListener('pointerdown', (e) => {
       J.Sv -= 4; J.w2v += 6; J.w3v -= 4; J.happy = 0.9;
@@ -80,7 +81,7 @@ R.skins.def({
         const mood = v.mood, bpm = v.bpm || 110;
         // background bubbles
         for (const b of bubbles) {
-          b.y -= b.s * dt * (1 + v.level); if (b.y < -0.1) { b.y = 1.1; b.x = Math.random(); }
+          b.y -= b.s * dt * (0.7 + v.level * 0.6 + v.pump * 0.9); if (b.y < -0.1) { b.y = 1.1; b.x = Math.random(); }
           const x = b.x * w + Math.sin(t * 0.6 + b.p) * 12, y = b.y * h, r = b.r * (1 + v.high * 0.5);
           ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(x, y, r, 0, R.TAU); ctx.fill();
           ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(x - r * 0.35, y - r * 0.35, r * 0.22, 0, R.TAU); ctx.fill();
@@ -88,7 +89,8 @@ R.skins.def({
         // physics
         J.jumpCd -= dt;
         const swayAmp = mood === 'hype' ? 0.32 : mood === 'groove' ? 0.22 : mood === 'sleepy' ? 0.12 : 0.05;
-        J.swayT += dt * (mood === 'idle' ? 0.25 : (bpm / 60) * 0.5);
+        // the sway is locked to the beat: leaning one way on the bar's 1, the other way on its 3
+        if (mood === 'idle' || !v.playing) J.swayT += dt * 0.25; else J.swayT = v.beatT * 0.5;
         const swTarget = Math.sin(J.swayT * Math.PI) * swayAmp;
         J.sway += (swTarget - J.sway) * Math.min(1, dt * 5);
         J.Sv += (-(J.S - 1) * 240 - J.Sv * 8.5) * dt; J.S += J.Sv * dt; J.S = Math.max(0.55, Math.min(1.5, J.S));

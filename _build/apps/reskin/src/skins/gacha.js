@@ -60,7 +60,8 @@ R.skins.def({
     fill();
     api.on('queue', fill);
     let drop = null, turn = 0, crankA = 0, drag = null, enterT = 9;
-    api.beat((s) => { for (const c of caps) { c.vx += (Math.random() - 0.5) * s * 2.2; c.vy -= s * (1.2 + Math.random() * 1.6); } });
+    // the capsules jump on every beat, higher on the bar's first
+    api.beat((s, i) => { const k = i.down ? 1.3 : 0.75; for (const c of caps) { c.vx += (Math.random() - 0.5) * s * 2.2 * k; c.vy -= s * k * (1.2 + Math.random() * 1.6); } });
     const spin = () => { turn = 1; drop = { t: 0, col: capColor(api.track(), 0) }; cap.classList.remove('pop'); void cap.offsetWidth; cap.classList.add('pop'); };
     api.on('track', () => spin());
     // crank: tap = next, or drag it round
@@ -92,7 +93,8 @@ R.skins.def({
         if (!M) return;
         const { x0, y0, W, H, dome, body } = M;
         const rise = R.ease.back(Math.min(1, enterT / 0.7));
-        ctx.save(); ctx.translate(0, (1 - rise) * 300);
+        // the whole machine hops a little on the beat
+        ctx.save(); ctx.translate(0, (1 - rise) * 300 - (R.reduced ? 0 : v.pump * 5 + v.down * 3));
         // body
         ctx.lineJoin = 'round';
         ctx.fillStyle = '#7a1218'; rr(ctx, body.x - 4, body.y + 6, body.w + 8, body.h, 22); ctx.fill();
