@@ -50,7 +50,7 @@ R.skins.def({
     const cv = api.canvas(root.querySelector('.cs-cv'));
     const ctrCols = Array.from(root.querySelectorAll('.cs-ctr span i'));
     const vuEls = Array.from(root.querySelectorAll('.cs-vu i'));
-    let aL = 0, aR = 0, wind = 0, hold = null, enterT = 9, label = { t: '', a: '' };
+    let aL = 0, aR = 0, wind = 0, hold = null, enterT = 9, label = { t: '', a: '' }, whirr = 0;
     const setLabel = (t) => { label = t ? { t: t.title, a: t.artist || '' } : { t: R.lib.count() ? 'SIDE A' : 'BLANK TAPE', a: '' }; };
     setLabel(api.track());
     // keys
@@ -97,7 +97,8 @@ R.skins.def({
       for (let i = 0; i < 6; i++) { const t = a + (i / 6) * R.TAU; ctx.save(); ctx.translate(x, y); ctx.rotate(t); ctx.fillRect(-rHub * 0.1, rHub * 0.25, rHub * 0.2, rHub * 0.32); ctx.restore(); }
     }
     return {
-      onTrack: setLabel,
+      onTrack: setLabel, onMeta: setLabel,
+      swap() { whirr = 1; },
       enter() { enterT = 0; },
       resize() { cv.resize(); },
       destroy() { if (hold) { clearTimeout(hold.to); clearInterval(hold.iv); hold = null; } },
@@ -131,7 +132,8 @@ R.skins.def({
         const wx = lx + lw * 0.2, wy = ly + lh * 0.66, ww = lw * 0.6, wh = lh * 0.3;
         const rMax = wh * 1.05, rHub = wh * 0.3;
         const rL = rHub + (rMax - rHub) * Math.sqrt(Math.max(0.02, 1 - p)), rR = rHub + (rMax - rHub) * Math.sqrt(Math.max(0.02, p));
-        const speed = wind ? wind * 900 : v.playing ? 46 : 0;
+        whirr = Math.max(0, whirr - dt * 1.6);
+        const speed = (wind ? wind * 900 : v.playing ? 46 : 0) + whirr * whirr * 700;
         aL += (speed / rL) * dt; aR += (speed / rR) * dt;
         ctx.save(); rr(ctx, wx, wy, ww, wh, wh / 2); ctx.clip();
         ctx.fillStyle = '#6a6470'; ctx.fillRect(wx, wy, ww, wh);

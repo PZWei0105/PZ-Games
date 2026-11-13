@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>耳目一新 RESKIN</title>
-<meta name="description" content="痞子葳的換膚音樂播放器：九套 Skin 一鍵換裝，播自己的音樂檔，離線也能聽。">
+<meta name="description" content="痞子葳的換膚音樂播放器：十五套 Skin 一鍵換裝，副歌全開特效、歌詞、睡眠定時，播自己的音樂檔，離線也能聽。">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="theme-color" content="#07051a">
 <meta name="color-scheme" content="dark">
@@ -24,11 +24,15 @@
 <noscript><p style="color:#eee;padding:24px;font-family:sans-serif">耳目一新需要開啟 JavaScript 才能使用。</p></noscript>
 <div id="app">
   <main id="stage" aria-label="播放器"></main>
+  <canvas id="hype" aria-hidden="true"></canvas>
+  <section id="lyrics" hidden aria-label="歌詞"></section>
+  <button type="button" id="sleepPill" hidden data-act="sleep"></button>
   <nav id="dock" aria-label="功能">
     <button type="button" class="dk" data-act="lib" aria-label="歌庫"></button>
     <button type="button" class="dk" data-act="wardrobe" aria-label="衣櫃（換 Skin）"></button>
+    <button type="button" class="dk dk-fav" data-act="fav" aria-label="加入我的最愛"></button>
     <button type="button" class="dk" data-act="party" aria-label="派對模式"></button>
-    <button type="button" class="dk" data-act="settings" aria-label="設定"></button>
+    <button type="button" class="dk" data-act="more" aria-label="更多：歌詞、睡眠定時、分享、設定"></button>
   </nav>
   <section id="empty" hidden></section>
   <div id="partyTitle" aria-hidden="true"></div>

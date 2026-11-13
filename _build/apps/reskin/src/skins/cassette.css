@@ -53,6 +53,9 @@
 .skin-cassette.enter .cs-jcard { animation: cs-card .8s cubic-bezier(.3,1.4,.5,1) .45s both; }
 @keyframes cs-drop { from { transform: translateY(-40px) rotate(-3deg); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes cs-card { from { transform: translateY(60px) rotate(6deg); opacity: 0; } to { transform: rotate(.8deg); opacity: 1; } }
+/* next song: the tape pops up and clunks back into the deck */
+.skin-cassette.swap .cs-win { animation: cs-clunk .6s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes cs-clunk { 0% { transform: none; } 25% { transform: translateY(-14px) scale(.98); } 55% { transform: translateY(3px); } 100% { transform: none; } }
 @media (orientation: landscape) and (min-width: 640px) {
   .skin-cassette .cs-wrap { flex-direction: row; gap: 4vw; }
   .skin-cassette .cs-dev { width: min(46vw, 78vh * 1.05, 520px); }

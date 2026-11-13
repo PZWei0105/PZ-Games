@@ -1,0 +1,57 @@
+/* ---------- 演唱會舞台 ---------- */
+.skin-stage { --lv: 0; --bt: 0; --hot: 0; color: #fff; font-family: "Chakra Petch", var(--sans); }
+.skin-stage .st-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-stage .st-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: calc(var(--st) + 62px) calc(var(--sr) + 20px) calc(var(--sb) + 16px) calc(var(--sl) + 20px); }
+.skin-stage .st-wall { position: relative; flex: none; width: min(100%, 560px); aspect-ratio: 16 / 9; }
+/* the screen is a square in the middle of the 16:9 wall: 88% of its height = 49.5% of its width */
+.skin-stage .st-screen { position: absolute; top: 6%; height: 88%; left: 25.25%; width: 49.5%; overflow: hidden; background: #120b18; box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 0 calc(26px + var(--lv) * 30px + var(--hot) * 30px) rgba(255,61,110,calc(.3 + var(--hot) * .35)); }
+.skin-stage .st-screen img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(1.25) brightness(calc(.92 + var(--bt) * .12 + var(--hot) * .12)); }
+.skin-stage .st-screen img.blank { opacity: 0; }
+.skin-stage .st-led { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle, transparent 0 40%, rgba(0,0,0,.55) 68%) 0 0 / 4px 4px; }
+.skin-stage .st-tag { position: absolute; left: 6px; top: 6px; display: flex; align-items: center; gap: 5px; padding: 3px 7px 3px 6px; border-radius: 3px; background: rgba(0,0,0,.6); font-size: 10px; font-weight: 700; letter-spacing: .18em; line-height: 1; }
+.skin-stage .st-tag i { width: 7px; height: 7px; border-radius: 50%; background: #ff2d55; box-shadow: 0 0 6px #ff2d55; opacity: calc(.45 + var(--bt) * .55); }
+.skin-stage .st-next { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); font-family: "Press Start 2P", "Chakra Petch", monospace; font-size: clamp(11px, 3.6vw, 20px); color: #ffd23f; text-shadow: 0 0 8px #ff9a3f; white-space: nowrap; text-align: center; opacity: 0; pointer-events: none; }
+.skin-stage .st-info { flex: none; width: 100%; max-width: 640px; text-align: center; margin-top: 20px; }
+.skin-stage .st-t { font-family: "Bungee", var(--sans); font-size: 24px; line-height: 1.25; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 12px rgba(255,61,110,.9), 0 0 calc(24px + var(--hot) * 24px) rgba(255,61,110,.55); }
+.skin-stage .st-a { margin-top: 6px; font-size: 13px; font-weight: 700; letter-spacing: .28em; color: #ffd23f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 10px rgba(255,180,40,.5); }
+.skin-stage .st-fill { flex: 1 1 auto; min-height: 16px; }
+.skin-stage .st-seek { flex: none; width: 100%; max-width: 560px; padding: 10px 0 2px; }
+.skin-stage .st-seek .seek-track { height: 4px; border-radius: 2px; background: rgba(255,255,255,.16); }
+.skin-stage .st-seek .seek-fill { border-radius: 2px; background: linear-gradient(90deg, #ff3d6e, #ffd23f); box-shadow: 0 0 12px rgba(255,61,110,.8); }
+.skin-stage .st-seek .seek-knob { width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,61,110,.45), 0 0 14px #ff3d6e; }
+.skin-stage .st-seek .seek-times { margin-top: 8px; font-size: 12px; letter-spacing: .1em; color: rgba(255,255,255,.72); }
+.skin-stage .st-ctrl { flex: none; width: 100%; max-width: 420px; justify-content: space-between; margin-top: 6px; }
+.skin-stage .st-ctrl button { width: 52px; height: 52px; border-radius: 50%; font-size: 21px; color: #fff; background: rgba(12,7,18,.72); border: 1px solid rgba(255,255,255,.22); transition: transform .15s, background .2s; }
+.skin-stage .st-ctrl .c-play { width: 76px; height: 76px; font-size: 28px; border: none; background: radial-gradient(circle at 50% 32%, #ff7396, #ff3d6e 55%, #a80f3a); box-shadow: 0 0 0 4px rgba(255,210,63,calc(.28 + var(--bt) * .5)), 0 0 calc(20px + var(--lv) * 34px) rgba(255,61,110,.75); }
+.skin-stage .st-ctrl .c-shuf, .skin-stage .st-ctrl .c-rep { width: 42px; height: 42px; font-size: 16px; background: none; border-color: transparent; }
+.skin-stage .st-ctrl button:active { transform: scale(.88); background: rgba(255,61,110,.3); }
+/* curtain up: the wall drops in, the screen flickers on, then the band */
+.skin-stage.enter .st-wall { animation: st-drop 1s cubic-bezier(.2,.9,.25,1) .3s both; }
+.skin-stage.enter .st-screen > img, .skin-stage.enter .st-led, .skin-stage.enter .st-tag { animation: st-power .8s steps(1, end) .9s both; }
+.skin-stage.enter .st-info { animation: st-up .7s cubic-bezier(.2,.9,.25,1) 1.1s both; }
+.skin-stage.enter .st-seek, .skin-stage.enter .st-ctrl { animation: st-up .75s cubic-bezier(.2,.9,.25,1) 1s both; }
+@keyframes st-drop { from { opacity: 0; transform: translateY(-46px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes st-power { 0% { opacity: 0; } 12% { opacity: 1; } 22% { opacity: .15; } 34% { opacity: 1; } 44% { opacity: .35; } 56%, 100% { opacity: 1; } }
+@keyframes st-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+/* next song: the screen blacks out, NEXT SONG runs across it, then it flashes back on */
+.skin-stage.swap .st-screen img[data-bind="cover"] { animation: st-next-img 1.2s linear both; }
+.skin-stage.swap .st-next { animation: st-next-txt 1.2s linear both; }
+.skin-stage.swap .st-info [data-bind] { animation: swap-txt .7s cubic-bezier(.2,.9,.25,1) .62s both; }
+@keyframes st-next-img { 0% { opacity: 1; } 10%, 56% { opacity: 0; } 60% { opacity: 1; filter: brightness(1.8); } 66% { opacity: .25; } 72% { opacity: 1; filter: brightness(1.4); } 100% { opacity: 1; } }
+@keyframes st-next-txt { 0%, 10% { opacity: 0; transform: translate(100%, -50%); } 12% { opacity: 1; } 52% { opacity: 1; transform: translate(-100%, -50%); } 56%, 100% { opacity: 0; transform: translate(-100%, -50%); } }
+@media (orientation: landscape) and (min-width: 640px) {
+  .skin-stage .st-wall { width: min(100%, 760px, calc((100vh - 340px) * 16 / 9)); }
+  .skin-stage .st-t { font-size: clamp(24px, 2.6vw, 34px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .skin-stage .st-wrap { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 1fr auto auto auto 1fr; column-gap: 26px; align-items: center; padding: calc(var(--st) + 12px) calc(var(--sr) + 22px) calc(var(--sb) + 10px) calc(var(--sl) + 22px); }
+  .skin-stage .st-wall { grid-column: 1; grid-row: 1 / -1; justify-self: start; width: auto; height: min(64vh, 300px); margin-top: -4vh; }
+  .skin-stage .st-info { grid-column: 2; grid-row: 2; text-align: left; margin-top: 0; }
+  .skin-stage .st-t { font-size: 22px; }
+  .skin-stage .st-fill { display: none; }
+  .skin-stage .st-seek { grid-column: 2; grid-row: 3; padding-top: 14px; }
+  .skin-stage .st-ctrl { grid-column: 2; grid-row: 4; margin-top: 4px; }
+  .skin-stage .st-ctrl button { width: 46px; height: 46px; font-size: 19px; }
+  .skin-stage .st-ctrl .c-play { width: 64px; height: 64px; font-size: 24px; }
+  .skin-stage .st-ctrl .c-shuf, .skin-stage .st-ctrl .c-rep { width: 38px; height: 38px; }
+}

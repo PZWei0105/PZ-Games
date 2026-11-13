@@ -1,6 +1,7 @@
 # 耳目一新 RESKIN（維護說明）
 
-痞子葳的換膚音樂播放器：播自己的音樂檔，九套 Skin 加 DIY，一鍵換裝。
+痞子葳的換膚音樂播放器：播自己的音樂檔，十五套 Skin 加 DIY，一鍵換裝；副歌一到每套都全開，換歌有各自的轉場。
+另有歌詞、我的最愛、睡眠定時、改歌曲資訊、分享卡片、DIY 分享碼。
 App 裡稱呼使用者一律用「痞子葳」。
 
 - 網頁版：https://pzwei0105.github.io/PZ-Games/apps/reskin/（可加到主畫面、離線聽、鎖屏連播；收藏庫「專屬 App」分頁有入口）
@@ -9,10 +10,13 @@ App 裡稱呼使用者一律用「痞子葳」。
 ## 組建與檢查
 
 ```bash
-python3 _build/apps/reskin/build.py --claude-out /tmp/reskin-claude   # 網頁版輸出到 apps/reskin/，Claude 版另外輸出
-python3 _build/apps/reskin/check.py --claude /tmp/reskin-claude       # 全流程檢查（資料夾匯入、手機、電腦），約 4 分鐘，要看到「全部 OK」
+python3 _build/apps/reskin/build.py --claude-out /tmp/reskin-claude --friend-out /tmp/reskin-friend --friend-zip /home/claude/out/耳目一新-朋友版.zip
+python3 _build/apps/reskin/check.py --claude /tmp/reskin-claude --friend /tmp/reskin-friend   # 全流程檢查，要看到「全部 OK」
 python3 _build/apps/reskin/build.py --icons                            # 只有改圖示才需要（要 playwright、pillow）
 ```
+
+- 網頁版輸出到 `apps/reskin/`；`--claude-out` 另外輸出 Claude 版；`--friend-out`／`--friend-zip` 輸出朋友版（見最下面）。
+- check.py 依序跑：讀不到檔時的備援、資料夾匯入、新功能（歌詞、最愛、睡眠定時、改資訊、分享卡片、分享碼、副歌）、網頁版全流程（手機直、手機橫、電腦，每套 Skin 都換一次歌），再對 Claude 版、朋友版各跑一次全流程。
 
 - 截圖在 `/tmp/reskin-check`，改到畫面就逐套看過再上線：手機直、手機橫（844×390）、電腦（1280×800）。
 - 發布 Claude 版：`publish_files` 不收 `/tmp` 底下的檔，先把 `/tmp/reskin-claude/index.html` 複製到 `/home/claude/` 底下再發布。
@@ -63,6 +67,24 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 - 歌名、歌手、封面、長度讀檔案裡的標籤（`meta.js`）：ID3v1／v2.2～2.4、M4A、FLAC、WAV。Big5／GBK 編的舊標籤會自動判斷，不會變亂碼。
 - 播不了的檔（例如這台裝置不支援的格式）會標記起來，提示後跳下一首。
 
+## 副歌全開、換歌轉場
+
+- 副歌偵測（`viz.js` 的 `hotSpans`）：分析好的音量曲線裡，找明顯比整首平均大聲、又撐得夠久的段落。播到那裡 `R.viz.hot` 會漸變到 1，並送出 `'hot'` 事件（進、出各一次）；副歌裡每一拍也會打得比較重。
+- 共用特效 `hype.js`：進副歌時衝擊波、（允許的話）閃一下、兩邊彩帶炮；副歌裡重拍再補彩帶、上方光束掃動。每套 Skin 用 `def.hype` 決定：不寫是 `'full'`、`'lite'`（沒有光束和重拍彩帶）、`false`（自己做整套副歌表演，例如煙火夜、水墨、極光、像素街機）。副歌以外完全不畫、不花電。
+- 換歌時（從一首換到另一首）每套 Skin 的根元素會加上 `.swap`（`def.swapMs` 後拿掉），並呼叫 `inst.swap(t)` 給 canvas 做動畫。沒有自己寫的，共用樣式會讓歌名和封面淡入。
+- `.enter`（開場）和 `.swap` 的 CSS 動畫都要在 `enterMs`／`swapMs` 之內跑完，不然 class 拿掉時會跳一下；加新 Skin 或改動畫後要量過。
+- 要「剛好在拍上」發生的效果（例如煙火：發射到炸開要 1 秒），用 `R.viz.upcoming(a, b)` 先讀接下來的拍點（`[時間, 強度, …]`），提前開始。
+- 歌名、歌手被改掉時，`data-bind` 的字會自己更新；自己在 canvas 上畫字的 Skin（卡帶標籤、水墨的印章、像素街機的關卡卡片）實作 `onMeta(t)`。
+
+## 歌詞、我的最愛、睡眠定時、改資訊、分享
+
+- 歌詞（`lyrics.js`）：存在歌的 `lrc` 欄位。來源：資料夾匯入時同一個資料夾、同檔名的 `.lrc`（UTF-8、UTF-16、Big5／GBK 都認得）；歌曲檔裡的歌詞標籤（ID3 的 USLT、TXXX:LYRICS／USLT、M4A 的 ©lyr、FLAC 的 LYRICS）；改歌曲資訊時直接貼上。有時間標記的會跟著唱亮、點一句就跳過去。已在歌庫的歌，重新匯入時有新的 .lrc 就補上。
+- 我的最愛：歌的 `fav` 欄位（加入的時間）。「我的最愛」歌單（id `fav`）是虛擬的：從 `fav` 算出來，不能改名、刪除、拖順序。H 鍵或按鈕列的愛心切換。
+- 睡眠定時（`player.js` 的 `setSleep`）：15／30／60 分鐘或「播完這首」；右上角顯示倒數，點它可以改或取消。
+- 改歌曲資訊（`extras.js`）：歌名、歌手、專輯、封面、歌詞。換封面會讓 `coverRev` 加一，正在穿的 Skin 重新掛上，封面才會全部換掉。
+- 分享卡片（`share.js`）：1080×1350 的圖（封面、歌名、歌手、App 名稱），手機用系統的分享選單，電腦可以下載。
+- DIY 分享碼：`耳目一新Skin:` 後面接 base64url 的 JSON（配色、視覺化樣式、版面、字型、暗度、模糊；照片不會一起過去）。貼的時候夾在聊天訊息裡、被斷行也認得。
+
 ## Skin 怎麼做
 
 - 一套 Skin 是 `skins/<id>.js` 加 `skins/<id>.css`，用 `R.skins.def({...})` 註冊。`build.py` 的 `SKINS` 決定順序，衣櫃也照這個順序。
@@ -72,12 +94,14 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 - canvas 一律用 `R.kit.canvas`（限制 DPR，手機變慢時自動降畫質）。`frame(dt, t, v)` 每一格都拿得到現在的頻譜、節拍、心情（`v`）。
 - 換裝是從點的地方用 clip-path 擴散開；衣櫃試穿用 `R.stage.show(id, { fast: true })`。
 - DIY（`skins/diy.js`）：底圖（照片或封面）、配色、視覺化樣式、字型，存在 `settings.diy`，照片存在 `images`。
-- 加新 Skin：照現有九套的寫法；三種畫面都要截圖看過，check.py 要全過；閃光類效果要尊重設定頁的「閃光特效」開關。
+- 加新 Skin：照現有十五套的寫法；三種畫面都要截圖看過，check.py 要全過；閃光類效果要尊重設定頁的「閃光特效」開關（`api.flash()`）。
+- 例外：像素街機自己管 canvas（用很低的解析度畫，CSS `image-rendering: pixelated` 放大），沒有用 `R.kit.canvas`；水墨、極光、煙火夜的山、城市、湖面在換尺寸時先畫好，每格只疊動的東西。
 
 ## Claude 版
 
 - `build.py --claude-out` 另外輸出一份，最前面多一行 `window.RESKIN_NO_SW = true`（程式裡是 `R.CLAUDE`）：不註冊 service worker（Claude 不允許），設定頁和存不了歌時的提示，改成請他開網頁版。
 - Artifact 跑在沙盒裡：瀏覽器的 alert、confirm、prompt 會被擋，所以 App 一律用自己的對話框（`R.ui.confirm`、`R.ui.prompt`）。全螢幕、Wake Lock 都要包 try/catch。
+- Artifact 的頁面不能自己給檔案（一般的下載連結、程式存檔都沒作用）。分享卡片在 Claude 版走 artifact 的 `downloads` 能力（artifact 已宣告 `downloads: true`；程式用 `claude.use('downloads')`，拿到 `null` 就不顯示按鈕）：按「存起來或傳出去」會先跳確認，iPhone 上接著出現分享選單、電腦上是下載。網頁版專用的下載連結由 `build.py` 的 `CLAUDE_SUBS` 從 Claude 版拿掉，組建時會檢查裡面沒有 `download=`。
 
 ## 檔案
 
@@ -95,7 +119,11 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 | `src/sfx.js` | 介面音效（每套 Skin 不一樣） |
 | `src/demo.js` | 示範曲：在裝置上現場合成的 56 秒電子樂 |
 | `src/skinkit.js` | Skin 框架：註冊、換裝轉場、canvas、共用控制鈕 |
-| `src/skins/` | 九套 Skin 和 DIY |
+| `src/skins/` | 十五套 Skin 和 DIY |
+| `src/hype.js` | 副歌全開的共用特效（彩帶、光束、衝擊波） |
+| `src/lyrics.js` | 歌詞：解析 LRC、讀 .lrc 檔、跟著唱的歌詞畫面 |
+| `src/extras.js` | 我的最愛、睡眠定時、「更多」選單、改歌曲資訊 |
+| `src/share.js` | 分享卡片 |
 | `src/ui.js` | 抽屜、選單、對話框 |
 | `src/library.js` | 歌庫畫面：歌曲、歌單（含綁 Skin）、播放佇列 |
 | `src/wardrobe.js` | 衣櫃：左右滑，用正在播的歌試穿 |
@@ -105,8 +133,13 @@ python3 _build/apps/reskin/build.py --icons                            # 只有�
 | `src/sw.js` | service worker：頁面網路優先，離線用存好的那份 |
 | `src/fonts/` | 內嵌字型（見下面） |
 | `build.py` | 組建 |
-| `check.py` | 全流程檢查：自己產生測試音檔（含 Big5 標籤、壞檔）和測試資料夾，先跑資料夾匯入，再跑手機和電腦，最後測離線 |
+| `check.py` | 全流程檢查：自己產生測試音檔（含 Big5 標籤、壞檔、內嵌歌詞）和測試資料夾（含 .lrc、子資料夾），跑讀不到時的備援、資料夾匯入、新功能、手機直橫和電腦，最後測離線 |
 
 ## 字型
 
-`src/fonts/` 是 @fontsource 的 woff2：Orbitron、Share Tech Mono、Chakra Petch、Exo 2、Fredoka、Bungee、Playfair Display、Permanent Marker、VT323。授權是 SIL OFL（Permanent Marker 是 Apache 2.0），組建時內嵌。只有拉丁字母，中文用系統字型。
+`src/fonts/` 是 @fontsource 的 woff2：Orbitron、Share Tech Mono、Chakra Petch、Exo 2、Fredoka、Bungee、Playfair Display、Permanent Marker、VT323、Press Start 2P。授權是 SIL OFL（Permanent Marker 是 Apache 2.0），組建時內嵌。只有拉丁字母，中文用系統字型。
+
+## 朋友版
+
+- 給痞子葳的朋友用的獨立網頁版：沒有痞子葳的名字、沒有收藏庫的網址和按鈕。用 `build.py --friend-out DIR --friend-zip ZIP` 輸出，內容跟網頁版同一份，只是換掉 `FRIEND_SUBS` 列的字；`FRIEND_NEVER` 列的字只要還在，組建就會失敗（改了原本的字，要一起改這兩張表）。
+- 壓縮檔的檔案直接放在最上層（index.html、manifest、sw.js、icons）。放到 Netlify Drop：先解壓縮，把有 index.html 的那個資料夾拖進 https://app.netlify.com/drop（要先登入，網站才不會一小時後消失）；之後改版到同一個網站的「Deploys」頁再拖一次，網址不變。

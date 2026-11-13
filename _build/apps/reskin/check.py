@@ -3,18 +3,22 @@
 
   python3 _build/apps/reskin/check.py                      # 網頁版（apps/reskin/）
   python3 _build/apps/reskin/check.py --claude /tmp/rs-c   # 另外檢查 build.py --claude-out 輸出的 Claude 版
+  python3 _build/apps/reskin/check.py --friend /tmp/rs-f   # 另外檢查 build.py --friend-out 輸出的朋友版
 
 標籤      MP3（ID3v2.3＋封面）、M4A（封面）、FLAC（Vorbis＋圖片）、WAV（從檔名猜歌手）、Big5 編碼的舊 MP3 標籤
 分析      每首都算出節奏（BPM 誤差 ±3）與頻譜
 播放      單軌換帶：播完接下一首；雙軌接力：螢幕關著時提前交棒、記成功；鎖屏沒接上 → 自動改雙軌＋「繼續播放」；
           單曲循環、上一首重頭、隨機保留目前這首、刪掉正在播的歌、壞掉的檔案跳過
 介面      空歌庫→示範曲、衣櫃左右滑試穿＋就穿這套、歌單綁 Skin、每首換一套、DIY 存檔、派對模式、重新整理後接著上次
+新功能    歌詞（資料夾裡的 .lrc 跟著唱亮、點一句跳過去；內嵌歌詞）、我的最愛（H 鍵、愛心歌單）、睡眠定時（倒數、
+          播完這首）、改歌曲資訊（Skin 上的字跟著換）、子資料夾各存一個歌單、分享卡片、DIY 分享碼（複製→貼上）、
+          副歌偵測＋全開特效、提前排好的節拍（煙火準時炸開）
 資料夾    整個資料夾匯入（子資料夾、略過 ._ 檔／.DS_Store／文字檔、WMA 說明不能播、已在歌庫的跳過、資料夾裡的
           cover.jpg 當封面、去掉檔名前的曲序、照資料夾順序）、存成歌單、「匯入」選單開資料夾、沒有歌的資料夾、
           中途停止再匯入、空間不夠停下來不留殘檔、螢幕關著不分析節奏、上千首的歌庫邊捲邊畫
 讀不到時  歌存成純位元組、舊版 Blob 讀一次就轉存；blob: 連結被擋時改用 data: 連結（音樂、封面）；檔案讀不到
           標記起來、重新匯入就補回；連續三首播不了就停下來說明（Claude 版附網頁版連結）
-每套 Skin 手機直拿、電腦各截一張（/tmp/reskin-check），沒有程式錯誤
+每套 Skin 手機直拿、手機橫拿、電腦各截一張（/tmp/reskin-check）；每套都換一次歌（換歌動畫）；沒有程式錯誤
 離線      網頁版關掉伺服器還打得開
 需要 Playwright、numpy、ffmpeg（雲端沙盒都有，不要執行 playwright install）。有 BAD 時 exit code 1。
 """
@@ -22,9 +26,10 @@ import argparse, functools, http.server, json, os, shutil, socketserver, struct,
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
-SKINS = ['neon', 'mecha', 'nebula', 'jelly', 'gacha', 'vinyl', 'cassette', 'scope', 'glass']
+SKINS = ['neon', 'stage', 'mecha', 'nebula', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
 PHONE = {'viewport': {'width': 390, 'height': 844}, 'device_scale_factor': 2, 'has_touch': True, 'is_mobile': True}
 DESK = {'viewport': {'width': 1280, 'height': 800}}
+LAND = {'width': 844, 'height': 390}
 HIDE = "Object.defineProperty(Document.prototype,'hidden',{get(){return !!window.__hid},configurable:true});Object.defineProperty(Document.prototype,'visibilityState',{get(){return window.__hid?'hidden':'visible'},configurable:true});"
 BAD = []
 
@@ -165,7 +170,7 @@ def run(url, out, fx, web):
         ok(ev('RESKIN.settings.get("skin")') == 'jelly', '衣櫃：就穿這套')
         ev('async () => { const p = await RESKIN.lib.pl.create("開車聽", RESKIN.lib.list().slice(0, 3).map(t => t.id)); p.skin = "vinyl"; await RESKIN.lib.pl.save(p); }')
         ev('RESKIN.library.open("lists")'); pg.wait_for_timeout(700)
-        pg.click('[data-pl]'); pg.wait_for_timeout(600)
+        pg.click('[data-pl]:not([data-pl="fav"])'); pg.wait_for_timeout(600)
         pg.screenshot(path=os.path.join(out, 'ui-playlist.png'))
         pg.click('[data-l="pl-play"]'); pg.wait_for_timeout(1600)
         ok(ev('RESKIN.stage.current().id') == 'vinyl', '歌單綁 Skin：播這個歌單自動換上黑膠')
@@ -196,6 +201,17 @@ def run(url, out, fx, web):
         for s in SKINS:
             ev(f'RESKIN.stage.show("{s}", {{instant: true, silent: true}})'); pg.wait_for_timeout(1800)
             pg.screenshot(path=os.path.join(out, f'{s}-phone.png'))
+        # every skin plays its song-change animation once
+        for s in SKINS:
+            ev(f'RESKIN.settings.set("skin", "{s}"); RESKIN.stage.show("{s}", {{instant: true, silent: true}})'); pg.wait_for_timeout(500)
+            ev('RESKIN.player.next()'); pg.wait_for_timeout(700)
+        ok(ev('RESKIN.stage.current().id') == SKINS[-1], '每套 Skin：換歌動畫跑完')
+        # every skin, phone on its side
+        pg.set_viewport_size(LAND); pg.wait_for_timeout(600)
+        for s in SKINS:
+            ev(f'RESKIN.stage.show("{s}", {{instant: true, silent: true}})'); pg.wait_for_timeout(1700)
+            pg.screenshot(path=os.path.join(out, f'{s}-land.png'))
+        pg.set_viewport_size(PHONE['viewport']); pg.wait_for_timeout(400)
         ok(not errs, '手機：沒有程式錯誤' + ('' if not errs else '：' + ' | '.join(errs[:5])))
         ctx.close()
         # every skin, desktop
@@ -217,6 +233,119 @@ def run(url, out, fx, web):
                 ok(ev('!!document.querySelector(".skin") && RESKIN.lib.count() === 1'), '離線：關掉伺服器還打得開，歌也還在')
             except Exception as e:
                 ok(False, '離線：' + str(e)[:120])
+        ctx.close(); b.close()
+
+
+def feature_fixtures(d, fx):
+    """A folder with two subfolders: a song with a synced .lrc next to it, one with lyrics inside its tags, one without."""
+    import numpy as np
+    shutil.rmtree(d, ignore_errors=True)
+    A, B = os.path.join(d, '合輯', 'A面'), os.path.join(d, '合輯', 'B面')
+    os.makedirs(A); os.makedirs(B)
+    shutil.copy(os.path.join(fx, 't1.mp3'), os.path.join(A, '01 第一首.mp3'))
+    open(os.path.join(A, '01 第一首.lrc'), 'w', encoding='utf-8').write('[ti:第一首]\n[00:00.40]第一句歌詞\n[00:02.50]第二句歌詞\n[00:05.00]第三句歌詞\n[00:08.00]第四句歌詞\n[00:12.00]第五句歌詞\n')
+    sr = 22050
+
+    def wav(path, freq, secs):
+        t = np.arange(int(secs * sr)) / sr; x = 0.35 * np.sin(2 * np.pi * freq * t)
+        d16 = (np.stack([x, x], 1) * 32767).astype('<i2')
+        with open(path, 'wb') as f:
+            f.write(b'RIFF' + struct.pack('<I', 36 + d16.nbytes) + b'WAVEfmt ' + struct.pack('<IHHIIHH', 16, 1, 2, sr, sr * 4, 4, 16) + b'data' + struct.pack('<I', d16.nbytes) + d16.tobytes())
+    tmp = os.path.join(d, 'x.wav'); wav(tmp, 330, 6)
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', tmp, '-c:a', 'libmp3lame', '-b:a', '96k', '-id3v2_version', '3', '-metadata', 'title=夜曲', '-metadata', 'lyrics=內嵌的第一行\n內嵌的第二行', os.path.join(B, '夜曲.mp3')], check=True)
+    os.remove(tmp)
+    wav(os.path.join(B, '尾聲.wav'), 262, 5)
+    return os.path.join(d, '合輯')
+
+
+def run_features(url, out, folder):
+    from playwright.sync_api import sync_playwright
+    errs = []
+    with sync_playwright() as p:
+        b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'])
+        ctx = b.new_context(**PHONE)
+        pg = ctx.new_page()
+        pg.on('pageerror', lambda e: errs.append(str(e)))
+        pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
+        ev = pg.evaluate
+        done = lambda t=60000: pg.wait_for_function('document.getElementById("busy").hidden', timeout=t)
+        pg.goto(url); pg.wait_for_function("!!window.RESKIN && !document.getElementById('splash')", timeout=20000); pg.wait_for_timeout(500)
+        # subfolders + lyrics
+        pg.set_input_files('#folderIn', folder); done(); pg.wait_for_timeout(300)
+        T = {t['name']: t for t in ev('RESKIN.lib.list().map(t => ({ id: t.id, name: t.name, kind: RESKIN.lyrics.kind(t) }))')}
+        ok(len(T) == 3, '資料夾（有子資料夾）：三首都進來（%s）' % list(T))
+        ok(T.get('01 第一首.mp3', {}).get('kind') == 'synced', '歌詞：資料夾裡同名的 .lrc 自動配上，而且有時間標記（%s）' % T.get('01 第一首.mp3'))
+        ok(T.get('夜曲.mp3', {}).get('kind') == 'plain', '歌詞：歌曲檔裡內嵌的歌詞也讀得到（%s）' % T.get('夜曲.mp3'))
+        btn = pg.locator('#toasts .toast button', has_text='存成歌單')
+        if btn.count():
+            btn.first.click(); pg.wait_for_timeout(500)
+            pg.screenshot(path=os.path.join(out, 'ui-folder-playlists.png'))
+            pg.click('#modal .md-i:has-text("每個資料夾各存一個歌單")'); pg.wait_for_timeout(700)
+        P = sorted((x['name'], x['n']) for x in ev('RESKIN.lib.pl.all().filter(p => p.id !== "fav").map(p => ({ name: p.name, n: p.ids.length }))'))
+        ok(P == [('A面', 1), ('B面', 2)], '子資料夾：每個資料夾各存一個歌單（%s）' % P)
+        # lyrics follow the song; tapping a line jumps there
+        first = T['01 第一首.mp3']['id']
+        ev('(id) => RESKIN.player.playFrom(RESKIN.lib.list().map(t => t.id), id, { type: "library" })', first)
+        pg.wait_for_function('RESKIN.player.isPlaying() && RESKIN.player.time() > 0.2', timeout=15000)
+        ok(ev('!!document.querySelector("#dock [data-act=more] .dot")'), '有歌詞的歌：「更多」按鈕上有小點')
+        pg.keyboard.press('y'); pg.wait_for_timeout(300)
+        ev('RESKIN.player.seek(2.7)'); pg.wait_for_timeout(900)
+        ok(ev('(document.querySelector("#lyrics .ly-list p.on") || {}).textContent') == '第二句歌詞', '歌詞：唱到哪句亮哪句')
+        pg.screenshot(path=os.path.join(out, 'ui-lyrics.png'))
+        pg.click('#lyrics .ly-list p:has-text("第四句歌詞")'); pg.wait_for_timeout(500)
+        ok(7.8 <= ev('RESKIN.player.time()') < 9.5, '歌詞：點一句就跳到那裡')
+        pg.keyboard.press('y'); pg.wait_for_timeout(300)
+        # favourites
+        pg.keyboard.press('h'); pg.wait_for_timeout(400)
+        ok(ev('!!RESKIN.player.current().fav') and 'on' in ev('document.querySelector("#dock [data-act=fav]").className'), '我的最愛：H 鍵（或愛心）加進去，愛心變色')
+        ok(ev('(id) => RESKIN.lib.pl.get("fav").ids.includes(id)', first), '我的最愛：自動出現在「我的最愛」歌單')
+        ev("RESKIN.library.open('lists')"); pg.wait_for_timeout(600)
+        ok(ev('(document.querySelector("#sheetBody [data-pl]") || {}).dataset.pl') == 'fav', '歌單頁：「我的最愛」排第一個')
+        pg.screenshot(path=os.path.join(out, 'ui-lists.png'))
+        ev('RESKIN.ui.closeSheet(true)'); pg.wait_for_timeout(400)
+        # sleep timer: minutes, then "end of this song"
+        ev('RESKIN.player.setSleep(30)'); pg.wait_for_timeout(1200)
+        ok(not ev('document.getElementById("sleepPill").hidden') and ':' in ev('document.getElementById("sleepPill").textContent'), '睡眠定時：右上角顯示倒數')
+        ev('RESKIN.player.setSleep(0.03)'); pg.wait_for_timeout(2600)
+        ok(not ev('RESKIN.player.isPlaying()') and ev('document.getElementById("sleepPill").hidden'), '睡眠定時：時間到就停')
+        ev('RESKIN.player.play()'); pg.wait_for_timeout(600)
+        ev("RESKIN.player.setSleep('end')"); c0 = ev('RESKIN.player.current().id')
+        ev('RESKIN.player.seek(RESKIN.player.duration() - 1)'); pg.wait_for_timeout(2400)
+        ok(not ev('RESKIN.player.isPlaying()') and ev('RESKIN.player.current().id') == c0, '睡眠定時「播完這首」：這首唱完就停，不接下一首')
+        # edit the song: the skin's text follows
+        ev('RESKIN.stage.show("ink", { instant: true, silent: true })'); pg.wait_for_timeout(1500)
+        ev('(id) => RESKIN.extras.editTrack(id)', c0); pg.wait_for_timeout(600)
+        pg.fill('[data-ed-f="title"]', '改過的歌名'); pg.fill('[data-ed-f="artist"]', '新的歌手'); pg.click('[data-ed="save"]'); pg.wait_for_timeout(800)
+        ok(ev('RESKIN.player.current().title') == '改過的歌名' and ev('document.querySelector(".skin [data-bind=title]").textContent') == '改過的歌名', '改歌曲資訊：存好後 Skin 上的歌名馬上跟著換')
+        ok(ev('document.querySelector(".ik-seal").textContent') == '新的', '改歌曲資訊：自己畫字的 Skin 也跟著換（水墨的印章）')
+        # share card
+        ev('RESKIN.share.open()')
+        try:
+            pg.wait_for_selector('.share-img', timeout=15000); pg.wait_for_timeout(500)
+            dims = ev('(() => { const i = document.querySelector(".share-img"); return [i.naturalWidth, i.naturalHeight]; })()')
+            ok(dims == [1080, 1350], '分享卡片：做出 1080×1350 的圖（%s）' % dims)
+            pg.screenshot(path=os.path.join(out, 'ui-share.png'))
+        except Exception as e:
+            ok(False, '分享卡片：' + str(e)[:100])
+        ev('RESKIN.ui.closeSheet(true)'); pg.wait_for_timeout(400)
+        # DIY share code: copy, paste back
+        code = ev("RESKIN.diy.toCode({ name: '分享測試', accent: '#ff2bd6', accent2: '#22f3ff', viz: 'ring', layout: 'full', font: 'tech', dim: .4, blur: .3 })")
+        back = ev('(c) => RESKIN.diy.fromCode("朋友傳來：" + c + " 試試看")', code)
+        ok(code.startswith('耳目一新Skin:') and back and back.get('accent') == '#ff2bd6' and back.get('viz') == 'ring', 'DIY 分享碼：複製出來、貼回去還原（夾在別的字中間也認得）')
+        # chorus: found, every skin goes all out; beats can be read ahead
+        ev('RESKIN.lib.addDemo()'); pg.wait_for_function('RESKIN.analysis.left() === 0 && RESKIN.lib.count() === 4', timeout=60000)
+        ev('() => { const t = RESKIN.lib.list().find(t => t.demo); RESKIN.player.playFrom([t.id], t.id, { type: "library" }); }'); pg.wait_for_timeout(1200)
+        spans = ev('RESKIN.viz.hotSpans')
+        ok(bool(spans), '副歌偵測：示範曲找得到副歌（%s）' % spans)
+        ev('RESKIN.player.seek(20)'); pg.wait_for_timeout(500)
+        ahead = ev('RESKIN.viz.upcoming(RESKIN.viz.t, RESKIN.viz.t + 2)')
+        ok(len(ahead) >= 4 and all(ahead[i] > ahead[i - 2] for i in range(2, len(ahead), 2)), '節拍可以提前讀：接下來兩秒的拍點（煙火提前發射，剛好在拍上炸開）')
+        if spans:
+            ev('RESKIN.stage.show("glass", { instant: true, silent: true })'); pg.wait_for_timeout(800)
+            ev('(t) => RESKIN.player.seek(t)', spans[0][0] - 1.2); pg.wait_for_timeout(2600)
+            ok(ev('RESKIN.viz.hot') > 0.5 and ev('RESKIN.hype.count()') > 0, '副歌全開：進副歌時彩帶炮、光束一起來')
+            pg.screenshot(path=os.path.join(out, 'ui-chorus.png'))
+        ok(not errs, '新功能：沒有程式錯誤' + ('' if not errs else '：' + ' | '.join(errs[:5])))
         ctx.close(); b.close()
 
 
@@ -282,7 +411,9 @@ def run_folders(url, out, fd, fx):
         ok(btn.count() == 1, '資料夾：提示上有「存成歌單」')
         if btn.count():
             btn.first.click(); pg.wait_for_timeout(500)
-        P = ev('RESKIN.lib.pl.all().map(p => ({ name: p.name, titles: p.ids.map(id => RESKIN.lib.get(id).title) }))')
+            if pg.is_visible('#modal .md-i'):   # the album has a disc2 subfolder: one playlist for the whole folder
+                pg.click('#modal .md-i:has-text("存成一個歌單")'); pg.wait_for_timeout(500)
+        P = ev('RESKIN.lib.pl.all().filter(p => p.id !== "fav").map(p => ({ name: p.name, titles: p.ids.map(id => RESKIN.lib.get(id).title) }))')
         ok(P == [{'name': '專輯資料夾', 'titles': ['霓虹夜奔', '夜行', '中場', '尾聲']}], '存成歌單：用資料夾名稱、照資料夾順序、已在歌庫的也算')
         ev("RESKIN.library.open('songs')"); pg.wait_for_timeout(600)
         pg.click('[data-l="import"]'); pg.wait_for_timeout(450)
@@ -441,6 +572,7 @@ def run_fallbacks(url, claude_url, out, fx):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--claude')
+    ap.add_argument('--friend')
     ap.add_argument('--out', default='/tmp/reskin-check')
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -449,11 +581,19 @@ def main():
     s2 = serve(a.claude) if a.claude else None
     run_fallbacks(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', f'http://127.0.0.1:{s2.server_address[1]}/' if s2 else None, a.out, fx)
     run_folders(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', a.out, folder_fixtures('/tmp/reskin-folders', fx), fx)
+    run_features(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', a.out, feature_fixtures('/tmp/reskin-feat', fx))
     run(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', a.out, fx, srv)
     if a.claude:
         print('--- Claude 版 ---')
         os.makedirs(os.path.join(a.out, 'claude'), exist_ok=True)
         run(f'http://127.0.0.1:{s2.server_address[1]}/', os.path.join(a.out, 'claude'), fx, None)
+    if a.friend:
+        print('--- 朋友版 ---')
+        page = open(os.path.join(a.friend, 'index.html'), encoding='utf-8').read()
+        ok(not any(w in page for w in ('痞子葳', '收藏庫', 'PZ 遊戲收藏', 'pzwei0105', 'PZ-Games')), '朋友版：沒有痞子葳的名字、沒有收藏庫的網址或字樣')
+        s3 = serve(a.friend)
+        os.makedirs(os.path.join(a.out, 'friend'), exist_ok=True)
+        run(f'http://127.0.0.1:{s3.server_address[1]}/', os.path.join(a.out, 'friend'), fx, s3)
     print('\n截圖在', a.out)
     if BAD:
         print('BAD', len(BAD)); sys.exit(1)

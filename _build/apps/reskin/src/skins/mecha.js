@@ -46,7 +46,7 @@ R.skins.def({
     const MODES = { hype: 'OVERDRIVE', groove: 'CRUISE', sleepy: 'LOW POWER', idle: 'STANDBY' };
     let lastMode = '';
     const N = [{ a: -120, v: 0 }, { a: -120, v: 0 }];
-    let art = null, spin = 0, spin2 = 0, enterT = 9, bolts = [], flash = 0;
+    let art = null, spin = 0, spin2 = 0, enterT = 9, bolts = [];
     const loadArt = (t) => { art = null; if (t) api.coverImage(t).then((im) => { if (api.track() && t && api.track().id === t.id) art = im; }); };
     api.beat((s) => {
       lampSync.classList.remove('on'); void lampSync.offsetWidth; lampSync.classList.add('on');
@@ -62,6 +62,8 @@ R.skins.def({
     return {
       onTrack: loadArt,
       enter() { enterT = 0; },
+      // song change: the reactor powers down and re-ignites with a burst of arcs
+      swap() { enterT = 0.3; api.later(() => { for (let i = 0; i < 8; i++) bolts.push({ a: Math.random() * R.TAU, life: 0.2 + Math.random() * 0.12, seed: Math.random() * 1000 }); }, 560); },
       resize() { cv.resize(); },
       frame(dt, t, v) {
         enterT += dt;

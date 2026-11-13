@@ -65,6 +65,22 @@ R.player = (() => {
     for (const [id, u] of urls) if (!keep.has(id)) { R.dropURL(u); urls.delete(id); }
   }
 
+  /* ---------- sleep timer: minutes from now, or 'end' (stop when this song ends); 0 turns it off ---------- */
+  let sleepAt = 0, sleepEnd = false;
+  const sleepInfo = () => ({ at: sleepAt, end: sleepEnd });
+  function setSleep(v) {
+    sleepAt = typeof v === 'number' && v > 0 ? Date.now() + v * 60000 : 0;
+    sleepEnd = v === 'end';
+    if (sleepEnd) for (const el of els) el.loop = false;
+    bus.emit('sleep', sleepInfo());
+  }
+  function sleepNow() {
+    sleepAt = 0; sleepEnd = false;
+    S.playing = false; for (const el of els) el.pause(); emitState(); saveSession();
+    bus.emit('sleep', sleepInfo());
+    R.toast('睡眠定時到了，晚安 🌙', { ms: 5000 });
+  }
+
   /* ---------- songs that will not play ----------
      A song that fails is skipped, but three failures in a row stop the music and explain, instead of running
      through the whole library. auto: the player moved on by itself (true) or the song was picked (false). */
@@ -168,7 +184,7 @@ R.player = (() => {
     if (!wasOther.paused) wasOther.pause();
     const el = cur();
     markSwitch();
-    el.loop = S.repeat === 'one';
+    el.loop = S.repeat === 'one' && !sleepEnd;
     if (el.dataset.tid !== id || !el.getAttribute('src') || el.src !== u) { clearSeek(el); el.src = u; el.dataset.tid = id; }
     if (opts.at > 0) seekWhenReady(el, opts.at);
     else if (el.currentTime > 0.05 && opts.restart !== false) { try { el.currentTime = 0; } catch (e) { /* ignore */ } }
@@ -203,7 +219,7 @@ R.player = (() => {
       clearSeek(b);
       if (b.dataset.tid !== id || b.src !== u) { b.src = u; b.dataset.tid = id; }
       else { try { b.currentTime = 0; } catch (e) { /* ignore */ } }
-      b.loop = S.repeat === 'one';
+      b.loop = S.repeat === 'one' && !sleepEnd;
       act = 1 - act;
       S.playing = true;
       tryPlay(b);
@@ -211,7 +227,7 @@ R.player = (() => {
     } else {
       const el = cur();
       clearSeek(el);
-      el.src = u; el.dataset.tid = id; el.loop = S.repeat === 'one';
+      el.src = u; el.dataset.tid = id; el.loop = S.repeat === 'one' && !sleepEnd;
       S.playing = true;
       tryPlay(el);
     }
@@ -264,7 +280,7 @@ R.player = (() => {
     S.repeat = S.repeat === 'all' ? 'one' : S.repeat === 'one' ? 'off' : 'all';
     settings.set('repeat', S.repeat);
     for (const el of els) el.loop = false;
-    cur().loop = S.repeat === 'one';
+    cur().loop = S.repeat === 'one' && !sleepEnd;
     emitState(); prepare();
     return S.repeat;
   }
@@ -311,14 +327,16 @@ R.player = (() => {
       if (S.playing && document.hidden && Date.now() - userPauseAt > 1500) diag.note('bgpause');
       S.playing = false; emitState(); updatePos(); saveSession();
     });
-    el.addEventListener('ended', () => { if (k !== act || el.src === SILENT) return; if (S.repeat === 'one') { el.currentTime = 0; tryPlay(el); return; } advance('ended'); });
+    el.addEventListener('ended', () => { if (k !== act || el.src === SILENT) return; if (sleepEnd) { sleepNow(); return; } if (S.repeat === 'one') { el.currentTime = 0; tryPlay(el); return; } advance('ended'); });
     el.addEventListener('timeupdate', () => {
       if (k !== act || el.src === SILENT) return;
+      // the sleep timer is checked here: timeupdate keeps coming while the screen is locked, timers may not
+      if (sleepAt && Date.now() >= sleepAt) { sleepNow(); return; }
       const d = el.duration;
       if (d && isFinite(d)) {
         if (Math.abs(d - S.dur) > 0.5) { S.dur = d; bus.emit('duration', d); }
         // with the screen off, the dual engine starts the next song a hair before this one ends
-        if (document.hidden && engine() === 'dual' && S.repeat !== 'one' && !isSwitching()) {
+        if (document.hidden && engine() === 'dual' && S.repeat !== 'one' && !isSwitching() && !sleepEnd) {
           const rem = d - el.currentTime;
           if (rem > 0 && rem < 0.42 && nextIndex(true) != null) advance('near-end');
         }
@@ -435,7 +453,8 @@ R.player = (() => {
   setVolume(settings.get('volume') == null ? 1 : settings.get('volume'));
 
   return {
-    S, els, unlock, prime, play, pause, toggle, next, prev, seek, setShuffle, cycleRepeat, playFrom, playIndex, playNext, jump, removed, restore, setVolume,
+    S, els, unlock, prime, play, pause, toggle, next, prev, seek, setShuffle, cycleRepeat, playFrom, playIndex, playNext, jump, removed, restore, setVolume, setSleep, sleep: sleepInfo,
+    refreshMeta: () => msMeta(R.lib.get(S.tid)),
     engine, diag, SILENT,
     current: () => R.lib.get(S.tid),
     time: () => cur().currentTime || 0,

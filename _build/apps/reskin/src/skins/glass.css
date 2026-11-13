@@ -30,6 +30,9 @@
 .skin-glass.enter .gl-bg { animation: gl-bg 1.2s ease both; }
 @keyframes gl-in { 0% { opacity: 0; transform: translate(-50%, -44%) scale(.94); filter: blur(14px); } 60% { filter: blur(0); } 100% { opacity: 1; transform: translate(-50%, -50%); filter: none; } }
 @keyframes gl-bg { from { opacity: 0; } to { opacity: 1; } }
+/* next song: the new cover surfaces through frosted glass */
+.skin-glass.swap .gl-art img[data-bind] { animation: gl-surface .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes gl-surface { from { opacity: .2; transform: scale(1.08); filter: blur(18px) saturate(1.4); } to { opacity: 1; transform: none; filter: none; } }
 @media (orientation: landscape) and (min-width: 700px) {
   .skin-glass .gl-card { width: min(860px, 88vw); display: grid; grid-template-columns: min(42vh, 360px) 1fr; gap: 32px; align-items: center; padding: 28px 32px; }
   .skin-glass .gl-now { margin-top: 0; }

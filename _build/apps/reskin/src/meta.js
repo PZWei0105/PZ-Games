@@ -87,6 +87,11 @@ R.meta = (() => {
           const txt = decodeText(d.subarray(st), enc); if (txt && !out.lyrics) out.lyrics = txt.replace(/\u0000/g, '').trim();
           break;
         }
+        case 'TXXX': case 'TXX': {   // some taggers (and ffmpeg) keep plain lyrics in a user text frame
+          const enc = d[0], dEnd = termEnd(d, 1, enc), desc = (decodeText(d.subarray(1, dEnd), enc) || '').replace(/\u0000/g, '').trim().toLowerCase();
+          if (!out.lyrics && /^((unsynced ?)?lyrics|uslt)$/.test(desc)) { const txt = decodeText(d.subarray(dEnd + (enc === 1 || enc === 2 ? 2 : 1)), enc); if (txt) out.lyrics = txt.replace(/\u0000/g, '').trim(); }
+          break;
+        }
         case 'APIC': {
           const enc = d[0]; const mEnd = termEnd(d, 1, 0); const mime = ascii(d, 1, mEnd - 1).toLowerCase();
           const type = d[mEnd + 1]; const dEnd = termEnd(d, mEnd + 2, enc);

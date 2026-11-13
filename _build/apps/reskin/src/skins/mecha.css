@@ -79,6 +79,9 @@
 @keyframes mx-spinl { from { transform: rotate(-200deg) scale(0); } to { transform: none; } }
 @keyframes mx-spinr { from { transform: rotate(200deg) scale(0); } to { transform: none; } }
 @keyframes mx-zoom { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+/* next song: the name plate's letters roll in like a split-flap board */
+.skin-mecha.swap .mx-plate .mx-t, .skin-mecha.swap .mx-plate .mx-a span { animation: mx-flap .5s steps(5, end) .45s both; }
+@keyframes mx-flap { 0% { transform: scaleY(0); opacity: 0; } 40% { transform: scaleY(.3); opacity: 1; } 100% { transform: none; opacity: 1; } }
 @media (orientation: landscape) and (min-width: 640px) {
   .skin-mecha .mx-main { display: grid; grid-template-columns: auto minmax(0, 480px); grid-template-rows: 1fr auto auto auto 1fr; column-gap: 6vw; justify-content: center; align-items: center; padding: calc(var(--st) + 60px) 5vw calc(var(--sb) + 26px); }
   .skin-mecha .mx-core { grid-column: 1; grid-row: 1 / 6; width: min(70vh, 520px); }

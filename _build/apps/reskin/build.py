@@ -7,17 +7,20 @@
   python3 build.py                          # 網頁版 → apps/reskin/
   python3 build.py --claude-out /tmp/rs-c   # 另外輸出 Claude 版（不註冊 service worker）
   python3 build.py --icons                  # 重新產生圖示（需要 playwright、pillow）
+  python3 build.py --friend-out /tmp/rs-f --friend-zip /tmp/耳目一新-朋友版.zip
+                                            # 另外輸出給朋友的版本（拖進 Netlify Drop 用）：沒有痞子葳的名字、
+                                            # 沒有收藏庫的網址或字樣
 """
-import argparse, base64, datetime, json, os
+import argparse, base64, datetime, json, os, shutil, zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'reskin')
 
-SKINS = ['neon', 'mecha', 'nebula', 'jelly', 'gacha', 'vinyl', 'cassette', 'scope', 'glass']
-JS_ORDER = ['core.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'skinkit.js'] \
-    + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'main.js']
+SKINS = ['neon', 'stage', 'mecha', 'nebula', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+JS_ORDER = ['core.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'skinkit.js', 'hype.js'] \
+    + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'lyrics.js', 'share.js', 'extras.js', 'main.js']
 CSS_ORDER = ['style.css'] + ['skins/%s.css' % s for s in SKINS] + ['skins/diy.css']
 FONTS = [  # file, family, weight, style
     ('orbitron-latin-700-normal.woff2', 'Orbitron', 700, 'normal'),
@@ -34,6 +37,7 @@ FONTS = [  # file, family, weight, style
     ('playfair-display-latin-700-normal.woff2', 'Playfair Display', 700, 'normal'),
     ('permanent-marker-latin-400-normal.woff2', 'Permanent Marker', 400, 'normal'),
     ('vt323-latin-400-normal.woff2', 'VT323', 400, 'normal'),
+    ('press-start-2p-latin-400-normal.woff2', 'Press Start 2P', 400, 'normal'),
 ]
 
 
@@ -66,13 +70,44 @@ def compose(version, claude=False):
     js = js.replace("const VERSION = '1.0.0';", "const VERSION = '%s';" % version)
     if claude:
         js = 'window.RESKIN_NO_SW = true;\n' + js
+        for old, new in CLAUDE_SUBS:
+            assert old in js, 'Claude 版：找不到要換的字 ' + old
+            js = js.replace(old, new)
+        assert ' download=' not in js, 'Claude 版裡還有 download 連結'
     return html.replace('/*FONTS*/', fonts_css(), 1).replace('/*CSS*/', css, 1).replace('/*JS*/', js, 1)
+
+
+# 給朋友的版本：把只屬於痞子葳的字眼換掉（每一條都必須找得到，找不到代表原始碼改過，要一起改這裡）
+FRIEND_SUBS = [
+    ("R.WEB_URL = 'https://pzwei0105.github.io/PZ-Games/apps/reskin/';", "R.WEB_URL = '';"),
+    ('content="痞子葳的換膚音樂播放器：', 'content="換膚音樂播放器：'),
+    ('<h2>痞子葳，歌庫還是空的</h2>', '<h2>歌庫還是空的</h2>'),
+    ('（在 iPhone 上，它的歌庫跟收藏庫裡這份是分開的）', '（在 iPhone 上，主畫面的 App 跟這裡的歌庫是分開的）'),
+    ("'你現在是從《PZ 遊戲收藏》裡打開的。' + ", "'' + "),
+    ('<br>痞子葳的換膚音樂播放器 · 版本', '<br>換膚音樂播放器 · 版本'),
+    ("artist: '痞子葳的換膚音樂播放器' }", "artist: '換膚音樂播放器' }"),
+    ('WAKE UP, 痞子葳_', 'WAKE UP_'),
+]
+FRIEND_NEVER = ['痞子葳', '收藏庫', 'PZ 遊戲收藏', 'pzwei0105', 'PZ-Games']
+# the Claude version hands out files only through the artifact's downloads capability: no plain download links in it
+CLAUDE_SUBS = [
+    ("const webLink = (u, name) => `<a class=\"btn pri wide\" href=\"${u}\" download=\"${esc(name)}\">${I.upload}存成圖片</a>`;", "const webLink = () => '';"),
+]
+
+
+def friendly(html):
+    for old, new in FRIEND_SUBS:
+        assert old in html, '朋友版：找不到要換的字 ' + old
+        html = html.replace(old, new)
+    for w in FRIEND_NEVER:
+        assert w not in html, '朋友版裡還有「%s」' % w
+    return html
 
 
 MANIFEST = {
     'name': '耳目一新 RESKIN',
     'short_name': '耳目一新',
-    'description': '痞子葳的換膚音樂播放器：九套 Skin 一鍵換裝，播自己的音樂檔，離線也能聽。',
+    'description': '痞子葳的換膚音樂播放器：十五套 Skin 一鍵換裝，副歌全開特效、歌詞、睡眠定時，播自己的音樂檔，離線也能聽。',
     'lang': 'zh-Hant-TW',
     'start_url': './',
     'scope': './',
@@ -134,6 +169,8 @@ def main():
     ap.add_argument('--icons', action='store_true')
     ap.add_argument('--claude-out')
     ap.add_argument('--out', default=OUT)
+    ap.add_argument('--friend-out')
+    ap.add_argument('--friend-zip')
     a = ap.parse_args()
     version = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y.%m.%d-%H%M')
     os.makedirs(a.out, exist_ok=True)
@@ -152,6 +189,31 @@ def main():
         with open(os.path.join(a.claude_out, 'index.html'), 'w', encoding='utf-8') as f:
             f.write(compose(version, claude=True))
         print('claude version ->', a.claude_out)
+    if a.friend_out or a.friend_zip:
+        fo = a.friend_out or os.path.join('/tmp', 'reskin-friend')
+        if os.path.isdir(fo):
+            shutil.rmtree(fo)
+        os.makedirs(fo)
+        files = {
+            'index.html': friendly(compose(version)).encode('utf-8'),
+            'manifest.webmanifest': json.dumps(dict(MANIFEST, description=MANIFEST['description'].replace('痞子葳的', '')), ensure_ascii=False, indent=1).encode('utf-8'),
+            'sw.js': read('sw.js').replace('__VERSION__', version).encode('utf-8'),
+        }
+        for n in sorted(os.listdir(icons)):
+            with open(os.path.join(icons, n), 'rb') as f:
+                files['icons/' + n] = f.read()
+        for n, data in files.items():
+            assert not any(w.encode('utf-8') in data for w in FRIEND_NEVER), '朋友版的 %s 裡有不該出現的字' % n
+            os.makedirs(os.path.dirname(os.path.join(fo, n)) or fo, exist_ok=True)
+            with open(os.path.join(fo, n), 'wb') as f:
+                f.write(data)
+        print('friend version ->', fo)
+        if a.friend_zip:
+            # files sit at the top of the zip: unzipping gives one folder with index.html directly inside (what Netlify Drop wants)
+            with zipfile.ZipFile(a.friend_zip, 'w', zipfile.ZIP_DEFLATED) as z:
+                for n, data in sorted(files.items()):
+                    z.writestr(n, data)
+            print('friend zip ->', a.friend_zip, '(%d KB)' % (os.path.getsize(a.friend_zip) // 1024))
 
 
 if __name__ == '__main__':

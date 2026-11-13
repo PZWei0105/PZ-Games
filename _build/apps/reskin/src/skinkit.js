@@ -95,11 +95,12 @@ R.stage = (() => {
         for (const e of B.titleart) e.textContent = t ? (t.artist ? t.artist + ' — ' : '') + t.title : n.title;
         for (const e of B.bpm) e.textContent = t && t.bpm ? Math.round(t.bpm) : '--';
         root.classList.toggle('no-track', !t);
-        if (t !== undefined && (t ? t.id : null) === tid && t && (B.cover.length || B.coverbg.length)) return;
-        tid = t ? t.id : null;
+        const key = t ? t.id + ':' + (t.coverRev || 0) : null; // coverRev changes when the cover is replaced
+        if (t !== undefined && key === tid && t && (B.cover.length || B.coverbg.length)) return;
+        tid = key;
         if (!t) { for (const e of B.cover) { e.removeAttribute('src'); e.classList.add('blank'); } for (const e of B.coverbg) e.style.backgroundImage = ''; return; }
         if (B.cover.length || B.coverbg.length) R.art.coverUrl(t, 'full').then((u) => {
-          if (!u || tid !== t.id) return;
+          if (!u || tid !== key) return;
           for (const e of B.cover) { e.classList.remove('blank'); if (e.src !== u) e.src = u; }
           for (const e of B.coverbg) e.style.backgroundImage = `url("${u}")`;
         });
@@ -220,8 +221,21 @@ R.stage = (() => {
     }
   }
 
-  bus.on('track', (t) => { for (const L of layers) { L.b.track(t); L.b.queue(); L.b.tick(true); try { L.inst.onTrack && L.inst.onTrack(t); } catch (e) { console.error(e); } } });
-  bus.on('track:update', (t) => { const c = R.player.current(); if (c && t.id === c.id) for (const L of layers) L.b.track(t); });
+  // song change: every skin gets a .swap class for its own change animation (CSS), and inst.swap(t) for canvas effects
+  let lastTid = null;
+  function swap(L, t) {
+    const r = L.root;
+    r.classList.remove('swap'); void r.offsetWidth; r.classList.add('swap');
+    clearTimeout(L.swapT); L.swapT = setTimeout(() => r.classList.remove('swap'), L.def.swapMs || 1100);
+    try { L.inst.swap && L.inst.swap(t); } catch (e) { console.error(e); }
+  }
+  bus.on('track', (t) => {
+    const id = t ? t.id : null, changed = !!(id && lastTid && id !== lastTid);
+    lastTid = id;
+    for (const L of layers) { L.b.track(t); L.b.queue(); L.b.tick(true); try { L.inst.onTrack && L.inst.onTrack(t); } catch (e) { console.error(e); } if (changed && !L.dead) swap(L, t); }
+  });
+  // title / artist edited (or play counts etc. changed): bound text updates; skins that draw the text themselves get onMeta
+  bus.on('track:update', (t) => { const c = R.player.current(); if (c && t.id === c.id) for (const L of layers) { L.b.track(t); try { L.inst.onMeta && L.inst.onMeta(t); } catch (e) { console.error(e); } } });
   bus.on('state', (st) => { for (const L of layers) { L.b.state(st); try { L.inst.onState && L.inst.onState(st); } catch (e) { console.error(e); } } });
   bus.on('queue', () => { for (const L of layers) L.b.queue(); });
   bus.on('library', () => { if (!R.player.current()) for (const L of layers) L.b.track(null); });
@@ -251,6 +265,7 @@ R.loop = (() => {
     R.qualityMonitor(dt);
     R.viz.update(dt);
     R.stage.frame(dt, now / 1000);
+    if (R.hype) R.hype.frame(dt);
   }
   const start = () => { if (on) return; on = true; last = 0; requestAnimationFrame(frame); };
   const stop = () => { on = false; };
