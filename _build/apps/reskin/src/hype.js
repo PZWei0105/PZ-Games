@@ -113,5 +113,5 @@ R.hype = (() => {
     live = busy || conf.length > 0;
     if (!live && beamA <= 0.01) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); }
   }
-  return { frame, burst: () => R.bus.emit('hot', true), count: () => conf.length };
+  return { frame, burst: () => R.bus.emit('hot', true), count: () => conf.length, live: () => live || beamA > 0.01 };
 })();

@@ -193,6 +193,7 @@ const DEFAULTS = {
   shuffle: false, repeat: 'all', sort: 'added', volume: 1,
   diy: [], vinylCrackle: false, scopeMode: 0, embedHint: false, homeHint: false,
   seenWardrobe: false, demoAdded: false,
+  bloom: true, tilt: true, lockArt: true, transFx: 'auto',
 };
 const settings = {
   v: JSON.parse(JSON.stringify(DEFAULTS)),

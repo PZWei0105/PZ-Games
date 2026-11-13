@@ -310,6 +310,7 @@ R.app = (() => {
     R.player.S.repeat = settings.get('repeat') || 'all';
     R.player.setVolume(settings.get('volume') == null ? 1 : settings.get('volume'));
     await R.lib.load();
+    await R.stats.load();
     try { await R.player.restore(); } catch (e) { console.warn('restore', e); }
     lastTid = R.player.S.tid;
     R.extras.paint();
@@ -317,8 +318,15 @@ R.app = (() => {
     await R.stage.show(R.skins.get(want) ? want : R.skins.builtin()[0].id, { silent: true, instant: true });
     booted = true;
     R.loop.start();
-    setTimeout(() => $('#splash').classList.add('off'), 120);
-    setTimeout(() => $('#splash').remove(), 900);
+    R.boot.ready({ skins: R.skins.builtin().length, songs: R.lib.count(), skin: ((R.stage.current() || {}).en || '').toUpperCase() });
+    R.tilt.resume();
+    // iPhone: offer the gyroscope once (the permission prompt can only come from a tap)
+    if (R.tilt.needsAsk() && settings.get('tilt') !== false && !settings.get('tiltOk') && !settings.get('tiltAsked') && !R.embedded && !R.CLAUDE) {
+      setTimeout(() => {
+        settings.set('tiltAsked', true);
+        R.toast('傾斜手機，畫面會有 3D 立體感', { ms: 9000, action: { label: '打開', fn: () => { R.tilt.enable().then((r) => { if (r === 'granted') R.toast('立體感打開了：歪歪手機看看', { ms: 2600 }); }); } } });
+      }, 6000);
+    }
     updateEmpty();
     setTimeout(() => R.analysis.resume(), 1500);
     if (R.lib.count()) {

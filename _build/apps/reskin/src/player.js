@@ -366,12 +366,23 @@ R.player = (() => {
     h('stop', () => pause());
     // no seekbackward/seekforward: on iPhone they would replace the previous/next buttons
   }
+  let artTok = 0;
   async function msMeta(t) {
     if (!ms || !t) return;
+    const my = ++artTok;
+    const meta = (art) => new MediaMetadata(Object.assign({ title: t.title, artist: t.artist || '耳目一新', album: t.album || '' }, art ? { artwork: [art] } : {}));
     try {
-      ms.metadata = new MediaMetadata({ title: t.title, artist: t.artist || '耳目一新', album: t.album || '' });
+      ms.metadata = meta(null);
       const u = await R.art.coverUrl(t, 'full');
-      if (u && S.tid === t.id) ms.metadata = new MediaMetadata({ title: t.title, artist: t.artist || '耳目一新', album: t.album || '', artwork: [{ src: u, sizes: '512x512', type: 'image/jpeg' }] });
+      if (u && S.tid === t.id && my === artTok) ms.metadata = meta({ src: u, sizes: '512x512', type: 'image/jpeg' });
+      // a moment later the cover is swapped for a card in the style of the skin being worn
+      if (R.poster && settings.get('lockArt') !== false) {
+        setTimeout(async () => {
+          if (my !== artTok || S.tid !== t.id) return;
+          const c = await R.poster.lock(t).catch(() => null);
+          if (c && my === artTok && S.tid === t.id) ms.metadata = meta({ src: c, sizes: '600x600', type: 'image/jpeg' });
+        }, document.hidden ? 50 : 1900);
+      }
     } catch (e) { /* ignore */ }
   }
   function updatePos() {

@@ -83,13 +83,19 @@ R.extras = (() => {
     const k = await R.ui.menu([
       { key: 'lyrics', label: R.lyrics.isOpen() ? '收起歌詞' : '歌詞', sub: !t ? '先放一首歌' : lk === 'synced' ? '這首有歌詞，唱到哪亮到哪' : lk === 'plain' ? '這首有歌詞' : '這首還沒有歌詞，可以貼上', icon: I.mic },
       { key: 'sleep', label: '睡眠定時', sub: s.at || s.end ? sleepText() : '時間到就停，鎖屏也照樣算', icon: I.moon, on: !!(s.at || s.end) },
+      { key: 'intel', label: '歌曲情報', sub: !t ? '先放一首歌' : 'BPM、調性、能量曲線，一鍵跳到副歌', icon: I.info },
+      { key: 'clip', label: '做成音樂短片', sub: '9:16 直式，帶 Skin 特效和歌詞，發 IG、Shorts', icon: I.sparkle },
       { key: 'share', label: '分享正在聽的歌', sub: '做成一張圖傳給朋友', icon: I.share },
+      { key: 'report', label: '聽歌報告', sub: '聽了多久、最愛哪首、最常穿哪套', icon: I.party },
       { key: 'edit', label: '改這首的資訊', sub: '歌名、歌手、封面、歌詞', icon: I.edit },
       { key: 'settings', label: '設定', icon: I.gear },
     ], { title: t ? t.title : '耳目一新' });
     if (k === 'lyrics') { if (t) R.lyrics.toggle(); else R.toast('先放一首歌'); }
     else if (k === 'sleep') sleepMenu();
     else if (k === 'share') { if (t) R.share.open(); else R.toast('先放一首歌'); }
+    else if (k === 'intel') { if (t) R.insight.open(t.id); else R.toast('先放一首歌'); }
+    else if (k === 'clip') { if (t) R.clip.open(t.id); else R.toast('先放一首歌'); }
+    else if (k === 'report') R.report.open();
     else if (k === 'edit') { if (t) editTrack(t.id); else R.toast('先放一首歌'); }
     else if (k === 'settings') R.settingsUI.show();
   }

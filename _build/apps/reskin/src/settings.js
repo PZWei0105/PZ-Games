@@ -29,7 +29,12 @@ R.settingsUI = (() => {
       <div class="set-g">
         <div class="set-r"><div class="lb"><b>介面音效</b><small>按鈕、換 Skin 的音效，每套 Skin 的聲音都不一樣</small></div>${sw('sfx')}</div>
         <div class="set-r set-col"><div class="lb"><b>介面音效音量</b></div><input type="range" min="0" max="1" step="0.05" value="${settings.get('sfxVol')}" data-range="sfxVol" aria-label="介面音效音量"></div>
-        <div class="set-r"><div class="lb"><b>閃光特效</b><small>重拍時的故障閃爍、爆閃；怕刺眼可以關掉</small></div>${sw('flash')}</div>
+        <div class="set-r"><div class="lb"><b>閃光特效</b><small>重拍時的故障閃爍、爆閃、副歌的鏡頭色散；怕刺眼可以關掉</small></div>${sw('flash')}</div>
+        <div class="set-r"><div class="lb"><b>霓虹泛光</b><small>用顯示卡替每套 Skin 的光加上光暈（像《全知》那種發光感）${R.fx.ok() || R.fx.css() ? '' : '，第一次開啟時啟動'}</small></div>${sw('bloom')}</div>
+        <div class="set-r"><div class="lb"><b>陀螺儀立體感</b><small>${R.tilt.available() ? '傾斜手機，畫面的前景、背景和封面會錯開，有 3D 深度' + (R.tilt.needsAsk() ? '（iPhone 會先問一次能不能用動作感測）' : '') : '電腦上跟著滑鼠微微傾斜；手機上用陀螺儀'}</small></div>${sw('tilt')}</div>
+        <div class="set-r"><div class="lb"><b>開機動畫</b><small>每次打開 App 的科幻啟動，點一下就跳過</small></div><button type="button" class="sw${R.boot.enabled() ? ' on' : ''}" data-s="boot" role="switch" aria-checked="${R.boot.enabled()}"></button></div>
+        <div class="set-r set-col"><div class="lb"><b>換 Skin 轉場</b><small>「自動」會輪流用、也會照 Skin 的個性挑</small></div>${seg('transFx', [['auto', '自動'], ['portal', '傳送門'], ['shatter', '玻璃碎裂'], ['pixel', '像素溶解'], ['classic', '經典']])}</div>
+        <div class="set-r"><div class="lb"><b>鎖屏封面換膚</b><small>鎖屏和控制中心的封面，變成現在這套 Skin 風格的卡片</small></div>${sw('lockArt')}</div>
         <div class="set-r set-col"><div class="lb"><b>畫質</b><small>「自動」在手機變慢時會自己降一點解析度</small></div>${seg('quality', [['auto', '自動'], ['high', '最高'], ['low', '省電']])}</div>
       </div>
       <div class="sec-t">換膚</div>
@@ -61,7 +66,21 @@ R.settingsUI = (() => {
     if (R.ui.sheetKind() !== 'settings') return;
     const b = R.ui.body(); if (!b.contains(e.target)) return;
     const s = e.target.closest('[data-sw]');
-    if (s) { const k = s.dataset.sw; settings.set(k, !settings.get(k)); s.classList.toggle('on', !!settings.get(k)); s.setAttribute('aria-checked', String(!!settings.get(k))); R.sfx.play('toggle'); return; }
+    if (s) {
+      const k = s.dataset.sw;
+      // the gyroscope: iPhone asks for permission, and only straight from a tap
+      if (k === 'tilt' && !settings.get('tilt')) {
+        R.tilt.enable().then((r) => {
+          if (r === 'denied') R.toast(R.CLAUDE || R.embedded ? '這裡拿不到陀螺儀：單獨打開網頁版（加到主畫面）就能用' : '沒有拿到動作感測的權限：可以到 iPhone「設定 → App → Safari → 動作與方向取用」打開', { ms: 6000 });
+          refresh();
+        });
+        R.sfx.play('toggle'); return;
+      }
+      if (k === 'tilt') { R.tilt.disable(); s.classList.remove('on'); s.setAttribute('aria-checked', 'false'); R.sfx.play('toggle'); return; }
+      settings.set(k, !settings.get(k)); s.classList.toggle('on', !!settings.get(k)); s.setAttribute('aria-checked', String(!!settings.get(k))); R.sfx.play('toggle');
+      if (k === 'lockArt') R.player.refreshMeta();
+      return;
+    }
     const g = e.target.closest('[data-seg]');
     if (g) {
       settings.set(g.dataset.seg, g.dataset.v); R.sfx.play('toggle');
@@ -71,6 +90,7 @@ R.settingsUI = (() => {
     }
     const a = e.target.closest('[data-s]');
     if (!a) return;
+    if (a.dataset.s === 'boot') { const on = !R.boot.enabled(); R.boot.setEnabled(on); a.classList.toggle('on', on); a.setAttribute('aria-checked', String(on)); R.sfx.play('toggle'); return; }
     if (a.dataset.s === 'persist') { const ok = await R.db.persist(); R.toast(ok ? '已開啟，瀏覽器不會自動清掉你的歌' : (R.isIOS && !R.standalone ? '先加到主畫面，iPhone 才會保留' : '瀏覽器沒有答應，常用它就會比較穩')); refresh(); }
     else if (a.dataset.s === 'demo') { R.ui.closeSheet(true); R.app.addDemo(); }
     else if (a.dataset.s === 'wipe') {

@@ -2,6 +2,7 @@
 R.skins.def({
   id: 'glass', name: '毛玻璃', group: '極簡', en: 'FROSTED',
   desc: '自動從專輯封面取色，清爽耐看',
+  bloom: { s: 0.2, th: 0.82 }, hero: '.gl-art', trans: 'shatter',
   theme: { bg: '#10131c', fg: '#ffffff', accent: '#9cc2ff', accent2: '#ffc4e6', ui: 'rgba(22,24,34,.97)', dock: 'rgba(255,255,255,.14)', dockfg: '#fff' },
   enterMs: 1200,
   emblem: `<svg class="em" viewBox="0 0 116 150"><defs><radialGradient id="gla" cx=".3" cy=".25" r=".9"><stop offset="0" stop-color="#ffb3d9"/><stop offset=".5" stop-color="#8db4ff"/><stop offset="1" stop-color="#1b2140"/></radialGradient></defs><rect width="116" height="150" fill="url(#gla)"/><rect x="18" y="26" width="80" height="98" rx="14" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.55)"/><rect x="28" y="36" width="60" height="44" rx="8" fill="rgba(255,255,255,.55)"/><rect x="28" y="88" width="44" height="5" rx="2.5" fill="#fff"/><rect x="28" y="98" width="30" height="4" rx="2" fill="rgba(255,255,255,.6)"/><circle cx="58" cy="113" r="5" fill="#fff"/></svg>`,

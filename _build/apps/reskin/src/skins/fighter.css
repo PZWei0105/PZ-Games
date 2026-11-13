@@ -1,0 +1,46 @@
+/* ---------- 戰機座艙 SKY ACE ---------- */
+.skin-fighter { --lv: 0; --g: #7cff9b; --a: #ffb347; color: #e8fff0; font-family: "Share Tech Mono", var(--sans); background: #060a10; }
+.skin-fighter .ft-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* canopy bow and frame */
+.skin-fighter .ft-frame { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(150% 118% at 50% 104%, transparent 84%, rgba(3,5,8,.9) 86.5%, #04060a 94%),
+    linear-gradient(to right, rgba(3,5,8,.85), transparent 4%, transparent 96%, rgba(3,5,8,.85)); }
+.skin-fighter .ft-frame::after { content: ""; position: absolute; left: 50%; top: 0; width: 6px; height: 5%; margin-left: -3px; background: linear-gradient(#0b0f16, #04060a); box-shadow: 0 0 0 1px rgba(255,255,255,.04); }
+.skin-fighter .ft-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px calc(var(--sr) + 14px) calc(var(--sb) + 12px) calc(var(--sl) + 14px);
+  background: linear-gradient(#1a1f26, #0c1015 18%, #080b0f); border-top: 2px solid #2b323c; box-shadow: 0 -12px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05); }
+.skin-fighter .ft-panel::before, .skin-fighter .ft-panel::after { content: ""; position: absolute; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #8a929e, #2a3038); }
+.skin-fighter .ft-panel::before { left: 8px; } .skin-fighter .ft-panel::after { right: 8px; }
+.skin-fighter .ft-mfd { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; background: #030805; border: 2px solid #232a33; box-shadow: inset 0 0 22px rgba(124,255,155,.12), 0 0 0 1px #000; position: relative; overflow: hidden; }
+.skin-fighter .ft-mfd::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(124,255,155,.05) 0 1px, transparent 1px 3px); }
+.skin-fighter .ft-art { flex: none; width: 58px; height: 58px; border: 1.5px solid var(--g); padding: 2px; box-shadow: 0 0 12px rgba(124,255,155,.35); }
+.skin-fighter .ft-art img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(.8) contrast(1.1); }
+.skin-fighter .ft-art img.blank { opacity: 0; }
+.skin-fighter .ft-tx { flex: 1; min-width: 0; color: var(--g); }
+.skin-fighter .ft-tx small { display: block; font-size: 10px; letter-spacing: .2em; opacity: .7; }
+.skin-fighter .ft-t { margin-top: 2px; font-family: var(--sans); font-weight: 700; font-size: 18px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 8px rgba(124,255,155,.6); }
+.skin-fighter .ft-a { margin-top: 2px; font-size: 12.5px; letter-spacing: .1em; color: var(--a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-fighter .ft-seek { margin-top: 12px; padding: 4px 2px 6px; }
+.skin-fighter .ft-sl { display: flex; justify-content: space-between; font-size: 10.5px; letter-spacing: .16em; color: rgba(124,255,155,.75); margin-bottom: 7px; }
+.skin-fighter .ft-seek .seek-track { height: 8px; background: #030805; border: 1px solid #2b323c; }
+.skin-fighter .ft-seek .seek-fill { background: repeating-linear-gradient(90deg, var(--g) 0 5px, transparent 5px 7px); box-shadow: 0 0 8px rgba(124,255,155,.5); }
+.skin-fighter .ft-seek .seek-knob { width: 4px; height: 16px; background: var(--a); box-shadow: 0 0 8px var(--a); }
+.skin-fighter .ft-ctrl { margin-top: 6px; justify-content: space-between; gap: 6px; }
+.skin-fighter .ft-ctrl button { flex: 1; max-width: 72px; height: 54px; display: grid; place-items: center; gap: 2px; padding-top: 4px; border-radius: 6px; color: var(--g); font-size: 18px; background: linear-gradient(#2a313b, #151a21); border: 1px solid #3a424e; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 3px 0 #05070a; transition: transform .1s; }
+.skin-fighter .ft-ctrl button i { font-style: normal; font-size: 8.5px; letter-spacing: .14em; color: rgba(232,255,240,.6); }
+.skin-fighter .ft-ctrl button:active { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 1px 0 #05070a; }
+.skin-fighter .ft-ctrl .c-play { max-width: 92px; color: #061008; background: linear-gradient(#9dffb8, #4fd277); border-color: #8affaa; box-shadow: 0 0 calc(10px + var(--lv) * 22px) rgba(124,255,155,.55), 0 3px 0 #1f5a33; }
+.skin-fighter .ft-ctrl .c-play i { color: #061008; }
+.skin-fighter.hot .ft-mfd { box-shadow: inset 0 0 22px rgba(255,77,77,.18), 0 0 0 1px #000; }
+.skin-fighter.hot .ft-art { border-color: #ff4d4d; box-shadow: 0 0 14px rgba(255,77,77,.5); }
+.skin-fighter.enter .ft-panel { animation: ft-up .8s cubic-bezier(.2,.8,.2,1) .2s both; }
+.skin-fighter.enter .ft-mfd { animation: ft-boot 1s steps(1) .8s both; }
+@keyframes ft-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes ft-boot { 0% { filter: brightness(0); } 25% { filter: brightness(1.6); } 35% { filter: brightness(.3); } 50%, 100% { filter: none; } }
+.skin-fighter.swap .ft-t, .skin-fighter.swap .ft-a { animation: ft-type .7s steps(12) both; }
+.skin-fighter.swap .ft-a { animation-delay: .2s; }
+@keyframes ft-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-fighter .ft-panel { left: auto; top: 0; width: min(360px, 44vw); padding-top: calc(var(--st) + 56px); border-top: 0; border-left: 2px solid #2b323c; }
+  .skin-fighter .ft-ctrl button { height: 46px; }
+}
+@media (orientation: landscape) and (min-height: 521px) { .skin-fighter .ft-panel { max-width: 640px; margin: 0 auto; border-radius: 14px 14px 0 0; border: 2px solid #2b323c; border-bottom: 0; } }

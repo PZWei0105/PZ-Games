@@ -94,48 +94,56 @@ R.share = (() => {
   let dlCap = null;
   if (R.CLAUDE && window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then((d) => { dlCap = d || null; }).catch(() => {});
   // web version only (build.py drops it from the Claude version)
-  const webLink = (u, name) => `<a class="btn pri wide" href="${u}" download="${esc(name)}">${I.upload}存成圖片</a>`;
+  const webLink = (u, name, label) => `<a class="btn pri wide" href="${u}" download="${esc(name)}">${I.upload}${label || '存成圖片'}</a>`;
 
-  let card = null;
+  // a picture or a video, ready to go out: the share sheet (phones), the Claude downloads capability, or a download
+  let cur = null;
+  async function present(o) {
+    const type = o.blob.type || (o.video ? 'video/mp4' : 'image/png');
+    const file = new File([o.blob], o.name, { type });
+    const viaCap = !!(R.CLAUDE && dlCap);
+    const canShare = !viaCap && !!(navigator.canShare && (() => { try { return navigator.canShare({ files: [file] }); } catch (e) { return false; } })());
+    const u = o.video ? URL.createObjectURL(o.blob) : await R.imageURL(o.blob);
+    const dl = !canShare && !R.CLAUDE && !R.isIOS;
+    const media = o.video ? `<video class="share-img share-vid" src="${u}" playsinline controls loop autoplay muted></video>` : `<img class="share-img" src="${u}" alt="${esc(o.title || '')}">`;
+    const tip = viaCap ? '' : o.video ? (canShare ? '按上面的按鈕就能存到相簿，或直接傳到 IG、YouTube Shorts。' : dl ? '' : '在影片上長按或按右鍵就能存起來。') : `${canShare ? '也可以' : ''}${R.isTouch ? '長按圖片就能存起來或傳出去。' : canShare || dl ? '' : '在圖片上按右鍵就能存起來。'}`;
+    R.ui.openSheet(`<div class="sh-head"><h3>${esc(o.heading || '分享')}</h3><button type="button" class="ib" data-sh="close" aria-label="關閉">${I.close}</button></div>
+      <div class="sc share-sc">${media}
+        <div class="btn-row" style="padding:12px 4px 4px">
+          ${viaCap ? `<button type="button" class="btn pri wide" data-sh="save">${I.share}存起來或傳出去</button>` : ''}
+          ${canShare ? `<button type="button" class="btn pri wide" data-sh="go">${I.share}${o.video ? '存到相簿或分享' : '傳給朋友'}</button>` : ''}
+          ${dl ? webLink(u, file.name, o.video ? '下載影片' : '存成圖片') : ''}
+        </div>
+        <p class="share-tip">${tip}</p>${o.note ? `<p class="share-tip">${esc(o.note)}</p>` : ''}</div>`, { kind: 'share', onClose: () => { if (o.video) URL.revokeObjectURL(u); else R.dropURL(u); cur = null; if (o.onClose) o.onClose(); } });
+    R.stage.sfx('ok');
+    cur = { file, blob: o.blob, title: o.title || '', text: o.text || '' };
+  }
   async function open() {
     R.ui.busy('做分享圖中', '一下就好', null);
+    let card = null;
     try { card = await make(); } catch (e) { console.error(e); card = null; }
     R.ui.busy(null);
     if (!card) { R.toast('分享圖沒做成功，再試一次'); return; }
-    const file = new File([card.blob], `耳目一新-${card.title.replace(/[\\/:*?"<>|]/g, '').slice(0, 40) || '正在聽'}.png`, { type: 'image/png' });
-    const viaCap = !!(R.CLAUDE && dlCap);
-    const canShare = !viaCap && !!(navigator.canShare && (() => { try { return navigator.canShare({ files: [file] }); } catch (e) { return false; } })());
-    const u = await R.imageURL(card.blob);
-    const dl = !canShare && !R.CLAUDE && !R.isIOS;
-    R.ui.openSheet(`<div class="sh-head"><h3>分享正在聽的歌</h3><button type="button" class="ib" data-sh="close" aria-label="關閉">${I.close}</button></div>
-      <div class="sc share-sc"><img class="share-img" src="${u}" alt="分享圖：${esc(card.title)}">
-        <div class="btn-row" style="padding:12px 4px 4px">
-          ${viaCap ? `<button type="button" class="btn pri wide" data-sh="save">${I.share}存起來或傳出去</button>` : ''}
-          ${canShare ? `<button type="button" class="btn pri wide" data-sh="go">${I.share}傳給朋友</button>` : ''}
-          ${dl ? webLink(u, file.name) : ''}
-        </div>
-        <p class="share-tip">${viaCap ? '' : `${canShare ? '也可以' : ''}${R.isTouch ? '長按圖片就能存起來或傳出去。' : canShare || dl ? '' : '在圖片上按右鍵就能存起來。'}`}</p></div>`, { kind: 'share', onClose: () => { R.dropURL(u); card = null; } });
-    R.stage.sfx('ok');
-    card.file = file;
+    present({ blob: card.blob, name: `耳目一新-${card.title.replace(/[\\/:*?"<>|]/g, '').slice(0, 40) || '正在聽'}.png`, title: card.title, text: `正在聽：${card.title}${card.artist ? ' — ' + card.artist : ''}`, heading: '分享正在聽的歌' });
   }
   document.addEventListener('click', async (e) => {
     if (R.ui.sheetKind() !== 'share') return;
     const b = e.target.closest('[data-sh]'); if (!b) return;
     if (b.dataset.sh === 'close') { R.ui.closeSheet(); return; }
-    if (b.dataset.sh === 'save' && card && dlCap) {
-      try { const r = await dlCap.save({ filename: card.file.name, data: card.blob }); if (r && r.status === 'saved') R.toast('好了：圖片交出去了'); }
+    if (b.dataset.sh === 'save' && cur && dlCap) {
+      try { const r = await dlCap.save({ filename: cur.file.name, data: cur.blob }); if (r && r.status === 'saved') R.toast('好了：檔案交出去了'); }
       catch (err) {
         const code = err && err.code;
         if (code === 'declined') return;
         if (code === 'rate_limited') { R.toast('上一個確認視窗還開著，稍等一下再按'); return; }
-        b.remove(); R.toast('這裡存不了圖片：長按圖片試試，或打開網頁版');
+        b.remove(); R.toast('這裡存不了：長按試試，或打開網頁版');
       }
       return;
     }
-    if (b.dataset.sh === 'go' && card && card.file) {
-      try { await navigator.share({ files: [card.file], title: card.title, text: `正在聽：${card.title}${card.artist ? ' — ' + card.artist : ''}` }); }
-      catch (err) { if (err && err.name !== 'AbortError') R.toast('沒有分享出去，可以長按圖片存起來再傳'); }
+    if (b.dataset.sh === 'go' && cur && cur.file) {
+      try { await navigator.share({ files: [cur.file], title: cur.title, text: cur.text }); }
+      catch (err) { if (err && err.name !== 'AbortError') R.toast('沒有分享出去，可以長按存起來再傳'); }
     }
   });
-  return { open, make };
+  return { open, make, present };
 })();

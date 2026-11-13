@@ -2,6 +2,7 @@
 R.skins.def({
   id: 'scope', name: '綠光示波器', group: '復古', en: 'OSCILLOSCOPE',
   desc: '聲音直接畫成磷光波形，還能切李薩如和頻譜',
+  bloom: { s: 0.85, th: 0.42, tint: '#7cff9b' }, trans: 'pixel',
   theme: { bg: '#1c201d', fg: '#c9f7d2', accent: '#6dff8f', accent2: '#ffd36b', ui: 'rgba(16,22,18,.98)', dock: 'rgba(10,14,11,.6)', dockfg: '#6dff8f' },
   enterMs: 1400,
   emblem: `<svg class="em" viewBox="0 0 116 150"><rect width="116" height="150" fill="#2a2f2b"/><rect x="10" y="16" width="96" height="74" rx="10" fill="#0d0f0e"/><rect x="16" y="22" width="84" height="62" rx="8" fill="#03140a"/><g stroke="#1f5c33" stroke-width=".8"><path d="M16 53h84M58 22v62M37 22v62M79 22v62M16 37h84M16 69h84"/></g><path d="M18 53c6-20 10-20 14 0s8 20 13 0 9-26 13 0 8 18 13 0 8-14 12 0 6 8 9 0" fill="none" stroke="#6dff8f" stroke-width="2.4"/><rect x="10" y="100" width="96" height="40" rx="6" fill="#bfc3bb"/><g fill="#1a1a1a"><circle cx="30" cy="114" r="8"/><circle cx="58" cy="114" r="8"/><circle cx="86" cy="114" r="8"/></g><g stroke="#fff" stroke-width="1.6"><path d="M30 114l4-5M58 114l-5-3M86 114l1-6"/></g><rect x="20" y="128" width="76" height="5" rx="2.5" fill="#333"/><circle cx="96" cy="104" r="2.5" fill="#6dff8f"/></svg>`,

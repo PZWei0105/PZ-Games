@@ -147,5 +147,5 @@ R.viz = (() => {
     }
     return out;
   }
-  return Object.assign(v, { update, onBeat, upcoming, has: () => !!data });
+  return Object.assign(v, { update, onBeat, upcoming, has: () => !!data, hotSpansOf: (r) => (r ? r.hot || (r.hot = hotSpans(r)) : []) });
 })();

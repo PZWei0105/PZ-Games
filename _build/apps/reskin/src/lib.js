@@ -251,13 +251,14 @@ R.lib = (() => {
 
   const pl = {
     all: () => playlists.slice(),
-    get: (id) => (id === 'fav' ? favPL() : playlists.find((p) => p.id === id) || null),
+    get: (id) => (id === 'fav' ? favPL() : /^smart:/.test(id || '') ? R.smart.pl(id) : playlists.find((p) => p.id === id) || null),
     async create(name, ids) {
       const p = { id: R.uid(), name: (name || '').trim() || '新歌單', ids: (ids || []).slice(), skin: null, created: Date.now() };
       playlists.push(p); await R.db.put('playlists', p); bus.emit('playlists'); return p;
     },
     async save(p) {
       if (p.id === 'fav') { R.settings.set('favSkin', p.skin || null); bus.emit('playlists'); return; }
+      if (p.smart) { R.smart.bind(p.id, p.skin); return; }
       await R.db.put('playlists', p); bus.emit('playlists');
     },
     async remove(id) { if (id === 'fav') return; playlists = playlists.filter((p) => p.id !== id); await R.db.del('playlists', id).catch(() => {}); bus.emit('playlists'); },
