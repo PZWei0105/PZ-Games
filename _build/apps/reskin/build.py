@@ -7,9 +7,11 @@
   python3 build.py                          # 網頁版 → apps/reskin/
   python3 build.py --claude-out /tmp/rs-c   # 另外輸出 Claude 版（不註冊 service worker）
   python3 build.py --icons                  # 重新產生圖示（需要 playwright、pillow）
+  python3 build.py --friend-one /home/claude/out/朋友版/index.html
+                                            # 給朋友的版本，一個檔案就是整個網站（推薦）：沒有痞子葳的名字、
+                                            # 沒有收藏庫的網址或字樣；manifest、主畫面圖示都內嵌，沒有 service worker
   python3 build.py --friend-out /tmp/rs-f --friend-zip /tmp/耳目一新-朋友版.zip
-                                            # 另外輸出給朋友的版本（拖進 Netlify Drop 用）：沒有痞子葳的名字、
-                                            # 沒有收藏庫的網址或字樣
+                                            # 同一個朋友版的多檔案包（index.html＋manifest＋sw.js＋icons，能離線開）
 """
 import argparse, base64, datetime, json, os, shutil, zipfile
 
@@ -59,7 +61,7 @@ def fonts_css():
     return '\n'.join(out)
 
 
-def compose(version, claude=False):
+def compose(version, claude=False, onefile=False):
     html = read('index.html')
     js = '\n'.join('/* ---- %s ---- */\n' % n + read(n) for n in JS_ORDER if exists(n))
     css = '\n'.join(read(n) for n in CSS_ORDER if exists(n))
@@ -68,6 +70,8 @@ def compose(version, claude=False):
         assert '</style' not in v.lower(), k + ' contains </style>'
     assert "const VERSION = '1.0.0';" in js
     js = js.replace("const VERSION = '1.0.0';", "const VERSION = '%s';" % version)
+    if onefile:
+        js = 'window.RESKIN_ONEFILE = true;\n' + js
     if claude:
         js = 'window.RESKIN_NO_SW = true;\n' + js
         for old, new in CLAUDE_SUBS:
@@ -93,6 +97,27 @@ FRIEND_NEVER = ['痞子葳', '收藏庫', 'PZ 遊戲收藏', 'pzwei0105', 'PZ-Ga
 CLAUDE_SUBS = [
     ("const webLink = (u, name) => `<a class=\"btn pri wide\" href=\"${u}\" download=\"${esc(name)}\">${I.upload}存成圖片</a>`;", "const webLink = () => '';"),
 ]
+
+
+def one_file(html, icons):
+    """The friend edition as ONE file: manifest and home-screen icon inlined, no service worker. Drop it on any static
+    host (Netlify Drop takes a single HTML file; GitHub Pages takes an upload) and it works as the site's index.html."""
+    import base64, urllib.parse
+    b64 = lambda n: base64.b64encode(open(os.path.join(icons, n), 'rb').read()).decode()
+    man = {k: v for k, v in MANIFEST.items() if k not in ('start_url', 'scope', 'icons')}
+    man['description'] = man['description'].replace('痞子葳的', '').replace('，離線也能聽', '')
+    man['icons'] = [{'src': 'data:image/png;base64,' + b64('icon-192.png'), 'sizes': '192x192', 'type': 'image/png'}]
+    subs = [
+        ('<link rel="manifest" href="manifest.webmanifest">', '<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%s">' % urllib.parse.quote(json.dumps(man, ensure_ascii=False))),
+        ('<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">', '<link rel="apple-touch-icon" href="data:image/png;base64,%s">' % b64('apple-touch-icon.png')),
+    ]
+    for old, new in subs:
+        assert old in html, '單檔版：找不到要換的字 ' + old
+        html = html.replace(old, new)
+    # without a service worker the page itself needs the network to open (the songs still play without it)
+    assert '，離線也能開。' in html
+    html = html.replace('，離線也能開。', '。')
+    return html
 
 
 def friendly(html):
@@ -171,6 +196,7 @@ def main():
     ap.add_argument('--out', default=OUT)
     ap.add_argument('--friend-out')
     ap.add_argument('--friend-zip')
+    ap.add_argument('--friend-one')   # 朋友版單一檔案（一個 index.html 就能放上網）
     a = ap.parse_args()
     version = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y.%m.%d-%H%M')
     os.makedirs(a.out, exist_ok=True)
@@ -214,6 +240,13 @@ def main():
                 for n, data in sorted(files.items()):
                     z.writestr(n, data)
             print('friend zip ->', a.friend_zip, '(%d KB)' % (os.path.getsize(a.friend_zip) // 1024))
+    if a.friend_one:
+        page = one_file(friendly(compose(version, onefile=True)), icons).encode('utf-8')
+        assert not any(w.encode('utf-8') in page for w in FRIEND_NEVER)
+        os.makedirs(os.path.dirname(os.path.abspath(a.friend_one)), exist_ok=True)
+        with open(a.friend_one, 'wb') as f:
+            f.write(page)
+        print('friend one-file ->', a.friend_one, '(%d KB)' % (len(page) // 1024))
 
 
 if __name__ == '__main__':
