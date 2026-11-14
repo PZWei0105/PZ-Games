@@ -695,6 +695,7 @@ function cover(g, cls = '') {
   if (g.status === 'dev') tags.push(`<span class="chip st-dev">製作中</span>`);
   if (g.status === 'failed') tags.push(`<span class="chip st-failed">試作失敗</span>`);
   if (isNew(g) && g.kind === 'game') tags.push(`<span class="chip new">新</span>`);
+  if (g.remake) tags.push(`<span class="chip remake">${esc(g.remake.ver || '2.0')} 重製</span>`);
   const img = m.cover ? `<img src="${esc(m.cover)}" alt="" loading="lazy" decoding="async">` : `<div class="glyph">${esc((g.glyph || g.title || '?').slice(0, 1))}${g.kind === 'archive' ? `<small>${esc(STATUS[g.status] || '')}</small>` : ''}</div>`;
   // mastery pips: five little lights, lit up to how well you know this game
   const tr = g.kind === 'game' ? tierOf(statOf(g.id)) : -1;
@@ -789,6 +790,7 @@ function renderHome() {
   shelves += shelf('我的最愛', favs);
   shelves += shelf('PZ 推薦', picks, { desc: '你玩過、親口說好的那幾款。' });
   shelves += shelf('最新入庫', fresh, { sub: (g) => fmtDate(g.created).replace(/^\d+ 年 /, '') + '入庫' });
+  shelves += shelf('重製 2.0', live.filter((g) => g.remake).sort((a, b) => (b.remake.date || '').localeCompare(a.remake.date || '')), { desc: '換上 PZ 引擎、重新打磨過的舊作：玩法不變，手感升級。', sub: (g) => fmtDate(g.remake.date).replace(/^\d+ 年 /, '') + '重製', more: { act: 'lib-genre', arg: 'remake' } });
   for (const k of GENRE_ORDER) {
     const items = live.filter((g) => g.genre === k);
     shelves += shelf(S.genres[k] ? S.genres[k].label : k, items, { more: { act: 'lib-genre', arg: k } });
@@ -884,6 +886,7 @@ function renderLibrary() {
   const counts = {}; vis.forEach((g) => { counts[g.genre] = (counts[g.genre] || 0) + 1; });
   const gchips = [`<button class="fchip${L.genre === 'all' && !L.fav ? ' on' : ''}" data-act="f-genre" data-arg="all">全部<span class="n">${vis.length}</span></button>`,
     `<button class="fchip${L.fav ? ' on' : ''}" data-act="f-fav">我的最愛<span class="n">${vis.filter((g) => S.favs.has(g.id)).length}</span></button>`,
+    ...(vis.some((g) => g.remake) ? [`<button class="fchip remake${L.genre === 'remake' ? ' on' : ''}" data-act="f-genre" data-arg="remake">重製 2.0<span class="n">${vis.filter((g) => g.remake).length}</span></button>`] : []),
     ...GENRE_ORDER.filter((k) => counts[k]).map((k) => `<button class="fchip${L.genre === k ? ' on' : ''}" data-act="f-genre" data-arg="${k}">${esc(S.genres[k].label)}<span class="n">${counts[k]}</span></button>`)].join('');
   // only offer the statuses some game actually has (an empty 「試作失敗」 chip is just clutter)
   const sts = [['all', '全部狀態'], ['shipped', '已完成'], ['dev', '製作中'], ['failed', '試作失敗']].filter(([k]) => k === 'all' || S.games.some((g) => g.status === k));
@@ -924,7 +927,8 @@ function libFiltered() {
     return list.map((g) => [g, searchScore(g, q)]).filter(([, sc]) => sc).sort((a, b) => b[1] - a[1] || (b[0].created || '').localeCompare(a[0].created || '')).map(([g]) => g);
   }
   if (L.fav) list = list.filter((g) => S.favs.has(g.id));
-  if (L.genre !== 'all') list = list.filter((g) => g.genre === L.genre);
+  if (L.genre === 'remake') list = list.filter((g) => g.remake);
+  else if (L.genre !== 'all') list = list.filter((g) => g.genre === L.genre);
   if (L.status !== 'all') list = list.filter((g) => g.status === L.status);
   const by = {
     new: (a, b) => (b.created || '').localeCompare(a.created || ''),
@@ -948,7 +952,7 @@ function renderLibGrid() {
   const arch = $('#lib-arch'); if (arch) arch.hidden = !!q || libFiltering();
 }
 function searchText(g) {
-  if (!g._st) g._st = [g.title, g.en, g.tagline, g.summary, (S.genres[g.genre] || {}).label, STATUS[g.status], (g.highlights || []).join(' '), g.inspired].join(' ').toLowerCase();
+  if (!g._st) g._st = [g.title, g.en, g.tagline, g.summary, (S.genres[g.genre] || {}).label, STATUS[g.status], (g.highlights || []).join(' '), g.inspired, g.remake ? '重製 重做 2.0 ' + (g.remake.engine || '') : ''].join(' ').toLowerCase();
   return g._st;
 }
 
@@ -1107,7 +1111,10 @@ function noteFor(g) {
   if (h.orientation === 'landscape' && h.device !== 'desktop') out.push([I.rotate, '這款要把手機橫過來玩，在電腦上玩也很順。']);
   if (h.device === 'desktop') out.push([I.laptop, '這款是為電腦設計的，建議用筆電接鍵盤滑鼠或手把來玩。']);
   if (g.status === 'failed') out.push([I.info, '這是沒有成功的試作版，留著當紀錄。']);
-  return out.map(([ic, t]) => `<div class="gp-note">${ic}<span>${esc(t)}</span></div>`).join('');
+  const notes = out.map(([ic, t]) => `<div class="gp-note">${ic}<span>${esc(t)}</span></div>`).join('');
+  // 重製版：說清楚是哪一天、換了什麼（之後才記得哪幾款重做過）
+  const rm = g.remake ? `<div class="gp-note remake">${I.bolt}<span><b>${esc(g.remake.ver || '2.0')} 重製版</b>${esc(fmtDate(g.remake.date))}${g.remake.what ? '：' + esc(g.remake.what) : ''}</span></div>` : '';
+  return rm + notes;
 }
 function renderGame(g) {
   const p = $('#gamepage');
@@ -1117,6 +1124,7 @@ function renderGame(g) {
   const chips = [
     g.pick ? `<span class="chip pick">${I.star}PZ 推薦</span>` : '',
     isNew(g) ? `<span class="chip new">新入庫</span>` : '',
+    g.remake ? `<span class="chip remake">${I.bolt}${esc(g.remake.ver || '2.0')} 重製版</span>` : '',
     `<span class="chip">${esc(genre)}</span>`,
     `<span class="chip st-${g.status}"><span class="dot"></span>${esc(STATUS[g.status])}</span>`,
   ].join('');
@@ -1132,6 +1140,7 @@ function renderGame(g) {
     ['類型', genre], ['狀態', STATUS[g.status]], ['遊玩時間', h.playtime], ['建議裝置', deviceText(h)],
     ['操作方式', inputText(h.input)], ['存檔', h.save], ['版本', (g.builds || []).map((x) => x.label).join('、')],
     ['入庫', fmtDate(g.created)], ['最近更新', fmtDate(g.updated)],
+    ['重製', g.remake ? `${fmtDate(g.remake.date)}・${g.remake.ver || '2.0'} 版・${g.remake.engine || 'PZ 引擎'}` : ''],
   ].filter(([, v]) => v);
   if (g.inspired) facts.push(['靈感來源', g.inspired, true]);
   // long values take a full row; a lone half-width cell before a full row (or at the end) stretches too
@@ -2034,6 +2043,8 @@ function applyRoute() {
   if (TR.el) closeTrailer(true);
   const h = decodeURIComponent(location.hash.replace(/^#/, ''));
   let base = S.base, game = null, play = null;
+  // 網址換了分類（例如 #library-remake，或手機的上一頁）：已經在遊戲庫時也要重畫，不然還停在舊分類
+  const relib = h.startsWith('library-') && (S.lib.genre !== h.slice(8) || S.lib.fav) && S.base === 'library' && !!$('#view-library').innerHTML;
   if (!h) base = 'home';
   else if (h === 'library') base = 'library';
   else if (h.startsWith('library-')) { base = 'library'; S.lib.genre = h.slice(8); S.lib.fav = false; }
@@ -2044,6 +2055,7 @@ function applyRoute() {
   else if (h.startsWith('app-')) play = 'app:' + h.slice(4);
   if (!game && !play) setBase(base);
   else if (!$('#view-' + S.base).innerHTML) setBase(S.base);
+  if (relib && S.base === 'library') renderLibrary();
   if (play) {
     if (play.startsWith('app:')) {
       const a = S.byId[play.slice(4)];
