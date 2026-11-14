@@ -99,7 +99,7 @@ const Lib = (() => {
   function clearFresh(id, key) { const fl = Store.get('fresh', {}); if (!fl[id]) return; fl[id] = fl[id].filter((k) => k !== key); if (!fl[id].length) delete fl[id]; Store.set('fresh', fl); }
 
   async function chapter(book, i) {
-    const ch = book.chapters[i], key = book.id + ':' + (book.remote ? ch.v : i);
+    const ch = book.chapters[i], key = book.id + ':' + (book.remote ? ch.v : i + ':' + (book.conv || ''));
     if (mem.has(key)) return mem.get(key);
     let blocks;
     if (book.remote) {
@@ -111,6 +111,7 @@ const Lib = (() => {
       if (!rec) throw new Error('找不到這一章的內容');
       blocks = rec.blocks;
       for (const b of blocks) if (b.t === 'img' && !urls.has(b.k)) { try { const blob = await DB.get('assets', b.k); if (blob) urls.set(b.k, URL.createObjectURL(blob)); } catch (e) {} }
+      if (book.conv) { const cv = await Conv.converter(book.conv); blocks = blocks.map((b) => (b.x ? Object.assign({}, b, { x: cv(b.x) }) : b)); }
     }
     const val = { blocks };
     mem.set(key, val); if (mem.size > 8) mem.delete(mem.keys().next().value);
@@ -134,6 +135,13 @@ const Lib = (() => {
       if (got[k] === c.v) continue;
       try { const r = await fetch('books/' + b.id + '/' + c.f + '?v=' + c.v); if (r.ok) { await r.arrayBuffer(); got[k] = c.v; n++; } } catch (e) { Store.set('cached', got); return n; }
     }
+    // 前情提要也存一份，離線一樣看得到
+    for (const b of (remote.books || [])) {
+      if (!b.recaps) continue;
+      const k = b.id + '/' + b.recaps.f;
+      if (got[k] === b.recaps.v) continue;
+      try { const r = await fetch('books/' + b.id + '/' + b.recaps.f + '?v=' + b.recaps.v); if (r.ok) { await r.arrayBuffer(); got[k] = b.recaps.v; } } catch (e) { break; }
+    }
     Store.set('cached', got);
     return n;
   }
@@ -150,14 +158,70 @@ const Lib = (() => {
     local = local.filter((b) => b.id !== id);
     const p = Store.get('prog', {}); delete p[id]; Store.set('prog', p);
     const d = Store.get('done', {}); delete d[id]; Store.set('done', d);
+    const bm = Store.get('bm', {}); delete bm[id]; Store.set('bm', bm);
+    const g = Store.get('genre', {}); delete g[id]; Store.set('genre', g);
   }
+  /* 匯入書的資料改了（分類、簡轉繁）：存回這台裝置 */
+  async function saveLocal(book) {
+    const clean = Object.assign({}, book); delete clean.remote;
+    await DB.put('books', book.id, clean);
+    const k = local.findIndex((b) => b.id === book.id); if (k >= 0) local[k] = clean;
+    for (const key of Array.from(mem.keys())) if (key.indexOf(book.id + ':') === 0) mem.delete(key);
+    return clean;
+  }
+
+  /* ── 時間：最近更新、最早上架、最近讀過 ── */
+  const chAt = (c) => toMs(c.at || c.added);
+  function updated(b) { if (!b.remote) return toMs(b.added); let t = 0; b.chapters.forEach((c) => { t = Math.max(t, chAt(c) + c.n); }); return t; }
+  function created(b) { if (!b.remote) return toMs(b.added); let t = Infinity; b.chapters.forEach((c) => { t = Math.min(t, chAt(c)); }); return isFinite(t) ? t : 0; }
+  function readAt(b) { const p = Prog.get(b.id); return p ? p.t || 0 : 0; }
+
+  /* ── 前情提要（連載才有；打包在 books/<書>/recaps.pzc） ── */
+  const recapMem = {};
+  async function recaps(b) {
+    if (!b.remote || !b.recaps) return null;
+    const k = b.id + ':' + b.recaps.v;
+    if (recapMem[k]) return recapMem[k];
+    try { const r = await fetch('books/' + b.id + '/' + b.recaps.f + '?v=' + b.recaps.v); if (!r.ok) return null; const j = JSON.parse(unpackPZC(await r.arrayBuffer())); recapMem[k] = j.recaps || {}; return recapMem[k]; } catch (e) { return null; }
+  }
+
+  /* ── 整回的純文字（複製、分享用） ── */
+  async function chapterText(b, i) {
+    const ch = b.chapters[i], d = await chapter(b, i), out = [];
+    out.push('《' + b.title + '》' + (ch.label ? ch.label + '　' : '') + (ch.name || ''));
+    d.blocks.forEach((x) => {
+      if (x.t === 'p' || x.t === 'q' || x.t === 'h') out.push(x.x);
+      else if (x.t === 'br') out.push('＊　＊　＊');
+      else if (x.t === 'end') out.push(x.x);
+    });
+    return out.join('\n\n') + '\n';
+  }
+
+  /* ── 書內搜尋：一回一回找，找到的位置可以直接翻過去 ── */
+  async function search(b, q, onStep, isStale) {
+    q = (q || '').trim(); if (!q) return { hits: [], more: false };
+    const hits = [], LIMIT = 300, low = /[a-z]/i.test(q), qq = low ? q.toLowerCase() : q;
+    for (let i = 0; i < b.chapters.length; i++) {
+      if (isStale && isStale()) return null;
+      let d; try { d = await chapter(b, i); } catch (e) { continue; }
+      d.blocks.forEach((x, bi) => {
+        if (!x.x || (x.t !== 'p' && x.t !== 'q' && x.t !== 'h') || hits.length > LIMIT) return;
+        const hay = low ? x.x.toLowerCase() : x.x; let at = hay.indexOf(qq);
+        while (at >= 0 && hits.length <= LIMIT) { hits.push({ ci: i, b: bi, s: at, len: q.length, pre: x.x.slice(Math.max(0, at - 16), at), hit: x.x.substr(at, q.length), post: x.x.slice(at + q.length, at + q.length + 30), cut: at > 16 }); at = hay.indexOf(qq, at + q.length); }
+      });
+      if (onStep) onStep(i + 1, b.chapters.length, hits.length);
+      if (hits.length > LIMIT) break;
+    }
+    return { hits: hits.slice(0, LIMIT), more: hits.length > LIMIT };
+  }
+
   async function coverURL(book) {
     if (!book.cover || !book.cover.img) return null;
     if (urls.has(book.cover.img)) return urls.get(book.cover.img);
     try { const blob = await DB.get('assets', book.cover.img); if (blob) { const u = URL.createObjectURL(blob); urls.set(book.cover.img, u); return u; } } catch (e) {}
     return null;
   }
-  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, imgURL, coverURL, ck, freshSet, clearFresh, hasRemote: () => (remote.books || []).length > 0 };
+  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, hasRemote: () => (remote.books || []).length > 0 };
 })();
 
 /* ── 閱讀進度：每本書記到哪一章、哪一句 ── */
@@ -176,4 +240,44 @@ const Prog = {
     return clamp((before + (book.chapters[i].chars || 0) * (p.f || 0)) / tot, 0, 1);
   },
   last() { return Store.get('last', null); },
+};
+
+/* ── 分類：連載用書架上寫的，匯入的書自己選；也可以在這台裝置上改 ── */
+const Genre = (() => {
+  const ORDER = ['科幻', '奇幻', '仙俠', '武俠', '架空歷史', '歷史', '懸疑', '恐怖', '都市', '言情', '喜劇', '文學', '知識', '其他'];
+  const MAP = [
+    [/科幻|science.?fiction|sci-?fi|太空|星際/i, '科幻'], [/仙俠|仙侠|修仙|修真/, '仙俠'], [/武俠|武侠|wuxia/i, '武俠'],
+    [/奇幻|魔幻|玄幻|fantasy/i, '奇幻'], [/架空|穿越/, '架空歷史'], [/歷史|历史|history|historical/i, '歷史'],
+    [/懸疑|悬疑|推理|偵探|侦探|犯罪|驚悚|惊悚|mystery|thriller|crime|detective/i, '懸疑'], [/恐怖|靈異|灵异|鬼|horror/i, '恐怖'],
+    [/言情|愛情|爱情|romance/i, '言情'], [/喜劇|喜剧|幽默|搞笑|comedy|humou?r/i, '喜劇'], [/都市|現代|现代|urban/i, '都市'],
+    [/商業|商业|理財|理财|投資|投资|心理|傳記|传记|自我|成長|成长|科普|non-?fiction|business|biography|self-help|science|economics|psychology/i, '知識'],
+    [/文學|文学|小說|小说|fiction|literature|literary|novel/i, '文學'],
+  ];
+  const fromText = (s) => { for (const [re, g] of MAP) if (re.test(s || '')) return g; return ''; };
+  const over = () => Store.get('genre', {});
+  function of(b) { const o = over()[b.id]; return o || b.genre || '未分類'; }
+  function set(b, g) { const o = over(); if (!g || (b.remote && g === b.genre)) delete o[b.id]; else o[b.id] = g; Store.set('genre', o); }
+  function rank(g) { const i = ORDER.indexOf(g); return i < 0 ? (g === '未分類' ? 999 : 500) : i; }
+  function list(books) {
+    const m = new Map();
+    books.forEach((b) => { const g = of(b); m.set(g, (m.get(g) || 0) + 1); });
+    return Array.from(m.entries()).sort((a, b) => rank(a[0]) - rank(b[0]) || a[0].localeCompare(b[0], 'zh-Hant')).map(([g, n]) => ({ g, n }));
+  }
+  return { ORDER, of, set, list, fromText };
+})();
+
+/* ── 書籤：記在這台裝置，用「哪一回、哪一塊、第幾個字」記位置，改字級也不會跑 ── */
+const Marks = {
+  all() { return Store.get('bm', {}); },
+  of(id) { return (Marks.all()[id] || []).slice(); },
+  add(book, ci, a) {
+    const m = Marks.all(), list = m[book.id] = m[book.id] || [], ck = Lib.ck(book, book.chapters[ci], ci);
+    if (list.some((x) => x.ck === ck && x.b === a.b && x.s === a.s)) return false;
+    list.push({ ck, b: a.b, s: a.s || 0, x: (a.x || '').slice(0, 60), t: Date.now() });
+    Store.set('bm', m); return true;
+  },
+  remove(id, t) { const m = Marks.all(); if (!m[id]) return; m[id] = m[id].filter((x) => x.t !== t); if (!m[id].length) delete m[id]; Store.set('bm', m); },
+  /* 書籤在第幾回（找不到那一回就是 -1，例如匯入的書被刪掉重來） */
+  index(book, mk) { return book.chapters.findIndex((c, j) => Lib.ck(book, c, j) === mk.ck); },
+  sorted(book) { return Marks.of(book.id).map((mk) => Object.assign({ ci: Marks.index(book, mk) }, mk)).filter((mk) => mk.ci >= 0).sort((a, b) => a.ci - b.ci || a.b - b.b || a.s - b.s); },
 };

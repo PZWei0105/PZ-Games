@@ -1,7 +1,7 @@
 /* ───────── 閱讀器：仿真翻頁（兩片紙＋摺起來的頁背）與捲動 ───────── */
 const Reader = (() => {
   const GAP = 64;
-  let root, stage, flapC, flap, foldSh, scroller, scFlow;
+  let root, stage, flapC, flap, foldSh, scroller, scFlow, ribbon, veil;
   let book = null, ci = 0;
   const L = [];                       // 兩片頁面
   const G = { vp: null, flow: null, ghost: null, ci: -1 };   // 頁背：鏡像的同一頁，淡淡透出字來
@@ -13,12 +13,13 @@ const Reader = (() => {
   let scEls = [], scTick = 0, relayT = 0;
   const FONTS = { song: '"Noto Serif TC", "Songti TC", "PMingLiU", serif', hei: '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif', kai: '"LXGW WenKai TC", "Kaiti TC", "DFKai-SB", serif' };
   const THEME_COLOR = { night: '#131a25', paper: '#e9dfc8', black: '#000000' };
-  const paged = () => Settings.mode !== 'scroll';
+  const vert = () => !!Settings.vert;                    // 直排：由右到左，一定是翻頁
+  const paged = () => Settings.mode !== 'scroll' || vert();
   const isOpen = () => !!book && !root.hidden;
 
   function init() {
     root = $('#reader'); stage = $('#rdStage'); flapC = $('#flapC'); flap = flapC.firstElementChild; foldSh = $('#foldSh');
-    scroller = $('#rdScroll'); scFlow = $('#scFlow');
+    scroller = $('#rdScroll'); scFlow = $('#scFlow'); ribbon = $('#rdRibbon'); veil = $('#rdVeil');
     ['#leafA', '#leafB'].forEach((id) => {
       const e = $(id);
       L.push({ el: e, inner: $('.leaf-in', e), vp: $('.vp', e), flow: $('.flow', e), footL: $('.pf-l', e), footR: $('.pf-r', e), ci: -1, pages: 1, pi: 0, els: [], map: [], bs: [], ss: [], es: [] });
@@ -39,27 +40,51 @@ const Reader = (() => {
     r.style.setProperty('--lh', Settings.lh);
     r.style.setProperty('--mx', [16, 24, 34][Settings.margin] + 'px');
     r.style.setProperty('--ff', FONTS[Settings.font] || FONTS.song);
+    r.classList.toggle('vert', vert());
+    if (stage) stage.classList.toggle('rtl', vert());
+    // 夜讀：調暗＋暖光（蓋在整個閱讀器上，點擊會穿過去）
+    const vl = veilOf();
+    r.style.setProperty('--dim', vl.dim.toFixed(3)); r.classList.toggle('veil', vl.dim > 0);
+    warmVars(r, Settings.theme);
+    r.style.setProperty('--img-f', vl.warm > 0 ? 'sepia(' + (vl.warm * .55).toFixed(2) + ')' : 'none');
     if (Settings.font === 'hei' && !$('#fontHei')) document.head.appendChild(el('link', { id: 'fontHei', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap' }));
     if (r.hidden === false) setThemeColor(THEME_COLOR[Settings.theme]);
+  }
+  /* 夜讀：調暗是蓋一層黑紗；暖光是把這個主題的每個顏色都濾掉一些藍光（像手機的夜覽），不靠混色，哪個瀏覽器都一樣 */
+  const PAL = {
+    night: { bg: [19, 26, 37, 1], fg: [195, 202, 213, 1], dim: [102, 114, 127, 1], acc: [201, 164, 92, 1], outer: [10, 15, 23, 1], flap: [26, 35, 49, 1], on: [201, 164, 92, .2], bar: [16, 23, 34, .94] },
+    paper: { bg: [233, 223, 200, 1], fg: [51, 41, 29, 1], dim: [143, 127, 102, 1], acc: [156, 59, 42, 1], outer: [205, 191, 159, 1], flap: [217, 205, 177, 1], on: [156, 59, 42, .15], bar: [240, 231, 210, .96] },
+    black: { bg: [0, 0, 0, 1], fg: [156, 156, 156, 1], dim: [76, 76, 76, 1], acc: [141, 119, 72, 1], outer: [0, 0, 0, 1], flap: [12, 12, 12, 1], on: [255, 255, 255, .13], bar: [10, 10, 10, .96] },
+  };
+  function veilOf() { return { dim: (1 - clamp(+Settings.bright || 1, .3, 1)) * .92, warm: clamp(+Settings.warm || 0, 0, 1) }; }
+  function warmVars(e, theme) {
+    const w = veilOf().warm, p = PAL[theme] || PAL.night;
+    Object.keys(p).forEach((k) => {
+      if (w <= 0) { e.style.removeProperty('--rd-' + k); return; }
+      const c = p[k], f = [1, 1 - .36 * w, 1 - .7 * w];       // 紅不動、綠少一點、藍少很多
+      e.style.setProperty('--rd-' + k, 'rgba(' + Math.round(c[0] * f[0]) + ',' + Math.round(c[1] * f[1]) + ',' + Math.round(c[2] * f[2]) + ',' + c[3] + ')');
+    });
   }
   function setThemeColor(c) { const m = $('meta[name="theme-color"]'); if (m) m.setAttribute('content', c); }
 
   /* ── 排版與分頁 ── */
   function measure() {
     W = stage.clientWidth; const vp = L[0].vp;
-    cw = Math.max(120, vp.clientWidth); chh = Math.max(160, vp.clientHeight); stride = cw + GAP;
+    cw = Math.max(120, vp.clientWidth); chh = Math.max(160, vp.clientHeight); stride = (vert() ? chh : cw) + GAP;
   }
-  function sizeFlow(lf) { const s = lf.flow.style; s.height = chh + 'px'; s.width = cw + 'px'; s.columnWidth = cw + 'px'; s.columnGap = GAP + 'px'; }
+  /* 橫排：欄往右排、一欄一頁；直排：文字由右到左排，欄往下排、一欄一頁 */
+  function sizeFlow(lf) { const s = lf.flow.style; lf.flow.classList.toggle('v', vert()); s.height = chh + 'px'; s.width = cw + 'px'; s.columnWidth = (vert() ? chh : cw) + 'px'; s.columnGap = GAP + 'px'; }
   function paginate(lf) {
-    lf.vp.scrollLeft = 0;
-    const base = lf.flow.getBoundingClientRect().left;
+    lf.vp.scrollLeft = 0; lf.vp.scrollTop = 0;
+    const V = vert(), fr = lf.flow.getBoundingClientRect(), base = V ? fr.top : fr.left;
     lf.els = $$('.s, .brk, .fig, .ch-head, .endmark', lf.flow);
     lf.map = new Array(lf.els.length); lf.bs = new Array(lf.els.length); lf.ss = new Array(lf.els.length); lf.es = new Array(lf.els.length);
     let last = 0;
     for (let i = 0; i < lf.els.length; i++) {
       const e = lf.els[i], rs = e.getClientRects(), r0 = rs[0] || e.getBoundingClientRect(), r1 = rs[rs.length - 1] || r0;
-      lf.map[i] = Math.max(0, Math.floor((r0.left - base + .5) / stride));      // 用無條件捨去：一句話從行的右半邊開始，也還是這一頁
-      last = Math.max(last, Math.floor((r1.left - base + .5) / stride));
+      const p0 = V ? r0.top : r0.left, p1 = V ? r1.top : r1.left;
+      lf.map[i] = Math.max(0, Math.floor((p0 - base + .5) / stride));      // 用無條件捨去：一句話從行的後半段開始，也還是這一頁
+      last = Math.max(last, Math.floor((p1 - base + .5) / stride));
       lf.bs[i] = +e.dataset.b; lf.ss[i] = e.dataset.s ? +e.dataset.s : 0; lf.es[i] = e.dataset.e ? +e.dataset.e : 1e9;
     }
     lf.pages = Math.max(1, last + 1);
@@ -76,7 +101,7 @@ const Reader = (() => {
   function fillGhost(i, data) { G.ci = i; G.flow.innerHTML = htmlOf(i, data); sizeFlow(G); }
   function show(lf, pi) {
     lf.pi = clamp(pi, 0, lf.pages - 1);
-    lf.vp.scrollLeft = lf.pi * stride;
+    if (vert()) { lf.vp.scrollLeft = 0; lf.vp.scrollTop = lf.pi * stride; } else { lf.vp.scrollTop = 0; lf.vp.scrollLeft = lf.pi * stride; }
     lf.footR.textContent = (lf.pi + 1) + ' / ' + lf.pages;
   }
   function idxOf(lf, a) {
@@ -93,12 +118,17 @@ const Reader = (() => {
     for (let i = 0; i < lf.els.length; i++) { if (lf.map[i] === pi) { k = i; break; } if (lf.map[i] > pi) { k = Math.max(0, i - 1); break; } }
     if (k < 0) k = lf.els.length - 1;
     if (k < 0) return { b: -1, s: 0, x: '' };
-    // 頁首如果是章名，引文改抓第一句正文
+    return pinOf(lf, k);
+  }
+  /* 第 k 個元素當錨點。頁首是分隔線或插圖時，改用同一頁的第一句（換字級、直排後，讀的那一句才會在畫面上）；
+     章名（b = -1）照舊，代表這一回的開頭。引文一律抓第一句正文。 */
+  function pinOf(lf, k) {
     let t = k; while (t < lf.els.length && !lf.els[t].classList.contains('s')) t++;
-    return { b: lf.bs[k], s: lf.ss[k], x: t < lf.els.length ? lf.els[t].textContent.slice(0, 44) : '' };
+    const use = t < lf.els.length && t !== k && lf.bs[k] >= 0 && lf.map[t] === lf.map[k] ? t : k;
+    return { b: lf.bs[use], s: lf.ss[use], x: t < lf.els.length ? lf.els[t].textContent.slice(0, 44) : '' };
   }
   function setPin(a) {
-    if (paged()) { const lf = L[cur]; if (a && a !== 'end' && a.b >= 0 && lf.els.length) { const k = idxOf(lf, a); let t = k; while (t < lf.els.length && !lf.els[t].classList.contains('s')) t++; pin = { b: lf.bs[k], s: lf.ss[k], x: t < lf.els.length ? lf.els[t].textContent.slice(0, 44) : '' }; } else pin = anchorAt(lf, lf.pi); }
+    if (paged()) { const lf = L[cur]; if (a && a !== 'end' && a.b >= 0 && lf.els.length) pin = pinOf(lf, idxOf(lf, a)); else pin = anchorAt(lf, lf.pi); }
     else pin = scAnchor();
   }
 
@@ -175,7 +205,41 @@ const Reader = (() => {
     Prog.set(book.id, { ck: key, b: a.b, s: a.s, x: a.x, f });
     if (f >= .995) Prog.markDone(book.id, key);
   }
-  function emitShow() { Bus.emit('reader:show', info()); }
+  function emitShow() { updRibbon(); Bus.emit('reader:show', info()); }
+
+  /* ── 書籤：這一頁有沒有書籤（頁角的紅緞帶） ── */
+  function pageMarks() {
+    if (!book) return [];
+    const list = Marks.sorted(book).filter((mk) => mk.ci === ci);
+    if (!list.length) return [];
+    if (paged()) { const lf = L[cur]; return list.filter((mk) => pageOf(lf, mk) === lf.pi); }
+    const top = scroller.scrollTop, bot = top + scroller.clientHeight * .6;
+    return list.filter((mk) => { const e = scElOf(mk); return e && e.offsetTop >= top - 4 && e.offsetTop < bot; });
+  }
+  function updRibbon() { if (ribbon) ribbon.classList.toggle('on', pageMarks().length > 0); }
+  /* 加書籤：這一頁第一句；這一頁已經有了就拿掉 */
+  function toggleMark() {
+    if (!book) return null;
+    const on = pageMarks();
+    if (on.length) { on.forEach((mk) => Marks.remove(book.id, mk.t)); updRibbon(); return false; }
+    const a = where(); if (!a || a.b < 0) return null;
+    Marks.add(book, ci, a); updRibbon(); return true;
+  }
+
+  /* ── 搜尋跳過來時，把找到的字亮一下 ── */
+  // 只亮找到的那幾個字：暫時把那一句拆成「前面＋<mark>找到的字</mark>＋後面」，幾秒後還原（不影響排版）。
+  // 不用 CSS Highlight API：Safari 在不能選取文字（user-select: none）的地方不畫它。
+  let flashT = 0, flashed = null;
+  function unflash() { clearTimeout(flashT); if (flashed && flashed.sp.isConnected) flashed.sp.textContent = flashed.t; flashed = null; }
+  function flash(a, len) {
+    unflash();
+    const rootEl = paged() ? L[cur].flow : scFlow;
+    const sp = $$('.s[data-b="' + a.b + '"]', rootEl).find((x) => +x.dataset.s <= a.s && +x.dataset.e > a.s);
+    if (!sp) return;
+    const t = sp.textContent, off = clamp(a.s - +sp.dataset.s, 0, t.length - 1), end = Math.min(t.length, off + Math.max(1, len || 1));
+    sp.innerHTML = esc(t.slice(0, off)) + '<mark class="hitm">' + esc(t.slice(off, end)) + '</mark>' + esc(t.slice(end));
+    flashed = { sp, t }; flashT = setTimeout(unflash, 4600);
+  }
   function afterShow(chapterChanged) { save(); if (chapterChanged) Bus.emit('reader:chapter', info()); emitShow(); }
   function info() { const lf = L[cur]; return { book, ci, pi: paged() ? lf.pi : 0, pages: paged() ? lf.pages : 1, f: book ? frac() : 0, paged: paged() }; }
 
@@ -218,8 +282,9 @@ const Reader = (() => {
     const c = L[cur], a = L[1 - cur];
     if (dir > 0) { c.el.style.zIndex = 2; a.el.style.zIndex = 1; } else { a.el.style.zIndex = 2; c.el.style.zIndex = 1; }
     const tl = dir > 0 ? c : a;
-    if (G.ci === tl.ci) { G.vp.scrollLeft = tl.pi * stride; G.ghost.style.visibility = ''; } else G.ghost.style.visibility = 'hidden';
+    if (G.ci === tl.ci) { if (vert()) G.vp.scrollTop = tl.pi * stride; else G.vp.scrollLeft = tl.pi * stride; G.ghost.style.visibility = ''; } else G.ghost.style.visibility = 'hidden';
     flapC.classList.remove('off'); foldSh.classList.remove('off'); frame(0);
+    if (ribbon) ribbon.classList.remove('on');           // 書籤緞帶跟著頁面走：翻頁時先收起來
   }
   /* 準備好另一片（要翻到的那一頁）；同一章是同步完成的 */
   function prepare(tg) {
@@ -236,7 +301,7 @@ const Reader = (() => {
     const my = token;
     idle(() => { if (my !== token || turning || !book || (old.ci === L[cur].ci && G.ci === L[cur].ci)) return; Lib.chapter(book, L[cur].ci).then((d) => { if (my !== token || turning || !book) return; if (L[1 - cur] === old && old.ci !== L[cur].ci) { fill(old, L[cur].ci, d); show(old, L[cur].pi); } if (G.ci !== L[cur].ci) fillGhost(L[cur].ci, d); }); });
   }
-  function cancel() { turning = null; resetLayers(); }
+  function cancel() { turning = null; resetLayers(); updRibbon(); }
   function stopTurn() { if (animId) cancelAnimationFrame(animId); animId = 0; if (turning) { if (turning.live && turning.to === 1) commit(); else cancel(); } }
   function animate(to, ms, ease) {
     const from = turning.t, t0 = performance.now(); turning.to = to; turning.live = true;
@@ -305,6 +370,7 @@ const Reader = (() => {
   }
 
   /* ── 手勢 ── */
+  const sx = () => (vert() ? -1 : 1);     // 直排的翻頁方向左右相反
   function bindPointer() {
     let p = null, lpT = 0;
     const clearLP = () => { if (lpT) { clearTimeout(lpT); lpT = 0; } };
@@ -323,7 +389,7 @@ const Reader = (() => {
         if (Math.abs(dx) < 9 && Math.abs(dy) < 9) return;
         clearLP();
         if (Math.abs(dx) <= Math.abs(dy)) { p.mode = 'v'; return; }
-        const dir = dx < 0 ? 1 : -1;
+        const dir = dx * sx() < 0 ? 1 : -1;
         stopTurn();
         const tg = target(dir);
         if (!tg) { p.mode = 'edge'; edge(dir); return; }
@@ -333,7 +399,7 @@ const Reader = (() => {
         const start = (v) => { if (!v || !turning || turning.tg !== tg) { if (turning && turning.tg === tg) turning = null; return; } userTurned(); setup(dir); turning.ready = true; if (!p || p.mode !== 'drag') { Sound.page(dir < 0); animate(1, 380, 'inout'); } };
         if (ok && ok.then) ok.then(start, () => { turning = null; }); else start(ok);
       }
-      if (p.mode === 'drag' && turning && turning.ready && !turning.live) frame(clamp(Math.abs(dx) / (W * .86), 0, 1) * (dx * p.dir < 0 ? 1 : 0));
+      if (p.mode === 'drag' && turning && turning.ready && !turning.live) frame(clamp(Math.abs(dx) / (W * .86), 0, 1) * (dx * sx() * p.dir < 0 ? 1 : 0));
     });
     const up = (e) => {
       if (!p || e.pointerId !== p.id) return;
@@ -341,13 +407,13 @@ const Reader = (() => {
       const q = p; p = null;
       if (q.mode === 'drag') {
         if (!turning || !turning.ready || turning.live) return;
-        const fast = q.vx * q.dir < -.35, go = e.type !== 'pointercancel' && (turning.t > .28 || (fast && turning.t > .04));
+        const fast = q.vx * sx() * q.dir < -.35, go = e.type !== 'pointercancel' && (turning.t > .28 || (fast && turning.t > .04));
         if (go) Sound.page(q.dir < 0);
         animate(go ? 1 : 0, 150 + 230 * (go ? 1 - turning.t : turning.t), 'out');
         return;
       }
       if (q.mode || e.type === 'pointercancel' || performance.now() - q.t > 500) return;
-      const r = stage.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width;
+      const r = stage.getBoundingClientRect(), fx0 = (e.clientX - r.left) / r.width, fx = vert() ? 1 - fx0 : fx0;
       if (root.classList.contains('chrome-on')) { setChrome(false); return; }
       if (fx < .28) turn(-1, true); else if (fx > .72) turn(1, true); else setChrome(true);
     };
@@ -371,8 +437,9 @@ const Reader = (() => {
       if (!isOpen() || e.metaKey || e.ctrlKey || e.altKey) return;
       if (document.body.classList.contains('sheet-open')) return;
       const k = e.key;
-      if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'ArrowDown' && paged()) { e.preventDefault(); turn(1, true); }
-      else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'ArrowUp' && paged()) { e.preventDefault(); turn(-1, true); }
+      const fwd = vert() ? 'ArrowLeft' : 'ArrowRight', bwd = vert() ? 'ArrowRight' : 'ArrowLeft';
+      if (k === fwd || k === 'PageDown' || k === ' ' || k === 'ArrowDown' && paged()) { e.preventDefault(); turn(1, true); }
+      else if (k === bwd || k === 'PageUp' || k === 'ArrowUp' && paged()) { e.preventDefault(); turn(-1, true); }
       else if (k === 'Escape') { if (root.classList.contains('chrome-on')) setChrome(false); else close(); }
       else if (k === 'Enter') setChrome(!root.classList.contains('chrome-on'));
     });
@@ -386,5 +453,5 @@ const Reader = (() => {
     open(book, n, null, { keep: true });
   }
 
-  return { init, open, close, reopen, relayout, applyLook, where, info, turn, gotoPage, chapter, mark, unmark, resumeFollow, setChrome, isOpen, get book() { return book; }, get ci() { return ci; }, get following() { return !followPaused; } };
+  return { init, open, close, reopen, relayout, applyLook, where, info, turn, gotoPage, chapter, mark, unmark, resumeFollow, setChrome, isOpen, toggleMark, pageMarks, flash, updRibbon, paged, veilOf, warmVars, fontOf: (k) => FONTS[k] || FONTS.song, get book() { return book; }, get ci() { return ci; }, get following() { return !followPaused; } };
 })();

@@ -20,7 +20,11 @@ function hash32(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h 
 function fmtCount(n) { return n >= 10000 ? (n / 10000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, '') + ' 萬字' : n + ' 字'; }
 function fmtMin(chars) { const m = Math.max(1, Math.round(chars / 450)); return m >= 60 ? Math.floor(m / 60) + ' 小時 ' + (m % 60 ? (m % 60) + ' 分' : '') : m + ' 分鐘'; }
 function fmtClock(sec) { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0'); }
-function fmtDate(iso) { if (!iso) return ''; const d = new Date(iso + (iso.length <= 10 ? 'T00:00:00+08:00' : '')); const now = Date.now(), days = Math.floor((now - d.getTime()) / 864e5); return days <= 0 ? '今天' : days === 1 ? '昨天' : days < 7 ? days + ' 天前' : (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日'; }
+function dayDiff(t) { const a = new Date(t), b = new Date(); a.setHours(0, 0, 0, 0); b.setHours(0, 0, 0, 0); return Math.round((b - a) / 864e5); }
+function toMs(iso) { if (!iso) return 0; if (typeof iso === 'number') return iso; return new Date(iso + (iso.length <= 10 ? 'T12:00:00+08:00' : '')).getTime() || 0; }
+function fmtDate(iso) { if (!iso) return ''; const t = toMs(iso), d = new Date(t), days = dayDiff(t); return days <= 0 ? '今天' : days === 1 ? '昨天' : days < 7 ? days + ' 天前' : (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日'; }
+/* 幾分鐘前、幾小時前、昨天…… */
+function fmtAgo(t) { if (!t) return ''; const ms = Date.now() - t, days = dayDiff(t); if (ms < 6e4) return '剛剛'; if (ms < 36e5) return Math.floor(ms / 6e4) + ' 分鐘前'; if (days === 0) return Math.floor(ms / 36e5) + ' 小時前'; return fmtDate(t); }
 
 /* ── 小東西存 localStorage（設定、進度、看過哪些章） ── */
 const Store = {
@@ -29,7 +33,7 @@ const Store = {
   del(k) { try { localStorage.removeItem(PFX + k); } catch (e) {} },
 };
 
-const DEFAULTS = { theme: 'night', mode: 'page', font: 'song', size: 19, lh: 1.9, margin: 1, sfx: true, rate: 1, voice: '', follow: true, keepAwake: true };
+const DEFAULTS = { theme: 'night', mode: 'page', font: 'song', size: 19, lh: 1.9, margin: 1, vert: false, bright: 1, warm: 0, sfx: true, rate: 1, voice: '', follow: true, keepAwake: true, recap: true };
 const Settings = Object.assign({}, DEFAULTS, Store.get('settings', {}));
 function saveSettings() { Store.set('settings', Settings); }
 
@@ -94,4 +98,12 @@ const ICON = {
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.500M12 18.500V21M3 12h2.500M18.500 12H21M5.600 5.600l1.800 1.800M16.600 16.600l1.800 1.800M5.600 18.400l1.800-1.800M16.600 7.400l1.800-1.800"/></svg>',
   down: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
   target: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" class="fill"/></svg>',
+  share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5M7.5 7.5L12 3l4.5 4.5M6 11H5v9.5h14V11h-1"/></svg>',
+  ribbon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10v17l-5-4-5 4z"/></svg>',
+  ribbonOn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M7 3.5h10v17l-5-4-5 4z"/></svg>',
+  search: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-8A1.5 1.5 0 0 0 5 5.5V16a1.5 1.5 0 0 0 1.5 1.5H8"/></svg>',
+  sort: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 20l-3-3M7 20l3-3M14 6h6M14 11h4.5M14 16h3"/></svg>',
+  scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6M6 4a2 2 0 0 0-2 2v1h4V6a2 2 0 0 0-2-2zM9 9h7M9 13h7M9 17h4"/></svg>',
+  tag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9z"/><circle cx="8" cy="8" r="1.4" class="fill"/></svg>',
 };
