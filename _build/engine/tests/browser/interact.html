@@ -1,0 +1,14 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><title>PZ 互動檢查</title><link rel="icon" href="data:,"></head>
+<body><div id="pz-root"><div id="pz-ui"></div></div>
+<script src="../../build/pz-engine.js"></script>
+<script>
+window.__log = { fire: 0, stickMax: 0 };
+PZ.music.define('t', { bpm: 140, tracks: [{ inst: 'kick', pat: 'x...x...x...x...' }, { inst: 'hat', pat: 'x.x.x.x.x.x.x.x.', vol: 0.3 }, { inst: 'bass', notes: 'A1 . . . A1 . . . G1 . . . E1 . . .' }, { inst: 'pad', chords: 'Am F', vol: 0.25 }, { inst: 'pluck', notes: 'A4 C5 E5 C5 A4 C5 E5 C5 F4 A4 C5 A4 F4 A4 C5 A4', min: 0.6 }] });
+PZ.start({ id: 'interact', title: '互動檢查', fit: 400, first: 'play', firstTransition: 'none',
+  scenes: { play: {
+    enter() { PZ.input.stick({ target: 'move' }); PZ.input.button({ action: 'fire', label: '開火', right: 24, bottom: 120, size: 80 }); PZ.input.onPress('fire', () => window.__log.fire++); PZ.input.showTouch(true); },
+    update() { window.__log.stickMax = Math.max(window.__log.stickMax, PZ.input.move.mag); },
+    render(g) { g.circle(0, 0, 30, '#4ad2ff'); g.hud(); g.text('互動檢查', 16, 16, { size: 18 }); },
+  } },
+});
+</script></body></html>

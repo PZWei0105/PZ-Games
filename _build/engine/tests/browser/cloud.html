@@ -1,0 +1,13 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>雲端存檔測試</title><link rel="icon" href="data:,"></head>
+<body>
+<script src="../../build/pz-engine.js"></script>
+<script>
+/* 雲端存檔情境測試：tests/browser/run_cloud.py 先用 add_init_script 放一個假的 window.claude（記憶體裡的 db），再打開這頁。 */
+PZ.scene('t', { render(g) {} });
+window.__boot = (async () => {
+  await PZ.start({ id: 'cloudtest', title: '雲端測試', loading: false, first: 't', firstTransition: 'none' });
+  window.S = PZ.save.open('cloudtest', { version: 1, defaults: () => ({ lv: 1, gold: 0 }), describe: (d) => 'LV ' + d.lv, code: 'CT' });
+  window.__loads = 0; PZ.on('saveload', () => { window.__loads++; });
+  await S.ready; window.__ready = true;
+})();
+</script></body></html>

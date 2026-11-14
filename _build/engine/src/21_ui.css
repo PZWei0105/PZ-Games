@@ -1,0 +1,169 @@
+/* ==========================================================================
+   21 介面樣式（引擎內建；每款遊戲用 PZ.ui.theme({...}) 或自己的 CSS 覆蓋變數，做出自己的樣子）
+   ========================================================================== */
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: #000; }
+body { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+#pz-root {
+  --pz-font: "PZ Sans", "Noto Sans TC", "PingFang TC", "Heiti TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --pz-font-display: var(--pz-font);
+  --pz-text: #eef2f8; --pz-dim: rgba(238, 242, 248, .6); --pz-faint: rgba(238, 242, 248, .32);
+  --pz-bg: rgba(6, 8, 14, .6); --pz-panel: rgba(16, 20, 30, .92); --pz-panel2: rgba(255, 255, 255, .05); --pz-line: rgba(255, 255, 255, .12);
+  --pz-accent: #ffb547; --pz-accent2: #46d4ff; --pz-good: #5fe39a; --pz-bad: #ff4d5e; --pz-on-accent: #1a1206;
+  --pz-radius: 16px; --pz-radius-s: 10px; --pz-shadow: 0 24px 60px rgba(0, 0, 0, .55), 0 2px 0 rgba(255, 255, 255, .04) inset;
+  --pz-blur: 10px; --pz-ease: cubic-bezier(.2, .9, .25, 1.15); --pz-touch-scale: 1;
+  position: fixed; inset: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent; font-family: var(--pz-font); color: var(--pz-text); line-height: 1.5;
+  font-feature-settings: "palt" 0; text-rendering: optimizeLegibility; contain: strict;
+}
+#pz-canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; image-rendering: auto; }
+#pz-touch { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+#pz-touch.pz-hide { display: none; }
+#pz-ui { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
+#pz-ui button, #pz-ui a, #pz-ui input, #pz-ui select, #pz-ui textarea, #pz-ui label, #pz-ui [data-ui], #pz-ui .pz-block { pointer-events: auto; }
+.pz-scene-ui { position: absolute; inset: 0; pointer-events: none; }
+
+/* ---------- 虛擬搖桿與按鈕 ---------- */
+.pz-stick-zone { position: absolute; pointer-events: auto; touch-action: none; }
+.pz-stick { position: absolute; transform: translate(-50%, -50%) scale(var(--pz-touch-scale)); border-radius: 50%; opacity: 0; transition: opacity .18s;
+  background: radial-gradient(circle, rgba(255, 255, 255, .06) 0 55%, rgba(255, 255, 255, .14) 56% 58%, rgba(255, 255, 255, .03) 59%); box-shadow: 0 0 0 1px rgba(255, 255, 255, .1) inset; pointer-events: none; }
+.pz-stick.on, .pz-stick.fixed { opacity: 1; }
+.pz-stick.fixed { transform: translate(-50%, 50%) scale(var(--pz-touch-scale)); opacity: .55; }
+.pz-stick.fixed.on { opacity: 1; }
+.pz-stick-knob { position: absolute; left: 50%; top: 50%; width: 42%; height: 42%; margin: -21% 0 0 -21%; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .95), rgba(220, 230, 245, .75) 60%, rgba(160, 175, 200, .7));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .45), 0 0 0 2px rgba(255, 255, 255, .25); transition: transform .03s linear; }
+.pz-tbtn { position: absolute; pointer-events: auto; touch-action: none; border: 0; padding: 0; border-radius: 50%; display: grid; place-items: center;
+  color: #fff; font: 900 15px/1 var(--pz-font); letter-spacing: .04em;
+  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, .22), rgba(255, 255, 255, .06) 62%), rgba(10, 14, 22, .42);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .28) inset, 0 8px 22px rgba(0, 0, 0, .35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transform: scale(var(--pz-touch-scale)); transition: transform .08s, background .12s; }
+.pz-tbtn svg { width: 46%; height: 46%; }
+.pz-tbtn.on { transform: scale(calc(var(--pz-touch-scale) * .9)); background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, .4), rgba(255, 255, 255, .12) 62%), rgba(10, 14, 22, .5); }
+.pz-tbtn.off { opacity: .4; }
+.pz-tbtn.cd::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(0, 0, 0, .62) calc(var(--pz-cd, 0) * 360deg), transparent 0); }
+.pz-tbtn[data-badge]:not([data-badge=""])::before { content: attr(data-badge); position: absolute; right: -2px; top: -2px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: var(--pz-accent); color: var(--pz-on-accent); font: 900 12px/20px var(--pz-font); text-align: center; z-index: 1; }
+.pz-tbtn-label { position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+
+/* ---------- 按鈕 ---------- */
+.pz-btn { -webkit-appearance: none; appearance: none; border: 0; cursor: pointer; font: 800 16px/1.2 var(--pz-font); letter-spacing: .06em; color: var(--pz-text);
+  padding: 14px 22px; min-height: 48px; min-width: 48px; border-radius: var(--pz-radius-s); background: var(--pz-panel2);
+  box-shadow: 0 0 0 1px var(--pz-line) inset; transition: transform .12s var(--pz-ease), background .15s, box-shadow .15s, opacity .15s; position: relative; outline: none; }
+.pz-btn:hover { background: rgba(255, 255, 255, .1); }
+.pz-btn:active, .pz-btn.pz-press { transform: scale(.95); }
+.pz-btn.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--pz-accent) 92%, #fff), var(--pz-accent)); color: var(--pz-on-accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--pz-accent) 35%, transparent), 0 -2px 0 rgba(0, 0, 0, .2) inset; }
+.pz-btn.danger { background: color-mix(in srgb, var(--pz-bad) 22%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--pz-bad) 60%, transparent) inset; }
+.pz-btn.ghost { background: transparent; box-shadow: none; color: var(--pz-dim); }
+.pz-btn[disabled], .pz-btn.disabled { opacity: .38; pointer-events: none; }
+.pz-btn.pz-focus, .pz-focusable.pz-focus { box-shadow: 0 0 0 2px var(--pz-accent2), 0 0 22px color-mix(in srgb, var(--pz-accent2) 45%, transparent); }
+.pz-btn.wide { width: 100%; }
+
+/* ---------- 對話框 ---------- */
+.pz-modal-wrap { position: absolute; inset: 0; display: grid; place-items: center; padding: max(16px, var(--pz-safe-t, 0px)) max(16px, var(--pz-safe-r, 0px)) max(16px, var(--pz-safe-b, 0px)) max(16px, var(--pz-safe-l, 0px));
+  background: var(--pz-bg); pointer-events: auto; z-index: 50; opacity: 0; transition: opacity .2s; backdrop-filter: blur(var(--pz-blur)); -webkit-backdrop-filter: blur(var(--pz-blur)); }
+#pz-touch { transition: opacity .2s; }
+#pz-touch.pz-ui-open { opacity: 0; pointer-events: none; }
+#pz-touch.pz-ui-open * { pointer-events: none !important; }
+.pz-modal-wrap.on { opacity: 1; }
+.pz-modal { width: min(440px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; padding: 22px 20px 18px; border-radius: var(--pz-radius);
+  background: var(--pz-panel); box-shadow: var(--pz-shadow), 0 0 0 1px var(--pz-line) inset; transform: translateY(14px) scale(.96); transition: transform .32s var(--pz-ease); }
+.pz-modal-wrap.on .pz-modal { transform: none; }
+.pz-modal.wide { width: min(640px, 100%); }
+.pz-modal h2 { margin: 0 0 10px; font: 900 21px/1.3 var(--pz-font-display); letter-spacing: .06em; }
+.pz-modal .pz-body { color: var(--pz-dim); font-size: 15px; line-height: 1.75; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; min-height: 0; flex: 0 1 auto; margin: 0 -6px; padding: 0 6px; }
+.pz-modal h2, .pz-modal .pz-actions { flex: none; }
+.pz-modal .pz-list { overflow: auto; min-height: 0; touch-action: pan-y; }
+.pz-modal .pz-body b, .pz-modal .pz-body strong { color: var(--pz-text); }
+.pz-modal .pz-actions { display: flex; gap: 10px; margin-top: 18px; }
+.pz-modal .pz-actions .pz-btn { flex: 1; }
+.pz-modal .pz-list { display: grid; gap: 8px; margin-top: 14px; }
+.pz-modal .pz-list .pz-btn { text-align: left; display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+.pz-modal .pz-list .pz-btn small { font-weight: 500; color: var(--pz-dim); letter-spacing: .02em; font-size: 13px; }
+.pz-hint { color: var(--pz-faint); font-size: 13px; margin-top: 8px; }
+.pz-two { text-align: left; line-height: 1.9; }
+
+/* ---------- 設定 ---------- */
+.pz-set { display: grid; gap: 4px; margin-top: 6px; }
+.pz-set-row { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--pz-line); }
+.pz-set-row:last-child { border-bottom: 0; }
+.pz-set-row > span { flex: 1; font-weight: 700; font-size: 15px; }
+.pz-set-row > span small { display: block; font-weight: 400; color: var(--pz-faint); font-size: 12px; }
+.pz-set h3 { margin: 14px 0 2px; font-size: 12px; letter-spacing: .2em; color: var(--pz-accent); font-weight: 900; }
+.pz-range { -webkit-appearance: none; appearance: none; width: 46%; height: 30px; background: transparent; touch-action: pan-x; }
+.pz-range::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--pz-accent) var(--v, 50%), rgba(255, 255, 255, .14) var(--v, 50%)); }
+.pz-range::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
+.pz-range::-moz-range-track { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .14); }
+.pz-range::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--pz-accent); }
+.pz-range::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 50%; background: #fff; }
+.pz-toggle { position: relative; width: 52px; height: 30px; border-radius: 15px; border: 0; padding: 0; background: rgba(255, 255, 255, .16); transition: background .2s; cursor: pointer; }
+.pz-toggle::after { content: ""; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); transition: transform .25s var(--pz-ease); }
+.pz-toggle.on { background: var(--pz-accent); }
+.pz-toggle.on::after { transform: translateX(22px); }
+.pz-seg { display: flex; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px var(--pz-line) inset; }
+.pz-seg button { border: 0; background: transparent; color: var(--pz-dim); font: 700 13px/1 var(--pz-font); padding: 9px 10px; cursor: pointer; }
+.pz-seg button.on { background: var(--pz-accent); color: var(--pz-on-accent); }
+.pz-code { width: 100%; box-sizing: border-box; min-height: 74px; resize: none; border-radius: 10px; border: 0; padding: 10px; font: 12px/1.4 ui-monospace, monospace; color: var(--pz-text); background: rgba(0, 0, 0, .35); box-shadow: 0 0 0 1px var(--pz-line) inset; user-select: text; -webkit-user-select: text; touch-action: auto; }
+
+/* ---------- 提示泡泡、大標題 ---------- */
+.pz-toasts { position: absolute; left: 50%; top: calc(14px + var(--pz-safe-t, 0px)); transform: translateX(-50%); display: grid; gap: 8px; justify-items: center; z-index: 60; pointer-events: none; width: min(92vw, 420px); }
+.pz-toast { padding: 10px 16px; border-radius: 999px; background: rgba(12, 16, 26, .88); box-shadow: 0 10px 30px rgba(0, 0, 0, .4), 0 0 0 1px var(--pz-line) inset; font-weight: 700; font-size: 14px; display: flex; gap: 8px; align-items: center;
+  animation: pz-toast-in .38s var(--pz-ease) both; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.pz-toast.good { box-shadow: 0 10px 30px rgba(0, 0, 0, .4), 0 0 0 1px color-mix(in srgb, var(--pz-good) 70%, transparent) inset; }
+.pz-toast.bad { box-shadow: 0 10px 30px rgba(0, 0, 0, .4), 0 0 0 1px color-mix(in srgb, var(--pz-bad) 70%, transparent) inset; }
+.pz-toast.out { animation: pz-toast-out .3s ease-in both; }
+@keyframes pz-toast-in { from { opacity: 0; transform: translateY(-14px) scale(.9); } }
+@keyframes pz-toast-out { to { opacity: 0; transform: translateY(-10px) scale(.96); } }
+.pz-banner { position: absolute; left: 0; right: 0; top: 38%; transform: translateY(-50%); text-align: center; z-index: 55; pointer-events: none; }
+.pz-banner .pz-b-main { display: inline-block; font: 900 clamp(30px, 8vw, 64px)/1.1 var(--pz-font-display); letter-spacing: .12em; padding: 6px 26px; color: #fff;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--pz-accent) 70%, transparent), 0 4px 0 rgba(0, 0, 0, .35); animation: pz-ban-in .55s var(--pz-ease) both; }
+.pz-banner .pz-b-sub { font: 700 clamp(13px, 3.4vw, 17px)/1.4 var(--pz-font); letter-spacing: .3em; color: var(--pz-accent); margin-top: 6px; animation: pz-fade-up .5s .12s both; }
+.pz-banner::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 120%; transform: translateY(-50%) scaleY(var(--s, 1)); background: linear-gradient(90deg, transparent, rgba(0, 0, 0, .55) 20%, rgba(0, 0, 0, .55) 80%, transparent); z-index: -1; animation: pz-ban-bar .5s var(--pz-ease) both; }
+.pz-banner.boss .pz-b-main { color: #ffe1e1; text-shadow: 0 0 30px rgba(255, 40, 60, .85), 0 4px 0 rgba(0, 0, 0, .4); }
+.pz-banner.boss .pz-b-sub { color: #ff6b7a; }
+.pz-banner.out { animation: pz-ban-out .35s ease-in both; }
+@keyframes pz-ban-in { from { opacity: 0; transform: scale(1.6); letter-spacing: .5em; filter: blur(6px); } }
+@keyframes pz-ban-bar { from { transform: translateY(-50%) scaleY(0); } }
+@keyframes pz-ban-out { to { opacity: 0; transform: translateY(-50%) scale(.96); } }
+@keyframes pz-fade-up { from { opacity: 0; transform: translateY(10px); } }
+
+/* ---------- 對話（劇情）---------- */
+.pz-say { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 max(12px, var(--pz-safe-r, 0px)) max(14px, calc(var(--pz-safe-b, 0px) + 8px)) max(12px, var(--pz-safe-l, 0px)); z-index: 40; pointer-events: auto; display: flex; justify-content: center; }
+.pz-say-box { position: relative; width: min(760px, 100%); min-height: 132px; box-sizing: border-box; padding: 22px 20px 18px; border-radius: var(--pz-radius); background: var(--pz-panel); box-shadow: var(--pz-shadow), 0 0 0 1px var(--pz-line) inset;
+  animation: pz-fade-up .3s var(--pz-ease) both; cursor: pointer; }
+.pz-say-name { position: absolute; left: 18px; top: -15px; padding: 5px 14px; border-radius: 8px; background: var(--pz-accent); color: var(--pz-on-accent); font: 900 14px/1.2 var(--pz-font); letter-spacing: .12em; }
+.pz-say-text { font-size: 17px; line-height: 1.85; letter-spacing: .03em; min-height: 3.6em; }
+.pz-say.narr .pz-say-text { color: var(--pz-dim); font-style: normal; }
+.pz-say-more { position: absolute; right: 16px; bottom: 10px; width: 10px; height: 10px; border-right: 2px solid var(--pz-accent); border-bottom: 2px solid var(--pz-accent); transform: rotate(45deg); animation: pz-bob .9s ease-in-out infinite; opacity: 0; }
+.pz-say.done .pz-say-more { opacity: 1; }
+@keyframes pz-bob { 50% { transform: translateY(4px) rotate(45deg); } }
+.pz-say-face { position: absolute; bottom: calc(100% - 24px); left: 6px; width: min(36vw, 220px); pointer-events: none; animation: pz-fade-up .35s var(--pz-ease) both; filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .5)); }
+.pz-say-face img, .pz-say-face canvas { width: 100%; height: auto; display: block; }
+.pz-say.right .pz-say-face { left: auto; right: 6px; }
+.pz-say-tools { position: absolute; right: 14px; top: -16px; display: flex; gap: 6px; }
+.pz-say-tools button { border: 0; border-radius: 8px; padding: 5px 10px; font: 700 12px/1 var(--pz-font); color: var(--pz-dim); background: rgba(20, 24, 34, .9); box-shadow: 0 0 0 1px var(--pz-line) inset; cursor: pointer; }
+.pz-say-tools button.on { color: var(--pz-on-accent); background: var(--pz-accent); }
+.pz-choices { display: grid; gap: 8px; margin-top: 12px; }
+.pz-choices .pz-btn { text-align: left; }
+.pz-log { max-height: 60vh; overflow: auto; text-align: left; touch-action: pan-y; }
+.pz-log p { margin: 0 0 10px; color: var(--pz-dim); }
+.pz-log b { color: var(--pz-accent); margin-right: 6px; }
+
+/* ---------- 載入、轉向、錯誤、效能面板 ---------- */
+.pz-loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 90; background: #000; pointer-events: auto; transition: opacity .4s; }
+.pz-loading.out { opacity: 0; pointer-events: none; }
+.pz-loading-box { width: min(260px, 70vw); text-align: center; }
+.pz-loading-title { font: 900 22px/1.3 var(--pz-font-display); letter-spacing: .14em; margin-bottom: 16px; }
+.pz-loading-bar { height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+.pz-loading-bar i { display: block; height: 100%; width: 0; background: var(--pz-accent); box-shadow: 0 0 12px var(--pz-accent); transition: width .2s; }
+.pz-loading-note { margin-top: 10px; font-size: 12px; color: var(--pz-faint); letter-spacing: .1em; }
+.pz-rotate { position: absolute; inset: 0; z-index: 200; background: #05070b; display: none; place-items: center; text-align: center; font-weight: 800; letter-spacing: .1em; pointer-events: auto; }
+.pz-rotate.on { display: grid; }
+.pz-rotate-icon { width: 54px; height: 86px; margin: 0 auto 18px; border: 3px solid var(--pz-text); border-radius: 10px; animation: pz-rot 1.6s ease-in-out infinite; }
+@keyframes pz-rot { 40%, 70% { transform: rotate(90deg); } }
+.pz-err { position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); z-index: 2147483000; box-sizing: border-box; padding: 14px 14px 12px;
+  border-radius: 14px; background: rgba(28, 10, 14, .96); color: #ffe8ea; font: 13px/1.5 var(--pz-font); box-shadow: 0 20px 50px rgba(0, 0, 0, .6), 0 0 0 1px rgba(255, 90, 110, .5) inset; pointer-events: auto; }
+.pz-err b { display: block; font-size: 15px; margin-bottom: 4px; }
+.pz-err pre { margin: 6px 0 10px; max-height: 30vh; overflow: auto; white-space: pre-wrap; word-break: break-all; font: 11px/1.45 ui-monospace, monospace; color: #ffc7cd; background: rgba(0, 0, 0, .3); padding: 8px; border-radius: 8px; user-select: text; -webkit-user-select: text; }
+.pz-err .pz-err-b { display: flex; gap: 8px; }
+.pz-err button { flex: 1; border: 0; border-radius: 9px; padding: 9px; font: 800 13px/1 var(--pz-font); color: #fff; background: rgba(255, 255, 255, .12); cursor: pointer; }
+.pz-stats { position: fixed; left: max(6px, env(safe-area-inset-left)); top: max(6px, env(safe-area-inset-top)); z-index: 2147482000; pointer-events: none; padding: 6px 8px; border-radius: 8px; background: rgba(0, 0, 0, .66); color: #b9ffcf; font: 11px/1.35 ui-monospace, monospace; white-space: pre; }
+@media (prefers-reduced-motion: reduce) { .pz-banner .pz-b-main, .pz-toast, .pz-modal { animation-duration: .01s !important; transition-duration: .01s !important; } }

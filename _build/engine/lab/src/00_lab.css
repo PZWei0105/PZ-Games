@@ -1,0 +1,54 @@
+/* 樣品館的介面（示範：遊戲自己的 CSS 只要覆蓋 --pz-* 變數＋加自己的元件） */
+#pz-root { --pz-accent: #ffb547; --pz-accent2: #46d4ff; --lab-glass: rgba(10, 14, 24, .72); }
+.lab-hub { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y; pointer-events: auto; -webkit-overflow-scrolling: touch;
+  padding: calc(28px + var(--pz-safe-t, 0px)) max(18px, var(--pz-safe-r, 0px)) calc(36px + var(--pz-safe-b, 0px)) max(18px, var(--pz-safe-l, 0px)); box-sizing: border-box; }
+.lab-head { text-align: center; margin: 4vh 0 22px; animation: lab-in .8s cubic-bezier(.2, .9, .25, 1.1) both; }
+.lab-logo { font: 900 clamp(40px, 13vw, 76px)/0.95 var(--pz-font); letter-spacing: .04em; color: #fff; text-shadow: 0 0 30px rgba(255, 181, 71, .55), 0 0 2px #fff; }
+.lab-logo span { display: block; font-size: .34em; letter-spacing: .62em; margin-top: 10px; color: var(--pz-accent); text-shadow: 0 0 18px rgba(255, 181, 71, .6); padding-left: .62em; }
+.lab-sub { margin-top: 14px; color: var(--pz-dim); letter-spacing: .3em; font-size: 13px; font-weight: 700; }
+.lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 12px; max-width: 980px; margin: 0 auto; }
+.lab-card { position: relative; text-align: left; border: 0; cursor: pointer; padding: 18px 18px 16px 64px; border-radius: 16px; color: var(--pz-text); font: inherit; min-height: 84px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02)), var(--lab-glass); box-shadow: 0 0 0 1px rgba(255, 255, 255, .09) inset, 0 14px 40px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform .18s cubic-bezier(.2, .9, .25, 1.2), box-shadow .2s; animation: lab-in .6s cubic-bezier(.2, .9, .25, 1.1) both; }
+.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; }
+.lab-card:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255, 181, 71, .45) inset, 0 18px 50px rgba(0, 0, 0, .45); }
+.lab-card:active, .lab-card.pz-press { transform: scale(.97); }
+.lab-card.pz-focus { box-shadow: 0 0 0 2px var(--pz-accent2) inset, 0 0 28px rgba(70, 212, 255, .35); }
+.lab-card b { display: block; font-size: 18px; letter-spacing: .08em; }
+.lab-card small { display: block; margin-top: 4px; color: var(--pz-dim); font-size: 13px; line-height: 1.5; font-weight: 500; }
+.lab-card i { position: absolute; left: 16px; top: 18px; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-style: normal; font-size: 18px;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .35), rgba(255, 255, 255, .05)); box-shadow: 0 0 0 1px rgba(255, 255, 255, .15) inset; }
+.lab-foot { text-align: center; color: var(--pz-faint); font-size: 12px; letter-spacing: .12em; margin: 24px 0 0; line-height: 2; }
+@keyframes lab-in { from { opacity: 0; transform: translateY(16px); } }
+
+/* 示範頁的上方列與控制面板 */
+.lab-bar { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; gap: 10px; pointer-events: none;
+  padding: calc(10px + var(--pz-safe-t, 0px)) max(12px, var(--pz-safe-r, 0px)) 10px max(12px, var(--pz-safe-l, 0px)); background: linear-gradient(rgba(5, 7, 12, .75), rgba(5, 7, 12, 0)); }
+.lab-back { pointer-events: auto; border: 0; width: 42px; height: 42px; border-radius: 12px; color: #fff; font-size: 20px; background: rgba(255, 255, 255, .1); box-shadow: 0 0 0 1px rgba(255, 255, 255, .14) inset; cursor: pointer; }
+.lab-title { font-weight: 900; letter-spacing: .14em; font-size: 16px; text-shadow: 0 2px 8px rgba(0, 0, 0, .6); }
+.lab-title small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--pz-dim); }
+.lab-panel { position: absolute; left: 50%; bottom: calc(10px + var(--pz-safe-b, 0px)); transform: translateX(-50%); width: min(560px, calc(100% - 20px)); box-sizing: border-box; pointer-events: auto;
+  padding: 10px 10px 8px; border-radius: 16px; background: var(--lab-glass); box-shadow: 0 0 0 1px rgba(255, 255, 255, .09) inset, 0 14px 40px rgba(0, 0, 0, .4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.lab-panel.right { left: auto; right: max(10px, var(--pz-safe-r, 0px)); transform: none; width: min(300px, calc(100% - 20px)); bottom: auto; top: calc(64px + var(--pz-safe-t, 0px)); max-height: calc(100% - 90px); overflow: auto; touch-action: pan-y; }
+.lab-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.lab-row + .lab-row { margin-top: 7px; }
+.lab-chip { border: 0; cursor: pointer; padding: 8px 11px; border-radius: 999px; font: 800 13px/1 var(--pz-font); color: var(--pz-dim); background: rgba(255, 255, 255, .06); box-shadow: 0 0 0 1px rgba(255, 255, 255, .1) inset; transition: background .15s, color .15s, transform .1s; }
+.lab-chip.on { color: #1a1206; background: var(--pz-accent); box-shadow: 0 0 16px rgba(255, 181, 71, .35); }
+.lab-chip.cyan.on { background: var(--pz-accent2); color: #001a22; box-shadow: 0 0 16px rgba(70, 212, 255, .35); }
+.lab-chip:active { transform: scale(.94); }
+.lab-chip.big { padding: 11px 16px; font-size: 14px; }
+.lab-label { font-size: 11px; letter-spacing: .2em; color: var(--pz-faint); font-weight: 800; margin-right: 2px; }
+.lab-note { font-size: 12px; color: var(--pz-dim); line-height: 1.6; padding: 2px 4px; }
+.lab-stat { position: absolute; right: max(12px, var(--pz-safe-r, 0px)); top: calc(14px + var(--pz-safe-t, 0px)); text-align: right; font: 800 12px/1.5 ui-monospace, monospace; color: #b9ffcf; text-shadow: 0 1px 4px #000; pointer-events: none; white-space: pre; }
+.lab-range { -webkit-appearance: none; appearance: none; flex: 1; min-width: 120px; height: 28px; background: transparent; touch-action: pan-x; }
+.lab-range::-webkit-slider-runnable-track { height: 5px; border-radius: 3px; background: linear-gradient(90deg, var(--pz-accent) var(--v, 50%), rgba(255, 255, 255, .14) var(--v, 50%)); }
+.lab-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8.5px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
+.lab-sfx { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.lab-sfx button { border: 0; cursor: pointer; padding: 10px 4px; border-radius: 10px; font: 700 12px/1.2 var(--pz-font); color: var(--pz-text); background: rgba(255, 255, 255, .06); box-shadow: 0 0 0 1px rgba(255, 255, 255, .08) inset; }
+.lab-sfx button:active { background: var(--pz-accent); color: #1a1206; }
+/* 手機橫拿（矮螢幕）：下方的控制面板改放右邊一欄，畫面內容由各場景的 Lab.shift() 往左置中 */
+@media (orientation: landscape) and (max-height: 520px) {
+  .lab-panel:not(.right) { left: auto; right: max(10px, var(--pz-safe-r, 0px)); transform: none; width: min(320px, 44vw); bottom: auto; top: calc(56px + var(--pz-safe-t, 0px)); max-height: calc(100% - 66px - var(--pz-safe-t, 0px)) !important; overflow: auto; touch-action: pan-y; }
+  .lab-head { margin-top: 1vh; }
+  .lab-stat + .lab-panel { top: calc(128px + var(--pz-safe-t, 0px)); max-height: calc(100% - 138px - var(--pz-safe-t, 0px)) !important; }   /* 壓力測試：讓出右上角的數字 */
+}
