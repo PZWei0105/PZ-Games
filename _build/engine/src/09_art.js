@@ -98,6 +98,18 @@ function paintEntry(ctx, en, ox, oy) {
   if (en.nearest) ctx.imageSmoothingEnabled = false;
   try { en.draw(ctx, en.w, en.h, en.arg); } catch (e) { reportError(e, 'art:' + en.name); }
   ctx.restore();
+  if (en.wrap && en.pad > 0) wrapPad(ctx, en, ox, oy);
+}
+/* 可以鋪滿的材質（Art.make 的 wrap: true）：外圍的留白填上「另一邊」的內容，鋪起來接縫處的線性內插才不會混到透明而出現細線 */
+function wrapPad(ctx, en, ox, oy) {
+  const p = en.pad, iw = en.pw - p * 2, ih = en.ph - p * 2, X = ox + p, Y = oy + p, cv = ctx.canvas;
+  if (iw < p || ih < p) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(X - p, Y, p, ih); ctx.drawImage(cv, X + iw - p, Y, p, ih, X - p, Y, p, ih);
+  ctx.clearRect(X + iw, Y, p, ih); ctx.drawImage(cv, X, Y, p, ih, X + iw, Y, p, ih);
+  ctx.clearRect(X - p, Y - p, iw + p * 2, p); ctx.drawImage(cv, X - p, Y + ih - p, iw + p * 2, p, X - p, Y - p, iw + p * 2, p);
+  ctx.clearRect(X - p, Y + ih, iw + p * 2, p); ctx.drawImage(cv, X - p, Y, iw + p * 2, p, X - p, Y + ih, iw + p * 2, p);
+  ctx.restore();
 }
 function newPage(nearest, w = Art.pageSize, h = Art.pageSize, solo = false) {
   const r = Gfx.r;
@@ -142,7 +154,7 @@ function realize(en) {
 
 /**
  * 畫一張圖收進圖集。
- * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, arg（傳給 draw 的第 4 個參數）,
+ * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, wrap: true（要用 g.tile 鋪滿的材質：接縫不會有細線）, arg（傳給 draw 的第 4 個參數）,
  *      outline: 2（外框粗細，圖會變大一圈）, outlineColor: '#000', rim: '#9cf' 或 { color, a, w, angle }（朝光的亮邊）, shade: 0.25（下半部變暗） }
  * 同名會覆蓋（舊的位置不回收）。
  */
@@ -156,7 +168,7 @@ Art.make = (name, w, h, draw, o = {}) => {
     if (ol) { const an = o.anchor || [0.5, 0.5]; o = Object.assign({}, o, { anchor: [(an[0] * w + ol) / (w + ol * 2), (an[1] * h + ol) / (h + ol * 2)] }); w += ol * 2; h += ol * 2; }
   }
   const scale = o.scale || (o.pixel ? 1 : Art.scale), pad = o.pad != null ? o.pad : Art.pad;
-  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, fx, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
+  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, fx, wrap: !!o.wrap, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
   f.w = w; f.h = h; const an = o.anchor || [0.5, 0.5]; f.ax = an[0]; f.ay = an[1]; f.entry = en;
   if (Gfx.r) realize(en); else Art.pending.push(en);
   return f;
@@ -223,7 +235,7 @@ Art.live = (name, canvas, o = {}) => {
     // 舊貼圖：Canvas2D 模式下只拿掉包裝（canvas 是遊戲自己的，不能被清掉）；WebGL 才真的刪貼圖
     if (f.tex && r.textures.has(f.tex)) { if (f.tex.canvas === canvas) r.textures.delete(f.tex); else r.texDelete(f.tex); }
     if (r.kind === 'canvas2d') { f.tex = { id: ++TexId, w, h, canvas, ctx: canvas.getContext('2d'), nearest: !!o.pixel, restore: null, live: true }; r.textures.add(f.tex); }
-    else f.tex = r.texCreate(w, h, { nearest: !!o.pixel, restore: (t) => { if (Gfx.r.texAlloc) Gfx.r.texAlloc(t); if (Gfx.r.texUpload) Gfx.r.texUpload(t, canvas, 0, 0); } });
+    else f.tex = r.texCreate(w, h, { nearest: !!o.pixel, repeat: !!o.repeat, restore: (t) => { if (Gfx.r.texAlloc) Gfx.r.texAlloc(t); if (Gfx.r.texUpload) Gfx.r.texUpload(t, canvas, 0, 0); } });
     f.setRect(f.tex, 0, 0, w, h); f.w = w / (o.density || 1); f.h = h / (o.density || 1); f._w = w; f._h = h;
   };
   f.refresh = () => {
@@ -236,6 +248,21 @@ Art.live = (name, canvas, o = {}) => {
   return f;
 };
 PZ.on('renderer', () => { for (const f of Art.frames.values()) if (f.live) { f.tex = null; f.refresh(); } });
+
+/**
+ * 會一直重複的材質（草地、沙、岩石表面）：給 g.polyTex（任意形狀貼材質）、PZ.tiles.marching 的 tex 用
+ *   PZ.art.pattern('grass', 64, 64, (ctx, w, h) => { … })   畫的時候注意左右、上下要接得起來
+ * 自己一張貼圖（不放圖集），所以可以用 GPU 的重複取樣；Canvas2D 後備模式畫成平均色
+ */
+Art.pattern = (name, w, h, draw, o = {}) => {
+  const sc = o.scale || Art.scale, c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * sc)); c.height = Math.max(1, Math.round(h * sc));
+  const x = c.getContext('2d'); x.scale(c.width / w, c.height / h);
+  try { draw(x, w, h); } catch (e) { reportError(e, 'art.pattern:' + name); }
+  const p = document.createElement('canvas'); p.width = p.height = 1; const px = p.getContext('2d'); px.drawImage(c, 0, 0, 1, 1); const d = px.getImageData(0, 0, 1, 1).data;
+  const f = Art.live(name, c, { density: c.width / w, repeat: true });
+  f.avg = Color.rgb(d[0], d[1], d[2], d[3] / 255); f.pattern = true;
+  return f;
+};
 
 /** 動畫：PZ.anim(frames, fps, loop) → 回傳函式 (t秒) => frame */
 PZ.anim = (frames, fps = 10, loop = true) => {

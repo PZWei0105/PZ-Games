@@ -353,7 +353,7 @@ class GLRenderer {
   }
   /* ---- 貼圖 ---- */
   texCreate(w, h, o = {}) {
-    const t = { id: ++TexId, w, h, gl: null, nearest: !!o.nearest, rt: !!o.rt, restore: o.restore || null, fb: null };
+    const t = { id: ++TexId, w, h, gl: null, nearest: !!o.nearest, rt: !!o.rt, repeat: !!o.repeat, restore: o.restore || null, fb: null };
     this.texAlloc(t); this.textures.add(t); return t;
   }
   texAlloc(t) {
@@ -361,7 +361,8 @@ class GLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, t.w, t.h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     const f = t.nearest ? gl.NEAREST : gl.LINEAR;
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const wrap = t.repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;   // repeat：材質（Art.pattern）一直重複
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
     if (t.rt) { t.fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t.gl, 0); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.bindFramebuffer(gl.FRAMEBUFFER, null); }
   }
   /** 把 canvas／圖片貼到貼圖的 (x, y)（整張來源） */
