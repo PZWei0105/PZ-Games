@@ -111,3 +111,9 @@ python3 _build/apps/next-chapter/check_webkit.py # 動到排版、直排、亮�
 
 - 字型：`cd _build/tools/fonts && npm i @fontsource/noto-serif-tc @fontsource/lxgw-wenkai-tc @fontsource/noto-sans-tc`（截圖才是真正的字）。
 - commit `_build/apps/next-chapter/` 和 `apps/next-chapter/`，推上 PZ-Games 的 main。只改這個 App 時不用重組收藏庫。
+
+## 寫作筆記
+
+`notes/<book-id>.pzc`：該書的內部設定與大綱（不公開，跟章節一樣打包）。取回：
+`python3 -c "import sys;sys.path.insert(0,'_build/apps/next-chapter/tools');import shelf;print(shelf.unpack(open('_build/apps/next-chapter/notes/three-twelve.pzc','rb').read()))"`
+續寫前先讀，伏筆與結局要照它收；寫完一章若有新伏筆就更新它。
