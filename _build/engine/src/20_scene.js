@@ -9,7 +9,7 @@
        ui: () => '<div class="hud">…</div>',   // 這個場景的 DOM 介面（進場放進 #pz-ui，離場拿掉）
        keepCamera: false,            // 換場景時要不要保留相機
      });
-     await PZ.go('play', { stage: 2 }, { type: 'fade', time: 0.35, color: '#000' });   // 轉場：fade｜iris｜wipe｜none
+     await PZ.go('play', { stage: 2 }, { type: 'fade', time: 0.35, color: '#000' });   // 轉場：fade｜iris｜wipe｜diamond｜blinds｜shutter｜slide｜pixel｜none
    換場景時會清掉：遊戲時間的計時器與補間、粒子、跳字、震動、按住的按鍵。
    ========================================================================== */
 const Scenes = PZ.scenes = { defs: {}, cur: null, name: '', trans: null, busy: false, uiEl: null };
@@ -65,6 +65,23 @@ function drawTransition(g) {
   } else if (T.type === 'wipe') {
     const w = (W + H * 0.6) * cover;
     g.save(); g.translate(-H * 0.3, 0); g.poly([0, 0, w, 0, w - H * 0.3, H, -H * 0.3, H], col); g.restore();
+  } else if (T.type === 'diamond') {   // 菱形一格一格長出來，從左上掃到右下（回來時也從左上先亮）
+    const sz = Math.max(W, H) / 9, cols = Math.ceil(W / sz) + 1, rows = Math.ceil(H / sz) + 1, spread = 0.7;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const cx = i * sz, cy = j * sz, off = ((cx / W) * 0.65 + (cy / H) * 0.35) * spread, o2 = T.phase === 'in' ? spread - off : off;
+      const s = Ease.inOutQuad(clamp01(cover * (1 + spread) - o2)) * sz * 1.03;
+      if (s > 0.5) g.poly([cx, cy - s, cx + s, cy, cx, cy + s, cx - s, cy], col);
+    }
+  } else if (T.type === 'blinds') {   // 百葉窗
+    const n = 9, sh = H / n, spread = 0.5;
+    for (let i = 0; i < n; i++) { const c = Ease.inOutQuad(clamp01(cover * (1 + spread) - (i / n) * spread)); if (c > 0.001) g.rect(0, i * sh, W, sh * c + 0.5, col); }
+  } else if (T.type === 'shutter') {   // 上下兩片快門闔起來，接縫有一道光
+    const hh = (H / 2) * cover; if (hh > 0.5) { g.rect(0, 0, W, hh, col); g.rect(0, H - hh, W, hh, col); const e = Math.max(0, 1 - Math.abs(cover - 0.92) * 8); if (e > 0) { g.rect(0, hh - 2, W, 2, '#ffffff', { a: e * 0.6, add: 1 }); g.rect(0, H - hh, W, 2, '#ffffff', { a: e * 0.6, add: 1 }); } }
+  } else if (T.type === 'slide') {   // 一片從右邊推進來
+    const x0 = W * (1 - cover); if (cover > 0.001) { g.rect(x0, 0, W - x0 + 1, H, col); g.rect(x0, 0, 3, H, '#ffffff', { a: 0.25 * (1 - Math.abs(cover - 0.5) * 2), add: 1 }); }
+  } else if (T.type === 'pixel') {   // 方塊亂序蓋上
+    const sz = Math.max(W, H) / 14, cols = Math.ceil(W / sz), rows = Math.ceil(H / sz);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { let h = (i * 374761393 + j * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); const th = ((h ^ (h >>> 16)) >>> 0) / 4294967296 * 0.85; if (cover > th) g.rect(i * sz, j * sz, sz + 0.5, sz + 0.5, col); }
   } else if (cover > 0.001) g.rect(0, 0, W, H, col, { a: cover });
   if (k >= 1 && T.done) { const d = T.done; T.done = null; d(); }
 }

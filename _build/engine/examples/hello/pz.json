@@ -1,5 +1,5 @@
 {
   "id": "hello-pz", "title": "你好 PZ", "en": "HELLO PZ", "version": "0.1.0",
-  "engine": "1.0",
+  "engine": "1.1",
   "background": "#0b0f17", "accent": "#ffb547", "orientation": "any", "icon_char": "PZ"
 }

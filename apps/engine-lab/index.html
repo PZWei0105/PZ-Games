@@ -20,7 +20,7 @@
 .lab-card { position: relative; text-align: left; border: 0; cursor: pointer; padding: 18px 18px 16px 64px; border-radius: 16px; color: var(--pz-text); font: inherit; min-height: 84px;
   background: linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02)), var(--lab-glass); box-shadow: 0 0 0 1px rgba(255, 255, 255, .09) inset, 0 14px 40px rgba(0, 0, 0, .35);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform .18s cubic-bezier(.2, .9, .25, 1.2), box-shadow .2s; animation: lab-in .6s cubic-bezier(.2, .9, .25, 1.1) both; }
-.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; } .lab-card:nth-child(8) { animation-delay: .35s; } .lab-card:nth-child(9) { animation-delay: .4s; } .lab-card:nth-child(10) { animation-delay: .45s; } .lab-card:nth-child(11) { animation-delay: .5s; }
+.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; } .lab-card:nth-child(8) { animation-delay: .35s; } .lab-card:nth-child(9) { animation-delay: .4s; } .lab-card:nth-child(10) { animation-delay: .45s; } .lab-card:nth-child(11) { animation-delay: .5s; } .lab-card:nth-child(12) { animation-delay: .55s; }
 .lab-card:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255, 181, 71, .45) inset, 0 18px 50px rgba(0, 0, 0, .45); }
 .lab-card:active, .lab-card.pz-press { transform: scale(.97); }
 .lab-card.pz-focus { box-shadow: 0 0 0 2px var(--pz-accent2) inset, 0 0 28px rgba(70, 212, 255, .35); }
@@ -64,8 +64,8 @@
 }
 </style></head>
 <body><div id="pz-root"><div id="pz-ui"></div></div>
-<script>/* PZ Engine dev */
-/*! PZ Engine v1.1.0 (2026-11-14.2bba4e18) — 痞子葳 × Claude 的 2D 遊戲引擎。
+<script>/* PZ Engine 1.1.0 */
+/*! PZ Engine v1.1.0 (2026-11-14.042ba4d2) — 痞子葳 × Claude 的 2D 遊戲引擎。
     說明書：PZ-Games repo 的 _build/engine/HANDBOOK.md */
 (function (global) {
 'use strict';
@@ -75,7 +75,7 @@
    整個引擎包在一個 IIFE 裡，只對外公開 window.PZ。
    模組之間共用這個閉包裡的變數（例如 Screen、Input、R），不必互相 import。
    ========================================================================== */
-const PZ = { version: '1.1.0', build: '2026-11-14.2bba4e18' };
+const PZ = { version: '1.1.0', build: '2026-11-14.042ba4d2' };
 const HAS_DOM = typeof document !== 'undefined' && typeof window !== 'undefined';
 const nowMs = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
 const noop = () => { };
@@ -3299,6 +3299,9 @@ Aud.unlock = () => {
   master.connect(comp); comp.connect(c.destination);
   Aud.master = master; Aud.comp = comp;
   for (const k of ['sfx', 'music', 'ui', 'amb']) { const g = c.createGain(); g.connect(master); Aud.bus[k] = g; }
+  // 配樂多過一個低通（暫停選單、水底、被打暈時「悶住」：PZ.music.muffle）
+  Aud.musicLP = c.createBiquadFilter(); Aud.musicLP.type = 'lowpass'; Aud.musicLP.frequency.value = 20000; Aud.musicLP.Q.value = 0.6;
+  Aud.bus.music.disconnect(); Aud.bus.music.connect(Aud.musicLP); Aud.musicLP.connect(master);
   // 殘響（短的房間感，給需要的音效加一點空間）
   Aud.rev = c.createConvolver(); Aud.rev.buffer = makeIR(c, 1.6, 2.6); Aud.revIn = c.createGain(); Aud.revIn.gain.value = 1;
   Aud.revIn.connect(Aud.rev); Aud.rev.connect(Aud.bus.sfx);
@@ -3495,7 +3498,7 @@ Sfx.play = (name, o = {}) => {
   // 同一音效的聲部上限：停掉最舊的
   const max = sp.max || 6, mine = Sfx.voices.filter((v) => v.name === name);
   if (mine.length >= max) mine[0].stop(0.02);
-  if (Sfx.voices.length >= Sfx.maxVoices) Sfx.voices[0].stop(0.02);
+  if (Sfx.voices.length >= Sfx.maxVoices) { const ai = Sfx.voices.findIndex((v) => v.bus === 'amb'); Sfx.voices[ai >= 0 ? ai : 0].stop(0.02); }   // 聲部滿了先讓環境音讓位
   const src = c.createBufferSource(); src.buffer = buf;
   const pv = sp.pitchVar != null ? sp.pitchVar : 0.05;
   src.playbackRate.value = Math.max(0.1, (o.pitch || 1) * (1 + Rand.spread(pv)));
@@ -3509,7 +3512,7 @@ Sfx.play = (name, o = {}) => {
   if (rv > 0) { const rg = c.createGain(); rg.gain.value = rv; node.connect(rg); rg.connect(Aud.revIn); }
   const at = now + (o.delay || 0);
   src.start(at);
-  const v = { name, src, g, end: at + buf.duration / src.playbackRate.value, stop(fade = 0.03) { try { const t = c.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + fade); src.stop(t + fade + 0.01); } catch (e) { /* 已經停了 */ } rm(); } };
+  const v = { name, bus: o.bus || sp.bus || 'sfx', src, g, end: at + buf.duration / src.playbackRate.value, stop(fade = 0.03) { try { const t = c.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + fade); src.stop(t + fade + 0.01); } catch (e) { /* 已經停了 */ } rm(); } };
   const rm = () => { const i = Sfx.voices.indexOf(v); if (i >= 0) Sfx.voices.splice(i, 1); };
   src.onended = rm;
   Sfx.voices.push(v);
@@ -3642,6 +3645,25 @@ S('notify', { vol: 0.35, bus: 'ui', max: 1, rev: 0.2, layers: [{ w: 'sine', f: 8
 S('card', { vol: 0.35, pitchVar: 0.1, max: 4, gap: 0.03, layers: [{ w: 'noise', t: 0.07, a: 0.01, p: 2, v: 1, bp: [2600, 4200, 1.2] }] });
 S('alarm', { vol: 0.35, max: 1, layers: [{ w: 'square', f: 880, t: 0.7, a: 0.002, h: 0.65, p: 1, v: 0.35, jump: [[0.175, 0.75], [0.35, 1.333], [0.525, 0.75]], lp: [2500, 2500, 0.7] }] });
 S('bell', { vol: 0.5, max: 2, rev: 0.4, layers: [{ w: 'sine', f: 660, t: 1.6, a: 0.001, p: 2.6, v: 0.7, fm: [3.5, 2.2, 2.2] }, { w: 'sine', f: 1320, t: 1.1, a: 0.001, p: 3, v: 0.25, fm: [2.4, 1, 3] }] });
+// 腳步（不同地面）
+S('stepGrass', { vol: 0.24, pitchVar: 0.14, max: 3, gap: 0.07, layers: [{ w: 'pink', t: 0.08, a: 0.012, p: 1.8, v: 1, hp: [1400, 2200, 0.7], lp: [7000, 5000, 0.7] }] });
+S('stepStone', { vol: 0.26, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.03, a: 0.0008, p: 2.4, v: 0.8, bp: [2300, 1800, 1.2] }, { w: 'sine', f: 190, f1: 120, t: 0.035, a: 0.001, p: 2, v: 0.6 }] });
+S('stepWood', { vol: 0.3, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'sine', f: 240, f1: 175, t: 0.07, a: 0.001, p: 2.2, v: 0.9 }, { w: 'noise', t: 0.025, a: 0.0008, p: 2, v: 0.35, bp: [950, 950, 1.5] }] });
+S('stepWater', { vol: 0.3, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.14, a: 0.006, p: 2, v: 1, bp: [1500, 520, 1] }, { w: 'sine', f: 620, f1: 1250, t: 0.045, d: 0.03, a: 0.002, p: 2, v: 0.2 }] });
+S('stepSnow', { vol: 0.26, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.1, a: 0.012, p: 1.6, v: 1, lp: [3200, 1500, 0.7], crush: 6, hold: 3 }] });
+S('stepMetal', { vol: 0.24, pitchVar: 0.1, max: 3, gap: 0.07, layers: [{ w: 'sine', f: 880, t: 0.1, a: 0.0008, p: 2.6, v: 0.5, fm: [2.31, 2.2, 14] }, { w: 'noise', t: 0.02, a: 0.0005, p: 2, v: 0.4, hp: [3200, 3200, 0.7] }] });
+// 介面（第二組）
+S('select', { vol: 0.24, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'sine', f: 880, f1: 1320, t: 0.05, a: 0.002, p: 1.8, v: 0.8 }, { w: 'sine', f: 1760, t: 0.03, d: 0.03, a: 0.001, p: 2, v: 0.25 }] });
+S('back', { vol: 0.22, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'sine', f: 1100, f1: 700, t: 0.07, a: 0.002, p: 1.8, v: 0.8 }] });
+S('toggleOn', { vol: 0.24, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'tri', f: 740, t: 0.04, a: 0.001, p: 2, v: 0.7 }, { w: 'tri', f: 1110, t: 0.07, d: 0.035, a: 0.001, p: 2, v: 0.7 }] });
+S('toggleOff', { vol: 0.22, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'tri', f: 1110, t: 0.04, a: 0.001, p: 2, v: 0.6 }, { w: 'tri', f: 740, t: 0.07, d: 0.035, a: 0.001, p: 2, v: 0.6 }] });
+S('slider', { vol: 0.12, bus: 'ui', pitchVar: 0, max: 2, gap: 0.03, layers: [{ w: 'sine', f: 2400, t: 0.012, a: 0.0005, p: 1.5, v: 1 }] });
+S('unlock', { vol: 0.4, bus: 'ui', max: 1, rev: 0.35, layers: [523, 659, 784, 1046, 1318].map((f, i) => ({ w: 'sine', f, t: 0.5, d: i * 0.06, a: 0.002, p: 2.4, v: 0.45, fm: [2, 0.8, 6] })).concat([{ w: 'noise', t: 0.6, d: 0.1, a: 0.15, p: 2, v: 0.1, hp: [7000, 9000, 0.7] }]) });
+S('purchase', { vol: 0.42, bus: 'ui', max: 1, rev: 0.2, layers: [{ w: 'square', f: 1318, t: 0.08, a: 0.001, p: 2, v: 0.35, lp: [6000, 6000, 0.7] }, { w: 'square', f: 1760, t: 0.25, d: 0.07, a: 0.001, p: 2.2, v: 0.35, lp: [6000, 4000, 0.7] }, { w: 'sine', f: 2637, t: 0.5, d: 0.07, a: 0.001, p: 3, v: 0.2, fm: [3.5, 1.5, 6] }] });
+S('equip', { vol: 0.4, max: 2, layers: [{ w: 'noise', t: 0.14, a: 0.02, p: 2, v: 0.6, bp: [700, 2600, 1.1] }, { w: 'sine', f: 1250, t: 0.25, d: 0.1, a: 0.001, p: 2.8, v: 0.4, fm: [1.41, 3, 9] }, { w: 'noise', t: 0.02, d: 0.1, a: 0.0005, p: 2, v: 0.5, hp: [3500, 3500, 0.7] }] });
+S('page', { vol: 0.3, bus: 'ui', pitchVar: 0.1, max: 2, gap: 0.05, layers: [{ w: 'pink', t: 0.16, a: 0.03, p: 1.6, v: 1, bp: [2400, 5200, 0.9] }, { w: 'noise', t: 0.02, d: 0.13, a: 0.001, p: 2, v: 0.35, hp: [4000, 4000, 0.7] }] });
+S('rare', { vol: 0.42, max: 1, rev: 0.45, layers: [{ w: 'sine', f: 1568, f1: 3136, t: 0.7, a: 0.08, p: 2, v: 0.3, vib: [12, 0.3] }, { w: 'sine', f: 2093, t: 0.9, d: 0.1, a: 0.001, p: 2.6, v: 0.35, fm: [3.5, 2, 3] }, { w: 'noise', t: 0.9, a: 0.2, p: 1.6, v: 0.12, hp: [8000, 10000, 0.7] }] });
+S('combo', { vol: 0.32, pitchVar: 0, max: 3, gap: 0.04, layers: [{ w: 'square', f: 660, f1: 990, t: 0.09, a: 0.001, p: 1.8, v: 0.35, duty: 0.25, lp: [5000, 5000, 0.7] }, { w: 'sine', f: 1320, t: 0.12, d: 0.04, a: 0.001, p: 2, v: 0.35 }] });
 
 /* ---- 17_music.js ---- */
 /* ==========================================================================
@@ -3661,8 +3683,12 @@ S('bell', { vol: 0.5, max: 2, rev: 0.4, layers: [{ w: 'sine', f: 660, t: 1.6, a:
      PZ.music.stinger('win')（播一次、自動壓低主配樂）   PZ.music.file('theme', 'music.mp3')（用音檔）
    鼓的字：x 一般、X 重音、o 輕；數字 1～9 是力度。音名：C4＝中央 Do，可寫 C#4、Eb3。
    和弦：A、Am、A7、Am7、Amaj7、Asus2、Asus4、Adim、Aaug、A6、Am6、A9、Aadd9，可加 /E 指定低音。
-   樂器（取樣式，便宜）：kick snare hat ohat clap tom crash shaker rim bass sub pluck harp zither keys bell marimba arp stab
-   樂器（即時合成，長音）：pad strings lead choir flute organ
+   樂器（取樣式，便宜）：kick snare hat ohat clap tom crash shaker rim bass sub pluck harp zither keys bell marimba arp stab epiano piano guitar kalimba
+   樂器（即時合成，長音）：pad strings lead choir flute organ brass supersaw
+   聲部效果：{ delay: 0.35（跟拍子對齊的回音）, lp: 1800 或 [600, 6000]（低通；給兩個值＝緊張度越高越亮）, pump: 0.6（跟著大鼓一縮一放）, rev, pan }
+     歌曲：{ delaySteps: 3（回音隔幾格，預設附點八分）, feedback: 0.38, delayTone: 2600 }
+   換歌對拍子：PZ.music.play('boss', { sync: 'bar' | 'half' | 'beat' })   下一小節（半小節、下一拍）才切過去，不會亂拍
+   PZ.music.muffle(0.8)  配樂悶住（暫停選單、水底）；muffle(0) 恢復      PZ.music.phase()  這一拍走到哪（0～1，畫面跟著節奏跳）
    ========================================================================== */
 const NOTE_IDX = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 function noteToMidi(tok) {
@@ -3717,6 +3743,15 @@ buf('bell', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.55, lay
 buf('marimba', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.65, layers: [{ w: 'sine', f, t: 0.6, a: 0.001, p: 3, v: 0.9, fm: [4, 1.2, 18] }, { w: 'sine', f: f * 4, t: 0.08, a: 0.001, p: 3, v: 0.15 }] }, sr, 24); });
 buf('arp', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.45, layers: [{ w: 'square', f, t: Math.min(0.5, dur + 0.12), a: 0.002, p: 2.2, v: 0.5, duty: 0.3, lp: [f * 10, f * 3, 1.2] }] }, sr, 25); });
 buf('stab', (m, dur, sr) => { const f = midiHz(m), t = Math.min(1, dur + 0.1); return synth({ vol: 0.5, layers: [-8, 0, 8].map((c) => ({ w: 'saw', f: f * Math.pow(2, c / 1200), t, a: 0.003, h: dur * 0.3, p: 2, v: 0.35, lp: [f * 12, f * 2, 1] })) }, sr, 26); });
+buf('epiano', (m, dur, sr) => { const f = midiHz(m), t = Math.min(3.2, dur + 1); return synth({ vol: 0.6, layers: [{ w: 'sine', f, t, a: 0.002, h: dur * 0.3, p: 2.2, v: 0.85, fm: [1, 1.1, 1.6] }, { w: 'sine', f, t: 0.6, a: 0.001, p: 3.4, v: 0.26, fm: [14, 1.6, 12] }, { w: 'sine', f: f * 2, t: Math.min(t, 1.2), a: 0.002, p: 3, v: 0.1 }] }, sr, 27); });
+buf('piano', (m, dur, sr) => { // 鋼琴：泛音稍微偏高（弦的非諧和性），高的泛音衰減快，加一點擊槌聲
+  const f = midiHz(m), t = Math.min(3.6, dur + 1.6), B = 0.0004 * Math.pow(2, (m - 60) / 24), L = [];
+  for (let k = 1; k <= 7; k++) { const fk = f * k * Math.sqrt(1 + B * k * k); if (fk > sr * 0.4) break; L.push({ w: 'sine', f: fk, t: t / (1 + (k - 1) * 0.35), a: 0.0015, p: 2.4 + k * 0.45, v: (0.9 / Math.pow(k, 1.15)) * (k === 1 ? 1 : 0.8) }); }
+  L.push({ w: 'noise', t: 0.03, a: 0.0005, p: 2, v: 0.12, lp: [Math.min(9000, f * 8), f * 2, 0.7] });
+  return synth({ vol: 0.62, layers: L }, sr, 28);
+});
+buf('guitar', (m, dur, sr) => { const o = ks(midiHz(m), Math.min(2.6, dur + 1), sr, 0.62, 0.9965, m + 11); let lp = 0; for (let i = 0; i < o.length; i++) { lp += (o[i] - lp) * 0.04; o[i] = o[i] * 0.85 + lp * 1.6; } return normalizeBuf(o, 0.62); });
+buf('kalimba', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.6, layers: [{ w: 'sine', f, t: 1.5, a: 0.0015, p: 3.2, v: 0.9 }, { w: 'sine', f: f * 5.94, t: 0.16, a: 0.0008, p: 3, v: 0.22 }, { w: 'sine', f: f * 2.01, t: 0.5, a: 0.001, p: 3, v: 0.12 }, { w: 'noise', t: 0.012, a: 0.0003, p: 2, v: 0.12, bp: [f * 4, f * 4, 1.5] }] }, sr, 29); });
 function normalizeBuf(o, target) { let pk = 0; for (let i = 0; i < o.length; i++) pk = Math.max(pk, Math.abs(o[i])); if (pk > 0) { const g = target / pk; for (let i = 0; i < o.length; i++) o[i] *= g; } const fd = Math.min(o.length, 400); for (let i = 0; i < fd; i++) o[o.length - 1 - i] *= i / fd; return o; }
 
 /** 即時合成的長音樂器：c＝AudioContext、out＝輸出節點 */
@@ -3746,10 +3781,17 @@ node('choir', (c, m, t0, dur, vel, out) => {
   oscs(c, 'sawtooth', f, [-7, 0, 7], t0, t0 + dur + rel * 1.5, mix);
 });
 node('organ', (c, m, t0, dur, vel, out) => { const f = midiHz(m), rel = 0.12, g = envGain(c, t0, dur, 0.1 * vel, 0.01, rel, 1); g.connect(out); for (const [k, a] of [[1, 1], [2, 0.5], [3, 0.3], [4, 0.2]]) { const o = c.createOscillator(); o.frequency.value = f * k; const og = c.createGain(); og.gain.value = a; o.connect(og); og.connect(g); o.start(t0); o.stop(t0 + dur + rel * 3); } });
+node('brass', (c, m, t0, dur, vel, out) => { // 銅管：兩支鋸齒波、濾波器一開始猛地打開、音高從下面滑上來
+  const f = midiHz(m), rel = 0.18, g = envGain(c, t0, dur, 0.12 * vel, 0.035, rel, 0.85), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 1.2;
+  lp.frequency.setValueAtTime(f * 1.2, t0); lp.frequency.linearRampToValueAtTime(Math.min(9000, f * 7), t0 + 0.06); lp.frequency.setTargetAtTime(Math.min(7000, f * 4), t0 + 0.06, 0.15);
+  lp.connect(g); g.connect(out);
+  for (const d of [-6, 5]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.setValueAtTime(d - 35, t0); o.detune.linearRampToValueAtTime(d, t0 + 0.07); o.connect(lp); o.start(t0); o.stop(t0 + dur + rel * 3); }
+});
+node('supersaw', (c, m, t0, dur, vel, out) => { const f = midiHz(m), rel = 0.4, g = envGain(c, t0, dur, 0.07 * vel, 0.02, rel, 0.9), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(9000, f * 9); lp.Q.value = 0.6; lp.connect(g); g.connect(out); oscs(c, 'sawtooth', f, [-22, -11, 0, 11, 22], t0, t0 + dur + rel * 3, lp); });
 const DRUMS = new Set(['kick', 'snare', 'hat', 'ohat', 'clap', 'crash', 'shaker', 'rim']);
 
 /* ---------- 編曲器 ---------- */
-const Music = PZ.music = { songs: {}, cur: null, level: 0.5, _bufs: new Map(), _beats: [], _beatFns: [], _timer: 0, look: 0.18 };
+const Music = PZ.music = { songs: {}, cur: null, level: 0.5, _bufs: new Map(), _beats: [], _beatFns: [], _timer: 0, look: 0.18, _out: [] };
 Music.define = (name, song) => { Music.songs[name] = song; return song; };
 Music.instrument = (name, def) => { INST[name] = def; };
 function tokensOf(tr, steps) {
@@ -3797,6 +3839,11 @@ function scheduleStep(rt, step, time) {
     if (tr.chords) { const ns = chordNotes(tok, tr.base || 52); if (ns) for (const m of ns) playNote(rt, tr, m + (tr.shift || 0), t, dur, (tr.vel || 1) * 0.8); continue; }
     const midi = noteToMidi(tok); if (midi != null) playNote(rt, tr, midi + (tr.shift || 0), t, dur, tr.vel || 1);
   }
+  if (rt.pumpers.length) {   // 跟著大鼓一縮一放（沒有大鼓就每一拍）
+    const kick = rt.tracks.find((tr) => tr.inst === 'kick' && tr.on); let hit;
+    if (kick) { const tk = kick.toks[step % kick.toks.length]; hit = !!tk && /^[xXo1-9]$/.test(tk); } else hit = step % ((def.steps || 16) / 4) === 0;
+    if (hit) for (const tr of rt.pumpers) { const g = tr.pg.gain; g.cancelScheduledValues(time); g.setValueAtTime(1 - tr.def.pump, time); g.setTargetAtTime(1, time + 0.02, sd * 0.9); }
+  }
   if (step % (def.steps || 16) === 0) PZ.emit('bar', step / (def.steps || 16));
   if (step % ((def.steps || 16) / 4) === 0) Music._beats.push({ t: time, n: step / ((def.steps || 16) / 4) });
 }
@@ -3805,24 +3852,42 @@ function runSong(rt) {
   const c = Aud.ctx; if (!c || rt.stopped) return;
   if (rt.file) return;
   while (rt.next < c.currentTime + Music.look) {
+    if (rt.endStep != null && rt.step >= rt.endStep) { fadeOutAt(rt, rt.endAt, rt.endFade); return; }   // 對拍換歌：排到切換點就收
     if (rt.once && rt.step >= rt.len) { rt.stopped = true; PZ.after(rt.stepDur * 8, () => { try { rt.gain.disconnect(); } catch (e) { /* ignore */ } }, { real: true }); return; }
     scheduleStep(rt, rt.step, rt.next);
     rt.next += rt.stepDur; rt.step++;
   }
 }
+/** 低通截止頻率：lp 給兩個值時跟著緊張度在中間滑（指數內插） */
+function trackCut(td, lv) { const L = td.lp; if (!Array.isArray(L)) return L; return L[0] * Math.pow(L[1] / L[0], clamp01(lv)); }
+/** 跟拍子對齊的回音（附點八分）：輸入 → 延遲 ⇄ 回授（低通，越回越暗）→ 歌曲音量 */
+function makeDelay(c, rt, def) {
+  const input = c.createGain(), dl = c.createDelay(2), fb = c.createGain(), lp = c.createBiquadFilter();
+  dl.delayTime.value = Math.min(1.9, rt.stepDur * (def.delaySteps || 3)); fb.gain.value = def.feedback != null ? def.feedback : 0.38; lp.type = 'lowpass'; lp.frequency.value = def.delayTone || 2600;
+  input.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(rt.gain);
+  return input;
+}
+/** 下一個小節／半小節／拍子的位置 */
+function syncPoint(rt, sync) { const steps = rt.def.steps || 16, q = sync === 'beat' ? steps / 4 : sync === 'half' ? steps / 2 : steps, step = Math.ceil(rt.step / q) * q; return { step, time: rt.next + (step - rt.step) * rt.stepDur }; }
 function makeRuntime(name, o = {}) {
   const def = Music.songs[name]; if (!def) { warnOnce('song:' + name, '沒有這首配樂：' + name); return null; }
   const c = Aud.ctx, steps = def.steps || 16, stepDur = 60 / (def.bpm || 110) / (steps / 4);
   const gain = c.createGain(); gain.gain.value = 0.0001; gain.connect(o.bus || Aud.bus.music);
-  const rt = { name, def, stepDur, step: 0, next: c.currentTime + 0.06, gain, tracks: [], stopped: false, once: !!o.once || !!def.once, len: 0 };
+  const rt = { name, def, stepDur, step: 0, next: c.currentTime + 0.06, gain, tracks: [], pumpers: [], stopped: false, once: !!o.once || !!def.once, len: 0, delay: null };
+  rt.t0 = rt.next;
   if (def.file) { rt.file = true; return rt; }
   for (const td of def.tracks || []) {
     const out = c.createGain(), on = trackActive({ def: td }, Music.level);
     out.gain.value = on ? (td.vol != null ? td.vol : 0.7) : 0.0001;
-    let dst = out; if (td.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = td.pan; out.connect(p); dst = p; }
+    let dst = out, lpf = null, pg = null;
+    if (td.lp) { lpf = c.createBiquadFilter(); lpf.type = 'lowpass'; lpf.Q.value = td.q || 0.7; lpf.frequency.value = trackCut(td, Music.level); dst.connect(lpf); dst = lpf; }
+    if (td.pump) { pg = c.createGain(); pg.gain.value = 1; dst.connect(pg); dst = pg; }
+    if (td.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = td.pan; dst.connect(p); dst = p; }
     dst.connect(gain);
     if (td.rev) { const rg = c.createGain(); rg.gain.value = td.rev; out.connect(rg); rg.connect(Aud.revIn); }
-    const tr = Object.assign({}, td, { def: td, out, on, toks: tokensOf(td, steps) });
+    if (td.delay) { const D = rt.delay || (rt.delay = makeDelay(c, rt, def)), sg = c.createGain(); sg.gain.value = td.delay; dst.connect(sg); sg.connect(D); }
+    const tr = Object.assign({}, td, { def: td, out, on, lpf, pg, toks: tokensOf(td, steps) });
+    if (pg) rt.pumpers.push(tr);
     rt.len = Math.max(rt.len, tr.toks.length);
     rt.tracks.push(tr);
   }
@@ -3835,14 +3900,30 @@ Music.play = (name, o = {}) => {
   if (!Aud.ctx) return; // 還沒解鎖：解鎖後自動開始
   if (Music.cur && Music.cur.name === name && !Music.cur.stopped) { Music.intensity(Music.level); return; }
   const old = Music.cur, fade = o.fade != null ? o.fade : 1.2, c = Aud.ctx;
-  if (old) fadeOut(old, fade);
   const def = Music.songs[name];
   const rt = makeRuntime(name, o); if (!rt) return;
-  if (def && def.file) { startFile(rt, def); }
-  rt.gain.gain.setValueAtTime(0.0001, c.currentTime); rt.gain.gain.exponentialRampToValueAtTime(def && def.vol != null ? def.vol : 1, c.currentTime + Math.max(0.05, fade));
+  const vol = def && def.vol != null ? def.vol : 1;
+  if (o.sync && old && !old.stopped && !old.file && !(def && def.file)) {
+    // 對拍子換歌：舊的排到下一個小節（拍子）就收，新的剛好從那裡開始
+    const sp = syncPoint(old, o.sync); old.endStep = sp.step; old.endAt = sp.time; old.endFade = o.outFade != null ? o.outFade : 0.12;
+    Music._out.push(old); rt.next = rt.t0 = sp.time;
+    rt.gain.gain.setValueAtTime(0.0001, c.currentTime); rt.gain.gain.setValueAtTime(0.0001, sp.time); rt.gain.gain.exponentialRampToValueAtTime(vol, sp.time + Math.max(0.02, o.inFade != null ? o.inFade : 0.04));
+    Music.switchAt = sp.time;
+  } else {
+    if (old) fadeOut(old, fade);
+    if (def && def.file) { startFile(rt, def); }
+    rt.gain.gain.setValueAtTime(0.0001, c.currentTime); rt.gain.gain.exponentialRampToValueAtTime(vol, c.currentTime + Math.max(0.05, fade));
+    Music.switchAt = c.currentTime;
+  }
   Music.cur = rt;
   runSong(rt);
 };
+/** 在指定時間（音訊時間）淡出收掉 */
+function fadeOutAt(rt, at, fade = 0.12) {
+  rt.stopped = true; const c = Aud.ctx, g = rt.gain.gain, now = c.currentTime;
+  try { const v = Math.max(0.0001, g.value); g.cancelScheduledValues(now); g.setValueAtTime(v, now); g.setValueAtTime(v, Math.max(now, at)); g.exponentialRampToValueAtTime(0.0001, Math.max(now, at) + Math.max(0.02, fade)); } catch (e) { /* ignore */ }
+  PZ.after(Math.max(0, at - now) + fade + 0.6, () => { try { rt.gain.disconnect(); } catch (e) { /* ignore */ } }, { real: true });
+}
 function fadeOut(rt, fade) {
   rt.stopped = true; const c = Aud.ctx, t = c.currentTime;
   try { rt.gain.gain.cancelScheduledValues(t); rt.gain.gain.setValueAtTime(Math.max(0.0001, rt.gain.gain.value), t); rt.gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.05, fade)); } catch (e) { /* ignore */ }
@@ -3855,6 +3936,7 @@ Music.intensity = (v, fade = 1.2) => {
   Music.level = clamp01(v); const rt = Music.cur; if (!rt || !Aud.ctx || rt.file) return Music.level;
   const t = Aud.ctx.currentTime;
   for (const tr of rt.tracks) {
+    if (tr.lpf && Array.isArray(tr.def.lp)) tr.lpf.frequency.setTargetAtTime(trackCut(tr.def, Music.level), t, fade / 3);
     const on = trackActive(tr, Music.level); if (on === tr.on) continue;
     tr.on = on; const target = on ? (tr.def.vol != null ? tr.def.vol : 0.7) : 0.0001;
     tr.out.gain.cancelScheduledValues(t); tr.out.gain.setValueAtTime(Math.max(0.0001, tr.out.gain.value), t); tr.out.gain.exponentialRampToValueAtTime(target, t + fade);
@@ -3867,7 +3949,8 @@ Music.stinger = (name, o = {}) => {
   if (!Aud.ctx) return;
   if (Sfx.has(name) && !Music.songs[name]) { Aud.duck(0.35, o.duck || 1.2); Sfx.play(name, o); return; }
   const rt = makeRuntime(name, { once: true, bus: Aud.bus.sfx }); if (!rt) return;
-  Aud.duck(0.3, rt.len * rt.stepDur + 0.5);
+  if (o.sync && Music.cur && !Music.cur.stopped && !Music.cur.file) { const sp = syncPoint(Music.cur, o.sync); rt.next = rt.t0 = sp.time; }
+  Aud.duck(0.3, rt.len * rt.stepDur + 0.5 + Math.max(0, rt.next - Aud.ctx.currentTime));
   rt.gain.gain.setValueAtTime(o.vol || 1, Aud.ctx.currentTime);
   (Music._stingers || (Music._stingers = [])).push(rt);
   runSong(rt);
@@ -3883,14 +3966,27 @@ async function startFile(rt, def) {
     s.connect(rt.gain); s.start(); rt.src = s;
   } catch (e) { reportError(e, 'music.file'); }
 }
+/** 配樂悶住（0～1；暫停選單、水底、被打暈）：低通慢慢壓下去／打開 */
+Music.muffle = (amount = 1, time = 0.4) => {
+  Music._muffle = amount; if (!Aud.ctx || !Aud.musicLP) return;
+  const f = amount <= 0.001 ? 20000 : 20000 * Math.pow(380 / 20000, clamp01(amount));
+  Aud.musicLP.frequency.setTargetAtTime(f, Aud.ctx.currentTime, Math.max(0.01, time / 3));
+};
+/** 這一拍走到哪（0＝拍點、接近 1＝下一拍之前）：畫面跟著節奏一跳一跳 */
+Music.phase = () => {
+  const rt = Music.cur; if (!rt || !Aud.ctx || rt.file || rt.stopped) return 0;
+  const beat = rt.stepDur * ((rt.def.steps || 16) / 4), t = Aud.ctx.currentTime - rt.t0;
+  return t < 0 ? 0 : (t / beat) % 1;
+};
 /** 每一拍呼叫（跟音樂對拍：UI 脈動、燈光閃爍） */
 Music.onBeat = (fn) => { Music._beatFns.push(fn); return () => { const i = Music._beatFns.indexOf(fn); if (i >= 0) Music._beatFns.splice(i, 1); }; };
-PZ.on('audio', () => { if (Music._want) Music.play(Music._want.name, Object.assign({}, Music._want.o, { fade: 1.5 })); });
+PZ.on('audio', () => { if (Music._want) Music.play(Music._want.name, Object.assign({}, Music._want.o, { fade: 1.5, sync: null })); if (Music._muffle) Music.muffle(Music._muffle, 0.05); });
 addSystem({
   name: 'music', order: 32,
   frame() {
     if (!Aud.ctx) return;
     if (Music.cur) runSong(Music.cur);
+    for (let i = 0; i < Music._out.length; i++) { const r = Music._out[i]; runSong(r); if (r.stopped) Music._out.splice(i--, 1); }
     if (Music._stingers) for (let i = 0; i < Music._stingers.length; i++) { const s = Music._stingers[i]; runSong(s); if (s.stopped) Music._stingers.splice(i--, 1); }
     const t = Aud.ctx.currentTime;
     while (Music._beats.length && Music._beats[0].t <= t) { const b = Music._beats.shift(); for (const f of Music._beatFns) safeCall(f, null, b.n); }
@@ -3898,7 +3994,7 @@ addSystem({
   },
 });
 // 背景時 requestAnimationFrame 會停：用計時器補排程（避免切回來時斷拍）
-if (HAS_DOM) setInterval(() => { if (Aud.ctx && Aud.ctx.state === 'running' && Music.cur && document.hidden === false) runSong(Music.cur); }, 50);
+if (HAS_DOM) setInterval(() => { if (Aud.ctx && Aud.ctx.state === 'running' && document.hidden === false) { if (Music.cur) runSong(Music.cur); for (const r of Music._out) runSong(r); } }, 50);
 
 /* ---- 18_save.js ---- */
 /* ==========================================================================
@@ -4138,7 +4234,7 @@ const Cloud = PZ.cloud = {
        ui: () => '<div class="hud">…</div>',   // 這個場景的 DOM 介面（進場放進 #pz-ui，離場拿掉）
        keepCamera: false,            // 換場景時要不要保留相機
      });
-     await PZ.go('play', { stage: 2 }, { type: 'fade', time: 0.35, color: '#000' });   // 轉場：fade｜iris｜wipe｜none
+     await PZ.go('play', { stage: 2 }, { type: 'fade', time: 0.35, color: '#000' });   // 轉場：fade｜iris｜wipe｜diamond｜blinds｜shutter｜slide｜pixel｜none
    換場景時會清掉：遊戲時間的計時器與補間、粒子、跳字、震動、按住的按鍵。
    ========================================================================== */
 const Scenes = PZ.scenes = { defs: {}, cur: null, name: '', trans: null, busy: false, uiEl: null };
@@ -4194,6 +4290,23 @@ function drawTransition(g) {
   } else if (T.type === 'wipe') {
     const w = (W + H * 0.6) * cover;
     g.save(); g.translate(-H * 0.3, 0); g.poly([0, 0, w, 0, w - H * 0.3, H, -H * 0.3, H], col); g.restore();
+  } else if (T.type === 'diamond') {   // 菱形一格一格長出來，從左上掃到右下（回來時也從左上先亮）
+    const sz = Math.max(W, H) / 9, cols = Math.ceil(W / sz) + 1, rows = Math.ceil(H / sz) + 1, spread = 0.7;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const cx = i * sz, cy = j * sz, off = ((cx / W) * 0.65 + (cy / H) * 0.35) * spread, o2 = T.phase === 'in' ? spread - off : off;
+      const s = Ease.inOutQuad(clamp01(cover * (1 + spread) - o2)) * sz * 1.03;
+      if (s > 0.5) g.poly([cx, cy - s, cx + s, cy, cx, cy + s, cx - s, cy], col);
+    }
+  } else if (T.type === 'blinds') {   // 百葉窗
+    const n = 9, sh = H / n, spread = 0.5;
+    for (let i = 0; i < n; i++) { const c = Ease.inOutQuad(clamp01(cover * (1 + spread) - (i / n) * spread)); if (c > 0.001) g.rect(0, i * sh, W, sh * c + 0.5, col); }
+  } else if (T.type === 'shutter') {   // 上下兩片快門闔起來，接縫有一道光
+    const hh = (H / 2) * cover; if (hh > 0.5) { g.rect(0, 0, W, hh, col); g.rect(0, H - hh, W, hh, col); const e = Math.max(0, 1 - Math.abs(cover - 0.92) * 8); if (e > 0) { g.rect(0, hh - 2, W, 2, '#ffffff', { a: e * 0.6, add: 1 }); g.rect(0, H - hh, W, 2, '#ffffff', { a: e * 0.6, add: 1 }); } }
+  } else if (T.type === 'slide') {   // 一片從右邊推進來
+    const x0 = W * (1 - cover); if (cover > 0.001) { g.rect(x0, 0, W - x0 + 1, H, col); g.rect(x0, 0, 3, H, '#ffffff', { a: 0.25 * (1 - Math.abs(cover - 0.5) * 2), add: 1 }); }
+  } else if (T.type === 'pixel') {   // 方塊亂序蓋上
+    const sz = Math.max(W, H) / 14, cols = Math.ceil(W / sz), rows = Math.ceil(H / sz);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { let h = (i * 374761393 + j * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); const th = ((h ^ (h >>> 16)) >>> 0) / 4294967296 * 0.85; if (cover > th) g.rect(i * sz, j * sz, sz + 0.5, sz + 0.5, col); }
   } else if (cover > 0.001) g.rect(0, 0, W, H, col, { a: cover });
   if (k >= 1 && T.done) { const d = T.done; T.done = null; d(); }
 }
@@ -4228,9 +4341,13 @@ addSystem({
      PZ.ui.toast('撿到 金幣 ×3', { kind: 'good' })   PZ.ui.banner('BOSS 來襲', { sub: '屍王', style: 'boss' })
      PZ.ui.settings({ save })   標準設定頁（音量、震動、閃光、觸覺、數字、畫質、存檔碼、雲端）
      PZ.ui.pause({ items: [{ label, onClick }] })   標準暫停選單
+     PZ.ui.tip(元素, '說明', { side })              提示框：滑鼠移上去、手指按住、手把焦點移到就出現
+     PZ.ui.holo(卡片元素, { tilt: 14, foil: true })    閃卡：跟著手指傾斜、亮面跟著跑、彩虹箔
+     PZ.ui.slots({ items: [{ icon, name, desc, count, rarity, new }], cols, size, onPick })   格子背包（稀有度光暈、數量、新東西的小點）
+     await PZ.ui.title({ title, sub, kicker, items: [{ label, value, primary }], foot, backdrop })  標題畫面（字一個個浮上來、掃光；backdrop：蓋一層深色）
    所有 .pz-btn 自動有按下音效、觸覺、按壓動畫；鍵盤方向鍵／手把十字鍵可以移動焦點，A／Enter 按、B／Esc 返回。
    ========================================================================== */
-const ENGINE_CSS = "html,body{margin:0;padding:0;height:100%;overflow:hidden;overscroll-behavior:none;background:#000}body{-webkit-text-size-adjust:100%;text-size-adjust:100%}#pz-root{--pz-font:\"PZ Sans\",\"Noto Sans TC\",\"PingFang TC\",\"Heiti TC\",\"Microsoft JhengHei\",system-ui,sans-serif;--pz-font-display:var(--pz-font);--pz-text:#eef2f8;--pz-dim:rgba(238,242,248,.6);--pz-faint:rgba(238,242,248,.32);--pz-bg:rgba(6,8,14,.6);--pz-panel:rgba(16,20,30,.92);--pz-panel2:rgba(255,255,255,.05);--pz-line:rgba(255,255,255,.12);--pz-accent:#ffb547;--pz-accent2:#46d4ff;--pz-good:#5fe39a;--pz-bad:#ff4d5e;--pz-on-accent:#1a1206;--pz-radius:16px;--pz-radius-s:10px;--pz-shadow:0 24px 60px rgba(0,0,0,.55),0 2px 0 rgba(255,255,255,.04) inset;--pz-blur:10px;--pz-ease:cubic-bezier(.2,.9,.25,1.15);--pz-touch-scale:1;position:fixed;inset:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;font-family:var(--pz-font);color:var(--pz-text);line-height:1.5;font-feature-settings:\"palt\" 0;text-rendering:optimizeLegibility;contain:strict}#pz-canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image-rendering:auto}#pz-touch{position:absolute;inset:0;pointer-events:none;z-index:5}#pz-touch.pz-hide{display:none}#pz-ui{position:absolute;inset:0;pointer-events:none;z-index:10}#pz-ui button,#pz-ui a,#pz-ui input,#pz-ui select,#pz-ui textarea,#pz-ui label,#pz-ui [data-ui],#pz-ui .pz-block{pointer-events:auto}.pz-scene-ui{position:absolute;inset:0;pointer-events:none}.pz-stick-zone{position:absolute;pointer-events:auto;touch-action:none}.pz-stick{position:absolute;transform:translate(-50%,-50%) scale(var(--pz-touch-scale));border-radius:50%;opacity:0;transition:opacity .18s;background:radial-gradient(circle,rgba(255,255,255,.06) 0 55%,rgba(255,255,255,.14) 56% 58%,rgba(255,255,255,.03) 59%);box-shadow:0 0 0 1px rgba(255,255,255,.1) inset;pointer-events:none}.pz-stick.on,.pz-stick.fixed{opacity:1}.pz-stick.fixed{transform:translate(-50%,50%) scale(var(--pz-touch-scale));opacity:.55}.pz-stick.fixed.on{opacity:1}.pz-stick-knob{position:absolute;left:50%;top:50%;width:42%;height:42%;margin:-21% 0 0 -21%;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(220,230,245,.75) 60%,rgba(160,175,200,.7));box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.25);transition:transform .03s linear}.pz-tbtn{position:absolute;pointer-events:auto;touch-action:none;border:0;padding:0;border-radius:50%;display:grid;place-items:center;color:#fff;font:900 15px/1 var(--pz-font);letter-spacing:.04em;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.22),rgba(255,255,255,.06) 62%),rgba(10,14,22,.42);box-shadow:0 0 0 1.5px rgba(255,255,255,.28) inset,0 8px 22px rgba(0,0,0,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transform:scale(var(--pz-touch-scale));transition:transform .08s,background .12s}.pz-tbtn svg{width:46%;height:46%}.pz-tbtn.on{transform:scale(calc(var(--pz-touch-scale) * .9));background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.4),rgba(255,255,255,.12) 62%),rgba(10,14,22,.5)}.pz-tbtn.off{opacity:.4}.pz-tbtn.cd::after{content:\"\";position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(0,0,0,.62) calc(var(--pz-cd,0) * 360deg),transparent 0)}.pz-tbtn[data-badge]:not([data-badge=\"\"])::before{content:attr(data-badge);position:absolute;right:-2px;top:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:var(--pz-accent);color:var(--pz-on-accent);font:900 12px/20px var(--pz-font);text-align:center;z-index:1}.pz-tbtn-label{position:relative;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.6)}.pz-btn{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font:800 16px/1.2 var(--pz-font);letter-spacing:.06em;color:var(--pz-text);padding:14px 22px;min-height:48px;min-width:48px;border-radius:var(--pz-radius-s);background:var(--pz-panel2);box-shadow:0 0 0 1px var(--pz-line) inset;transition:transform .12s var(--pz-ease),background .15s,box-shadow .15s,opacity .15s;position:relative;outline:none}.pz-btn:hover{background:rgba(255,255,255,.1)}.pz-btn:active,.pz-btn.pz-press{transform:scale(.95)}.pz-btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--pz-accent) 92%,#fff),var(--pz-accent));color:var(--pz-on-accent);box-shadow:0 8px 24px color-mix(in srgb,var(--pz-accent) 35%,transparent),0 -2px 0 rgba(0,0,0,.2) inset}.pz-btn.danger{background:color-mix(in srgb,var(--pz-bad) 22%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--pz-bad) 60%,transparent) inset}.pz-btn.ghost{background:transparent;box-shadow:none;color:var(--pz-dim)}.pz-btn[disabled],.pz-btn.disabled{opacity:.38;pointer-events:none}.pz-btn.pz-focus,.pz-focusable.pz-focus{box-shadow:0 0 0 2px var(--pz-accent2),0 0 22px color-mix(in srgb,var(--pz-accent2) 45%,transparent)}.pz-btn.wide{width:100%}.pz-modal-wrap{position:absolute;inset:0;display:grid;place-items:center;padding:max(16px,var(--pz-safe-t,0px)) max(16px,var(--pz-safe-r,0px)) max(16px,var(--pz-safe-b,0px)) max(16px,var(--pz-safe-l,0px));background:var(--pz-bg);pointer-events:auto;z-index:50;opacity:0;transition:opacity .2s;backdrop-filter:blur(var(--pz-blur));-webkit-backdrop-filter:blur(var(--pz-blur))}#pz-touch{transition:opacity .2s}#pz-touch.pz-ui-open{opacity:0;pointer-events:none}#pz-touch.pz-ui-open *{pointer-events:none !important}.pz-modal-wrap.on{opacity:1}.pz-modal{width:min(440px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:22px 20px 18px;border-radius:var(--pz-radius);background:var(--pz-panel);box-shadow:var(--pz-shadow),0 0 0 1px var(--pz-line) inset;transform:translateY(14px) scale(.96);transition:transform .32s var(--pz-ease)}.pz-modal-wrap.on .pz-modal{transform:none}.pz-modal.wide{width:min(640px,100%)}.pz-modal h2{margin:0 0 10px;font:900 21px/1.3 var(--pz-font-display);letter-spacing:.06em}.pz-modal .pz-body{color:var(--pz-dim);font-size:15px;line-height:1.75;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;min-height:0;flex:0 1 auto;margin:0 -6px;padding:0 6px}.pz-modal h2,.pz-modal .pz-actions{flex:none}.pz-modal .pz-list{overflow:auto;min-height:0;touch-action:pan-y}.pz-modal .pz-body b,.pz-modal .pz-body strong{color:var(--pz-text)}.pz-modal .pz-actions{display:flex;gap:10px;margin-top:18px}.pz-modal .pz-actions .pz-btn{flex:1}.pz-modal .pz-list{display:grid;gap:8px;margin-top:14px}.pz-modal .pz-list .pz-btn{text-align:left;display:flex;flex-direction:column;gap:3px;align-items:flex-start}.pz-modal .pz-list .pz-btn small{font-weight:500;color:var(--pz-dim);letter-spacing:.02em;font-size:13px}.pz-hint{color:var(--pz-faint);font-size:13px;margin-top:8px}.pz-two{text-align:left;line-height:1.9}.pz-set{display:grid;gap:4px;margin-top:6px}.pz-set-row{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--pz-line)}.pz-set-row:last-child{border-bottom:0}.pz-set-row>span{flex:1;font-weight:700;font-size:15px}.pz-set-row>span small{display:block;font-weight:400;color:var(--pz-faint);font-size:12px}.pz-set h3{margin:14px 0 2px;font-size:12px;letter-spacing:.2em;color:var(--pz-accent);font-weight:900}.pz-range{-webkit-appearance:none;appearance:none;width:46%;height:30px;background:transparent;touch-action:pan-x}.pz-range::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--pz-accent) var(--v,50%),rgba(255,255,255,.14) var(--v,50%))}.pz-range::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5)}.pz-range::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.14)}.pz-range::-moz-range-progress{height:6px;border-radius:3px;background:var(--pz-accent)}.pz-range::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff}.pz-toggle{position:relative;width:52px;height:30px;border-radius:15px;border:0;padding:0;background:rgba(255,255,255,.16);transition:background .2s;cursor:pointer}.pz-toggle::after{content:\"\";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);transition:transform .25s var(--pz-ease)}.pz-toggle.on{background:var(--pz-accent)}.pz-toggle.on::after{transform:translateX(22px)}.pz-seg{display:flex;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--pz-line) inset}.pz-seg button{border:0;background:transparent;color:var(--pz-dim);font:700 13px/1 var(--pz-font);padding:9px 10px;cursor:pointer}.pz-seg button.on{background:var(--pz-accent);color:var(--pz-on-accent)}.pz-code{width:100%;box-sizing:border-box;min-height:74px;resize:none;border-radius:10px;border:0;padding:10px;font:12px/1.4 ui-monospace,monospace;color:var(--pz-text);background:rgba(0,0,0,.35);box-shadow:0 0 0 1px var(--pz-line) inset;user-select:text;-webkit-user-select:text;touch-action:auto}.pz-toasts{position:absolute;left:50%;top:calc(14px + var(--pz-safe-t,0px));transform:translateX(-50%);display:grid;gap:8px;justify-items:center;z-index:60;pointer-events:none;width:min(92vw,420px)}.pz-toast{padding:10px 16px;border-radius:999px;background:rgba(12,16,26,.88);box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px var(--pz-line) inset;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:center;animation:pz-toast-in .38s var(--pz-ease) both;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.pz-toast.good{box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px color-mix(in srgb,var(--pz-good) 70%,transparent) inset}.pz-toast.bad{box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px color-mix(in srgb,var(--pz-bad) 70%,transparent) inset}.pz-toast.out{animation:pz-toast-out .3s ease-in both}@keyframes pz-toast-in{from{opacity:0;transform:translateY(-14px) scale(.9)}}@keyframes pz-toast-out{to{opacity:0;transform:translateY(-10px) scale(.96)}}.pz-banner{position:absolute;left:0;right:0;top:38%;transform:translateY(-50%);text-align:center;z-index:55;pointer-events:none}.pz-banner .pz-b-main{display:inline-block;font:900 clamp(30px,8vw,64px)/1.1 var(--pz-font-display);letter-spacing:.12em;padding:6px 26px;color:#fff;text-shadow:0 0 24px color-mix(in srgb,var(--pz-accent) 70%,transparent),0 4px 0 rgba(0,0,0,.35);animation:pz-ban-in .55s var(--pz-ease) both}.pz-banner .pz-b-sub{font:700 clamp(13px,3.4vw,17px)/1.4 var(--pz-font);letter-spacing:.3em;color:var(--pz-accent);margin-top:6px;animation:pz-fade-up .5s .12s both}.pz-banner::before{content:\"\";position:absolute;left:0;right:0;top:50%;height:120%;transform:translateY(-50%) scaleY(var(--s,1));background:linear-gradient(90deg,transparent,rgba(0,0,0,.55) 20%,rgba(0,0,0,.55) 80%,transparent);z-index:-1;animation:pz-ban-bar .5s var(--pz-ease) both}.pz-banner.boss .pz-b-main{color:#ffe1e1;text-shadow:0 0 30px rgba(255,40,60,.85),0 4px 0 rgba(0,0,0,.4)}.pz-banner.boss .pz-b-sub{color:#ff6b7a}.pz-banner.out{animation:pz-ban-out .35s ease-in both}@keyframes pz-ban-in{from{opacity:0;transform:scale(1.6);letter-spacing:.5em;filter:blur(6px)}}@keyframes pz-ban-bar{from{transform:translateY(-50%) scaleY(0)}}@keyframes pz-ban-out{to{opacity:0;transform:translateY(-50%) scale(.96)}}@keyframes pz-fade-up{from{opacity:0;transform:translateY(10px)}}.pz-say{position:absolute;left:0;right:0;bottom:0;padding:0 max(12px,var(--pz-safe-r,0px)) max(14px,calc(var(--pz-safe-b,0px) + 8px)) max(12px,var(--pz-safe-l,0px));z-index:40;pointer-events:auto;display:flex;justify-content:center}.pz-say-box{position:relative;width:min(760px,100%);min-height:132px;box-sizing:border-box;padding:22px 20px 18px;border-radius:var(--pz-radius);background:var(--pz-panel);box-shadow:var(--pz-shadow),0 0 0 1px var(--pz-line) inset;animation:pz-fade-up .3s var(--pz-ease) both;cursor:pointer}.pz-say-name{position:absolute;left:18px;top:-15px;padding:5px 14px;border-radius:8px;background:var(--pz-accent);color:var(--pz-on-accent);font:900 14px/1.2 var(--pz-font);letter-spacing:.12em}.pz-say-text{font-size:17px;line-height:1.85;letter-spacing:.03em;min-height:3.6em}.pz-say.narr .pz-say-text{color:var(--pz-dim);font-style:normal}.pz-say-more{position:absolute;right:16px;bottom:10px;width:10px;height:10px;border-right:2px solid var(--pz-accent);border-bottom:2px solid var(--pz-accent);transform:rotate(45deg);animation:pz-bob .9s ease-in-out infinite;opacity:0}.pz-say.done .pz-say-more{opacity:1}@keyframes pz-bob{50%{transform:translateY(4px) rotate(45deg)}}.pz-say-face{position:absolute;bottom:calc(100% - 24px);left:6px;width:min(36vw,220px);pointer-events:none;animation:pz-fade-up .35s var(--pz-ease) both;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5))}.pz-say-face img,.pz-say-face canvas{width:100%;height:auto;display:block}.pz-say.right .pz-say-face{left:auto;right:6px}.pz-say-tools{position:absolute;right:14px;top:-16px;display:flex;gap:6px}.pz-say-tools button{border:0;border-radius:8px;padding:5px 10px;font:700 12px/1 var(--pz-font);color:var(--pz-dim);background:rgba(20,24,34,.9);box-shadow:0 0 0 1px var(--pz-line) inset;cursor:pointer}.pz-say-tools button.on{color:var(--pz-on-accent);background:var(--pz-accent)}.pz-choices{display:grid;gap:8px;margin-top:12px}.pz-choices .pz-btn{text-align:left}.pz-log{max-height:60vh;overflow:auto;text-align:left;touch-action:pan-y}.pz-log p{margin:0 0 10px;color:var(--pz-dim)}.pz-log b{color:var(--pz-accent);margin-right:6px}.pz-loading{position:absolute;inset:0;display:grid;place-items:center;z-index:90;background:#000;pointer-events:auto;transition:opacity .4s}.pz-loading.out{opacity:0;pointer-events:none}.pz-loading-box{width:min(260px,70vw);text-align:center}.pz-loading-title{font:900 22px/1.3 var(--pz-font-display);letter-spacing:.14em;margin-bottom:16px}.pz-loading-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}.pz-loading-bar i{display:block;height:100%;width:0;background:var(--pz-accent);box-shadow:0 0 12px var(--pz-accent);transition:width .2s}.pz-loading-note{margin-top:10px;font-size:12px;color:var(--pz-faint);letter-spacing:.1em}.pz-rotate{position:absolute;inset:0;z-index:200;background:#05070b;display:none;place-items:center;text-align:center;font-weight:800;letter-spacing:.1em;pointer-events:auto}.pz-rotate.on{display:grid}.pz-rotate-icon{width:54px;height:86px;margin:0 auto 18px;border:3px solid var(--pz-text);border-radius:10px;animation:pz-rot 1.6s ease-in-out infinite}@keyframes pz-rot{40%,70%{transform:rotate(90deg)}}.pz-err{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(560px,calc(100vw - 24px));z-index:2147483000;box-sizing:border-box;padding:14px 14px 12px;border-radius:14px;background:rgba(28,10,14,.96);color:#ffe8ea;font:13px/1.5 var(--pz-font);box-shadow:0 20px 50px rgba(0,0,0,.6),0 0 0 1px rgba(255,90,110,.5) inset;pointer-events:auto}.pz-err b{display:block;font-size:15px;margin-bottom:4px}.pz-err pre{margin:6px 0 10px;max-height:30vh;overflow:auto;white-space:pre-wrap;word-break:break-all;font:11px/1.45 ui-monospace,monospace;color:#ffc7cd;background:rgba(0,0,0,.3);padding:8px;border-radius:8px;user-select:text;-webkit-user-select:text}.pz-err .pz-err-b{display:flex;gap:8px}.pz-err button{flex:1;border:0;border-radius:9px;padding:9px;font:800 13px/1 var(--pz-font);color:#fff;background:rgba(255,255,255,.12);cursor:pointer}.pz-stats{position:fixed;left:max(6px,env(safe-area-inset-left));top:max(6px,env(safe-area-inset-top));z-index:2147482000;pointer-events:none;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.66);color:#b9ffcf;font:11px/1.35 ui-monospace,monospace;white-space:pre}@media (prefers-reduced-motion:reduce){.pz-banner .pz-b-main,.pz-toast,.pz-modal{animation-duration:.01s !important;transition-duration:.01s !important}}";
+const ENGINE_CSS = "html,body{margin:0;padding:0;height:100%;overflow:hidden;overscroll-behavior:none;background:#000}body{-webkit-text-size-adjust:100%;text-size-adjust:100%}#pz-root{--pz-font:\"PZ Sans\",\"Noto Sans TC\",\"PingFang TC\",\"Heiti TC\",\"Microsoft JhengHei\",system-ui,sans-serif;--pz-font-display:var(--pz-font);--pz-text:#eef2f8;--pz-dim:rgba(238,242,248,.6);--pz-faint:rgba(238,242,248,.32);--pz-bg:rgba(6,8,14,.6);--pz-panel:rgba(16,20,30,.92);--pz-panel2:rgba(255,255,255,.05);--pz-line:rgba(255,255,255,.12);--pz-accent:#ffb547;--pz-accent2:#46d4ff;--pz-good:#5fe39a;--pz-bad:#ff4d5e;--pz-on-accent:#1a1206;--pz-radius:16px;--pz-radius-s:10px;--pz-shadow:0 24px 60px rgba(0,0,0,.55),0 2px 0 rgba(255,255,255,.04) inset;--pz-blur:10px;--pz-ease:cubic-bezier(.2,.9,.25,1.15);--pz-touch-scale:1;position:fixed;inset:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;font-family:var(--pz-font);color:var(--pz-text);line-height:1.5;font-feature-settings:\"palt\" 0;text-rendering:optimizeLegibility;contain:strict}#pz-canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image-rendering:auto}#pz-touch{position:absolute;inset:0;pointer-events:none;z-index:5}#pz-touch.pz-hide{display:none}#pz-ui{position:absolute;inset:0;pointer-events:none;z-index:10}#pz-ui button,#pz-ui a,#pz-ui input,#pz-ui select,#pz-ui textarea,#pz-ui label,#pz-ui [data-ui],#pz-ui .pz-block{pointer-events:auto}.pz-scene-ui{position:absolute;inset:0;pointer-events:none}.pz-stick-zone{position:absolute;pointer-events:auto;touch-action:none}.pz-stick{position:absolute;transform:translate(-50%,-50%) scale(var(--pz-touch-scale));border-radius:50%;opacity:0;transition:opacity .18s;background:radial-gradient(circle,rgba(255,255,255,.06) 0 55%,rgba(255,255,255,.14) 56% 58%,rgba(255,255,255,.03) 59%);box-shadow:0 0 0 1px rgba(255,255,255,.1) inset;pointer-events:none}.pz-stick.on,.pz-stick.fixed{opacity:1}.pz-stick.fixed{transform:translate(-50%,50%) scale(var(--pz-touch-scale));opacity:.55}.pz-stick.fixed.on{opacity:1}.pz-stick-knob{position:absolute;left:50%;top:50%;width:42%;height:42%;margin:-21% 0 0 -21%;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(220,230,245,.75) 60%,rgba(160,175,200,.7));box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.25);transition:transform .03s linear}.pz-tbtn{position:absolute;pointer-events:auto;touch-action:none;border:0;padding:0;border-radius:50%;display:grid;place-items:center;color:#fff;font:900 15px/1 var(--pz-font);letter-spacing:.04em;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.22),rgba(255,255,255,.06) 62%),rgba(10,14,22,.42);box-shadow:0 0 0 1.5px rgba(255,255,255,.28) inset,0 8px 22px rgba(0,0,0,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transform:scale(var(--pz-touch-scale));transition:transform .08s,background .12s}.pz-tbtn svg{width:46%;height:46%}.pz-tbtn.on{transform:scale(calc(var(--pz-touch-scale) * .9));background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.4),rgba(255,255,255,.12) 62%),rgba(10,14,22,.5)}.pz-tbtn.off{opacity:.4}.pz-tbtn.cd::after{content:\"\";position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(0,0,0,.62) calc(var(--pz-cd,0) * 360deg),transparent 0)}.pz-tbtn[data-badge]:not([data-badge=\"\"])::before{content:attr(data-badge);position:absolute;right:-2px;top:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:var(--pz-accent);color:var(--pz-on-accent);font:900 12px/20px var(--pz-font);text-align:center;z-index:1}.pz-tbtn-label{position:relative;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.6)}.pz-btn{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font:800 16px/1.2 var(--pz-font);letter-spacing:.06em;color:var(--pz-text);padding:14px 22px;min-height:48px;min-width:48px;border-radius:var(--pz-radius-s);background:var(--pz-panel2);box-shadow:0 0 0 1px var(--pz-line) inset;transition:transform .12s var(--pz-ease),background .15s,box-shadow .15s,opacity .15s;position:relative;outline:none}.pz-btn:hover{background:rgba(255,255,255,.1)}.pz-btn:active,.pz-btn.pz-press{transform:scale(.95)}.pz-btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--pz-accent) 92%,#fff),var(--pz-accent));color:var(--pz-on-accent);box-shadow:0 8px 24px color-mix(in srgb,var(--pz-accent) 35%,transparent),0 -2px 0 rgba(0,0,0,.2) inset}.pz-btn.danger{background:color-mix(in srgb,var(--pz-bad) 22%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--pz-bad) 60%,transparent) inset}.pz-btn.ghost{background:transparent;box-shadow:none;color:var(--pz-dim)}.pz-btn[disabled],.pz-btn.disabled{opacity:.38;pointer-events:none}.pz-btn.pz-focus,.pz-focusable.pz-focus{box-shadow:0 0 0 2px var(--pz-accent2),0 0 22px color-mix(in srgb,var(--pz-accent2) 45%,transparent)}.pz-btn.wide{width:100%}.pz-modal-wrap{position:absolute;inset:0;display:grid;place-items:center;padding:max(16px,var(--pz-safe-t,0px)) max(16px,var(--pz-safe-r,0px)) max(16px,var(--pz-safe-b,0px)) max(16px,var(--pz-safe-l,0px));background:var(--pz-bg);pointer-events:auto;z-index:50;opacity:0;transition:opacity .2s;backdrop-filter:blur(var(--pz-blur));-webkit-backdrop-filter:blur(var(--pz-blur))}#pz-touch{transition:opacity .2s}#pz-touch.pz-ui-open{opacity:0;pointer-events:none}#pz-touch.pz-ui-open *{pointer-events:none !important}.pz-modal-wrap.on{opacity:1}.pz-modal{width:min(440px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:22px 20px 18px;border-radius:var(--pz-radius);background:var(--pz-panel);box-shadow:var(--pz-shadow),0 0 0 1px var(--pz-line) inset;transform:translateY(14px) scale(.96);transition:transform .32s var(--pz-ease)}.pz-modal-wrap.on .pz-modal{transform:none}.pz-modal.wide{width:min(640px,100%)}.pz-modal h2{margin:0 0 10px;font:900 21px/1.3 var(--pz-font-display);letter-spacing:.06em}.pz-modal .pz-body{color:var(--pz-dim);font-size:15px;line-height:1.75;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;min-height:0;flex:0 1 auto;margin:0 -6px;padding:0 6px}.pz-modal h2,.pz-modal .pz-actions{flex:none}.pz-modal .pz-list{overflow:auto;min-height:0;touch-action:pan-y}.pz-modal .pz-body b,.pz-modal .pz-body strong{color:var(--pz-text)}.pz-modal .pz-actions{display:flex;gap:10px;margin-top:18px}.pz-modal .pz-actions .pz-btn{flex:1}.pz-modal .pz-list{display:grid;gap:8px;margin-top:14px}.pz-modal .pz-list .pz-btn{text-align:left;display:flex;flex-direction:column;gap:3px;align-items:flex-start}.pz-modal .pz-list .pz-btn small{font-weight:500;color:var(--pz-dim);letter-spacing:.02em;font-size:13px}.pz-hint{color:var(--pz-faint);font-size:13px;margin-top:8px}.pz-two{text-align:left;line-height:1.9}.pz-set{display:grid;gap:4px;margin-top:6px}.pz-set-row{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--pz-line)}.pz-set-row:last-child{border-bottom:0}.pz-set-row>span{flex:1;font-weight:700;font-size:15px}.pz-set-row>span small{display:block;font-weight:400;color:var(--pz-faint);font-size:12px}.pz-set h3{margin:14px 0 2px;font-size:12px;letter-spacing:.2em;color:var(--pz-accent);font-weight:900}.pz-range{-webkit-appearance:none;appearance:none;width:46%;height:30px;background:transparent;touch-action:pan-x}.pz-range::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--pz-accent) var(--v,50%),rgba(255,255,255,.14) var(--v,50%))}.pz-range::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5)}.pz-range::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.14)}.pz-range::-moz-range-progress{height:6px;border-radius:3px;background:var(--pz-accent)}.pz-range::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff}.pz-toggle{position:relative;width:52px;height:30px;border-radius:15px;border:0;padding:0;background:rgba(255,255,255,.16);transition:background .2s;cursor:pointer}.pz-toggle::after{content:\"\";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);transition:transform .25s var(--pz-ease)}.pz-toggle.on{background:var(--pz-accent)}.pz-toggle.on::after{transform:translateX(22px)}.pz-seg{display:flex;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--pz-line) inset}.pz-seg button{border:0;background:transparent;color:var(--pz-dim);font:700 13px/1 var(--pz-font);padding:9px 10px;cursor:pointer}.pz-seg button.on{background:var(--pz-accent);color:var(--pz-on-accent)}.pz-code{width:100%;box-sizing:border-box;min-height:74px;resize:none;border-radius:10px;border:0;padding:10px;font:12px/1.4 ui-monospace,monospace;color:var(--pz-text);background:rgba(0,0,0,.35);box-shadow:0 0 0 1px var(--pz-line) inset;user-select:text;-webkit-user-select:text;touch-action:auto}.pz-toasts{position:absolute;left:50%;top:calc(14px + var(--pz-safe-t,0px));transform:translateX(-50%);display:grid;gap:8px;justify-items:center;z-index:60;pointer-events:none;width:min(92vw,420px)}.pz-toast{padding:10px 16px;border-radius:999px;background:rgba(12,16,26,.88);box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px var(--pz-line) inset;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:center;animation:pz-toast-in .38s var(--pz-ease) both;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.pz-toast.good{box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px color-mix(in srgb,var(--pz-good) 70%,transparent) inset}.pz-toast.bad{box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px color-mix(in srgb,var(--pz-bad) 70%,transparent) inset}.pz-toast.out{animation:pz-toast-out .3s ease-in both}@keyframes pz-toast-in{from{opacity:0;transform:translateY(-14px) scale(.9)}}@keyframes pz-toast-out{to{opacity:0;transform:translateY(-10px) scale(.96)}}.pz-banner{position:absolute;left:0;right:0;top:38%;transform:translateY(-50%);text-align:center;z-index:55;pointer-events:none}.pz-banner .pz-b-main{display:inline-block;font:900 clamp(30px,8vw,64px)/1.1 var(--pz-font-display);letter-spacing:.12em;padding:6px 26px;color:#fff;text-shadow:0 0 24px color-mix(in srgb,var(--pz-accent) 70%,transparent),0 4px 0 rgba(0,0,0,.35);animation:pz-ban-in .55s var(--pz-ease) both}.pz-banner .pz-b-sub{font:700 clamp(13px,3.4vw,17px)/1.4 var(--pz-font);letter-spacing:.3em;color:var(--pz-accent);margin-top:6px;animation:pz-fade-up .5s .12s both}.pz-banner::before{content:\"\";position:absolute;left:0;right:0;top:50%;height:120%;transform:translateY(-50%) scaleY(var(--s,1));background:linear-gradient(90deg,transparent,rgba(0,0,0,.55) 20%,rgba(0,0,0,.55) 80%,transparent);z-index:-1;animation:pz-ban-bar .5s var(--pz-ease) both}.pz-banner.boss .pz-b-main{color:#ffe1e1;text-shadow:0 0 30px rgba(255,40,60,.85),0 4px 0 rgba(0,0,0,.4)}.pz-banner.boss .pz-b-sub{color:#ff6b7a}.pz-banner.out{animation:pz-ban-out .35s ease-in both}@keyframes pz-ban-in{from{opacity:0;transform:scale(1.6);letter-spacing:.5em;filter:blur(6px)}}@keyframes pz-ban-bar{from{transform:translateY(-50%) scaleY(0)}}@keyframes pz-ban-out{to{opacity:0;transform:translateY(-50%) scale(.96)}}@keyframes pz-fade-up{from{opacity:0;transform:translateY(10px)}}.pz-say{position:absolute;left:0;right:0;bottom:0;padding:0 max(12px,var(--pz-safe-r,0px)) max(14px,calc(var(--pz-safe-b,0px) + 8px)) max(12px,var(--pz-safe-l,0px));z-index:40;pointer-events:auto;display:flex;justify-content:center}.pz-say-box{position:relative;width:min(760px,100%);min-height:132px;box-sizing:border-box;padding:22px 20px 18px;border-radius:var(--pz-radius);background:var(--pz-panel);box-shadow:var(--pz-shadow),0 0 0 1px var(--pz-line) inset;animation:pz-fade-up .3s var(--pz-ease) both;cursor:pointer}.pz-say-name{position:absolute;left:18px;top:-15px;padding:5px 14px;border-radius:8px;background:var(--pz-accent);color:var(--pz-on-accent);font:900 14px/1.2 var(--pz-font);letter-spacing:.12em}.pz-say-text{font-size:17px;line-height:1.85;letter-spacing:.03em;min-height:3.6em}.pz-say.narr .pz-say-text{color:var(--pz-dim);font-style:normal}.pz-say-more{position:absolute;right:16px;bottom:10px;width:10px;height:10px;border-right:2px solid var(--pz-accent);border-bottom:2px solid var(--pz-accent);transform:rotate(45deg);animation:pz-bob .9s ease-in-out infinite;opacity:0}.pz-say.done .pz-say-more{opacity:1}@keyframes pz-bob{50%{transform:translateY(4px) rotate(45deg)}}.pz-say-face{position:absolute;bottom:calc(100% - 24px);left:6px;width:min(36vw,220px);pointer-events:none;animation:pz-fade-up .35s var(--pz-ease) both;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5))}.pz-say-face img,.pz-say-face canvas{width:100%;height:auto;display:block}.pz-say.right .pz-say-face{left:auto;right:6px}.pz-say-tools{position:absolute;right:14px;top:-16px;display:flex;gap:6px}.pz-say-tools button{border:0;border-radius:8px;padding:5px 10px;font:700 12px/1 var(--pz-font);color:var(--pz-dim);background:rgba(20,24,34,.9);box-shadow:0 0 0 1px var(--pz-line) inset;cursor:pointer}.pz-say-tools button.on{color:var(--pz-on-accent);background:var(--pz-accent)}.pz-choices{display:grid;gap:8px;margin-top:12px}.pz-choices .pz-btn{text-align:left}.pz-log{max-height:60vh;overflow:auto;text-align:left;touch-action:pan-y}.pz-log p{margin:0 0 10px;color:var(--pz-dim)}.pz-log b{color:var(--pz-accent);margin-right:6px}.pz-loading{position:absolute;inset:0;display:grid;place-items:center;z-index:90;background:#000;pointer-events:auto;transition:opacity .4s}.pz-loading.out{opacity:0;pointer-events:none}.pz-loading-box{width:min(260px,70vw);text-align:center}.pz-loading-title{font:900 22px/1.3 var(--pz-font-display);letter-spacing:.14em;margin-bottom:16px}.pz-loading-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}.pz-loading-bar i{display:block;height:100%;width:0;background:var(--pz-accent);box-shadow:0 0 12px var(--pz-accent);transition:width .2s}.pz-loading-note{margin-top:10px;font-size:12px;color:var(--pz-faint);letter-spacing:.1em}.pz-rotate{position:absolute;inset:0;z-index:200;background:#05070b;display:none;place-items:center;text-align:center;font-weight:800;letter-spacing:.1em;pointer-events:auto}.pz-rotate.on{display:grid}.pz-rotate-icon{width:54px;height:86px;margin:0 auto 18px;border:3px solid var(--pz-text);border-radius:10px;animation:pz-rot 1.6s ease-in-out infinite}@keyframes pz-rot{40%,70%{transform:rotate(90deg)}}.pz-err{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(560px,calc(100vw - 24px));z-index:2147483000;box-sizing:border-box;padding:14px 14px 12px;border-radius:14px;background:rgba(28,10,14,.96);color:#ffe8ea;font:13px/1.5 var(--pz-font);box-shadow:0 20px 50px rgba(0,0,0,.6),0 0 0 1px rgba(255,90,110,.5) inset;pointer-events:auto}.pz-err b{display:block;font-size:15px;margin-bottom:4px}.pz-err pre{margin:6px 0 10px;max-height:30vh;overflow:auto;white-space:pre-wrap;word-break:break-all;font:11px/1.45 ui-monospace,monospace;color:#ffc7cd;background:rgba(0,0,0,.3);padding:8px;border-radius:8px;user-select:text;-webkit-user-select:text}.pz-err .pz-err-b{display:flex;gap:8px}.pz-err button{flex:1;border:0;border-radius:9px;padding:9px;font:800 13px/1 var(--pz-font);color:#fff;background:rgba(255,255,255,.12);cursor:pointer}.pz-stats{position:fixed;left:max(6px,env(safe-area-inset-left));top:max(6px,env(safe-area-inset-top));z-index:2147482000;pointer-events:none;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.66);color:#b9ffcf;font:11px/1.35 ui-monospace,monospace;white-space:pre}@media (prefers-reduced-motion:reduce){.pz-banner .pz-b-main,.pz-toast,.pz-modal{animation-duration:.01s !important;transition-duration:.01s !important}}.pz-tip{position:absolute;z-index:70;max-width:min(280px,80vw);padding:10px 13px;border-radius:12px;pointer-events:none;box-sizing:border-box;background:color-mix(in srgb,var(--pz-panel) 96%,#000);color:var(--pz-dim);font:500 13px/1.6 var(--pz-font);letter-spacing:.02em;box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 0 1px var(--pz-line) inset;opacity:0;transform:translateY(6px) scale(.97);transform-origin:var(--ax,50%) 100%;transition:opacity .16s,transform .2s var(--pz-ease)}.pz-tip.below{transform:translateY(-6px) scale(.97);transform-origin:var(--ax,50%) 0}.pz-tip.on{opacity:1;transform:none}.pz-tip::after{content:\"\";position:absolute;left:var(--ax,50%);top:100%;width:10px;height:10px;margin:-5px 0 0 -5px;background:inherit;transform:rotate(45deg);box-shadow:1px 1px 0 var(--pz-line)}.pz-tip.below::after{top:0;box-shadow:-1px -1px 0 var(--pz-line)}.pz-tip b{display:block;color:var(--pz-text);font-weight:900;font-size:14px;letter-spacing:.04em}.pz-tip em{display:block;font-style:normal;font-size:11px;letter-spacing:.12em;color:var(--pz-faint);margin:1px 0 3px}.pz-tip.r-rare b{color:#6fc3ff}.pz-tip.r-epic b{color:#c48bff}.pz-tip.r-legend b{color:#ffbf47}.pz-holo{position:relative;transform:perspective(820px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));will-change:transform;isolation:isolate;overflow:hidden}.pz-holo .pz-holo-shine{position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:3;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.62),rgba(255,255,255,.14) 26%,transparent 56%);mix-blend-mode:overlay;opacity:calc(.2 + var(--hon,0) * .8)}.pz-holo.pz-foil::after{content:\"\";position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:2;background:repeating-linear-gradient(118deg,#ff4f8b 0%,#ffd64f 6%,#4fffb5 12%,#4fbaff 18%,#b44fff 24%,#ff4f8b 30%);background-size:260% 260%;background-position:var(--gx,50%) var(--gy,50%);mix-blend-mode:color-dodge;opacity:calc(.06 + var(--hon,0) * .32)}.pz-slots{display:grid;grid-template-columns:repeat(var(--cols,5),var(--sz,58px));gap:8px;justify-content:center;padding:6px 2px}.pz-slot{-webkit-appearance:none;appearance:none;position:relative;width:var(--sz,58px);height:var(--sz,58px);padding:0;border:0;border-radius:12px;cursor:pointer;display:grid;place-items:center;--rc:rgba(200,210,225,.55);background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--rc) 22%,transparent),rgba(255,255,255,.03) 70%),rgba(8,10,16,.55);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--rc) 70%,transparent) inset,0 6px 14px rgba(0,0,0,.3);transition:transform .14s var(--pz-ease),box-shadow .15s;outline:none}.pz-slot.empty{--rc:rgba(255,255,255,.12);background:rgba(255,255,255,.025);box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}.pz-slot.r-rare{--rc:#4fa8ff}.pz-slot.r-epic{--rc:#b06bff}.pz-slot.r-legend{--rc:#ffb547}.pz-slot.r-legend::before{content:\"\";position:absolute;inset:-2px;border-radius:14px;background:conic-gradient(from var(--pz-spin,0deg),transparent 0 70%,rgba(255,220,140,.9) 82%,transparent 92%);z-index:-1;animation:pz-spin 2.6s linear infinite}.pz-slot:active,.pz-slot.pz-press{transform:scale(.92)}.pz-slot.sel{box-shadow:0 0 0 2.5px var(--pz-accent) inset,0 0 18px color-mix(in srgb,var(--pz-accent) 45%,transparent)}.pz-slot.pz-focus{box-shadow:0 0 0 2.5px var(--pz-accent2) inset,0 0 18px color-mix(in srgb,var(--pz-accent2) 45%,transparent)}.pz-slot-ico{width:70%;height:70%;display:grid;place-items:center;font-size:calc(var(--sz,58px) * .48);line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));pointer-events:none}canvas.pz-slot-ico{object-fit:contain}.pz-slot-n{position:absolute;right:4px;bottom:2px;font:900 12px/1.2 var(--pz-font);color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none}.pz-slot-new{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--pz-bad);box-shadow:0 0 0 2px rgba(0,0,0,.4),0 0 10px var(--pz-bad);animation:pz-blink 1.2s infinite}@property --pz-spin{syntax:\"<angle>\";inherits:false;initial-value:0deg}@keyframes pz-spin{to{--pz-spin:360deg}}.pz-title{position:absolute;inset:0;z-index:40;display:grid;place-items:center;text-align:center;pointer-events:auto;cursor:pointer;background:radial-gradient(ellipse at 50% 55%,transparent 35%,rgba(0,0,0,.5));transition:opacity .42s}.pz-title.out{opacity:0;pointer-events:none}.pz-title.solid{background:radial-gradient(ellipse at 50% 45%,rgba(10,12,24,.72),rgba(2,3,8,.94));backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}.pz-title-in{padding:max(24px,var(--pz-safe-t,0px)) 22px 60px}.pz-title-kicker{font:800 12px/1 var(--pz-font);letter-spacing:.55em;color:var(--pz-dim);margin-bottom:16px;animation:pz-fade-up .8s .05s both}.pz-title-main{position:relative;margin:0;font:900 clamp(40px,13vw,96px)/1.08 var(--pz-font-display);letter-spacing:.06em;color:#fff;white-space:nowrap;text-shadow:0 6px 30px rgba(0,0,0,.6),0 0 42px color-mix(in srgb,var(--pz-accent) 50%,transparent)}.pz-title-main span{display:inline-block;animation:pz-letter .75s calc(.2s + var(--i) * .075s) var(--pz-ease) both}.pz-title-main::after{content:attr(data-t);position:absolute;inset:0;color:transparent;text-shadow:none;pointer-events:none;background:linear-gradient(100deg,transparent 42%,rgba(255,255,255,.95) 50%,transparent 58%);background-size:260% 100%;background-position:160% 0;-webkit-background-clip:text;background-clip:text;animation:pz-shine 3.6s 1.6s infinite}.pz-title-sub{font:800 clamp(12px,3.4vw,16px)/1.3 var(--pz-font);letter-spacing:.45em;color:var(--pz-accent);margin-top:14px;animation:pz-fade-up .8s .85s both}.pz-title-menu{display:grid;gap:10px;width:min(280px,76vw);margin:34px auto 0}.pz-title-menu:empty{display:none}.pz-title-menu .pz-btn{animation:pz-fade-up .6s calc(1.05s + var(--i) * .08s) both}.pz-title-press{margin-top:46px;font:800 13px/1 var(--pz-font);letter-spacing:.34em;color:var(--pz-text);animation:pz-fade-up .6s 1.2s both,pz-blink 1.7s 1.9s infinite}.pz-title-foot{position:absolute;left:0;right:0;bottom:calc(14px + var(--pz-safe-b,0px));font:600 11px/1 var(--pz-font);letter-spacing:.22em;color:var(--pz-faint)}@keyframes pz-letter{from{opacity:0;transform:translateY(.5em) scale(.9);filter:blur(7px)}}@keyframes pz-shine{0%{background-position:160% 0}40%,100%{background-position:-60% 0}}@keyframes pz-blink{50%{opacity:.35}}";
 const THEMES = {
   night: {},
   ink: { text: '#1c1712', dim: 'rgba(28,23,18,.68)', faint: 'rgba(28,23,18,.4)', bg: 'rgba(236,228,212,.72)', panel: 'rgba(246,240,228,.97)', panel2: 'rgba(28,23,18,.06)', line: 'rgba(28,23,18,.18)', accent: '#b8232f', accent2: '#2c5d8a', 'on-accent': '#fff8ee', radius: '6px', 'radius-s': '4px', shadow: '0 18px 44px rgba(40,24,10,.35)', font: '"PZ Serif","Noto Serif TC","Songti TC","PMingLiU",serif' },
@@ -4276,7 +4393,11 @@ UI.enhance = (root) => {
 /* ---------- 焦點導覽（手把、鍵盤）---------- */
 UI.top = () => UI.stack[UI.stack.length - 1] || null;
 function focusables(root) { return [...root.querySelectorAll('.pz-btn,.pz-toggle,.pz-focusable,.pz-range,.pz-seg button')].filter((e) => !e.disabled && e.offsetParent !== null); }
-UI.setFocus = (elx) => { if (UI.focus) UI.focus.classList.remove('pz-focus'); UI.focus = elx; if (elx) { elx.classList.add('pz-focus'); try { elx.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } } };
+UI.setFocus = (elx) => {
+  if (UI.focus) { UI.focus.classList.remove('pz-focus'); if (UI.focus._tipHide) UI.focus._tipHide(); }
+  UI.focus = elx;
+  if (elx) { elx.classList.add('pz-focus'); try { elx.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } if (elx._tipShow && (Input.device === 'gamepad' || Input.device === 'keyboard')) elx._tipShow(); }
+};
 UI.move = (dir) => {
   const t = UI.top(); if (!t) return;
   const list = focusables(t.el); if (!list.length) return;
@@ -4350,6 +4471,109 @@ UI.banner = (text, o = {}) => new Promise((res) => {
   Screen.ui.appendChild(b);
   if (o.sound !== false) { const s = o.sound || (o.style === 'boss' ? 'alarm' : 'notify'); if (Sfx.has(s)) Sfx.play(s, { bus: 'ui' }); }
   setTimeout(() => { b.classList.add('out'); setTimeout(() => { b.remove(); res(); }, 360); }, o.ms || 1900);
+});
+
+/* ---------- 提示框 ---------- */
+UI.tip = (target, content, o = {}) => {
+  let box = null, timer = 0;
+  const html = () => (typeof content === 'function' ? content() : content);
+  const place = () => {
+    if (!box) return;
+    const r = target.getBoundingClientRect(), R = Screen.ui.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight, sf = Screen.safe;
+    const sx = r.left - R.left + r.width / 2, above = r.top - R.top - 10, below = r.bottom - R.top + 10;
+    const up = o.side ? o.side === 'top' : above - bh > 8 + sf.t;
+    const x = clamp(sx - bw / 2, 8 + sf.l, Math.max(8 + sf.l, R.width - bw - 8 - sf.r)), y = up ? above - bh : below;
+    box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.setProperty('--ax', clamp(sx - x, 12, bw - 12) + 'px'); box.classList.toggle('below', !up);
+  };
+  const show = () => {
+    if (box || !document.body.contains(target)) return;
+    box = el('div', 'pz-tip' + (o.cls ? ' ' + o.cls : ''), html()); Screen.ui.appendChild(box); place();
+    requestAnimationFrame(() => box && box.classList.add('on'));
+  };
+  const hide = () => { clearTimeout(timer); if (!box) return; const b = box; box = null; b.classList.remove('on'); setTimeout(() => b.remove(), 180); };
+  const enter = (e) => { if (e.pointerType === 'mouse') show(); };
+  const down = (e) => { if (e.pointerType !== 'mouse') { clearTimeout(timer); timer = setTimeout(show, o.delay != null ? o.delay : 300); } };
+  const leave = () => hide();
+  target.addEventListener('pointerenter', enter); target.addEventListener('pointerdown', down);
+  target.addEventListener('pointerleave', leave); target.addEventListener('pointerup', leave); target.addEventListener('pointercancel', leave);
+  target._tipShow = show; target._tipHide = hide;
+  return {
+    show, hide,
+    set(c) { content = c; if (box) { box.innerHTML = html(); place(); } },
+    remove() { hide(); target.removeEventListener('pointerenter', enter); target.removeEventListener('pointerdown', down); target.removeEventListener('pointerleave', leave); target.removeEventListener('pointerup', leave); target.removeEventListener('pointercancel', leave); target._tipShow = target._tipHide = null; },
+  };
+};
+
+/* ---------- 閃卡 ---------- */
+UI.holo = (card, o = {}) => {
+  card.classList.add('pz-holo'); if (o.foil !== false) card.classList.add('pz-foil');
+  if (!card.querySelector(':scope > .pz-holo-shine')) card.appendChild(el('i', 'pz-holo-shine'));
+  const st = card.style, max = o.tilt != null ? o.tilt : 14; let tx = 0.5, ty = 0.5, cx = 0.5, cy = 0.5, on = 0, ton = 0, raf = 0;
+  const step = () => {
+    raf = 0; cx += (tx - cx) * 0.18; cy += (ty - cy) * 0.18; on += (ton - on) * 0.14;
+    st.setProperty('--rx', ((0.5 - cy) * max * 2 * on).toFixed(2) + 'deg'); st.setProperty('--ry', ((cx - 0.5) * max * 2 * on).toFixed(2) + 'deg');
+    st.setProperty('--gx', (cx * 100).toFixed(1) + '%'); st.setProperty('--gy', (cy * 100).toFixed(1) + '%'); st.setProperty('--hon', on.toFixed(3));
+    if (Math.abs(tx - cx) + Math.abs(ty - cy) + Math.abs(ton - on) > 0.002) raf = requestAnimationFrame(step);
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(step); };
+  const move = (e) => { const r = card.getBoundingClientRect(); tx = clamp01((e.clientX - r.left) / Math.max(1, r.width)); ty = clamp01((e.clientY - r.top) / Math.max(1, r.height)); ton = 1; kick(); };
+  const leave = () => { tx = 0.5; ty = 0.5; ton = 0; kick(); };
+  const up = (e) => { if (e.pointerType !== 'mouse') leave(); };
+  card.addEventListener('pointermove', move); card.addEventListener('pointerdown', move); card.addEventListener('pointerleave', leave); card.addEventListener('pointerup', up); card.addEventListener('pointercancel', leave);
+  return { remove() { card.removeEventListener('pointermove', move); card.removeEventListener('pointerdown', move); card.removeEventListener('pointerleave', leave); card.removeEventListener('pointerup', up); card.removeEventListener('pointercancel', leave); card.classList.remove('pz-holo', 'pz-foil'); } };
+};
+
+/* ---------- 格子背包 ---------- */
+const slotIcon = (icon) => { if (icon && Art.has(icon)) { const c = Art.canvas(icon); c.className = 'pz-slot-ico'; return c; } return el('span', 'pz-slot-ico', icon || ''); };
+UI.slots = (o = {}) => {
+  const grid = el('div', 'pz-slots'); grid.style.setProperty('--cols', o.cols || 5); grid.style.setProperty('--sz', (o.size || 58) + 'px');
+  const fill = (items) => {
+    grid.querySelectorAll('.pz-slot').forEach((b) => { if (b._tip) b._tip.remove(); });
+    grid.innerHTML = '';
+    const n = Math.max(items.length, o.min || 0);
+    for (let i = 0; i < n; i++) {
+      const it = items[i], r = it ? it.rarity || 'common' : '';
+      const b = el('button', 'pz-slot pz-focusable' + (it ? ' r-' + r : ' empty')); b.type = 'button'; b.dataset.sfx = it ? 'card' : 'none';
+      if (it) {
+        b.appendChild(slotIcon(it.icon));
+        if (it.count > 1) b.appendChild(el('b', 'pz-slot-n', '×' + it.count));
+        if (it.new) b.appendChild(el('i', 'pz-slot-new'));
+        if (it.name) b._tip = UI.tip(b, `<b>${it.name}</b>${it.tag ? `<em>${it.tag}</em>` : ''}${it.desc ? `<div>${it.desc}</div>` : ''}`, { cls: 'r-' + r });
+        b.onclick = () => {
+          grid.querySelectorAll('.pz-slot.sel').forEach((x) => x.classList.remove('sel')); b.classList.add('sel');
+          if (it.new) { it.new = false; const nn = b.querySelector('.pz-slot-new'); if (nn) nn.remove(); }
+          if (o.onPick) safeCall(o.onPick, null, it, i);
+        };
+      } else if (o.lockEmpty !== false) b.disabled = true;
+      grid.appendChild(b);
+    }
+  };
+  fill(o.items || []);
+  grid.set = fill;
+  return grid;
+};
+
+/* ---------- 標題畫面 ---------- */
+UI.title = (o = {}) => new Promise((resolve) => {
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const letters = [...String(o.title || '')].map((c, i) => (c === ' ' ? ' ' : `<span style="--i:${i}">${esc(c)}</span>`)).join('');
+  const box = el('div', 'pz-title' + (o.backdrop ? ' solid' : '') + (o.cls ? ' ' + o.cls : ''), `<div class="pz-title-in">${o.kicker ? `<div class="pz-title-kicker">${o.kicker}</div>` : ''}<h1 class="pz-title-main" data-t="${esc(o.title)}">${letters}</h1>${o.sub ? `<div class="pz-title-sub">${o.sub}</div>` : ''}<div class="pz-title-menu"></div>${o.items ? '' : `<div class="pz-title-press">${o.press || (Env.touch ? '點一下開始' : '按任意鍵開始')}</div>`}</div>${o.foot ? `<div class="pz-title-foot">${o.foot}</div>` : ''}`);
+  let done = false, layer = null, offPad = null;
+  const close = (v) => {
+    if (done) return; done = true; if (layer) UI.pop(layer); window.removeEventListener('keydown', key, true); if (offPad) offPad();
+    box.classList.add('out'); setTimeout(() => { box.remove(); resolve(v); }, 420);
+  };
+  const key = (e) => { if (!o.items && !e.repeat) { e.preventDefault(); PZ.uiSound('confirm'); close('start'); } };
+  if (o.items) {
+    const menu = box.querySelector('.pz-title-menu');
+    o.items.forEach((it, i) => { const b = el('button', 'pz-btn' + (it.primary ? ' primary' : ''), it.label); b.type = 'button'; b.style.setProperty('--i', i); b.onclick = () => close(it.value !== undefined ? it.value : it.label); menu.appendChild(b); });
+  } else {
+    box.addEventListener('pointerdown', () => { PZ.uiSound('confirm'); close('start'); });
+    setTimeout(() => { if (!done) window.addEventListener('keydown', key, true); }, 300);
+    offPad = Input.onPress('confirm', () => { if (Input.device === 'gamepad') { PZ.uiSound('confirm'); close('start'); } });
+  }
+  Screen.ui.appendChild(box); UI.enhance(box);
+  layer = UI.push(box, null);
 });
 
 /* ---------- 載入畫面 ---------- */
@@ -6756,10 +6980,351 @@ Tiles.island = (map, height, o = {}) => {
   };
 };
 
+/* ---- 32_hud.js ---- */
+/* ==========================================================================
+   32 HUD 元件（畫在畫布上；通常在 g.hud() 之後畫，不受震動、後製影響）
+     const hp = PZ.meter({ max: 100, value: 100 })     hp.hit(18)  hp.heal(25)  hp.set(v)   （引擎每格自動更新）
+     g.meter(hp, x, y, w, h, { color: '#ff4d5e', color2, shape: 'skew'|'round'|'flat', segments: 10, low: 0.3, label: 'HP', text: true })
+       受傷：主條馬上掉、白色殘影停一下再慢慢退、整條閃白抖一下；補血：綠色預覽先長出來、主條再追上；快沒血時一閃一閃
+     const score = PZ.count(0)    score.add(120)        數字一路往上滾、每跳一下有聲音、變大一下
+     g.count(score, x, y, { size: 30, color, align: 'right', prefix: '', suffix: '' })
+     g.arc(x, y, r, 粗細, 起角, 終角, color, { cap: 'round', a })   圓弧（經驗值環、充能）
+     g.pie(x, y, r, 起角, 終角, color, { a })                       扇形
+     g.cooldown(x, y, r, 剩下 0～1, { color, flash })               技能冷卻：暗色扇形一圈掃開、外圈亮邊；好了的瞬間閃一下（flash 0～1）
+     g.rrect(x, y, w, h, 圓角, color, { a, border, borderColor })   圓角框
+     g.quad([x0,y0, x1,y1, x2,y2, x3,y3], 左色, 右色, { a, add })   任意四邊形、左右漸層（順時針：左上、右上、右下、左下）
+   ========================================================================== */
+const HudList = new Set();
+class Meter {
+  constructor(o = {}) {
+    this.max = o.max != null ? o.max : 100; this.value = clamp(o.value != null ? o.value : this.max, 0, this.max);
+    this.shown = this.value; this.trail = this.value; this.ghost = this.value;
+    this.hold = 0; this.flash = 0; this.shake = 0; this.t = 0; this.drain = o.drain || 0.55; this.fill = o.fill || 5;
+    this.dead = false; this.keep = !!o.keep; this.scene = Scenes.name; HudList.add(this);
+  }
+  get frac() { return this.max > 0 ? this.value / this.max : 0; }
+  /** 直接設定（instant：沒有動畫） */
+  set(v, instant) {
+    v = clamp(v, 0, this.max);
+    if (v < this.value) { this.hold = Math.max(this.hold, 0.45); this.shown = v; } else this.ghost = v;
+    this.value = v; if (instant) this.shown = this.trail = this.ghost = v; return this;
+  }
+  hit(n) { const before = this.value; this.set(this.value - n); const k = (before - this.value) / Math.max(1, this.max); this.flash = 1; this.shake = Math.min(1, this.shake + k * 5 + 0.15); return this; }
+  heal(n) { this.set(this.value + n); return this; }
+  setMax(m, keepFrac) { const f = this.frac; this.max = Math.max(1, m); this.set(keepFrac ? f * this.max : Math.min(this.value, this.max), true); return this; }
+  update(dt) {
+    this.t += dt;
+    if (this.shown < this.value) this.shown = Math.min(this.value, damp(this.shown, this.value, this.fill, dt) + this.max * 0.04 * dt);
+    else this.shown = this.value;
+    if (this.trail > this.shown) { if (this.hold > 0) this.hold -= dt; else this.trail = Math.max(this.shown, this.trail - this.max * this.drain * dt * (0.4 + (this.trail - this.shown) / this.max * 2)); } else this.trail = this.shown;
+    if (this.ghost < this.shown || Math.abs(this.ghost - this.value) > 1e-6 && this.ghost < this.value) this.ghost = Math.max(this.ghost, this.shown);
+    if (this.ghost > this.value) this.ghost = this.value;
+    this.flash = Math.max(0, this.flash - dt * 4); this.shake = Math.max(0, this.shake - dt * 3);
+  }
+  remove() { this.dead = true; HudList.delete(this); }
+}
+PZ.meter = (o) => new Meter(o);
+PZ.Meter = Meter;
+
+const fmtThousands = (n) => { const s = String(Math.abs(Math.round(n))); let out = ''; for (let i = 0; i < s.length; i++) { if (i && (s.length - i) % 3 === 0) out += ','; out += s[i]; } return (n < 0 ? '-' : '') + out; };
+class Count {
+  constructor(v = 0, o = {}) { this.value = v; this.shown = v; this.speed = o.speed || 7; this.pop = 0; this.sound = o.sound === undefined ? 'tick' : o.sound; this.fmt = o.format || fmtThousands; this._tick = 0; this.dead = false; this.keep = !!o.keep; this.scene = Scenes.name; HudList.add(this); }
+  set(v, instant) { if (v > this.value) this.pop = Math.min(1, this.pop + 0.5); this.value = v; if (instant) this.shown = v; return this; }
+  add(n) { return this.set(this.value + n); }
+  get rolling() { return Math.round(this.shown) !== Math.round(this.value); }
+  update(dt) {
+    const d = this.value - this.shown;
+    if (Math.abs(d) < 0.5) this.shown = this.value;
+    else {
+      const before = Math.round(this.shown);
+      this.shown += d * Math.min(1, dt * this.speed) + Math.sign(d) * Math.min(Math.abs(d), dt * 6);
+      this._tick -= dt;
+      if (this.sound && Math.round(this.shown) !== before && this._tick <= 0) { this._tick = 0.045; Sfx.play(this.sound, { bus: 'ui', pitch: 1 + Math.min(0.5, Math.abs(d) / Math.max(50, Math.abs(this.value)) * 0.8), vol: 0.8 }); }
+    }
+    this.pop = Math.max(0, this.pop - dt * 3.2);
+  }
+  get text() { return this.fmt(this.shown); }
+  remove() { this.dead = true; HudList.delete(this); }
+}
+PZ.count = (v, o) => new Count(v, o);
+PZ.Count = Count;
+PZ.fmt = fmtThousands;
+addSystem({ name: 'hud', order: 66, frame(rdt) { for (const h of HudList) h.update(rdt); } });
+// 換場景：上一個場景建的血條、數字不再更新（keep: true 的留著）
+PZ.on('scene', (name) => { for (const h of HudList) if (!h.keep && h.scene !== name) HudList.delete(h); });
+
+/* ---------- 繪圖 ---------- */
+const HUD_SCR = new Float64Array(16);
+Object.assign(Graphics.prototype, {
+  /** 任意四邊形（順時針：0 左上、1 右上、2 右下、3 左下），左邊 c0、右邊 c1 漸層 */
+  quad(p, c0, c1, o) {
+    const m = this.m, a = o && o.a != null ? o.a : 1, add = (o && o.add) || 0, A = this._col(c0, a), B = c1 == null ? A : this._col(c1, a), S = HUD_SCR;
+    for (let i = 0; i < 4; i++) { const x = p[i * 2], y = p[i * 2 + 1]; S[i * 2] = m[0] * x + m[2] * y + m[4]; S[i * 2 + 1] = m[1] * x + m[3] * y + m[5]; }
+    this.r.quadv(null, S[0], S[1], 0, 0, S[2], S[3], 0, 0, S[4], S[5], 0, 0, S[6], S[7], 0, 0, A, B, MODE.solid, add, 0);
+    return this;
+  },
+  /** 扇形（角度：0 朝右、順時針為正） */
+  pie(x, y, r, a0, a1, color, o) {
+    if (a1 < a0) [a0, a1] = [a1, a0]; const n = Math.max(1, Math.ceil((a1 - a0) / 0.14)), m = this.m, col = this._col(color, o && o.a != null ? o.a : 1), add = (o && o.add) || 0;
+    const X = (px, py) => m[0] * px + m[2] * py + m[4], Y = (px, py) => m[1] * px + m[3] * py + m[5], cx = X(x, y), cy = Y(x, y);
+    let px = x + Math.cos(a0) * r, py = y + Math.sin(a0) * r;
+    for (let i = 1; i <= n; i++) { const a = a0 + ((a1 - a0) * i) / n, qx = x + Math.cos(a) * r, qy = y + Math.sin(a) * r; this.r.tri(cx, cy, X(px, py), Y(px, py), X(qx, qy), Y(qx, qy), col, add); px = qx; py = qy; }
+    return this;
+  },
+  /** 粗圓弧 */
+  arc(x, y, r, thick, a0, a1, color, o) {
+    if (Math.abs(a1 - a0) < 1e-4) return this;
+    const n = Math.max(1, Math.ceil(Math.abs(a1 - a0) / 0.12)), r0 = r - thick / 2, r1 = r + thick / 2, a = o && o.a != null ? o.a : 1, p = HUD_A;
+    for (let i = 0; i < n; i++) {
+      const b0 = a0 + ((a1 - a0) * i) / n, b1 = a0 + ((a1 - a0) * (i + 1)) / n, c0 = Math.cos(b0), s0 = Math.sin(b0), c1 = Math.cos(b1), s1 = Math.sin(b1);
+      p[0] = x + c0 * r1; p[1] = y + s0 * r1; p[2] = x + c1 * r1; p[3] = y + s1 * r1; p[4] = x + c1 * r0; p[5] = y + s1 * r0; p[6] = x + c0 * r0; p[7] = y + s0 * r0;
+      this.quad(p, color, color, o);
+    }
+    if (o && o.cap === 'round') { this.circle(x + Math.cos(a0) * r, y + Math.sin(a0) * r, thick / 2, color, { a }); this.circle(x + Math.cos(a1) * r, y + Math.sin(a1) * r, thick / 2, color, { a }); }
+    return this;
+  },
+  /** 圓角框（凸多邊形）＋可選的框線 */
+  rrect(x, y, w, h, r, color, o) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2)); const pts = HUD_RR; pts.length = 0;
+    const seg = r > 6 ? 6 : r > 2 ? 4 : 1;
+    const corner = (cx, cy, a0) => { for (let i = 0; i <= seg; i++) { const a = a0 + (Math.PI / 2) * (i / seg); pts.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } };
+    if (r <= 0.01) pts.push(x, y, x + w, y, x + w, y + h, x, y + h);
+    else { corner(x + w - r, y + r, -Math.PI / 2); corner(x + w - r, y + h - r, 0); corner(x + r, y + h - r, Math.PI / 2); corner(x + r, y + r, Math.PI); }
+    if (color != null) this.poly(pts, color, o);
+    if (o && o.border) this.strokePoly(pts, o.border, o.borderColor || 'rgba(255,255,255,.25)', o.borderA != null ? { a: o.borderA } : null);
+    return this;
+  },
+  /** 凸多邊形的框線（往內畫 w 粗） */
+  strokePoly(pts, w, color, o) {
+    const n = pts.length / 2; if (n < 3) return this;
+    let cx = 0, cy = 0; for (let i = 0; i < n; i++) { cx += pts[i * 2]; cy += pts[i * 2 + 1]; } cx /= n; cy /= n;
+    const inner = HUD_IN; inner.length = 0;
+    for (let i = 0; i < n; i++) { const px = pts[i * 2], py = pts[i * 2 + 1], dx = cx - px, dy = cy - py, l = Math.hypot(dx, dy) || 1, k = Math.min(w, l * 0.5); inner.push(px + (dx / l) * k, py + (dy / l) * k); }
+    const q = HUD_Q;
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; q[0] = pts[i * 2]; q[1] = pts[i * 2 + 1]; q[2] = pts[j * 2]; q[3] = pts[j * 2 + 1]; q[4] = inner[j * 2]; q[5] = inner[j * 2 + 1]; q[6] = inner[i * 2]; q[7] = inner[i * 2 + 1]; this.quad(q, color, color, o); }
+    return this;
+  },
+  /** 血條／能量條 */
+  meter(M, x, y, w, h, o = {}) {
+    const shape = o.shape || 'skew', sk = shape === 'skew' ? Math.min(h * 0.6, w * 0.1) : 0, max = Math.max(1e-6, M.max);
+    const sx = M.shake > 0 ? Math.sin(M.t * 70) * M.shake * 3 : 0, sy = M.shake > 0 ? Math.cos(M.t * 57) * M.shake * 1.2 : 0;
+    x += sx; y += sy;
+    const col = o.color || '#ff4d5e', col2 = o.color2 || Color.lighten(col, 0.25), low = o.low != null ? o.low : 0.3, f = M.shown / max;
+    // 從比例 a 到 b 的那一段（斜的：上緣往右偏 sk）
+    const span = (a, b, c0, c1, op) => {
+      if (b - a <= 1e-4) return;
+      const L = x + (w - sk) * a, R = x + (w - sk) * b;
+      if (shape === 'round') { const rr = h / 2, x0 = x + (w) * a, x1 = x + w * b; this.rrect(x0, y, Math.max(x1 - x0, Math.min(h, x1 - x0)), h, Math.min(rr, (x1 - x0) / 2), c0, op); return; }
+      HUD_Q[0] = L + sk; HUD_Q[1] = y; HUD_Q[2] = R + sk; HUD_Q[3] = y; HUD_Q[4] = R; HUD_Q[5] = y + h; HUD_Q[6] = L; HUD_Q[7] = y + h;
+      this.quad(HUD_Q, c0, c1, op);
+    };
+    // 底
+    if (o.frame !== false) { const pad = o.pad != null ? o.pad : 2; HUD_Q2[0] = x + sk - pad + pad * 0.5; HUD_Q2[1] = y - pad; HUD_Q2[2] = x + w + pad; HUD_Q2[3] = y - pad; HUD_Q2[4] = x + w - sk + pad - pad * 0.5; HUD_Q2[5] = y + h + pad; HUD_Q2[6] = x - pad; HUD_Q2[7] = y + h + pad; if (shape === 'round') this.rrect(x - pad, y - pad, w + pad * 2, h + pad * 2, h / 2 + pad, o.frameColor || 'rgba(0,0,0,.55)'); else this.quad(HUD_Q2, o.frameColor || 'rgba(0,0,0,.55)', null); }
+    span(0, 1, o.bg || 'rgba(255,255,255,.08)', o.bg || 'rgba(255,255,255,.04)');
+    // 受傷殘影、補血預覽
+    if (M.trail > M.shown) span(f, M.trail / max, o.trailColor || '#fff4e0', o.trailColor || '#ffd9b0', { a: 0.9 });
+    if (M.ghost > M.shown) span(f, M.ghost / max, o.ghostColor || '#7dffa8', o.ghostColor || '#b6ffd0', { a: 0.45 + 0.25 * Math.sin(M.t * 10) });
+    // 主條
+    const lowOn = f <= low && f > 0, pulse = lowOn ? 0.5 + 0.5 * Math.sin(M.t * 9) : 0;
+    span(0, f, Color.mix(Color.darken(col, 0.15), '#ffffff', pulse * 0.25), Color.mix(col2, '#ffffff', pulse * 0.35));
+    // 上半部光澤
+    if (shape !== 'round' && f > 0) { const gh = h * 0.42, L = x + sk, R = x + (w - sk) * f + sk; HUD_Q[0] = L; HUD_Q[1] = y + 1; HUD_Q[2] = R; HUD_Q[3] = y + 1; HUD_Q[4] = R - sk * (gh / h); HUD_Q[5] = y + gh; HUD_Q[6] = L - sk * (gh / h); HUD_Q[7] = y + gh; this.quad(HUD_Q, 'rgba(255,255,255,.28)', 'rgba(255,255,255,.12)'); }
+    // 刻度
+    if (o.segments) { const per = o.segments, n = Math.floor(max / per); for (let i = 1; i < n + (max % per ? 1 : 0); i++) { const k = (i * per) / max; if (k >= 1) break; const X = x + (w - sk) * k; this.line(X + sk, y + 1, X, y + h - 1, i % 5 === 0 ? 2 : 1.2, 'rgba(0,0,0,.45)'); } }
+    if (M.flash > 0) span(0, 1, '#ffffff', '#ffffff', { a: M.flash * 0.55 });
+    if (lowOn && o.lowGlow !== false) span(0, 1, col, col, { a: pulse * 0.18, add: 1 });
+    // 字
+    const fs = o.size || Math.max(10, h * 0.78);
+    if (o.label) this.text(o.label, x - (o.labelGap != null ? o.labelGap : 6), y + h / 2, { size: fs, weight: 900, color: o.labelColor || '#fff', align: 'right', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.6)' });
+    if (o.text) this.text(o.text === true ? `${Math.ceil(M.value)} / ${Math.round(max)}` : o.text, x + w - sk - 6, y + h / 2 + 0.5, { size: fs * 0.85, weight: 800, color: '#fff', align: 'right', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.55)' });
+    return this;
+  },
+  /** 會滾的數字 */
+  count(C, x, y, st = {}) {
+    const p = C.pop, s = 1 + Ease.outBack(Math.min(1, p)) * (st.pop != null ? st.pop : 0.28) * p;
+    this.save(); this.translate(x, y); this.scale(s, s);
+    this.text((st.prefix || '') + C.text + (st.suffix || ''), 0, 0, Object.assign({ size: 28, weight: 900, color: '#fff', align: 'left', baseline: 'middle', outline: 4, outlineColor: 'rgba(0,0,0,.55)' }, st, { color: p > 0.05 ? Color.css(Color.mix(st.color || '#ffffff', st.popColor || '#fff4b0', Math.min(1, p * 1.5))) : st.color || '#fff' }));
+    this.restore(); return this;
+  },
+  /** 技能冷卻：rest＝剩下的比例（1 剛用完、0 好了） */
+  cooldown(x, y, r, rest, o = {}) {
+    const top = -Math.PI / 2, done = 1 - clamp01(rest);
+    if (rest > 0.001) {
+      this.pie(x, y, r, top + done * TAU, top + TAU, o.shade || 'rgba(4,6,12,.72)');
+      const a = top + done * TAU; this.line(x, y, x + Math.cos(a) * r, y + Math.sin(a) * r, 2, o.color || '#fff', { a: 0.85 });
+      this.arc(x, y, r + 2.5, 3, top, a, o.color || '#ffd36b', { a: 0.95 });
+    }
+    if (o.flash > 0) { const k = 1 - o.flash; this.ring(x, y, r + 2 + k * 10, 3 * o.flash + 0.5, o.flashColor || '#ffffff', { a: o.flash }); this.circle(x, y, r, '#ffffff', { a: o.flash * 0.45, add: 1 }); }
+    return this;
+  },
+});
+const HUD_RR = [], HUD_IN = [], HUD_Q = [0, 0, 0, 0, 0, 0, 0, 0], HUD_Q2 = [0, 0, 0, 0, 0, 0, 0, 0], HUD_A = [0, 0, 0, 0, 0, 0, 0, 0];
+
+/* ---- 33_amb.js ---- */
+/* ==========================================================================
+   33 環境音（音景）：雨、雷雨、風、森林、夜晚、洞窟、海邊、城市、營火、船艙、溪流
+     PZ.amb.play('rain', { fade: 2 })        換成這個音景（其他的淡出）
+     PZ.amb.mix({ fire: 1, night: 0.6 })    同時好幾種、各自音量
+     PZ.amb.set('wind', 0.4)                只調一種，其他不動        PZ.amb.stop({ fade: 2 })
+     PZ.amb.follow(true)                    跟著 PZ.weather：下雨就有雨聲、雷雨有遠雷、下雪／起霧有風
+     PZ.amb.define('lab', { beds: [...], events: [...] })   自己做（欄位見下面的預設）
+   全部即時合成、不用音檔：
+     底（beds）：一直循環的雜訊，經過濾波；可以慢慢起伏（swell：陣風）、像浪一樣湧上來又退下去（wave）、濾波掃動（sweep：風的呼嘯）
+     事件（events）：隨機冒出來的聲音（鳥叫、水滴、木柴爆裂、遠處喇叭、船板嘎吱），每次左右位置、大小、音高都不一樣
+   走 amb 匯流排（跟著設定裡的音效音量）；切到背景時跟其他聲音一起停。
+   ========================================================================== */
+const AMB_PRESETS = {
+  rain: { beds: [{ noise: 'pink', hp: 380, lp: 6800, vol: 0.42, swell: [3, 7, 0.25] }, { noise: 'white', bp: [2400, 0.55], vol: 0.12 }, { noise: 'brown', lp: 260, vol: 0.2 }],
+    events: [{ sfx: 'amb.drip', rate: 3.5, vol: [0.08, 0.22], pitch: [0.8, 1.6], pan: 0.9 }, { sfx: 'amb.patter', rate: 0.6, vol: [0.15, 0.3], pan: 0.8 }] },
+  storm: { beds: [{ noise: 'pink', hp: 260, lp: 8000, vol: 0.6, swell: [2, 5, 0.35] }, { noise: 'brown', bp: [380, 0.7], vol: 0.35, swell: [2, 6, 0.6], sweep: [0.13, 160] }, { noise: 'white', bp: [3000, 0.5], vol: 0.12 }],
+    events: [{ sfx: 'amb.rumble', rate: 0.06, vol: [0.4, 0.8], pitch: [0.7, 1.1], pan: 0.6, rev: 0.5 }, { sfx: 'amb.drip', rate: 5, vol: [0.06, 0.18], pitch: [0.8, 1.6], pan: 0.9 }] },
+  wind: { beds: [{ noise: 'brown', bp: [420, 0.6], vol: 0.55, swell: [2.5, 6, 0.7], sweep: [0.09, 180] }, { noise: 'pink', bp: [1300, 5], vol: 0.07, swell: [3, 7, 0.9], sweep: [0.17, 420] }],
+    events: [{ sfx: 'amb.rustle', rate: 0.25, vol: [0.15, 0.35], pan: 0.9 }] },
+  forest: { beds: [{ noise: 'pink', hp: 900, lp: 4200, vol: 0.13, swell: [3, 8, 0.6] }, { noise: 'brown', lp: 300, vol: 0.1 }],
+    events: [{ sfx: 'amb.bird1', rate: 0.32, vol: [0.16, 0.38], pitch: [0.85, 1.2], pan: 0.9, rev: 0.25 }, { sfx: 'amb.bird2', rate: 0.18, vol: [0.1, 0.24], pitch: [0.9, 1.15], pan: 0.9, rev: 0.3 },
+      { sfx: 'amb.bird3', rate: 0.12, vol: [0.08, 0.2], pitch: [0.9, 1.1], pan: 0.9, rev: 0.3 }, { sfx: 'amb.wood', rate: 0.03, vol: [0.1, 0.2], pan: 0.8, rev: 0.4 }, { sfx: 'amb.rustle', rate: 0.12, vol: [0.08, 0.18], pan: 0.9 }] },
+  night: { beds: [{ noise: 'brown', lp: 220, vol: 0.18 }, { noise: 'pink', hp: 2500, lp: 5000, vol: 0.03 }],
+    events: [{ sfx: 'amb.cricket', rate: 2.4, vol: [0.07, 0.18], pitch: [0.92, 1.1], pan: 1 }, { sfx: 'amb.owl', rate: 0.035, vol: [0.12, 0.22], pitch: [0.92, 1.05], pan: 0.8, rev: 0.5 }, { sfx: 'amb.frog', rate: 0.25, vol: [0.05, 0.12], pitch: [0.85, 1.2], pan: 0.9 }] },
+  cave: { beds: [{ noise: 'brown', lp: 170, vol: 0.4, swell: [6, 12, 0.3] }, { noise: 'pink', bp: [700, 2.5], vol: 0.04, swell: [4, 9, 0.8] }],
+    events: [{ sfx: 'amb.drip', rate: 0.55, vol: [0.15, 0.4], pitch: [0.55, 1.1], pan: 0.9, rev: 0.75 }, { sfx: 'amb.rumble', rate: 0.03, vol: [0.15, 0.3], pitch: [0.5, 0.7], pan: 0.5, rev: 0.6 }] },
+  ocean: { beds: [{ noise: 'pink', lp: 1500, vol: 0.55, wave: [6, 10, 0.15, 1] }, { noise: 'white', hp: 2800, lp: 9000, vol: 0.12, wave: [6, 10, 0.05, 1] }, { noise: 'brown', lp: 200, vol: 0.18 }],
+    events: [{ sfx: 'amb.gull', rate: 0.07, vol: [0.06, 0.16], pitch: [0.85, 1.15], pan: 0.9, rev: 0.4 }] },
+  city: { beds: [{ noise: 'brown', lp: 240, vol: 0.45, swell: [4, 9, 0.25] }, { noise: 'pink', bp: [850, 0.5], vol: 0.1 }],
+    events: [{ sfx: 'amb.car', rate: 0.16, vol: [0.15, 0.4], pitch: [0.8, 1.2], pan: 0.9 }, { sfx: 'amb.horn', rate: 0.04, vol: [0.06, 0.14], pitch: [0.9, 1.15], pan: 0.9, rev: 0.4 }, { sfx: 'amb.siren', rate: 0.008, vol: [0.05, 0.1], pan: 0.7, rev: 0.6 }] },
+  fire: { beds: [{ noise: 'brown', lp: 520, vol: 0.32, swell: [0.4, 1.4, 0.45] }, { noise: 'pink', hp: 1800, lp: 6000, vol: 0.05, swell: [0.3, 1, 0.6] }],
+    events: [{ sfx: 'amb.crackle', rate: 9, vol: [0.06, 0.3], pitch: [0.7, 1.6], pan: 0.35 }, { sfx: 'amb.pop', rate: 0.5, vol: [0.15, 0.35], pitch: [0.8, 1.3], pan: 0.3 }] },
+  ship: { beds: [{ noise: 'brown', lp: 280, vol: 0.32, wave: [5, 8, 0.4, 1] }, { noise: 'pink', lp: 1100, hp: 200, vol: 0.14, wave: [5, 8, 0.2, 1] }],
+    events: [{ sfx: 'amb.creak', rate: 0.2, vol: [0.1, 0.25], pitch: [0.8, 1.25], pan: 0.9 }, { sfx: 'amb.slap', rate: 0.35, vol: [0.1, 0.25], pan: 0.8 }, { sfx: 'bell', rate: 0.02, vol: [0.04, 0.08], pitch: [0.5, 0.55], pan: 0.6, rev: 0.6 }] },
+  stream: { beds: [{ noise: 'pink', bp: [1500, 0.45], vol: 0.3, swell: [1.5, 4, 0.25] }, { noise: 'white', hp: 4200, vol: 0.05 }],
+    events: [{ sfx: 'amb.bubble', rate: 5, vol: [0.04, 0.12], pitch: [0.7, 1.6], pan: 0.7 }] },
+};
+// 事件的聲音（一般的合成音效，走 amb 匯流排）
+(() => {
+  const D = (n, sp) => Sfx.define(n, Object.assign({ bus: 'amb', pitchVar: 0, max: 6, gap: 0.01 }, sp));
+  D('amb.drip', { vol: 0.5, layers: [{ w: 'sine', f: 1900, f1: 950, t: 0.08, a: 0.001, p: 3, v: 0.8 }, { w: 'sine', f: 3100, f1: 2200, t: 0.03, a: 0.0005, p: 2.5, v: 0.25 }] });
+  D('amb.patter', { vol: 0.5, layers: [0, 0.03, 0.07, 0.1, 0.16].map((d, i) => ({ w: 'noise', d, t: 0.012, a: 0.0005, p: 2, v: 0.6 - i * 0.06, bp: [2600 + i * 300, 2600, 1.4] })) });
+  D('amb.rumble', { vol: 0.8, max: 2, layers: [{ w: 'brown', t: 3.2, a: 0.7, p: 1.4, v: 1, lp: [420, 90, 0.7] }, { w: 'noise', t: 1.6, d: 0.3, a: 0.4, p: 2, v: 0.15, bp: [500, 200, 0.8] }] });
+  D('amb.rustle', { vol: 0.5, layers: [{ w: 'pink', t: 0.9, a: 0.3, p: 1.3, v: 1, hp: [1600, 2400, 0.7] }, { w: 'noise', t: 0.6, d: 0.15, a: 0.1, p: 2, v: 0.2, bp: [5200, 4000, 1] }] });
+  D('amb.bird1', { vol: 0.5, layers: [0, 0.075, 0.15, 0.225].map((d, i) => ({ w: 'sine', d, f: 3000 + i * 120, f1: 4300 + i * 60, t: 0.055, a: 0.004, p: 2, v: 0.7 })).concat([{ w: 'sine', d: 0.31, f: 3900, f1: 2700, t: 0.12, a: 0.005, p: 1.6, v: 0.6 }]) });
+  D('amb.bird2', { vol: 0.5, layers: [{ w: 'sine', f: 2650, f1: 2750, t: 0.2, a: 0.02, p: 1.4, v: 0.7, vib: [9, 0.4] }, { w: 'sine', d: 0.24, f: 2150, f1: 2050, t: 0.28, a: 0.02, p: 1.5, v: 0.65, vib: [8, 0.35] }] });
+  D('amb.bird3', { vol: 0.45, layers: [{ w: 'sine', f: 2300, f1: 3100, t: 0.42, a: 0.03, p: 1.2, v: 0.7, vib: [21, 2.2], fm: [1.5, 0.6, 0] }] });
+  D('amb.wood', { vol: 0.5, layers: Array.from({ length: 9 }, (_, i) => ({ w: 'noise', d: i * 0.055, t: 0.018, a: 0.0005, p: 2, v: 0.8 - i * 0.05, bp: [1500, 1500, 3] })) });
+  D('amb.cricket', { vol: 0.4, layers: [0, 1, 2].flatMap((c) => [0, 1, 2, 3].map((k) => ({ w: 'sine', d: c * 0.17 + k * 0.026, f: 4400, t: 0.016, a: 0.002, p: 1.4, v: 0.6, fm: [1.01, 0.3, 0] }))) });
+  D('amb.owl', { vol: 0.5, max: 1, layers: [{ w: 'sine', f: 390, f1: 350, t: 0.42, a: 0.06, p: 1.2, v: 0.8, vib: [5, 0.25] }, { w: 'sine', d: 0.6, f: 370, f1: 330, t: 0.6, a: 0.08, p: 1.1, v: 0.7, vib: [5, 0.3] }, { w: 'sine', d: 0.62, f: 740, f1: 660, t: 0.5, a: 0.08, p: 1.4, v: 0.08 }] });
+  D('amb.frog', { vol: 0.4, layers: [{ w: 'saw', f: 150, f1: 135, t: 0.22, a: 0.01, p: 1.6, v: 0.6, lp: [1100, 700, 2], vib: [32, 2.5] }, { w: 'saw', d: 0.28, f: 145, f1: 130, t: 0.18, a: 0.01, p: 1.6, v: 0.45, lp: [1000, 600, 2], vib: [30, 2.5] }] });
+  D('amb.gull', { vol: 0.45, layers: [0, 0.32, 0.6].map((d, i) => ({ w: 'saw', d, f: 1900 - i * 80, f1: 1250, t: 0.26, a: 0.02, p: 1.5, v: 0.5, bp: [1700, 1300, 4], vib: [11, 0.6] })) });
+  D('amb.car', { vol: 0.6, max: 3, layers: [{ w: 'brown', t: 3.4, a: 1.4, h: 0.2, p: 1.5, v: 1, bp: [260, 150, 0.8] }, { w: 'noise', t: 3.2, a: 1.4, h: 0.1, p: 1.7, v: 0.35, bp: [1100, 480, 0.9] }] });
+  D('amb.horn', { vol: 0.5, max: 2, layers: [{ w: 'square', f: 415, t: 0.32, a: 0.01, h: 0.25, p: 1, v: 0.4, lp: [1600, 1600, 0.8] }, { w: 'square', f: 523, t: 0.32, a: 0.01, h: 0.25, p: 1, v: 0.3, lp: [1600, 1600, 0.8] }, { w: 'square', d: 0.42, f: 415, t: 0.5, a: 0.01, h: 0.4, p: 1, v: 0.4, lp: [1600, 1600, 0.8] }] });
+  D('amb.siren', { vol: 0.4, max: 1, layers: [{ w: 'sine', f: 820, t: 3.2, a: 0.6, h: 2, p: 1.3, v: 0.6, vib: [0.75, 3.6] }, { w: 'tri', f: 1640, t: 3.2, a: 0.6, h: 2, p: 1.3, v: 0.12, vib: [0.75, 3.6] }] });
+  D('amb.crackle', { vol: 0.6, max: 8, layers: [{ w: 'noise', t: 0.012, a: 0.0003, p: 3, v: 1, hp: [1300, 1300, 0.7] }] });
+  D('amb.pop', { vol: 0.6, max: 3, layers: [{ w: 'noise', t: 0.05, a: 0.0005, p: 2.5, v: 1, bp: [1700, 900, 1.2] }, { w: 'sine', f: 900, f1: 250, t: 0.04, a: 0.0005, p: 2, v: 0.5 }, { w: 'noise', d: 0.05, t: 0.25, a: 0.01, p: 2, v: 0.2, hp: [3000, 5000, 0.7] }] });
+  D('amb.creak', { vol: 0.5, max: 2, layers: [{ w: 'saw', f: 95, f1: 72, t: 0.7, a: 0.18, p: 1.4, v: 0.7, bp: [620, 460, 6], vib: [15, 0.9] }, { w: 'saw', d: 0.05, f: 140, f1: 120, t: 0.5, a: 0.15, p: 1.6, v: 0.3, bp: [900, 700, 7], vib: [19, 0.7] }] });
+  D('amb.slap', { vol: 0.5, max: 3, layers: [{ w: 'pink', t: 0.42, a: 0.025, p: 2, v: 1, lp: [1500, 380, 0.8] }, { w: 'noise', t: 0.15, d: 0.02, a: 0.01, p: 2, v: 0.25, hp: [3000, 3000, 0.7] }] });
+  D('amb.bubble', { vol: 0.45, max: 6, layers: [{ w: 'sine', f: 420, f1: 1150, t: 0.05, a: 0.002, p: 2, v: 0.8 }] });
+})();
+
+let AmbNoise = null;
+/** 5 秒可以循環的雜訊（首尾交叉淡化，循環時不會喀一聲） */
+function ambNoise(kind) {
+  if (!AmbNoise) AmbNoise = {};
+  if (AmbNoise[kind]) return AmbNoise[kind];
+  const c = Aud.ctx, sr = c.sampleRate, len = Math.floor(sr * 5), x = Math.floor(sr * 0.25), raw = new Float32Array(len + x), R = makeRng(hashStr(kind));
+  let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, br = 0;
+  for (let i = 0; i < raw.length; i++) {
+    const w = R.next() * 2 - 1;
+    if (kind === 'white') raw[i] = w * 0.5;
+    else if (kind === 'brown') { br = (br + 0.02 * w) / 1.02; raw[i] = br * 3.2; }
+    else { b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759; b2 = 0.969 * b2 + w * 0.153852; b3 = 0.8665 * b3 + w * 0.3104856; b4 = 0.55 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.016898; raw[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926; }
+  }
+  const buf = c.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = raw[i];
+  for (let i = 0; i < x; i++) { const k = i / x; d[i] = raw[i] * k + raw[len + i] * (1 - k); }   // 結尾接回開頭
+  let pk = 0; for (let i = 0; i < len; i++) pk = Math.max(pk, Math.abs(d[i])); const g = pk > 0 ? 0.9 / pk : 1; for (let i = 0; i < len; i++) d[i] *= g;
+  return (AmbNoise[kind] = buf);
+}
+
+const Amb = PZ.amb = { presets: AMB_PRESETS, live: {}, want: {}, vol: 1, _follow: false };
+Amb.define = (name, def) => { AMB_PRESETS[name] = def; return def; };
+function makeBed(c, B, out) {
+  const src = c.createBufferSource(); src.buffer = ambNoise(B.noise || 'pink'); src.loop = true;
+  let node = src; const chain = (n) => { node.connect(n); node = n; }, nodes = [src], oscs = [];
+  const filt = (type, f, q) => { const n = c.createBiquadFilter(); n.type = type; n.frequency.value = f; n.Q.value = q; chain(n); nodes.push(n); return n; };
+  if (B.hp) filt('highpass', B.hp, 0.5);
+  if (B.lp) filt('lowpass', B.lp, 0.5);
+  let bp = null; if (B.bp) bp = filt('bandpass', B.bp[0], B.bp[1] || 1);
+  if (B.sweep && bp) { const o = c.createOscillator(), og = c.createGain(); o.frequency.value = B.sweep[0]; og.gain.value = B.sweep[1]; o.connect(og); og.connect(bp.frequency); o.start(); oscs.push(o); nodes.push(og); }
+  const g = c.createGain(); g.gain.value = B.vol || 0.3; chain(g); nodes.push(g);
+  if (c.createStereoPanner && B.pan) { const p = c.createStereoPanner(); p.pan.value = B.pan; chain(p); nodes.push(p); }
+  node.connect(out);
+  src.start(0, Rand.range(0, src.buffer.duration * 0.9));
+  return { B, g, t: Rand.range(0, 1), nodes, oscs, src };
+}
+function ambStart(name) {
+  const def = AMB_PRESETS[name], c = Aud.ctx; if (!def || !c) return null;
+  const gain = c.createGain(); gain.gain.value = 0.0001; gain.connect(Aud.bus.amb);
+  const L = { name, gain, level: 0, beds: (def.beds || []).map((B) => makeBed(c, B, gain)), events: (def.events || []).map((E) => ({ E, t: Rand.range(0.2, 1.5) / Math.max(0.05, E.rate) })), dying: 0 };
+  Amb.live[name] = L; return L;
+}
+function ambKill(L) {
+  for (const b of L.beds) { try { b.src.stop(); } catch (e) { /* ignore */ } for (const o of b.oscs) { try { o.stop(); } catch (e) { /* ignore */ } } for (const n of b.nodes) { try { n.disconnect(); } catch (e) { /* ignore */ } } }
+  try { L.gain.disconnect(); } catch (e) { /* ignore */ }
+  delete Amb.live[L.name];
+}
+/** 把目標音量套上去（淡入淡出 fade 秒） */
+function ambApply(fade = 2) {
+  const c = Aud.ctx; if (!c) return;
+  const names = new Set([...Object.keys(Amb.want), ...Object.keys(Amb.live)]);
+  for (const n of names) {
+    const v = (Amb.want[n] || 0) * Amb.vol;
+    let L = Amb.live[n];
+    if (!L) { if (v <= 0.001) continue; L = ambStart(n); if (!L) continue; }
+    L.level = v; L.dying = v <= 0.001 ? fade + 0.6 : 0;
+    const t = c.currentTime; L.gain.gain.cancelScheduledValues(t); L.gain.gain.setTargetAtTime(Math.max(0.0001, v), t, Math.max(0.05, fade / 3));
+  }
+}
+Amb.play = (name, o = {}) => { Amb.want = {}; if (name) Amb.want[name] = o.vol != null ? o.vol : 1; ambApply(o.fade); return Amb; };
+Amb.mix = (levels, o = {}) => { Amb.want = Object.assign({}, levels); ambApply(o.fade); return Amb; };
+Amb.set = (name, v, o = {}) => { Amb.want[name] = v; ambApply(o.fade); return Amb; };
+Amb.stop = (o = {}) => { Amb.want = {}; ambApply(o.fade != null ? o.fade : 1.5); return Amb; };
+Amb.level = (name) => (Amb.live[name] ? Amb.live[name].level : 0);
+/* 跟著天氣：只管雨、雷雨、風三種，其他（營火、森林…）照遊戲自己設的 */
+const AMB_WEATHER = { clear: {}, rain: { rain: 1 }, drizzle: { rain: 0.45 }, storm: { storm: 1 }, snow: { wind: 0.3 }, blizzard: { wind: 1 }, fog: { wind: 0.16 }, mist: { wind: 0.1 } };
+Amb.follow = (on = true) => { Amb._follow = !!on; if (on) ambWeather(Weather.name); return Amb; };
+function ambWeather(name) { const m = AMB_WEATHER[name] || {}; for (const k of ['rain', 'storm', 'wind']) Amb.want[k] = m[k] || 0; ambApply(3); }
+PZ.on('weather', (name) => { if (Amb._follow) ambWeather(name); });
+PZ.on('audio', () => ambApply(1.5));
+addSystem({
+  name: 'amb', order: 33,
+  frame(rdt) {
+    const c = Aud.ctx; if (!c || c.state !== 'running') return;
+    const now = c.currentTime;
+    for (const n in Amb.live) {
+      const L = Amb.live[n];
+      if (L.dying > 0) { L.dying -= rdt; if (L.dying <= 0) { ambKill(L); continue; } }
+      // 底：陣風起伏、浪湧上來又退
+      for (const b of L.beds) {
+        const B = b.B; b.t -= rdt; if (b.t > 0) continue;
+        if (B.wave) { const [p0, p1, lo, hi] = B.wave, per = Rand.range(p0, p1), rise = per * Rand.range(0.3, 0.42), v = B.vol;
+          b.g.gain.cancelScheduledValues(now); b.g.gain.setValueAtTime(Math.max(0.0001, b.g.gain.value), now); b.g.gain.linearRampToValueAtTime(v * Rand.range(hi * 0.8, hi), now + rise); b.g.gain.setTargetAtTime(v * lo, now + rise, (per - rise) / 2.6); b.t = per; }
+        else if (B.swell) { const [p0, p1, depth] = B.swell, per = Rand.range(p0, p1); b.g.gain.setTargetAtTime(B.vol * (1 - depth + depth * Rand.next() * 1.15), now, per / 3); b.t = per; }
+        else b.t = 1e9;
+      }
+      // 事件
+      if (L.level < 0.01 || L.dying > 0) continue;
+      for (const ev of L.events) {
+        ev.t -= rdt; if (ev.t > 0) continue;
+        const E = ev.E; ev.t = -Math.log(1 - Rand.next() * 0.999) / Math.max(0.01, E.rate);
+        const v = E.vol || [0.2, 0.4], p = E.pitch || [1, 1];
+        Sfx.play(E.sfx, { bus: 'amb', vol: Rand.range(v[0], v[1]) * L.level, pitch: Rand.range(p[0], p[1]), pan: Rand.spread(E.pan || 0), rev: E.rev || 0, force: true });
+      }
+    }
+  },
+});
+
 global.PZ = PZ;
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
-<script>window.PZ_GAME = {"id": "engine-lab", "title": "樣品館", "version": "1.0.0", "engine": "dev", "built": "2026-11-14 22:05"};
+<script>window.PZ_GAME = {"id": "engine-lab", "title": "樣品館", "version": "1.1.0", "engine": "1.1.0", "built": "2026-11-14 22:43"};
 /* ---- 01_art.js ---- */
 /* 樣品館：用程式畫的美術（也是「怎麼畫出有質感的程式美術」的範例） */
 const LabArt = {};
@@ -6946,6 +7511,7 @@ const HUB_ITEMS = [
   ['weather', '☂', '天氣與水面', '雨夜港口：水面倒影、雨雪霧雷、路燈光柱、電影調色與黑邊'],
   ['anim', '♞', '角色動畫', '骨架騎士：走跑跳、三連段、腳踩高低地形、披風羽飾飄動；一張圖的史萊姆也會呼吸跳躍'],
   ['world', '⌖', '世界與地圖', '一鍵生成地牢、洞窟、島嶼：2.5D 牆、點哪走哪、上百隻怪繞牆追人、戰爭迷霧、小地圖'],
+  ['hud', '♫', '介面與聲音', '血條殘影、數字滾動、技能冷卻、閃卡、背包、標題畫面；十一種音景混音、對拍子換歌'],
   ['ui', '▤', '介面與劇情', '五套主題、對話框、劇情對話、選擇、設定頁'],
 ];
 PZ.scene('hub', {
@@ -8358,6 +8924,312 @@ PZ.scene('world', {
     for (const e of this.mobs) if (e.va > 0.5) g.rect(mx + (e.x / S) * k - 1.2, my + (e.y / S) * k - 1.2, 2.4, 2.4, '#ff4fd8');
     if (this.mark && H.path) g.circle(mx + (this.mark.x / S) * k, my + (this.mark.y / S) * k, 2.2, '#7fe8ff', { a: 0.8 });
     g.circle(mx + (H.x / S) * k, my + (H.y / S) * k, 3.2, '#ffffff'); g.circle(mx + (H.x / S) * k, my + (H.y / S) * k, 2.2, '#46d4ff');
+  },
+});
+
+/* ---- 23_hud.js ---- */
+/* 樣品館：介面與聲音（遊戲 HUD：血條殘影、數字滾動、技能冷卻、連擊；閃卡、背包、標題畫面、轉場；音景混音、對拍子換歌、悶住） */
+const HD = {};
+HD.art = () => {
+  if (PZ.art.has('hd.sk0')) return;
+  const A = PZ.art;
+  const icon = (n, draw) => A.make(n, 48, 48, (c, w, h) => { draw(c, w, h); }, { anchor: [0.5, 0.5] });
+  icon('hd.sk0', (c) => { c.save(); c.translate(24, 24); c.rotate(-0.78); const g = c.createLinearGradient(-4, 0, 4, 0); g.addColorStop(0, '#f4fbff'); g.addColorStop(1, '#8fb4d8'); c.fillStyle = g; c.beginPath(); c.moveTo(0, -19); c.lineTo(4, -13); c.lineTo(4, 8); c.lineTo(-4, 8); c.lineTo(-4, -13); c.closePath(); c.fill(); c.fillStyle = '#d9a94a'; c.fillRect(-9, 8, 18, 3.5); c.fillStyle = '#6b4424'; c.fillRect(-2.5, 11, 5, 8); c.restore(); });
+  icon('hd.sk1', (c) => { const g = c.createRadialGradient(22, 27, 2, 24, 24, 17); g.addColorStop(0, '#fff7c2'); g.addColorStop(0.35, '#ffb347'); g.addColorStop(0.75, '#ff4d2e'); g.addColorStop(1, 'rgba(255,60,30,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(24, 5); c.bezierCurveTo(33, 15, 40, 21, 38, 30); c.bezierCurveTo(36, 40, 28, 43, 24, 43); c.bezierCurveTo(14, 43, 9, 35, 11, 27); c.bezierCurveTo(13, 20, 20, 17, 24, 5); c.fill(); });
+  icon('hd.sk2', (c) => { c.translate(24, 24); c.strokeStyle = '#bff3ff'; c.lineWidth = 3; c.lineCap = 'round'; for (let i = 0; i < 6; i++) { c.save(); c.rotate((i * Math.PI) / 3); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -17); c.moveTo(0, -10); c.lineTo(-5, -14); c.moveTo(0, -10); c.lineTo(5, -14); c.stroke(); c.restore(); } c.fillStyle = '#eaffff'; c.beginPath(); c.arc(0, 0, 3.5, 0, Math.PI * 2); c.fill(); });
+  icon('hd.sk3', (c) => { const g = c.createLinearGradient(0, 8, 0, 40); g.addColorStop(0, '#b6ffcf'); g.addColorStop(1, '#2fbf6a'); c.fillStyle = g; c.beginPath(); c.roundRect(19, 8, 10, 32, 3); c.roundRect(8, 19, 32, 10, 3); c.fill(); c.fillStyle = 'rgba(255,255,255,.45)'; c.fillRect(20.5, 9.5, 3, 12); });
+  A.make('hd.pine', 70, 130, (c, w, h) => { c.fillStyle = '#0b1120'; for (let i = 0; i < 4; i++) { const y = 18 + i * 26, hw = 16 + i * 9; c.beginPath(); c.moveTo(w / 2, y - 20); c.lineTo(w / 2 + hw, y + 22); c.lineTo(w / 2 - hw, y + 22); c.closePath(); c.fill(); } c.fillRect(w / 2 - 4, h - 22, 8, 22); c.strokeStyle = 'rgba(150,180,255,.12)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(w / 2, 0); c.lineTo(w / 2 - 22, 40); c.stroke(); }, { anchor: [0.5, 1] });
+  A.make('hd.tent', 110, 70, (c, w, h) => { const g = c.createLinearGradient(0, 0, w, 0); g.addColorStop(0, '#2b3f5e'); g.addColorStop(0.5, '#3d5880'); g.addColorStop(1, '#1d2b42'); c.fillStyle = g; c.beginPath(); c.moveTo(4, h); c.lineTo(w / 2, 4); c.lineTo(w - 4, h); c.closePath(); c.fill(); c.fillStyle = '#0d1422'; c.beginPath(); c.moveTo(w / 2 - 14, h); c.lineTo(w / 2, 26); c.lineTo(w / 2 + 14, h); c.closePath(); c.fill(); c.strokeStyle = 'rgba(255,220,170,.25)'; c.lineWidth = 2; c.beginPath(); c.moveTo(w / 2, 4); c.lineTo(w - 4, h); c.stroke(); }, { anchor: [0.5, 1] });
+  A.make('hd.logs', 70, 22, (c, w, h) => { c.lineCap = 'round'; for (const [x0, y0, x1, y1] of [[6, 16, 60, 8], [10, 8, 64, 17], [20, 19, 52, 19]]) { c.strokeStyle = '#3d2412'; c.lineWidth = 8; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); c.strokeStyle = 'rgba(255,170,90,.35)'; c.lineWidth = 2; c.beginPath(); c.moveTo(x0, y0 - 2); c.lineTo(x1, y1 - 2); c.stroke(); } }, { anchor: [0.5, 0.8] });
+  A.make('hd.leafart', 12, 8, (c, w, h) => { c.fillStyle = '#7aa04a'; c.beginPath(); c.ellipse(w / 2, h / 2, w / 2 - 0.5, h / 2 - 0.5, 0, 0, Math.PI * 2); c.fill(); c.strokeStyle = 'rgba(30,50,10,.6)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(1, h / 2); c.lineTo(w - 1, h / 2); c.stroke(); });
+  PZ.particles.define('hd.leaf', { count: [1, 2], life: [3, 5], speed: [120, 220], angle: 0.15, spread: 0.5, drag: 0.2, grav: 22, size: [7, 11], end: 1, colors: ['#9bc45a', '#6e8f3a', 'rgba(110,143,58,0)'], shape: 'hd.leafart', spin: [-5, 5], rot: 'random' });
+  A.make('hd.flame', 30, 46, (c, w, h) => { const g = c.createLinearGradient(0, h, 0, 0); g.addColorStop(0, '#fff3c0'); g.addColorStop(0.3, '#ffb347'); g.addColorStop(0.75, '#ff5a2e'); g.addColorStop(1, 'rgba(255,60,30,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(w / 2, 0); c.bezierCurveTo(w, h * 0.45, w, h * 0.8, w / 2, h); c.bezierCurveTo(0, h * 0.8, 0, h * 0.45, w / 2, 0); c.fill(); }, { anchor: [0.5, 1] });
+};
+HD.SKILLS = [
+  { name: '斬擊', icon: 'hd.sk0', cd: 0.8, mp: 0, color: '#bfefff', key: '1' },
+  { name: '火球', icon: 'hd.sk1', cd: 3.5, mp: 18, color: '#ffb347', key: '2' },
+  { name: '冰霜', icon: 'hd.sk2', cd: 6, mp: 26, color: '#8ff3ff', key: '3' },
+  { name: '治療', icon: 'hd.sk3', cd: 9, mp: 30, color: '#7dffa8', key: '4' },
+];
+HD.AMBS = [['雨', 'rain'], ['雷雨', 'storm'], ['風', 'wind'], ['森林', 'forest'], ['夜晚', 'night'], ['洞窟', 'cave'], ['海邊', 'ocean'], ['城市', 'city'], ['營火', 'fire'], ['船艙', 'ship'], ['溪流', 'stream']];
+HD.TRANS = [['菱形', 'diamond'], ['百葉窗', 'blinds'], ['快門', 'shutter'], ['推門', 'slide'], ['方塊', 'pixel'], ['光圈', 'iris'], ['斜切', 'wipe']];
+HD.songs = () => {
+  if (PZ.music.songs.hd_explore) return;
+  const M = PZ.music;
+  M.define('hd_explore', { bpm: 92, swing: 0.14, delaySteps: 3, feedback: 0.42, tracks: [
+    { inst: 'kick', pat: 'x.......x..x....', vol: 0.45 },
+    { inst: 'hat', pat: '..x...x...x...xo', vol: 0.16 },
+    { inst: 'rim', pat: '....o.......o...', vol: 0.18, min: 0.35 },
+    { inst: 'epiano', chords: 'Fmaj7 Em7 Dm7 Cmaj7', vol: 0.3, rev: 0.3, base: 55 },
+    { inst: 'sub', notes: 'F2 - - - - - - - . . . . F2 - . . E2 - - - - - - - . . . . E2 - . . D2 - - - - - - - . . . . D2 - . . C2 - - - - - - - . . . . G2 - . .', vol: 0.45 },
+    { inst: 'kalimba', notes: 'A4 . C5 . E5 . . . D5 . C5 . A4 . . . G4 . B4 . D5 . . . C5 . B4 . G4 . . . F4 . A4 . C5 . . . B4 . A4 . F4 . . . E4 . G4 . C5 . . . B4 . G4 . E4 . . .', vol: 0.36, delay: 0.38, rev: 0.25 },
+    { inst: 'pad', chords: 'Fmaj7 Em7 Dm7 Cmaj7', vol: 0.12, min: 0.55 },
+  ] });
+  M.define('hd_battle', { bpm: 128, delaySteps: 3, feedback: 0.3, tracks: [
+    { inst: 'kick', pat: 'x...x...x...x...', vol: 0.9 },
+    { inst: 'snare', pat: '....x.......x...', vol: 0.55 },
+    { inst: 'clap', pat: '....x.......x...', vol: 0.25, min: 0.5 },
+    { inst: 'hat', pat: 'x.x.x.x.x.x.x.x.', vol: 0.22 },
+    { inst: 'ohat', pat: '..x...x...x...x.', vol: 0.14, min: 0.45 },
+    { inst: 'bass', notes: 'A1 . A1 A2 . A1 . A1 F1 . F1 F2 . F1 . F1 C2 . C2 C3 . C2 . C2 G1 . G1 G2 . G1 . G1', vol: 0.55 },
+    { inst: 'supersaw', chords: 'Am F C G', vol: 0.2, pump: 0.75, lp: [700, 6000], base: 57 },
+    { inst: 'arp', notes: 'A4 C5 E5 A5 E5 C5 A4 C5 F4 A4 C5 F5 C5 A4 F4 A4 C5 E5 G5 C6 G5 E5 C5 E5 B4 D5 G5 B5 G5 D5 B4 D5', vol: 0.2, delay: 0.25, lp: [900, 9000], min: 0.35 },
+    { inst: 'brass', notes: 'A4 - . . . . . . . . . . . . . . F4 - . . . . . . . . . . . . . . C5 - . . . . . . . . . . . . . . B4 - . . . . . . G4 - . . . . . .', vol: 0.3, min: 0.62, rev: 0.2 },
+  ] });
+  M.define('hd_boss', { bpm: 140, tracks: [
+    { inst: 'kick', pat: 'x..x..x.x..x..x.', vol: 1 },
+    { inst: 'snare', pat: '....X.......X..o', vol: 0.65 },
+    { inst: 'hat', pat: 'xxxxxxxxxxxxxxxx', vol: 0.15 },
+    { inst: 'crash', pat: 'x...............................................................', vol: 0.3 },
+    { inst: 'bass', notes: 'D2 . D2 D2 . D2 . D2 C2 . C2 C2 . C2 . C2 Bb1 . Bb1 Bb1 . Bb1 . Bb1 A1 . A1 A1 . A1 . A1', vol: 0.6 },
+    { inst: 'supersaw', chords: 'Dm C Bb A', vol: 0.15, pump: 0.6, lp: [1200, 8000], base: 57 },
+    { inst: 'choir', chords: 'Dm C Bb A', vol: 0.16, min: 0.3 },
+    { inst: 'brass', notes: 'D4 - - - F4 - A4 - G4 - - - F4 - E4 - F4 - - - D4 - - - . . . . . . . . D4 - - - F4 - A4 - C5 - - - Bb4 - A4 - G4 - - - - - - - A4 - - - - - - -', vol: 0.32, rev: 0.25 },
+  ] });
+};
+
+PZ.scene('hud', {
+  bg: '#070a16',
+  ui: () => `${Lab.bar('介面與聲音', '點技能、點稻草人；音景可以同時開好幾種')}
+    <div class="lab-panel" data-ui style="max-height:46%;overflow:auto;touch-action:pan-y">
+      <div class="lab-row"><span class="lab-label">介面</span><button class="lab-chip" data-a="hurt" data-sfx="none">受傷</button><button class="lab-chip" data-a="heal" data-sfx="none">補血</button><button class="lab-chip" data-a="score" data-sfx="none">得分</button><button class="lab-chip" data-a="cards">抽卡</button><button class="lab-chip" data-a="bag">背包</button><button class="lab-chip" data-a="title">標題畫面</button><button class="lab-chip" data-a="trans">轉場：菱形</button></div>
+      <div class="lab-row"><span class="lab-label">音景</span>${HD.AMBS.map(([n, k]) => `<button class="lab-chip cyan" data-amb="${k}" data-sfx="none">${n}</button>`).join('')}</div>
+      <div class="lab-row"><span class="lab-label">配樂</span><button class="lab-chip big" data-m="hd_explore">探索</button><button class="lab-chip big" data-m="hd_battle">戰鬥</button><button class="lab-chip big" data-m="hd_boss">頭目</button><button class="lab-chip" data-a="muffle">悶住</button><span class="hd-beat"></span></div>
+      <div class="lab-note">換歌會等到下一小節才切（不會亂拍）；緊張度跟著戰鬥狀態走，濾波一層一層打開。</div>
+    </div>
+    <style>.hd-beat{display:inline-block;width:12px;height:12px;border-radius:50%;background:#ffb547;margin-left:6px;box-shadow:0 0 12px #ffb547;transform:scale(var(--b,.5));opacity:calc(.35 + var(--b,.5) * .65)}
+    .hd-cards{display:flex;gap:min(12px,2.4vw);justify-content:center;padding:8px 2px 4px}
+    .hd-card{width:min(118px,25vw);aspect-ratio:118/168;border-radius:14px;box-sizing:border-box;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;color:#fff;background:linear-gradient(160deg,var(--c1),var(--c2));box-shadow:0 14px 30px rgba(0,0,0,.5),0 0 0 1.5px rgba(255,255,255,.28) inset;cursor:pointer;animation:hd-deal .5s calc(var(--i) * .12s) cubic-bezier(.2,.9,.25,1.2) both}
+    .hd-card canvas{width:72%;height:auto;max-height:56%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+    .hd-card b{font:900 15px/1.2 var(--pz-font);letter-spacing:.08em;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+    .hd-card small{font:800 10px/1 var(--pz-font);letter-spacing:.3em;opacity:.8}
+    @keyframes hd-deal{from{opacity:0;transform:translateY(40px) rotate(-8deg) scale(.8)}}</style>`,
+  enter(params) {
+    HD.art(); HD.songs(); AN.art(); WD.art(); LT.art();
+    const box = PZ.scenes.uiEl; Lab.bindBack(box); this.box = box;
+    // 狀態：血、魔力、經驗、分數、連擊、技能冷卻
+    this.hp = PZ.meter({ max: 120, value: 120 }); this.mp = PZ.meter({ max: 100, value: 100, drain: 0.9 });
+    this.xp = 0.35; this.xpShown = 0.35; this.level = 7; this.score = PZ.count(0); this.combo = 0; this.comboT = 0; this.comboPop = 0;
+    this.sk = HD.SKILLS.map((s) => ({ s, cd: 0, flash: 0, press: 0 }));
+    this.t = 0; this.dummy = { x: 130, y: 0, hit: 0, ph: 0 }; this.hero = { x: -70, y: 0, atk: 0 };
+    this.fly = []; this.tension = 0;
+    // 音景：預設是海邊懸崖上的營火之夜
+    const ambOn = this.amb = params && params.amb ? params.amb : { fire: 1, night: 1, ocean: 0.7 };
+    const ambBtn = box.querySelectorAll('[data-amb]');
+    const syncAmb = () => { ambBtn.forEach((b) => b.classList.toggle('on', !!ambOn[b.dataset.amb])); PZ.amb.mix(ambOn, { fade: 1.6 }); const w = ambOn.storm ? 'storm' : ambOn.rain ? 'rain' : 'clear'; if (PZ.weather.name !== w) PZ.weather.set(w, { time: 2, wind: ambOn.wind ? 0.6 : w === 'clear' ? 0 : 0.2 }); else PZ.weather.wind = ambOn.wind ? 0.6 : 0.1; };
+    ambBtn.forEach((b) => b.addEventListener('click', () => { const k = b.dataset.amb; if (ambOn[k]) delete ambOn[k]; else ambOn[k] = k === 'ocean' ? 0.7 : 1; PZ.uiSound(ambOn[k] ? 'toggleOn' : 'toggleOff'); syncAmb(); }));
+    syncAmb();
+    // 配樂：對拍子換歌
+    const mb = box.querySelectorAll('[data-m]'); this.mb = mb;
+    const syncM = () => mb.forEach((b) => b.classList.toggle('on', PZ.music.cur && PZ.music.cur.name === b.dataset.m));
+    mb.forEach((b) => b.addEventListener('click', () => { PZ.music.play(b.dataset.m, { sync: 'bar', intensity: b.dataset.m === 'hd_explore' ? 0.3 : 0.6 }); setTimeout(syncM, 30); }));
+    if (!PZ.music.cur || !/^hd_/.test(PZ.music.cur.name)) PZ.music.play('hd_explore', { fade: 1.5, intensity: 0.3 });
+    syncM();
+    this.beatEl = box.querySelector('.hd-beat');
+    // 介面示範
+    const act = {
+      hurt: () => this.hurt(PZ.rand.int(14, 30)),
+      heal: () => { this.hp.heal(35); PZ.sfx.play('heal'); PZ.fx.number(this.hero.x, this.hero.y - 80, 35, { heal: true }); },
+      score: () => { this.score.add(PZ.rand.int(800, 2400)); PZ.sfx.play('coin'); },
+      cards: () => this.cards(),
+      bag: () => this.bag(),
+      title: () => this.title(),
+      trans: () => { const i = ((params && params.ti) || 0), T = HD.TRANS[i % HD.TRANS.length]; PZ.go('hud', { ti: i + 1, amb: ambOn }, { type: T[1], time: 0.55, color: '#05060c' }); },
+      muffle: (b) => { this.muffled = !this.muffled; PZ.music.muffle(this.muffled ? 0.85 : 0, 0.5); b.classList.toggle('on', this.muffled); PZ.uiSound(this.muffled ? 'toggleOn' : 'toggleOff'); },
+    };
+    box.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => act[b.dataset.a](b)));
+    const tb = box.querySelector('[data-a=trans]'), ti = (params && params.ti) || 0; tb.textContent = '轉場：' + HD.TRANS[ti % HD.TRANS.length][0];
+    if (this.muffled) PZ.music.muffle(0, 0.3); this.muffled = false;
+    // 點技能、點稻草人
+    this.offTap = PZ.on('tap', (t) => { const i = this.skillAt(t.x, t.y); if (i >= 0) { this.cast(i); return; } if (Math.abs(t.wx - this.dummy.x) < 60 && t.wy > this.dummy.y - 110 && t.wy < this.dummy.y + 20) this.cast(0); });
+    this.offKey = (e) => { const i = '1234'.indexOf(e.key); if (i >= 0) this.cast(i); else if (e.key === ' ') this.cast(0); };
+    window.addEventListener('keydown', this.offKey);
+    // 光影：月光＋營火；天空不受影響
+    const L = PZ.light; L.on({ ambient: '#4a5476', soak: 8 });
+    L.zone(-3000, -3000, 6000, 2978, { ambient: '#ffffff', soft: 24 });   // 天空與遠方的海不受明暗影響
+    this.fireL = L.add({ x: 0, y: -18, r: 330, color: '#ff9a46', intensity: 1.35, flicker: 0.28, flickerSpeed: 9, size: 10, shadows: false });
+    this.lay = () => {
+      const side = Lab.side(); PZ.cam.fit(side ? 380 : PZ.screen.portrait ? 470 : 420); PZ.cam.compute(); PZ.cam.x = Lab.shift();
+      // 地面放在「面板上面那塊畫面」的 78% 高（天空多一點、地上不要空一大片）
+      const panel = this.box.querySelector('.lab-panel'), top = side || !panel ? PZ.screen.h : panel.getBoundingClientRect().top - PZ.screen.ui.getBoundingClientRect().top;
+      PZ.cam.y = (PZ.screen.h / 2 - top * (side ? 0.7 : 0.74)) / (PZ.cam.ez || 1);
+    };
+    this.lay(); this.offR = PZ.on('resize', this.lay);
+    const R = PZ.rng(5); this.stars = Array.from({ length: 90 }, () => ({ x: R.next(), y: R.next() * 0.62, s: R.range(0.6, 1.8), ph: R.angle(), sp: R.range(0.6, 2.2) }));
+    this.flies = Array.from({ length: 14 }, () => ({ x: R.range(-300, 300), y: R.range(-120, 40), ph: R.angle() }));
+    this.city = Array.from({ length: 46 }, () => ({ x: R.range(-420, -60), h: R.range(2, 10), c: R.pick(['#ffd27a', '#ffe9b0', '#7fd8ff']), ph: R.angle() }));
+    this.rocks = Array.from({ length: 10 }, () => ({ x: R.range(-300, 300), y: R.range(16, 90), w: R.range(6, 16), h: R.range(3, 6) }));
+    this.grass = Array.from({ length: 34 }, () => ({ x: R.range(-320, 320), y: R.range(-12, 110), h: R.range(5, 11) }));
+  },
+  exit() { this.offTap(); this.offR(); window.removeEventListener('keydown', this.offKey); PZ.music.muffle(0, 0.2); PZ.amb.stop({ fade: 0.8 }); },
+  skillRects() {
+    const n = this.sk.length, r = PZ.screen.portrait ? 25 : 23, gap = r * 2 + 14, side = Lab.side();
+    const panel = this.box && this.box.querySelector('.lab-panel'), pt = panel && !side ? panel.getBoundingClientRect().top - PZ.screen.ui.getBoundingClientRect().top : PZ.screen.h;
+    const cx = side ? (PZ.screen.w - Math.min(320, PZ.screen.w * 0.44) - 20) / 2 : PZ.screen.w / 2, cy = Math.min(PZ.screen.h - 40, pt - r - 22);
+    return this.sk.map((_, i) => ({ x: cx + (i - (n - 1) / 2) * gap, y: cy, r }));
+  },
+  skillAt(x, y) { const rs = this.skillRects(); for (let i = 0; i < rs.length; i++) if (Math.hypot(x - rs[i].x, y - rs[i].y) < rs[i].r + 8) return i; return -1; },
+  cast(i) {
+    const k = this.sk[i], S = k.s, H = this.hero, D = this.dummy;
+    if (k.cd > 0) { PZ.uiSound('error'); k.press = 0.6; return; }
+    if (this.mp.value < S.mp) { PZ.uiSound('error'); PZ.fx.text(H.x, H.y - 90, '魔力不夠', null, { life: 0.7 }); return; }
+    k.cd = S.cd; k.press = 1; if (S.mp) this.mp.set(this.mp.value - S.mp);   // 用掉的那段留一下殘影
+    H.atk = 1; this.tension = Math.min(1, this.tension + 0.25);
+    if (i === 3) { this.hp.heal(45); PZ.sfx.play('heal'); PZ.fx.number(H.x, H.y - 80, 45, { heal: true }); PZ.particles.emit('heal', H.x, H.y - 30, { count: 18 }); return; }
+    const dmg = [PZ.rand.int(16, 26), PZ.rand.int(48, 70), PZ.rand.int(30, 42)][i], crit = PZ.rand.chance(i === 0 ? 0.2 : 0.35);
+    const hit = () => {
+      D.hit = 1; PZ.fx.hit(D.x, D.y - 50, { power: i ? 0.7 : 0.35, crit, dir: 0, color: S.color, sound: i === 1 ? 'explosion' : i === 2 ? 'glass' : 'hit' });
+      PZ.fx.number(D.x, D.y - 90, crit ? dmg * 2 : dmg, { crit });
+      this.combo++; this.comboT = 2.2; this.comboPop = 1; if (this.combo > 1) PZ.sfx.play('combo', { pitch: 1 + Math.min(1, this.combo * 0.04) });
+      this.score.add((crit ? dmg * 2 : dmg) * 10 * Math.max(1, this.combo)); this.xp += 0.07;
+      if (this.xp >= 1) { this.xp -= 1; this.xpShown = 0; this.level++; PZ.sfx.play('levelup'); PZ.ui.banner('升級！', { sub: '等級 ' + this.level, sound: false }); }
+    };
+    if (i === 0) { PZ.sfx.play('slash'); PZ.after(0.08, hit); return; }
+    PZ.sfx.play(i === 1 ? 'magic' : 'charge', { vol: 0.6 });
+    this.fly.push({ i, x: H.x + 20, y: H.y - 50, t: 0, hit, col: S.color });
+  },
+  hurt(n) { this.hp.hit(n); PZ.fx.number(this.hero.x, this.hero.y - 80, n, { color: '#ff6b6b' }); PZ.sfx.play('hurt'); PZ.cam.shake(0.25); PZ.fx.vignette('#b0001a', 0.6, 0.6); this.combo = 0; },
+  async cards() {
+    const rar = [['普通', '#3c4a63', '#1d2536', 'common', 'husk'], ['稀有', '#2c6bc4', '#122a55', 'rare', 'hero'], ['傳說', '#c98b1e', '#5a2a08', 'legend', 'brute']];
+    const wrap = document.createElement('div'); wrap.className = 'hd-cards';
+    rar.forEach(([n, c1, c2, r, art], i) => {
+      const cd = document.createElement('div'); cd.className = 'hd-card'; cd.style.setProperty('--c1', c1); cd.style.setProperty('--c2', c2); cd.style.setProperty('--i', i);
+      cd.innerHTML = `<small>${n}</small>`; cd.appendChild(PZ.art.canvas(art)); cd.insertAdjacentHTML('beforeend', `<b>${['空殼', '魏子葳', '屍王'][i]}</b>`);
+      PZ.ui.holo(cd, { foil: r !== 'common', tilt: 16 }); wrap.appendChild(cd);
+      PZ.ui.tip(cd, `<b>${['空殼', '魏子葳', '屍王'][i]}</b><em>${n}</em><div>${['怕光，被照到會往後縮。', '凌晨三點的外送員，背包裡永遠有一單。', '倉庫最深處的那個東西。攻擊時整個畫面都會震。'][i]}</div>`, { cls: 'r-' + (r === 'common' ? 'common' : r) });
+    });
+    PZ.after(0.35, () => PZ.sfx.play('rare'), { real: true });
+    await PZ.ui.modal({ title: '抽到三張卡', body: wrap, wide: true, buttons: [{ label: '收下', primary: true, value: true }] });
+  },
+  async bag() {
+    const items = [
+      { icon: 'kn.sword', name: '騎士長劍', tag: '武器・傳說', desc: '揮出去會留下一道藍白色的刀光。', rarity: 'legend', new: true },
+      { icon: 'wd.crystal', name: '洞窟水晶', tag: '素材・史詩', desc: '在黑暗裡會自己發光。', rarity: 'epic', count: 3 },
+      { icon: 'gem', name: '藍寶石', tag: '素材・稀有', desc: '可以拿去換錢。', rarity: 'rare', count: 12 },
+      { icon: 'lt.flare', name: '照明彈', tag: '道具', desc: '丟出去照亮一大片，空殼最怕這個。', count: 5, new: true },
+      { icon: 'wd.chest', name: '寶箱鑰匙組', tag: '道具・稀有', desc: '地牢的寶箱都打得開。', rarity: 'rare' },
+      { icon: '🧪', name: '回復藥水', tag: '消耗品', desc: '回復 50 點生命。', count: 8 },
+      { icon: '📜', name: '傳送卷軸', tag: '消耗品・史詩', desc: '回到最近的營火。', rarity: 'epic', count: 2 },
+      { icon: '🔑', name: '生鏽的鑰匙', tag: '劇情', desc: '上面刻著「312」。' },
+      { icon: '🍙', name: '飯糰', tag: '食物', desc: '便利商店的最後一個。', count: 2 },
+    ];
+    const pick = document.createElement('div'); pick.className = 'lab-note'; pick.style.cssText = 'text-align:center;min-height:22px;margin-top:6px'; pick.textContent = '點一格看看（手指按住看說明）';
+    const body = document.createElement('div');
+    body.appendChild(PZ.ui.slots({ items, cols: PZ.screen.w < 400 ? 4 : 5, size: PZ.screen.w < 400 ? 60 : 64, min: 15, onPick: (it) => { pick.innerHTML = `<b style="color:#fff">${it.name}</b>　${it.desc}`; PZ.sfx.play(it.rarity === 'legend' || it.rarity === 'epic' ? 'equip' : 'select'); } }));
+    body.appendChild(pick);
+    await PZ.ui.modal({ title: '背包', body, wide: true, buttons: [{ label: '關閉', value: true }] });
+  },
+  async title() {
+    PZ.music.muffle(0.6, 0.6);
+    await PZ.ui.title({ backdrop: true, kicker: '痞子葳 出品', title: '夜行', sub: 'NIGHT RUN', items: [{ label: '開始遊戲', value: 'start', primary: true }, { label: '繼續', value: 'cont' }, { label: '設定', value: 'set' }], foot: 'PZ ENGINE · v' + PZ.version });
+    PZ.music.muffle(this.muffled ? 0.85 : 0, 0.6);
+  },
+  update(dt) {
+    this.t += dt; const H = this.hero, D = this.dummy;
+    this.mp.heal(dt * 7); this.mp.ghost = this.mp.value;   // 魔力慢慢回（不要綠色預覽）
+    for (const k of this.sk) { if (k.cd > 0) { k.cd = Math.max(0, k.cd - dt); if (k.cd === 0) { k.flash = 1; PZ.sfx.play('select', { vol: 0.5, pitch: 1.3 }); } } k.flash = Math.max(0, k.flash - dt * 2.5); k.press = Math.max(0, k.press - dt * 5); }
+    if (this.comboT > 0) { this.comboT -= dt; if (this.comboT <= 0) this.combo = 0; }
+    this.comboPop = Math.max(0, this.comboPop - dt * 4);
+    this.xpShown = PZ.damp(this.xpShown, this.xp, 6, dt);
+    H.atk = Math.max(0, H.atk - dt * 4); D.hit = Math.max(0, D.hit - dt * 3); D.ph += dt;
+    // 飛行的法術
+    for (const f of this.fly) {
+      f.t += dt; const k = Math.min(1, f.t / 0.38); f.x = PZ.lerp(H.x + 20, D.x - 10, k); f.y = PZ.lerp(H.y - 50, D.y - 50, k) - Math.sin(k * Math.PI) * 40;
+      PZ.particles.emit(f.i === 1 ? 'ember' : 'sparks', f.x, f.y, { count: f.i === 1 ? 2 : 1, colors: f.i === 2 ? ['#ffffff', '#8ff3ff', 'rgba(140,240,255,0)'] : undefined, scale: 0.8 });
+      if (k >= 1 && !f.done) { f.done = true; f.hit(); if (f.i === 1) PZ.fx.explode(D.x, D.y - 50, { power: 0.5, radius: 70 }); }
+    }
+    this.fly = this.fly.filter((f) => !f.done);
+    // 緊張度：打得越兇配樂越滿（濾波打開、聲部加進來）
+    this.tension = Math.max(0, this.tension - dt * 0.08);
+    if (PZ.music.cur && PZ.music.cur.name !== 'hd_explore') { const lv = 0.35 + this.tension * 0.65; if (Math.abs(lv - PZ.music.level) > 0.04) PZ.music.intensity(lv, 0.6); }
+    // 營火的火星、風吹落葉
+    if (this.amb.fire && PZ.rand.chance(dt * 9)) PZ.particles.emit('ember', PZ.rand.spread(14), -12, { scale: 0.8 });
+    if (this.amb.wind && PZ.rand.chance(dt * 3)) PZ.particles.emit('hd.leaf', PZ.cam.view.x - 20, PZ.rand.range(-220, -20), { angle: 0.15 });
+    this.fireL.intensity = this.amb.fire ? 1.35 : 0.0001;
+    // 拍子燈
+    const ph = PZ.music.phase(); this.beatEl.style.setProperty('--b', (0.45 + 0.55 * Math.pow(1 - ph, 3)).toFixed(3));
+    if (this.mb) { const cur = PZ.music.cur && PZ.music.cur.name; this.mb.forEach((b) => b.classList.toggle('on', cur === b.dataset.m)); }
+  },
+  render(g) {
+    const t = this.t, v = PZ.cam.view, A = this.amb;
+    // 天空（垂直漸層：g.quad 的角順序轉一下，左色＝上、右色＝下）
+    const HZ = -150, top = A.storm ? '#0b0f1c' : '#0a1030', bot = A.storm ? '#1c2234' : '#40305e';
+    g.quad([v.x + v.w, v.y - 10, v.x + v.w, HZ, v.x, HZ, v.x, v.y - 10], top, bot);
+    if (!A.storm && !A.rain) for (const s of this.stars) { const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * s.sp + s.ph)); g.circle(v.x + s.x * v.w, v.y + s.y * (HZ - v.y), s.s, '#e8f0ff', { a }); }
+    // 月亮
+    const mx = v.x + v.w * 0.78, my = v.y + (HZ - v.y) * 0.56;
+    if (!A.storm) { g.glow(mx, my, 80, '#9fb8ff', { a: 0.35 }); g.circle(mx, my, 18, '#f4f2e4'); g.circle(mx + 5, my - 3, 16, '#e4e2d2', { a: 0.5 }); }
+    // 遠方的海（越近越暗）＋月光倒影＋對岸的城市燈火
+    g.quad([v.x + v.w, HZ, v.x + v.w, -18, v.x, -18, v.x, HZ], A.storm ? '#141c30' : '#1d2a52', A.storm ? '#080c16' : '#0b1228');
+    if (!A.storm) for (let i = 0; i < 34; i++) { const k = i / 34, yy = HZ + 3 + k * 120, w = 10 + k * 40 + Math.sin(t * 1.6 + i * 1.7) * 8; g.rect(mx - w / 2 + Math.sin(t * 1.1 + i) * (3 + k * 6), yy, w, 1 + k, '#d8e2ff', { a: (0.3 - k * 0.24) * (0.6 + 0.4 * Math.sin(t * 2.3 + i)) }); }
+    for (const c of this.city) g.rect(c.x, HZ - c.h, 2.2, c.h, c.c, { a: 0.5 + 0.4 * Math.sin(t * 0.7 + c.ph) });
+    g.rect(v.x, HZ - 0.5, v.w, 1, '#8ea2d8', { a: 0.25 });
+    // 懸崖頂（站的地方）：邊緣一道月光
+    g.quad([v.x + v.w + 20, -20, v.x + v.w + 20, v.y + v.h + 20, v.x - 20, v.y + v.h + 20, v.x - 20, -20], '#202a44', '#0c1120');
+    g.rect(v.x - 20, -21, v.w + 40, 2, '#5a6c9e', { a: 0.5 });
+    for (const r of this.rocks) g.ellipse(r.x, r.y, r.w, r.h, '#1a2238');
+    for (const gr of this.grass) for (let k = -1; k <= 1; k++) g.line(gr.x + k * 2.5, gr.y, gr.x + k * 4 + Math.sin(t * (A.wind ? 3 : 1.2) + gr.x) * (A.wind ? 4 : 1.5), gr.y - gr.h, 1.4, '#2c3a5c');
+    const sway = A.wind ? 0.07 : 0.015;
+    for (const [x, sc] of [[-260, 1.1], [-205, 0.8], [215, 1.2], [270, 0.9]]) g.spr('hd.pine', x, -14, Math.sin(t * (A.wind ? 2.2 : 0.9) + x) * sway, sc, sc);
+    g.spr('hd.tent', -150, -10);
+    // 營火
+    g.spr('hd.logs', 0, -4);
+    // 角色
+    const H = this.hero, D = this.dummy;
+    g.ellipse(H.x, H.y - 2, 22, 6, 'rgba(0,0,0,.4)'); g.spr('hero', H.x + H.atk * 8, H.y - 4 - Math.abs(Math.sin(t * 2)) * 1.5, H.atk * 0.12, 1.35, 1.35);
+    g.ellipse(D.x, D.y - 2, 22, 6, 'rgba(0,0,0,.4)');
+    g.spr('husk2', D.x + Math.sin(t * 60) * D.hit * 4, D.y - 4, Math.sin(D.ph * 1.3) * 0.03 + D.hit * 0.12, -1.25, 1.25 * (1 - D.hit * 0.08), 1, null, 0, D.hit * 0.8);
+    for (const f of this.flies) { f.ph += 0.016; f.x += Math.cos(f.ph * 0.7) * 0.4; f.y += Math.sin(f.ph * 1.1) * 0.25; }
+    g.lighting();
+    // 會發光的：火焰、法術、螢火蟲、稻草人的眼睛
+    if (A.fire) { const fl = this.fireL._fi || 1; for (let i = 0; i < 3; i++) g.spr('hd.flame', (i - 1) * 7, -6, Math.sin(t * 8 + i * 2) * 0.12, 0.7 + i % 2 * 0.25, (0.85 + 0.25 * Math.sin(t * 11 + i)) * fl, 0.95, null, 1); g.glow(0, -16, 46 * fl, '#ff9a46', { a: 0.55 }); }
+    for (const f of this.fly) { g.glow(f.x, f.y, f.i === 1 ? 20 : 16, f.col, { a: 0.95, core: 1 }); g.glow(f.x, f.y, 40, f.col, { a: 0.3 }); }
+    if (A.forest || A.night) for (const f of this.flies) g.glow(f.x, f.y, 4, '#d8ff7a', { a: 0.4 + 0.5 * Math.max(0, Math.sin(t * 2 + f.ph * 3)), core: 1 });
+    for (const ex of [-5, 5]) g.glow(D.x - ex * 1.25, D.y - 4 - 32 * 1.25, 4, '#ffd04f', { a: 0.8, core: 1 });
+    PZ.particles.draw(g);
+    g.hud();
+    this.drawHud(g);
+  },
+  drawHud(g) {
+    const S = PZ.screen, sf = S.safe, side = Lab.side(), t = this.t;
+    // 左上：頭像＋經驗值環＋血條、魔力條
+    const px = 16 + sf.l + 30, py = 66 + sf.t + 30, pr = 27;
+    g.circle(px, py, pr + 5, 'rgba(6,8,16,.8)');
+    g.arc(px, py, pr + 2.5, 3.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2, 'rgba(255,255,255,.12)');
+    g.arc(px, py, pr + 2.5, 3.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * PZ.clamp(this.xpShown, 0, 1), '#c48bff', { cap: 'round' });
+    g.circle(px, py, pr, '#1a2440');
+    g.spr('face_wei', px, py + 5, 0, 0.225, 0.225);
+    g.rrect(px + 12, py + 14, 24, 15, 7, '#c48bff'); g.text(String(this.level), px + 24, py + 21.5, { size: 11, weight: 900, color: '#1a0c2e', align: 'center', baseline: 'middle' });
+    const bw = Math.min(side ? 180 : 210, S.w * 0.5), bx = px + pr + 26;
+    g.text('魏子葳', bx, py - 30, { size: 13, weight: 900, color: '#fff', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.6)' });
+    g.meter(this.hp, bx, py - 17, bw, 15, { color: '#ff3b55', color2: '#ff8a5a', segments: 10, low: 0.3, text: true });
+    g.meter(this.mp, bx - 6, py + 4, bw * 0.78, 9, { color: '#2f7bff', color2: '#46d4ff', frame: true });
+    // 右上：分數、連擊
+    const rx = S.w - 16 - sf.r - (side ? Math.min(320, S.w * 0.44) + 12 : 0), ry = 22 + sf.t + (side ? 0 : 36);
+    g.text('SCORE', rx, ry - 10, { size: 10, weight: 900, color: 'rgba(255,255,255,.55)', align: 'right', baseline: 'middle', letterSpacing: 2 });
+    g.count(this.score, rx, ry + 10, { size: 26, align: 'right', color: '#ffe9b0' });
+    if (this.combo > 1) {
+      const k = this.comboPop, s = 1 + k * 0.45, hot = Math.min(1, this.combo / 20), col = PZ.color.mix('#7fe8ff', '#ff5a3d', hot);
+      g.save(); g.translate(rx, ry + 52); g.scale(s, s); g.rotate(-0.06);
+      g.text(this.combo + '', 0, 0, { size: 34, weight: 900, color: PZ.color.css(col), align: 'right', baseline: 'middle', outline: 4, outlineColor: 'rgba(0,0,0,.6)' });
+      g.restore();
+      g.text('連擊', rx, ry + 76, { size: 12, weight: 900, color: '#fff', align: 'right', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.6)' });
+      g.rect(rx - 60, ry + 88, 60, 3, 'rgba(255,255,255,.18)'); g.rect(rx - 60 * (this.comboT / 2.2), ry + 88, 60 * (this.comboT / 2.2), 3, PZ.color.css(col));
+    }
+    // 技能列
+    const rs = this.skillRects();
+    rs.forEach((r, i) => {
+      const k = this.sk[i], S2 = k.s, s = 1 - k.press * 0.12, ready = k.cd <= 0 && this.mp.value >= S2.mp;
+      g.circle(r.x, r.y + 3, r.r + 3, 'rgba(0,0,0,.45)');
+      g.circle(r.x, r.y, (r.r + 2) * s, ready ? S2.color : '#3a4258', { a: ready ? 0.85 : 0.6 });
+      g.circle(r.x, r.y, r.r * s, '#141b2e');
+      g.spr(S2.icon, r.x, r.y, 0, (r.r / 30) * s, (r.r / 30) * s, ready ? 1 : 0.45);
+      g.cooldown(r.x, r.y, r.r * s, k.cd / S2.cd, { color: S2.color, flash: k.flash });
+      if (k.cd > 0) g.text(k.cd >= 1 ? Math.ceil(k.cd) + '' : k.cd.toFixed(1), r.x, r.y + 1, { size: 15, weight: 900, color: '#fff', align: 'center', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.7)' });
+      if (S2.mp) g.text(S2.mp + '', r.x + r.r * 0.7, r.y + r.r * 0.75, { size: 10, weight: 900, color: this.mp.value >= S2.mp ? '#8fd0ff' : '#ff6b6b', align: 'center', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.8)' });
+      if (!PZ.env.touch) g.text(S2.key, r.x - r.r * 0.72, r.y - r.r * 0.72, { size: 10, weight: 900, color: 'rgba(255,255,255,.75)', align: 'center', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.8)' });
+    });
+    void t;
   },
 });
 

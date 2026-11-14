@@ -9,6 +9,10 @@
      PZ.ui.toast('撿到 金幣 ×3', { kind: 'good' })   PZ.ui.banner('BOSS 來襲', { sub: '屍王', style: 'boss' })
      PZ.ui.settings({ save })   標準設定頁（音量、震動、閃光、觸覺、數字、畫質、存檔碼、雲端）
      PZ.ui.pause({ items: [{ label, onClick }] })   標準暫停選單
+     PZ.ui.tip(元素, '說明', { side })              提示框：滑鼠移上去、手指按住、手把焦點移到就出現
+     PZ.ui.holo(卡片元素, { tilt: 14, foil: true })    閃卡：跟著手指傾斜、亮面跟著跑、彩虹箔
+     PZ.ui.slots({ items: [{ icon, name, desc, count, rarity, new }], cols, size, onPick })   格子背包（稀有度光暈、數量、新東西的小點）
+     await PZ.ui.title({ title, sub, kicker, items: [{ label, value, primary }], foot, backdrop })  標題畫面（字一個個浮上來、掃光；backdrop：蓋一層深色）
    所有 .pz-btn 自動有按下音效、觸覺、按壓動畫；鍵盤方向鍵／手把十字鍵可以移動焦點，A／Enter 按、B／Esc 返回。
    ========================================================================== */
 const ENGINE_CSS = __PZ_CSS__;
@@ -57,7 +61,11 @@ UI.enhance = (root) => {
 /* ---------- 焦點導覽（手把、鍵盤）---------- */
 UI.top = () => UI.stack[UI.stack.length - 1] || null;
 function focusables(root) { return [...root.querySelectorAll('.pz-btn,.pz-toggle,.pz-focusable,.pz-range,.pz-seg button')].filter((e) => !e.disabled && e.offsetParent !== null); }
-UI.setFocus = (elx) => { if (UI.focus) UI.focus.classList.remove('pz-focus'); UI.focus = elx; if (elx) { elx.classList.add('pz-focus'); try { elx.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } } };
+UI.setFocus = (elx) => {
+  if (UI.focus) { UI.focus.classList.remove('pz-focus'); if (UI.focus._tipHide) UI.focus._tipHide(); }
+  UI.focus = elx;
+  if (elx) { elx.classList.add('pz-focus'); try { elx.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } if (elx._tipShow && (Input.device === 'gamepad' || Input.device === 'keyboard')) elx._tipShow(); }
+};
 UI.move = (dir) => {
   const t = UI.top(); if (!t) return;
   const list = focusables(t.el); if (!list.length) return;
@@ -131,6 +139,109 @@ UI.banner = (text, o = {}) => new Promise((res) => {
   Screen.ui.appendChild(b);
   if (o.sound !== false) { const s = o.sound || (o.style === 'boss' ? 'alarm' : 'notify'); if (Sfx.has(s)) Sfx.play(s, { bus: 'ui' }); }
   setTimeout(() => { b.classList.add('out'); setTimeout(() => { b.remove(); res(); }, 360); }, o.ms || 1900);
+});
+
+/* ---------- 提示框 ---------- */
+UI.tip = (target, content, o = {}) => {
+  let box = null, timer = 0;
+  const html = () => (typeof content === 'function' ? content() : content);
+  const place = () => {
+    if (!box) return;
+    const r = target.getBoundingClientRect(), R = Screen.ui.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight, sf = Screen.safe;
+    const sx = r.left - R.left + r.width / 2, above = r.top - R.top - 10, below = r.bottom - R.top + 10;
+    const up = o.side ? o.side === 'top' : above - bh > 8 + sf.t;
+    const x = clamp(sx - bw / 2, 8 + sf.l, Math.max(8 + sf.l, R.width - bw - 8 - sf.r)), y = up ? above - bh : below;
+    box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.setProperty('--ax', clamp(sx - x, 12, bw - 12) + 'px'); box.classList.toggle('below', !up);
+  };
+  const show = () => {
+    if (box || !document.body.contains(target)) return;
+    box = el('div', 'pz-tip' + (o.cls ? ' ' + o.cls : ''), html()); Screen.ui.appendChild(box); place();
+    requestAnimationFrame(() => box && box.classList.add('on'));
+  };
+  const hide = () => { clearTimeout(timer); if (!box) return; const b = box; box = null; b.classList.remove('on'); setTimeout(() => b.remove(), 180); };
+  const enter = (e) => { if (e.pointerType === 'mouse') show(); };
+  const down = (e) => { if (e.pointerType !== 'mouse') { clearTimeout(timer); timer = setTimeout(show, o.delay != null ? o.delay : 300); } };
+  const leave = () => hide();
+  target.addEventListener('pointerenter', enter); target.addEventListener('pointerdown', down);
+  target.addEventListener('pointerleave', leave); target.addEventListener('pointerup', leave); target.addEventListener('pointercancel', leave);
+  target._tipShow = show; target._tipHide = hide;
+  return {
+    show, hide,
+    set(c) { content = c; if (box) { box.innerHTML = html(); place(); } },
+    remove() { hide(); target.removeEventListener('pointerenter', enter); target.removeEventListener('pointerdown', down); target.removeEventListener('pointerleave', leave); target.removeEventListener('pointerup', leave); target.removeEventListener('pointercancel', leave); target._tipShow = target._tipHide = null; },
+  };
+};
+
+/* ---------- 閃卡 ---------- */
+UI.holo = (card, o = {}) => {
+  card.classList.add('pz-holo'); if (o.foil !== false) card.classList.add('pz-foil');
+  if (!card.querySelector(':scope > .pz-holo-shine')) card.appendChild(el('i', 'pz-holo-shine'));
+  const st = card.style, max = o.tilt != null ? o.tilt : 14; let tx = 0.5, ty = 0.5, cx = 0.5, cy = 0.5, on = 0, ton = 0, raf = 0;
+  const step = () => {
+    raf = 0; cx += (tx - cx) * 0.18; cy += (ty - cy) * 0.18; on += (ton - on) * 0.14;
+    st.setProperty('--rx', ((0.5 - cy) * max * 2 * on).toFixed(2) + 'deg'); st.setProperty('--ry', ((cx - 0.5) * max * 2 * on).toFixed(2) + 'deg');
+    st.setProperty('--gx', (cx * 100).toFixed(1) + '%'); st.setProperty('--gy', (cy * 100).toFixed(1) + '%'); st.setProperty('--hon', on.toFixed(3));
+    if (Math.abs(tx - cx) + Math.abs(ty - cy) + Math.abs(ton - on) > 0.002) raf = requestAnimationFrame(step);
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(step); };
+  const move = (e) => { const r = card.getBoundingClientRect(); tx = clamp01((e.clientX - r.left) / Math.max(1, r.width)); ty = clamp01((e.clientY - r.top) / Math.max(1, r.height)); ton = 1; kick(); };
+  const leave = () => { tx = 0.5; ty = 0.5; ton = 0; kick(); };
+  const up = (e) => { if (e.pointerType !== 'mouse') leave(); };
+  card.addEventListener('pointermove', move); card.addEventListener('pointerdown', move); card.addEventListener('pointerleave', leave); card.addEventListener('pointerup', up); card.addEventListener('pointercancel', leave);
+  return { remove() { card.removeEventListener('pointermove', move); card.removeEventListener('pointerdown', move); card.removeEventListener('pointerleave', leave); card.removeEventListener('pointerup', up); card.removeEventListener('pointercancel', leave); card.classList.remove('pz-holo', 'pz-foil'); } };
+};
+
+/* ---------- 格子背包 ---------- */
+const slotIcon = (icon) => { if (icon && Art.has(icon)) { const c = Art.canvas(icon); c.className = 'pz-slot-ico'; return c; } return el('span', 'pz-slot-ico', icon || ''); };
+UI.slots = (o = {}) => {
+  const grid = el('div', 'pz-slots'); grid.style.setProperty('--cols', o.cols || 5); grid.style.setProperty('--sz', (o.size || 58) + 'px');
+  const fill = (items) => {
+    grid.querySelectorAll('.pz-slot').forEach((b) => { if (b._tip) b._tip.remove(); });
+    grid.innerHTML = '';
+    const n = Math.max(items.length, o.min || 0);
+    for (let i = 0; i < n; i++) {
+      const it = items[i], r = it ? it.rarity || 'common' : '';
+      const b = el('button', 'pz-slot pz-focusable' + (it ? ' r-' + r : ' empty')); b.type = 'button'; b.dataset.sfx = it ? 'card' : 'none';
+      if (it) {
+        b.appendChild(slotIcon(it.icon));
+        if (it.count > 1) b.appendChild(el('b', 'pz-slot-n', '×' + it.count));
+        if (it.new) b.appendChild(el('i', 'pz-slot-new'));
+        if (it.name) b._tip = UI.tip(b, `<b>${it.name}</b>${it.tag ? `<em>${it.tag}</em>` : ''}${it.desc ? `<div>${it.desc}</div>` : ''}`, { cls: 'r-' + r });
+        b.onclick = () => {
+          grid.querySelectorAll('.pz-slot.sel').forEach((x) => x.classList.remove('sel')); b.classList.add('sel');
+          if (it.new) { it.new = false; const nn = b.querySelector('.pz-slot-new'); if (nn) nn.remove(); }
+          if (o.onPick) safeCall(o.onPick, null, it, i);
+        };
+      } else if (o.lockEmpty !== false) b.disabled = true;
+      grid.appendChild(b);
+    }
+  };
+  fill(o.items || []);
+  grid.set = fill;
+  return grid;
+};
+
+/* ---------- 標題畫面 ---------- */
+UI.title = (o = {}) => new Promise((resolve) => {
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const letters = [...String(o.title || '')].map((c, i) => (c === ' ' ? ' ' : `<span style="--i:${i}">${esc(c)}</span>`)).join('');
+  const box = el('div', 'pz-title' + (o.backdrop ? ' solid' : '') + (o.cls ? ' ' + o.cls : ''), `<div class="pz-title-in">${o.kicker ? `<div class="pz-title-kicker">${o.kicker}</div>` : ''}<h1 class="pz-title-main" data-t="${esc(o.title)}">${letters}</h1>${o.sub ? `<div class="pz-title-sub">${o.sub}</div>` : ''}<div class="pz-title-menu"></div>${o.items ? '' : `<div class="pz-title-press">${o.press || (Env.touch ? '點一下開始' : '按任意鍵開始')}</div>`}</div>${o.foot ? `<div class="pz-title-foot">${o.foot}</div>` : ''}`);
+  let done = false, layer = null, offPad = null;
+  const close = (v) => {
+    if (done) return; done = true; if (layer) UI.pop(layer); window.removeEventListener('keydown', key, true); if (offPad) offPad();
+    box.classList.add('out'); setTimeout(() => { box.remove(); resolve(v); }, 420);
+  };
+  const key = (e) => { if (!o.items && !e.repeat) { e.preventDefault(); PZ.uiSound('confirm'); close('start'); } };
+  if (o.items) {
+    const menu = box.querySelector('.pz-title-menu');
+    o.items.forEach((it, i) => { const b = el('button', 'pz-btn' + (it.primary ? ' primary' : ''), it.label); b.type = 'button'; b.style.setProperty('--i', i); b.onclick = () => close(it.value !== undefined ? it.value : it.label); menu.appendChild(b); });
+  } else {
+    box.addEventListener('pointerdown', () => { PZ.uiSound('confirm'); close('start'); });
+    setTimeout(() => { if (!done) window.addEventListener('keydown', key, true); }, 300);
+    offPad = Input.onPress('confirm', () => { if (Input.device === 'gamepad') { PZ.uiSound('confirm'); close('start'); } });
+  }
+  Screen.ui.appendChild(box); UI.enhance(box);
+  layer = UI.push(box, null);
 });
 
 /* ---------- 載入畫面 ---------- */
