@@ -18,10 +18,23 @@
 | `tools/smoke.py` | 上線前檢查：檔案、收藏庫本身（手機／電腦／離線）、逐款「開始遊戲 → PZ 圓鈕 → 回收藏庫」（見下面「上線前檢查」） |
 | `tools/memory.py` | 用 WebKit（iPhone Safari 的引擎）量遊戲或收藏庫吃多少記憶體，查閃退用 |
 | `ROADMAP.md` | 待辦、已知問題、已完成（定期維護時先看、做完記下來） |
+| `engine/` | **《PZ 引擎》**：所有 2D 遊戲共用的引擎、組建工具、測試、樣品館（見下面「PZ 引擎」，說明書 `engine/HANDBOOK.md`） |
 
 截圖原檔（`shots/`）太大沒有放進來；網站用的是 `media/` 裡壓縮過的 WebP。重新 build 時，沒有截圖原檔的遊戲會直接沿用上一版 `catalog.json` 裡的圖片設定，不會壞掉。
 
 遊戲原檔（`raw/`）也沒有放進來：從 GitHub 重新 clone 時，`games/<build>/` 裡的就是目前上架的版本，build 會原封不動保留它（只把 PZ 圓鈕的標籤更新成最新版）。要改一款已上架的遊戲：先把 `games/<build>/` 整個資料夾複製成 `_build/raw/<build>/`，在 raw 裡改，再 build（圓鈕那行 build 會重新插，不用手動處理）。有 `sources/<遊戲 id>/` 的遊戲（長明、差一點、墜星、深艙、偷渡者、墜庭）改原始碼、照它的 README 組建，不要直接改打包好的檔。Claude 上的版本（`builds[].artifact`）是另一份，能一起更新就一起更新，不能就記在 ROADMAP 的「已知問題」。
+
+## PZ 引擎（新的 2D 遊戲一律用它）
+
+2026-11-14 起，新的 2D 遊戲都用 `engine/` 的《PZ 引擎》做（3D 照舊）：畫面、手感、聲音、iPhone 的坑、存檔（Claude 版自動雲端存檔）、設定頁、手把都已經做好，一份程式同時出 Claude 版與網頁版。
+**動手前先讀 `engine/HANDBOOK.md`**；會動的範例是樣品館（`engine/lab/`），舊遊戲搬家的範例是《最後一單》（`sources/last-order/`）。
+冷眼（`coldeye-etf`）不在這個範圍：永遠獨立，不套引擎、不改。
+
+```bash
+cd _build/engine
+python3 tools/pzbuild.py ../sources/<id>     # 組一款：dist/artifact（Claude 版）＋ dist/web（複製到 raw/<id>/）
+python3 tools/test_engine.py --perf          # 改引擎後的全套檢查（--webkit 再加 iPhone Safari 的引擎）
+```
 
 ## 遊戲怎麼開（重要）
 
@@ -90,6 +103,7 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 | 深艙 UNDERTOW（深海搜打撤，完整版） | `_build/sources/undertow/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/undertow/`）；`tests/run.py bot 0` 自動玩、`tests/scenarios.py` 檢查核心規則（躲藏、憋氣、陷阱、震爆彈…）、`tests/fuzz_maps.py` 檢查地圖；收藏庫截圖步驟 `tests/shots_steps.py` |
 | 偷渡者 STOWAWAY（太空恐怖生存＋船員指揮，完整版） | `_build/sources/stowaway/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/stowaway/`）；`tests/run.py bot 1500` 自動玩一整航、`tests/flows.py all` 跑六條結局路線；收藏庫截圖步驟 `tests/shots_steps.py` |
 | 墜庭 FALLEN COURT（斜俯視日式回合制撿寶 RPG，第一卷） | `_build/sources/fallen-court/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`，發布後要宣告能力 `{db, user}` 才有雲端存檔）與獨立網頁版（`dist/web/`，複製到 `raw/fallen-court/`）；`node tests/sim.js all` 自動打每一場看平衡、`python3 tests/full.py all` 在瀏覽器裡把整條主線玩過五條分支、`python3 tests/cloud.py` 檢查雲端存檔、`node tests/maps.js` 檢查地圖；收藏庫截圖步驟 `tests/shots_steps.py`；完整企劃在 `DESIGN.md` |
+| 最後一單 LAST ORDER（像素殭屍求生，2.0 PZ 引擎版：第一款搬到引擎的舊遊戲） | `_build/sources/last-order/`：`python3 _build/engine/tools/pzbuild.py _build/sources/last-order` 產生 Claude 版（`dist/artifact/`，發布後要宣告能力 `{db, user}` 才有雲端存檔，目前在 https://claude.ai/artifact/FKfdaq7SNNk1Gurv9Hdc11 ）與獨立網頁版（`dist/web/`，複製到 `raw/last-order/`）；`python3 tests/flow.py phone|land|desk` 把整條流程（舊存檔搬家、選單、劇情、觸控搖桿、升級、Boss、暫停、死亡）在三種畫面各玩一次；搬家做法與規矩見它的 README |
 | 留一口 LEAVE ONE（冰河末回合制狩獵，試作：第一場狩獵） | `_build/sources/leave-one/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/leave-one/`）；`node tests/sim.js 60` 用六種打法各打 60 場看規則與收穫、`python3 tests/run.py flow ice|bleed` 在瀏覽器裡自動玩一整場、`python3 tests/icon.py` 用遊戲畫面重做圖示；收藏庫截圖步驟 `tests/shots_steps.py`；企劃在 `DESIGN.md` |
 
 ## 放在這個網站裡的專屬 App（`apps/`）
@@ -108,6 +122,7 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 | 重新點火 REIGNITE（痞子葳專屬的減重 App，燈塔船修復遊戲化） | `_build/apps/reignite/src/`（劇情、貨物、事件、換法在 `data.js`；規則在 `core.js`） | `python3 _build/apps/reignite/build.py --claude-out /tmp/reignite-claude`：網頁版輸出到 `apps/reignite/`，Claude 版（雲端同步紀錄）另外輸出，發布到 https://claude.ai/artifact/WhsJtzRqYda9tvteFMFXGP；檢查 `python3 _build/apps/reignite/check.py --claude /tmp/reignite-claude`；安全與「不獎勵少吃」的規矩見 `_build/apps/reignite/README.md` |
 | 下回分解 NEXT CHAPTER（閱讀 App：連載小說上架＋匯入電子書＋說書） | `_build/apps/next-chapter/src/` | `python3 _build/apps/next-chapter/build.py`：輸出到 `apps/next-chapter/`（沒有 Claude 版）；檢查 `python3 _build/apps/next-chapter/check.py`。**每寫完一章小說都要上架**：`tools/shelf.py add <book> <章節.md>` 再 push，步驟與規矩（章節不放純文字、說書音軌怎麼錄）見 `_build/apps/next-chapter/README.md`、`ROADMAP.md` |
 | 耳目一新 RESKIN（換膚音樂播放器：播自己的音樂檔＋九套 Skin＋DIY） | `_build/apps/reskin/src/`（一套 Skin 一組 `skins/<id>.js`、`.css`） | `python3 _build/apps/reskin/build.py --claude-out /tmp/reskin-claude`：網頁版輸出到 `apps/reskin/`，Claude 版（試 Skin 用，沒有 service worker）另外輸出，發布到 https://claude.ai/artifact/Dcws22E7CZzxpo9HLH8XUm；檢查 `python3 _build/apps/reskin/check.py --claude /tmp/reskin-claude`。**歌不能接進 Web Audio**（iPhone 鎖屏會沒聲音），鎖屏連播的規矩見 `_build/apps/reskin/README.md`、`ROADMAP.md` |
+| 樣品館 PZ ENGINE LAB（《PZ 引擎》的展示間：打擊感、壓力測試、操控、鏡頭、聲音、後製、介面） | `_build/engine/lab/src/` | `cd _build/engine && python3 tools/pzbuild.py lab`，再把 `lab/dist/web/*` 複製到 `apps/engine-lab/`；Claude 版 `lab/dist/artifact/index.html` 發布到 https://claude.ai/artifact/Gc1xRDKdV3zE1jGCqn68SR （已宣告 `{db, user}`）。改引擎時也要用它看效果（`tools/labshot.py <場景> out.png`） |
 | 全知 OMNISCIENT（冷眼的炫砲戰情看板：讀冷眼的公開資料，盤中即時、收盤後回放當天） | `_build/apps/omniscient/src/` | `python3 _build/apps/omniscient/build.py`：輸出到 `apps/omniscient/`（沒有 Claude 版，artifact 讀不到冷眼的資料）。**只讀不寫冷眼、動畫不產生數字、資料備份不放 localStorage**，鐵律與資料格式見 `_build/apps/omniscient/README.md`；配樂與音效的原始程式在 `audio/`（`audio/make.sh` 重錄成 MP3 放進 `src/audio/`，`audio/out/` 的大檔 wav 不進 git）；本機測試用 `tools/testdata.py`、`tools/shoot.py` |
 
 ## App 怎麼運作（改程式前先看）
