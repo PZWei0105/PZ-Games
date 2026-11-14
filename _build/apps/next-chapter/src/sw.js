@@ -1,11 +1,11 @@
 /* 下回分解 service worker — version __VERSION__ */
-const V = 'pznc-__VERSION__', BOOKS = 'pznc-books-v1', FONTS = 'pznc-fonts-v1';
+const V = 'pznc-__VERSION__', BOOKS = 'pznc-books-v1', FONTS = 'pznc-fonts-v1', LIBS = 'pznc-lib-v1';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(V).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('pznc-') && k !== V && k !== BOOKS && k !== FONTS).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('pznc-') && k !== V && k !== BOOKS && k !== FONTS && k !== LIBS).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request;
@@ -33,6 +33,11 @@ self.addEventListener('fetch', (e) => {
   // 章節與時間軸：網址帶版本碼，內容不會變，存下來就一直用
   if (rel.startsWith('books/')) {
     e.respondWith(caches.open(BOOKS).then((c) => c.match(req).then((hit) => hit || fetch(req).then((r) => { if (r && r.ok) c.put(req, r.clone()); return r; }))));
+    return;
+  }
+  // 用到才下載的大檔（簡轉繁轉換表）：檔名就是版本，存下來就一直用
+  if (rel.startsWith('lib/')) {
+    e.respondWith(caches.open(LIBS).then((c) => c.match(req).then((hit) => hit || fetch(req).then((r) => { if (r && r.ok) c.put(req, r.clone()); return r; }))));
     return;
   }
   // 頁面：先拿最新版，斷網時用存好的

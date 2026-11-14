@@ -8,13 +8,13 @@
   python3 build.py            # 組建
   python3 build.py --icons    # 重新產生圖示（需要 playwright、pillow）
 """
-import argparse, datetime, json, os
+import argparse, datetime, json, os, shutil
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'next-chapter')
-JS_ORDER = ['core.js', 'covers.js', 'sound.js', 'books.js', 'importer.js', 'reader.js', 'narrator.js', 'ui.js', 'main.js']
+JS_ORDER = ['core.js', 'covers.js', 'sound.js', 'conv.js', 'books.js', 'importer.js', 'reader.js', 'narrator.js', 'ui.js', 'main.js']
 
 
 def read(name):
@@ -112,6 +112,11 @@ def main():
         json.dump(MANIFEST, f, ensure_ascii=False, indent=1)
     with open(os.path.join(OUT, 'sw.js'), 'w', encoding='utf-8') as f:
         f.write(read('sw.js').replace('__VERSION__', version))
+    # 用到時才下載的大檔（簡轉繁的轉換表）：原樣複製到 apps/next-chapter/lib/
+    lib = os.path.join(OUT, 'lib')
+    os.makedirs(lib, exist_ok=True)
+    for fn in sorted(os.listdir(os.path.join(SRC, 'lib'))):
+        shutil.copyfile(os.path.join(SRC, 'lib', fn), os.path.join(lib, fn))
     icons = os.path.join(OUT, 'icons')
     if a.icons or not os.path.exists(os.path.join(icons, 'icon-512.png')):
         make_icons(icons)

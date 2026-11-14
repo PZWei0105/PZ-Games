@@ -14,6 +14,9 @@
   說書      有音軌的章：播放、時間在走、唸到的句子有標出來、跟著翻頁、拖進度、語速、睡眠定時、說書現場
   新章      書架多一回 → 提示與「新」標記
   離線      伺服器關掉後還打得開、讀得到存過的章
+  新功能    書房最下面的分類分頁、書架排序、第一次開書的操作說明、書籤（緞帶、清單、長按夾）、書內搜尋（亮字）、
+            分享／複製這一回、前情提要（久沒讀的提要卡、書頁的提要）、夜讀（亮度、暖光）、直排、簡體書自動轉繁體、改分類
+Safari 的排版另外用 check_webkit.py 在 WebKit 裡走一遍（直排、搜尋亮字、夜讀）。
 需要 Playwright（雲端沙盒已裝好 Chromium，不要執行 playwright install）。
 字型：在 _build/tools/fonts 執行 npm i @fontsource/noto-serif-tc @fontsource/lxgw-wenkai-tc @fontsource/noto-sans-tc，截圖才是真正的字。
 有 BAD 時 exit code 1；截圖要打開來親眼看。
@@ -223,7 +226,7 @@ def run(p, name, opts, base, out, tmp, srv):
     ok(js("document.querySelectorAll('.cover-svg').length") >= 2, '封面沒有畫出來')
 
     # ── 書頁 ──
-    act('book')
+    page.locator('.shelf [data-act="book"][data-id="%s"]' % bk['id']).click()
     page.wait_for_selector('#bookv:not([hidden]) .toc .row')
     page.wait_for_timeout(300)
     shot('book')
@@ -234,6 +237,10 @@ def run(p, name, opts, base, out, tmp, srv):
     page.wait_for_timeout(420)
     shot('opening')
     wait_reader()
+    ok(js("!document.querySelector('#coach').hidden"), '第一次開書沒有出現操作說明')
+    shot('coach')
+    page.locator('#coach .btn[data-act="coach-ok"]').click(); page.wait_for_timeout(250)
+    ok(js("document.querySelector('#coach').hidden && localStorage.getItem('pznc.v1.coach') === '1'"), '按「知道了」以後操作說明沒有收起來')
     shot('read-p1')
     a = info()
     ok(a and a['pi'] == 1 and a['pages'] >= 3, '閱讀器沒有分好頁：%s' % a)
@@ -487,10 +494,354 @@ def run(p, name, opts, base, out, tmp, srv):
     br.close()
 
 
+SIMP_PARAS = ['这是一个简体中文的测试文件，我们用它来看看转换对不对。', '软件更新以后，信息会自动同步到手机上，他们说这样比较方便。',
+              '他们走过长长的马路，听见远处的鸟在叫，风吹过来的时候很凉快。', '「你还记得吗？」她问。「当然记得，那时候我们都还很年轻。」']
+
+
+def run_features(p, name, opts, base, out, tmp):
+    import shelf
+    print('\n== %s：新功能 ==' % name, flush=True)
+    lib = shelf.load()
+    zb = next((b for b in lib['books'] if b['id'] == 'zhen-zi-bianguan'), lib['books'][0])
+    br = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required', '--disable-gpu-compositing'])
+    ctx = br.new_context(locale='zh-TW', timezone_id='Asia/Taipei', **opts)
+    clip_ok = True
+    try:
+        ctx.grant_permissions(['clipboard-read', 'clipboard-write'], origin=base)
+    except Exception:
+        clip_ok = False
+        warn('開不了剪貼簿權限，複製的檢查跳過')
+    fr = font_router(base)
+    ctx.route(re.compile(r'^https://fonts\.googleapis\.com/.*'), fr if fr else (lambda r: r.abort()))
+    ctx.route(re.compile(r'^https://fonts\.gstatic\.com/.*'), lambda r: r.abort())
+    page = ctx.new_page()
+    page.add_init_script("if (!sessionStorage.getItem('pznc.t')) { sessionStorage.setItem('pznc.t', '1'); localStorage.setItem('pznc.v1.coach', '1'); }")
+    errs = []
+    page.on('pageerror', lambda e: errs.append('pageerror: ' + str(e)))
+    page.on('console', lambda m: errs.append('console: ' + m.text) if m.type == 'error' and 'Failed to load resource' not in m.text and 'fonts.g' not in m.text else None)
+    W = opts['viewport']['width']
+    touch = opts.get('has_touch', False)
+    n = [0]
+    TOP = "[...document.querySelectorAll('.leaf')].sort((a, b) => (+b.style.zIndex || 0) - (+a.style.zIndex || 0))[0]"
+
+    def shot(tag):
+        n[0] += 1
+        page.screenshot(path=os.path.join(out, '%s-f%02d-%s.png' % (name, n[0], tag)))
+
+    def js(code):
+        return page.evaluate(code)
+
+    def tap(x, y):
+        if touch:
+            page.touchscreen.tap(x, y)
+        else:
+            page.mouse.click(x, y)
+
+    def stage_xy(fx, fy=0.5):
+        b = js("(() => { const b = document.querySelector('#rdStage').getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; })()")
+        return b[0] + b[2] * fx, b[1] + b[3] * fy
+
+    def tap_stage(fx, fy=0.5):
+        tap(*stage_xy(fx, fy))
+
+    def info():
+        return js("(() => { const lf = " + TOP + ", f = lf.querySelector('.pf-r').textContent.split('/').map((s) => +s.trim()), r = document.querySelector('#reader'); return { pi: f[0], pages: f[1], ch: lf.querySelector('.pf-l').textContent, chrome: r.classList.contains('chrome-on'), rtl: document.querySelector('#rdStage').classList.contains('rtl'), v: !!lf.querySelector('.flow.v'), ribbon: document.querySelector('#rdRibbon').classList.contains('on') }; })()")
+
+    def seen():  # 這一頁看得到的句子（橫排、直排都適用）
+        return js("(() => { const lf = " + TOP + ", b = lf.querySelector('.vp').getBoundingClientRect(); return [...lf.querySelectorAll('.s')].filter((s) => [...s.getClientRects()].some((q) => q.right > b.left + 2 && q.left < b.right - 2 && q.bottom > b.top + 2 && q.top < b.bottom - 2)).map((s) => s.textContent); })()")
+
+    def first_start():  # 這一頁第一個「從這一頁開始」的句子（上一頁接過來的半句不算）
+        return js("(() => { const lf = " + TOP + ", b = lf.querySelector('.vp').getBoundingClientRect(); for (const s of lf.querySelectorAll('.s')) { const q = s.getClientRects()[0]; if (q && q.right > b.left + 2 && q.left < b.right - 2 && q.bottom > b.top + 2 && q.top < b.bottom - 2) return s.textContent; } return ''; })()")
+
+    def wait_reader():
+        page.wait_for_function("(() => { const r = document.querySelector('#reader'); return !r.hidden && !r.classList.contains('loading') && document.querySelector('#opening').hidden; })()", timeout=15000)
+        page.wait_for_timeout(350)
+
+    def chrome(on):
+        if info()['chrome'] != on:
+            tap_stage(0.5, 0.45)
+            page.wait_for_timeout(380)
+
+    def turn(d, wait=700):
+        chrome(False)
+        tap_stage(0.9 if d > 0 else 0.08)
+        page.wait_for_timeout(wait)
+
+    def close_sheet():
+        page.locator('.sheet-bg').click(position={'x': W / 2, 'y': 10})
+        page.wait_for_timeout(300)
+
+    def look(k, v):
+        chrome(True)
+        page.locator('[data-act="rd-look"]').click(); page.wait_for_selector('#sheet:not([hidden]) .lk-pv')
+        page.locator('#sheet [data-act="set"][data-k="%s"][data-v="%s"]' % (k, v)).click(); page.wait_for_timeout(900)
+        close_sheet()
+
+    def sliders(bright, warm):
+        js("(() => { for (const [k, v] of [['bright', %d], ['warm', %d]]) { const r = document.querySelector('.lk-sl[data-k=\"' + k + '\"]'); r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); } })()" % (bright, warm))
+        page.wait_for_timeout(250)
+
+    def long_press(x, y):
+        if touch:
+            cdp = ctx.new_cdp_session(page)
+            cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y}]})
+            page.wait_for_timeout(760)
+            cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        else:
+            page.mouse.move(x, y); page.mouse.down(); page.wait_for_timeout(760); page.mouse.up()
+        page.wait_for_timeout(200)
+
+    def mid_sentence():
+        return js("(() => { const lf = " + TOP + ", b = lf.querySelector('.vp').getBoundingClientRect(); for (const s of lf.querySelectorAll('.s')) { const q = s.getClientRects()[0]; if (q && q.top > b.top + b.height * .35 && q.bottom < b.bottom - 20 && q.left > b.left && q.right < b.right && q.width > 30 && q.height > 10) return { x: q.left + Math.min(q.width, 60) / 2, y: q.top + q.height / 2, t: s.textContent }; } return null; })()")
+
+    def clip():
+        try:
+            return page.evaluate('navigator.clipboard.readText()')
+        except Exception as e:
+            return 'ERR ' + str(e)
+
+    def t_ms(c):
+        import datetime
+        s = c.get('at') or (c['added'] + 'T12:00:00+08:00')
+        return datetime.datetime.fromisoformat(s).timestamp() * 1000
+
+    # ── 書房：分類分頁 ──
+    page.goto(base + APP, wait_until='load')
+    page.wait_for_function("document.querySelectorAll('.shelf .bk:not(.add)').length > 0", timeout=15000)
+    page.wait_for_timeout(800)
+    tabs = js("[...document.querySelectorAll('#gbar .gb span')].map((e) => e.textContent)")
+    genres = sorted(set(b.get('genre') or '未分類' for b in lib['books']))
+    ok(not js("document.querySelector('#gbar').hidden") and tabs[:1] == ['全部'] and all(g in tabs for g in genres), '書房最下面的分類分頁不對：%s（書架上的分類：%s）' % (tabs, genres))
+    ok(js("[...document.querySelectorAll('.bk-d')].every((e) => e.textContent.length > 1)"), '書卡下面沒有時間（幾天前更新）')
+    shot('lib')
+    other = next((b for b in lib['books'] if (b.get('genre') or '未分類') != (zb.get('genre') or '未分類')), None)
+    if other:
+        g = other.get('genre') or '未分類'
+        page.locator('#gbar .gb[data-g="%s"]' % g).click(); page.wait_for_timeout(400)
+        want = sorted(b['title'] for b in lib['books'] if (b.get('genre') or '未分類') == g)
+        got = sorted(js("[...document.querySelectorAll('.bk:not(.add) .bk-t')].map((e) => e.textContent)"))
+        ok(got == want and js("document.querySelector('.hero h2').textContent") in want, '選了「%s」，書架應該只剩 %s，結果 %s' % (g, want, got))
+        ok(js("localStorage.getItem('pznc.v1.gsel')") == json.dumps(g, ensure_ascii=False), '選的分類沒有記住')
+        shot('lib-genre')
+        page.locator('#gbar .gb[data-g=""]').click(); page.wait_for_timeout(300)
+    # ── 書架排序 ──
+    if len(lib['books']) > 1:
+        page.locator('.shelf[data-shelf="serial"] .sortb').click(); page.wait_for_selector('#menu:not([hidden])')
+        shot('sort-menu')
+        page.locator('#menu [data-v="old"]').click(); page.wait_for_timeout(300)
+        exp = [b['id'] for b in sorted(lib['books'], key=lambda b: min(t_ms(c) for c in b['chapters']))]
+        ok(js("[...document.querySelectorAll('.shelf[data-shelf=serial] .bk')].map((e) => e.dataset.id)") == exp, '「最早上架」的順序不對')
+        ok('上架' in js("document.querySelector('.shelf[data-shelf=serial] .bk-d').textContent"), '排「最早上架」時，書卡下面應該寫幾月幾日上架')
+        page.locator('.shelf[data-shelf="serial"] .sortb').click(); page.locator('#menu [data-v="upd"]').click(); page.wait_for_timeout(300)
+        exp = [b['id'] for b in sorted(lib['books'], key=lambda b: -max(t_ms(c) + c['n'] for c in b['chapters']))]
+        ok(js("[...document.querySelectorAll('.shelf[data-shelf=serial] .bk')].map((e) => e.dataset.id)") == exp, '「最近更新」的順序不對')
+        ok(json.loads(js("localStorage.getItem('pznc.v1.sort')") or '{}').get('serial') == 'upd', '排序方式沒有記住')
+
+    # ── 書頁：分類、分頁、提要不劇透 ──
+    page.locator('.shelf [data-act="book"][data-id="%s"]' % zb['id']).click(); page.wait_for_selector('#bookv:not([hidden]) .tabs')
+    page.wait_for_timeout(400)
+    ok(js("document.querySelector('#bookv .gchip').textContent") == (zb.get('genre') or '未分類'), '書頁上的分類不對')
+    want_tabs = ['toc', 'marks', 'search'] + (['recap'] if zb.get('recaps') else [])
+    ok(js("[...document.querySelectorAll('#bookv .tab')].map((e) => e.dataset.tab)") == want_tabs, '書頁的分頁不對')
+    ok(js("document.querySelector('#bvRecap').hidden"), '還沒讀過，書頁不應該先給前情提要')
+    if zb.get('recaps'):
+        page.locator('#bookv .tab[data-tab="recap"]').click(); page.wait_for_selector('#bookv .rcl-wrap .empty:not(:empty), #bookv .rcl')
+        page.wait_for_timeout(300)
+        ok(js("document.querySelectorAll('#bookv .rcl li').length") == 0 and '還有' in js("(document.querySelector('#bookv .rc-more') || {}).textContent || ''"), '還沒讀過，提要分頁不應該列出任何一回（會劇透）')
+    # ── 書內搜尋 ──
+    page.locator('#bookv .tab[data-tab="search"]').click(); page.wait_for_selector('#bookv .q')
+    ok(js("document.activeElement && document.activeElement.classList.contains('q')"), '點「搜尋」以後游標沒有放進搜尋框')
+    page.locator('#bookv .q').fill('魏子葳')
+    page.wait_for_selector('#bookv .qhit', timeout=20000); page.wait_for_timeout(900)
+    nhit = js("document.querySelectorAll('#bookv .qhit').length")
+    ok(nhit > 0 and '找到' in js("document.querySelector('#bookv .qstat').textContent"), '書內搜尋找不到「魏子葳」')
+    shot('search')
+    k = min(4, nhit - 1)
+    page.locator('#bookv .qhit').nth(k).click(); wait_reader()
+    m = js("(() => { const lf = " + TOP + ", m = lf.querySelector('mark.hitm'); if (!m) return ''; const r = m.getBoundingClientRect(), v = lf.querySelector('.vp').getBoundingClientRect(); return m.textContent + (r.left >= v.left - 2 && r.right <= v.right + 2 && r.top >= v.top - 2 && r.bottom <= v.bottom + 2 ? '|在這一頁' : '|不在這一頁'); })()")
+    ok(m == '魏子葳|在這一頁', '點搜尋結果以後，找到的字沒有亮在這一頁：%s' % m)
+    shot('search-hit')
+    page.wait_for_timeout(4800)
+    ok(js("!document.querySelector('mark.hitm')"), '亮起來的字過了幾秒沒有還原')
+
+    # ── 書籤 ──
+    chrome(True)
+    page.locator('[data-act="rd-mark"]').click(); page.wait_for_timeout(500)
+    a = info()
+    ok(a['ribbon'] and js("document.querySelector('[data-act=\"rd-mark\"]').getAttribute('aria-pressed')") == 'true', '夾了書籤，頁角沒有緞帶、按鈕也沒有變')
+    shot('ribbon')
+    turn(1); ok(not info()['ribbon'], '翻到下一頁，緞帶應該收起來')
+    turn(-1); ok(info()['ribbon'], '翻回夾書籤的那一頁，緞帶沒有出來')
+    turn(1); turn(1)
+    chrome(True); page.locator('[data-act="rd-toc"]').click(); page.wait_for_selector('#sheet:not([hidden]) .tabs')
+    page.locator('#sheet .tab[data-tab="marks"]').click(); page.wait_for_selector('#sheet .bml .bm')
+    ok(js("document.querySelectorAll('#sheet .bm').length") == 1, '書籤清單應該有一個')
+    shot('marks')
+    page.locator('#sheet .bm').first.click(); page.wait_for_timeout(900)
+    b2 = info()
+    ok(b2['pi'] == a['pi'] and b2['ribbon'], '從書籤清單跳回去，沒有回到夾書籤的那一頁：%s → %s' % (a['pi'], b2['pi']))
+    # ── 長按一句：說書、書籤、複製 ──
+    ms = mid_sentence()
+    if ok(ms is not None, '這一頁找不到可以長按的句子'):
+        long_press(ms['x'], ms['y'])
+        ok(js("!document.querySelector('#pop').hidden"), '長按一句沒有跳出選單')
+        acts = js("[...document.querySelectorAll('#pop button')].map((b) => b.dataset.act)")
+        ok('pop-mark' in acts and 'pop-copy' in acts, '長按選單少了書籤或複製：%s' % acts)
+        shot('longpress')
+        page.locator('#pop [data-act="pop-copy"]').click(); page.wait_for_timeout(400)
+        if clip_ok:
+            ok(clip().strip() == ms['t'].strip(), '長按「複製」複製到的不是那一句')
+        long_press(ms['x'], ms['y'])
+        page.locator('#pop [data-act="pop-mark"]').click(); page.wait_for_timeout(400)
+        ok(js("Object.values(JSON.parse(localStorage.getItem('pznc.v1.bm') || '{}')).flat().length") == 2, '長按「書籤」沒有多一個書籤')
+    # 刪書籤
+    chrome(True); page.locator('[data-act="rd-toc"]').click(); page.wait_for_selector('#sheet:not([hidden]) .tabs')
+    page.locator('#sheet .tab[data-tab="marks"]').click(); page.wait_for_selector('#sheet .bml')
+    page.locator('#sheet .bm-del').first.click(); page.wait_for_timeout(400)
+    ok(js("document.querySelectorAll('#sheet .bm').length") == 1, '刪掉一個書籤以後清單沒有更新')
+    close_sheet()
+
+    # ── 分享這一回 ──
+    chrome(True); page.locator('[data-act="rd-share"]').click(); page.wait_for_selector('#sheet:not([hidden]) [data-act="share-copy"]')
+    page.wait_for_timeout(500)
+    shot('share')
+    page.locator('#sheet [data-act="share-copy"]').click(); page.wait_for_timeout(700)
+    if clip_ok:
+        c = clip()
+        ok(c.startswith('《%s》' % zb['title']) and len(c) > 800, '「複製這一回的全文」複製到的內容不對（%d 字）' % len(c))
+    ok(js("document.querySelector('#sheet').hidden"), '複製完分享抽屜沒有收起來')
+
+    # ── 夜讀 ──
+    chrome(True); page.locator('[data-act="rd-look"]').click(); page.wait_for_selector('#sheet:not([hidden]) .lk-pv')
+    base_bg = js("getComputedStyle(" + TOP + ".querySelector('.leaf-in')).backgroundColor")
+    sliders(50, 80)
+    night = js("({ veil: document.querySelector('#reader').classList.contains('veil'), dim: +getComputedStyle(document.querySelector('.rd-veil')).opacity, bg: getComputedStyle(" + TOP + ".querySelector('.leaf-in')).backgroundColor, pv: getComputedStyle(document.querySelector('.lk-pv')).backgroundColor })")
+    ok(night['veil'] and night['dim'] > .3 and night['bg'] != base_bg and night['pv'] == night['bg'], '夜讀（亮度、暖光）沒有作用，或預覽框跟頁面不一樣：%s' % night)
+    shot('night-sheet')
+    close_sheet(); shot('night')
+    chrome(True); page.locator('[data-act="rd-look"]').click(); page.wait_for_selector('#sheet:not([hidden]) .lk-pv')
+    sliders(100, 0)
+    ok(not js("document.querySelector('#reader').classList.contains('veil')") and js("getComputedStyle(" + TOP + ".querySelector('.leaf-in')).backgroundColor") == base_bg, '夜讀調回來以後顏色沒有還原')
+    ok(json.loads(js("localStorage.getItem('pznc.v1.settings')"))['warm'] == 0, '夜讀的設定沒有存起來')
+    close_sheet()
+
+    # ── 直排（先正常翻一頁：剛從書籤、搜尋跳過來時，記住的是那一句，不是頁首） ──
+    turn(1)
+    keep = first_start()[:10]
+    look('vert', '1')
+    a = info()
+    ok(a['rtl'] and a['v'], '沒有切到直排')
+    ok(any(keep in s for s in seen()), '切到直排以後，原本那一句不在這一頁：「%s」' % keep)
+    shot('vert')
+    chrome(False)
+    tap_stage(0.1); page.wait_for_timeout(750)
+    ok(info()['pi'] == a['pi'] + 1, '直排點左邊沒有翻到下一頁')
+    tap_stage(0.9); page.wait_for_timeout(750)
+    ok(info()['pi'] == a['pi'], '直排點右邊沒有翻回上一頁')
+    x0, y0 = stage_xy(0.07, 0.55); x1, _ = stage_xy(0.6, 0.55)
+    if touch:
+        cdp = ctx.new_cdp_session(page)
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x0, 'y': y0}]})
+        for i in range(1, 9):
+            cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x0 + (x1 - x0) * i / 8, 'y': y0}]}); page.wait_for_timeout(30)
+        shot('vert-fold')
+        cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+    else:
+        page.mouse.move(x0, y0); page.mouse.down()
+        for i in range(1, 9):
+            page.mouse.move(x0 + (x1 - x0) * i / 8, y0); page.wait_for_timeout(30)
+        shot('vert-fold')
+        page.mouse.up()
+    page.wait_for_timeout(800)
+    ok(info()['pi'] == a['pi'] + 1, '直排從左往右拖過半，沒有翻到下一頁')
+    keep = first_start()[:10]
+    look('vert', '0')
+    ok(not info()['rtl'] and any(keep in s for s in seen()), '換回橫排以後，原本那一句不在這一頁：「%s」' % keep)
+
+    # ── 前情提要（久沒讀才跳出來） ──
+    if zb.get('recaps') and len(zb['chapters']) >= 3:
+        rc = json.loads(shelf.unpack(open(os.path.join(shelf.BOOKS, zb['id'], zb['recaps']['f']), 'rb').read()))['recaps']
+        c2, c3 = zb['chapters'][1], zb['chapters'][2]
+        chrome(True); page.locator('[data-act="rd-back"]').click(); page.wait_for_timeout(500)
+        js("(() => { const p = JSON.parse(localStorage.getItem('pznc.v1.prog') || '{}'); p['%s'] = { t: Date.now() - 3 * 864e5, ck: 'n%d', b: 0, s: 0, x: '', f: .2 }; localStorage.setItem('pznc.v1.prog', JSON.stringify(p)); const d = JSON.parse(localStorage.getItem('pznc.v1.done') || '{}'); delete d['%s']; localStorage.setItem('pznc.v1.done', JSON.stringify(d)); localStorage.removeItem('pznc.v1.gsel'); })()" % (zb['id'], c3['n'], zb['id']))
+        page.reload(wait_until='load'); page.wait_for_selector('.hero'); page.wait_for_timeout(700)
+        ok(js("document.querySelector('.hero h2').textContent") == zb['title'], '書房的「上回說到」應該是剛剛讀的那本')
+        page.locator('.hero [data-act="continue"].btn').click(); wait_reader()
+        try:
+            page.wait_for_selector('#rdCard:not([hidden]) .rc-box', timeout=5000)
+            card = js("document.querySelector('#rdCard').textContent")
+            ok(c2['label'] in card and rc[str(c2['n'])][:12] in card, '前情提要卡給的不是上一回（%s）' % c2['label'])
+            shot('recap-card')
+            page.locator('#rdCard [data-act="card-close"]').click(); page.wait_for_timeout(300)
+            ok(js("document.querySelector('#rdCard').hidden"), '按「接著讀」以後提要卡沒有收起來')
+        except Exception:
+            bad('隔了三天再翻開，沒有跳出前情提要卡')
+        ok(info()['ch'].startswith(c3['label']), '前情提要以後沒有回到原本讀的那一回')
+        chrome(True); page.locator('[data-act="rd-back"]').click(); page.wait_for_timeout(500)
+        page.locator('.shelf [data-act="book"][data-id="%s"]' % zb['id']).click(); page.wait_for_selector('#bookv:not([hidden]) .tabs')
+        page.wait_for_timeout(600)
+        ok(js("!document.querySelector('#bvRecap').hidden && document.querySelector('#bvRecap').textContent.includes('%s')" % c2['label']), '書頁上沒有上一回的前情提要')
+        page.locator('#bvRecap [data-act="tab"]').click(); page.wait_for_selector('#bookv .rcl li')
+        page.wait_for_timeout(400)
+        ok(js("document.querySelectorAll('#bookv .rcl li').length") == 2, '讀到第三回，提要應該只列前兩回（不劇透）')
+        shot('recap-tab')
+        page.locator('#bookv [data-act="back"]').click(); page.wait_for_timeout(400)
+        # 排序：最近讀過
+        page.locator('.shelf[data-shelf="serial"] .sortb').click(); page.locator('#menu [data-v="read"]').click(); page.wait_for_timeout(300)
+        ok(js("document.querySelector('.shelf[data-shelf=serial] .bk').dataset.id") == zb['id'], '「最近讀過」應該把剛讀的那本排第一')
+        ok('讀過' in js("document.querySelector('.shelf[data-shelf=serial] .bk-d').textContent"), '排「最近讀過」時，書卡下面應該寫幾分鐘前讀過')
+
+    # ── 簡體書：自動轉繁體、可以換回原文、臺灣用語 ──
+    simp = os.path.join(tmp, '简体测试.txt')
+    open(simp, 'w', encoding='utf-8').write('第一章 开始\n\n' + '\n\n'.join(SIMP_PARAS * 6) + '\n\n第二章 结束\n\n' + '\n\n'.join(SIMP_PARAS * 5) + '\n')
+    page.set_input_files('#file', [simp])
+    page.wait_for_function("[...document.querySelectorAll('.bk-t')].some((e) => e.textContent === '簡體測試')", timeout=20000)
+    page.wait_for_timeout(500)
+    shot('lib-simp')
+    page.locator('.bk:not(.add)', has_text='簡體測試').click(); page.wait_for_selector('#bookv:not([hidden]) .conv')
+    ok(js("document.querySelector('#bookv .conv [data-v=\"tw\"]').getAttribute('aria-pressed')") == 'true', '簡體書匯入以後應該自動轉成繁體')
+    shot('book-simp')
+
+    def chapter_text():
+        page.locator('#bookv .tab[data-tab="toc"]').click()
+        page.locator('#bookv .toc .row').first.click(); wait_reader()
+        t = js("document.querySelector('.leaf .flow').textContent")
+        chrome(True); page.locator('[data-act="rd-back"]').click(); page.wait_for_selector('#bookv:not([hidden]) .conv')
+        return t
+    t = chapter_text()
+    ok('這是一個簡體中文' in t and '这是' not in t, '簡體書的內文沒有轉成繁體')
+    page.locator('#bookv .conv [data-v=""]').click(); page.wait_for_function("document.querySelector('#busy').hidden && document.querySelector('#bookv .conv [data-v=\"\"]').getAttribute('aria-pressed') === 'true'", timeout=10000)
+    t = chapter_text()
+    ok('这是一个简体中文' in t, '換回「原文」以後內文不是原本的簡體字')
+    page.locator('#bookv .conv [data-v="twp"]').click(); page.wait_for_function("document.querySelector('#busy').hidden && document.querySelector('#bookv .conv [data-v=\"twp\"]').getAttribute('aria-pressed') === 'true'", timeout=10000)
+    t = chapter_text()
+    ok('軟體' in t and '資訊' in t, '「繁體＋臺灣用語」沒有把软件、信息換成軟體、資訊')
+    # ── 改分類 ──
+    page.locator('#bookv .gchip').click(); page.wait_for_selector('#sheet:not([hidden]) .gpick')
+    shot('genre-sheet')
+    page.locator('#sheet .gpick [data-g="科幻"]').click(); page.wait_for_timeout(400)
+    ok(js("document.querySelector('#bookv .gchip').textContent") == '科幻', '改了分類，書頁上沒有變')
+    page.locator('#bookv [data-act="back"]').click(); page.wait_for_timeout(400)
+    page.locator('#gbar .gb[data-g="科幻"]').click(); page.wait_for_timeout(400)
+    ok(js("[...document.querySelectorAll('.bk:not(.add) .bk-t')].map((e) => e.textContent)") == ['簡體測試'], '「科幻」分頁裡應該只有剛剛那本')
+    shot('lib-scifi')
+    page.locator('#gbar .gb[data-g=""]').click(); page.wait_for_timeout(300)
+    # ── 書房設定裡的閱讀外觀 ──
+    page.locator('[data-act="settings"]').click(); page.wait_for_selector('#sheet:not([hidden]) [data-act="look-open"]')
+    shot('settings')
+    page.locator('#sheet [data-act="look-open"]').click(); page.wait_for_selector('#sheet:not([hidden]) .lk-pv')
+    shot('settings-look')
+    close_sheet()
+    for e in errs:
+        bad('程式錯誤：' + e[:300])
+    br.close()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default='/tmp/pznc-check')
     ap.add_argument('--only')
+    ap.add_argument('--features', action='store_true', help='只跑新功能那一段')
     a = ap.parse_args()
     from playwright.sync_api import sync_playwright
     shutil.rmtree(a.out, ignore_errors=True); os.makedirs(a.out)
@@ -502,10 +853,15 @@ def main():
         for name, opts in (('phone', PHONE), ('desk', DESK)):
             if a.only and a.only != name:
                 continue
+            if not a.features:
+                try:
+                    run(p, name, opts, base, a.out, tmp, srv)
+                except Exception as ex:
+                    bad('%s：檢查中斷：%s' % (name, str(ex)[:400]))
             try:
-                run(p, name, opts, base, a.out, tmp, srv)
+                run_features(p, name, opts, base, a.out, tmp)
             except Exception as ex:
-                bad('%s：檢查中斷：%s' % (name, str(ex)[:400]))
+                bad('%s：新功能檢查中斷：%s' % (name, str(ex)[:400]))
     srv.shutdown()
     print('\n%d BAD, %d WARN；截圖在 %s' % (len(BAD), len(WARN), a.out))
     sys.exit(1 if BAD else 0)

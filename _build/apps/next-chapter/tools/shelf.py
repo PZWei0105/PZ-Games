@@ -12,8 +12,16 @@
   shelf.py add   <book> <章節.md> [--n 9] [--label 第九章] [--name 咽喉] [--date 2026-11-11]
                                                   新章上架；同一章再 add 一次就是改稿（版本會換，App 會重新下載）
   shelf.py cat   <book> <n>                       印出某一章的純文字（要改稿時先取回）
+  shelf.py recap <book> <n> <提要.txt>             寫／改某一章的前情提要（一段話，一百多字；用 - 代表從標準輸入讀）
+  shelf.py recap <book> <n>                       印出某一章現在的提要
+  shelf.py recap <book>                           列出哪幾章有提要、哪幾章還沒有
+  shelf.py set   <book> [--genre 架空歷史] [--status 已完結] [--title …] [--blurb …] [--seal …] [--motif …] [--cloth …]
+                                                  改書的資料（分類就是 App 書房最下面的分頁）
   shelf.py rm    <book> <n>                       下架一章
-  shelf.py check                                  檢查整個書架（解得開、字數、標點、引號成對）
+  shelf.py check                                  檢查整個書架（解得開、字數、標點、引號成對、提要）
+
+每上架一章，順手寫那一章的前情提要（recap）：App 會在久沒讀的時候先給讀者看「上一回」的提要，
+書頁上也有一整排「提要」可以翻。提要只會給讀到那裡的人看，不會先劇透。
 
 章節 .md 的格式（跟對話裡連寫的檔案一樣）：
   # 書名
@@ -147,14 +155,16 @@ def cmd_books(a):
     for b in lib['books']:
         chars = sum(c['chars'] for c in b['chapters'])
         au = sum(1 for c in b['chapters'] if c.get('au'))
-        print('%-18s 《%s》 %s  %d 章  %d 字  說書音軌 %d 章' % (b['id'], b['title'], b.get('status', ''), len(b['chapters']), chars, au))
+        rc = len(load_recaps(b))
+        print('%-18s 《%s》 %s  %s  %d 章  %d 字  提要 %d 章  說書音軌 %d 章' % (b['id'], b['title'], b.get('status', ''), b.get('genre', '') or '未分類', len(b['chapters']), chars, rc, au))
 
 
 def cmd_list(a):
     b = book_of(load(), a.book)
+    rc = load_recaps(b)
     for c in b['chapters']:
-        print('%3d  %s　%s  %d 字  %s%s%s' % (c['n'], c['label'], c['name'], c['chars'], c['added'],
-                                           '  改稿 ' + c['rev'] if c.get('rev') else '', '  ♪' if c.get('au') else ''))
+        print('%3d  %s　%s  %d 字  %s%s%s%s' % (c['n'], c['label'], c['name'], c['chars'], c['added'],
+                                             '  改稿 ' + c['rev'] if c.get('rev') else '', '  ♪' if c.get('au') else '', '  提要' if str(c['n']) in rc else ''))
 
 
 def cmd_new(a):
@@ -193,15 +203,21 @@ def cmd_add(a):
     os.makedirs(os.path.join(BOOKS, a.book), exist_ok=True)
     with open(os.path.join(BOOKS, a.book, fn), 'wb') as f:
         f.write(data)
-    today = a.date or datetime.datetime.now(TZ).strftime('%Y-%m-%d')
+    now = datetime.datetime.now(TZ)
+    today = a.date or now.strftime('%Y-%m-%d')
     ent = {'n': n, 'label': label, 'name': name, 'f': fn, 'v': hashlib.sha1(data).hexdigest()[:8],
-           'chars': len(re.sub(r'\s', '', body)), 'added': today}
+           'chars': len(re.sub(r'\s', '', body)), 'added': today,
+           'at': (a.date + 'T12:00:00+08:00') if a.date else now.strftime('%Y-%m-%dT%H:%M:%S+08:00')}
     old = next((c for c in b['chapters'] if c['n'] == n), None)
     if old:
         if old['v'] == ent['v'] and old['label'] == label and old['name'] == name:
             print('內容沒有變：%s　%s' % (label, name))
             return
         ent['added'] = old['added']
+        if old.get('at'):
+            ent['at'] = old['at']
+        else:
+            del ent['at']                       # 舊的章只有日期：上架時間不知道，就不要亂填
         if old['v'] != ent['v']:
             ent['rev'] = today
             if old.get('au'):
@@ -215,6 +231,80 @@ def cmd_add(a):
         print('已上架：%s　%s（%d 字）' % (label, name, ent['chars']))
     b['chapters'].sort(key=lambda c: c['n'])
     save(lib)
+    if not old and str(n) not in load_recaps(b):
+        print('提醒：記得寫這一章的前情提要 → shelf.py recap %s %d 提要.txt' % (a.book, n))
+
+
+def load_recaps(b):
+    r = b.get('recaps')
+    if not r:
+        return {}
+    with open(os.path.join(BOOKS, b['id'], r['f']), 'rb') as f:
+        return json.loads(unpack(f.read())).get('recaps', {})
+
+
+def save_recaps(b, rc):
+    rc = {k: rc[k] for k in sorted(rc, key=int)}
+    data = pack(json.dumps({'v': 1, 'recaps': rc}, ensure_ascii=False, separators=(',', ':')))
+    with open(os.path.join(BOOKS, b['id'], 'recaps.pzc'), 'wb') as f:
+        f.write(data)
+    b['recaps'] = {'f': 'recaps.pzc', 'v': hashlib.sha1(data).hexdigest()[:8], 'n': len(rc)}
+
+
+def cmd_recap(a):
+    lib = load()
+    b = book_of(lib, a.book)
+    rc = load_recaps(b)
+    if a.n is None:
+        have = [c['n'] for c in b['chapters'] if str(c['n']) in rc]
+        miss = [c['n'] for c in b['chapters'] if str(c['n']) not in rc]
+        print('《%s》有提要：%s' % (b['title'], have or '無'))
+        print('還沒有：%s' % (miss or '無'))
+        return
+    c = next((c for c in b['chapters'] if c['n'] == a.n), None)
+    if not c:
+        sys.exit('沒有第 %d 章' % a.n)
+    if a.file is None:
+        print(rc.get(str(a.n), '（第 %d 章還沒有提要）' % a.n))
+        return
+    raw = sys.stdin.read() if a.file == '-' else open(a.file, encoding='utf-8').read()
+    text = ''.join(ln.strip() for ln in raw.replace('\r', '').replace('\ufeff', '').split('\n')).strip()
+    if not text:
+        sys.exit('提要是空的')
+    half = sorted(set(re.findall(r'[,;:!?"()]', text)))
+    if half:
+        print('注意：提要裡有半形標點：', ' '.join(half))
+    if not 40 <= len(text) <= 240:
+        print('注意：提要 %d 字（建議一百到一百五十字，一段話）' % len(text))
+    old = rc.get(str(a.n))
+    if old == text:
+        print('提要沒有變：%s　%s' % (c['label'], c['name']))
+        return
+    rc[str(a.n)] = text
+    save_recaps(b, rc)
+    save(lib)
+    print('%s：%s　%s 的前情提要（%d 字）' % ('已改' if old else '已寫好', c['label'], c['name'], len(text)))
+
+
+def cmd_set(a):
+    lib = load()
+    b = book_of(lib, a.book)
+    changed = []
+    for k in ('title', 'author', 'status', 'genre', 'blurb'):
+        v = getattr(a, k)
+        if v is not None and b.get(k) != v:
+            b[k] = v
+            changed.append(k)
+    for k in ('cloth', 'seal', 'motif'):
+        v = getattr(a, k)
+        if v is not None and b['cover'].get(k) != v:
+            b['cover'][k] = v
+            changed.append(k)
+    if not changed:
+        print('沒有要改的')
+        return
+    save(lib)
+    print('已更新《%s》：%s' % (b['title'], '、'.join(changed)))
 
 
 def cmd_cat(a):
@@ -238,6 +328,10 @@ def cmd_rm(a):
         p = os.path.join(BOOKS, a.book, fn)
         if os.path.exists(p):
             os.remove(p)
+    rc = load_recaps(b)
+    if str(a.n) in rc:
+        del rc[str(a.n)]
+        save_recaps(b, rc)
     save(lib)
     print('已下架：%s　%s' % (c['label'], c['name']))
 
@@ -282,6 +376,23 @@ def cmd_check(a):
                     if not os.path.exists(os.path.join(BOOKS, b['id'], c['au'][k])):
                         print('BAD ', tag, '說書音軌檔案不見了：', c['au'][k])
                         bad += 1
+        if b.get('recaps'):
+            p = os.path.join(BOOKS, b['id'], b['recaps']['f'])
+            try:
+                with open(p, 'rb') as f:
+                    data = f.read()
+                rc = json.loads(unpack(data)).get('recaps', {})
+                if hashlib.sha1(data).hexdigest()[:8] != b['recaps']['v']:
+                    print('BAD ', '《%s》前情提要的版本碼跟檔案不符（忘了用 recap？）' % b['title'])
+                    bad += 1
+                miss = [c['n'] for c in b['chapters'] if str(c['n']) not in rc]
+                if miss:
+                    print('WARN', '《%s》這幾章還沒寫前情提要：%s' % (b['title'], miss))
+            except Exception as e:
+                print('BAD ', '《%s》前情提要解不開：' % b['title'], e)
+                bad += 1
+        elif b['chapters']:
+            print('WARN', '《%s》還沒有前情提要（shelf.py recap %s <n> 提要.txt）' % (b['title'], b['id']))
         ns = [c['n'] for c in b['chapters']]
         gaps = [n for n in range(1, max(ns + [0]) + 1) if n not in ns]
         if gaps:
@@ -304,6 +415,12 @@ def main():
     p.add_argument('--label'); p.add_argument('--name'); p.add_argument('--date'); p.set_defaults(fn=cmd_add)
     p = sp.add_parser('cat'); p.add_argument('book'); p.add_argument('n', type=int); p.set_defaults(fn=cmd_cat)
     p = sp.add_parser('rm'); p.add_argument('book'); p.add_argument('n', type=int); p.set_defaults(fn=cmd_rm)
+    p = sp.add_parser('recap'); p.add_argument('book'); p.add_argument('n', type=int, nargs='?'); p.add_argument('file', nargs='?')
+    p.set_defaults(fn=cmd_recap)
+    p = sp.add_parser('set'); p.add_argument('book')
+    for k in ('title', 'author', 'status', 'genre', 'blurb', 'cloth', 'seal', 'motif'):
+        p.add_argument('--' + k)
+    p.set_defaults(fn=cmd_set)
     sp.add_parser('check').set_defaults(fn=cmd_check)
     a = ap.parse_args()
     a.fn(a)

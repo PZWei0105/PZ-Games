@@ -34,12 +34,15 @@
       <div class="leaf" id="leafB"><div class="leaf-in"><div class="vp"><div class="flow"></div></div><div class="pg-foot"><span class="pf-l"></span><span class="pf-r"></span></div></div></div>
       <div class="flapc off" id="flapC"><div class="flap"><div class="ghost"><div class="vp"><div class="flow"></div></div></div></div></div>
       <div class="foldsh off" id="foldSh"></div>
+      <div class="rd-ribbon" id="rdRibbon" aria-hidden="true"></div>
     </div>
     <div class="rd-scroll" id="rdScroll" hidden><div class="flow" id="scFlow"></div></div>
     <header class="rd-top">
       <button type="button" class="ib" data-act="rd-back" aria-label="回到書頁"></button>
       <div class="rd-title"><b id="rdBook"></b><span id="rdCh"></span></div>
-      <button type="button" class="ib" data-act="rd-toc" aria-label="目錄"></button>
+      <button type="button" class="ib" data-act="rd-mark" aria-label="這一頁加書籤"></button>
+      <button type="button" class="ib" data-act="rd-toc" aria-label="目錄、書籤、搜尋"></button>
+      <button type="button" class="ib" data-act="rd-share" aria-label="複製或分享這一回"></button>
       <button type="button" class="ib" data-act="rd-look" aria-label="字體與外觀"></button>
     </header>
     <footer class="rd-bot">
@@ -51,10 +54,15 @@
       <div class="rd-acts"><span id="rdPos"></span><button type="button" class="btn gilt" data-act="rd-narr"></button></div>
     </footer>
     <button type="button" class="rd-pill" id="rdFollow" data-act="rd-follow" hidden>回到說書的地方</button>
+    <div class="rd-veil" id="rdVeil" aria-hidden="true"></div>
+    <div class="rd-card" id="rdCard" data-act="card-close" hidden></div>
+    <div class="coach" id="coach" hidden></div>
     <div class="rd-load" aria-hidden="true"><i></i></div>
   </section>
 
+  <nav id="gbar" hidden aria-label="分類"></nav>
   <div id="mini" hidden></div>
+  <div id="menu" hidden role="menu"></div>
   <div id="sheet" class="sheet" hidden>
     <div class="sheet-bg" data-act="sheet-close"></div>
     <div class="sheet-panel" role="dialog" aria-modal="true" tabindex="-1"><div class="sheet-grab" data-act="sheet-close" aria-hidden="true"><i></i></div><div id="sheetBody"></div></div>
