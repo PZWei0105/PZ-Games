@@ -148,6 +148,71 @@ window.__selftest = async () => {
   await PZ.go('t', null, { type: 'iris', time: 0.1 }); ok('圓形轉場', PZ.scenes.name === 't');
   PZ.loop.stop();
 
+  // ---- 光影：環境光、燈、陰影、手電筒、嵌在牆裡的燈、環境光區塊、視線 ----
+  const K = PZ.cam.ez, cx = S.w / 2, cy = S.h / 2, floor = (g) => g.rect(-300, -300, 600, 600, '#ffffff');
+  PZ.cam.x = 0; PZ.cam.y = 0; drawHook = floor;
+  PZ.light.on({ ambient: '#404040' }); PZ.loop.step(1);
+  const amb = readPx(cx + 120, cy + 120);
+  ok('光影：環境光讓畫面變暗', near(amb, [64, 64, 64], 14), amb);
+  const L1 = PZ.light.add({ x: 0, y: 0, r: 200, color: '#ffffff', intensity: 1 }); PZ.loop.step(1);
+  const lc0 = readPx(cx, cy), lc1 = readPx(cx + 100 * K, cy);
+  ok('光影：燈的中心比原色還亮（2× 光照）', lc0[0] > 240, lc0);
+  ok('光影：離燈越遠越暗', lc1[0] > amb[0] + 30 && lc1[0] < lc0[0] - 30, lc1);
+  const box = PZ.light.box(40, -25, 20, 50); PZ.loop.step(1);
+  const shd = readPx(cx + 120 * K, cy), opn = readPx(cx, cy + 120 * K);
+  ok('光影：牆後面有影子', shd[0] < opn[0] - 35 && shd[0] < amb[0] + 25, shd + ' / ' + opn);
+  ok('光影：視線檢查 PZ.light.blocked', PZ.light.blocked(0, 0, 120, 0) === true && PZ.light.blocked(0, 0, 0, 120) === false);
+  const a1 = PZ.light.at(120, 0), a2 = PZ.light.at(0, 120), a3 = PZ.light.at(500, 500);
+  ok('光影：亮度查詢 PZ.light.at', a1 < a2 && Math.abs(a1 - 0.251) < 0.03 && Math.abs(a3 - 0.251) < 0.03, [a1, a2, a3].map((v) => v.toFixed(2)).join(','));
+  L1.remove(); box.remove();
+  const C1 = PZ.light.add({ x: 0, y: 0, r: 220, cone: 0.4, dir: 0, intensity: 1 }); PZ.loop.step(1);
+  const cf = readPx(cx + 100 * K, cy), cb = readPx(cx - 100 * K, cy);
+  ok('光影：手電筒只照前面', cf[0] > cb[0] + 50 && near(cb, amb, 18), cf + ' / ' + cb);
+  C1.remove();
+  const wall = PZ.light.box(-20, -20, 40, 40), T1 = PZ.light.add({ x: 0, y: 0, r: 200, intensity: 1 }); PZ.loop.step(1);
+  const tp = readPx(cx + 80 * K, cy);
+  ok('光影：嵌在牆裡的燈（火把）照得到外面', tp[0] > amb[0] + 50, tp);
+  wall.remove(); T1.remove();
+  const Z1 = PZ.light.zone(-200, -300, 100, 600, { ambient: '#ffffff', soft: 1 }); PZ.loop.step(1);
+  const zin = readPx(cx - 150 * K, cy), zout = readPx(cx + 120 * K, cy);
+  ok('光影：環境光區塊（這一塊不變暗）', zin[0] > 225 && near(zout, amb, 16), zin + ' / ' + zout);
+  Z1.remove();
+  drawHook = (g) => { floor(g); g.lighting(); g.rect(-10, -10, 20, 20, '#ff0000'); }; PZ.loop.step(1);
+  ok('光影：g.lighting() 之後畫的發光物不變暗', near(readPx(cx, cy), [255, 0, 0], 20), readPx(cx, cy));
+  PZ.art.make('t-tall', 10, 40, (c, w, h) => { c.fillStyle = '#fff'; c.fillRect(0, 0, w, h); }, { anchor: [0.5, 1] });
+  drawHook = (g) => { floor(g); g.castShadow('t-tall', 0, 0, { angle: 0, len: 1, a: 0.8, soft: false }); };
+  PZ.light.off(); PZ.loop.step(1);
+  const csh = readPx(cx + 15 * K, cy), cno = readPx(cx - 15 * K, cy);
+  ok('角色投影：往指定方向拖', csh[0] < 120 && cno[0] > 230, csh + ' / ' + cno);
+  drawHook = (g) => { g.hud(); g.beam(20, 300, 0, 200, 4, 60, '#ffffff', { a: 1, end: 1 }); }; PZ.loop.step(1);
+  const bm = readPx(180, 300), be = readPx(180, 300 + 34);
+  ok('光束：中間亮、邊緣淡', bm[0] > 150 && be[0] < bm[0] - 60, bm + ' / ' + be);
+  // ---- 水面倒影、調色、黑邊 ----
+  drawHook = (g) => { g.rect(-300, -300, 600, 300, '#ff0000'); g.rect(-300, 0, 600, 300, '#0000ff'); g.water(-300, 0, 600, 250, { reflect: 1, depth: 0, ripple: 0, foam: 0 }); };
+  PZ.loop.step(1); const wp = readPx(cx, cy + 15 * K);
+  ok('水面：倒映上面的東西', wp[0] > 150 && wp[2] < 140, wp);
+  drawHook = (g) => g.rect(-300, -300, 600, 600, '#ff0000');
+  PZ.post.grade('noir', { time: 0 }); PZ.loop.step(1); const gp = readPx(cx, cy);
+  ok('調色：黑白', Math.abs(gp[0] - gp[1]) < 14 && Math.abs(gp[1] - gp[2]) < 14 && gp[0] < 200, gp);
+  PZ.post.grade('warm', { time: 0.2 }); PZ.loop.step(4, 1 / 60); const mid = PZ.post._lut.mix;
+  PZ.loop.step(20, 1 / 60); ok('調色：淡入淡出換過去', mid > 0.05 && mid < 0.95 && PZ.post._lut.b === null, mid.toFixed(2));
+  PZ.post.grade(null, { time: 0 }); PZ.loop.step(2);
+  ok('調色：回到原色', near(readPx(cx, cy), [255, 0, 0], 16), readPx(cx, cy));
+  PZ.fx.letterbox(0.1, 0); PZ.loop.step(1);
+  ok('電影黑邊', near(readPx(cx, 4), [0, 0, 0], 8) && near(readPx(cx, S.h - 4), [0, 0, 0], 8) && near(readPx(cx, cy), [255, 0, 0], 16), readPx(cx, 4));
+  PZ.fx.letterbox(0, 0); PZ.loop.step(1);
+  // ---- 天氣 ----
+  PZ.weather.set('rain', { time: 0 }); PZ.loop.step(30, 1 / 60);
+  ok('天氣：下雨有雨滴', PZ.weather.rain === 1 && PZ.weather.drops.length > 20, PZ.weather.drops.length);
+  PZ.weather.set('clear', { time: 0.5 }); PZ.loop.step(45, 1 / 60); ok('天氣：放晴（淡出）', PZ.weather.rain === 0 && PZ.weather.to.rain === 0, PZ.weather.rain);
+  PZ.weather.strike({ sound: false }); PZ.loop.step(2); ok('天氣：打雷有閃電', PZ.weather.bolts.length === 1);
+  PZ.weather.set('snow', { time: 0 }); PZ.loop.step(20, 1 / 60); ok('天氣：下雪', PZ.weather.flakes.length > 10, PZ.weather.flakes.length);
+  PZ.weather.set('fog', { time: 0 }); drawHook = floor; PZ.loop.step(2); ok('天氣：霧（貼圖做得出來）', PZ.art.has('pz.fog') && PZ.art.get('pz.fog').tex);
+  PZ.light.on({ ambient: '#202020' }); PZ.light.add({ x: 0, y: 0, r: 100 });
+  PZ.loop.start(); await PZ.go('t2', null, { type: 'none' });
+  ok('換場景：光影、天氣自動清掉', !PZ.light.active && PZ.light.lights.length === 0 && PZ.weather.fog === 0 && PZ.weather.flakes.length === 0);
+  await PZ.go('t', null, { type: 'none' }); PZ.loop.stop();
+
   // ---- WebGL 遺失與恢復 ----
   const ext = PZ.gfx.r.gl.getExtension('WEBGL_lose_context');
   if (ext) {
@@ -155,6 +220,9 @@ window.__selftest = async () => {
     ok('WebGL 遺失時不出錯', PZ.gfx.r.lost === true);
     ext.restoreContext(); await sleep(150);
     drawHook = drawBasic; PZ.loop.step(1); checkBasic('恢復後');
+    drawHook = (g) => g.rect(-300, -300, 600, 600, '#ffffff'); PZ.light.on({ ambient: '#404040' }); PZ.light.box(40, -25, 20, 50); PZ.light.add({ x: 0, y: 0, r: 200 }); PZ.loop.step(1);
+    ok('恢復後：光影與陰影照常', near(readPx(S.w / 2 + 120 * PZ.cam.ez, S.h / 2), [64, 64, 64], 26) && readPx(S.w / 2, S.h / 2 + 100 * PZ.cam.ez)[0] > 100, readPx(S.w / 2 + 120 * PZ.cam.ez, S.h / 2));
+    PZ.light.reset();
   } else ok('WebGL 遺失測試（沒有擴充，略過）', true);
 
   // ---- Canvas2D 後備 ----
@@ -167,6 +235,11 @@ window.__selftest = async () => {
   drawHook = (g) => { g.hud(); g.spr(live, 300, 100, 0, 4, 4); }; PZ.loop.step(1);
   ok('Canvas2D 即時貼圖：改大小後畫布還在', liveCv.width === 10 && near(readPx(310, 110), [255, 255, 0]), liveCv.width + ' ' + readPx(310, 110));
 
+  drawHook = (g) => g.rect(-300, -300, 600, 600, '#ffffff'); PZ.light.on({ ambient: '#404040' }); PZ.loop.step(1);
+  ok('Canvas2D 光影：環境光', near(readPx(S.w / 2 + 120, S.h / 2 + 120), [64, 64, 64], 16), readPx(S.w / 2 + 120, S.h / 2 + 120));
+  PZ.light.add({ x: 0, y: 0, r: 200 }); PZ.loop.step(1); ok('Canvas2D 光影：燈', readPx(S.w / 2, S.h / 2)[0] > 200, readPx(S.w / 2, S.h / 2));
+  drawHook = (g) => { g.rect(-300, -300, 600, 300, '#ff0000'); g.rect(-300, 0, 600, 300, '#0000ff'); g.water(-300, 0, 600, 250, { reflect: 1, depth: 0, foam: 0 }); };
+  PZ.light.reset(); PZ.loop.step(1); ok('Canvas2D 水面倒影', readPx(S.w / 2, S.h / 2 + 15)[0] > 120, readPx(S.w / 2, S.h / 2 + 15));
   ok('沒有引擎錯誤', PZ.debug.errors.length === 0, PZ.debug.errors.map((e) => e.msg).join(' / '));
   return results;
 };

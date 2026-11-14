@@ -45,7 +45,7 @@ addSystem({
   render() {
     if (!Debug.statsOn || !Debug.statsEl || Time.frame % 10) return;
     const r = Gfx.r, st = r ? r.stats : {};
-    Debug.statsEl.textContent = `${Time.fps.toFixed(0)} fps  ${(Time.rdt * 1000).toFixed(1)} ms  (${Time.refresh}Hz)\n更新 ${Perf.upd.toFixed(2)} ms  繪圖 ${Perf.ren.toFixed(2)} ms\n${Gfx.kind}  批次 ${st.draws || 0}  方塊 ${st.quads || 0}\n粒子 ${Particles.n}  畫質 ${Quality.cur.name}${Quality.auto ? '(自動)' : ''}  ${Screen.pw}×${Screen.ph}\n音訊 ${Aud.ctx ? Aud.ctx.state : '未啟動'}  聲部 ${Sfx.voices.length}${Debug.errors.length ? '  錯誤 ' + Debug.errors.length : ''}`;
+    Debug.statsEl.textContent = `${Time.fps.toFixed(0)} fps  ${(Time.rdt * 1000).toFixed(1)} ms  (${Time.refresh}Hz)\n更新 ${Perf.upd.toFixed(2)} ms  繪圖 ${Perf.ren.toFixed(2)} ms\n${Gfx.kind}  批次 ${st.draws || 0}  方塊 ${st.quads || 0}${Light.active ? '  燈 ' + (st.lights || 0) : ''}${Weather.active() ? '  天氣 ' + Weather.name : ''}\n粒子 ${Particles.n}  畫質 ${Quality.cur.name}${Quality.auto ? '(自動)' : ''}  ${Screen.pw}×${Screen.ph}\n音訊 ${Aud.ctx ? Aud.ctx.state : '未啟動'}  聲部 ${Sfx.voices.length}${Debug.errors.length ? '  錯誤 ' + Debug.errors.length : ''}`;
   },
 });
 Debug.init = (cfg) => {
@@ -64,6 +64,6 @@ if (HAS_DOM) {
     pause: () => { Loop.stop(); }, resume: () => { Loop.start(); },
     seed: (n) => PZ.seed(n),
     get errors() { return Debug.errors.map((e) => e.msg + ' @' + e.where); },
-    state: () => ({ scene: Scenes.name, fps: Math.round(Time.fps), renderer: Gfx.kind, tier: Quality.tier, particles: Particles.n, quads: Gfx.r ? Gfx.r.stats.quads : 0, draws: Gfx.r ? Gfx.r.stats.draws : 0, w: Screen.w, h: Screen.h, res: Screen.res, audio: Aud.ctx ? Aud.ctx.state : 'none', errors: Debug.errors.length }),
+    state: () => ({ scene: Scenes.name, fps: Math.round(Time.fps), renderer: Gfx.kind, tier: Quality.tier, particles: Particles.n, quads: Gfx.r ? Gfx.r.stats.quads : 0, draws: Gfx.r ? Gfx.r.stats.draws : 0, lights: Gfx.r ? Gfx.r.stats.lights || 0 : 0, w: Screen.w, h: Screen.h, res: Screen.res, audio: Aud.ctx ? Aud.ctx.state : 'none', errors: Debug.errors.length }),
   };
 }

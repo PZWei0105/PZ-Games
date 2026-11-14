@@ -24,7 +24,7 @@ class C2DRenderer {
   texDelete(t) { if (t.canvas && !t.live) { t.canvas.width = t.canvas.height = 0; } t.canvas = null; this.textures.delete(t); } // live＝遊戲自己的畫布，不清
   begin(clear) {
     this.w = this.canvas.width; this.h = this.canvas.height;
-    this.stats.draws = this.stats.quads = 0;
+    this.stats.draws = this.stats.quads = this.stats.lights = 0;
     const c = this.ctx; this.cur = c;
     c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
     c.fillStyle = Color.css(Color.alpha(clear == null ? '#000' : clear, 1)); c.fillRect(0, 0, this.w, this.h);
@@ -77,11 +77,17 @@ class C2DRenderer {
       x.drawImage(this.glowOf(color), 0, 0, 1, 1);
     }
   }
-  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add) {
+  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add) { this.quadv(t, x0, y0, 0, 0, x1, y1, 0, 0, x2, y2, 0, 0, x3, y3, 0, 0, c0, c1, mode, add); }
+  quadv(t, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, x3, y3, u3, v3, c0, c1, mode, add) {
     const x = this.cur; x.setTransform(1, 0, 0, 1, 0, 0);
-    x.globalAlpha = (cA(c0) + cA(c1)) / 2; if (x.globalAlpha <= 0.002) return;
     x.globalCompositeOperation = add > 0.5 ? 'lighter' : this.blendOp;
-    x.fillStyle = Color.css(Color.mix(c0, c1, 0.5) | 0xff000000);
+    if (mode === MODE.beam) { // 光束：沿長度漸層（橫向柔邊做不到，用整塊淡一點代替）
+      x.globalAlpha = 0.7; const g = x.createLinearGradient((x0 + x3) / 2, (y0 + y3) / 2, (x1 + x2) / 2, (y1 + y2) / 2);
+      g.addColorStop(0, Color.css(c0)); g.addColorStop(1, Color.css(c1)); x.fillStyle = g;
+    } else {
+      x.globalAlpha = (cA(c0) + cA(c1)) / 2; if (x.globalAlpha <= 0.002) return;
+      x.fillStyle = Color.css(Color.mix(c0, c1, 0.5) | 0xff000000);
+    }
     x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.lineTo(x2, y2); x.lineTo(x3, y3); x.closePath(); x.fill();
   }
   tri(x1, y1, x2, y2, x3, y3, color, add) {
@@ -90,6 +96,46 @@ class C2DRenderer {
     x.fillStyle = Color.css(color | 0xff000000); x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.lineTo(x3, y3); x.closePath(); x.fill();
   }
   flush() { }
+  /** 光影（沒有陰影）：小張的光照圖，用 multiply 疊上去 */
+  lighting(S) {
+    if (this.cur !== this.ctx) return false;
+    const sc = 0.25, lw = Math.max(1, Math.ceil(this.w * sc)), lh = Math.max(1, Math.ceil(this.h * sc));
+    const lc = this._lc || (this._lc = document.createElement('canvas'));
+    if (lc.width !== lw || lc.height !== lh) { lc.width = lw; lc.height = lh; }
+    const x = lc.getContext('2d'), a = S.ambient, b = (v) => Math.max(0, Math.min(255, v * 255)) | 0;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+    x.fillStyle = `rgb(${b(a[0])},${b(a[1])},${b(a[2])})`; x.fillRect(0, 0, lw, lh);
+    if (S.zones) for (const z of S.zones) { x.globalAlpha = z.a; x.fillStyle = `rgb(${b(z.r)},${b(z.g)},${b(z.b)})`; x.fillRect(z.x0 * sc, z.y0 * sc, (z.x1 - z.x0) * sc, (z.y1 - z.y0) * sc); }
+    x.globalAlpha = 1; x.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < S.n; i++) {
+      const l = S.lights[i], px = l.x * sc, py = l.y * sc, r = Math.max(1, l.r * sc), rgb = `${b(l.cr * 2)},${b(l.cg * 2)},${b(l.cb * 2)}`;
+      const g = x.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0, `rgba(${rgb},1)`); g.addColorStop(0.3, `rgba(${rgb},.62)`); g.addColorStop(0.65, `rgba(${rgb},.2)`); g.addColorStop(1, `rgba(${rgb},0)`);
+      x.fillStyle = g; x.beginPath();
+      if (l.cone) { const ang = Math.atan2(l.cone[1], l.cone[0]), half = Math.acos(clamp(l.cone[2], -1, 1)); x.moveTo(px, py); x.arc(px, py, r, ang - half, ang + half); x.closePath(); }
+      else x.arc(px, py, r, 0, TAU);
+      x.fill();
+    }
+    const c = this.ctx; c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'multiply'; c.imageSmoothingEnabled = true;
+    c.drawImage(lc, 0, 0, this.w, this.h); c.restore();
+    this.stats.lights = (this.stats.lights || 0) + S.n;
+    return true;
+  }
+  /** 水面：倒影＋上色（扭曲、熱浪做不到） */
+  grab(o) {
+    if (this.cur !== this.ctx || o.mode === 2) return false;
+    const c = this.ctx, r = o.rect, w = r[2] - r[0], h = r[3] - r[1]; if (w <= 0 || h <= 0) return false;
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over';
+    c.beginPath(); if (o.shape) c.ellipse(r[0] + w / 2, r[1] + h / 2, w / 2, h / 2, 0, 0, TAU); else c.rect(r[0], r[1], w, h); c.clip();
+    if (o.mode === 0 && o.reflect > 0) {
+      const sy = Math.max(0, r[1] - h), sh = r[1] - sy;
+      if (sh > 1) { c.save(); c.globalAlpha = o.reflect * 0.75; c.translate(0, 2 * r[1]); c.scale(1, -1); c.drawImage(this.canvas, r[0], sy, w, sh, r[0], sy, w, sh); c.restore(); }
+    }
+    const k = o.col; c.globalAlpha = k[3] * 0.65; c.fillStyle = `rgb(${k[0] * 255 | 0},${k[1] * 255 | 0},${k[2] * 255 | 0})`; c.fillRect(r[0], r[1], w, h);
+    if (o.mode === 0 && o.foam > 0) { c.globalAlpha = o.foam * 0.5; c.fillStyle = '#fff'; c.fillRect(r[0], r[1], w, Math.max(1, o.scale)); }
+    c.restore();
+    return true;
+  }
   hud() {
     if (!this.inScene) return; this.inScene = false;
     const x = this.ctx; x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over';

@@ -10,7 +10,7 @@
 .lab-card { position: relative; text-align: left; border: 0; cursor: pointer; padding: 18px 18px 16px 64px; border-radius: 16px; color: var(--pz-text); font: inherit; min-height: 84px;
   background: linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02)), var(--lab-glass); box-shadow: 0 0 0 1px rgba(255, 255, 255, .09) inset, 0 14px 40px rgba(0, 0, 0, .35);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform .18s cubic-bezier(.2, .9, .25, 1.2), box-shadow .2s; animation: lab-in .6s cubic-bezier(.2, .9, .25, 1.1) both; }
-.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; }
+.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; } .lab-card:nth-child(8) { animation-delay: .35s; } .lab-card:nth-child(9) { animation-delay: .4s; } .lab-card:nth-child(10) { animation-delay: .45s; }
 .lab-card:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255, 181, 71, .45) inset, 0 18px 50px rgba(0, 0, 0, .45); }
 .lab-card:active, .lab-card.pz-press { transform: scale(.97); }
 .lab-card.pz-focus { box-shadow: 0 0 0 2px var(--pz-accent2) inset, 0 0 28px rgba(70, 212, 255, .35); }

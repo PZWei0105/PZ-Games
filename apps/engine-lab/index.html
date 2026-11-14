@@ -20,7 +20,7 @@
 .lab-card { position: relative; text-align: left; border: 0; cursor: pointer; padding: 18px 18px 16px 64px; border-radius: 16px; color: var(--pz-text); font: inherit; min-height: 84px;
   background: linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02)), var(--lab-glass); box-shadow: 0 0 0 1px rgba(255, 255, 255, .09) inset, 0 14px 40px rgba(0, 0, 0, .35);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform .18s cubic-bezier(.2, .9, .25, 1.2), box-shadow .2s; animation: lab-in .6s cubic-bezier(.2, .9, .25, 1.1) both; }
-.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; }
+.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; } .lab-card:nth-child(8) { animation-delay: .35s; } .lab-card:nth-child(9) { animation-delay: .4s; } .lab-card:nth-child(10) { animation-delay: .45s; }
 .lab-card:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255, 181, 71, .45) inset, 0 18px 50px rgba(0, 0, 0, .45); }
 .lab-card:active, .lab-card.pz-press { transform: scale(.97); }
 .lab-card.pz-focus { box-shadow: 0 0 0 2px var(--pz-accent2) inset, 0 0 28px rgba(70, 212, 255, .35); }
@@ -64,8 +64,8 @@
 }
 </style></head>
 <body><div id="pz-root"><div id="pz-ui"></div></div>
-<script>/* PZ Engine 1.0.2 */
-/*! PZ Engine v1.0.2 (2026-11-14.d1d123e2) — 痞子葳 × Claude 的 2D 遊戲引擎。
+<script>/* PZ Engine dev */
+/*! PZ Engine v1.1.0 (2026-11-14.6a4cf087) — 痞子葳 × Claude 的 2D 遊戲引擎。
     說明書：PZ-Games repo 的 _build/engine/HANDBOOK.md */
 (function (global) {
 'use strict';
@@ -75,7 +75,7 @@
    整個引擎包在一個 IIFE 裡，只對外公開 window.PZ。
    模組之間共用這個閉包裡的變數（例如 Screen、Input、R），不必互相 import。
    ========================================================================== */
-const PZ = { version: '1.0.2', build: '2026-11-14.d1d123e2' };
+const PZ = { version: '1.1.0', build: '2026-11-14.6a4cf087' };
 const HAS_DOM = typeof document !== 'undefined' && typeof window !== 'undefined';
 const nowMs = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
 const noop = () => { };
@@ -1215,7 +1215,7 @@ Input.init = () => {
    ========================================================================== */
 const MAX_QUADS = 8192, VERT_WORDS = 6, QUAD_WORDS = VERT_WORDS * 4;
 const BLEND = { normal: 0, multiply: 1, screen: 2, erase: 3, add: 4 };
-const MODE = { sprite: 0, solid: 1, circle: 2, ring: 3, glow: 4, line: 5, silhouette: 6 };
+const MODE = { sprite: 0, solid: 1, circle: 2, ring: 3, glow: 4, line: 5, silhouette: 6, beam: 7 };
 
 const SPRITE_VS = `#version 300 es
 layout(location=0) in vec2 aPos;
@@ -1259,8 +1259,13 @@ void main(){
   } else if (vMode == 5) {
     float d = abs(vUV.y); float aa = max(fwidth(d), 1e-4);
     c = col * (1.0 - smoothstep(1.0 - aa, 1.0, d));
-  } else {
+  } else if (vMode == 6) {
     c = col * tx(vTex, vUV).a;
+  } else {
+    // 光束：v 是「到中線的距離 ÷ 寬端半寬」，除以這裡的半寬比例（窄端比例放在 param）才不會在梯形對角線折一下
+    float hw = mix(vParam, 1.0, clamp(vUV.x, 0.0, 1.0));
+    float a = clamp(1.0 - abs(vUV.y) / max(hw, 0.001), 0.0, 1.0);
+    c = col * (a * a * (3.0 - 2.0 * a));
   }
   c.a *= (1.0 - vAdd);
   o = c;
@@ -1308,7 +1313,15 @@ uniform vec2 uRes; uniform float uTime; uniform float uAspect;
 uniform vec4 uWave[4]; uniform vec4 uWaveP[4]; uniform int uWaves;
 uniform float uChroma; uniform float uBloomAmt; uniform float uVig; uniform vec3 uVigCol; uniform float uGrain;
 uniform float uSat; uniform float uContrast; uniform float uBright; uniform vec3 uTint; uniform vec4 uFlash; uniform float uScan; uniform float uWarp;
+uniform sampler2D uLut0; uniform sampler2D uLut1; uniform float uLutMix; uniform float uLutAmt;
 in vec2 vUV; out vec4 o;
+// 16³ 調色表（256×16 的長條：藍色分 16 片、每片 16×16 是紅×綠）
+vec3 lut(sampler2D t, vec3 c){
+  c = clamp(c, 0.0, 1.0);
+  float b = c.b * 15.0, b0 = floor(b), b1 = min(b0 + 1.0, 15.0);
+  float x = c.r * 15.0 + 0.5, y = (c.g * 15.0 + 0.5) / 16.0;
+  return mix(texture(t, vec2((b0 * 16.0 + x) / 256.0, y)).rgb, texture(t, vec2((b1 * 16.0 + x) / 256.0, y)).rgb, b - b0);
+}
 void main(){
   vec2 uv = vUV;
   if (uWarp > 0.0) { vec2 c = uv - 0.5; uv = 0.5 + c * (1.0 + dot(c, c) * uWarp); }
@@ -1326,11 +1339,150 @@ void main(){
   col = mix(vec3(l), col, uSat);
   col = (col - 0.5) * uContrast + 0.5 + uBright;
   col *= uTint;
+  if (uLutAmt > 0.0) { vec3 g = lut(uLut0, col); if (uLutMix > 0.0) g = mix(g, lut(uLut1, col), uLutMix); col = mix(col, g, uLutAmt); }
   if (uVig > 0.0) { vec2 q = vUV - 0.5; q.x *= mix(1.0, uAspect, 0.5); float v = 1.0 - smoothstep(0.2, 0.85, length(q) * 1.15); col = mix(uVigCol, col, mix(1.0, v, uVig)); }
   if (uScan > 0.0) col *= 1.0 - uScan * (0.5 + 0.5 * sin(vUV.y * uRes.y * 3.14159));
   col = mix(col, uFlash.rgb, uFlash.a);
   if (uGrain > 0.0) { float n = fract(sin(dot(vUV * uRes + fract(uTime) * 91.7, vec2(12.9898, 78.233))) * 43758.5453); col += (n - 0.5) * uGrain; }
   o = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
+
+/* ---- 光影（25_light.js 用）：遮光圖 → 跳躍填色（JFA）算距離場 → 每盞燈一個方塊，柔和陰影 ---- */
+// JFA 每個格子存「最近的牆邊格子的相對位移」：r、g＝dx、dy（偏 128，±127 格內），b＝那個牆邊格子被蓋住多少（0.5～1，0＝沒找到；用來算到次像素的邊），a＝這格自己在不在牆裡
+// 種子是「牆的邊緣」：牆外的點量到牆邊、牆裡的點量到出口 → 有正負號的距離場，光走進牆裡也能平順地算
+const JFA_SEED_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uTex; out vec4 o;
+void main(){
+  ivec2 p = ivec2(gl_FragCoord.xy), S = textureSize(uTex, 0);
+  float a = texelFetch(uTex, p, 0).a; bool ins = a > 0.5, edge = false;
+  if (ins) {
+    if (p.x + 1 < S.x && texelFetch(uTex, p + ivec2(1, 0), 0).a <= 0.5) edge = true;
+    if (p.x > 0 && texelFetch(uTex, p - ivec2(1, 0), 0).a <= 0.5) edge = true;
+    if (p.y + 1 < S.y && texelFetch(uTex, p + ivec2(0, 1), 0).a <= 0.5) edge = true;
+    if (p.y > 0 && texelFetch(uTex, p - ivec2(0, 1), 0).a <= 0.5) edge = true;
+  }
+  o = vec4(128.0 / 255.0, 128.0 / 255.0, edge ? max(a, 0.51) : 0.0, ins ? 1.0 : 0.0);
+}`;
+const JFA_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uTex; uniform int uStep; uniform ivec2 uSize; out vec4 o;
+void main(){
+  ivec2 p = ivec2(gl_FragCoord.xy); int best = 1 << 30; ivec2 bo = ivec2(0); float bc = 0.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    ivec2 q = p + ivec2(i, j) * uStep;
+    if (q.x < 0 || q.y < 0 || q.x >= uSize.x || q.y >= uSize.y) continue;
+    vec4 s = texelFetch(uTex, q, 0); if (s.b < 0.25) continue;
+    ivec2 off = q + ivec2(floor(s.rg * 255.0 + 0.5)) - 128 - p; int d = off.x * off.x + off.y * off.y;
+    if (d < best) { best = d; bo = off; bc = s.b; }
+  }
+  float ins = texelFetch(uTex, p, 0).a;
+  o = (bc > 0.25 && abs(bo.x) <= 127 && abs(bo.y) <= 127) ? vec4((vec2(bo) + 128.0) / 255.0, bc, ins) : vec4(128.0 / 255.0, 128.0 / 255.0, 0.0, ins);
+}`;
+// 畫布像素座標的方塊（燈、水面）：uRect＝x0,y0,x1,y1（畫布 px，y 往下）
+const RECT_VS = `#version 300 es
+uniform vec4 uRect; uniform vec2 uCanvas; out vec2 vP;
+void main(){ vec2 c = vec2(float(gl_VertexID & 1), float((gl_VertexID >> 1) & 1)); vec2 p = mix(uRect.xy, uRect.zw, c); vP = p; gl_Position = vec4(p.x / uCanvas.x * 2.0 - 1.0, 1.0 - p.y / uCanvas.y * 2.0, 0.0, 1.0); }`;
+const LIGHT_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uJfa; uniform vec2 uCanvas; uniform vec2 uMS; uniform ivec2 uMSize;
+uniform vec2 uPos; uniform float uRad; uniform vec3 uCol; uniform float uHaze; uniform vec4 uCone; uniform float uFall;
+uniform vec4 uSh; uniform float uSeed; uniform float uFar;
+in vec2 vP; layout(location=0) out vec4 o; layout(location=1) out vec4 oHaze;
+vec2 toM(vec2 p){ return vec2(p.x * uMS.x, (uCanvas.y - p.y) * uMS.y); }
+// 有正負號的距離（遮光圖的格子）：牆外＝到牆邊多遠，牆裡＝負的（到出口多遠）；畫面外當成空地
+float sdf(vec2 m){
+  if (m.x < 0.0 || m.y < 0.0 || m.x >= float(uMSize.x) || m.y >= float(uMSize.y)) return uFar;
+  ivec2 t = ivec2(floor(m)); vec4 s = texelFetch(uJfa, t, 0); float d = uFar;
+  float c = 1.0;
+  if (s.b > 0.25) { ivec2 off = ivec2(floor(s.rg * 255.0 + 0.5)) - 128; d = length(m - (vec2(t + off) + 0.5)); c = s.b; }
+  return s.a > 0.5 ? -(d + c - 0.5) : max(d + 0.5 - c, 0.0);
+}
+float shadow(vec2 p, vec2 l){
+  vec2 v = l - p; float len = length(v); if (len < 1.0) return 1.0;
+  vec2 dir = v / len; float res = 1.0, t = 0.0, tEnd = len, d;
+  // 燈本身嵌在牆裡（牆上的火把）：燈旁邊那段牆不擋
+  if (sdf(l) < 0.0) { float e = 0.0; for (int i = 0; i < 24; i++) { d = sdf(l - dir * e); if (d >= 0.0 || e >= len) break; e += max(-d, 0.5); } tEnd = len - e; }
+  // 自己就在牆裡：光只滲進表面一點點（牆面、柱子朝燈的那一側有亮邊）。走出自己這面牆之後，從出口再往燈算
+  float t0 = 0.0;
+  if (sdf(p) < 0.0) {
+    d = -1.0;
+    for (int i = 0; i < 24; i++) { d = sdf(p + dir * t); if (d >= 0.0 || t >= tEnd) break; t += max(-d, 0.35); }
+    float pen = d >= 0.0 ? max(t - d, 0.0) : t;
+    res = 1.0 - smoothstep(uSh.z * 0.3, uSh.z + 0.001, pen);
+    if (res < 0.003) return 0.0;
+    if (t >= tEnd) return res;
+    t0 = t; t += 1.0;
+  } else t = 1.0;
+  // 往燈的方向跳著走（距離場說可以放心跳多遠），順便量「擦邊」多近 → 半影
+  float k = len / max(uSh.y, 0.5); int steps = int(uSh.w);
+  for (int i = 0; i < 64; i++) {
+    if (i >= steps || t >= tEnd - max(uSh.y, 1.0)) break;   // 光源本身有大小：擦過燈旁邊（光源範圍內）的牆不算擋住
+    d = sdf(p + dir * t);
+    if (d <= 0.0) return 0.0;
+    res = min(res, k * d / (t - t0)); if (res < 0.003) return 0.0;
+    t += max(d, 0.75);
+  }
+  res = clamp(res, 0.0, 1.0); return res * res * (3.0 - 2.0 * res);
+}
+void main(){
+  vec2 d = vP - uPos; float L = length(d), s = L / uRad;
+  if (s >= 1.0) discard;
+  float w = clamp(1.0 - s * s * s * s, 0.0, 1.0), att = w * w / (1.0 + uFall * s * s);
+  if (uCone.z > -1.5) { vec2 dn = L > 0.001 ? d / L : uCone.xy; att *= max(smoothstep(uCone.z, uCone.w, dot(dn, uCone.xy)), (1.0 - smoothstep(0.0, 0.04, s)) * 0.5); }
+  if (att < 0.002) discard;
+  float sh = uSh.x > 0.5 ? shadow(toM(vP), toM(uPos)) : 1.0;
+  vec3 c = uCol * att * sh;
+  float n = fract(sin(dot(gl_FragCoord.xy + uSeed, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+  o = vec4(c + n * (1.5 / 255.0), 1.0); oHaze = vec4(c * uHaze, 1.0);
+}`;
+// 環境光區塊（室內暗、室外亮；側視遊戲的天空背景）：方塊內換成另一種環境光，邊緣柔和
+const ZONE_FS = `#version 300 es
+precision highp float;
+uniform vec4 uRect; uniform vec4 uCol; uniform float uSoft; in vec2 vP; layout(location=0) out vec4 o; layout(location=1) out vec4 oHaze;
+void main(){ vec2 d = min(vP - uRect.xy, uRect.zw - vP); float m = smoothstep(0.0, max(uSoft, 0.001), min(d.x, d.y)) * uCol.a; o = vec4(uCol.rgb * 0.5, m); oHaze = vec4(0.0); }`;
+const APPLY_FS = `#version 300 es
+precision mediump float;
+uniform sampler2D uTex; in vec2 vUV; out vec4 o;
+void main(){ o = vec4(texture(uTex, vUV).rgb, 1.0); }`;
+// 水面、熱浪：先把畫面「抓」下來，再用扭曲過的座標讀回去
+const GRAB_FS = `#version 300 es
+precision highp float;
+uniform sampler2D uGrab; uniform vec2 uCanvas; uniform vec4 uRect; uniform float uTime;
+uniform vec4 uCol; uniform vec4 uP; uniform vec4 uW; uniform vec4 uSky; uniform float uShape;
+in vec2 vP; out vec4 o;
+vec2 uvOf(vec2 p){ p = clamp(p, vec2(0.5), uCanvas - 0.5); return vec2(p.x / uCanvas.x, 1.0 - p.y / uCanvas.y); }
+void main(){
+  vec2 sz = max(uRect.zw - uRect.xy, vec2(1.0)), q = (vP - uRect.xy) / sz;
+  vec2 wp = (vP - uRect.xy) / uW.x + uW.yz; float t = uTime * uW.w; int mode = int(uP.x + 0.5);
+  if (mode == 2) {
+    float edge = smoothstep(0.0, 0.25, q.x) * smoothstep(1.0, 0.75, q.x) * smoothstep(0.0, 0.35, q.y) * smoothstep(1.0, 0.8, q.y);
+    vec2 off = vec2(sin(wp.y * 0.09 + t * 5.0) + sin(wp.y * 0.23 - t * 7.0 + wp.x * 0.05) * 0.5, sin(wp.x * 0.11 + t * 4.0) * 0.4) * uP.y * edge;
+    float m = uShape > 0.5 ? 1.0 - smoothstep(0.82, 1.0, length(q * 2.0 - 1.0)) : 1.0;
+    o = vec4(texture(uGrab, uvOf(vP + off)).rgb * m, m); return;
+  }
+  float depth = mode == 0 ? q.y : 0.5;
+  float ax = sin(wp.x * 0.045 + t * 1.7) * 0.6 + sin(wp.x * 0.13 - t * 2.3 + wp.y * 0.07) * 0.4;
+  float ay = sin(wp.y * 0.09 + t * 1.9 + wp.x * 0.02) * 0.5 + sin(wp.x * 0.07 + t * 1.1) * 0.5;
+  vec2 rip = vec2(ax, ay) * uP.y * (0.35 + depth * 0.9);
+  vec3 col = texture(uGrab, uvOf(vP + rip * 0.6)).rgb;
+  if (mode == 0) {
+    vec2 src = vec2(vP.x + rip.x * 1.4, 2.0 * uRect.y - vP.y + rip.y * 1.8);
+    vec3 refl = texture(uGrab, uvOf(src)).rgb;
+    if (src.y < 0.0) refl = uSky.rgb;
+    float f = uP.z * (0.25 + 0.75 * (1.0 - smoothstep(0.0, 1.0, depth)));
+    col = mix(col, refl, f);
+    float line = 1.0 - smoothstep(0.0, max(1.5, uW.x * 1.2), abs(vP.y - uRect.y - ay * uP.y * 0.3));
+    col += line * uP.w * 0.5;
+  } else {
+    float c1 = sin(wp.x * 0.08 + t * 1.3 + sin(wp.y * 0.07 + t)) * sin(wp.y * 0.09 - t * 1.1 + sin(wp.x * 0.05));
+    col += vec3(pow(max(c1, 0.0), 6.0)) * uP.z * 0.45;
+  }
+  col = mix(col, uCol.rgb, uCol.a * (0.3 + 0.7 * depth));
+  // 橢圓（水窪、池塘）：邊緣柔和地淡掉，還有一圈亮邊
+  float m = 1.0;
+  if (uShape > 0.5) { float e = length(q * 2.0 - 1.0); m = 1.0 - smoothstep(0.86, 1.0, e); col += smoothstep(0.7, 0.93, e) * (1.0 - smoothstep(0.93, 1.0, e)) * uP.w * 0.25; }
+  o = vec4(col * m, m);
 }`;
 
 /** 後製參數（PZ.post）：特效模組會去動它們；遊戲也可以直接設 */
@@ -1364,7 +1516,7 @@ class GLRenderer {
     if (!gl) throw new Error('這台裝置不支援 WebGL2');
     this.gl = gl;
     this.textures = new Set();
-    this.stats = { draws: 0, quads: 0, flushes: 0, tex: 0 };
+    this.stats = { draws: 0, quads: 0, flushes: 0, tex: 0, lights: 0 };
     this.buf = new ArrayBuffer(MAX_QUADS * QUAD_WORDS * 4);
     this.f32 = new Float32Array(this.buf); this.u32 = new Uint32Array(this.buf);
     this.n = 0; this.slots = []; this.blend = 0; this.target = null; this.inScene = false; this.lost = false;
@@ -1382,7 +1534,10 @@ class GLRenderer {
     this.pBright = program(gl, FULL_VS, BRIGHT_FS, ['uTex', 'uTexel', 'uThresh']);
     this.pDown = program(gl, FULL_VS, DOWN_FS, ['uTex', 'uTexel']);
     this.pUp = program(gl, FULL_VS, UP_FS, ['uTex', 'uTexel']);
-    this.pComp = program(gl, FULL_VS, COMP_FS, ['uScene', 'uBloom', 'uRes', 'uTime', 'uAspect', 'uWave', 'uWaveP', 'uWaves', 'uChroma', 'uBloomAmt', 'uVig', 'uVigCol', 'uGrain', 'uSat', 'uContrast', 'uBright', 'uTint', 'uFlash', 'uScan', 'uWarp']);
+    this.pComp = program(gl, FULL_VS, COMP_FS, ['uScene', 'uBloom', 'uRes', 'uTime', 'uAspect', 'uWave', 'uWaveP', 'uWaves', 'uChroma', 'uBloomAmt', 'uVig', 'uVigCol', 'uGrain', 'uSat', 'uContrast', 'uBright', 'uTint', 'uFlash', 'uScan', 'uWarp', 'uLut0', 'uLut1', 'uLutMix', 'uLutAmt']);
+    // 光影、水面用的著色器：第一次用到才編譯（沒用光影的遊戲不花這個時間）
+    this.pl = null; this.lfbo = {}; this.lfboKey = ''; this.grabTex = null; this.grabW = 0; this.grabH = 0;
+    this.lut = [null, null]; this.lutVer = [-1, -1];
     this.vao = gl.createVertexArray(); gl.bindVertexArray(this.vao);
     this.vbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo); gl.bufferData(gl.ARRAY_BUFFER, this.buf.byteLength, gl.DYNAMIC_DRAW);
     const stride = VERT_WORDS * 4;
@@ -1429,22 +1584,31 @@ class GLRenderer {
   texClear(t) { if (this.lost || !t.gl) return; this.flush(); const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, t.gl); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, t.w, t.h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); }
   texDelete(t) { if (t.gl && !this.lost) { this.flush(); this.gl.deleteTexture(t.gl); if (t.fb) this.gl.deleteFramebuffer(t.fb); } t.gl = null; t.fb = null; this.textures.delete(t); }
   /* ---- 離屏畫布（場景、泛光）---- */
+  /** 建一張離屏畫布：o.nearest（不內插）、o.extra（多一張同大小的貼圖接在第二個出口，畫光的時候順便畫霧裡的光） */
+  makeFbo(w, h, o = {}) {
+    const gl = this.gl; w = Math.max(1, w | 0); h = Math.max(1, h | 0);
+    const tx = () => {
+      const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      const f = o.nearest ? gl.NEAREST : gl.LINEAR;
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return tex;
+    };
+    const tex = tx(), fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const out = { tex, fb, w, h, tex2: null };
+    if (o.extra) { out.tex2 = tx(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, out.tex2, 0); }
+    return out;
+  }
+  dropFbo(f) { if (!f) return; const gl = this.gl; gl.deleteTexture(f.tex); if (f.tex2) gl.deleteTexture(f.tex2); gl.deleteFramebuffer(f.fb); }
   ensureFbos() {
     const key = this.w + 'x' + this.h + ':' + (Quality.cur.bloom || 0);
     if (key === this.fboSize) return;
     this.fboSize = key;
     const gl = this.gl;
-    for (const k in this.fbo) { const f = this.fbo[k]; gl.deleteTexture(f.tex); gl.deleteFramebuffer(f.fb); }
+    for (const k in this.fbo) this.dropFbo(this.fbo[k]);
     this.fbo = {};
-    const mk = (name, w, h) => {
-      w = Math.max(1, w | 0); h = Math.max(1, h | 0);
-      const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-      this.fbo[name] = { tex, fb, w, h };
-    };
+    const mk = (name, w, h) => { this.fbo[name] = this.makeFbo(w, h); };
     mk('scene', this.w, this.h);
     const b = Quality.cur.bloom || 0;
     if (b) { const d = b >= 2 ? 2 : 4; mk('b0', this.w / d, this.h / d); mk('b1', this.w / d / 2, this.h / d / 2); mk('b2', this.w / d / 4, this.h / d / 4); }
@@ -1456,17 +1620,17 @@ class GLRenderer {
     if (this.lost) return;
     const gl = this.gl;
     this.w = this.canvas.width; this.h = this.canvas.height;
-    this.stats.draws = this.stats.quads = this.stats.flushes = 0;
-    this.n = 0; this.slots.length = 0;
+    this.stats.draws = this.stats.quads = this.stats.flushes = this.stats.lights = 0;
+    this.n = 0; this.slots.length = 0; this.inTarget = false;
     this.inScene = this.usePost();
     if (this.inScene) { this.ensureFbos(); this.bindTarget(this.fbo.scene.fb, this.w, this.h, false); }
     else this.bindTarget(null, this.w, this.h, false);
     const c = toColor(clear == null ? '#000' : clear);
     gl.clearColor(cR(c) / 255, cG(c) / 255, cB(c) / 255, 1); gl.clear(gl.COLOR_BUFFER_BIT);
   }
-  bindTarget(fb, w, h, rt) {
+  bindTarget(fb, w, h, rt, vw, vh) {
     const gl = this.gl; this.flush();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0, 0, w, h);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0, 0, vw || w, vh || h);
     gl.useProgram(this.sp.p); gl.bindVertexArray(this.vao);
     // 畫到貼圖（rt）時 y 不翻：貼圖第 0 列在下面，之後當貼圖用時 UV 翻一下
     gl.uniform2f(this.sp.u.uView, 2 / w, rt ? 2 / h : -2 / h); gl.uniform2f(this.sp.u.uOff, -1, rt ? -1 : 1);
@@ -1476,12 +1640,12 @@ class GLRenderer {
   /** 開始畫到某張貼圖（rt：用 texCreate(w, h, {rt:true}) 建的）；endTarget() 回到原本的地方 */
   beginTarget(t, clear) {
     if (this.lost) return;
-    this.flush(); this._prevTarget = this.inScene ? this.fbo.scene : null;
+    this.flush(); this._prevTarget = this.inScene ? this.fbo.scene : null; this.inTarget = true;
     if (!t.gl) this.texAlloc(t);
     this.bindTarget(t.fb, t.w, t.h, true);
     if (clear !== undefined) { const gl = this.gl, c = toColor(clear); gl.clearColor(cR(c) / 255 * cA(c), cG(c) / 255 * cA(c), cB(c) / 255 * cA(c), cA(c)); gl.clear(gl.COLOR_BUFFER_BIT); }
   }
-  endTarget() { if (this.lost) return; const p = this._prevTarget; this.bindTarget(p ? p.fb : null, this.w, this.h, false); }
+  endTarget() { this.inTarget = false; if (this.lost) return; const p = this._prevTarget; this.bindTarget(p ? p.fb : null, this.w, this.h, false); }
   applyBlend(b, force) {
     if (b === this.blend && !force) return;
     this.flush(); this.blend = b; const gl = this.gl;
@@ -1516,7 +1680,9 @@ class GLRenderer {
     this.n++;
   }
   /** 任意四個角的四邊形（拖尾、梯形光束）：0→1→2→3 順時針；c0 給 0、3 角，c1 給 1、2 角（可以一頭濃一頭淡） */
-  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add, param) {
+  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add, param) { this.quadv(t, x0, y0, u0, v0, x1, y1, u1, v0, x2, y2, u1, v1, x3, y3, u0, v1, c0, c1, mode, add, param); }
+  /** 同上，但四個角各自給貼圖座標（光束要用） */
+  quadv(t, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, x3, y3, u3, v3, c0, c1, mode, add, param) {
     if (this.lost) return;
     if (t && !t.gl) { if (t.restore) t.restore(t); if (!t.gl) return; }
     if (this.n >= MAX_QUADS) this.flush();
@@ -1524,9 +1690,9 @@ class GLRenderer {
     const ext = ((((param * 255) & 255) << 24) | (((add * 255) & 255) << 16) | ((mode & 255) << 8) | slot) >>> 0;
     const F = this.f32, U = this.u32; let i = this.n * QUAD_WORDS;
     F[i] = x0; F[i + 1] = y0; F[i + 2] = u0; F[i + 3] = v0; U[i + 4] = c0; U[i + 5] = ext; i += 6;
-    F[i] = x1; F[i + 1] = y1; F[i + 2] = u1; F[i + 3] = v0; U[i + 4] = c1; U[i + 5] = ext; i += 6;
-    F[i] = x2; F[i + 1] = y2; F[i + 2] = u1; F[i + 3] = v1; U[i + 4] = c1; U[i + 5] = ext; i += 6;
-    F[i] = x3; F[i + 1] = y3; F[i + 2] = u0; F[i + 3] = v1; U[i + 4] = c0; U[i + 5] = ext;
+    F[i] = x1; F[i + 1] = y1; F[i + 2] = u1; F[i + 3] = v1; U[i + 4] = c1; U[i + 5] = ext; i += 6;
+    F[i] = x2; F[i + 1] = y2; F[i + 2] = u2; F[i + 3] = v2; U[i + 4] = c1; U[i + 5] = ext; i += 6;
+    F[i] = x3; F[i + 1] = y3; F[i + 2] = u3; F[i + 3] = v3; U[i + 4] = c0; U[i + 5] = ext;
     this.n++;
   }
   /** 實心三角形（多邊形拆成三角形用）：第二個三角形退化 */
@@ -1548,6 +1714,125 @@ class GLRenderer {
     gl.drawElements(gl.TRIANGLES, this.n * 6, gl.UNSIGNED_SHORT, 0);
     this.stats.draws++; this.stats.quads += this.n;
     this.n = 0; this.slots.length = 0;
+  }
+  /* ---- 光影、水面（著色器第一次用到才編譯）---- */
+  lightProgs() {
+    if (this.pl) return this.pl;
+    const gl = this.gl;
+    this.pl = {
+      seed: program(gl, FULL_VS, JFA_SEED_FS, ['uTex']),
+      jfa: program(gl, FULL_VS, JFA_FS, ['uTex', 'uStep', 'uSize']),
+      light: program(gl, RECT_VS, LIGHT_FS, ['uRect', 'uCanvas', 'uJfa', 'uMS', 'uMSize', 'uPos', 'uRad', 'uCol', 'uHaze', 'uCone', 'uFall', 'uSh', 'uSeed', 'uFar']),
+      apply: program(gl, FULL_VS, APPLY_FS, ['uTex']),
+      zone: program(gl, RECT_VS, ZONE_FS, ['uRect', 'uCanvas', 'uCol', 'uSoft']),
+      grab: program(gl, RECT_VS, GRAB_FS, ['uRect', 'uCanvas', 'uGrab', 'uTime', 'uCol', 'uP', 'uW', 'uSky', 'uShape']),
+    };
+    return this.pl;
+  }
+  /**
+   * 光影（25_light.js 呼叫）。S = { ambient: [r,g,b]（0～1）, zones: [{ x0,y0,x1,y1（畫布 px）, r,g,b,a, soft }], lights, n, scale（光照圖解析度）, mask（遮光圖解析度）, shadows, steps, drawOcc()（畫遮光物）, haze }
+   * 每盞燈：{ x, y, r（畫布 px）, cr, cg, cb（已乘強度）, cone: null | [dx, dy, cos外, cos內], size, soak（畫布 px）, sh, haze, fall }
+   */
+  lighting(S) {
+    if (this.lost || this.inTarget) return false;
+    const gl = this.gl, P = this.lightProgs();
+    this.flush();
+    const W = this.w, H = this.h, prev = this.inScene ? this.fbo.scene : null;
+    const lw = Math.max(1, Math.ceil(W * S.scale)), lh = Math.max(1, Math.ceil(H * S.scale));
+    const mk = S.mask || S.scale, mw = Math.max(1, Math.ceil(W * mk)), mh = Math.max(1, Math.ceil(H * mk)), key = lw + 'x' + lh + '/' + mw + 'x' + mh;
+    if (key !== this.lfboKey) {
+      for (const k in this.lfbo) this.dropFbo(this.lfbo[k]);
+      this.lfbo = { lm: this.makeFbo(lw, lh, { extra: true }), mask: this.makeFbo(mw, mh), j0: this.makeFbo(mw, mh, { nearest: true }), j1: this.makeFbo(mw, mh, { nearest: true }) };
+      this.lfboKey = key;
+    }
+    const F = this.lfbo; let jfa = null;
+    if (S.shadows && S.drawOcc) {
+      // 1) 遮光圖：用平常的畫圖程式、照相機畫，只是畫在小張的圖上
+      const pb = this.blend; this.applyBlend(0, true);
+      this.bindTarget(F.mask.fb, W, H, false, mw, mh);
+      gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      try { S.drawOcc(); } catch (e) { reportError(e, 'light.occluders'); }
+      this.flush(); this.blend = pb;
+      // 2) 距離場（JFA：步長 reach、reach/2 … 1；最遠量到 2×reach 格，再遠就當「很遠」）
+      gl.disable(gl.BLEND); gl.bindVertexArray(this.emptyVao);
+      const pass = (prog, src, dst) => { gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.viewport(0, 0, mw, mh); gl.useProgram(prog.p); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, src.tex); gl.uniform1i(prog.u.uTex, 0); };
+      pass(P.seed, F.mask, F.j0); gl.drawArrays(gl.TRIANGLES, 0, 3);
+      let a = F.j0, b = F.j1;
+      for (let st = S.reach || 64; st >= 1; st >>= 1) { pass(P.jfa, a, b); gl.uniform1i(P.jfa.u.uStep, st); gl.uniform2i(P.jfa.u.uSize, mw, mh); gl.drawArrays(gl.TRIANGLES, 0, 3); const t = a; a = b; b = t; }
+      jfa = a;
+    }
+    // 3) 光照圖：先鋪環境光，每盞燈一個方塊加上去；「霧裡的光」同時畫進第二張
+    gl.bindFramebuffer(gl.FRAMEBUFFER, F.lm.fb); gl.viewport(0, 0, lw, lh);
+    gl.drawBuffers(S.haze ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1] : [gl.COLOR_ATTACHMENT0, gl.NONE]);
+    const amb = this._amb || (this._amb = new Float32Array(4));
+    amb[0] = S.ambient[0] * 0.5; amb[1] = S.ambient[1] * 0.5; amb[2] = S.ambient[2] * 0.5; amb[3] = 1; gl.clearBufferfv(gl.COLOR, 0, amb);
+    if (S.haze) { amb[0] = amb[1] = amb[2] = 0; gl.clearBufferfv(gl.COLOR, 1, amb); }
+    gl.enable(gl.BLEND); gl.bindVertexArray(this.emptyVao);
+    if (S.zones && S.zones.length) {
+      const Z = P.zone, zu = Z.u; gl.useProgram(Z.p); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform2f(zu.uCanvas, W, H);
+      for (const z of S.zones) { gl.uniform4f(zu.uRect, z.x0, z.y0, z.x1, z.y1); gl.uniform4f(zu.uCol, z.r, z.g, z.b, z.a); gl.uniform1f(zu.uSoft, z.soft); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
+    }
+    gl.blendFunc(gl.ONE, gl.ONE);
+    const L = P.light, u = L.u, ms = mw / W; gl.useProgram(L.p);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, jfa ? jfa.tex : this.white); gl.uniform1i(u.uJfa, 0);
+    gl.uniform2f(u.uCanvas, W, H); gl.uniform2f(u.uMS, mw / W, mh / H); gl.uniform2i(u.uMSize, mw, mh); gl.uniform1f(u.uSeed, (Time.frame % 64) * 1.7); gl.uniform1f(u.uFar, Math.min(127, (S.reach || 64) * 2 - 1));
+    for (let i = 0; i < S.n; i++) {
+      const l = S.lights[i];
+      gl.uniform4f(u.uRect, l.x - l.r, l.y - l.r, l.x + l.r, l.y + l.r);
+      gl.uniform2f(u.uPos, l.x, l.y); gl.uniform1f(u.uRad, l.r); gl.uniform3f(u.uCol, l.cr, l.cg, l.cb); gl.uniform1f(u.uHaze, l.haze); gl.uniform1f(u.uFall, l.fall);
+      if (l.cone) gl.uniform4f(u.uCone, l.cone[0], l.cone[1], l.cone[2], l.cone[3]); else gl.uniform4f(u.uCone, 1, 0, -2, -1.9);
+      gl.uniform4f(u.uSh, jfa && l.sh ? 1 : 0, l.size * ms, l.soak * ms, S.steps);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    // 4) 乘回場景（2× 相乘：光照圖 0.5＝原色，最亮可到原色的兩倍），霧裡的光再加上去
+    gl.bindFramebuffer(gl.FRAMEBUFFER, prev ? prev.fb : null); gl.viewport(0, 0, W, H);
+    const A = P.apply; gl.useProgram(A.p); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(A.u.uTex, 0);
+    gl.bindTexture(gl.TEXTURE_2D, F.lm.tex); gl.blendFunc(gl.DST_COLOR, gl.SRC_COLOR); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (S.haze) { gl.bindTexture(gl.TEXTURE_2D, F.lm.tex2); gl.blendFunc(gl.ONE, gl.ONE); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    this.stats.lights += S.n;
+    this.bindTarget(prev ? prev.fb : null, W, H, false);
+    return true;
+  }
+  /**
+   * 水面、熱浪：把畫面一塊抓下來，扭曲後畫回去。o = { mode: 0 倒影（側視）| 1 俯視水面 | 2 熱浪, rect: [x0,y0,x1,y1]（畫布 px）,
+   *   src: [x0,y0,x1,y1] 要抓的範圍, col: [r,g,b,a], amp（畫布 px）, reflect, foam, scale（畫布 px／世界單位）, wx, wy（方塊左上角的世界座標）, speed, sky: [r,g,b] }
+   */
+  grab(o) {
+    if (this.lost || this.inTarget) return false;
+    const gl = this.gl, P = this.lightProgs(); this.flush();
+    const W = this.w, H = this.h;
+    if (!this.grabTex || this.grabW !== W || this.grabH !== H) {
+      if (this.grabTex) gl.deleteTexture(this.grabTex);
+      this.grabTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.grabTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, W, H, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.grabW = W; this.grabH = H;
+    }
+    const s = o.src, x0 = clamp(Math.floor(s[0]), 0, W), y0 = clamp(Math.floor(s[1]), 0, H), x1 = clamp(Math.ceil(s[2]), 0, W), y1 = clamp(Math.ceil(s[3]), 0, H);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.grabTex);
+    if (x1 > x0 && y1 > y0) gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, x0, H - y1, x0, H - y1, x1 - x0, y1 - y0);
+    const G = P.grab, u = G.u; gl.useProgram(G.p); gl.bindVertexArray(this.emptyVao); gl.uniform1i(u.uGrab, 0);
+    const r = o.rect; gl.uniform4f(u.uRect, r[0], r[1], r[2], r[3]); gl.uniform2f(u.uCanvas, W, H); gl.uniform1f(u.uTime, o.time);
+    gl.uniform4f(u.uCol, o.col[0], o.col[1], o.col[2], o.col[3]); gl.uniform4f(u.uP, o.mode, o.amp, o.reflect, o.foam);
+    gl.uniform4f(u.uW, o.scale, o.wx, o.wy, o.speed); gl.uniform4f(u.uSky, o.sky[0], o.sky[1], o.sky[2], 1); gl.uniform1f(u.uShape, o.shape ? 1 : 0);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    this.bindTarget(this.inScene ? this.fbo.scene.fb : null, W, H, false);
+    return true;
+  }
+  /** 調色表（PZ.post.grade）：兩張 256×16，換的時候淡入淡出 */
+  lutSync(i, data, ver) {
+    const gl = this.gl;
+    if (!this.lut[i]) {
+      this.lut[i] = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.lut[i]);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 16, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.lutVer[i] = -1;
+    }
+    gl.bindTexture(gl.TEXTURE_2D, this.lut[i]);
+    if (this.lutVer[i] !== ver) { gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 16, gl.RGBA, gl.UNSIGNED_BYTE, data); this.lutVer[i] = ver; }
   }
   /** 場景畫完：做後製並換到螢幕；之後畫的東西（HUD）不受震動、色差影響 */
   hud() {
@@ -1583,6 +1868,15 @@ class GLRenderer {
     gl.uniform3f(u.uTint, Post.tint[0], Post.tint[1], Post.tint[2]);
     const fl = Post.flash; gl.uniform4f(u.uFlash, fl[0], fl[1], fl[2], fl[3] * Settings.flashScale());
     gl.uniform1f(u.uScan, Post.scan); gl.uniform1f(u.uWarp, Post.warp);
+    const lt = Post._lut; gl.uniform1i(u.uLut0, 2); gl.uniform1i(u.uLut1, 3);
+    if (lt && lt.amt > 0.001 && lt.a) {
+      gl.activeTexture(gl.TEXTURE2); this.lutSync(0, lt.a, lt.va);
+      gl.activeTexture(gl.TEXTURE3); if (lt.b && lt.mix > 0.001) this.lutSync(1, lt.b, lt.vb); else gl.bindTexture(gl.TEXTURE_2D, this.lut[0]);
+      gl.uniform1f(u.uLutMix, lt.b ? lt.mix : 0); gl.uniform1f(u.uLutAmt, Math.min(1, lt.amt));
+    } else {
+      gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, this.white); gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, this.white);
+      gl.uniform1f(u.uLutMix, 0); gl.uniform1f(u.uLutAmt, 0);
+    }
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.enable(gl.BLEND);
     this.bindTarget(null, this.w, this.h, false);
@@ -1625,7 +1919,7 @@ class C2DRenderer {
   texDelete(t) { if (t.canvas && !t.live) { t.canvas.width = t.canvas.height = 0; } t.canvas = null; this.textures.delete(t); } // live＝遊戲自己的畫布，不清
   begin(clear) {
     this.w = this.canvas.width; this.h = this.canvas.height;
-    this.stats.draws = this.stats.quads = 0;
+    this.stats.draws = this.stats.quads = this.stats.lights = 0;
     const c = this.ctx; this.cur = c;
     c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
     c.fillStyle = Color.css(Color.alpha(clear == null ? '#000' : clear, 1)); c.fillRect(0, 0, this.w, this.h);
@@ -1678,11 +1972,17 @@ class C2DRenderer {
       x.drawImage(this.glowOf(color), 0, 0, 1, 1);
     }
   }
-  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add) {
+  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add) { this.quadv(t, x0, y0, 0, 0, x1, y1, 0, 0, x2, y2, 0, 0, x3, y3, 0, 0, c0, c1, mode, add); }
+  quadv(t, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, x3, y3, u3, v3, c0, c1, mode, add) {
     const x = this.cur; x.setTransform(1, 0, 0, 1, 0, 0);
-    x.globalAlpha = (cA(c0) + cA(c1)) / 2; if (x.globalAlpha <= 0.002) return;
     x.globalCompositeOperation = add > 0.5 ? 'lighter' : this.blendOp;
-    x.fillStyle = Color.css(Color.mix(c0, c1, 0.5) | 0xff000000);
+    if (mode === MODE.beam) { // 光束：沿長度漸層（橫向柔邊做不到，用整塊淡一點代替）
+      x.globalAlpha = 0.7; const g = x.createLinearGradient((x0 + x3) / 2, (y0 + y3) / 2, (x1 + x2) / 2, (y1 + y2) / 2);
+      g.addColorStop(0, Color.css(c0)); g.addColorStop(1, Color.css(c1)); x.fillStyle = g;
+    } else {
+      x.globalAlpha = (cA(c0) + cA(c1)) / 2; if (x.globalAlpha <= 0.002) return;
+      x.fillStyle = Color.css(Color.mix(c0, c1, 0.5) | 0xff000000);
+    }
     x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.lineTo(x2, y2); x.lineTo(x3, y3); x.closePath(); x.fill();
   }
   tri(x1, y1, x2, y2, x3, y3, color, add) {
@@ -1691,6 +1991,46 @@ class C2DRenderer {
     x.fillStyle = Color.css(color | 0xff000000); x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.lineTo(x3, y3); x.closePath(); x.fill();
   }
   flush() { }
+  /** 光影（沒有陰影）：小張的光照圖，用 multiply 疊上去 */
+  lighting(S) {
+    if (this.cur !== this.ctx) return false;
+    const sc = 0.25, lw = Math.max(1, Math.ceil(this.w * sc)), lh = Math.max(1, Math.ceil(this.h * sc));
+    const lc = this._lc || (this._lc = document.createElement('canvas'));
+    if (lc.width !== lw || lc.height !== lh) { lc.width = lw; lc.height = lh; }
+    const x = lc.getContext('2d'), a = S.ambient, b = (v) => Math.max(0, Math.min(255, v * 255)) | 0;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+    x.fillStyle = `rgb(${b(a[0])},${b(a[1])},${b(a[2])})`; x.fillRect(0, 0, lw, lh);
+    if (S.zones) for (const z of S.zones) { x.globalAlpha = z.a; x.fillStyle = `rgb(${b(z.r)},${b(z.g)},${b(z.b)})`; x.fillRect(z.x0 * sc, z.y0 * sc, (z.x1 - z.x0) * sc, (z.y1 - z.y0) * sc); }
+    x.globalAlpha = 1; x.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < S.n; i++) {
+      const l = S.lights[i], px = l.x * sc, py = l.y * sc, r = Math.max(1, l.r * sc), rgb = `${b(l.cr * 2)},${b(l.cg * 2)},${b(l.cb * 2)}`;
+      const g = x.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0, `rgba(${rgb},1)`); g.addColorStop(0.3, `rgba(${rgb},.62)`); g.addColorStop(0.65, `rgba(${rgb},.2)`); g.addColorStop(1, `rgba(${rgb},0)`);
+      x.fillStyle = g; x.beginPath();
+      if (l.cone) { const ang = Math.atan2(l.cone[1], l.cone[0]), half = Math.acos(clamp(l.cone[2], -1, 1)); x.moveTo(px, py); x.arc(px, py, r, ang - half, ang + half); x.closePath(); }
+      else x.arc(px, py, r, 0, TAU);
+      x.fill();
+    }
+    const c = this.ctx; c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'multiply'; c.imageSmoothingEnabled = true;
+    c.drawImage(lc, 0, 0, this.w, this.h); c.restore();
+    this.stats.lights = (this.stats.lights || 0) + S.n;
+    return true;
+  }
+  /** 水面：倒影＋上色（扭曲、熱浪做不到） */
+  grab(o) {
+    if (this.cur !== this.ctx || o.mode === 2) return false;
+    const c = this.ctx, r = o.rect, w = r[2] - r[0], h = r[3] - r[1]; if (w <= 0 || h <= 0) return false;
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over';
+    c.beginPath(); if (o.shape) c.ellipse(r[0] + w / 2, r[1] + h / 2, w / 2, h / 2, 0, 0, TAU); else c.rect(r[0], r[1], w, h); c.clip();
+    if (o.mode === 0 && o.reflect > 0) {
+      const sy = Math.max(0, r[1] - h), sh = r[1] - sy;
+      if (sh > 1) { c.save(); c.globalAlpha = o.reflect * 0.75; c.translate(0, 2 * r[1]); c.scale(1, -1); c.drawImage(this.canvas, r[0], sy, w, sh, r[0], sy, w, sh); c.restore(); }
+    }
+    const k = o.col; c.globalAlpha = k[3] * 0.65; c.fillStyle = `rgb(${k[0] * 255 | 0},${k[1] * 255 | 0},${k[2] * 255 | 0})`; c.fillRect(r[0], r[1], w, h);
+    if (o.mode === 0 && o.foam > 0) { c.globalAlpha = o.foam * 0.5; c.fillStyle = '#fff'; c.fillRect(r[0], r[1], w, Math.max(1, o.scale)); }
+    c.restore();
+    return true;
+  }
   hud() {
     if (!this.inScene) return; this.inScene = false;
     const x = this.ctx; x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over';
@@ -2176,6 +2516,7 @@ if (HAS_DOM && document.fonts && document.fonts.addEventListener) document.fonts
      g.world()   世界座標（跟著相機：位移、縮放、旋轉、震動）← render 一開始就是這個
      g.screen()  螢幕座標（CSS px，左上角 0,0），不跟相機
      g.hud()     場景畫完：做後製（泛光、扭曲…），之後畫的 HUD 不受震動與後製影響；自動切到 screen
+     g.lighting() 套用光影（PZ.light）與霧；之後畫的東西不受明暗影響（發光的燈泡、火焰）。沒呼叫的話 g.hud() 會自動套用
    變形跟 Canvas2D 一樣：g.save() / g.translate() / g.rotate() / g.scale() / g.restore() / g.alpha(a)
    常用：
      g.sprite('hero', x, y, { r: 角度, s: 縮放, sx, sy, a: 透明度, color: 上色, add: 發光 0～1, flash: 閃白 0～1, ax, ay })
@@ -2187,6 +2528,8 @@ if (HAS_DOM && document.fonts && document.fonts.addEventListener) document.fonts
      g.text('字', x, y, { size, color, weight, outline, outlineColor, shadow, align, baseline, maxWidth })
      g.bar(x, y, w, h, 比例, { bg, fg, back })  血條
      g.into('decals', () => { …畫進畫布貼圖… })
+     g.castShadow('hero', x, y, { len, a })   角色投影（朝離燈的方向）    g.beam(x, y, 角度, 長度, 起寬, 終寬, color)  光束
+     g.water(x, y, w, h, { mode: 'mirror' | 'flat', color, reflect })     水面（倒影、波紋）    g.haze(x, y, w, h)  熱浪扭曲
    ========================================================================== */
 const M_ID = [1, 0, 0, 1, 0, 0];
 class Graphics {
@@ -2205,7 +2548,14 @@ class Graphics {
   }
   world() { this._base('world'); return this; }
   screen() { this._base('screen'); return this; }
-  hud() { if (this._hudDone) { this._base('screen'); return this; } Fx._drawAuto(this); this.r.hud(); this._base('screen'); this._hudDone = true; return this; }
+  hud() {
+    if (this._hudDone) { this._base('screen'); return this; }
+    this.lighting(); Weather._drawOver(this); Fx._drawAuto(this);
+    this.r.hud(); this._base('screen'); Cinema._drawBars(this);
+    this._hudDone = true; return this;
+  }
+  /** 套用光影（PZ.light）與霧：之前畫的東西被照亮／變暗，之後畫的（燈泡、火焰、發光字）照原樣。沒呼叫的話 g.hud() 會自動套用 */
+  lighting() { if (this._litDone) return this; this._litDone = true; Weather._drawUnder(this); Light._apply(this); return this; }
   /* ---- 變形 ---- */
   save() { this.stack.push([this.m[0], this.m[1], this.m[2], this.m[3], this.m[4], this.m[5], this.al, this.blendName]); return this; }
   restore() { const s = this.stack.pop(); if (s) { this.m.set(s.slice(0, 6)); this.al = s[6]; if (s[7] !== this.blendName) this.blend(s[7]); } return this; }
@@ -3715,6 +4065,9 @@ PZ.go = async (name, params, o = {}) => {
   PZ.clearTimers(); Tweens.clear(); Particles.clear(); Fx.nums.length = 0; Input.releaseAll();
   Cam.trauma = 0; if (!def.keepCamera) Cam.reset();
   Post.waves.length = 0; Fx._waves.length = 0; Post.flash[3] = 0; PZ.resume('*');
+  if (!def.keepLights) Light.reset();
+  if (!def.keepWeather) Weather.reset();
+  Cinema.reset();
   Scenes.cur = def; Scenes.name = name;
   if (def.ui) {
     const u = typeof def.ui === 'function' ? def.ui(params) : def.ui;
@@ -3757,7 +4110,7 @@ addSystem({
     const r = Gfx.r; if (!r) return;
     const s = Scenes.cur;
     r.begin(s && s.bg != null ? s.bg : Screen.bg);
-    G._hudDone = false; G.world();
+    G._hudDone = false; G._litDone = false; G.world();
     if (s && s.render) { try { s.render(G); } catch (e) { reportError(e, Scenes.name + '.render'); } }
     if (!G._hudDone) G.hud();
     drawTransition(G);
@@ -4129,7 +4482,7 @@ addSystem({
   render() {
     if (!Debug.statsOn || !Debug.statsEl || Time.frame % 10) return;
     const r = Gfx.r, st = r ? r.stats : {};
-    Debug.statsEl.textContent = `${Time.fps.toFixed(0)} fps  ${(Time.rdt * 1000).toFixed(1)} ms  (${Time.refresh}Hz)\n更新 ${Perf.upd.toFixed(2)} ms  繪圖 ${Perf.ren.toFixed(2)} ms\n${Gfx.kind}  批次 ${st.draws || 0}  方塊 ${st.quads || 0}\n粒子 ${Particles.n}  畫質 ${Quality.cur.name}${Quality.auto ? '(自動)' : ''}  ${Screen.pw}×${Screen.ph}\n音訊 ${Aud.ctx ? Aud.ctx.state : '未啟動'}  聲部 ${Sfx.voices.length}${Debug.errors.length ? '  錯誤 ' + Debug.errors.length : ''}`;
+    Debug.statsEl.textContent = `${Time.fps.toFixed(0)} fps  ${(Time.rdt * 1000).toFixed(1)} ms  (${Time.refresh}Hz)\n更新 ${Perf.upd.toFixed(2)} ms  繪圖 ${Perf.ren.toFixed(2)} ms\n${Gfx.kind}  批次 ${st.draws || 0}  方塊 ${st.quads || 0}${Light.active ? '  燈 ' + (st.lights || 0) : ''}${Weather.active() ? '  天氣 ' + Weather.name : ''}\n粒子 ${Particles.n}  畫質 ${Quality.cur.name}${Quality.auto ? '(自動)' : ''}  ${Screen.pw}×${Screen.ph}\n音訊 ${Aud.ctx ? Aud.ctx.state : '未啟動'}  聲部 ${Sfx.voices.length}${Debug.errors.length ? '  錯誤 ' + Debug.errors.length : ''}`;
   },
 });
 Debug.init = (cfg) => {
@@ -4148,7 +4501,7 @@ if (HAS_DOM) {
     pause: () => { Loop.stop(); }, resume: () => { Loop.start(); },
     seed: (n) => PZ.seed(n),
     get errors() { return Debug.errors.map((e) => e.msg + ' @' + e.where); },
-    state: () => ({ scene: Scenes.name, fps: Math.round(Time.fps), renderer: Gfx.kind, tier: Quality.tier, particles: Particles.n, quads: Gfx.r ? Gfx.r.stats.quads : 0, draws: Gfx.r ? Gfx.r.stats.draws : 0, w: Screen.w, h: Screen.h, res: Screen.res, audio: Aud.ctx ? Aud.ctx.state : 'none', errors: Debug.errors.length }),
+    state: () => ({ scene: Scenes.name, fps: Math.round(Time.fps), renderer: Gfx.kind, tier: Quality.tier, particles: Particles.n, quads: Gfx.r ? Gfx.r.stats.quads : 0, draws: Gfx.r ? Gfx.r.stats.draws : 0, lights: Gfx.r ? Gfx.r.stats.lights || 0 : 0, w: Screen.w, h: Screen.h, res: Screen.res, audio: Aud.ctx ? Aud.ctx.state : 'none', errors: Debug.errors.length }),
   };
 }
 
@@ -4210,10 +4563,726 @@ PZ.start = async (cfg = {}) => {
   return PZ;
 };
 
+/* ---- 25_light.js ---- */
+/* ==========================================================================
+   25 光影：動態光源、柔和陰影、投影、光束
+     PZ.light.on({ ambient: '#1b2333' })     打開光影；ambient＝沒被照到的地方剩多亮（'#fff'＝白天，看起來跟沒開一樣）
+     const lamp = PZ.light.add({ x, y, r: 260, color: '#ffb547', intensity: 1.2, flicker: 0.25, glow: 0.6 })
+       lamp.x = …（會動就直接改）  lamp.fade(0, 0.5)  lamp.remove()
+     手電筒：PZ.light.add({ follow: hero, r: 460, cone: 0.42, dir: 角度, color: '#fff2d6' })   cone＝半張角（弧度）
+     擋光的東西（產生陰影）：
+       PZ.light.box(x, y, w, h)、PZ.light.circle(x, y, r)、PZ.light.poly([x0,y0, x1,y1, …])   固定的牆、柱子、箱子（回傳的東西可以改位置、.remove()）
+       PZ.light.occluders((g) => { g.sprite('crate', c.x, c.y); … })                        每格畫一次（會動的、要用圖形狀的）
+     render(g) { …畫地板、牆、角色… g.lighting(); …畫燈泡、火焰、發光字… }   沒呼叫的話 g.hud() 會自動套用
+     PZ.light.zone(x, y, w, h, { ambient: '#fff', soft: 60 })   這一塊換一種環境光（屋內暗、院子亮；側視遊戲的天空、遠景不受影響）
+     PZ.light.at(x, y)        這一點有多亮（0＝全黑、1＝原色；潛行遊戲用）    PZ.light.blocked(x0, y0, x1, y1)  兩點之間有沒有被擋（視線）
+     g.castShadow('hero', x, y, { len, a })   角色的投影：自動朝「離最亮那盞燈」的方向，沒有燈就用 PZ.light.sun
+     g.beam(x, y, 角度, 長度, 起點寬, 終點寬, color, { a, end })   光束（窗戶透進來的光、探照燈、舞台燈）
+   做法：每盞燈一個方塊畫進低解析度的「光照圖」，最後跟畫面相乘（2×：光照圖一半＝原色，最亮到兩倍，搭泛光會發光）。
+   陰影：擋光的東西先畫成遮光圖，用 JFA 算出「到最近牆的距離」，每個像素往燈的方向跳著走，順便量擦邊多近 → 柔和的半影。
+   畫質低時自動降解析度、關陰影；Canvas2D 後備模式只有光、沒有陰影。
+   ========================================================================== */
+const Light = PZ.light = {
+  active: false, ambient: '#ffffff', soak: 10, haze: 0, shadows: true,
+  sun: { angle: 0.9, len: 0.75, a: 0.4 },          // 沒有燈的時候，角色投影的方向（白天的太陽）
+  lights: [], shapes: [], zones: [], fn: null,
+  _list: [], _vis: [], _flash: 0, _flashColor: [0.8, 0.86, 1], _wHaze: 0, _amb: [1, 1, 1],
+  /** 每一階畫質：光照圖解析度（scale）、遮光圖解析度（mask，0＝不算陰影）、陰影追蹤步數、距離場最遠量幾格（reach：JFA 從這個步長開始） */
+  tiers: [
+    { scale: 0.25, mask: 0, steps: 0, reach: 0 },
+    { scale: 0.34, mask: 0.25, steps: 14, reach: 32 },
+    { scale: 0.5, mask: 0.34, steps: 20, reach: 32 },
+    { scale: 0.5, mask: 0.5, steps: 28, reach: 64 },
+  ],
+};
+Light.quality = () => Light.tiers[clamp(Quality.tier, 0, Light.tiers.length - 1)];
+
+/** 打開光影。o: { ambient, soak（光滲進牆面幾單位，預設 10）, shadows（false＝全部不算陰影） } */
+Light.on = (o = {}) => {
+  Light.active = true;
+  if (o.ambient != null) Light.ambient = o.ambient;
+  if (o.soak != null) Light.soak = o.soak;
+  if (o.shadows != null) Light.shadows = !!o.shadows;
+  if (o.haze != null) Light.haze = o.haze;
+  return Light;
+};
+Light.off = () => { Light.active = false; return Light; };
+/** 全部清掉（場景切換時引擎會自動呼叫） */
+Light.reset = () => {
+  for (const l of Light.lights) l.dead = true;
+  for (const s of Light.shapes) s.dead = true;
+  Light.lights.length = 0; Light.shapes.length = 0; Light.zones.length = 0; Light.fn = null;
+  Light.active = false; Light.ambient = '#ffffff'; Light.soak = 10; Light.haze = 0; Light.shadows = true; Light._flash = 0;
+  Light.sun = { angle: 0.9, len: 0.75, a: 0.4 };
+};
+
+/* ---------- 燈 ---------- */
+let LightSeed = 1;
+class PZLight {
+  constructor(o) {
+    this.x = 0; this.y = 0; this.r = 240; this.color = '#fff'; this.intensity = 1;
+    this.flicker = 0; this.flickerSpeed = 9; this.cone = null; this.dir = 0; this.soft = null;
+    this.size = 10; this.shadows = true; this.haze = 0; this.glow = 0; this.glowR = null; this.fall = 6;
+    this.follow = null; this.ox = 0; this.oy = 0; this.screen = false; this.on = true;
+    this.dead = false; this._k = 1; this._fi = 1; this._seed = (LightSeed++ * 7.31) % 100; this._fade = null;
+    this.set(o);
+  }
+  set(o) { if (o) for (const k in o) this[k] = o[k]; return this; }
+  get color() { return this._color; }
+  set color(v) { this._color = v; this._col = toColor(v); }
+  /** 漸亮／漸暗到 k（強度倍率），time 秒；k＝0 且 o.remove 時順便移除 */
+  fade(k, time = 0.4, o = {}) { this._fade = { from: this._k, to: k, t: 0, time: Math.max(0.001, time), remove: !!o.remove }; return this; }
+  remove() { this.dead = true; const i = Light.lights.indexOf(this); if (i >= 0) Light.lights.splice(i, 1); }
+}
+/**
+ * 加一盞燈。o: { x, y, r（半徑）, color, intensity（1＝把原色照到最亮；2＝曝光過度會發光）,
+ *   flicker（0～1 閃爍，火把 0.2、壞掉的燈 0.6）, flickerSpeed, cone（半張角，弧度；不給＝四面八方）, dir（方向）, soft（邊緣柔和，弧度）,
+ *   size（光源大小，越大陰影越柔，預設 10）, shadows（false＝這盞不算陰影）, haze（0～1 霧裡看得到的光）,
+ *   glow（0～1 光源本身畫一顆光點）, glowR, fall（衰減，越大中心越集中，預設 6）, follow（跟著某個物件）, ox, oy, screen（用螢幕座標） }
+ */
+Light.add = (o = {}) => {
+  const l = new PZLight(o);
+  if (l.follow) { l.x = l.follow.x + l.ox; l.y = l.follow.y + l.oy; }
+  Light.lights.push(l);
+  return l;
+};
+
+/* ---------- 擋光的東西 ---------- */
+class PZShape {
+  constructor(kind, o) { this.kind = kind; Object.assign(this, o); this.dead = false; }
+  remove() { this.dead = true; const i = Light.shapes.indexOf(this); if (i >= 0) Light.shapes.splice(i, 1); }
+}
+/** 方塊（左上角 x, y） */
+Light.box = (x, y, w, h) => { const s = new PZShape('box', { x, y, w, h }); Light.shapes.push(s); return s; };
+/** 圓柱 */
+Light.circle = (x, y, r) => { const s = new PZShape('circle', { x, y, r }); Light.shapes.push(s); return s; };
+/** 凸多邊形 [x0,y0, x1,y1, …]（凹的請拆成幾塊） */
+Light.poly = (pts) => { const s = new PZShape('poly', { pts: pts.slice() }); Light.shapes.push(s); return s; };
+/** 每格自己畫擋光的東西（用平常的 g.sprite / g.rect / g.circle，顏色不重要，看透明度）。回傳取消用的函式 */
+Light.occluders = (fn) => { Light.fn = fn; return () => { if (Light.fn === fn) Light.fn = null; }; };
+
+/** 環境光區塊（世界座標的方塊；screen: true 用螢幕座標）。o: { ambient（預設白＝不變暗）, soft（邊緣柔和幾單位，預設 40）, a（0～1 蓋過多少）}。回傳的物件可以改 x/y/w/h/ambient、.remove() */
+Light.zone = (x, y, w, h, o = {}) => {
+  const z = { x, y, w, h, ambient: o.ambient || '#ffffff', soft: o.soft != null ? o.soft : 40, a: o.a != null ? o.a : 1, screen: !!o.screen, dead: false,
+    remove() { this.dead = true; const i = Light.zones.indexOf(this); if (i >= 0) Light.zones.splice(i, 1); } };
+  Light.zones.push(z); return z;
+};
+/** 打雷、爆炸：環境光短暫變亮（amount 0～1，time 秒，color 預設冷白） */
+Light.flash = (amount = 0.8, time = 0.25, color) => {
+  Light._flash = Math.max(Light._flash, amount * Settings.flashScale()); Light._flashDecay = 1 / Math.max(0.02, time);
+  if (color) { const c = toColor(color); Light._flashColor = [cR(c) / 255, cG(c) / 255, cB(c) / 255]; }
+};
+
+/* ---------- 每格 ---------- */
+function lightNoise(t) { return (noise1(t) + noise1(t * 2.7 + 13.1) * 0.5) * 0.66 * 0.5 + 0.5; } // 約 0～1
+/** 換到乾淨的座標空間畫一些東西，畫完把遊戲原本的狀態（變形、透明度、save 堆疊）原封不動還回去 */
+function withSpace(g, space, fn) {
+  const m = g.m, m0 = m[0], m1 = m[1], m2 = m[2], m3 = m[3], m4 = m[4], m5 = m[5], al = g.al, sp = g.space, st = g.stack, bn = g.blendName;
+  g.stack = []; g._base(space);
+  if (bn !== 'normal') g.blend('normal');
+  try { fn(g); } catch (e) { reportError(e, 'light'); }
+  if (g.blendName !== bn) g.blend(bn);
+  g.stack = st; m[0] = m0; m[1] = m1; m[2] = m2; m[3] = m3; m[4] = m4; m[5] = m5; g.al = al; g.space = sp;
+}
+function drawOccluders() {
+  withSpace(G, 'world', (g) => {
+    for (const s of Light.shapes) {
+      if (s.dead) continue;
+      if (s.kind === 'box') g.rect(s.x, s.y, s.w, s.h, WHITE);
+      else if (s.kind === 'circle') g.circle(s.x, s.y, s.r, WHITE);
+      else if (s.kind === 'poly') g.poly(s.pts, WHITE);
+    }
+    if (Light.fn) Light.fn(g);
+  });
+}
+Light._ambient = () => {
+  const c = toColor(Light.ambient), a = Light._amb, f = Light._flash, k = Light._flashColor;
+  a[0] = cR(c) / 255 + (k[0] - cR(c) / 255) * f; a[1] = cG(c) / 255 + (k[1] - cG(c) / 255) * f; a[2] = cB(c) / 255 + (k[2] - cB(c) / 255) * f;
+  return a;
+};
+addSystem({
+  name: 'light', order: 72,
+  frame(rdt) {
+    if (Light._flash > 0) Light._flash = Math.max(0, Light._flash - rdt * (Light._flashDecay || 4) * Math.max(0.2, Light._flash));
+    for (let i = Light.lights.length - 1; i >= 0; i--) {
+      const l = Light.lights[i], f = l._fade; if (!f) continue;
+      f.t += rdt; const k = clamp01(f.t / f.time); l._k = lerp(f.from, f.to, Ease.inOutQuad(k));
+      if (k >= 1) { l._fade = null; if (f.remove) l.remove(); }
+    }
+  },
+});
+
+Light._apply = (g) => {
+  const r = g.r; Light._vis.length = 0;
+  if (!Light.active || !r || r.lost || r.inTarget) return;
+  const q = Light.quality(), res = Screen.res, M = Cam.mat, z = Cam.ez || 1, W = r.w, H = r.h, T = Time.real;
+  const list = Light._list, vis = Light._vis; let n = 0, haze = false;
+  const amb = Light._ambient();
+  for (const L of Light.lights) {
+    if (L.dead || !L.on) continue;
+    if (L.follow) { const f = L.follow; if (f.dead || f.removed) { L.follow = null; } else { L.x = f.x + L.ox; L.y = f.y + L.oy; } }
+    let fi = 1;
+    if (L.flicker > 0) fi = 1 - L.flicker * lightNoise(T * L.flickerSpeed + L._seed);
+    L._fi = fi;
+    const I = L.intensity * L._k * fi; if (I <= 0.003) continue;
+    let sx, sy; const scl = L.screen ? 1 : z;
+    if (L.screen) { sx = L.x; sy = L.y; } else { sx = M[0] * L.x + M[2] * L.y + M[4]; sy = M[1] * L.x + M[3] * L.y + M[5]; }
+    const sr = L.r * scl * (1 - L.flicker * 0.06 * (1 - fi) * 4), px = sx * res, py = sy * res, pr = sr * res;
+    if (px + pr < 0 || px - pr > W || py + pr < 0 || py - pr > H || pr < 1) continue;
+    const o = list[n] || (list[n] = { cone: null, _cone: [0, 0, 0, 0] }); n++;
+    const c = L._col;
+    o.x = px; o.y = py; o.r = pr; o.cr = (cR(c) / 255) * I * 0.5; o.cg = (cG(c) / 255) * I * 0.5; o.cb = (cB(c) / 255) * I * 0.5;
+    let dx = 1, dy = 0;
+    if (L.cone != null && L.cone < Math.PI - 0.01) {
+      dx = Math.cos(L.dir); dy = Math.sin(L.dir);
+      if (!L.screen) { const tx = M[0] * dx + M[2] * dy, ty = M[1] * dx + M[3] * dy, l = Math.hypot(tx, ty) || 1; dx = tx / l; dy = ty / l; }
+      const soft = L.soft != null ? L.soft : Math.min(0.32, L.cone * 0.45), cn = o._cone;
+      cn[0] = dx; cn[1] = dy; cn[2] = Math.cos(Math.min(Math.PI, L.cone + soft * 0.5)); cn[3] = Math.cos(Math.max(0, L.cone - soft * 0.5)); o.cone = cn;
+    } else o.cone = null;
+    o.size = L.size * scl * res; o.soak = Light.soak * scl * res; o.sh = L.shadows !== false; o.fall = L.fall;
+    o.haze = Math.max(0, L.haze + Light.haze + Light._wHaze); if (o.haze > 0.002) haze = true;
+    vis.push({ x: sx, y: sy, r: sr, cr: o.cr * 2, cg: o.cg * 2, cb: o.cb * 2, cone: o.cone ? [dx, dy, o.cone[2], o.cone[3]] : null, fall: L.fall });
+  }
+  const zl = Light._zl || (Light._zl = []); zl.length = 0;
+  for (const Z of Light.zones) {
+    if (Z.dead) continue;
+    let x0, y0, x1, y1;
+    if (Z.screen) { x0 = Z.x * res; y0 = Z.y * res; x1 = (Z.x + Z.w) * res; y1 = (Z.y + Z.h) * res; }
+    else { const xs = [Z.x, Z.x + Z.w], ys = [Z.y, Z.y + Z.h]; x0 = y0 = Infinity; x1 = y1 = -Infinity; for (const xx of xs) for (const yy of ys) { const X = (M[0] * xx + M[2] * yy + M[4]) * res, Y = (M[1] * xx + M[3] * yy + M[5]) * res; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); } }
+    if (x1 < 0 || y1 < 0 || x0 > W || y0 > H) continue;
+    const c = toColor(Z.ambient), k = Light._flash, fc = Light._flashColor;
+    zl.push({ x0: Math.max(-1e5, x0), y0: Math.max(-1e5, y0), x1: Math.min(1e5, x1), y1: Math.min(1e5, y1), r: lerp(cR(c) / 255, fc[0], k), g: lerp(cG(c) / 255, fc[1], k), b: lerp(cB(c) / 255, fc[2], k), a: Z.a, soft: Math.max(0.5, Z.soft * (Z.screen ? 1 : z) * res) });
+  }
+  const dark = amb[0] < 0.999 || amb[1] < 0.999 || amb[2] < 0.999 || zl.length > 0;
+  if (n || dark) {
+    const occ = Light.shadows && q.mask > 0 && (Light.shapes.length > 0 || !!Light.fn);
+    r.lighting({ ambient: amb, zones: zl, lights: list, n, scale: q.scale, mask: q.mask, reach: q.reach || 64, shadows: occ, steps: q.steps, drawOcc: occ ? drawOccluders : null, haze });
+  }
+  // 光源本身的光點（發光、不受明暗影響）
+  let anyGlow = false; for (const L of Light.lights) if (L.glow > 0 && L.on && !L.dead) { anyGlow = true; break; }
+  if (anyGlow) {
+    for (const space of ['world', 'screen']) withSpace(g, space, (gg) => {
+      for (const L of Light.lights) {
+        if (!(L.glow > 0) || !L.on || L.dead || (space === 'screen') !== !!L.screen) continue;
+        const k = L.glow * L._k * L._fi; if (k <= 0.01) continue;
+        const gr = L.glowR != null ? L.glowR : Math.max(6, L.r * 0.1);
+        gg.glow(L.x, L.y, gr * (0.85 + 0.15 * L._fi), L._col, { a: Math.min(1, k), core: 0.7 });
+        gg.glow(L.x, L.y, gr * 2.6, L._col, { a: Math.min(1, k) * 0.22 });
+      }
+    });
+  }
+};
+
+/** 給天氣用：螢幕上某一點（CSS px）被燈照到多少（不算陰影），回傳 0～ */
+Light.glint = (sx, sy) => {
+  let v = 0;
+  for (const l of Light._vis) {
+    const dx = sx - l.x, dy = sy - l.y, d2 = dx * dx + dy * dy, r2 = l.r * l.r; if (d2 >= r2) continue;
+    const s2 = d2 / r2, w = 1 - s2 * s2; let att = (w * w) / (1 + l.fall * s2);
+    if (l.cone) { const d = Math.sqrt(d2) || 1; att *= smoothstep(l.cone[2], l.cone[3], (dx * l.cone[0] + dy * l.cone[1]) / d); }
+    v += att * (0.2126 * l.cr + 0.7152 * l.cg + 0.0722 * l.cb);
+  }
+  return v;
+};
+
+/* ---------- 遊戲邏輯用：亮度、視線 ---------- */
+function segBox(x0, y0, x1, y1, b) {
+  let t0 = 0, t1 = 1; const dx = x1 - x0, dy = y1 - y0;
+  const p = [-dx, dx, -dy, dy], q = [x0 - b.x, b.x + b.w - x0, y0 - b.y, b.y + b.h - y0];
+  for (let i = 0; i < 4; i++) {
+    if (p[i] === 0) { if (q[i] < 0) return false; continue; }
+    const t = q[i] / p[i];
+    if (p[i] < 0) { if (t > t1) return false; if (t > t0) t0 = t; } else { if (t < t0) return false; if (t < t1) t1 = t; }
+  }
+  return true;
+}
+function segCircle(x0, y0, x1, y1, cx, cy, r) {
+  const dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy || 1, t = clamp01(((cx - x0) * dx + (cy - y0) * dy) / l2);
+  return dist2(x0 + dx * t, y0 + dy * t, cx, cy) < r * r;
+}
+function inPoly(x, y, p) {
+  let ins = false;
+  for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) { const xi = p[i], yi = p[i + 1], xj = p[j], yj = p[j + 1]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) ins = !ins; }
+  return ins;
+}
+function segSeg(ax, ay, bx, by, cx, cy, dx, dy) {
+  const d = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx); if (d === 0) return false;
+  const u = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / d, v = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / d;
+  return u >= 0 && u <= 1 && v >= 0 && v <= 1;
+}
+function shapeHas(s, x, y) {
+  if (s.kind === 'box') return x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h;
+  if (s.kind === 'circle') return dist2(x, y, s.x, s.y) <= s.r * s.r;
+  return inPoly(x, y, s.pts);
+}
+/** (x0,y0) 到 (x1,y1) 中間有沒有被擋光的形狀擋住（只看 box/circle/poly，不看 occluders 函式畫的）。端點所在的那塊不算（牆上的火把、貼牆站） */
+Light.blocked = (x0, y0, x1, y1) => {
+  for (const s of Light.shapes) {
+    if (s.dead || shapeHas(s, x0, y0) || shapeHas(s, x1, y1)) continue;
+    if (s.kind === 'box') { if (segBox(x0, y0, x1, y1, s)) return true; }
+    else if (s.kind === 'circle') { if (segCircle(x0, y0, x1, y1, s.x, s.y, s.r)) return true; }
+    else { const p = s.pts; for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) if (segSeg(x0, y0, x1, y1, p[j], p[j + 1], p[i], p[i + 1])) return true; }
+  }
+  return false;
+};
+function lightAtt(L, x, y) {
+  const dx = x - L.x, dy = y - L.y, d = Math.hypot(dx, dy), s = d / L.r; if (s >= 1) return 0;
+  const w = Math.max(0, 1 - s * s * s * s); let att = (w * w) / (1 + L.fall * s * s);
+  if (L.cone != null && L.cone < Math.PI - 0.01) {
+    const soft = L.soft != null ? L.soft : Math.min(0.32, L.cone * 0.45), ca = d > 1e-3 ? (dx * Math.cos(L.dir) + dy * Math.sin(L.dir)) / d : 1;
+    att *= Math.max(smoothstep(Math.cos(Math.min(Math.PI, L.cone + soft * 0.5)), Math.cos(Math.max(0, L.cone - soft * 0.5)), ca), (1 - smoothstep(0, 0.07, s)) * 0.55);
+  }
+  return att * L.intensity * L._k * L._fi;
+}
+/** 世界座標 (x, y) 有多亮：0＝全黑、1＝原色、>1＝曝光。o.shadows: false 不檢查遮擋 */
+Light.at = (x, y, o = {}) => {
+  if (!Light.active) return 1;
+  const a = Light._ambient(); let v = 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+  for (const Z of Light.zones) {
+    if (Z.dead || Z.screen) continue;
+    const d = Math.min(x - Z.x, Z.x + Z.w - x, y - Z.y, Z.y + Z.h - y); if (d <= 0) continue;
+    v = lerp(v, Color.luma(Z.ambient), smoothstep(0, Math.max(0.001, Z.soft), d) * Z.a);
+  }
+  for (const L of Light.lights) {
+    if (L.dead || !L.on || L.screen) continue;
+    const att = lightAtt(L, x, y); if (att <= 0.002) continue;
+    if (o.shadows !== false && L.shadows !== false && Light.blocked(x, y, L.x, L.y)) continue;
+    v += att * Color.luma(L._col);
+  }
+  return v;
+};
+/** 角色投影的方向：最亮的那盞燈的反方向；白天（環境光亮）用太陽 */
+Light.shadowDir = (x, y) => {
+  const sun = Light.sun; let best = null, bv = 0;
+  const amb = Light.active ? Light._ambient() : [1, 1, 1], sunK = Light.active ? 0.2126 * amb[0] + 0.7152 * amb[1] + 0.0722 * amb[2] : 1;
+  if (Light.active) for (const L of Light.lights) { if (L.dead || !L.on || L.screen) continue; const v = lightAtt(L, x, y) * Color.luma(L._col); if (v > bv) { bv = v; best = L; } }
+  if (best && bv * 1.4 > sunK * 0.6) {
+    const d = Math.hypot(x - best.x, y - best.y);
+    return { angle: Math.atan2(y - best.y, x - best.x), len: 0.45 + 1.1 * clamp01(d / best.r), k: clamp01(bv * 1.6) };
+  }
+  return { angle: sun.angle, len: sun.len, k: sunK * (sun.a / 0.4) };
+};
+
+/* ---------- 畫圖 API ---------- */
+/**
+ * 角色的投影（貼在地上的剪影）：o = { angle（不給＝自動）, len（相對身高，預設 0.7）, a（濃度，預設 0.42）, color, s/sx/sy, soft（預設 true：靠腳深、尾巴淡）,
+ *   flat（側視遊戲：影子落在地面上、從側面看是扁扁一條，往離燈的方向拖；flatY 扁的程度，預設 0.07） }
+ */
+Graphics.prototype.castShadow = function (f, x, y, o = {}) {
+  if (typeof f === 'string') f = Art.get(f); if (!f.tex) return this;
+  let ang = o.angle, len = o.len != null ? o.len : 0.7, a = o.a != null ? o.a : 0.42;
+  if (ang == null) { const s = Light.shadowDir(x, y); ang = s.angle; len *= s.len / 0.75; a *= Math.min(1, s.k); }
+  if (a <= 0.004 || len <= 0.01) return this;
+  const sc = o.s != null ? o.s : 1, Wd = f.w * sc * (o.sx || 1), Ht = f.h * sc * (o.sy || 1), dx = Math.cos(ang), dy = Math.sin(ang);
+  const col = o.color || '#000', layers = o.soft === false ? [[1, a]] : [[1, 0], [0.78, 0], [0.56, 0]];
+  if (o.soft !== false) { const k = 1 - Math.pow(1 - a, 1 / 3); for (const L of layers) L[1] = k; }
+  const fy = o.flatY != null ? o.flatY : 0.07;
+  for (const [lk, al] of layers) {
+    const la = o.flat ? Wd : -dy * Wd, lb = o.flat ? 0 : dx * Wd, lc = o.flat ? -dx * len * lk * Ht : -dx * len * lk * Ht, ld = o.flat ? -fy * Ht : -dy * len * lk * Ht;
+    this._emit(f.tex, la, lb, lc, ld, x - f.ax * la - f.ay * lc, y - f.ax * lb - f.ay * ld, f.u0, f.v0, f.u1, f.v1, this._col(col, al), MODE.silhouette, 0, 0);
+  }
+  return this;
+};
+/** 光束：從 (x, y) 往 angle 方向 len 長，寬度 w0 → w1；o = { a, add（預設 1 發光）, end（尾端濃度，預設 0）, color2（尾端顏色） } */
+Graphics.prototype.beam = function (x, y, angle, len, w0, w1, color, o) {
+  const a = o && o.a != null ? o.a : 1, add = o && o.add != null ? o.add : 1;
+  let c0 = this._col(color, a), c1 = this._col(o && o.color2 != null ? o.color2 : color, a * (o && o.end != null ? o.end : 0));
+  let dx = Math.cos(angle), dy = Math.sin(angle), hx = x, hy = y, n0 = Math.max(0.01, w0 / 2), n1 = Math.max(0.01, w1 / 2);
+  if (n0 > n1) { hx = x + dx * len; hy = y + dy * len; dx = -dx; dy = -dy; let t = n0; n0 = n1; n1 = t; t = c0; c0 = c1; c1 = t; }
+  const tx = hx + dx * len, ty = hy + dy * len, nx = -dy, ny = dx, k = n0 / n1, m = this.m;
+  const X = (px, py) => m[0] * px + m[2] * py + m[4], Y = (px, py) => m[1] * px + m[3] * py + m[5];
+  const ax = hx - nx * n0, ay = hy - ny * n0, bx = tx - nx * n1, by = ty - ny * n1, cx = tx + nx * n1, cy = ty + ny * n1, ex = hx + nx * n0, ey = hy + ny * n0;
+  this.r.quadv(null, X(ax, ay), Y(ax, ay), 0, -k, X(bx, by), Y(bx, by), 1, -1, X(cx, cy), Y(cx, cy), 1, 1, X(ex, ey), Y(ex, ey), 0, k, c0, c1, MODE.beam, clamp01(add), k);
+  return this;
+};
+
+/* ---------- 水面、熱浪（把畫面抓下來扭曲；要畫在被倒映的東西「之後」） ---------- */
+/**
+ * 水面：x, y, w, h 是水的範圍（世界座標，y＝水面那條線）。
+ * o = { mode: 'mirror'（側視：倒映水面上方的東西，預設）| 'flat'（俯視：波光＋水下扭曲）, shape: 'ellipse'（水窪、池塘：橢圓、邊緣柔和）,
+ *       color（水色，預設深藍綠）, depth（水色多濃 0～1，預設 0.45）, reflect（倒影多清楚 0～1，預設 0.65）,
+ *       ripple（波紋幅度，世界單位，預設 3）, speed（預設 1）, foam（水面亮線 0～1，預設 0.5）, sky（倒影超出畫面時用的顏色） }
+ */
+Graphics.prototype.water = function (x, y, w, h, o = {}) {
+  const m = this.m, X = (px, py) => m[0] * px + m[2] * py + m[4], Y = (px, py) => m[1] * px + m[3] * py + m[5];
+  const xs = [X(x, y), X(x + w, y), X(x, y + h), X(x + w, y + h)], ys = [Y(x, y), Y(x + w, y), Y(x, y + h), Y(x + w, y + h)];
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), scale = Math.hypot(m[0], m[1]) || 1;
+  if (x1 <= 0 || y1 <= 0 || x0 >= this.r.w || y0 >= this.r.h) return this;
+  const mode = o.mode === 'flat' ? 1 : 0, amp = (o.ripple != null ? o.ripple : 3) * scale, c = toColor(o.color || '#123a4a'), sk = toColor(o.sky || '#05070c');
+  const src = mode === 0 ? [x0 - amp * 2, y0 - (y1 - y0) - amp * 3, x1 + amp * 2, y1 + amp * 2] : [x0 - amp * 2, y0 - amp * 2, x1 + amp * 2, y1 + amp * 2];
+  this.r.grab({ mode, rect: [x0, y0, x1, y1], src, time: Time.t, col: [cR(c) / 255, cG(c) / 255, cB(c) / 255, o.depth != null ? o.depth : 0.45],
+    amp, reflect: o.reflect != null ? o.reflect : 0.65, foam: o.foam != null ? o.foam : 0.5, scale, wx: x, wy: y, speed: o.speed != null ? o.speed : 1, sky: [cR(sk) / 255, cG(sk) / 255, cB(sk) / 255], shape: o.shape === 'ellipse' ? 1 : 0 });
+  return this;
+};
+/** 熱浪／扭曲（火堆上方、沙漠、傳送門）：o = { strength（世界單位，預設 4）, speed（預設 1）, shape: 'ellipse' } */
+Graphics.prototype.haze = function (x, y, w, h, o = {}) {
+  const m = this.m, scale = Math.hypot(m[0], m[1]) || 1, x0 = m[0] * x + m[2] * y + m[4], y0 = m[1] * x + m[3] * y + m[5], x1 = x0 + w * scale, y1 = y0 + h * scale, amp = (o.strength != null ? o.strength : 4) * scale;
+  if (x1 <= 0 || y1 <= 0 || x0 >= this.r.w || y0 >= this.r.h) return this;
+  this.r.grab({ mode: 2, rect: [x0, y0, x1, y1], src: [x0 - amp, y0 - amp, x1 + amp, y1 + amp], time: Time.t, col: [0, 0, 0, 0], amp, reflect: 0, foam: 0, scale, wx: x, wy: y, speed: o.speed != null ? o.speed : 1, sky: [0, 0, 0], shape: o.shape === 'ellipse' ? 1 : 0 });
+  return this;
+};
+
+/* ---- 26_weather.js ---- */
+/* ==========================================================================
+   26 天氣：雨、雪、霧、雷雨
+     PZ.weather.set('rain')                  'rain' 雨 | 'drizzle' 毛毛雨 | 'storm' 雷雨 | 'snow' 雪 | 'blizzard' 暴風雪 | 'fog' 濃霧 | 'mist' 薄霧 | 'clear' 放晴
+     PZ.weather.set('snow', { amount: 0.6, wind: -0.3, time: 4 })      強度、風、幾秒變過去（預設 2 秒）
+     PZ.weather.mix({ rain: 0.5, fog: 0.8, lightning: 0.3 })           自己調配方（0～1）
+     PZ.weather.wind = 0.4                   風（-1～1：雨絲斜、雪往旁邊飄、霧流動）
+     PZ.weather.strike()                     馬上打一道雷（閃光、照亮、雷聲）
+     PZ.weather.ground = (x) => y            側視遊戲：雨滴濺在哪條線上；俯視遊戲不用設（濺在畫面裡隨機的地方）
+     顏色：PZ.weather.rainColor / snowColor / fogColor / boltColor
+   - 霧畫在光影「之前」：會被燈照亮（手電筒照進霧裡有光柱）；雨、雪畫在光影「之後」：在燈下閃亮、黑暗裡淡淡的。
+   - 數量跟著畫質（粒子量）自動調；跟著鏡頭有一點視差，不會像貼在螢幕上。
+   - 場景切換時清掉（每個場景在 enter 自己設）。
+   ========================================================================== */
+const WEATHER_PRESETS = {
+  clear: {}, rain: { rain: 1, fog: 0.12 }, drizzle: { rain: 0.35, fog: 0.22 }, storm: { rain: 1, fog: 0.26, lightning: 1, wind: 0.45 },
+  snow: { snow: 1, fog: 0.16 }, blizzard: { snow: 1, fog: 0.5, wind: 0.85 }, fog: { fog: 1 }, mist: { fog: 0.5 },
+};
+const Weather = PZ.weather = {
+  name: 'clear', rain: 0, snow: 0, fog: 0, lightning: 0, wind: 0,
+  to: { rain: 0, snow: 0, fog: 0, lightning: 0 }, windTo: null, rate: 0.5, density: 1,
+  rainColor: '#b4c6de', snowColor: '#f4f8ff', fogColor: '#c3ccd8', boltColor: '#b9ccff',
+  ground: null, splashes: true,
+  drops: [], flakes: [], spl: [], bolts: [], _t: 0, _strikeIn: 3, _env: null, _cx: null, _cy: 0, _splAcc: 0,
+};
+Weather.set = (name, o = {}) => {
+  const p = WEATHER_PRESETS[name]; if (!p) { warnOnce('weather:' + name, '沒有這種天氣：' + name); return Weather; }
+  const k = o.amount != null ? o.amount : 1;
+  Weather.name = name;
+  Weather.mix({ rain: (p.rain || 0) * k, snow: (p.snow || 0) * k, fog: o.fog != null ? o.fog : Math.min(1, (p.fog || 0) * Math.max(k, 0.5)),
+    lightning: o.lightning != null ? o.lightning : p.lightning || 0, wind: o.wind != null ? o.wind : p.wind != null ? p.wind : (name === 'clear' ? 0 : undefined) }, o.time);
+  PZ.emit('weather', name);
+  return Weather;
+};
+Weather.mix = (o, time = 2) => {
+  for (const k of ['rain', 'snow', 'fog', 'lightning']) if (o[k] != null) Weather.to[k] = clamp01(o[k]);
+  if (o.wind != null) Weather.windTo = clamp(o.wind, -1, 1);
+  if (!(time > 0)) { for (const k in Weather.to) Weather[k] = Weather.to[k]; if (Weather.windTo != null) { Weather.wind = Weather.windTo; Weather.windTo = null; } }
+  Weather.rate = 1 / Math.max(0.01, time || 0.01);
+  if (Weather.to.lightning > 0 && Weather._strikeIn > 6) Weather._strikeIn = Rand.range(1.5, 4);
+  return Weather;
+};
+Weather.reset = () => {
+  Object.assign(Weather, { name: 'clear', rain: 0, snow: 0, fog: 0, lightning: 0, wind: 0, windTo: null, density: 1, ground: null, splashes: true, _env: null, _cx: null, _strikeIn: 3 });
+  Object.assign(Weather.to, { rain: 0, snow: 0, fog: 0, lightning: 0 });
+  Object.assign(Weather, { rainColor: '#b4c6de', snowColor: '#f4f8ff', fogColor: '#c3ccd8', boltColor: '#b9ccff' });
+  Weather.drops.length = 0; Weather.flakes.length = 0; Weather.spl.length = 0; Weather.bolts.length = 0;
+  Light._wHaze = 0;
+};
+Weather.active = () => Weather.rain > 0.002 || Weather.snow > 0.002 || Weather.fog > 0.002 || Weather.bolts.length > 0 || Weather.spl.length > 0 || Weather.drops.length > 0 || Weather.flakes.length > 0;
+
+/* ---------- 雷 ---------- */
+function boltPath(x0, y0, x1, y1, depth, disp) {
+  let pts = [{ x: x0, y: y0 }, { x: x1, y: y1 }];
+  for (let d = 0; d < depth; d++) {
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1], b = pts[i], nx = -(b.y - a.y), ny = b.x - a.x, l = Math.hypot(nx, ny) || 1, o = Rand.spread(disp);
+      out.push({ x: (a.x + b.x) / 2 + (nx / l) * o, y: (a.y + b.y) / 2 + (ny / l) * o }, b);
+    }
+    pts = out; disp *= 0.55;
+  }
+  return pts;
+}
+/** 打一道雷。o: { x, y（螢幕 CSS px，雷打到哪；不給隨機）, bolt: false 不畫閃電（只閃光）, delay（雷聲延遲秒，不給隨機）, sound: false } */
+Weather.strike = (o = {}) => {
+  const W = Screen.w, H = Screen.h;
+  Weather._env = { t: 0, p: [[0, 1], [0.085, 0.42], [0.165, 0.85]].map(([t, a]) => [t, a * Rand.range(0.75, 1)]) };
+  if (o.bolt !== false) {
+    const x0 = o.x != null ? o.x + Rand.spread(W * 0.12) : Rand.range(W * 0.12, W * 0.88), x1 = o.x != null ? o.x : x0 + Rand.spread(W * 0.18);
+    const y1 = o.y != null ? o.y : Rand.range(H * 0.3, H * 0.62), main = boltPath(x0, -12, x1, y1, 6, (y1 + 12) * 0.2), branches = [];
+    for (let k = Rand.int(1, 3); k > 0; k--) {
+      const p = main[Rand.int(4, main.length - 8)], a = Math.atan2(y1 + 12, x1 - x0) + Rand.sign() * Rand.range(0.35, 0.9), L = Rand.range(0.12, 0.3) * H;
+      branches.push(boltPath(p.x, p.y, p.x + Math.cos(a) * L, p.y + Math.sin(a) * L, 5, L * 0.22));
+    }
+    Weather.bolts.push({ main, branches, t: 0, life: 0.42 });
+    if (Weather.bolts.length > 3) Weather.bolts.shift();
+  }
+  Fx.flash('#dfe8ff', Light.active ? 0.14 : 0.42, 0.22);
+  if (o.sound !== false && Sfx.has('thunder')) {
+    const d = o.delay != null ? o.delay : Rand.range(0.2, 1.5);
+    PZ.after(d, () => { Sfx.play('thunder', { vol: clamp(1.15 - d * 0.4, 0.35, 1), pitch: Rand.range(0.85, 1.1) }); Cam.shake(Math.max(0, 0.12 - d * 0.06)); }, { real: true });
+  }
+  PZ.emit('lightning');
+};
+
+/* ---------- 霧的貼圖：可以無縫鋪的雜訊（第一次用到才做） ---------- */
+let FogCanvas = null;
+function fogFrame() {
+  if (Art.frames.has('pz.fog') && Art.frames.get('pz.fog').tex) return Art.frames.get('pz.fog');
+  const N = 128;
+  if (!FogCanvas) {
+    FogCanvas = document.createElement('canvas'); FogCanvas.width = FogCanvas.height = N;
+    const x = FogCanvas.getContext('2d'), img = x.createImageData(N, N), d = img.data, R = makeRng(41);
+    const octs = [[4, 0.52], [8, 0.27], [16, 0.14], [32, 0.07]], grids = octs.map(([P]) => { const a = new Float32Array(P * P); for (let i = 0; i < a.length; i++) a[i] = R.next(); return a; });
+    for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
+      let v = 0;
+      for (let k = 0; k < octs.length; k++) {
+        const P = octs[k][0], g = grids[k], fx = (xx / N) * P, fy = (y / N) * P, ix = Math.floor(fx), iy = Math.floor(fy), tx = fx - ix, ty = fy - iy;
+        const i0 = (iy % P) * P, i1 = ((iy + 1) % P) * P, j0 = ix % P, j1 = (ix + 1) % P, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+        v += octs[k][1] * lerp(lerp(g[i0 + j0], g[i0 + j1], sx), lerp(g[i1 + j0], g[i1 + j1], sx), sy);
+      }
+      const i = (y * N + xx) * 4; d[i] = d[i + 1] = d[i + 2] = 255; d[i + 3] = Math.round((0.18 + 0.82 * smoothstep(0.22, 0.85, v)) * 255);
+    }
+    x.putImageData(img, 0, 0);
+  }
+  // 自己一張貼圖（不放圖集：鋪的時候邊緣才不會有縫）；取樣範圍內縮半格
+  const f = Art.frames.get('pz.fog') || new Frame('pz.fog'); Art.frames.set('pz.fog', f);
+  const tex = Gfx.r.texCreate(N, N, { restore: (t) => { if (Gfx.r.texAlloc && Gfx.r.kind !== 'canvas2d') Gfx.r.texAlloc(t); Gfx.r.texUpload(t, FogCanvas, 0, 0); } });
+  Gfx.r.texUpload(tex, FogCanvas, 0, 0);
+  f.setRect(tex, 0.5, 0.5, N - 1, N - 1); f.w = N; f.h = N; f.ax = 0; f.ay = 0;
+  return f;
+}
+
+/* ---------- 模擬 ---------- */
+addSystem({
+  name: 'weather', order: 74,
+  update(dt) {
+    const W = Weather, st = W.rate * dt;
+    for (const k of ['rain', 'snow', 'fog', 'lightning']) W[k] = approach(W[k], W.to[k], st);
+    if (W.windTo != null) { W.wind = approach(W.wind, W.windTo, st * 1.2); if (W.wind === W.windTo) W.windTo = null; }
+    W._t += dt;
+    Light._wHaze = W.fog * 0.13 + W.rain * 0.06 + W.snow * 0.07;
+    if (!Weather.active()) { W._cx = null; return; }
+    const SW = Screen.w, SH = Screen.h, area = SW * SH, Q = Quality.cur.particles * W.density;
+    // 鏡頭視差：近的雨滴跟著世界走多一點
+    let px = 0, py = 0;
+    if (W._cx != null) { px = (Cam.x - W._cx) * (Cam.ez || 1); py = (Cam.y - W._cy) * (Cam.ez || 1); if (Math.abs(px) > SW || Math.abs(py) > SH) px = py = 0; }
+    W._cx = Cam.x; W._cy = Cam.y;
+    // 雨
+    const nR = Math.round(W.rain * Math.min(520, area / 2100) * Q), D = W.drops, wind = W.wind;
+    while (D.length < nR) D.push({ x: Rand.range(-60, SW + 60), y: Rand.range(-SH * 0.6, -10), z: Rand.range(0.3, 1), seed: Rand.next() });
+    for (let i = D.length - 1; i >= 0; i--) {
+      const d = D[i], sp = 650 + 950 * d.z;
+      d.x += (wind * 430 * d.z) * dt - px * (0.3 + 0.7 * d.z); d.y += sp * dt - py * (0.3 + 0.7 * d.z);
+      if (d.y > SH + 40 || d.x < -120 || d.x > SW + 120) {
+        if (i >= nR) { D.splice(i, 1); continue; }
+        d.z = Rand.range(0.3, 1); d.y = Rand.range(-SH * 0.25, -12); d.x = Rand.range(-60, SW + 60) - wind * 430 * d.z * (SH / (650 + 950 * d.z)) * 0.5;
+      }
+    }
+    // 雪
+    const nS = Math.round(W.snow * Math.min(420, area / 2500) * Q), Fl = W.flakes;
+    while (Fl.length < nS) Fl.push({ x: Rand.range(-20, SW + 20), y: Rand.range(-SH * 0.5, -6), z: Rand.range(0.25, 1), ph: Rand.angle(), f: Rand.range(0.6, 1.6), amp: Rand.range(14, 40) });
+    for (let i = Fl.length - 1; i >= 0; i--) {
+      const f = Fl[i];
+      f.x += (wind * 140 * f.z + Math.cos(W._t * f.f + f.ph) * f.amp * f.z) * dt - px * (0.25 + 0.75 * f.z); f.y += (26 + 78 * f.z) * dt - py * (0.25 + 0.75 * f.z);
+      if (f.x < -30) f.x += SW + 60; else if (f.x > SW + 30) f.x -= SW + 60;
+      if (f.y > SH + 20) { if (i >= nS) { Fl.splice(i, 1); continue; } f.y = Rand.range(-40, -6); f.x = Rand.range(-20, SW + 20); f.z = Rand.range(0.25, 1); }
+    }
+    // 水花（世界座標）
+    const S = W.spl;
+    for (let i = S.length - 1; i >= 0; i--) { S[i].t += dt; if (S[i].t >= S[i].life) S.splice(i, 1); }
+    if (W.splashes && W.rain > 0.02) {
+      W._splAcc += W.rain * 48 * (area / 360000) * Q * dt;
+      const v = Cam.view;
+      while (W._splAcc >= 1 && S.length < 160) {
+        W._splAcc -= 1;
+        const x = v.x + Rand.next() * v.w; let y = v.y + Rand.next() * v.h;
+        if (W.ground) { y = W.ground(x); if (y == null || !(y >= v.y - 20 && y <= v.y + v.h + 20)) continue; }
+        S.push({ x, y, t: 0, life: Rand.range(0.24, 0.38), s: Rand.range(0.6, 1.25) / Math.max(0.35, Math.min(2.5, Cam.ez || 1)) });
+      }
+      if (W._splAcc > 4) W._splAcc = 0;
+    }
+    // 雷
+    if (W.lightning > 0.03) { W._strikeIn -= dt; if (W._strikeIn <= 0) { Weather.strike(); W._strikeIn = Rand.range(2.5, 9) / Math.max(0.3, W.lightning); } }
+  },
+  frame(rdt) {
+    const W = Weather;
+    for (let i = W.bolts.length - 1; i >= 0; i--) { const b = W.bolts[i]; b.t += rdt; if (b.t >= b.life) W.bolts.splice(i, 1); }
+    const e = W._env;
+    if (e) {
+      e.t += rdt; let v = 0;
+      for (const [t0, a] of e.p) if (e.t >= t0) v += a * Math.exp(-(e.t - t0) * 16);
+      Light._flash = Math.max(Light._flash, Math.min(1, v * 0.85) * Settings.flashScale()); Light._flashDecay = 6;
+      W._envV = v; if (e.t > 1.2) { W._env = null; W._envV = 0; }
+    }
+  },
+});
+
+/* ---------- 畫 ---------- */
+/** 霧：光影之前（會被燈照亮） */
+Weather._drawUnder = (g) => {
+  if (Weather.fog < 0.004) return;
+  const f = fogFrame(); if (!f || !f.tex) return;
+  withSpace(g, 'world', (gg) => {
+    const v = Cam.view, t = Weather._t, w = Weather.wind, pad = 80, a = Weather.fog;
+    const x = v.x - pad, y = v.y - pad, W = v.w + pad * 2, H = v.h + pad * 2;
+    gg.rect(x, y, W, H, Weather.fogColor, { a: a * 0.12 });
+    gg.tile(f, x, y, W, H, { s: 6, ox: -t * (9 + w * 70), oy: -t * 3, a: a * 0.27, color: Weather.fogColor });
+    gg.tile(f, x, y, W, H, { s: 3.6, ox: -t * (16 + w * 110) + 300, oy: t * 2.5 + 170, a: a * 0.17, color: Weather.fogColor });
+  });
+};
+/** 雨、雪、水花、閃電：光影之後 */
+Weather._drawOver = (g) => {
+  const W = Weather;
+  if (!W.drops.length && !W.flakes.length && !W.spl.length && !W.bolts.length) return;
+  const lit = Light.active, amb = lit ? Light._ambient() : null, e = lit ? clamp(0.16 + (0.2126 * amb[0] + 0.7152 * amb[1] + 0.0722 * amb[2]), 0.16, 1.15) : 1;
+  const glint = lit && Light._vis.length > 0;
+  if (W.spl.length) withSpace(g, 'world', (gg) => {
+    const col = toColor(W.rainColor);
+    for (const s of W.spl) {
+      const k = s.t / s.life, r = (2 + 11 * Ease.outQuad(k)) * s.s, al = (1 - k) * 0.55 * Math.min(1, e + (glint ? Light.glint(Cam.toScreenX(s.x, s.y), Cam.toScreenY(s.x, s.y)) * 1.5 : 0));
+      if (al < 0.01) continue;
+      gg.save(); gg.translate(s.x, s.y); gg.scale(1, 0.38); gg.ring(0, 0, r, 1.2 * s.s, col, { a: al }); gg.restore();
+      const hy = (16 * k - 22 * k * k) * s.s * 1.4, hx = 6 * k * s.s;
+      if (hy > 0) { gg.circle(s.x - hx, s.y - hy, 0.9 * s.s, col, { a: al }); gg.circle(s.x + hx * 0.8, s.y - hy * 0.85, 0.8 * s.s, col, { a: al }); }
+    }
+  });
+  if (W.drops.length || W.flakes.length || W.bolts.length) withSpace(g, 'screen', (gg) => {
+    if (W.drops.length) {
+      const col = toColor(W.rainColor), wind = W.wind;
+      for (const d of W.drops) {
+        const sp = 650 + 950 * d.z, vx = wind * 430 * d.z, l = Math.hypot(vx, sp), len = (9 + 24 * d.z) * (0.7 + 0.3 * W.rain);
+        let b = e; if (glint) b = Math.min(1.6, e + Light.glint(d.x, d.y) * 1.6);
+        const al = (0.1 + 0.34 * d.z) * b * Math.min(1, W.rain * 3);
+        if (al < 0.012) continue;
+        gg.line(d.x, d.y, d.x - (vx / l) * len, d.y - (sp / l) * len, 0.8 + d.z * 1.1, col, { a: Math.min(0.85, al), add: b > 1 ? 0.5 : 0 });
+      }
+    }
+    if (W.flakes.length) {
+      const col = toColor(W.snowColor);
+      for (const f of W.flakes) {
+        let b = e; if (glint) b = Math.min(1.5, e + Light.glint(f.x, f.y) * 1.4);
+        const r = 1 + f.z * 2.8, al = (0.4 + 0.5 * f.z) * b * Math.min(1, W.snow * 3);
+        if (al < 0.015) continue;
+        if (f.z > 0.82) gg.glow(f.x, f.y, r * 2.6, col, { a: al * 0.55, add: 0.35 });
+        else gg.circle(f.x, f.y, r, col, { a: Math.min(1, al) });
+      }
+    }
+    for (const bo of W.bolts) {
+      const k = bo.t / bo.life, v = (1 - k) * (0.55 + 0.45 * (Math.sin(bo.t * 70) > -0.3 ? 1 : 0.2));
+      const seg = (pts, w) => { for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; gg.line(a.x, a.y, b.x, b.y, w * 5, W.boltColor, { a: 0.14 * v, add: 1 }); gg.line(a.x, a.y, b.x, b.y, w, '#fff', { a: 0.95 * v, add: 1 }); } };
+      seg(bo.main, 2.4); for (const br of bo.branches) seg(br, 1.3);
+    }
+  });
+};
+
+/* ---- 27_cinema.js ---- */
+/* ==========================================================================
+   27 電影感：調色（LUT）、黑邊
+     PZ.post.grade('cinema')                  套用調色（預設 0.8 秒淡過去）
+       'cinema' 青橘電影  'warm' 暖  'cold' 冷  'noir' 黑白  'sepia' 舊照片  'horror' 恐怖  'dream' 夢境
+       'night' 夜晚  'sunset' 夕陽  'neon' 霓虹  'toxic' 毒氣  'vivid' 鮮豔  'bleach' 漂白  'retro' 復古
+     PZ.post.grade('noir', { time: 1.5, amount: 0.8 })                 1.5 秒換過去、強度八成
+     PZ.post.grade({ temp: 0.4, sat: 1.2, contrast: 0.2, lift: [0, 0, 0.05] })   自己調（欄位見下面 gradeColor）
+     PZ.post.grade(null)                      回到原色
+     PZ.post.grades                           全部預設的名字＋中文
+     PZ.fx.letterbox(0.12)                    電影黑邊：上下各佔畫面高度 12%（預設 0.6 秒滑進來）；PZ.fx.letterbox(0) 收起來
+   調色只在有後製的時候有效（Canvas2D 後備模式、最低畫質沒有）；黑邊一直都有。
+   ========================================================================== */
+const GRADES = {
+  cinema: { name: '電影', temp: 0.04, contrast: 0.18, sat: 1.04, lift: [0, 0.008, 0.02], split: { shadow: '#0f6f7d', highlight: '#ffad6a', amount: 0.34 } },
+  warm: { name: '暖', temp: 0.42, sat: 1.07, contrast: 0.08, gain: [1.04, 1, 0.95] },
+  cold: { name: '冷', temp: -0.45, sat: 0.9, contrast: 0.12, lift: [0, 0.01, 0.04] },
+  noir: { name: '黑白', mono: 1, contrast: 0.5, gamma: 0.94, fade: 0.015 },
+  sepia: { name: '舊照片', mono: 1, monoColor: '#d1a877', fade: 0.09, contrast: -0.04 },
+  horror: { name: '恐怖', sat: 0.42, temp: -0.12, tint: 0.28, contrast: 0.32, gamma: 0.9, split: { shadow: '#1f3b29', highlight: '#cfdcb4', amount: 0.26 } },
+  dream: { name: '夢境', fade: 0.08, sat: 1.12, contrast: -0.12, gain: [1.03, 1, 1.04], split: { shadow: '#6b4ea0', highlight: '#ffd8ea', amount: 0.32 } },
+  night: { name: '夜晚', temp: -0.6, sat: 0.66, exposure: -0.4, contrast: 0.12, lift: [0, 0.01, 0.05] },
+  sunset: { name: '夕陽', temp: 0.55, tint: -0.16, sat: 1.15, contrast: 0.1, split: { shadow: '#5b2b6c', highlight: '#ffb45c', amount: 0.36 } },
+  neon: { name: '霓虹', sat: 1.32, vibrance: 0.4, contrast: 0.2, split: { shadow: '#3c1b8c', highlight: '#2fe6ff', amount: 0.3 } },
+  toxic: { name: '毒氣', sat: 0.9, tint: 0.5, contrast: 0.16, split: { shadow: '#1e3d10', highlight: '#c8ff6a', amount: 0.42 } },
+  vivid: { name: '鮮豔', sat: 1.28, vibrance: 0.3, contrast: 0.12 },
+  bleach: { name: '漂白', sat: 0.45, contrast: 0.42, gain: [1.02, 1.02, 1.02], fade: 0.02 },
+  retro: { name: '復古', fade: 0.12, sat: 0.84, temp: 0.2, contrast: -0.08, split: { shadow: '#2a4b5c', highlight: '#f2d18f', amount: 0.26 } },
+};
+const vec3of = (v, d) => (v == null ? [d, d, d] : typeof v === 'number' ? [v, v, v] : v);
+const rgb01 = (c) => { c = toColor(c); return [cR(c) / 255, cG(c) / 255, cB(c) / 255]; };
+/**
+ * 一個顏色經過調色。P 的欄位（都可以不給）：
+ *   exposure（曝光，格數，-1 暗一半）  temp（-1 冷～1 暖）  tint（-1 洋紅～1 綠）
+ *   contrast（-0.5～1，S 曲線）  lift / gamma / gain（暗部／中間調／亮部，數字或 [r,g,b]）
+ *   sat（飽和度，1＝原樣）  vibrance（只拉不飽和的顏色）  split: { shadow, highlight, amount, balance }（暗部、亮部各染一種顏色）
+ *   fade（黑色抬起來的霧面感）  mono（0～1 變黑白）, monoColor（黑白帶的顏色，例如舊照片的褐色）
+ */
+function gradeColor(r, g, b, P, sh, hi, mono) {
+  if (P.exposure) { const e = Math.pow(2, P.exposure); r *= e; g *= e; b *= e; }
+  if (P.temp) { r *= 1 + P.temp * 0.11; g *= 1 + P.temp * 0.015; b *= 1 - P.temp * 0.12; }
+  if (P.tint) { g *= 1 + P.tint * 0.09; r *= 1 - P.tint * 0.03; b *= 1 - P.tint * 0.03; }
+  const lift = vec3of(P.lift, 0), gam = vec3of(P.gamma, 1), gain = vec3of(P.gain, 1), out = [r, g, b];
+  for (let i = 0; i < 3; i++) {
+    let x = Math.max(0, out[i]);
+    if (P.contrast) { const k = 1 + P.contrast; x = Math.min(1, x); x = x < 0.5 ? 0.5 * Math.pow(2 * x, k) : 1 - 0.5 * Math.pow(2 - 2 * x, k); }
+    x = gain[i] * (x + lift[i] * (1 - x));
+    x = Math.pow(Math.max(0, x), 1 / Math.max(0.05, gam[i]));
+    out[i] = x;
+  }
+  [r, g, b] = out;
+  let l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const sat = P.sat != null ? P.sat : 1;
+  if (sat !== 1) { r = l + (r - l) * sat; g = l + (g - l) * sat; b = l + (b - l) * sat; }
+  if (P.vibrance) { const mx = Math.max(r, g, b), mn = Math.min(r, g, b), k = 1 + P.vibrance * (1 - clamp01((mx - mn) * 2)); r = l + (r - l) * k; g = l + (g - l) * k; b = l + (b - l) * k; }
+  if (sh) {
+    l = clamp01(0.2126 * r + 0.7152 * g + 0.0722 * b);
+    const bal = P.split.balance || 0, amt = P.split.amount != null ? P.split.amount : 0.3;
+    const ws = (1 - smoothstep(0, 0.55 + bal * 0.3, l)) * amt, wh = smoothstep(0.45 + bal * 0.3, 1, l) * amt;
+    r += (sh[0] - sh[3]) * ws + (hi[0] - hi[3]) * wh; g += (sh[1] - sh[3]) * ws + (hi[1] - hi[3]) * wh; b += (sh[2] - sh[3]) * ws + (hi[2] - hi[3]) * wh;
+  }
+  if (mono) { l = 0.2126 * r + 0.7152 * g + 0.0722 * b; const k = P.mono; r = lerp(r, l * mono[0], k); g = lerp(g, l * mono[1], k); b = lerp(b, l * mono[2], k); }
+  if (P.fade) { const f = P.fade; r = f + r * (1 - f); g = f + g * (1 - f); b = f + b * (1 - f); }
+  return [r, g, b];
+}
+/** 做一張 16³ 調色表（256×16 RGBA） */
+function makeLut(P) {
+  P = P || {};
+  const d = new Uint8Array(256 * 16 * 4), withL = (c) => { const v = rgb01(c); v.push(0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]); return v; };
+  const sh = P.split ? withL(P.split.shadow || '#000') : null, hi = P.split ? withL(P.split.highlight || '#fff') : null;
+  let mono = null; if (P.mono) { mono = rgb01(P.monoColor || '#fff'); const l = 0.2126 * mono[0] + 0.7152 * mono[1] + 0.0722 * mono[2] || 1; mono = mono.map((v) => v / l); }
+  for (let bi = 0; bi < 16; bi++) for (let gi = 0; gi < 16; gi++) for (let ri = 0; ri < 16; ri++) {
+    const c = gradeColor(ri / 15, gi / 15, bi / 15, P, sh, hi, mono), i = (gi * 256 + bi * 16 + ri) * 4;
+    d[i] = Math.round(clamp01(c[0]) * 255); d[i + 1] = Math.round(clamp01(c[1]) * 255); d[i + 2] = Math.round(clamp01(c[2]) * 255); d[i + 3] = 255;
+  }
+  return d;
+}
+let LutVer = 0, LutIdent = null;
+const lutIdent = () => LutIdent || (LutIdent = makeLut({}));
+function lutBlend(a, b, t) { const o = new Uint8Array(a.length); for (let i = 0; i < a.length; i++) o[i] = Math.round(a[i] + (b[i] - a[i]) * t); return o; }
+/* Post._lut：{ a, va, b, vb, mix（0～1 從 a 換到 b）, amt（整體強度）} 由 07_gl 的合成著色器讀 */
+const Cinema = PZ.cinema = { bars: 0, barsFrom: 0, barsTo: 0, barsT: 0, barsDur: 0, _gAmtTo: 0, _gAmtRate: 1, _gMixRate: 0 };
+Post.grades = Object.fromEntries(Object.entries(GRADES).map(([k, v]) => [k, v.name]));
+Post.gradeName = null;
+Post.grade = (p, o = {}) => {
+  const time = o.time != null ? o.time : 0.8, amount = o.amount != null ? clamp01(o.amount) : 1;
+  let P = null;
+  if (typeof p === 'string') { P = GRADES[p]; if (!P) { warnOnce('grade:' + p, '沒有這種調色：' + p); return; } }
+  else if (p && typeof p === 'object') P = p;
+  const L = Post._lut || (Post._lut = { a: lutIdent(), va: ++LutVer, b: null, vb: 0, mix: 0, amt: 0 });
+  if (L.b && L.mix > 0) { L.a = lutBlend(L.a, L.b, L.mix); L.va = ++LutVer; }
+  L.b = null; L.mix = 0;
+  Post.gradeName = typeof p === 'string' ? p : P ? 'custom' : null;
+  const rate = 1 / Math.max(0.001, time);
+  if (!P) { Cinema._gAmtTo = 0; Cinema._gAmtRate = rate; return; }
+  const data = makeLut(P);
+  if (L.amt <= 0.001 || time <= 0) { L.a = data; L.va = ++LutVer; if (time <= 0) L.amt = amount; }
+  else { L.b = data; L.vb = ++LutVer; Cinema._gMixRate = rate; }
+  Cinema._gAmtTo = amount; Cinema._gAmtRate = rate;
+};
+/** 電影黑邊：amount＝上下各佔畫面高度幾成（0～0.3），time 秒 */
+Fx.letterbox = (amount = 0.12, time = 0.6) => { const C = Cinema; C.barsFrom = C.bars; C.barsTo = clamp(amount, 0, 0.3); C.barsT = 0; C.barsDur = Math.max(0, time); if (time <= 0) C.bars = C.barsTo; };
+Cinema.reset = () => { Cinema.bars = Cinema.barsTo = Cinema.barsFrom = 0; Cinema.barsDur = 0; };
+addSystem({
+  name: 'cinema', order: 76,
+  frame(rdt) {
+    const C = Cinema, L = Post._lut;
+    if (C.bars !== C.barsTo) { C.barsT += rdt; C.bars = C.barsDur > 0 ? lerp(C.barsFrom, C.barsTo, Ease.inOutQuad(clamp01(C.barsT / C.barsDur))) : C.barsTo; }
+    if (L) {
+      if (L.b) { L.mix = Math.min(1, L.mix + C._gMixRate * rdt); if (L.mix >= 1) { L.a = L.b; L.va = L.vb; L.b = null; L.mix = 0; } }
+      if (L.amt !== C._gAmtTo) L.amt = approach(L.amt, C._gAmtTo, C._gAmtRate * rdt);
+    }
+  },
+});
+Cinema._drawBars = (g) => {
+  if (Cinema.bars < 0.0005) return;
+  const h = Screen.h * Cinema.bars;
+  g.rect(-2, -2, Screen.w + 4, h + 2, '#000'); g.rect(-2, Screen.h - h, Screen.w + 4, h + 2, '#000');
+};
+
 global.PZ = PZ;
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
-<script>window.PZ_GAME = {"id": "engine-lab", "title": "樣品館", "version": "1.0.0", "engine": "1.0.2", "built": "2026-11-14 17:55"};
+<script>window.PZ_GAME = {"id": "engine-lab", "title": "樣品館", "version": "1.0.0", "engine": "dev", "built": "2026-11-14 20:38"};
 /* ---- 01_art.js ---- */
 /* 樣品館：用程式畫的美術（也是「怎麼畫出有質感的程式美術」的範例） */
 const LabArt = {};
@@ -4396,6 +5465,8 @@ const HUB_ITEMS = [
   ['city', '⌂', '鏡頭', '雙指縮放、旋轉、拖曳慣性、滾輪：戰略與模擬類的基本功'],
   ['sound', '♪', '聲音', '四十多種合成音效、三首文字寫的配樂、緊張度分層'],
   ['post', '◐', '後製特效', '泛光、衝擊波扭曲、色差、調色、掃描線，一鍵切換'],
+  ['light', '☀', '光影', '動態光源、柔和陰影、手電筒、火把、照明彈；角色會投影，空殼怕光'],
+  ['weather', '☂', '天氣與水面', '雨夜港口：水面倒影、雨雪霧雷、路燈光柱、電影調色與黑邊'],
   ['ui', '▤', '介面與劇情', '五套主題、對話框、劇情對話、選擇、設定頁'],
 ];
 PZ.scene('hub', {
@@ -4873,6 +5944,459 @@ PZ.scene('ui', {
     g.glow(0, -30, 120, 'rgba(255,181,71,.18)');
     const sizes = [12, 16, 20, 28, 36];   // 最大那行在 390 寬的手機上也要整行看得到
     let y = -300; for (const s of sizes) { g.text(`${s}px 中文字清楚嗎？`, 0, y, { size: s, align: 'center', color: '#e9eef7', weight: s > 20 ? 900 : 500 }); y += s * 1.35; }
+  },
+});
+
+/* ---- 19_light.js ---- */
+/* 樣品館：光影（動態光源、柔和陰影、手電筒、火把、照明彈、角色投影、怕光的空殼） */
+const LT = {
+  walls: [[-600, -500, 1200, 48], [-600, 452, 1200, 48], [-600, -500, 48, 1000], [552, -500, 48, 1000], [-600, -40, 290, 40], [310, 130, 290, 40], [-100, -262, 200, 36]],
+  pillars: [[-250, -250], [250, -250], [-250, 270], [250, 270]],
+  crates: [[-500, -420], [-436, -420], [-500, -356], [470, 400], [406, 400], [470, 336], [150, 380], [-470, 300]],
+  barrels: [[-380, -420], [500, -60], [-160, 400], [60, -400]],
+  torches: [[-300, -452, 'n'], [300, -452, 'n'], [-552, 220, 'w'], [552, -280, 'e'], [0, -226, 'n']],   // 牆面上的位置＋朝向（n：北牆朝下、w：西牆朝右、e：東牆朝左）
+  husks: [[-420, 110, 'husk'], [420, -160, 'husk2'], [0, 300, 'brute'], [-120, -380, 'husk']],
+  oil: [[-150, 120, 1.1, 0.4], [170, -40, 0.8, 2.1], [80, 230, 1.3, 1]],
+  papers: [[-60, 160, 0.4], [230, 60, -0.7], [-260, -120, 1.9], [-20, 175, 1.2]],
+  puddle: [-405, 366, 150, 64],
+  gen: [420, -400],
+  path: (t) => ({ x: Math.cos(t) * 330, y: 40 + Math.sin(t) * 190 }),
+};
+LT.art = () => {
+  if (PZ.art.has('lt.floor')) return;
+  const A = PZ.art;
+  // 石板地：2×2 塊，每塊有色差、裂縫、苔蘚、髒污（燈一照細節就出來）
+  A.make('lt.floor', 128, 128, (c, w, h) => {
+    const R = PZ.rng(21);
+    for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
+      const x = i * 64, y = j * 64, base = R.range(30, 42);
+      const g = c.createLinearGradient(x, y, x + 64, y + 64); g.addColorStop(0, `hsl(220,10%,${base + 4}%)`); g.addColorStop(1, `hsl(225,12%,${base - 6}%)`);
+      c.fillStyle = g; c.fillRect(x + 1.5, y + 1.5, 61, 61);
+      for (let k = 0; k < 60; k++) { c.fillStyle = `rgba(${R.chance(0.5) ? '255,255,255' : '0,0,0'},${R.range(0.02, 0.07)})`; c.fillRect(x + R.range(2, 60), y + R.range(2, 60), R.range(1, 4), R.range(1, 4)); }
+      c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(x + 1.5, y + 1.5, 61, 1.5); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x + 1.5, y + 61, 61, 1.5);
+      if (R.chance(0.6)) { c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 1; c.beginPath(); let px = x + R.range(10, 54), py = y + R.range(6, 20); c.moveTo(px, py); for (let s = 0; s < 4; s++) { px += R.spread(10); py += R.range(6, 12); c.lineTo(px, py); } c.stroke(); }
+      if (R.chance(0.45)) { const mg = c.createRadialGradient(x + R.range(8, 56), y + R.range(8, 56), 0, x + 32, y + 32, 30); mg.addColorStop(0, 'rgba(70,110,60,.22)'); mg.addColorStop(1, 'rgba(70,110,60,0)'); c.fillStyle = mg; c.fillRect(x, y, 64, 64); }
+    }
+    c.fillStyle = '#0b0d12'; c.fillRect(0, 0, w, 1.5); c.fillRect(0, 0, 1.5, h); c.fillRect(0, 63, w, 2); c.fillRect(63, 0, 2, h);
+  });
+  // 牆頂（深色石材，邊緣有斜面光）與牆面（磚）
+  A.make('lt.top', 64, 64, (c, w, h) => {
+    const R = PZ.rng(4); c.fillStyle = '#2b2f38'; c.fillRect(0, 0, w, h);
+    for (let k = 0; k < 90; k++) { c.fillStyle = `rgba(${R.chance(0.5) ? '255,255,255' : '0,0,0'},${R.range(0.02, 0.06)})`; c.fillRect(R.range(0, w), R.range(0, h), R.range(1, 5), R.range(1, 3)); }
+    c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.strokeRect(0.5, 0.5, w - 1, h - 1);
+  });
+  A.make('lt.brick', 64, 28, (c, w, h) => {
+    c.fillStyle = '#1d1f26'; c.fillRect(0, 0, w, h);
+    const R = PZ.rng(8);
+    for (let row = 0; row < 2; row++) for (let i = -1; i < 3; i++) {
+      const x = i * 32 + (row ? 16 : 0), y = row * 14, l = R.range(26, 36);
+      c.fillStyle = `hsl(18,${R.range(14, 24)}%,${l}%)`; c.fillRect(x + 1, y + 1, 30, 12);
+      c.fillStyle = 'rgba(255,255,255,.07)'; c.fillRect(x + 1, y + 1, 30, 1.5); c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(x + 1, y + 11.5, 30, 1.5);
+    }
+  });
+  // 柱子（俯視：圓頂有刻紋）
+  A.make('lt.pillar', 72, 72, (c, w, h) => {
+    const g = c.createRadialGradient(w * 0.4, h * 0.38, 2, w / 2, h / 2, 34); g.addColorStop(0, '#6d7180'); g.addColorStop(0.7, '#3d414c'); g.addColorStop(1, '#22252c');
+    c.fillStyle = g; c.beginPath(); c.arc(w / 2, h / 2, 33, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; for (const r of [24, 14]) { c.beginPath(); c.arc(w / 2, h / 2, r, 0, Math.PI * 2); c.stroke(); }
+    c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 1.5; c.beginPath(); c.arc(w / 2, h / 2, 31, Math.PI * 1.05, Math.PI * 1.7); c.stroke();
+  });
+  // 木箱
+  A.make('lt.crate', 60, 60, (c, w, h) => {
+    c.fillStyle = '#4a3220'; c.fillRect(2, 2, w - 4, h - 4);
+    for (let i = 0; i < 4; i++) { c.fillStyle = i % 2 ? '#7a5634' : '#6c4a2c'; c.fillRect(5, 5 + i * 12.5, w - 10, 11); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(5, 15 + i * 12.5, w - 10, 1.2); }
+    c.strokeStyle = '#3a2614'; c.lineWidth = 5; c.strokeRect(4.5, 4.5, w - 9, h - 9);
+    c.strokeStyle = '#8a6440'; c.lineWidth = 4; c.beginPath(); c.moveTo(8, 8); c.lineTo(w - 8, h - 8); c.stroke();
+    c.fillStyle = '#b8b0a0'; for (const [x, y] of [[7, 7], [w - 7, 7], [7, h - 7], [w - 7, h - 7]]) { c.beginPath(); c.arc(x, y, 1.8, 0, Math.PI * 2); c.fill(); }
+  });
+  A.make('lt.barrel', 46, 46, (c, w, h) => {
+    const g = c.createRadialGradient(w * 0.42, h * 0.4, 2, w / 2, h / 2, 22); g.addColorStop(0, '#8a4a3a'); g.addColorStop(1, '#3a1c16');
+    c.fillStyle = g; c.beginPath(); c.arc(w / 2, h / 2, 21, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#2a2a30'; c.lineWidth = 3; for (const r of [20, 13]) { c.beginPath(); c.arc(w / 2, h / 2, r, 0, Math.PI * 2); c.stroke(); }
+    c.fillStyle = 'rgba(255,220,180,.18)'; c.beginPath(); c.ellipse(w * 0.4, h * 0.36, 8, 4, -0.6, 0, Math.PI * 2); c.fill();
+  });
+  // 火把座
+  A.make('lt.torch', 14, 26, (c, w, h) => {
+    c.fillStyle = '#2a1f18'; c.fillRect(w / 2 - 2, 8, 4, h - 8);
+    c.fillStyle = '#5a4030'; c.beginPath(); c.moveTo(1, 4); c.lineTo(w - 1, 4); c.lineTo(w - 3, 10); c.lineTo(3, 10); c.closePath(); c.fill();
+    c.fillStyle = '#8a6a4a'; c.fillRect(1, 3, w - 2, 2);
+  }, { anchor: [0.5, 0.2] });
+  // 地上的油漬（帶一點虹彩）、警示斑馬線、散落的紙、發電機
+  A.make('lt.oil', 90, 56, (c, w, h) => {
+    const R = PZ.rng(13);
+    for (let i = 0; i < 9; i++) { const x = w / 2 + R.spread(w * 0.25), y = h / 2 + R.spread(h * 0.2), r = R.range(10, 24), g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, 'rgba(8,8,12,.55)'); g.addColorStop(0.75, 'rgba(8,8,12,.35)'); g.addColorStop(1, 'rgba(8,8,12,0)'); c.fillStyle = g; c.fillRect(0, 0, w, h); }
+    const g2 = c.createLinearGradient(10, 10, w - 10, h - 10); g2.addColorStop(0, 'rgba(120,60,200,0)'); g2.addColorStop(0.4, 'rgba(60,160,200,.18)'); g2.addColorStop(0.6, 'rgba(200,180,60,.14)'); g2.addColorStop(1, 'rgba(200,60,120,0)');
+    c.globalCompositeOperation = 'source-atop'; c.fillStyle = g2; c.fillRect(0, 0, w, h);
+  });
+  A.make('lt.stripes', 64, 16, (c, w, h) => {
+    c.fillStyle = '#c99a1e'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#16140f'; for (let x = -16; x < w; x += 16) { c.beginPath(); c.moveTo(x, h); c.lineTo(x + 8, 0); c.lineTo(x + 16, 0); c.lineTo(x + 8, h); c.closePath(); c.fill(); }
+    const R = PZ.rng(3); for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(30,30,34,${R.range(0.2, 0.6)})`; c.fillRect(R.range(0, w), R.range(0, h), R.range(1, 5), R.range(1, 3)); }
+  });
+  A.make('lt.paper', 18, 24, (c, w, h) => { c.fillStyle = '#d9d4c6'; c.fillRect(1, 1, w - 2, h - 2); c.fillStyle = 'rgba(40,40,50,.35)'; for (let y = 5; y < h - 3; y += 3) c.fillRect(3, y, w - 6 - (y % 6), 1); c.fillStyle = 'rgba(0,0,0,.12)'; c.beginPath(); c.moveTo(w - 1, 1); c.lineTo(w - 6, 1); c.lineTo(w - 1, 6); c.fill(); });
+  A.make('lt.gen', 76, 54, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#4c5560'); g.addColorStop(1, '#262c33'); c.fillStyle = g; c.beginPath(); c.roundRect(2, 2, w - 4, h - 4, 5); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.14)'; c.lineWidth = 1.5; c.beginPath(); c.roundRect(2.5, 2.5, w - 5, h - 5, 5); c.stroke();
+    c.fillStyle = '#15191e'; for (let i = 0; i < 6; i++) c.fillRect(8 + i * 7, 10, 4, 22);
+    c.fillStyle = '#c99a1e'; c.fillRect(w - 26, 10, 16, 10); c.fillStyle = '#16140f'; c.font = '900 8px sans-serif'; c.fillText('⚡', w - 22, 18);
+    c.fillStyle = '#0d1014'; c.fillRect(w - 28, h - 18, 20, 8);
+  });
+  // 照明彈
+  A.make('lt.flare', 10, 22, (c, w, h) => { c.fillStyle = '#b02a2a'; c.fillRect(2, 4, w - 4, h - 4); c.fillStyle = '#e8d8c0'; c.fillRect(2, h - 5, w - 4, 3); c.fillStyle = '#fff'; c.fillRect(3, 0, w - 6, 4); });
+};
+const LT_TIMES = { 深夜: { amb: '#1a2234', bloom: 0.75, k: 1 }, 黃昏: { amb: '#5d4a5e', bloom: 0.6, k: 0.85 }, 白天: { amb: '#ffffff', bloom: 0.45, k: 0.3 } };
+
+PZ.scene('light', {
+  bg: '#07080c',
+  ui: () => `${Lab.bar('光影', '點地上：丟照明彈・空殼怕光')}<div class="lab-stat"></div>
+    <div class="lab-panel" data-ui>
+      <div class="lab-row"><button class="lab-chip" data-chip="shadows">陰影</button><button class="lab-chip" data-chip="flash">手電筒</button><button class="lab-chip" data-chip="torch">火把</button><button class="lab-chip" data-chip="orbs">彩燈</button><button class="lab-chip" data-chip="cast">投影</button><button class="lab-chip" data-chip="fog">霧氣</button></div>
+      <div class="lab-row"><span class="lab-label">時段</span>${Object.keys(LT_TIMES).map((k, i) => `<button class="lab-chip cyan${i ? '' : ' on'}" data-time="${k}">${k}</button>`).join('')}</div>
+    </div>`,
+  enter() {
+    LT.art();
+    const box = PZ.scenes.uiEl; Lab.bindBack(box); this.stat = box.querySelector('.lab-stat');
+    const st = this.st = { shadows: true, flash: true, torch: true, orbs: true, cast: true, fog: false };
+    Lab.chips(box, st, (k) => this.apply(k));
+    box.querySelectorAll('[data-time]').forEach((b) => b.addEventListener('click', () => { box.querySelectorAll('[data-time]').forEach((x) => x.classList.toggle('on', x === b)); this.setTime(b.dataset.time); PZ.uiSound('click'); }));
+    this.base = { bloom: PZ.post.bloom.strength };
+    const L = PZ.light; L.on({ ambient: LT_TIMES['深夜'].amb, soak: 12 });
+    for (const w of LT.walls) L.box(...w);
+    for (const [x, y] of LT.pillars) L.circle(x, y, 31);
+    for (const [x, y] of LT.crates) L.box(x - 28, y - 28, 56, 56);
+    for (const [x, y] of LT.barrels) L.circle(x, y, 20);
+    L.box(LT.gen[0] - 36, LT.gen[1] - 25, 72, 50);
+    this.led = L.add({ x: LT.gen[0] + 26, y: LT.gen[1] + 14, r: 90, color: '#3dff8a', intensity: 0.8, flicker: 0.5, flickerSpeed: 2.5, shadows: false });
+    // 角色也擋光（照明彈會把空殼的影子拖得很長）
+    L.occluders((g) => { for (const h of this.husks) g.sprite(h.f, h.x, h.y - 4, { s: h.s * 0.9, silhouette: true }); });
+    this.torches = LT.torches.map(([x, y, f]) => {
+      const fx = f === 'w' ? 1 : f === 'e' ? -1 : 0, fy = f === 'n' ? 1 : 0, t = { x, y, f, fx, fy, lx: x + fx * 16, ly: y + fy * 16 + (fx ? -10 : 0) };
+      t.L = L.add({ x: t.lx, y: t.ly, r: 310, color: '#ff9a3c', intensity: 1.3, flicker: 0.22, flickerSpeed: 11, size: 10, fall: 5 });
+      return t;
+    });
+    this.orbs = [{ c: '#46d4ff', ph: 0 }, { c: '#c06bff', ph: Math.PI }].map((o) => Object.assign(o, { x: 0, y: 0, L: L.add({ r: 290, color: o.c, intensity: 1.1, size: 8, glow: 0.9, glowR: 9 }) }));
+    this.neon = L.add({ x: 0, y: -440, r: 230, color: '#ff3db8', intensity: 0.9, flicker: 0.08, flickerSpeed: 3 });
+    const H = this.H = { x: 300, y: 40, vx: 0, vy: 0, dir: Math.PI / 2, aim: Math.PI / 2, t: 0, auto: true, idle: 9, walk: 0 };
+    this.flash = L.add({ follow: H, oy: -26, r: 520, cone: 0.38, dir: H.aim, color: '#fff1d6', intensity: 1.55, size: 5, haze: 0.05 });
+    this.lantern = L.add({ follow: H, oy: -12, r: 110, color: '#ffd9a8', intensity: 0.28, shadows: false });
+    this.husks = LT.husks.map(([x, y, f]) => ({ x, y, f, s: f === 'brute' ? 1.05 : 1.2, scare: 0, lit: 0, ph: PZ.rand.angle() }));
+    this.flares = [];
+    PZ.cam.fit(520); PZ.cam.follow(H, { lerp: 5, lead: 0.15 });
+    this.stick = PZ.input.stick({ target: 'move', zone: { l: 0, t: 0.35, r: 0.5, b: 0.82 } });
+    this.offTap = PZ.on('tap', (t) => { if (t.y > PZ.screen.h - 130 && !Lab.side()) return; this.throwFlare(t.wx, t.wy); });
+    // 手機橫拿時面板在右邊：鏡頭往右挪、邊界也放寬，主角才不會被面板擋住
+    this.lay = () => { const k = Lab.shift(); PZ.cam.offX = k; PZ.cam.bounds = { x: -660, y: -560, w: 1320 + k * 2, h: 1140 }; }; this.lay(); this.offR = PZ.on('resize', this.lay);
+    PZ.post.bloom.strength = LT_TIMES['深夜'].bloom;
+    PZ.music.play('dread', { intensity: 0.45, fade: 1.5 });
+  },
+  exit() { this.offTap(); this.offR(); PZ.input.clearTouch(); PZ.post.bloom.strength = this.base.bloom; },
+  apply(k) {
+    const s = this.st, L = PZ.light, dk = this.dayK == null ? 1 : this.dayK;   // 白天燈要暗一點（不然手電筒在大太陽下還很刺眼）
+    if (k === 'shadows') L.shadows = s.shadows;
+    if (k === 'flash' || k === '*') this.flash.fade(s.flash ? dk : 0, 0.25);
+    if (k === 'torch' || k === '*') for (const t of this.torches) t.L.fade(s.torch ? dk : 0, 0.35);
+    if (k === 'orbs' || k === '*') for (const o of this.orbs) o.L.fade(s.orbs ? dk : 0, 0.35);
+    if (k === 'fog') PZ.weather.set(s.fog ? 'mist' : 'clear', { time: 1.2 });
+  },
+  setTime(k) {
+    const T = LT_TIMES[k], L = PZ.light, from = PZ.color(L.ambient), to = PZ.color(T.amb);
+    this.dayK = T.k; this.apply('*'); this.neon.fade(T.k, 0.6); this.led.fade(T.k, 0.6);
+    PZ.tween({ k: 0 }, { k: 1 }, 0.8, 'inOutQuad', { real: true, onUpdate: (o) => { L.ambient = PZ.color.mix(from, to, o.k); } });
+    PZ.tween(PZ.post.bloom, { strength: T.bloom }, 0.8, 'inOutQuad', { real: true });
+  },
+  throwFlare(x, y) {
+    const H = this.H, f = { x: H.x, y: H.y - 30, sx: H.x, sy: H.y - 30, tx: x, ty: y, t: 0, fly: 0.55, life: 9, rot: 0, L: null };
+    f.L = PZ.light.add({ x: f.x, y: f.y, r: 380, color: '#ff4a3a', intensity: 1.6, flicker: 0.35, flickerSpeed: 17, size: 6, glow: 1, glowR: 10, haze: 0.08 });
+    this.flares.push(f); if (this.flares.length > 4) { const o = this.flares.shift(); o.L.fade(0, 0.3, { remove: true }); }
+    PZ.sfx.play('whoosh', { vol: 0.5 }); PZ.haptic.tap('light');
+  },
+  collide(H) {
+    const r = 14;
+    for (const [x, y, w, h] of LT.walls) {
+      const cx = PZ.clamp(H.x, x, x + w), cy = PZ.clamp(H.y, y, y + h + 12), dx = H.x - cx, dy = H.y - cy, d = Math.hypot(dx, dy);
+      if (d < r) { if (d > 0.01) { H.x = cx + (dx / d) * r; H.y = cy + (dy / d) * r; } else H.y = y + h + 12 + r; }
+    }
+    for (const [x, y] of LT.pillars.concat(LT.barrels)) { const dx = H.x - x, dy = H.y - y, d = Math.hypot(dx, dy), R = 34 + r * 0.5; if (d < R && d > 0.01) { H.x = x + (dx / d) * R; H.y = y + (dy / d) * R; } }
+    for (const [x, y] of LT.crates.concat([LT.gen])) { const cx = PZ.clamp(H.x, x - 28, x + 28), cy = PZ.clamp(H.y, y - 28, y + 30), dx = H.x - cx, dy = H.y - cy, d = Math.hypot(dx, dy); if (d < r && d > 0.01) { H.x = cx + (dx / d) * r; H.y = cy + (dy / d) * r; } }
+  },
+  update(dt) {
+    const H = this.H, I = PZ.input, M = I.move, L = PZ.light;
+    if (M.mag > 0.12) { H.idle = 0; H.auto = false; } else H.idle += dt;
+    if (H.idle > 4) H.auto = true;
+    if (H.auto) {
+      H.t += dt * 0.32; const p = LT.path(H.t), q = LT.path(H.t + 0.05);
+      H.vx = (p.x - H.x) * 6; H.vy = (p.y - H.y) * 6; H.x = p.x; H.y = p.y; H.dir = Math.atan2(q.y - p.y, q.x - p.x);
+    } else {
+      H.vx = PZ.damp(H.vx, M.x * 210, 12, dt); H.vy = PZ.damp(H.vy, M.y * 210, 12, dt);
+      H.x += H.vx * dt; H.y += H.vy * dt; this.collide(H);
+      if (M.mag > 0.15) H.dir = Math.atan2(M.y, M.x);
+      // 回到自動巡邏時從最近的點接上
+      let best = 0, bd = 1e9; for (let a = 0; a < Math.PI * 2; a += 0.1) { const p = LT.path(a), d = PZ.math.dist(p.x, p.y, H.x, H.y); if (d < bd) { bd = d; best = a; } } H.t = best;
+    }
+    if (I.device === 'mouse' && !H.auto) H.dir = Math.atan2(I.pointer.wy - (H.y - 26), I.pointer.wx - H.x);
+    H.aim = PZ.math.dampAngle(H.aim, H.dir, 9, dt); H.walk += Math.hypot(H.vx, H.vy) * dt;
+    this.flash.dir = H.aim; this.flash.ox = Math.cos(H.aim) * 18; this.flash.oy = -24 + Math.sin(H.aim) * 10;
+    // 彩燈：8 字形飄
+    this.T = (this.T || 0) + dt;
+    this.orbs.forEach((o, i) => { const a = this.T * 0.45 + o.ph; o.x = Math.sin(a) * 300; o.y = 30 + Math.sin(a * 2) * 150 * (i ? -1 : 1); o.L.x = o.x; o.L.y = o.y - 10; });
+    // 照明彈：拋物線飛出去、落地、燒完熄掉
+    for (const f of this.flares) {
+      f.t += dt;
+      if (f.t < f.fly) { const k = f.t / f.fly; f.x = PZ.lerp(f.sx, f.tx, k); f.y = PZ.lerp(f.sy, f.ty, k) - Math.sin(k * Math.PI) * 90; f.rot += dt * 14; }
+      else if (!f.landed) { f.landed = true; f.x = f.tx; f.y = f.ty; PZ.particles.emit('sparks', f.x, f.y, { count: 14, color: '#ff8a5a' }); PZ.sfx.play('hit', { vol: 0.25, pitch: 1.6 }); }
+      if (f.landed && PZ.rand.chance(dt * 18)) PZ.particles.emit('ember', f.x, f.y - 4, { color: '#ff6a4a', scale: 0.8 });
+      f.L.x = f.x; f.L.y = f.y - 6;
+      if (f.t > f.life && !f.out) { f.out = true; f.L.fade(0, 1.2, { remove: true }); }
+    }
+    this.flares = this.flares.filter((f) => !(f.out && f.t > f.life + 1.3));
+    // 空殼：被照亮就往後縮、眼睛暗掉
+    for (const h of this.husks) {
+      const lit = L.at(h.x, h.y - 20); h.lit = PZ.damp(h.lit, lit, 6, dt);
+      const scared = h.lit > 0.7; if (scared && h.scare < 0.05) PZ.sfx.play('hurt', { vol: 0.12, pitch: 1.8 });
+      h.scare = PZ.damp(h.scare, scared ? 1 : 0, scared ? 14 : 3, dt); h.ph += dt;
+    }
+    // 火把的火星
+    if (this.st.torch) for (const t of this.torches) if (PZ.rand.chance(dt * 2.2)) PZ.particles.emit('ember', t.lx + PZ.rand.spread(3), t.ly - 6, { scale: 0.7 });
+    const q = PZ.quality.cur.name, hl = L.at(H.x, H.y - 20);
+    this.stat.textContent = `燈 ${PZ.gfx.r.stats.lights}　主角亮度 ${hl.toFixed(2)}\n畫質 ${q}${PZ.gfx.kind === 'canvas2d' ? '（無陰影）' : ''}`;
+  },
+  drawWall(g, x, y, w, h) {
+    g.tile('lt.brick', x, y + h, w, 28, { color: '#c9c0b8' });
+    g.rect(x, y + h + 22, w, 6, 'rgba(0,0,0,.35)');
+    g.tile('lt.top', x, y, w, h);
+    g.rect(x, y, w, 2, 'rgba(255,255,255,.09)'); g.rect(x, y + h - 3, w, 3, 'rgba(0,0,0,.4)');
+  },
+  render(g) {
+    const v = PZ.cam.view, s = 128, x0 = Math.floor(v.x / s) * s - s, y0 = Math.floor(v.y / s) * s - s;
+    g.tile('lt.floor', x0, y0, v.w + s * 3, v.h + s * 3, { ox: -x0, oy: -y0 });
+    g.rect(-600, 500, 1200, 400, '#05060a'); g.rect(-600, -900, 1200, 400, '#05060a'); g.rect(-900, -900, 300, 1800, '#05060a'); g.rect(600, -900, 300, 1800, '#05060a');
+    // 地上的東西（油漬、斑馬線、紙、水窪）：畫在光影之前，會被照亮
+    g.tile('lt.stripes', -100, -194, 200, 14, { a: 0.85 });
+    for (const [x, y, k, r] of LT.oil) g.sprite('lt.oil', x, y, { s: k, r });
+    for (const [x, y, r] of LT.papers) g.sprite('lt.paper', x, y, { r, a: 0.9 });
+    const [px, py, pw, ph] = LT.puddle; g.water(px, py, pw, ph, { mode: 'flat', shape: 'ellipse', color: '#0e1a24', depth: 0.35, reflect: 0.9, ripple: 2.2, foam: 0.6 });
+    // 物件依 y 排序：越下面越前面
+    const items = [];
+    items.push({ y: LT.gen[1] + 25, d: () => { g.rect(LT.gen[0] - 36, LT.gen[1] + 20, 76, 8, 'rgba(0,0,0,.35)'); g.sprite('lt.gen', LT.gen[0], LT.gen[1]); } });
+    for (const [x, y] of LT.pillars) items.push({ y: y + 30, d: () => { g.ellipse(x + 4, y + 8, 36, 30, 'rgba(0,0,0,.35)'); g.sprite('lt.pillar', x, y); } });
+    for (const [x, y] of LT.crates) items.push({ y: y + 28, d: () => { g.rect(x - 26, y + 24, 56, 8, 'rgba(0,0,0,.35)'); g.sprite('lt.crate', x, y); } });
+    for (const [x, y] of LT.barrels) items.push({ y: y + 20, d: () => g.sprite('lt.barrel', x, y) });
+    for (const h of this.husks) items.push({ y: h.y, d: () => {
+      const back = h.scare * 6, sq = 1 - h.scare * 0.12;
+      if (this.st.cast) g.castShadow(h.f, h.x, h.y, { s: h.s, a: 0.5 });
+      g.ellipse(h.x, h.y, 16 * h.s, 6 * h.s, 'rgba(0,0,0,.4)');
+      g.spr(h.f, h.x + Math.sin(h.ph * 30) * h.scare * 1.5, h.y - back, 0, h.s * (1 + h.scare * 0.06), h.s * sq, 1, null, 0, h.scare * 0.25);
+    } });
+    const H = this.H;
+    items.push({ y: H.y, d: () => {
+      if (this.st.cast) g.castShadow('hero', H.x, H.y, { s: 1.15, a: 0.55 });
+      g.ellipse(H.x, H.y, 16, 6, 'rgba(0,0,0,.45)');
+      const bob = Math.abs(Math.sin(H.walk * 0.06)) * 2.5;
+      g.spr('hero', H.x, H.y - bob, Math.sin(H.walk * 0.06) * 0.04, 1.15, 1.15);
+    } });
+    items.sort((a, b) => a.y - b.y);
+    for (const w of LT.walls) this.drawWall(g, ...w);
+    for (const t of this.torches) g.sprite('lt.torch', t.lx - t.fx * 8, t.ly - (t.fy ? 10 : -4), { r: t.fx ? -t.fx * 0.5 : 0 });
+    for (const it of items) it.d();
+    for (const f of this.flares) g.sprite('lt.flare', f.x, f.y, { r: f.landed ? 1.2 : f.rot, s: 0.9 });
+    PZ.particles.draw(g, 'under');
+    // ↓ 套用光影：之前畫的東西被照亮／變暗；之後畫的是會發光的東西
+    g.lighting();
+    if (this.st.torch) for (const t of this.torches) { const k = t.L._fi * t.L._k, x = t.lx - t.fx * 8, y = t.ly - (t.fy ? 14 : 0); g.glow(x, y, 16 * k, '#ffb050', { a: 0.95, core: 0.8 }); g.glow(x, y - 2, 7 * k, '#fff2c8', { core: 1 }); }
+    g.glow(LT.gen[0] + 26, LT.gen[1] + 14, 5, '#3dff8a', { a: 0.4 + 0.6 * this.led._fi, core: 1 });
+    const nk = this.neon._fi;
+    g.text('夜 班', 0, -466, { size: 26, weight: 900, color: '#ffd0ef', align: 'center', baseline: 'middle', outline: 3, outlineColor: PZ.color.alpha('#ff3db8', 0.9 * nk), a: 0.4 + 0.6 * nk });
+    g.glow(0, -466, 70, '#ff3db8', { a: 0.35 * nk });
+    for (const h of this.husks) { const e = (1 - h.scare) * (0.6 + 0.4 * Math.sin(h.ph * 3)); if (e > 0.05) for (const ex of [-5, 5]) g.glow(h.x + ex * h.s, h.y - (h.f === 'brute' ? 66 : 33) * h.s, 6 * h.s, h.f === 'husk2' ? '#ffd04f' : '#ff4fd8', { a: e, core: 0.9 }); }
+    if (this.flash._k > 0.05) { const a = H.aim; g.beam(H.x + Math.cos(a) * 14, H.y - 26 + Math.sin(a) * 14, a, 300, 8, 210, '#fff4dc', { a: 0.07 * this.flash._k }); }
+  },
+});
+
+/* ---- 20_weather.js ---- */
+/* 樣品館：天氣與水面（側視雨夜港口：倒影、雨雪霧雷、路燈光柱、調色、電影黑邊） */
+const WX = { pierY: 40, waterY: 70, x0: -1500, x1: 1500 };
+WX.art = () => {
+  if (PZ.art.has('wx.lamp')) return;
+  const A = PZ.art;
+  // 路燈：細長燈桿＋彎臂＋燈罩
+  A.make('wx.lamp', 46, 176, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 10, 0); g.addColorStop(0, '#3b4252'); g.addColorStop(1, '#1b1f28');
+    c.fillStyle = g; c.fillRect(8, 20, 6, h - 26); c.fillStyle = '#2a303c'; c.fillRect(4, h - 10, 14, 10); c.fillRect(6, h - 40, 10, 4);
+    c.strokeStyle = '#2a303c'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(11, 24); c.quadraticCurveTo(12, 6, 30, 8); c.stroke();
+    c.fillStyle = '#323846'; c.beginPath(); c.moveTo(22, 8); c.lineTo(42, 8); c.lineTo(38, 18); c.lineTo(26, 18); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(9, 20, 1.5, h - 30);
+  }, { anchor: [0.24, 1] });
+  // 長椅
+  A.make('wx.bench', 92, 38, (c, w, h) => {
+    c.fillStyle = '#5a3c26'; for (let i = 0; i < 3; i++) c.fillRect(4, 4 + i * 7, w - 8, 5);
+    c.fillStyle = '#4a3020'; c.fillRect(4, 24, w - 8, 5);
+    c.fillStyle = '#1c2028'; c.fillRect(10, 22, 5, 16); c.fillRect(w - 15, 22, 5, 16); c.fillRect(8, 2, 4, 26); c.fillRect(w - 12, 2, 4, 26);
+  }, { anchor: [0.5, 1] });
+  // 小漁船（有小艙房、桅杆掛燈）
+  A.make('wx.boat', 150, 74, (c, w, h) => {
+    const hull = c.createLinearGradient(0, 40, 0, h); hull.addColorStop(0, '#7a2e2a'); hull.addColorStop(1, '#3a1412');
+    c.fillStyle = hull; c.beginPath(); c.moveTo(4, 46); c.lineTo(w - 2, 42); c.quadraticCurveTo(w - 16, h - 6, w - 40, h - 4); c.lineTo(26, h - 4); c.quadraticCurveTo(10, h - 10, 4, 46); c.closePath(); c.fill();
+    c.fillStyle = '#d8d0c0'; c.fillRect(6, 44, w - 10, 4);
+    c.fillStyle = '#c8c0ae'; c.fillRect(52, 22, 46, 22); c.fillStyle = '#2a3442'; c.fillRect(58, 27, 12, 9); c.fillRect(76, 27, 16, 9);
+    c.fillStyle = '#8a8070'; c.fillRect(50, 19, 50, 4);
+    c.fillStyle = '#3a3a3a'; c.fillRect(118, 6, 3, 38); c.fillRect(112, 8, 14, 2);
+  }, { anchor: [0.5, 0.8] });
+  // 撐傘的路人：八格走路（側面），傘有邊光
+  A.sheet('wx.walker', 8, 70, 104, (c, w, h, i) => {
+    const th = (i / 8) * Math.PI * 2, bob = Math.abs(Math.sin(th)) * 1.6, cx = 34, hip = 66 - bob;
+    const leg = (a, back) => { c.strokeStyle = back ? '#151a26' : '#202838'; c.lineWidth = 6; c.lineCap = 'round'; const kx = cx + Math.sin(a) * 9, ky = hip + 15, fx = kx + Math.sin(a - (back ? 0.5 : 0.1)) * 10, fy = h - 4; c.beginPath(); c.moveTo(cx, hip); c.lineTo(kx, ky); c.lineTo(fx, fy); c.stroke(); c.fillStyle = '#0c0f16'; c.beginPath(); c.ellipse(fx + 3, fy, 6, 3, 0, 0, Math.PI * 2); c.fill(); };
+    leg(-Math.sin(th) * 0.5, true);
+    // 大衣
+    const coat = c.createLinearGradient(0, 30, 0, hip + 14); coat.addColorStop(0, '#3a4560'); coat.addColorStop(1, '#232a3c');
+    c.fillStyle = coat; c.beginPath(); c.moveTo(cx - 9, 34 - bob); c.lineTo(cx + 10, 34 - bob); c.lineTo(cx + 13, hip + 13); c.lineTo(cx - 12, hip + 13); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(150,180,255,.25)'; c.fillRect(cx + 8, 36 - bob, 2, hip - 24);
+    leg(Math.sin(th) * 0.5, false);
+    // 圍巾、頭
+    c.fillStyle = '#c99a2e'; c.fillRect(cx - 8, 31 - bob, 17, 6); c.fillRect(cx - 7, 35 - bob, 5, 12);
+    c.fillStyle = '#e0b48c'; c.beginPath(); c.arc(cx + 2, 24 - bob, 7, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#1a1414'; c.beginPath(); c.arc(cx, 21 - bob, 7.5, Math.PI * 0.9, Math.PI * 2.1); c.fill();
+    // 拿傘的手、傘
+    c.strokeStyle = '#2b3348'; c.lineWidth = 5; c.beginPath(); c.moveTo(cx + 4, 38 - bob); c.lineTo(cx + 13, 44 - bob); c.lineTo(cx + 12, 30 - bob); c.stroke();
+    c.strokeStyle = '#11141c'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx + 12, 34 - bob); c.lineTo(cx + 10, 6 - bob); c.stroke();
+    const can = c.createLinearGradient(0, 0, 0, 12); can.addColorStop(0, '#a3283a'); can.addColorStop(1, '#5a1220');
+    c.fillStyle = can; c.beginPath(); c.moveTo(cx - 24, 15 - bob); c.quadraticCurveTo(cx + 10, -10 - bob, cx + 44, 15 - bob);
+    for (let k = 0; k < 4; k++) { const x0 = cx + 44 - k * 17; c.quadraticCurveTo(x0 - 8.5, 10 - bob, x0 - 17, 15 - bob); }
+    c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(255,190,200,.45)'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(cx - 22, 13 - bob); c.quadraticCurveTo(cx + 10, -8 - bob, cx + 42, 13 - bob); c.stroke();
+  }, { anchor: [0.48, 0.97] });
+  // 天空：上暗下亮（城市光害）
+  A.make('wx.sky', 4, 256, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#04060e'); g.addColorStop(0.5, '#141634'); g.addColorStop(0.82, '#3a2650'); g.addColorStop(1, '#5c3354'); c.fillStyle = g; c.fillRect(0, 0, w, h); }, { scale: 1 });
+  A.make('wx.moon', 64, 64, (c, w, h) => {
+    const g = c.createRadialGradient(w * 0.42, h * 0.4, 2, w / 2, h / 2, 28); g.addColorStop(0, '#fffdf2'); g.addColorStop(1, '#d9dcef');
+    c.fillStyle = g; c.beginPath(); c.arc(w / 2, h / 2, 28, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(120,130,170,.25)'; for (const [x, y, r] of [[24, 26, 6], [40, 36, 4], [30, 42, 3], [42, 22, 3]]) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); }
+  });
+  A.make('wx.plank', 64, 26, (c, w, h) => {
+    const R = PZ.rng(6); c.fillStyle = '#3a2a1e'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 4; i++) { c.fillStyle = `hsl(25,${R.range(22, 32)}%,${R.range(20, 27)}%)`; c.fillRect(i * 16 + 1, 0, 14, h); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(i * 16 + 14, 0, 2, h); }
+    c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(0, 0, w, 2);
+  });
+};
+// 城市：遠景、中景大樓（固定亂數種子，每次一樣）
+WX.city = () => {
+  if (WX.far) return;
+  const R = PZ.rng(77);
+  WX.far = []; for (let x = -3600; x < 3600; x += R.range(36, 90)) { const w = R.range(40, 120), h = R.range(90, 330), win = []; for (let y = 10; y < h - 8; y += 9) for (let k = 4; k < w - 6; k += 7) if (R.chance(0.09)) win.push(k, y); WX.far.push({ x, w, h, win, ant: R.chance(0.25), ph: R.angle() }); }
+  WX.mid = []; const signs = [['HOTEL', '#46d4ff'], ['喫茶', '#ff5fd1'], ['24H', '#5dff9a'], ['PZ', '#ffb547'], ['居酒屋', '#ff4a3a'], ['BAR', '#c06bff']];
+  let si = 0;
+  for (let x = -3000; x < 3000; x += R.range(150, 260)) {
+    const w = R.range(110, 210), h = R.range(230, 470), win = [];
+    for (let y = 22; y < h - 20; y += 26) for (let k = 14; k < w - 18; k += 20) if (R.chance(0.3)) win.push(k, y, R.chance(0.7) ? 0 : 1, R.chance(0.08) ? 1 : 0);
+    const b = { x, w, h, win, roof: R.int(0, 2), sign: null, ph: R.angle() };
+    if (R.chance(0.55)) { const [t, c] = signs[si++ % signs.length]; b.sign = { t, c, y: R.range(60, Math.min(160, h - 60)), vert: t.length <= 3 && R.chance(0.5), broken: t === '居酒屋' }; }
+    WX.mid.push(b);
+  }
+};
+const WX_GRADES = [['原色', null], ['電影', 'cinema'], ['冷', 'cold'], ['暖', 'warm'], ['黑白', 'noir'], ['夢境', 'dream'], ['復古', 'retro'], ['霓虹', 'neon']];
+const WX_SKIES = [['晴', 'clear'], ['雨', 'rain'], ['雷雨', 'storm'], ['雪', 'snow'], ['霧', 'fog']];
+const WX_P = { far: 0.22, mid: 0.5 };
+
+PZ.scene('weather', {
+  bg: '#05070f',
+  ui: () => `${Lab.bar('天氣與水面', '點天空：打雷')}
+    <div class="lab-panel" data-ui>
+      <div class="lab-row"><span class="lab-label">天氣</span>${WX_SKIES.map(([n, k]) => `<button class="lab-chip cyan${k === 'rain' ? ' on' : ''}" data-sky="${k}">${n}</button>`).join('')}</div>
+      <div class="lab-row"><span class="lab-label">調色</span>${WX_GRADES.map(([n, k], i) => `<button class="lab-chip${i === 1 ? ' on' : ''}" data-grade="${k || ''}">${n}</button>`).join('')}</div>
+      <div class="lab-row"><button class="lab-chip" data-chip="bars">電影黑邊</button><button class="lab-chip" data-chip="water">水面倒影</button><button class="lab-chip" data-chip="beams">光柱</button></div>
+    </div>`,
+  enter() {
+    WX.art(); WX.city();
+    const box = PZ.scenes.uiEl; Lab.bindBack(box);
+    const st = this.st = { bars: false, water: true, beams: true };
+    Lab.chips(box, st, (k) => { if (k === 'bars') PZ.fx.letterbox(st.bars ? 0.11 : 0, 0.7); });
+    box.querySelectorAll('[data-sky]').forEach((b) => b.addEventListener('click', () => { box.querySelectorAll('[data-sky]').forEach((x) => x.classList.toggle('on', x === b)); PZ.weather.set(b.dataset.sky, { time: 2.5 }); PZ.uiSound('click'); }));
+    box.querySelectorAll('[data-grade]').forEach((b) => b.addEventListener('click', () => { box.querySelectorAll('[data-grade]').forEach((x) => x.classList.toggle('on', x === b)); PZ.post.grade(b.dataset.grade || null, { time: 0.9 }); PZ.uiSound('click'); }));
+    this.base = { grade: PZ.post.gradeName, bloom: PZ.post.bloom.strength, vig: PZ.post.vignette };
+    PZ.post.grade('cinema', { time: 0 }); PZ.post.bloom.strength = 0.8; PZ.post.vignette = 0.45;
+    const L = PZ.light; L.on({ ambient: '#5a6184', shadows: false });
+    L.zone(-1e5, -1e5, 2e5, 1e5 + WX.pierY - 150, { ambient: '#ffffff', soft: 130 });   // 天空、遠景自己會亮（不被環境光壓暗），只有碼頭這一帶受燈光影響
+    this.moonL = L.add({ r: 1500, color: '#8ea6ff', intensity: 0.32 });
+    this.lamps = []; for (let x = -1350; x <= 1350; x += 300) this.lamps.push({ x, L: L.add({ x: x + 21, y: WX.pierY - 150, r: 380, cone: 0.62, dir: Math.PI / 2, color: '#ffcb86', intensity: 1.45, size: 6, haze: 0.12, glow: 0.85, glowR: 9, flicker: x === 150 ? 0.55 : 0, flickerSpeed: 6 }) });
+    for (const b of WX.mid) if (b.sign) b._L = L.add({ r: 200, color: b.sign.c, intensity: 0.85, flicker: b.sign.broken ? 0.75 : 0.05, flickerSpeed: b.sign.broken ? 5 : 2 });
+    this.boat = { x: 420, y: WX.waterY + 6, t: 0 };
+    this.boatL = L.add({ r: 200, color: '#ffb35c', intensity: 0.75, flicker: 0.15, glow: 0.9, glowR: 6, haze: 0.1, fall: 9 });
+    const W = this.W = { x: -200, y: WX.pierY, dir: 1, t: 0 };
+    PZ.weather.set('rain', { time: 0 }); PZ.weather.ground = (x) => (x > WX.x0 && x < WX.x1 && Math.abs(x - this.boat.x) > 70 ? (PZ.rand.chance(0.45) ? WX.pierY : WX.waterY + PZ.rand.range(4, 60)) : WX.waterY + 8);
+    this.lay = () => { PZ.cam.fit(PZ.screen.portrait ? 520 : 820); PZ.cam.offX = Lab.shift(); PZ.cam.offY = PZ.screen.portrait ? -90 : -123; PZ.cam.snap(); };
+    PZ.cam.follow(W, { lerp: 3, lead: 0 }); this.lay(); this.offR = PZ.on('resize', this.lay);
+    this.offTap = PZ.on('tap', (t) => { if (t.wy < WX.pierY - 120) { PZ.weather.strike({ x: t.x, y: Math.max(40, t.y) }); PZ.haptic.tap('heavy'); } });
+    PZ.music.play('dread', { intensity: 0.35, fade: 2 });
+  },
+  exit() {
+    this.offR(); this.offTap(); PZ.fx.letterbox(0, 0);
+    PZ.post.grade(this.base.grade, { time: 0 }); PZ.post.bloom.strength = this.base.bloom; PZ.post.vignette = this.base.vig;
+  },
+  update(dt) {
+    const W = this.W, sp = 46;
+    W.t += dt; W.x += W.dir * sp * dt;
+    if (W.x > 1250) W.dir = -1; else if (W.x < -1250) W.dir = 1;
+    W.y = WX.pierY;
+    const B = this.boat; B.t += dt; B.bob = Math.sin(B.t * 1.3) * 3; B.rot = Math.sin(B.t * 1.1 + 0.6) * 0.045;
+    this.boatL.x = B.x + 44; this.boatL.y = B.y - 60 + B.bob;
+    // 傘上的雨滴濺起來
+    if (PZ.weather.rain > 0.3 && PZ.rand.chance(dt * 9 * PZ.weather.rain)) PZ.particles.emit('dust', W.x + W.dir * PZ.rand.range(-18, 30), WX.pierY - 96, { count: 2, color: 'rgba(200,215,240,.6)', scale: 0.5 });
+  },
+  layerX(p) { return PZ.cam.x * (1 - p); },
+  render(g) {
+    const cam = PZ.cam, v = cam.view, t = this.W.t, L = PZ.light;
+    // 天空（螢幕座標鋪滿）＋星星＋月亮
+    const top = -900, hz = WX.pierY;
+    g.rect(v.x - 10, v.y - 10, v.w + 20, v.h + 20, '#04060e');
+    g.sprite('wx.sky', v.x + v.w / 2, (top + hz) / 2, { sx: (v.w + 40) / 4, sy: (hz - top) / 256 });
+    const R = PZ.rng(5), sx0 = this.layerX(0.03);
+    for (let i = 0; i < 90; i++) { const x = sx0 + R.range(-1400, 1400), y = R.range(-760, -180), tw = 0.45 + 0.55 * Math.sin(t * R.range(1, 3) + i); if (x > v.x && x < v.x + v.w) g.circle(x, y, R.range(0.6, 1.5), '#e8eeff', { a: 0.35 + 0.5 * tw }); }
+    const mx = this.layerX(0.06) + 300, my = -390;
+    g.glow(mx, my, 160, '#9bb0ff', { a: 0.25 }); g.sprite('wx.moon', mx, my, { s: 1.1 });
+    this.moonL.x = mx; this.moonL.y = my + 200;
+    // 遠景大樓
+    const fx = this.layerX(WX_P.far), base = WX.pierY - 6;
+    for (const b of WX.far) { const x = fx + b.x; if (x + b.w < v.x || x > v.x + v.w) continue; g.rect(x, base - b.h, b.w, b.h, '#191a38'); if (b.ant) g.rect(x + b.w / 2 - 1, base - b.h - 26, 2, 26, '#191a38'); }
+    // 中景大樓（招牌的燈不管看不看得到都要跟著位置走，不然會全部疊在原點）
+    const mxo = this.layerX(WX_P.mid);
+    for (const b of WX.mid) if (b._L) { b._L.x = mxo + b.x + b.w / 2; b._L.y = WX.pierY - 6 - b.h + b.sign.y + 30; }
+    for (const b of WX.mid) {
+      const x = mxo + b.x; if (x + b.w < v.x - 40 || x > v.x + v.w + 40) continue;
+      g.rect(x, base - b.h, b.w, b.h, '#211e3e'); g.rect(x, base - b.h, 3, b.h, 'rgba(160,170,255,.14)');
+      if (b.roof === 1) g.rect(x + 12, base - b.h - 14, b.w * 0.4, 14, '#211e3e');
+      if (b.roof === 2) g.poly([x, base - b.h, x + b.w, base - b.h, x + b.w * 0.5, base - b.h - 30], '#211e3e');
+    }
+    // 碼頭、欄杆、路燈、長椅、船
+    const pv0 = Math.max(WX.x0, v.x - 40), pv1 = Math.min(WX.x1, v.x + v.w + 40);
+    for (let x = Math.ceil(pv0 / 120) * 120; x < pv1; x += 120) g.rect(x - 5, WX.pierY + 18, 10, 120, '#2b2018');
+    g.tile('wx.plank', pv0, WX.pierY, pv1 - pv0, 26, { ox: -pv0 });
+    g.rect(pv0, WX.pierY + 24, pv1 - pv0, 6, '#1d150f');
+    for (let x = Math.ceil(pv0 / 60) * 60; x < pv1; x += 60) g.rect(x - 2, WX.pierY - 34, 4, 34, '#2b2f3a');
+    g.rect(pv0, WX.pierY - 36, pv1 - pv0, 4, '#3a3f4c');
+    for (const l of this.lamps) if (l.x > v.x - 80 && l.x < v.x + v.w + 80) g.sprite('wx.lamp', l.x, WX.pierY + 2);
+    for (const bx of [-600, 450, 1050]) g.sprite('wx.bench', bx, WX.pierY + 2);
+    const B = this.boat; g.sprite('wx.boat', B.x, B.y + B.bob, { r: B.rot });
+    // 撐傘的人＋投影（路燈照下來，影子落在碼頭上）
+    const W = this.W, f = Math.floor(W.t * 7.3) % 8, wf = 'wx.walker:' + f, fl = W.dir < 0 ? -1.1 : 1.1;
+    g.ellipse(W.x, WX.pierY + 2, 20, 4, 'rgba(0,0,0,.35)');
+    g.castShadow(wf, W.x, WX.pierY + 2, { flat: true, len: 0.9, a: 0.55, sx: fl, sy: 1.1 });
+    g.sprite(wf, W.x, WX.pierY + 2, { sx: fl, sy: 1.1 });
+    // ↓ 套用光影；之後是會發光的東西
+    g.lighting();
+    for (const b of WX.far) { const x = fx + b.x; if (x + b.w < v.x || x > v.x + v.w) continue; for (let i = 0; i < b.win.length; i += 2) g.rect(x + b.win[i], base - b.h + b.win[i + 1], 2.5, 3.5, '#ffcf8a', { a: 0.55 }); if (b.ant && Math.sin(t * 2.5 + b.ph) > 0.6) g.glow(x + b.w / 2, base - b.h - 27, 5, '#ff3b3b', { core: 1 }); }
+    for (const b of WX.mid) {
+      const x = mxo + b.x; if (x + b.w < v.x - 40 || x > v.x + v.w + 40) continue;
+      for (let i = 0; i < b.win.length; i += 4) { const flick = b.win[i + 3] && Math.sin(t * 9 + i) > 0.7 ? 0.3 : 1; g.rect(x + b.win[i], base - b.h + b.win[i + 1], 9, 13, b.win[i + 2] ? '#9fd8ff' : '#ffd28a', { a: 0.75 * flick }); }
+      const s = b.sign; if (!s) continue;
+      const sL = b._L, k = sL ? sL._fi : 1, sx = x + b.w / 2, sy = base - b.h + s.y;
+      g.glow(sx, sy, 60, s.c, { a: 0.3 * k });
+      if (s.vert) { [...s.t].forEach((ch, i) => g.text(ch, sx, sy - 18 + i * 22, { size: 19, weight: 900, color: '#fff', align: 'center', baseline: 'middle', outline: 3, outlineColor: s.c, a: 0.25 + 0.75 * k })); }
+      else g.text(s.t, sx, sy, { size: 22, weight: 900, color: '#fff', align: 'center', baseline: 'middle', outline: 3, outlineColor: s.c, a: 0.25 + 0.75 * k });
+    }
+    // 路燈下的光柱（雨天、霧天更明顯）
+    if (this.st.beams) { const wet = 0.35 + PZ.weather.rain * 0.4 + PZ.weather.fog * 0.6 + PZ.weather.snow * 0.3; for (const l of this.lamps) if (l.x > v.x - 200 && l.x < v.x + v.w + 200) { const k = l.L._fi; g.beam(l.x + 21, WX.pierY - 146, Math.PI / 2, 186, 14, 150, '#ffd9a0', { a: 0.13 * wet * k, end: 0.25 }); } }
+    // 水面：倒映上面所有東西（包含剛剛畫的發光窗戶、霓虹、路燈）
+    if (this.st.water) g.water(v.x - 20, WX.waterY, v.w + 40, v.y + v.h - WX.waterY + 20, { color: '#0b1630', depth: 0.5, reflect: 0.78, ripple: 2.6, foam: 0.35, sky: '#3a2a50' });
+    else g.rect(v.x - 20, WX.waterY, v.w + 40, v.y + v.h - WX.waterY + 20, '#081022');
   },
 });
 

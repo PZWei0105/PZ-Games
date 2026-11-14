@@ -34,6 +34,9 @@ PZ.go = async (name, params, o = {}) => {
   PZ.clearTimers(); Tweens.clear(); Particles.clear(); Fx.nums.length = 0; Input.releaseAll();
   Cam.trauma = 0; if (!def.keepCamera) Cam.reset();
   Post.waves.length = 0; Fx._waves.length = 0; Post.flash[3] = 0; PZ.resume('*');
+  if (!def.keepLights) Light.reset();
+  if (!def.keepWeather) Weather.reset();
+  Cinema.reset();
   Scenes.cur = def; Scenes.name = name;
   if (def.ui) {
     const u = typeof def.ui === 'function' ? def.ui(params) : def.ui;
@@ -76,7 +79,7 @@ addSystem({
     const r = Gfx.r; if (!r) return;
     const s = Scenes.cur;
     r.begin(s && s.bg != null ? s.bg : Screen.bg);
-    G._hudDone = false; G.world();
+    G._hudDone = false; G._litDone = false; G.world();
     if (s && s.render) { try { s.render(G); } catch (e) { reportError(e, Scenes.name + '.render'); } }
     if (!G._hudDone) G.hud();
     drawTransition(G);
