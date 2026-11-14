@@ -65,7 +65,7 @@
 </style></head>
 <body><div id="pz-root"><div id="pz-ui"></div></div>
 <script>/* PZ Engine dev */
-/*! PZ Engine v1.1.0 (2026-11-14.6a4cf087) — 痞子葳 × Claude 的 2D 遊戲引擎。
+/*! PZ Engine v1.1.0 (2026-11-14.fbe86503) — 痞子葳 × Claude 的 2D 遊戲引擎。
     說明書：PZ-Games repo 的 _build/engine/HANDBOOK.md */
 (function (global) {
 'use strict';
@@ -75,7 +75,7 @@
    整個引擎包在一個 IIFE 裡，只對外公開 window.PZ。
    模組之間共用這個閉包裡的變數（例如 Screen、Input、R），不必互相 import。
    ========================================================================== */
-const PZ = { version: '1.1.0', build: '2026-11-14.6a4cf087' };
+const PZ = { version: '1.1.0', build: '2026-11-14.fbe86503' };
 const HAS_DOM = typeof document !== 'undefined' && typeof window !== 'undefined';
 const nowMs = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
 const noop = () => { };
@@ -2136,7 +2136,46 @@ function scratch(w, h) {
   return x;
 }
 /** 依條目的畫法畫到 ctx（左上角＝(ox, oy)，已經含 pad） */
+/* 圖的後加工（Art.make 的 outline / rim / shade）：先畫到暫存畫布，加工完再貼上 */
+let FxCv = null, FxCv2 = null;
+function fxCanvas(w, h, second) {
+  let c = second ? FxCv2 : FxCv; if (!c) { c = document.createElement('canvas'); if (second) FxCv2 = c; else FxCv = c; }
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; } else c.getContext('2d').clearRect(0, 0, w, h);
+  const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; return c;
+}
+function applyFx(c, fx, scale) {
+  const w = c.width, h = c.height, x = c.getContext('2d');
+  x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';   // 畫圖時的縮放、位移不能帶進來
+  if (fx.shade) { // 下半部稍微暗（立體感）
+    const k = typeof fx.shade === 'number' ? fx.shade : 0.25, g = x.createLinearGradient(0, h * 0.35, 0, h);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${k})`);
+    x.globalCompositeOperation = 'source-atop'; x.fillStyle = g; x.fillRect(0, 0, w, h); x.globalCompositeOperation = 'source-over';
+  }
+  if (fx.rim) { // 朝光那一側的亮邊
+    const R = typeof fx.rim === 'object' ? fx.rim : { color: typeof fx.rim === 'string' ? fx.rim : '#ffffff' };
+    const a = R.angle != null ? R.angle : -2.3, d = (R.w || 1.5) * scale, m = fxCanvas(w, h, true), mx = m.getContext('2d');
+    mx.drawImage(c, 0, 0); mx.globalCompositeOperation = 'destination-out'; mx.drawImage(c, -Math.cos(a) * d, -Math.sin(a) * d);
+    mx.globalCompositeOperation = 'source-in'; mx.fillStyle = R.color || '#fff'; mx.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-atop'; x.globalAlpha = R.a != null ? R.a : 0.55; x.drawImage(m, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+  }
+  if (fx.outline) { // 外框（往外長一圈）
+    const r = fx.outline * scale, m = fxCanvas(w, h, true), mx = m.getContext('2d'), n = Math.max(8, Math.ceil(r * 5));
+    for (let i = 0; i < n; i++) { const t = (i / n) * TAU; mx.drawImage(c, Math.cos(t) * r, Math.sin(t) * r); }
+    mx.globalCompositeOperation = 'source-in'; mx.fillStyle = fx.outlineColor || '#000'; mx.fillRect(0, 0, w, h);
+    mx.globalCompositeOperation = 'source-over'; mx.drawImage(c, 0, 0);
+    x.clearRect(0, 0, w, h); x.drawImage(m, 0, 0);
+  }
+}
 function paintEntry(ctx, en, ox, oy) {
+  if (en.fx) {
+    const iw = en.pw - en.pad * 2, ih = en.ph - en.pad * 2, c = fxCanvas(iw, ih), x = c.getContext('2d');
+    x.scale(en.scale, en.scale); if (en.nearest) x.imageSmoothingEnabled = false;
+    x.translate(en.fx.ol || 0, en.fx.ol || 0);
+    try { en.draw(x, en.w - (en.fx.ol || 0) * 2, en.h - (en.fx.ol || 0) * 2, en.arg); } catch (e) { reportError(e, 'art:' + en.name); }
+    applyFx(c, en.fx, en.scale);
+    ctx.save(); ctx.drawImage(c, ox + en.pad, oy + en.pad); ctx.restore();
+    return;
+  }
   ctx.save();
   ctx.translate(ox + en.pad, oy + en.pad);
   ctx.beginPath(); ctx.rect(0, 0, en.pw - en.pad * 2, en.ph - en.pad * 2); ctx.clip();
@@ -2188,14 +2227,21 @@ function realize(en) {
 
 /**
  * 畫一張圖收進圖集。
- * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, arg（傳給 draw 的第 4 個參數） }
+ * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, arg（傳給 draw 的第 4 個參數）,
+ *      outline: 2（外框粗細，圖會變大一圈）, outlineColor: '#000', rim: '#9cf' 或 { color, a, w, angle }（朝光的亮邊）, shade: 0.25（下半部變暗） }
  * 同名會覆蓋（舊的位置不回收）。
  */
 Art.make = (name, w, h, draw, o = {}) => {
   let f = Art.frames.get(name);
   if (!f) { f = new Frame(name); Art.frames.set(name, f); }
+  // 後加工：外框會讓圖變大一圈（anchor 跟著調，圖不會跑位）
+  let fx = null;
+  if (o.outline || o.rim || o.shade) {
+    const ol = o.outline || 0; fx = { outline: ol, outlineColor: o.outlineColor, rim: o.rim, shade: o.shade, ol };
+    if (ol) { const an = o.anchor || [0.5, 0.5]; o = Object.assign({}, o, { anchor: [(an[0] * w + ol) / (w + ol * 2), (an[1] * h + ol) / (h + ol * 2)] }); w += ol * 2; h += ol * 2; }
+  }
   const scale = o.scale || (o.pixel ? 1 : Art.scale), pad = o.pad != null ? o.pad : Art.pad;
-  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
+  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, fx, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
   f.w = w; f.h = h; const an = o.anchor || [0.5, 0.5]; f.ax = an[0]; f.ay = an[1]; f.entry = en;
   if (Gfx.r) realize(en); else Art.pending.push(en);
   return f;
@@ -2231,7 +2277,9 @@ Art.canvas = (name, scale) => {
   const s = scale || Math.min(3, (HAS_DOM && window.devicePixelRatio) || 2);
   const c = document.createElement('canvas'); c.width = Math.ceil(en.w * s); c.height = Math.ceil(en.h * s);
   const x = c.getContext('2d'); x.scale(s, s); if (en.nearest) x.imageSmoothingEnabled = false;
-  try { en.draw(x, en.w, en.h, en.arg); } catch (e) { reportError(e, 'art.canvas:' + name); }
+  const ol = en.fx ? en.fx.ol || 0 : 0; if (ol) x.translate(ol, ol);
+  try { en.draw(x, en.w - ol * 2, en.h - ol * 2, en.arg); } catch (e) { reportError(e, 'art.canvas:' + name); }
+  if (en.fx) applyFx(c, en.fx, s);
   return c;
 };
 Art.url = (name, scale) => Art.canvas(name, scale).toDataURL('image/png');
@@ -5279,10 +5327,551 @@ Cinema._drawBars = (g) => {
   g.rect(-2, -2, Screen.w + 4, h + 2, '#000'); g.rect(-2, Screen.h - h, Screen.w + 4, h + 2, '#000');
 };
 
+/* ---- 28_anim.js ---- */
+/* ==========================================================================
+   28 角色動畫（一）：讓「一張圖」的角色活起來、會飄的東西、逐格動畫
+     PZ.juice(o)       程序動畫：呼吸、走路起伏與搖擺、前傾、轉身、跳躍拉長、落地壓扁、受擊抖動與閃白
+       const j = PZ.juice();  每格 j.update(dt, { vx, vy, grounded, face });  畫：j.draw(g, 'slime', x, y, { s: 1.2 })
+       j.hit(力道, 方向)  j.land(力道)  j.jump()  j.pulse(0.2)  j.set({ breathe: 0 })
+     PZ.chain(o)       繩子、披風、圍巾、尾巴、頭髮、觸手（verlet）：每格 c.pin(x, y) → c.update(dt) → g.chain(c, { w0, w1, color })
+     PZ.animator(defs) 逐格動畫狀態機：播放、不循環播完接下一個、某一格發事件（腳步聲、出招判定）
+   ========================================================================== */
+
+/* ---------- PZ.juice：程序動畫 ---------- */
+const JUICE_DEF = { breathe: 0.022, breatheRate: 0.42, bob: 2.6, waddle: 0.07, step: 0.045, lean: 0.1, leanSpeed: 320, turn: 0.13, k: 420, d: 15, shake: 1 };
+class Juice {
+  constructor(o) {
+    this.o = Object.assign({}, JUICE_DEF, o);
+    this.sx = new Spring(1, { k: this.o.k, d: this.o.d }); this.sy = new Spring(1, { k: this.o.k, d: this.o.d }); this.rot = new Spring(0, { k: this.o.k * 0.6, d: this.o.d });
+    this.t = Rand.range(0, 10); this.phase = 0; this.move = 0; this.face = 1; this.turnT = 0; this.flash = 0; this.shakeT = 0; this.shakeA = 0; this.air = 0; this.grounded = true;
+    this.ox = 0; this.oy = 0;
+  }
+  set(o) { Object.assign(this.o, o); return this; }
+  /** 每格呼叫：s = { vx, vy, grounded, face }（都可以不給） */
+  update(dt, s) {
+    if (!(dt > 0)) return this;
+    const o = this.o, vx = (s && s.vx) || 0, vy = (s && s.vy) || 0, grounded = !s || s.grounded !== false, sp = Math.abs(vx);
+    this.t += dt;
+    let face = s && s.face != null ? Math.sign(s.face) : (sp > 8 ? Math.sign(vx) : 0);
+    if (face && face !== this.face) { this.face = face; this.turnT = o.turn; }
+    this.turnT = Math.max(0, this.turnT - dt);
+    if (grounded && sp > 6) { this.phase += sp * o.step * dt; this.move = Math.min(1, this.move + dt * 6); } else this.move = Math.max(0, this.move - dt * 5);
+    // 落地：從空中回到地面時自動壓扁
+    if (grounded && !this.grounded && this.air > 0.08) this.land(Math.min(1, Math.abs(this._vyLast || 0) / 600 + 0.25));
+    if (!grounded) this.air += dt; else this.air = 0;
+    this.grounded = grounded; this._vyLast = vy;
+    // 目標：空中依速度拉長；地上 1
+    const stretch = grounded ? 0 : clamp(-vy / 900, -0.12, 0.18);
+    this.sy.target = 1 + stretch; this.sx.target = 1 - stretch * 0.6;
+    this.rot.target = clamp(vx / o.leanSpeed, -1, 1) * o.lean * (grounded ? 1 : 0.6);
+    const n = Math.ceil(dt / 0.008); for (let i = 0; i < n; i++) { this.sx.step(dt / n); this.sy.step(dt / n); this.rot.step(dt / n); }
+    this.flash = Math.max(0, this.flash - dt * 7);
+    if (this.shakeT > 0) { this.shakeT = Math.max(0, this.shakeT - dt); }
+    return this;
+  }
+  /** 被打：力道 0～1（或更大）、方向（弧度，從哪裡被打過來；不給就原地抖） */
+  hit(power = 0.6, dir) {
+    const p = Math.max(0.1, power);
+    this.flash = Math.min(1, 0.6 + p * 0.5); this.shakeT = 0.12 + p * 0.18; this.shakeA = (2 + p * 5) * this.o.shake;
+    this.sx.kick(p * 7); this.sy.kick(-p * 7);
+    if (dir != null) this.rot.kick(Math.cos(dir) * p * 9);
+    return this;
+  }
+  /** 落地壓扁 */
+  land(power = 0.6) { this.sy.kick(-power * 9); this.sx.kick(power * 7); return this; }
+  /** 起跳拉長 */
+  jump(power = 0.7) { this.sy.kick(power * 8); this.sx.kick(-power * 5); return this; }
+  /** 一下脈動（撿到東西、升級、被選到） */
+  pulse(k = 0.25) { this.sx.kick(k * 14); this.sy.kick(k * 14); return this; }
+  /** 算出這一格的變形（不畫）：{ dx, dy, r, sx, sy, flash } */
+  pose() {
+    const o = this.o, br = Math.sin(this.t * Math.PI * 2 * o.breatheRate) * o.breathe * (1 - this.move);
+    const stepS = Math.sin(this.phase * Math.PI * 2), bob = Math.abs(stepS) * o.bob * this.move;
+    let fx = this.face;
+    if (this.turnT > 0) fx *= Math.max(0.05, Math.abs(Math.cos((1 - this.turnT / o.turn) * Math.PI)));   // 轉身：像紙片一樣翻過去
+    const sh = this.shakeT > 0 ? this.shakeA * (this.shakeT / 0.3) : 0;
+    const p = this._p || (this._p = {});
+    p.dx = sh ? Rand.spread(sh) : 0; p.dy = -bob + (sh ? Rand.spread(sh * 0.5) : 0);
+    p.r = this.rot.value + stepS * o.waddle * this.move;
+    p.sx = this.sx.value * (1 - br * 0.5) * fx; p.sy = this.sy.value * (1 + br); p.flash = this.flash;
+    return p;
+  }
+  /** 直接畫：o = { s, sx, sy, a, color, add, r, ax, ay } */
+  draw(g, f, x, y, o) {
+    const p = this.pose(), s = o && o.s != null ? o.s : 1;
+    g.spr(f, x + p.dx, y + p.dy, p.r + ((o && o.r) || 0), p.sx * s * (o && o.sx != null ? o.sx : 1), p.sy * s * (o && o.sy != null ? o.sy : 1), o && o.a != null ? o.a : 1, o && o.color, (o && o.add) || 0, Math.max(p.flash, (o && o.flash) || 0), o && o.ax, o && o.ay);
+    return this;
+  }
+}
+PZ.juice = (o) => new Juice(o);
+PZ.Juice = Juice;
+
+/* ---------- PZ.chain：繩子、披風、尾巴（verlet） ---------- */
+/**
+ * o = { n（節數，預設 8）, len（每節長度，預設 8）, gravity（預設 600）, damping（0～1，預設 0.94）, iterations（預設 4）,
+ *       stiff（0～1 不容易彎，預設 0.1）, dir（不受力時往哪個方向垂，弧度，預設 π/2 往下）, wind（受天氣的風影響多少，預設 1）,
+ *       ground（地面 y，或 (x) => y）, x, y（一開始的位置） }
+ */
+class Chain {
+  constructor(o = {}) {
+    this.o = Object.assign({ n: 8, len: 8, gravity: 600, damping: 0.94, iterations: 4, stiff: 0.1, dir: Math.PI / 2, wind: 1, ground: null, x: 0, y: 0 }, o);
+    const { n, len, dir, x, y } = this.o;
+    this.pts = []; for (let i = 0; i < n; i++) { const px = x + Math.cos(dir) * len * i, py = y + Math.sin(dir) * len * i; this.pts.push({ x: px, y: py, px, py }); }
+    this.acc = 0; this.ax = x; this.ay = y; this.aa = null; this.fx = 0; this.fy = 0;
+  }
+  /** 把第一節釘在 (x, y)；angle：第一節要往哪個方向延伸（尾巴、圍巾用；不給就自由垂） */
+  pin(x, y, angle) { this.ax = x; this.ay = y; this.aa = angle == null ? null : angle; return this; }
+  /** 額外的力（爆炸、衝刺），一格有效 */
+  push(fx, fy) { this.fx += fx; this.fy += fy; return this; }
+  /** 一下子全部移到某處（傳送、換場景時避免甩一大圈） */
+  reset(x, y) { const { len, dir } = this.o; this.pts.forEach((p, i) => { p.x = p.px = x + Math.cos(dir) * len * i; p.y = p.py = y + Math.sin(dir) * len * i; }); this.ax = this._lx = x; this.ay = this._ly = y; return this; }
+  update(dt) {
+    if (!(dt > 0)) return this;
+    const H = 1 / 120; this.acc = Math.min(this.acc + dt, 0.1);
+    // 釘住的點在這幾小步之間平順移過去（不然一格跳一大段，鏈子會被甩出去）
+    const n = Math.floor(this.acc / H), tx = this.ax, ty = this.ay, sx = this._lx == null ? tx : this._lx, sy = this._ly == null ? ty : this._ly;
+    for (let i = 1; i <= n; i++) { this.ax = sx + (tx - sx) * (i / n); this.ay = sy + (ty - sy) * (i / n); this._step(H); }
+    this.acc -= n * H; this.ax = tx; this.ay = ty; if (n > 0) { this._lx = tx; this._ly = ty; }
+    this.fx = this.fy = 0;
+    return this;
+  }
+  _step(h) {
+    const o = this.o, P = this.pts, n = P.length, wind = (typeof Weather !== 'undefined' ? Weather.wind : 0) * o.wind * 260;
+    const gx = this.fx + wind, gy = o.gravity + this.fy, damp = Math.pow(o.damping, h * 60);
+    P[0].px = P[0].x; P[0].py = P[0].y; P[0].x = this.ax; P[0].y = this.ay;
+    for (let i = 1; i < n; i++) {
+      const p = P[i], vx = (p.x - p.px) * damp, vy = (p.y - p.py) * damp;
+      p.px = p.x; p.py = p.y;
+      p.x += vx + gx * h * h * (0.7 + 0.3 * i / n); p.y += vy + gy * h * h;
+    }
+    const L = o.len, ground = o.ground;
+    for (let it = 0; it < o.iterations; it++) {
+      P[0].x = this.ax; P[0].y = this.ay;
+      for (let i = 1; i < n; i++) {
+        const a = P[i - 1], b = P[i];
+        let dx = b.x - a.x, dy = b.y - a.y; const d = Math.hypot(dx, dy) || 1e-6, diff = (d - L) / d;
+        if (i === 1) { b.x -= dx * diff; b.y -= dy * diff; } else { a.x += dx * diff * 0.5; a.y += dy * diff * 0.5; b.x -= dx * diff * 0.5; b.y -= dy * diff * 0.5; }
+        // 不容易彎：往「上一節的方向」（第一節：釘住的方向）拉一點
+        if (o.stiff > 0) {
+          let ux, uy;
+          if (i === 1) { if (this.aa == null) continue; ux = Math.cos(this.aa); uy = Math.sin(this.aa); }
+          else { const z = P[i - 2]; ux = a.x - z.x; uy = a.y - z.y; const l = Math.hypot(ux, uy) || 1; ux /= l; uy /= l; }
+          const tx = a.x + ux * L, ty = a.y + uy * L, k = o.stiff * (i === 1 ? 1 : 0.6);
+          b.x += (tx - b.x) * k; b.y += (ty - b.y) * k;
+        }
+      }
+      if (ground != null) for (let i = 1; i < n; i++) { const p = P[i], gy0 = typeof ground === 'function' ? ground(p.x) : ground; if (gy0 != null && p.y > gy0) { p.y = gy0; p.px += (p.x - p.px) * 0.4; } }
+    }
+  }
+  get tip() { return this.pts[this.pts.length - 1]; }
+}
+PZ.chain = (o) => new Chain(o);
+PZ.Chain = Chain;
+/** 把鏈子畫成一條帶子：o = { w0（根部寬）, w1（尾端寬）, color, color2, a, add } */
+Graphics.prototype.chain = function (c, o = {}) {
+  const color = o.color || '#fff';
+  return this.trail(c.pts, o.w0 != null ? o.w0 : 6, o.w1 != null ? o.w1 : 2, color, o.color2 != null ? o.color2 : color, { a: o.a, add: o.add || 0 });
+};
+
+/* ---------- PZ.animator：逐格動畫狀態機 ---------- */
+/**
+ * defs = { idle: { frames: ['hero:0', …] 或 'hero'（自動找 hero:0、hero:1…）, fps: 8, loop: true },
+ *          attack: { frames: 'atk', fps: 16, loop: false, next: 'idle', events: { 3: 'hit' } } }
+ * const an = PZ.animator(defs, 'idle');  an.play('attack');  an.on('hit', () => …);  每格 an.update(dt)；畫 g.sprite(an.frame, x, y)
+ */
+class Animator {
+  constructor(defs, start) {
+    makeEmitter(this);
+    this.defs = {}; for (const k in defs) this.defs[k] = this._norm(defs[k]);
+    this.name = ''; this.cur = null; this.t = 0; this.i = 0; this.speed = 1; this.done = false;
+    if (start || Object.keys(this.defs)[0]) this.play(start || Object.keys(this.defs)[0]);
+  }
+  _norm(d) {
+    let fr = d.frames;
+    if (typeof fr === 'string') { const base = fr; fr = []; for (let i = 0; Art.has(`${base}:${i}`); i++) fr.push(`${base}:${i}`); if (!fr.length) fr = [base]; }
+    return { frames: fr.map((f) => Art.get(f)), fps: d.fps || 10, loop: d.loop !== false, next: d.next || null, events: d.events || null, speed: d.speed || 1 };
+  }
+  /** 換動畫（同一個在播就不重來，除非 restart） */
+  play(name, o = {}) {
+    const d = this.defs[name]; if (!d) { warnOnce('anim:' + name, '沒有這個動畫：' + name); return this; }
+    if (name === this.name && !o.restart && !this.done) return this;
+    this.name = name; this.cur = d; this.t = 0; this.i = 0; this.done = false; if (o.speed != null) this.speed = o.speed;
+    this._fire(0);
+    return this;
+  }
+  _fire(i) { const ev = this.cur.events && this.cur.events[i]; if (ev) this.emit(ev, this.name, i); this.emit('frame', this.name, i); }
+  update(dt) {
+    const d = this.cur; if (!d || this.done) return this;
+    this.t += dt * this.speed * d.speed;
+    const n = d.frames.length, idx = Math.floor(this.t * d.fps);
+    while (this.i < idx) {
+      this.i++;
+      if (this.i >= n) {
+        if (d.loop) { this.i = 0; this.t -= n / d.fps; this.emit('loop', this.name); this._fire(0); break; }
+        this.i = n - 1; this.done = true; this.emit('end', this.name);
+        if (d.next) this.play(d.next);
+        return this;
+      }
+      this._fire(this.i);
+    }
+    return this;
+  }
+  get frame() { const d = this.cur; return d ? d.frames[Math.min(this.i, d.frames.length - 1)] : MISSING; }
+  /** 0～1：播到哪裡了（不循環的動畫判斷「出招到哪」） */
+  get progress() { const d = this.cur; return d ? clamp01(this.t * d.fps / d.frames.length) : 0; }
+}
+PZ.animator = (defs, start) => new Animator(defs, start);
+
+/* ---- 29_rig.js ---- */
+/* ==========================================================================
+   29 角色動畫（二）：骨架角色 PZ.rig
+     只要畫好身體各部位（頭、身體、骨盆、上臂、前臂、手、大腿、小腿、腳、武器），引擎就讓它
+     站著呼吸、走、跑、跳、落地、蹲、出招（揮砍、橫掃、突刺、上挑、重擊、出拳、施法）、受傷、倒下、爬起來；
+     腳會踩在高低不平的地上（兩段 IK），動作之間自動平滑接起來，披風、羽飾、頭髮自己飄（PZ.chain）。
+       const hero = PZ.rig.humanoid({ parts: { head, torso, pelvis, upper, fore, hand, thigh, shin, foot }, weapon, cape, plume })
+       每格：hero.drive({ vx, vy, grounded, crouch }); hero.update(dt);   畫：g.rig(hero, x, y)   影子：g.rigShadow(hero, x, y)
+       hero.attack('slash').then(…)   hero.on('hit', (招式) => 判定傷害)   hero.hurt()   hero.die()   hero.revive()
+       hero.ground = (x) => 地面 y      腳踩地形；hero.joint('handF') 手的位置（放特效）；hero.tip() 武器尖端
+   部位圖的畫法（重要）：手腳畫成「往下垂」的直條，關節（上端）在 anchor；身體、頭、骨盆畫成直立的，跟下一段相接的點在 anchor；
+   腳畫成橫的（腳尖朝右），腳踝在 anchor；武器畫成橫的（尖端朝右），握把在 anchor。角色面向右邊畫。
+   ========================================================================== */
+const RIG_DIMS = { thigh: 24, shin: 24, torso: 30, upper: 17, fore: 16, depth: 3, spread: 10, shoulder: 0.86, neck: 1 };
+const P_KEYS = ['hx', 'hy', 'r', 'lean', 'head', 'fFx', 'fFy', 'fBx', 'fBy', 'aFu', 'aFf', 'aBu', 'aBf', 'footF', 'footB', 'wr'];
+const newPose = () => { const p = {}; for (const k of P_KEYS) p[k] = 0; return p; };
+const HALF_PI = Math.PI / 2;
+/** 兩段 IK：從 (hx, hy) 伸到 (tx, ty)，兩節長 a、b；bend +1 關節朝前（膝蓋）、-1 朝後（手肘） → [第一節角度, 第二節角度, 關節 x, 關節 y] */
+function ik2(hx, hy, tx, ty, a, b, bend, out) {
+  let dx = tx - hx, dy = ty - hy, d = Math.hypot(dx, dy) || 1e-4;
+  const dmax = a + b - 0.05, dmin = Math.abs(a - b) + 0.05;
+  if (d > dmax) { dx *= dmax / d; dy *= dmax / d; d = dmax; } else if (d < dmin) { dx *= dmin / d; dy *= dmin / d; d = dmin; }
+  const th = Math.atan2(dy, dx), A = Math.acos(clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1)), a1 = th - bend * A;
+  const kx = hx + Math.cos(a1) * a, ky = hy + Math.sin(a1) * a;
+  out[0] = a1; out[1] = Math.atan2(hy + dy - ky, hx + dx - kx); out[2] = kx; out[3] = ky;
+  return out;
+}
+/* 招式：每個關鍵格 [時間, { u 前上臂, f 前前臂, bu, bf 後手, lean, hx, hy, head, w 手腕（武器相對前臂多轉幾度） }, 緩動]；沒寫的欄位＝跟著原本的動作 */
+const RIG_MOVES = {
+  slash: { dur: 0.46, hit: 0.15, keys: [[0.11, { u: -2.3, f: -2.9, bu: 1.0, bf: 0.6, lean: -0.08, hx: -1 }, 'outQuad'], [0.17, { u: 0.32, f: 0.14, bu: 2.3, bf: 2.0, lean: 0.26, hx: 7 }, 'outQuint'], [0.3, { u: 0.95, f: 0.8, bu: 2.0, bf: 1.7, lean: 0.2, hx: 6 }, 'outCubic']] },
+  swing: { dur: 0.42, hit: 0.15, keys: [[0.12, { u: 2.5, f: 2.95, bu: 0.6, bf: 0.2, lean: -0.05, hx: -2 }, 'outQuad'], [0.18, { u: -0.05, f: -0.35, bu: 2.2, bf: 2.0, lean: 0.2, hx: 6 }, 'outQuint'], [0.3, { u: -0.85, f: -1.35, bu: 2.4, bf: 2.3, lean: 0.12, hx: 6 }, 'outCubic']] },
+  thrust: { dur: 0.4, hit: 0.13, keys: [[0.1, { u: 2.0, f: 2.7, bu: 1.2, bf: 0.8, lean: -0.05, hx: -3, w: 1.6 }, 'outQuad'], [0.15, { u: 0.05, f: 0.0, bu: 2.5, bf: 2.4, lean: 0.3, hx: 14, w: 1.2 }, 'outQuint'], [0.28, { u: 0.1, f: 0.05, lean: 0.26, hx: 13, w: 1.2 }, 'outCubic']] },
+  upper: { dur: 0.45, hit: 0.15, keys: [[0.1, { u: 1.4, f: 1.0, bu: 2.0, bf: 1.6, lean: 0.15, hx: 0, hy: 4 }, 'outQuad'], [0.16, { u: -1.2, f: -1.6, bu: 0.8, bf: 0.4, lean: -0.12, hx: 5, hy: -2 }, 'outQuint'], [0.3, { u: -1.6, f: -2.0, lean: -0.15, hx: 4 }, 'outCubic']] },
+  smash: { dur: 0.72, hit: 0.33, keys: [[0.22, { u: -2.4, f: -2.9, bu: -2.0, bf: -2.6, lean: -0.15, hx: -3, hy: 5, head: 0.1, w: -0.3 }, 'inOutQuad'], [0.32, { u: 0.6, f: 0.45, bu: 0.9, bf: 0.6, lean: 0.42, hx: 9, hy: 11, head: -0.1, w: 0.5 }, 'outQuint'], [0.5, { u: 0.9, f: 0.7, bu: 1.1, bf: 0.8, lean: 0.36, hx: 9, hy: 9 }, 'outCubic']] },
+  punch: { dur: 0.27, hit: 0.08, keys: [[0.05, { u: 1.9, f: -0.6, bu: 1.2, bf: -0.4, lean: -0.02 }, 'outQuad'], [0.09, { u: 0.0, f: 0.0, bu: 1.6, bf: -0.9, lean: 0.16, hx: 4 }, 'outQuint'], [0.18, { u: 0.12, f: -0.2, lean: 0.12, hx: 3 }, 'outCubic']] },
+  cast: { dur: 0.6, hit: 0.28, keys: [[0.2, { u: -1.6, f: -1.9, bu: -1.4, bf: -1.8, lean: -0.1, hy: 2, head: 0.12 }, 'inOutQuad'], [0.3, { u: -0.1, f: -0.05, bu: 0.05, bf: 0.0, lean: 0.12, hx: 3 }, 'outQuint'], [0.46, { u: -0.05, f: 0.0, bu: 0.1, bf: 0.05, lean: 0.1, hx: 3 }, 'linear']] },
+};
+class Humanoid {
+  constructor(o = {}) {
+    makeEmitter(this);
+    this.o = o; this.d = Object.assign({}, RIG_DIMS, o.dims); this.s = o.scale || 1;
+    this.parts = Object.assign({}, o.parts);
+    this.walkSpeed = o.walkSpeed || 80; this.runSpeed = o.runSpeed || 230;
+    this.face = 1; this.faceK = 1; this.turnT = 0; this.ground = o.ground || null;
+    this.vx = 0; this.vy = 0; this.grounded = true; this.crouching = false;
+    this.t = Rand.range(0, 10); this.phase = 0; this.move = 0; this.runK = 0; this.airK = 0; this.landK = 0; this.crouchK = 0;
+    this.atk = null; this.queue = null; this.hurtT = 0; this.hurtK = 0; this.deadK = 0; this.dead = false; this.flash = 0;
+    this.cur = newPose(); this.pp = newPose(); this.tmp = newPose(); this.tmp2 = newPose(); this._ik = [0, 0, 0, 0]; this._fa = [0, 0, 0]; this._fb = [0, 0, 0];
+    this.J = {}; this.x = 0; this.y = 0; this.trail = []; this._first = true;
+    this.chains = [];
+    // 披風、圍巾：根部順著背往下垂（不會被甩到頭上）；羽飾：往後上方翹；頭髮：往後垂
+    const CH_DEF = { cape: { n: 8, len: 7, gravity: 700, damping: 0.9, stiff: 0.12, angle: 1.95 }, scarf: { n: 6, len: 6, gravity: 600, damping: 0.9, stiff: 0.08, angle: 2.4 }, plume: { n: 6, len: 5.5, gravity: 260, damping: 0.93, stiff: 0.35, angle: 3.6 }, hair: { n: 6, len: 6, gravity: 500, damping: 0.9, stiff: 0.15, angle: 2.2 } };
+    for (const k of ['cape', 'plume', 'hair', 'scarf']) if (o[k]) { const c = Object.assign({}, CH_DEF[k], o[k]); this.chains.push({ key: k, c: new Chain(c), at: c.at || k, o: c }); }
+    this._poseIdle(this.cur, 0);
+  }
+  /** 每格先餵狀態：{ vx, vy, grounded, crouch, face } */
+  drive(s) {
+    if (s.vx != null) this.vx = s.vx; if (s.vy != null) this.vy = s.vy; if (s.grounded != null) this.grounded = !!s.grounded;
+    if (s.crouch != null) this.crouching = !!s.crouch;
+    const f = s.face != null ? Math.sign(s.face) : (Math.abs(this.vx) > 6 && !this.atk ? Math.sign(this.vx) : 0);
+    if (f && f !== this.face && !this.dead) { this.face = f; this.turnT = 0.1; }
+    return this;
+  }
+  /** 出招：'slash' 'swing' 'thrust' 'upper' 'smash' 'punch' 'cast'，或自訂 { dur, hit, keys }。出招中再按會接下一招（連段） */
+  attack(kind = 'slash') {
+    if (this.dead) return Promise.resolve(false);
+    const mv = typeof kind === 'object' ? kind : RIG_MOVES[kind];
+    if (!mv) { warnOnce('move:' + kind, '沒有這個招式：' + kind); return Promise.resolve(false); }
+    if (this.atk && this.atk.t < this.atk.mv.hit + 0.06) { if (this.queue && this.queue.res) this.queue.res(false); return new Promise((res) => { this.queue = { kind, mv, res }; }); }
+    if (this.atk && this.atk.res) this.atk.res(false);
+    return new Promise((res) => { this.atk = { kind: typeof kind === 'string' ? kind : 'custom', mv, t: 0, hitDone: false, res, from: this.atk ? this._snapshotArms() : null }; this.trail.length = 0; });
+  }
+  _snapshotArms() { const c = this.pp && this.atk ? this.pp : this.cur; return { u: c.aFu, f: c.aFf, bu: c.aBu, bf: c.aBf, lean: c.lean, hx: c.hx, hy: 0, head: c.head, w: c.wr || 0 }; }
+  get attacking() { return !!this.atk; }
+  hurt(dir, power = 0.7) {
+    if (this.dead) return this;
+    this.hurtT = 0.38; this.hurtK = clamp(power, 0.2, 1.2); this.flash = 1;
+    if (this.atk && this.atk.t < this.atk.mv.hit) { if (this.atk.res) this.atk.res(false); this.atk = null; this.queue = null; }
+    for (const ch of this.chains) ch.c.push(-this.face * 3000 * power, -1200 * power);
+    return this;
+  }
+  die() { if (this.dead) return this; this.dead = true; this.atk = null; this.queue = null; this.flash = 1; this.emit('die'); return this; }
+  revive() { this.dead = false; this.emit('revive'); return this; }
+  /** 起跳的瞬間（蹲一下再彈起來的感覺；遊戲照常給速度） */
+  jump() { this.landK = 0; this.airK = Math.max(this.airK, 0.4); return this; }
+  update(dt) {
+    if (!(dt > 0)) return this;
+    const d = this.d, sp = Math.abs(this.vx);
+    this.t += dt; this.turnT = Math.max(0, this.turnT - dt); this.flash = Math.max(0, this.flash - dt * 5);
+    const legScale = (d.thigh + d.shin) / 48, stride = lerp(26, 56, this.runK) * legScale;
+    // 走路／跑步：相位依速度前進；runK 依速度在走與跑之間混
+    const tgtRun = clamp01((sp - this.walkSpeed * 0.9) / Math.max(1, this.runSpeed - this.walkSpeed * 0.9));
+    this.runK = damp(this.runK, tgtRun, 6, dt);
+    const moving = this.grounded && sp > 4 && !this.dead;
+    this.move = damp(this.move, moving ? 1 : 0, moving ? 10 : 7, dt);
+    if (moving) this.phase = (this.phase + sp / (stride * 2) * dt) % 1;
+    else if (this.move < 0.05) this.phase = 0;
+    // 空中、落地、蹲
+    const wasAir = this.airK > 0.5;
+    this.airK = damp(this.airK, this.grounded ? 0 : 1, this.grounded ? 22 : 12, dt);
+    if (this.grounded && wasAir && this.airK < 0.5) { this.landK = Math.min(1, 0.45 + Math.abs(this._vyAir || 0) / 900); this.emit('land', this.landK); for (const ch of this.chains) ch.c.push(0, 2500); }
+    if (!this.grounded) this._vyAir = this.vy;
+    this.landK = Math.max(0, this.landK - dt * 4.2);
+    this.crouchK = damp(this.crouchK, this.crouching && this.grounded ? 1 : 0, 14, dt);
+    this.hurtT = Math.max(0, this.hurtT - dt);
+    this.deadK = approach(this.deadK, this.dead ? 1 : 0, dt * (this.dead ? 1.6 : 2.6));
+    // 招式
+    const A = this.atk;
+    if (A) {
+      A.t += dt;
+      if (!A.hitDone && A.t >= A.mv.hit) { A.hitDone = true; this.emit('hit', A.kind); }
+      if (A.t >= A.mv.dur || (this.queue && A.t >= A.mv.hit + 0.06)) {
+        if (A.res) A.res(true);
+        const q = this.queue; this.queue = null; this.atk = null;
+        if (q) { this.atk = { kind: typeof q.kind === 'string' ? q.kind : 'custom', mv: q.mv, t: 0, hitDone: false, res: q.res, from: this._snapshotArms() }; this.trail.length = 0; }
+      }
+    }
+    // 姿勢：各種狀態的權重本身已經是平滑變化的，直接混（不能再整體平滑，腳會在地上滑）
+    this._poseTarget(this.cur);
+    return this;
+  }
+  _poseIdle(P, t) {
+    const d = this.d, L = d.thigh + d.shin, b = Math.sin(t * Math.PI * 2 / 3.4);
+    P.hx = 0; P.hy = -L * 0.975 + b * 0.5; P.r = 0; P.lean = 0.035 + b * 0.012; P.head = -0.03 - b * 0.012;
+    P.fFx = d.spread * 0.45; P.fFy = 0; P.fBx = -d.spread * 0.55; P.fBy = 0;
+    P.aFu = HALF_PI + 0.1 + b * 0.025; P.aFf = P.aFu - 0.3; P.aBu = HALF_PI + 0.15 - b * 0.02; P.aBf = P.aBu - 0.32; P.footF = 0; P.footB = 0; P.wr = 0;
+  }
+  _foot(ph, S, lift, stance, k, out) {
+    if (ph < stance) { const u = ph / stance; out[0] = S / 2 - S * u; out[1] = 0; out[2] = 0; return out; }
+    const u = (ph - stance) / (1 - stance);
+    out[0] = -S / 2 + S * smoothstep(0, 1, Math.pow(u, 1 + k * 0.4)); out[1] = -lift * Math.sin(Math.PI * u) - k * 9 * Math.sin(Math.PI * Math.min(1, u * 1.7)) * (1 - u); out[2] = 0.3 * Math.sin(Math.PI * u) * (1 - k * 0.3);
+    return out;
+  }
+  _poseLoco(P, ph, k) {
+    const d = this.d, L = d.thigh + d.shin, ls = L / 48;
+    const S = lerp(26, 56, k) * ls, lift = lerp(7, 17, k) * ls, stance = lerp(0.62, 0.4, k), bob = lerp(2.2, 4.5, k) * ls, sw = lerp(0.38, 0.72, k), elbow = lerp(0.32, 1.55, k);
+    const F = this._foot(ph, S, lift, stance, k, this._fa), B = this._foot((ph + 0.5) % 1, S, lift, stance, k, this._fb);
+    P.hx = 0; P.hy = -L * lerp(0.95, 0.9, k) + bob * 0.5 * (1 + Math.cos(Math.PI * 4 * (ph - 0.2 * k))); P.r = 0;
+    P.lean = lerp(0.07, 0.27, k) + 0.025 * Math.sin(Math.PI * 4 * ph); P.head = -P.lean * 0.55;
+    P.fFx = F[0]; P.fFy = F[1]; P.footF = F[2]; P.fBx = B[0]; P.fBy = B[1]; P.footB = B[2];
+    const sF = F[0] / (S / 2), sB = B[0] / (S / 2);
+    P.aFu = HALF_PI + sw * sF - k * 0.25; P.aFf = P.aFu - elbow - 0.25 * Math.max(0, -sF);
+    P.aBu = HALF_PI + sw * sB - k * 0.25; P.aBf = P.aBu - elbow - 0.25 * Math.max(0, -sB); P.wr = 0;
+  }
+  _poseAir(P) {
+    const d = this.d, L = d.thigh + d.shin, ls = L / 48, w = clamp01(this.vy / 380 + 0.45), T = this._airT || (this._airT = newPose());
+    // 上升：前腳膝蓋抬起、後腳往後伸、雙手往上；下墜：腳往下找地、手張開
+    P.hx = 0; P.hy = -L * 0.93; P.r = 0; P.lean = 0.12; P.head = -0.1;
+    P.fFx = 9 * ls; P.fFy = -15 * ls; P.fBx = -7 * ls; P.fBy = -3 * ls; P.footF = 0.35; P.footB = 0.5;
+    P.aFu = -0.9; P.aFf = -1.5; P.aBu = -0.5; P.aBf = -0.8; P.wr = 0; T.wr = 0;
+    T.hx = 0; T.hy = -L * 0.95; T.r = 0; T.lean = 0; T.head = 0.06;
+    T.fFx = 5 * ls; T.fFy = -3 * ls; T.fBx = -6 * ls; T.fBy = -7 * ls; T.footF = 0.2; T.footB = 0.4;
+    T.aFu = 0.2; T.aFf = -0.3; T.aBu = 2.6; T.aBf = 2.2;
+    for (const k of P_KEYS) P[k] = lerp(P[k], T[k], w);
+  }
+  _poseTarget(P) {
+    const d = this.d, L = d.thigh + d.shin, ls = L / 48, T = this.tmp;
+    this._poseIdle(P, this.t);
+    if (this.move > 0.001) { this._poseLoco(T, this.phase, this.runK); for (const k of P_KEYS) P[k] = lerp(P[k], T[k], this.move); }
+    if (this.airK > 0.001) { const A2 = this.tmp2; this._poseAir(A2); for (const k of P_KEYS) P[k] = lerp(P[k], A2[k], this.airK); }
+    if (this.crouchK > 0.001) {
+      const c = this.crouchK; P.hy = lerp(P.hy, -L * 0.64, c); P.lean += 0.3 * c; P.head -= 0.2 * c;
+      P.fFx = lerp(P.fFx, 10 * ls, c); P.fBx = lerp(P.fBx, -9 * ls, c); P.fFy *= 1 - c; P.fBy *= 1 - c;
+      P.aFu = lerp(P.aFu, 1.0, c); P.aFf = lerp(P.aFf, 0.3, c); P.aBu = lerp(P.aBu, 1.2, c); P.aBf = lerp(P.aBf, 0.6, c);
+    }
+    if (this.landK > 0) { const c = Ease.outQuad(this.landK); P.hy += c * L * 0.22; P.lean += c * 0.16; P.aFu += c * 0.35; P.aBu += c * 0.35; }
+    if (this.hurtT > 0) { const c = Math.sin(Math.min(1, this.hurtT / 0.38) * Math.PI * 0.5) * this.hurtK; P.lean -= 0.5 * c; P.head -= 0.45 * c; P.hx -= 4 * c * ls; P.aFu = lerp(P.aFu, -0.6, c * 0.8); P.aBu = lerp(P.aBu, 2.5, c * 0.8); P.hy += 2 * c; }
+    if (this.deadK > 0) {
+      const c = this.dead ? Ease.outBounce(this.deadK) : Ease.inOutQuad(this.deadK);
+      P.r = -1.5 * c; P.hy = lerp(P.hy, -L * 0.98, c); P.lean = lerp(P.lean, -0.05, c); P.head = lerp(P.head, 0.25, c);
+      P.fFx = lerp(P.fFx, 3 * ls, c); P.fFy = lerp(P.fFy, 0, c); P.fBx = lerp(P.fBx, -2 * ls, c); P.fBy = lerp(P.fBy, 0, c);
+      P.aFu = lerp(P.aFu, -1.9, c); P.aFf = lerp(P.aFf, -1.6, c); P.aBu = lerp(P.aBu, -2.3, c); P.aBf = lerp(P.aBf, -2.0, c);
+    }
+  }
+  /** 招式疊在身體動作上（上半身照關鍵格，下半身照走路／站著） */
+  _applyMove(P) {
+    const A = this.atk; if (!A) return;
+    const keys = A.mv.keys, t = A.t, from = A.from, base = { u: P.aFu, f: P.aFf, bu: P.aBu, bf: P.aBf, lean: P.lean, hx: P.hx, hy: 0, head: P.head, w: 0 };
+    const val = (key, ch) => (key && key[ch] != null ? key[ch] : base[ch]);
+    let k0 = { t: 0, v: from || base }, k1 = null, ease = 'outQuad';
+    for (let i = 0; i < keys.length; i++) { if (t < keys[i][0]) { k1 = { t: keys[i][0], v: keys[i][1] }; ease = keys[i][2] || 'outQuad'; break; } k0 = { t: keys[i][0], v: keys[i][1] }; }
+    if (!k1) { k1 = { t: A.mv.dur, v: null }; ease = 'inOutQuad'; }
+    const e = easeOf(ease)(clamp01((t - k0.t) / Math.max(1e-4, k1.t - k0.t)));
+    const mix = (ch) => lerp(val(k0.v, ch), val(k1.v, ch), e);
+    P.aFu = mix('u'); P.aFf = mix('f'); P.aBu = mix('bu'); P.aBf = mix('bf'); P.lean = mix('lean'); P.hx = mix('hx') * ((this.d.thigh + this.d.shin) / 48); P.head = mix('head');
+    P.hy += mix('hy'); P.wr = mix('w');
+  }
+  /** 算出每個關節的位置（本地座標：面向右、腳底中間是 (0,0)、單位＝世界單位 ÷ scale）；x, y 是畫的位置（世界） */
+  _place(x, y) {
+    const d = this.d, s = this.s, J = this.J, p = this.pp, C = this.cur;
+    for (const k of P_KEYS) p[k] = C[k];
+    this._applyMove(p);
+    this.x = x; this.y = y;
+    // 地形：腳踩在地上（在地上、沒倒下時）
+    if (this.ground && this.airK < 0.5 && this.deadK < 0.5) {
+      const g0 = this.ground(x), f = this.faceK;
+      const dF = (this.ground(x + f * p.fFx * s) - g0) / s, dB = (this.ground(x + f * p.fBx * s) - g0) / s;
+      if (p.fFy > -3) p.fFy += dF; if (p.fBy > -3) p.fBy += dB;
+      p.hy += clamp(Math.max(dF, dB, 0) * 0.85 + Math.min(dF, dB, 0) * 0.15, -12, 14);
+      const sl = (gx) => Math.atan2(this.ground(gx + 4) - this.ground(gx - 4), 8);
+      p.footF += sl(x + f * p.fFx * s) * f; p.footB += sl(x + f * p.fBx * s) * f;
+    }
+    const L = this._ik, ta = -HALF_PI + p.lean, tc = Math.cos(ta), ts = Math.sin(ta);
+    J.hip = [p.hx, p.hy]; J.ta = ta;
+    J.sh = [p.hx + tc * d.torso * d.shoulder, p.hy + ts * d.torso * d.shoulder];
+    J.neck = [p.hx + tc * (d.torso + d.neck), p.hy + ts * (d.torso + d.neck)]; J.ha = ta + p.head;
+    const hF = [p.hx + d.depth * 0.5, p.hy], hB = [p.hx - d.depth * 0.5, p.hy];
+    ik2(hF[0], hF[1], p.fFx, p.fFy, d.thigh, d.shin, 1, L); J.hipF = hF; J.thF = L[0]; J.shF = L[1]; J.kneeF = [L[2], L[3]]; J.ankF = [L[2] + Math.cos(L[1]) * d.shin, L[3] + Math.sin(L[1]) * d.shin]; J.ftF = p.footF;
+    ik2(hB[0], hB[1], p.fBx, p.fBy, d.thigh, d.shin, 1, L); J.hipB = hB; J.thB = L[0]; J.shB = L[1]; J.kneeB = [L[2], L[3]]; J.ankB = [L[2] + Math.cos(L[1]) * d.shin, L[3] + Math.sin(L[1]) * d.shin]; J.ftB = p.footB;
+    const sF = [J.sh[0] + d.depth * 0.3, J.sh[1]], sB = [J.sh[0] - d.depth * 0.6, J.sh[1] + 0.5];
+    J.shoF = sF; J.auF = p.aFu; J.elF = [sF[0] + Math.cos(p.aFu) * d.upper, sF[1] + Math.sin(p.aFu) * d.upper]; J.afF = p.aFf; J.hdF = [J.elF[0] + Math.cos(p.aFf) * d.fore, J.elF[1] + Math.sin(p.aFf) * d.fore];
+    J.wr = p.wr || 0;
+    J.shoB = sB; J.auB = p.aBu; J.elB = [sB[0] + Math.cos(p.aBu) * d.upper, sB[1] + Math.sin(p.aBu) * d.upper]; J.afB = p.aBf; J.hdB = [J.elB[0] + Math.cos(p.aBf) * d.fore, J.elB[1] + Math.sin(p.aBf) * d.fore];
+    // 整個身體繞腳底旋轉（倒下）
+    J.r = p.r;
+    if (p.r) { const c = Math.cos(p.r), sn = Math.sin(p.r); for (const k in J) { const v = J[k]; if (Array.isArray(v)) { const X = v[0], Y = v[1]; v[0] = X * c - Y * sn; v[1] = X * sn + Y * c; } } }
+    // 面向：轉身時快速壓扁再翻過去
+    const tk = this.turnT > 0 ? Math.max(0.15, Math.abs(Math.cos((1 - this.turnT / 0.1) * Math.PI))) : 1;
+    this.faceK = this.face * tk;
+    return J;
+  }
+  /** 關節的世界座標（上一次畫的時候）：'hip' 'neck' 'hdF'（前手）'hdB' 'ankF' 'kneeF' 'elF'… */
+  joint(name) { const v = this.J[name]; if (!v) return null; return { x: this.x + v[0] * this.s * this.faceK, y: this.y + v[1] * this.s }; }
+  /** 武器尖端的世界座標 */
+  tip() {
+    const w = this.o.weapon; if (!w || !this.J.hdF) return null;
+    const a = this.J.afF + (this.J.r || 0) + (this.J.wr || 0) + (w.grip != null ? w.grip : -1.25), len = w.len || 40, h = this.J.hdF;
+    return { x: this.x + (h[0] + Math.cos(a) * len) * this.s * this.faceK, y: this.y + (h[1] + Math.sin(a) * len) * this.s };
+  }
+  /** 鏈子（披風、羽飾）跟著身體 */
+  _chains(dt) {
+    for (const ch of this.chains) {
+      const j = this.J, at = ch.o.at || ch.key, base = at === 'plume' || at === 'hair' ? j.neck : at === 'scarf' ? j.sh : j.sh;
+      if (!base) continue;
+      const off = ch.o.off || (ch.key === 'cape' ? [-4, 1] : ch.key === 'plume' ? [-2, -22] : ch.key === 'hair' ? [-6, -16] : [-3, 2]);
+      const ang = ((ch.key === 'cape' || ch.key === 'scarf') ? j.ta : j.ha) + (j.r || 0), c = Math.cos(ang + HALF_PI), s = Math.sin(ang + HALF_PI);
+      // 偏移是在身體／頭的方向上（往上是 -y）
+      const lx = base[0] + off[0] * c - off[1] * s, ly = base[1] + off[0] * s + off[1] * c;
+      const wx = this.x + lx * this.s * this.faceK, wy = this.y + ly * this.s;
+      if (this._first) ch.c.reset(wx, wy);
+      const a0 = ch.o.angle != null ? (this.faceK > 0 ? ch.o.angle : Math.PI - ch.o.angle) + (j.r || 0) * Math.sign(this.faceK || 1) : null;
+      if (this.ground && !ch.o.ground) ch.c.o.ground = this.ground;   // 披風、頭髮不會穿到地底下
+      ch.c.pin(wx, wy, a0); ch.c.update(dt);
+    }
+    this._first = false;
+  }
+}
+PZ.rig = { moves: RIG_MOVES, humanoid: (o) => new Humanoid(o), Humanoid, ik: ik2 };
+
+/* ---------- 畫 ---------- */
+const RIG_ORDER_BACK = [['upper', 'shoB', 'auB', 'down'], ['fore', 'elB', 'afB', 'down'], ['hand', 'hdB', 'afB', 'down'], ['thigh', 'hipB', 'thB', 'down'], ['shin', 'kneeB', 'shB', 'down'], ['foot', 'ankB', 'ftB', 'flat']];
+const RIG_ORDER_FRONT_LEG = [['thigh', 'hipF', 'thF', 'down'], ['shin', 'kneeF', 'shF', 'down'], ['foot', 'ankF', 'ftF', 'flat']];
+const RIG_ORDER_FRONT_ARM = [['upper', 'shoF', 'auF', 'down'], ['fore', 'elF', 'afF', 'down'], ['hand', 'hdF', 'afF', 'down']];
+function rigPart(g, R, name, jk, ak, mode, back, o) {
+  const P = R.parts, fr = (back && P[name + 'B']) || P[name]; if (!fr) return;
+  const J = R.J, p = J[jk]; if (!p) return;
+  let a = J[ak]; if (typeof a !== 'number') return; a += J.r || 0;
+  const r = mode === 'down' ? a - HALF_PI : mode === 'up' ? a + HALF_PI : a;
+  if (o.silhouette) { g.sprite(fr, p[0], p[1], { r, silhouette: true, color: o.shadowColor || '#000', a: o.sa }); return; }
+  const col = back ? (R.o.backTint || '#b6b6c6') : o.color;
+  g.spr(fr, p[0], p[1], r, 1, 1, o.a == null ? 1 : o.a, col, o.add || 0, Math.max(R.flash, o.flash || 0));
+}
+function rigBody(g, R, o) {
+  const J = R.J, P = R.parts, r = J.r || 0, al = o.a == null ? 1 : o.a, fl = Math.max(R.flash, o.flash || 0);
+  const draw = (fr, p, ang) => { if (!fr || !p) return; if (o.silhouette) g.sprite(fr, p[0], p[1], { r: ang, silhouette: true, color: o.shadowColor || '#000', a: o.sa }); else g.spr(fr, p[0], p[1], ang, 1, 1, al, o.color, o.add || 0, fl); };
+  draw(P.pelvis, J.hip, J.ta + HALF_PI + r);
+  draw(P.torso, J.hip, J.ta + HALF_PI + r);
+  draw(P.head, J.neck, J.ha + HALF_PI + r);
+}
+function rigWeapon(g, R, o) {
+  const w = R.o.weapon; if (!w || !w.frame || !R.J.hdF) return;
+  const a = R.J.afF + (R.J.r || 0) + (R.J.wr || 0) + (w.grip != null ? w.grip : -1.25), h = R.J.hdF;
+  if (o.silhouette) { g.sprite(w.frame, h[0], h[1], { r: a, silhouette: true, color: o.shadowColor || '#000', a: o.sa }); return; }
+  g.spr(w.frame, h[0], h[1], a, 1, 1, o.a == null ? 1 : o.a, o.color, (o.add || 0) + (w.add || 0), Math.max(R.flash, o.flash || 0));
+}
+/** 畫骨架角色：o = { s（再縮放）, color, a, add, flash, bones（畫骨架線，除錯用）, trail（揮武器的刀光，預設 true）, trailColor } */
+Graphics.prototype.rig = function (R, x, y, o = {}) {
+  // 鏈子用「上次畫到現在過了多少遊戲時間」來算：掉幀時一格畫面可能跑了好幾次更新，只用最後一次的 dt 會讓披風被甩飛
+  R._place(x, y);
+  if (R._chainFrame !== Time.frame) { R._chainFrame = Time.frame; const dt = R._lastT == null ? 0 : clamp(Time.t - R._lastT, 0, 0.1); R._lastT = Time.t; R._chains(dt); }
+  const s = R.s * (o.s || 1), fx = R.faceK;
+  // 刀光：出招中記下武器尖端
+  if (o.trail !== false && R.o.weapon) {
+    const A = R.atk, tp = R.tip(), hp = R.joint('hdF');
+    if (A && A.t > A.mv.hit - 0.09 && A.t < A.mv.hit + 0.11 && tp && hp) { const w = (R.o.weapon.len || 40) * 0.35, k = w / Math.max(1, Math.hypot(tp.x - hp.x, tp.y - hp.y)); R.trail.unshift({ x: tp.x, y: tp.y, bx: tp.x + (hp.x - tp.x) * k * 1.6, by: tp.y + (hp.y - tp.y) * k * 1.6, t: Time.t }); }
+    while (R.trail.length && (Time.t - R.trail[R.trail.length - 1].t > 0.13 || R.trail.length > 16)) R.trail.pop();
+  }
+  const local = (fn) => { this.save(); this.translate(x, y); this.scale(fx * s, s); try { fn(); } finally { this.restore(); } };
+  const capes = R.chains.filter((c) => c.key === 'cape' || c.key === 'scarf'), heads = R.chains.filter((c) => c.key === 'plume' || c.key === 'hair');
+  local(() => { for (const [n, j, a, m] of RIG_ORDER_BACK) rigPart(this, R, n, j, a, m, true, o); });
+  for (const c of capes) this.chain(c.c, Object.assign({ w0: 10, w1: 18, color: '#6a1a2a' }, c.o.draw, { a: o.a }));
+  for (const c of heads) this.chain(c.c, Object.assign({ w0: 6, w1: 2, color: '#c33' }, c.o.draw, { a: o.a }));
+  local(() => {
+    rigBody(this, R, o);
+    for (const [n, j, a, m] of RIG_ORDER_FRONT_LEG) rigPart(this, R, n, j, a, m, false, o);
+    rigWeapon(this, R, o);
+    for (const [n, j, a, m] of RIG_ORDER_FRONT_ARM) rigPart(this, R, n, j, a, m, false, o);
+  });
+  if (R.trail.length >= 2 && o.trail !== false) this.swoosh(R.trail, o.trailColor || (R.o.weapon && R.o.weapon.trail) || '#cfe8ff', { a: 0.9 });
+  if (o.bones) local(() => {
+    const J = R.J, L = (a, b, c) => { if (J[a] && J[b]) this.line(J[a][0], J[a][1], J[b][0], J[b][1], 1.2 / s, c, { a: 0.9 }); };
+    for (const [a, b] of [['hip', 'neck'], ['hipF', 'kneeF'], ['kneeF', 'ankF'], ['hipB', 'kneeB'], ['kneeB', 'ankB'], ['shoF', 'elF'], ['elF', 'hdF'], ['shoB', 'elB'], ['elB', 'hdB']]) L(a, b, a.endsWith('B') || b.endsWith('B') ? '#46d4ff' : '#ffb547');
+    for (const k of ['hip', 'neck', 'kneeF', 'kneeB', 'ankF', 'ankB', 'elF', 'elB', 'hdF', 'hdB']) if (J[k]) this.circle(J[k][0], J[k][1], 2 / s, '#fff');
+  });
+  return this;
+};
+/** 骨架角色的影子：o = { flat（側視：貼地扁影，預設 true）, angle, len（預設 0.3）, a（濃度，預設 0.35）, color } */
+Graphics.prototype.rigShadow = function (R, x, y, o = {}) {
+  if (!R.J.hip) R._place(x, y);
+  const flat = o.flat !== false, s = R.s * (o.s || 1), fx = R.faceK;
+  let ang = o.angle; if (ang == null) ang = Light.shadowDir(x, y).angle;
+  const len = o.len != null ? o.len : flat ? 0.9 : 0.6, dx = Math.cos(ang), dy = Math.sin(ang), fy = o.flatY != null ? o.flatY : 0.07;
+  this.save(); this.translate(x, y);
+  if (flat) this.transform(fx * s, 0, -dx * len * s, -fy * s, 0, 0); else this.transform(-dy * s * fx, dx * s * fx, -dx * len * s, -dy * len * s, 0, 0);
+  const so = { silhouette: true, shadowColor: o.color || '#000', sa: o.a != null ? o.a : 0.35 };
+  for (const [n, j, a, m] of RIG_ORDER_BACK) rigPart(this, R, n, j, a, m, true, so);
+  rigBody(this, R, so);
+  for (const [n, j, a, m] of RIG_ORDER_FRONT_LEG) rigPart(this, R, n, j, a, m, false, so);
+  this.restore();
+  return this;
+};
+
+/* ---------- 刀光 ---------- */
+function catmull(p0, p1, p2, p3, t) { const t2 = t * t, t3 = t2 * t; return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3); }
+/**
+ * 刀光／揮擊的殘影：list 是最新在前的 [{ x, y（刀尖）, bx, by（靠手那一側）}…]，畫成一片從刀尖亮到內側透明、越舊越淡的弧。
+ * o = { a, sub（每段再細分幾份，預設 4：掉幀時也是圓弧）, add（預設 1） }
+ */
+Graphics.prototype.swoosh = function (list, color, o = {}) {
+  const n = list.length; if (n < 2) return this;
+  const sub = o.sub || 4, pts = [], m = this.m, c = toColor(color), al = o.a != null ? o.a : 1, add = o.add != null ? o.add : 1;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = list[Math.max(0, i - 1)], p1 = list[i], p2 = list[i + 1], p3 = list[Math.min(n - 1, i + 2)];
+    for (let k = 0; k < sub; k++) { const t = k / sub; pts.push([catmull(p0.x, p1.x, p2.x, p3.x, t), catmull(p0.y, p1.y, p2.y, p3.y, t), catmull(p0.bx, p1.bx, p2.bx, p3.bx, t), catmull(p0.by, p1.by, p2.by, p3.by, t)]); }
+  }
+  const L = list[n - 1]; pts.push([L.x, L.y, L.bx, L.by]);
+  const X = (x, y) => m[0] * x + m[2] * y + m[4], Y = (x, y) => m[1] * x + m[3] * y + m[5], N = pts.length;
+  for (let i = 0; i < N - 1; i++) {
+    const a = pts[i], b = pts[i + 1], f0 = 1 - i / (N - 1), f1 = 1 - (i + 1) / (N - 1);
+    const ct = pack(cR(c), cG(c), cB(c), al * (f0 + f1) * 0.5 * this.al);
+    // 外緣（刀尖）亮、內緣透明；越舊越淡（細分得夠細，一段一段的階梯看不出來）
+    this.r.quadv(null, X(a[2], a[3]), Y(a[2], a[3]), 0, 0, X(a[0], a[1]), Y(a[0], a[1]), 0, 0, X(b[0], b[1]), Y(b[0], b[1]), 0, 0, X(b[2], b[3]), Y(b[2], b[3]), 0, 0, 0, ct, MODE.solid, add, 0);
+  }
+  return this;
+};
+
 global.PZ = PZ;
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
-<script>window.PZ_GAME = {"id": "engine-lab", "title": "樣品館", "version": "1.0.0", "engine": "dev", "built": "2026-11-14 20:38"};
+<script>window.PZ_GAME = {"id": "engine-lab", "title": "樣品館", "version": "1.0.0", "engine": "dev", "built": "2026-11-14 21:13"};
 /* ---- 01_art.js ---- */
 /* 樣品館：用程式畫的美術（也是「怎麼畫出有質感的程式美術」的範例） */
 const LabArt = {};
@@ -5467,6 +6056,7 @@ const HUB_ITEMS = [
   ['post', '◐', '後製特效', '泛光、衝擊波扭曲、色差、調色、掃描線，一鍵切換'],
   ['light', '☀', '光影', '動態光源、柔和陰影、手電筒、火把、照明彈；角色會投影，空殼怕光'],
   ['weather', '☂', '天氣與水面', '雨夜港口：水面倒影、雨雪霧雷、路燈光柱、電影調色與黑邊'],
+  ['anim', '♞', '角色動畫', '骨架騎士：走跑跳、三連段、腳踩高低地形、披風羽飾飄動；一張圖的史萊姆也會呼吸跳躍'],
   ['ui', '▤', '介面與劇情', '五套主題、對話框、劇情對話、選擇、設定頁'],
 ];
 PZ.scene('hub', {
@@ -6397,6 +6987,244 @@ PZ.scene('weather', {
     // 水面：倒映上面所有東西（包含剛剛畫的發光窗戶、霓虹、路燈）
     if (this.st.water) g.water(v.x - 20, WX.waterY, v.w + 40, v.y + v.h - WX.waterY + 20, { color: '#0b1630', depth: 0.5, reflect: 0.78, ripple: 2.6, foam: 0.35, sky: '#3a2a50' });
     else g.rect(v.x - 20, WX.waterY, v.w + 40, v.y + v.h - WX.waterY + 20, '#081022');
+  },
+});
+
+/* ---- 21_anim.js ---- */
+/* 樣品館：角色動畫（骨架騎士、披風與羽飾、腳踩地形、連段攻擊；程序動畫的史萊姆、木樁；尾巴會甩的小狐狸） */
+const AN = { base: 40 };
+AN.ground = (x) => AN.base + (AN.hills ? 22 * Math.sin(x / 170) + 10 * Math.sin(x / 61 + 1.3) : 0);
+AN.art = () => {
+  if (PZ.art.has('kn.head')) return;
+  const A = PZ.art, steel = (c, x0, y0, x1, y1) => { const g = c.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, '#e2e8f0'); g.addColorStop(0.45, '#9aa6b6'); g.addColorStop(1, '#4a5466'); return g; };
+  const gold = '#d9a94a', red = '#a3283a', dark = '#2a303c', rim = { color: '#fff4dc', a: 0.6, w: 1.2, angle: -2.4 };
+  // 頭盔（面向右，脖子在下緣中間）
+  A.make('kn.head', 28, 30, (c) => {
+    c.fillStyle = steel(c, 4, 2, 24, 28); c.beginPath(); c.moveTo(5, 27); c.quadraticCurveTo(2, 4, 15, 2.5); c.quadraticCurveTo(27, 3, 26, 16); c.lineTo(24.5, 27); c.closePath(); c.fill();
+    c.fillStyle = '#0d1118'; c.beginPath(); c.roundRect(14, 12.5, 12.5, 4, 1.5); c.fill();
+    c.fillStyle = '#7fe8ff'; c.fillRect(16, 13.8, 9.5, 1.4);
+    c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(6, 7); c.quadraticCurveTo(14, 3, 25, 9); c.stroke();
+    c.fillStyle = gold; c.fillRect(4.5, 24.5, 20, 2.5);
+    c.fillStyle = '#5b6576'; for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(17 + i * 3, 20.5, 0.9, 0, Math.PI * 2); c.fill(); }
+  }, { anchor: [0.5, 0.95], rim });
+  // 胸甲＋紅色罩袍＋腰帶（髖在下緣中間）
+  A.make('kn.torso', 26, 34, (c) => {
+    c.fillStyle = steel(c, 4, 0, 24, 30); c.beginPath(); c.moveTo(6, 33); c.lineTo(5, 6); c.quadraticCurveTo(6, 1, 13, 1); c.quadraticCurveTo(22, 2, 24.5, 13); c.quadraticCurveTo(25, 23, 20.5, 33); c.closePath(); c.fill();
+    c.fillStyle = red; c.beginPath(); c.moveTo(6.5, 33); c.lineTo(6, 14); c.lineTo(20, 12); c.quadraticCurveTo(24, 22, 20.5, 33); c.closePath(); c.fill();
+    c.strokeStyle = gold; c.lineWidth = 1.4; c.beginPath(); c.moveTo(6, 14); c.lineTo(20, 12); c.stroke();
+    c.fillStyle = '#f2d68a'; c.beginPath(); c.moveTo(13, 17); c.lineTo(16, 21); c.lineTo(13, 25); c.lineTo(10, 21); c.closePath(); c.fill();
+    c.fillStyle = '#4a3020'; c.fillRect(5.5, 27.5, 16, 3.4); c.fillStyle = gold; c.fillRect(15, 27, 4, 4.4);
+  }, { anchor: [0.5, 0.97], rim, shade: 0.2 });
+  A.make('kn.pelvis', 24, 18, (c) => {
+    c.fillStyle = red; c.beginPath(); c.moveTo(5, 0); c.lineTo(19, 0); c.lineTo(21, 15); c.lineTo(3, 15); c.closePath(); c.fill();
+    for (let i = 0; i < 3; i++) { c.fillStyle = steel(c, 0, i * 4, 0, i * 4 + 6); c.beginPath(); c.roundRect(3 - i * 0.4, 1 + i * 4, 18 + i * 0.8, 5.5, 2); c.fill(); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(3, 5.7 + i * 4, 18, 1); }
+    c.strokeStyle = gold; c.lineWidth = 1; c.beginPath(); c.moveTo(3, 15); c.lineTo(21, 15); c.stroke();
+  }, { anchor: [0.5, 0.1], rim });
+  // 手：上臂（肩甲圓圓的）、前臂（護腕）、拳頭
+  A.make('kn.upper', 14, 21, (c) => {
+    c.fillStyle = steel(c, 2, 4, 10, 20); c.beginPath(); c.roundRect(4, 6, 6.5, 14, 3); c.fill();
+    c.fillStyle = steel(c, 0, 0, 12, 10); c.beginPath(); c.ellipse(7, 5.5, 6.8, 5.5, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = gold; c.lineWidth = 1.2; c.beginPath(); c.ellipse(7, 5.5, 6, 4.6, 0, 0.2, Math.PI - 0.2); c.stroke();
+  }, { anchor: [0.5, 0.16], rim });
+  A.make('kn.fore', 10, 19, (c) => {
+    c.fillStyle = steel(c, 1, 2, 9, 18); c.beginPath(); c.moveTo(1.5, 3); c.lineTo(8.5, 3); c.lineTo(7.5, 18.5); c.lineTo(2.5, 18.5); c.closePath(); c.fill();
+    c.fillStyle = '#c3ccd8'; c.beginPath(); c.arc(5, 3, 3.6, 0, Math.PI * 2); c.fill(); c.fillStyle = gold; c.fillRect(2.4, 14, 5.2, 1.6);
+  }, { anchor: [0.5, 0.12], rim });
+  A.make('kn.hand', 9, 10, (c) => { c.fillStyle = dark; c.beginPath(); c.roundRect(0.5, 1, 8, 8.5, 3); c.fill(); c.fillStyle = '#5b6576'; c.fillRect(1.5, 2.5, 6, 1.5); c.fillRect(1.5, 5, 6, 1.2); }, { anchor: [0.5, 0.15] });
+  // 腳：大腿（膝蓋護片）、小腿、鞋（腳尖朝右）
+  A.make('kn.thigh', 13, 28, (c) => {
+    c.fillStyle = '#3a2e2a'; c.fillRect(3, 0, 7, 26);
+    c.fillStyle = steel(c, 1, 2, 12, 24); c.beginPath(); c.moveTo(2, 1); c.lineTo(11, 1); c.lineTo(10.5, 22); c.lineTo(2.5, 22); c.closePath(); c.fill();
+    c.fillStyle = '#c9d1dd'; c.beginPath(); c.ellipse(7.5, 24, 4.8, 3.6, 0, 0, Math.PI * 2); c.fill(); c.fillStyle = gold; c.beginPath(); c.arc(7.5, 24, 1.3, 0, Math.PI * 2); c.fill();
+  }, { anchor: [0.5, 0.06], rim });
+  A.make('kn.shin', 11, 27, (c) => {
+    c.fillStyle = steel(c, 1, 0, 10, 26); c.beginPath(); c.moveTo(2, 1); c.lineTo(9.5, 1); c.quadraticCurveTo(10.5, 12, 8.5, 26); c.lineTo(3, 26); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 1; c.beginPath(); c.moveTo(3, 9); c.lineTo(9.5, 9); c.stroke();
+  }, { anchor: [0.5, 0.05], rim });
+  A.make('kn.foot', 17, 9, (c) => {
+    c.fillStyle = steel(c, 0, 0, 16, 8); c.beginPath(); c.moveTo(1, 1); c.lineTo(8, 1); c.quadraticCurveTo(14, 3, 16.5, 8); c.lineTo(1, 8.5); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 0.8; for (const x of [6, 9.5, 12.5]) { c.beginPath(); c.moveTo(x, 2); c.lineTo(x - 1, 8); c.stroke(); }
+  }, { anchor: [0.3, 0.3], rim });
+  // 長劍（握把在 anchor、劍尖朝右）
+  A.make('kn.sword', 72, 12, (c) => {
+    c.fillStyle = gold; c.beginPath(); c.arc(2.5, 6, 2.4, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#4a2c1c'; c.fillRect(4, 4.4, 9, 3.2); c.fillStyle = 'rgba(255,255,255,.18)'; for (let x = 5; x < 13; x += 2.2) c.fillRect(x, 4.4, 0.8, 3.2);
+    c.fillStyle = gold; c.beginPath(); c.roundRect(12.5, 0.5, 3.4, 11, 1.4); c.fill();
+    const g = c.createLinearGradient(0, 3.5, 0, 8.5); g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#b8c6d8'); g.addColorStop(1, '#6f7e94');
+    c.fillStyle = g; c.beginPath(); c.moveTo(16, 3.6); c.lineTo(62, 3.9); c.lineTo(71.5, 6); c.lineTo(62, 8.1); c.lineTo(16, 8.4); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(70,90,120,.55)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(17, 6); c.lineTo(58, 6); c.stroke();
+    c.fillStyle = 'rgba(127,232,255,.55)'; c.fillRect(18, 3.6, 40, 0.8);
+  }, { anchor: [0.1, 0.5] });
+  // 史萊姆（果凍、亮面、眼睛）、木樁、小狐狸
+  A.make('cr.slime', 42, 34, (c, w, h) => {
+    const g = c.createRadialGradient(w * 0.38, h * 0.32, 2, w / 2, h * 0.6, w * 0.6); g.addColorStop(0, '#c8ffb0'); g.addColorStop(0.5, '#5fd16a'); g.addColorStop(1, '#22803c');
+    c.fillStyle = g; c.beginPath(); c.moveTo(3, h - 2); c.quadraticCurveTo(2, 6, w / 2, 3); c.quadraticCurveTo(w - 2, 6, w - 3, h - 2); c.quadraticCurveTo(w / 2, h + 1, 3, h - 2); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.65)'; c.beginPath(); c.ellipse(13, 11, 6, 3.2, -0.5, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#14301a'; for (const x of [23, 31]) { c.beginPath(); c.ellipse(x, 18, 2.4, 3.4, 0, 0, Math.PI * 2); c.fill(); }
+    c.fillStyle = '#fff'; for (const x of [23.8, 31.8]) { c.beginPath(); c.arc(x, 16.8, 0.9, 0, Math.PI * 2); c.fill(); }
+  }, { anchor: [0.5, 0.96], outline: 1.2, outlineColor: '#0f2a16' });
+  A.make('cr.dummy', 34, 74, (c, w, h) => {
+    c.fillStyle = '#6a4a30'; c.fillRect(w / 2 - 3, 18, 6, h - 18); c.fillRect(2, 30, w - 4, 5);
+    c.fillStyle = '#c9a46a'; c.beginPath(); c.roundRect(6, 22, w - 12, 34, 8); c.fill();
+    c.strokeStyle = 'rgba(90,60,30,.5)'; c.lineWidth = 1; for (let y = 26; y < 54; y += 5) { c.beginPath(); c.moveTo(8, y); c.lineTo(w - 8, y + 1.5); c.stroke(); }
+    c.fillStyle = '#d23a3a'; c.beginPath(); c.arc(w / 2, 39, 8, 0, Math.PI * 2); c.fill(); c.fillStyle = '#f4e4c8'; c.beginPath(); c.arc(w / 2, 39, 5, 0, Math.PI * 2); c.fill(); c.fillStyle = '#d23a3a'; c.beginPath(); c.arc(w / 2, 39, 2.2, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#c9a46a'; c.beginPath(); c.arc(w / 2, 12, 9, 0, Math.PI * 2); c.fill(); c.strokeStyle = 'rgba(90,60,30,.5)'; c.beginPath(); c.moveTo(w / 2 - 6, 12); c.lineTo(w / 2 + 6, 13); c.stroke();
+  }, { anchor: [0.5, 0.98], rim: { color: '#ffe0a8', a: 0.5 } });
+  A.make('cr.fox', 42, 30, (c, w, h) => {
+    const g = c.createLinearGradient(0, 4, 0, h); g.addColorStop(0, '#f39a4a'); g.addColorStop(1, '#c75a1e');
+    c.fillStyle = g; c.beginPath(); c.ellipse(19, 18, 13, 8.5, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(32, 11, 7.5, 6.5, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.moveTo(30, 6); c.lineTo(31, -2); c.lineTo(35, 5); c.fill(); c.beginPath(); c.moveTo(34, 6); c.lineTo(37, -1); c.lineTo(38.5, 7); c.fill();
+    c.beginPath(); c.moveTo(37, 11); c.lineTo(42, 13.5); c.lineTo(36, 15); c.fill();
+    c.fillStyle = '#fff3e6'; c.beginPath(); c.ellipse(34, 15, 4.5, 3, 0.3, 0, Math.PI * 2); c.fill(); c.beginPath(); c.ellipse(24, 22, 7, 3.6, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#1a1010'; c.beginPath(); c.arc(41, 13.4, 1.2, 0, Math.PI * 2); c.fill(); c.beginPath(); c.ellipse(34, 10.5, 1.2, 1.6, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#3a2016'; for (const x of [10, 15, 24, 29]) c.fillRect(x, 24, 3, 6);
+  }, { anchor: [0.5, 0.98], rim: { color: '#fff0c8', a: 0.45 } });
+  A.make('an.sky', 4, 256, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1b1b3a'); g.addColorStop(0.45, '#5b3a6a'); g.addColorStop(0.75, '#d4705a'); g.addColorStop(1, '#ffc27a'); c.fillStyle = g; c.fillRect(0, 0, w, h); }, { scale: 1 });
+};
+AN.mountains = (seed, n, amp, base) => { const R = PZ.rng(seed), pts = []; let y = 0; for (let i = 0; i <= n; i++) { y = PZ.clamp(y + R.spread(amp * 0.5), -amp, amp * 0.3); pts.push(y - R.range(0, amp * 0.6)); } return pts; };
+
+PZ.scene('anim', {
+  bg: '#1b1b3a',
+  ui: () => `${Lab.bar('角色動畫', '搖桿走跑・攻擊三連段・點騎士：受傷')}
+    <div class="lab-panel" data-ui>
+      <div class="lab-row"><button class="lab-chip" data-chip="bones">骨架</button><button class="lab-chip" data-chip="slow">慢動作</button><button class="lab-chip" data-chip="hills">地形</button><button class="lab-chip" data-chip="cloth">披風</button><button class="lab-chip" data-chip="juice">程序動畫</button></div>
+      <div class="lab-row"><button class="lab-chip cyan" data-act="die">倒下／起來</button><button class="lab-chip cyan" data-act="smash">重擊</button><button class="lab-chip cyan" data-act="cast">施法</button></div>
+    </div>`,
+  enter() {
+    AN.art();
+    const box = PZ.scenes.uiEl; Lab.bindBack(box);
+    const st = this.st = { bones: false, slow: false, hills: true, cloth: true, juice: true };
+    AN.hills = true;
+    Lab.chips(box, st, (k, v) => { if (k === 'slow') PZ.time.scale = v ? 0.3 : 1; if (k === 'hills') AN.hills = v; });
+    box.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => this.act(b.dataset.act)));
+    PZ.input.bind({ jump: ['Space', 'KeyW', 'ArrowUp', 'PadA'], attack: ['KeyJ', 'Mouse0', 'PadX', 'PadRT'], heavy: ['KeyL', 'PadY'], run: ['ShiftLeft', 'ShiftRight', 'PadB', 'PadLT'] });
+    // 騎士：只給部位圖，走跑跳、出招、受傷、倒下都是引擎算的
+    const K = this.K = PZ.rig.humanoid({
+      scale: 1.15, walkSpeed: 85, runSpeed: 240,
+      parts: { head: 'kn.head', torso: 'kn.torso', pelvis: 'kn.pelvis', upper: 'kn.upper', fore: 'kn.fore', hand: 'kn.hand', thigh: 'kn.thigh', shin: 'kn.shin', foot: 'kn.foot' },
+      weapon: { frame: 'kn.sword', grip: -1.2, len: 62, trail: '#bfefff' },
+      cape: { n: 8, len: 7.6, off: [-6, 2], draw: { w0: 14, w1: 30, color: '#9a2234', color2: '#4a0f1a' } },
+      plume: { n: 6, len: 5.5, gravity: 260, angle: 3.6, off: [-3, -27], draw: { w0: 7, w1: 2.5, color: '#e8434e', color2: '#8a1520' } },
+    });
+    K.ground = AN.ground;
+    this.P = { x: -120, y: AN.ground(-120), vx: 0, vy: 0, grounded: true, idle: 6, combo: 0, comboT: 0, aiT: 0, aiTarget: 0 };
+    K.on('hit', (kind) => this.onHit(kind));
+    K.on('land', (k) => { if (k > 0.6) { PZ.particles.emit('dust', this.P.x, this.P.y, { count: 10 }); PZ.sfx.play('land', { vol: 0.4 }); } });
+    this.dummies = [-420, 230, 520].map((x) => ({ x, j: PZ.juice({ breathe: 0, bob: 0, k: 300, d: 9 }) }));
+    this.slimes = [[-260, 1], [80, -1], [380, 1]].map(([x, d]) => ({ x, y: AN.ground(x), vx: 0, vy: 0, dir: d, grounded: true, t: PZ.rand.range(0.5, 2), state: 'wait', j: PZ.juice({ breathe: 0.05, breatheRate: 0.7 }) }));
+    const F = this.fox = { x: -200, y: AN.ground(-200), vx: 0, vy: 0, grounded: true, face: 1, j: PZ.juice({ bob: 3, step: 0.06 }) };
+    F.tail = PZ.chain({ n: 7, len: 5.5, gravity: 140, stiff: 0.32, damping: 0.9, x: F.x, y: F.y });
+    this.far = AN.mountains(3, 40, 60); this.mid = AN.mountains(9, 40, 90);
+    if (PZ.env.touch) {
+      this.stick = PZ.input.stick({ target: 'move', zone: { l: 0, t: 0.3, r: 0.5, b: 0.85 } });
+      this.bA = PZ.input.button({ action: 'attack', label: '攻擊', right: 22, bottom: 190, size: 78 });
+      this.bJ = PZ.input.button({ action: 'jump', label: '跳', right: 112, bottom: 150, size: 62 });
+    }
+    this.offTap = PZ.on('tap', (t) => { const j = this.K.joint('hip'); if (j && Math.abs(t.wx - j.x) < 40 && Math.abs(t.wy - j.y) < 70) { this.K.hurt(0, 0.9); PZ.sfx.play('hurt', { vol: 0.5 }); PZ.freeze(60); PZ.cam.shake(0.25); } });
+    this.lay = () => { PZ.cam.fit(PZ.screen.portrait ? 440 : PZ.screen.h > 600 ? 560 : 400); PZ.cam.offX = Lab.shift(); };
+    this.camT = { x: this.P.x, y: AN.base - 60 }; PZ.cam.follow(this.camT, { lerp: 5, lead: 0 }); this.lay(); this.offR = PZ.on('resize', this.lay);
+    this.base = { grade: PZ.post.gradeName }; PZ.post.grade('warm', { time: 0, amount: 0.55 });
+    PZ.music.play('drive', { intensity: 0.4, fade: 1.5 });
+  },
+  exit() { this.offTap(); this.offR(); PZ.input.clearTouch(); PZ.time.scale = 1; PZ.post.grade(this.base.grade, { time: 0 }); },
+  act(a) {
+    const K = this.K; PZ.uiSound('click');
+    if (a === 'die') { if (K.dead) K.revive(); else { K.die(); PZ.sfx.play('death', { vol: 0.5 }); } }
+    else if (!K.dead) K.attack(a);
+    this.P.idle = 0;
+  },
+  onHit(kind) {
+    const K = this.K, P = this.P, tip = K.tip() || { x: P.x + K.face * 60, y: P.y - 60 }, heavy = kind === 'smash', reach = heavy ? 120 : kind === 'thrust' ? 105 : 90;
+    PZ.sfx.play(kind === 'cast' ? 'magic' : 'slash', { vol: 0.55 });
+    if (kind === 'cast') { PZ.particles.emit('magic', tip.x, tip.y, { count: 30 }); PZ.fx.shockwave(tip.x, tip.y, { radius: 200, strength: 0.03 }); }
+    let any = false;
+    for (const d of this.dummies) { const dx = d.x - P.x; if (Math.sign(dx) === K.face && Math.abs(dx) < reach) { any = true; d.j.hit(heavy ? 1.3 : 0.8, K.face > 0 ? 0 : Math.PI); PZ.particles.emit('hit', d.x - K.face * 12, AN.ground(d.x) - 40, { color: '#ffd28a' }); PZ.particles.emit('debris', d.x, AN.ground(d.x) - 40, { count: 6, color: '#c9a46a' }); } }
+    for (const s of this.slimes) { const dx = s.x - P.x; if (Math.sign(dx) === K.face && Math.abs(dx) < reach) { any = true; s.j.hit(1, 0); s.vx = K.face * (heavy ? 420 : 260); s.vy = heavy ? -420 : -260; s.grounded = false; s.state = 'air'; PZ.particles.emit('hit', s.x, s.y - 14, { color: '#9cff8a' }); } }
+    if (any) { PZ.sfx.play(heavy ? 'hitHeavy' : 'hit', { vol: 0.6 }); PZ.freeze(heavy ? 90 : 55); PZ.cam.shake(heavy ? 0.45 : 0.18); PZ.cam.kick(K.face > 0 ? 0 : Math.PI, heavy ? 6 : 3); }
+    if (heavy) { PZ.particles.emit('dust', P.x + K.face * 50, AN.ground(P.x + K.face * 50), { count: 18, scale: 1.6 }); PZ.particles.emit('shockring', P.x + K.face * 50, AN.ground(P.x + K.face * 50), { scale: 1.6 }); }
+  },
+  update(dt) {
+    const P = this.P, K = this.K, I = PZ.input, M = I.move;
+    // 輸入（閒著四秒以上就自己示範：走到木樁前打一套連段）
+    let ix = M.mag > 0.15 ? M.x : 0, run = I.down('run') || Math.abs(M.x) > 0.85, wantJump = I.pressed('jump'), wantAtk = I.pressed('attack'), wantHeavy = I.pressed('heavy');
+    if (ix || wantJump || wantAtk || wantHeavy) P.idle = 0; else P.idle += dt;
+    if (P.idle > 4 && !K.dead) {
+      P.aiT -= dt;
+      const tx = this.dummies[P.aiTarget].x - Math.sign(this.dummies[P.aiTarget].x - P.x || 1) * 62, dx = tx - P.x;
+      if (Math.abs(dx) > 8) { ix = Math.sign(dx); run = Math.abs(dx) > 180; if (P.grounded && Math.abs(dx) > 260 && PZ.rand.chance(dt * 0.5)) wantJump = true; }
+      else { if (K.face !== Math.sign(this.dummies[P.aiTarget].x - P.x)) K.drive({ face: Math.sign(this.dummies[P.aiTarget].x - P.x) }); if (P.aiT <= 0 && !K.attacking) { wantAtk = true; P.aiHits = (P.aiHits || 0) + 1; P.aiT = 0.05; if (P.aiHits >= 3) { P.aiHits = 0; P.aiT = 1.1; P.aiTarget = (P.aiTarget + 1) % this.dummies.length; } } }
+    }
+    if (K.dead) ix = 0;
+    const sp = run ? 240 : 85, lock = K.attacking && K.atk.t < K.atk.mv.dur * 0.6;
+    P.vx = PZ.damp(P.vx, lock ? P.vx * 0.2 : ix * sp, lock ? 20 : 10, dt);
+    if (wantJump && P.grounded && !K.dead) { P.vy = -470; P.grounded = false; K.jump(); PZ.sfx.play('jump', { vol: 0.4 }); }
+    if ((wantAtk || wantHeavy) && !K.dead) {
+      const kinds = ['slash', 'swing', 'thrust'];
+      if (wantHeavy) K.attack('smash');
+      else { if (P.comboT <= 0) P.combo = 0; K.attack(kinds[P.combo % 3]); P.combo++; P.comboT = 0.75; }
+    }
+    P.comboT -= dt;
+    P.vy += 1350 * dt; P.x += P.vx * dt; P.y += P.vy * dt;
+    P.x = PZ.clamp(P.x, -900, 900);
+    const gy = AN.ground(P.x);
+    if (P.y >= gy && P.vy >= 0) { P.y = gy; P.vy = 0; P.grounded = true; } else if (P.grounded && P.y < gy - 6) P.grounded = false; else if (P.grounded) P.y = gy;
+    K.drive({ vx: P.vx, vy: P.vy, grounded: P.grounded });
+    K.update(dt);
+    this.camT.x = P.x + K.face * 40; this.camT.y = AN.base - 70;
+    // 木樁
+    for (const d of this.dummies) d.j.update(dt);
+    // 史萊姆：等 → 蹲一下（預備）→ 跳 → 落地壓扁
+    const J = this.st.juice;
+    for (const s of this.slimes) {
+      s.t -= dt;
+      if (s.state === 'wait' && s.t <= 0) { s.state = 'crouch'; s.t = 0.2; if (J) s.j.land(0.5); }
+      else if (s.state === 'crouch' && s.t <= 0) { s.state = 'air'; s.vy = -330; s.vx = s.dir * PZ.rand.range(70, 110); s.grounded = false; if (J) s.j.jump(0.9); }
+      if (!s.grounded) { s.vy += 1100 * dt; s.x += s.vx * dt; s.y += s.vy * dt; const g = AN.ground(s.x); if (s.y >= g) { s.y = g; s.grounded = true; s.vx = 0; s.state = 'wait'; s.t = PZ.rand.range(0.8, 2.2); if (Math.abs(s.x) > 620) s.dir = -Math.sign(s.x); else if (PZ.rand.chance(0.3)) s.dir *= -1; } }
+      else s.y = AN.ground(s.x);
+      if (J) s.j.update(dt, { vx: s.vx, vy: s.vy, grounded: s.grounded, face: s.dir });
+    }
+    // 小狐狸：跟在騎士後面，跑起來一跳一跳，尾巴自己甩
+    const F = this.fox, fx = P.x - K.face * 70, dxF = fx - F.x;
+    F.vx = PZ.damp(F.vx, Math.abs(dxF) > 14 ? Math.sign(dxF) * Math.min(260, Math.abs(dxF) * 3) : 0, 6, dt);
+    F.x += F.vx * dt; F.y = AN.ground(F.x);
+    if (Math.abs(F.vx) > 10) F.face = Math.sign(F.vx); else F.face = Math.sign(P.x - F.x) || F.face;
+    F.j.update(dt, { vx: F.vx, grounded: true, face: F.face });
+    const pz = F.j.pose();
+    F.tail.pin(F.x - F.face * 16, F.y - 13 + pz.dy, F.face > 0 ? Math.PI + 0.75 : -0.75); F.tail.update(dt);
+    if (P.grounded && Math.abs(P.vx) > 200 && PZ.rand.chance(dt * 8)) PZ.particles.emit('dust', P.x - K.face * 10, P.y, { count: 2 });
+  },
+  render(g) {
+    const v = PZ.cam.view, t = PZ.time.t;
+    // 黃昏天空、太陽、兩層山（視差）
+    g.rect(v.x - 10, v.y - 10, v.w + 20, v.h + 20, '#1b1b3a');
+    g.sprite('an.sky', v.x + v.w / 2, -130, { sx: (v.w + 40) / 4, sy: 600 / 256 });
+    const sx = PZ.cam.x * 0.92 + 260; g.glow(sx, -40, 220, '#ffb070', { a: 0.5 }); g.circle(sx, -40, 34, '#ffe2a8');
+    for (const [pts, px, col, y0, step] of [[this.far, 0.82, '#3d2a52', 0, 70], [this.mid, 0.6, '#2b1f3c', 30, 60]]) {
+      const ox = PZ.cam.x * px - pts.length * step / 2;
+      for (let i = 0; i < pts.length - 1; i++) { const x0 = ox + i * step, x1 = x0 + step; if (x1 < v.x - 10 || x0 > v.x + v.w + 10) continue; g.poly([x0, y0 + pts[i], x1, y0 + pts[i + 1], x1, AN.base + 40, x0, AN.base + 40], col); }
+    }
+    // 地面（草地）
+    const st = 10, gx0 = Math.floor(v.x / st) * st - st;
+    for (let x = gx0; x < v.x + v.w + st; x += st) { const y0 = AN.ground(x), y1 = AN.ground(x + st); g.poly([x, y0, x + st, y1, x + st, v.y + v.h + 20, x, v.y + v.h + 20], '#3b4a2a'); g.poly([x, y0 - 1, x + st, y1 - 1, x + st, y1 + 7, x, y0 + 7], '#7da54a'); }
+    for (let x = Math.floor(v.x / 23) * 23; x < v.x + v.w; x += 23) { const y = AN.ground(x), sw = Math.sin(t * 2 + x * 0.05) * 2.5; g.line(x, y + 2, x + sw - 3, y - 8, 1.6, '#9fcf5a'); g.line(x + 3, y + 2, x + 4 + sw, y - 10, 1.6, '#86b84c'); }
+    // 木樁
+    for (const d of this.dummies) {
+      const y = AN.ground(d.x);
+      g.ellipse(d.x, y + 1, 18, 4, 'rgba(0,0,0,.3)');
+      if (this.st.juice) d.j.draw(g, 'cr.dummy', d.x, y + 2, { s: 1.1 }); else g.sprite('cr.dummy', d.x, y + 2, { s: 1.1 });
+    }
+    // 史萊姆
+    for (const s of this.slimes) { const gy = AN.ground(s.x); g.ellipse(s.x, gy + 1, 16 * PZ.clamp(1 - (gy - s.y) / 200, 0.4, 1), 4, 'rgba(0,0,0,.3)'); if (this.st.juice) s.j.draw(g, 'cr.slime', s.x, s.y + 1); else g.sprite('cr.slime', s.x, s.y + 1, { sx: s.dir < 0 ? -1 : 1 }); }
+    // 小狐狸（尾巴是鏈子）
+    const F = this.fox; g.ellipse(F.x, F.y + 1, 16, 3.5, 'rgba(0,0,0,.3)');
+    g.chain(F.tail, { w0: 10, w1: 6, color: '#e2712c', color2: '#fff1e0' }); F.j.draw(g, 'cr.fox', F.x, F.y + 1);
+    // 騎士＋貼地的影子
+    const K = this.K, P = this.P;
+    g.rigShadow(K, P.x, AN.ground(P.x), { angle: 0.2, a: 0.32 });
+    if (this.st.cloth) g.rig(K, P.x, P.y, { bones: this.st.bones });
+    else { const ch = K.chains; K.chains = []; g.rig(K, P.x, P.y, { bones: this.st.bones }); K.chains = ch; }
+    PZ.particles.draw(g, 'under');
   },
 });
 

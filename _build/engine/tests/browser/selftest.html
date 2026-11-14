@@ -213,6 +213,58 @@ window.__selftest = async () => {
   ok('換場景：光影、天氣自動清掉', !PZ.light.active && PZ.light.lights.length === 0 && PZ.weather.fog === 0 && PZ.weather.flakes.length === 0);
   await PZ.go('t', null, { type: 'none' }); PZ.loop.stop();
 
+  // ---- 角色動畫：程序動畫、鏈子、逐格動畫機、骨架角色、圖的外框 ----
+  const ju = PZ.juice(); for (let i = 0; i < 30; i++) ju.update(1 / 60, { vx: 0 });
+  const jp0 = ju.pose(); ok('程序動畫：站著時大小約原樣（在呼吸）', Math.abs(jp0.sx - 1) < 0.05 && Math.abs(jp0.sy - 1) < 0.05, jp0.sx.toFixed(3) + ',' + jp0.sy.toFixed(3));
+  ju.hit(1, 0); ok('程序動畫：被打會閃白', ju.pose().flash > 0.5);
+  ju.land(1); for (let i = 0; i < 4; i++) ju.update(1 / 60); ok('程序動畫：落地壓扁', ju.pose().sy < 0.97, ju.pose().sy.toFixed(3));
+  for (let i = 0; i < 90; i++) ju.update(1 / 60); const jp1 = ju.pose(); ok('程序動畫：彈回原樣、閃白消失', Math.abs(jp1.sy - 1) < 0.06 && jp1.flash === 0, jp1.sy.toFixed(3));
+  for (let i = 0; i < 20; i++) ju.update(1 / 60, { vx: 200 }); ok('程序動畫：往前跑會前傾', ju.pose().r > 0.03, ju.pose().r.toFixed(3));
+  const ch = PZ.chain({ n: 8, len: 7 }); ch.reset(0, 0); for (let i = 0; i < 120; i++) { ch.pin(0, 0); ch.update(1 / 60); }
+  ok('鏈子：自然垂下', ch.tip.y > 44 && Math.abs(ch.tip.x) < 3, ch.tip.x.toFixed(1) + ',' + ch.tip.y.toFixed(1));
+  for (let i = 0; i < 30; i++) { ch.pin(i * 6, 0); ch.update(1 / 60); } ok('鏈子：跟著移動會拖在後面', ch.tip.x < 30 * 6 - 15, ch.tip.x.toFixed(1));
+  const ch2 = PZ.chain({ n: 8, len: 7, ground: 20 }); ch2.reset(0, 0); for (let i = 0; i < 120; i++) { ch2.pin(0, 0); ch2.update(1 / 60); } ok('鏈子：碰到地面', ch2.pts.every((p) => p.y <= 20.01), ch2.tip.y.toFixed(1));
+  PZ.art.sheet('t-an', 4, 8, 8, (c, w, h, i) => { c.fillStyle = ['#f00', '#0f0', '#00f', '#fff'][i]; c.fillRect(0, 0, w, h); });
+  const anm = PZ.animator({ idle: { frames: 't-an', fps: 10 }, atk: { frames: 't-an', fps: 20, loop: false, next: 'idle', events: { 2: 'hit' } } }, 'idle');
+  let anHit = 0, anEnd = 0; anm.on('hit', () => anHit++); anm.on('end', () => anEnd++);
+  ok('逐格動畫：自動找到 4 格', anm.defs.idle.frames.length === 4);
+  anm.update(0.25); ok('逐格動畫：照速度換格', anm.frame === PZ.art.get('t-an:2'), anm.i);
+  anm.play('atk'); anm.update(0.12); ok('逐格動畫：某一格發事件', anHit === 1);
+  anm.update(0.2); ok('逐格動畫：播完接下一個', anEnd === 1 && anm.name === 'idle');
+  const rg = PZ.rig.humanoid({}), d0 = rg.d;
+  for (let i = 0; i < 30; i++) { rg.drive({ vx: 0, grounded: true }); rg.update(1 / 60); } rg._place(0, 0);
+  const J0 = rg.J, thighLen = Math.hypot(J0.kneeF[0] - J0.hipF[0], J0.kneeF[1] - J0.hipF[1]);
+  ok('骨架：IK 大腿長度不變', Math.abs(thighLen - d0.thigh) < 0.01, thighLen.toFixed(3));
+  ok('骨架：站著時腳踩在地上', Math.abs(J0.ankF[1]) < 0.5 && Math.abs(J0.ankB[1]) < 0.5 && J0.hip[1] < -(d0.thigh + d0.shin) * 0.9, J0.ankF[1].toFixed(2));
+  let maxKnee = 0, slide = 0, prevX = null;
+  for (let i = 0; i < 120; i++) {
+    rg.drive({ vx: 80, grounded: true }); rg.update(1 / 60); rg._place(i * 80 / 60, 0);
+    const fx = rg.x + rg.J.ankF[0];
+    if (rg.cur.fFy === 0 && prevX != null && rg.move > 0.95) slide = Math.max(slide, Math.abs(fx - prevX));
+    prevX = rg.cur.fFy === 0 ? fx : null;
+    maxKnee = Math.max(maxKnee, rg.J.kneeF[0] - rg.J.hipF[0]);
+  }
+  ok('骨架：走路時著地的腳不會滑', slide < 0.6, slide.toFixed(3));
+  ok('骨架：膝蓋朝前彎', maxKnee > 2, maxKnee.toFixed(2));
+  let rgHit = 0; rg.on('hit', () => rgHit++); const atkP = rg.attack('slash');
+  for (let i = 0; i < 12; i++) rg.update(1 / 60); ok('骨架：出招到判定那一刻發 hit', rgHit === 1);
+  for (let i = 0; i < 30; i++) rg.update(1 / 60); ok('骨架：招式結束', !rg.attacking && (await Promise.race([atkP, sleep(10).then(() => 'x')])) === true);
+  rg.die(); for (let i = 0; i < 90; i++) rg.update(1 / 60); rg._place(0, 0); ok('骨架：倒下', rg.J.r < -1.3, rg.J.r.toFixed(2));
+  rg.revive(); for (let i = 0; i < 90; i++) rg.update(1 / 60); rg._place(0, 0); ok('骨架：爬起來', Math.abs(rg.J.r) < 0.05, rg.J.r.toFixed(2));
+  rg.ground = (x) => (x > 0 ? 8 : 0); for (let i = 0; i < 40; i++) { rg.drive({ vx: 0 }); rg.update(1 / 60); } rg._place(0, 0);
+  ok('骨架：腳踩高低不平的地', Math.abs(rg.J.ankF[1] - 8) < 1.5 && Math.abs(rg.J.ankB[1]) < 1.5, rg.J.ankF[1].toFixed(2) + ' / ' + rg.J.ankB[1].toFixed(2));
+  const box2 = (n, w, h, col, an) => PZ.art.make(n, w, h, (c) => { c.fillStyle = col; c.fillRect(0, 0, w, h); }, { anchor: an });
+  box2('t-torso', 20, 30, '#00ff00', [0.5, 1]); box2('t-limb', 6, 24, '#0000ff', [0.5, 0]); box2('t-head', 16, 16, '#ff0000', [0.5, 1]);
+  const rg2 = PZ.rig.humanoid({ parts: { torso: 't-torso', head: 't-head', thigh: 't-limb', shin: 't-limb', upper: 't-limb', fore: 't-limb' } });
+  for (let i = 0; i < 10; i++) { rg2.drive({ vx: 0 }); rg2.update(1 / 60); }
+  drawHook = (g) => { g.hud(); g.rig(rg2, 200, 400, { s: 2 }); }; PZ.loop.step(1);
+  ok('骨架：畫得出身體與頭', near(readPx(186, 400 - 47 * 2 - 25), [0, 255, 0], 40) && near(readPx(200, 400 - 47 * 2 - 30 * 2 - 10), [255, 0, 0], 40), readPx(186, 400 - 47 * 2 - 25) + ' / ' + readPx(200, 400 - 47 * 2 - 70));
+  PZ.art.make('t-ol', 10, 10, (c) => { c.fillStyle = '#ff0000'; c.fillRect(0, 0, 10, 10); }, { outline: 3, outlineColor: '#00ff00' });
+  const olf = PZ.art.get('t-ol'); drawHook = (g) => { g.hud(); g.spr('t-ol', 300, 300, 0, 4, 4); }; PZ.loop.step(1);
+  ok('圖的外框：大一圈、中間原色、外圈是框', olf.w === 16 && near(readPx(300, 300), [255, 0, 0]) && near(readPx(300 + 6.5 * 4, 300), [0, 255, 0], 50), olf.w + ' ' + readPx(300 + 26, 300));
+  drawHook = (g) => { g.hud(); g.swoosh([{ x: 100, y: 500, bx: 100, by: 540 }, { x: 160, y: 500, bx: 160, by: 540 }, { x: 220, y: 500, bx: 220, by: 540 }], '#ffffff', { a: 1 }); }; PZ.loop.step(1);
+  ok('刀光：外緣亮、內緣淡', readPx(110, 502)[0] > readPx(110, 536)[0] + 60, readPx(110, 502) + ' / ' + readPx(110, 536));
+
   // ---- WebGL 遺失與恢復 ----
   const ext = PZ.gfx.r.gl.getExtension('WEBGL_lose_context');
   if (ext) {

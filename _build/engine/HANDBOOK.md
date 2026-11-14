@@ -28,7 +28,7 @@ _build/engine/
     00_head  01_math  02_color  03_events  04_time  05_screen  06_input  07_gl  08_c2d
     09_art  10_text  11_draw  12_camera  13_tween  14_particles  15_fx  16_audio  17_music
     18_save  19_cloud  20_scene  21_ui(.css/.js)  22_dialogue  23_debug  24_boot
-    25_light（光影、陰影、水面）  26_weather（天氣）  27_cinema（調色、黑邊）
+    25_light（光影、陰影、水面）  26_weather（天氣）  27_cinema（調色、黑邊）  28_anim（程序動畫、鏈子、逐格動畫）  29_rig（骨架角色）
   build/pz-engine.js       開發版（每次 build_engine.py 覆蓋）
   releases/pz-engine-X.Y.Z.js   正式版（發了就不再改）
   tools/
@@ -38,7 +38,7 @@ _build/engine/
     webkit_check.py   在 WebKit（iPhone Safari 的引擎）裡跑自我檢查或任一頁
     shot.py / labshot.py   截圖
   tests/unit/         Node 單元測試（數學、顏色、事件、時間、存檔、音效合成）
-  tests/browser/      selftest.html（101 項）、interact（真的點擊／觸控）、run_cloud（雲端存檔九種情境）、run_example（範例能玩）
+  tests/browser/      selftest.html（125 項）、interact（真的點擊／觸控）、run_cloud（雲端存檔九種情境）、run_example（範例能玩）
   lab/                樣品館（自己也是一款用引擎做的 App）
   examples/hello/     最小範例（第 3 節那份程式，測試會實際玩它）
 ```
@@ -368,6 +368,56 @@ PZ.fx.pickup(x, y)   PZ.fx.celebrate(x, y)
 - **一秒好幾發的自動射擊不要每發都震、都頓鏡**，畫面會一直抖；震動留給重的東西（霰彈槍、近戰、爆炸、Boss）。
 - 後製參數 `PZ.post`：`bloom: { on, strength, threshold }`、`vignette`、`vignetteColor`、`grain`、`scan`（掃描線）、`warp`（老電視彎曲）、`sat`、`contrast`、`bright`、`tint`。泛光只讓亮過門檻的地方發光（看人眼亮度）：鮮豔的角色主色不會整片發光，疊加發光（`add`）疊出來的白光才會強烈泛光。
 
+
+### 8.1 角色動畫
+
+讓角色「活」起來的四種工具，從最省事到最完整：
+
+**① 一張圖的角色：`PZ.juice`（程序動畫）**——呼吸、走路一跳一跳、往前傾、轉身像紙片翻過去、起跳拉長、落地壓扁、被打抖動閃白。舊遊戲的角色、怪物、史萊姆、道具，加三行就有生命感：
+
+```js
+const j = PZ.juice({ breathe: 0.022, bob: 2.6, lean: 0.1 });    // 參數都可以不給
+update(dt) { j.update(dt, { vx, vy, grounded, face }); }        // 都可以不給
+render(g) { j.draw(g, 'slime', x, y, { s: 1.2 }); }             // 或 j.pose() 拿 { dx, dy, r, sx, sy, flash } 自己畫
+j.hit(0.8, 從哪裡被打的角度)   j.land(0.6)   j.jump()   j.pulse(0.25)
+```
+
+**② 會飄的東西：`PZ.chain`**——披風、圍巾、尾巴、頭髮、羽飾、繩子、觸手、旗子：
+
+```js
+const tail = PZ.chain({ n: 7, len: 6, gravity: 300, stiff: 0.3 });
+每格：tail.pin(x, y, 方向角度); tail.update(dt);    畫：g.chain(tail, { w0: 10, w1: 4, color: '#e2712c', color2: '#fff' })
+```
+
+`stiff`（0～1）越大越不容易彎（尾巴、羽飾）；給 `pin` 的角度＝根部朝哪個方向長；`ground` 不會穿到地底；`push(fx, fy)` 爆炸氣流；天氣的風（`PZ.weather.wind`）會吹它。
+
+**③ 逐格動畫：`PZ.animator`**——畫好每一格（`PZ.art.sheet`）的傳統做法：
+
+```js
+const an = PZ.animator({ idle: { frames: 'hero_idle', fps: 6 }, attack: { frames: 'hero_atk', fps: 16, loop: false, next: 'idle', events: { 3: 'hit' } } });
+an.play('attack');  an.on('hit', () => 判定傷害);  每格 an.update(dt);  g.sprite(an.frame, x, y)
+```
+
+**④ 骨架角色：`PZ.rig.humanoid`**（最精緻）——只畫身體各部位，走、跑、跳、落地、蹲、七種招式、受傷、倒下、爬起來全部由引擎算；腳用兩段 IK 踩在地形上，動作之間自動接順，掉幀也不滑步：
+
+```js
+const hero = PZ.rig.humanoid({
+  scale: 1.15, walkSpeed: 85, runSpeed: 240,
+  parts: { head, torso, pelvis, upper, fore, hand, thigh, shin, foot },   // 圖的名字；後面那隻手腳自動調暗（backTint）
+  weapon: { frame: 'sword', grip: -1.2, len: 62, trail: '#bfefff' },     // 握在前手；出招自動畫刀光
+  cape: { draw: { w0: 14, w1: 30, color: '#9a2234' } },  plume: { off: [-3, -27] },  hair: {…},  scarf: {…},
+});
+hero.ground = (x) => 地面高度;                            // 腳踩高低不平的地
+update(dt) { hero.drive({ vx, vy, grounded, crouch }); hero.update(dt); }
+render(g) { g.rigShadow(hero, x, groundY); g.rig(hero, x, y, { bones: false }); }
+hero.attack('slash')  // swing thrust upper smash punch cast；出招中再按會接下一招（連段）；回傳 Promise
+hero.on('hit', (招式) => 判定傷害)   hero.hurt(角度, 力道)   hero.die()   hero.revive()   hero.jump()
+hero.joint('hdF')  hero.tip()        // 前手、武器尖端的世界座標（放特效、判定範圍）
+```
+
+部位圖的畫法：**角色面向右**；手腳畫成往下垂的直條，上端關節放在 `anchor`（例如 `[0.5, 0.1]`）；身體、頭、骨盆畫成直立的，跟下一段相接的點在 `anchor`（身體 `[0.5, 0.97]`）；腳畫成橫的、腳尖朝右；武器畫成橫的、尖端朝右、握把在 `anchor`。自訂招式：`hero.attack({ dur, hit, keys: [[時間, { u, f, bu, bf, lean, hx, hy, head, w }, 'outQuint'], …] })`（角度：0 往前、π/2 往下、-π/2 往上）。範例：`lab/src/21_anim.js` 的騎士。
+
+**讓程式畫的圖更有質感**：`PZ.art.make(name, w, h, draw, { outline: 1.5, outlineColor: '#102', rim: { color: '#fff4dc', a: 0.6 }, shade: 0.2 })`——自動外框（圖會大一圈，anchor 自動調好）、朝光那側的亮邊、下半部陰影。刀光、揮擊殘影：`g.swoosh(list, color)`。
 ---
 
 ## 9. 輸入

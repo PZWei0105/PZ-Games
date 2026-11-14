@@ -51,7 +51,46 @@ function scratch(w, h) {
   return x;
 }
 /** 依條目的畫法畫到 ctx（左上角＝(ox, oy)，已經含 pad） */
+/* 圖的後加工（Art.make 的 outline / rim / shade）：先畫到暫存畫布，加工完再貼上 */
+let FxCv = null, FxCv2 = null;
+function fxCanvas(w, h, second) {
+  let c = second ? FxCv2 : FxCv; if (!c) { c = document.createElement('canvas'); if (second) FxCv2 = c; else FxCv = c; }
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; } else c.getContext('2d').clearRect(0, 0, w, h);
+  const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; return c;
+}
+function applyFx(c, fx, scale) {
+  const w = c.width, h = c.height, x = c.getContext('2d');
+  x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';   // 畫圖時的縮放、位移不能帶進來
+  if (fx.shade) { // 下半部稍微暗（立體感）
+    const k = typeof fx.shade === 'number' ? fx.shade : 0.25, g = x.createLinearGradient(0, h * 0.35, 0, h);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${k})`);
+    x.globalCompositeOperation = 'source-atop'; x.fillStyle = g; x.fillRect(0, 0, w, h); x.globalCompositeOperation = 'source-over';
+  }
+  if (fx.rim) { // 朝光那一側的亮邊
+    const R = typeof fx.rim === 'object' ? fx.rim : { color: typeof fx.rim === 'string' ? fx.rim : '#ffffff' };
+    const a = R.angle != null ? R.angle : -2.3, d = (R.w || 1.5) * scale, m = fxCanvas(w, h, true), mx = m.getContext('2d');
+    mx.drawImage(c, 0, 0); mx.globalCompositeOperation = 'destination-out'; mx.drawImage(c, -Math.cos(a) * d, -Math.sin(a) * d);
+    mx.globalCompositeOperation = 'source-in'; mx.fillStyle = R.color || '#fff'; mx.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-atop'; x.globalAlpha = R.a != null ? R.a : 0.55; x.drawImage(m, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+  }
+  if (fx.outline) { // 外框（往外長一圈）
+    const r = fx.outline * scale, m = fxCanvas(w, h, true), mx = m.getContext('2d'), n = Math.max(8, Math.ceil(r * 5));
+    for (let i = 0; i < n; i++) { const t = (i / n) * TAU; mx.drawImage(c, Math.cos(t) * r, Math.sin(t) * r); }
+    mx.globalCompositeOperation = 'source-in'; mx.fillStyle = fx.outlineColor || '#000'; mx.fillRect(0, 0, w, h);
+    mx.globalCompositeOperation = 'source-over'; mx.drawImage(c, 0, 0);
+    x.clearRect(0, 0, w, h); x.drawImage(m, 0, 0);
+  }
+}
 function paintEntry(ctx, en, ox, oy) {
+  if (en.fx) {
+    const iw = en.pw - en.pad * 2, ih = en.ph - en.pad * 2, c = fxCanvas(iw, ih), x = c.getContext('2d');
+    x.scale(en.scale, en.scale); if (en.nearest) x.imageSmoothingEnabled = false;
+    x.translate(en.fx.ol || 0, en.fx.ol || 0);
+    try { en.draw(x, en.w - (en.fx.ol || 0) * 2, en.h - (en.fx.ol || 0) * 2, en.arg); } catch (e) { reportError(e, 'art:' + en.name); }
+    applyFx(c, en.fx, en.scale);
+    ctx.save(); ctx.drawImage(c, ox + en.pad, oy + en.pad); ctx.restore();
+    return;
+  }
   ctx.save();
   ctx.translate(ox + en.pad, oy + en.pad);
   ctx.beginPath(); ctx.rect(0, 0, en.pw - en.pad * 2, en.ph - en.pad * 2); ctx.clip();
@@ -103,14 +142,21 @@ function realize(en) {
 
 /**
  * 畫一張圖收進圖集。
- * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, arg（傳給 draw 的第 4 個參數） }
+ * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, arg（傳給 draw 的第 4 個參數）,
+ *      outline: 2（外框粗細，圖會變大一圈）, outlineColor: '#000', rim: '#9cf' 或 { color, a, w, angle }（朝光的亮邊）, shade: 0.25（下半部變暗） }
  * 同名會覆蓋（舊的位置不回收）。
  */
 Art.make = (name, w, h, draw, o = {}) => {
   let f = Art.frames.get(name);
   if (!f) { f = new Frame(name); Art.frames.set(name, f); }
+  // 後加工：外框會讓圖變大一圈（anchor 跟著調，圖不會跑位）
+  let fx = null;
+  if (o.outline || o.rim || o.shade) {
+    const ol = o.outline || 0; fx = { outline: ol, outlineColor: o.outlineColor, rim: o.rim, shade: o.shade, ol };
+    if (ol) { const an = o.anchor || [0.5, 0.5]; o = Object.assign({}, o, { anchor: [(an[0] * w + ol) / (w + ol * 2), (an[1] * h + ol) / (h + ol * 2)] }); w += ol * 2; h += ol * 2; }
+  }
   const scale = o.scale || (o.pixel ? 1 : Art.scale), pad = o.pad != null ? o.pad : Art.pad;
-  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
+  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, fx, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
   f.w = w; f.h = h; const an = o.anchor || [0.5, 0.5]; f.ax = an[0]; f.ay = an[1]; f.entry = en;
   if (Gfx.r) realize(en); else Art.pending.push(en);
   return f;
@@ -146,7 +192,9 @@ Art.canvas = (name, scale) => {
   const s = scale || Math.min(3, (HAS_DOM && window.devicePixelRatio) || 2);
   const c = document.createElement('canvas'); c.width = Math.ceil(en.w * s); c.height = Math.ceil(en.h * s);
   const x = c.getContext('2d'); x.scale(s, s); if (en.nearest) x.imageSmoothingEnabled = false;
-  try { en.draw(x, en.w, en.h, en.arg); } catch (e) { reportError(e, 'art.canvas:' + name); }
+  const ol = en.fx ? en.fx.ol || 0 : 0; if (ol) x.translate(ol, ol);
+  try { en.draw(x, en.w - ol * 2, en.h - ol * 2, en.arg); } catch (e) { reportError(e, 'art.canvas:' + name); }
+  if (en.fx) applyFx(c, en.fx, s);
   return c;
 };
 Art.url = (name, scale) => Art.canvas(name, scale).toDataURL('image/png');
