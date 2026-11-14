@@ -250,6 +250,17 @@ def check_shell(br, base, tag, opts, out, cat, R, shots):
         if not pg.evaluate("document.querySelectorAll('#view-library .card').length"):
             bad('遊戲庫是空的')
         shot(pg, os.path.join(d, 'library_%s.png' % tag), shots)
+        # 重製版（換上 PZ 引擎重做的舊作）：專屬分類、封面上的標示、遊戲頁的說明都要在
+        remade = [g['id'] for g in cat.get('games', []) if g.get('remake')]
+        if remade:
+            pg.evaluate("location.hash = 'library-remake'")
+            pg.wait_for_timeout(700)
+            got = pg.evaluate("[...document.querySelectorAll('#lib-grid .card')].map((c) => c.dataset.id)")
+            if sorted(got) != sorted(remade):
+                bad('「重製 2.0」分類不對：應該是 %s，畫面上是 %s' % ('、'.join(remade), '、'.join(got) or '空的'))
+            elif pg.evaluate("document.querySelectorAll('#lib-grid .card .chip.remake').length") != len(remade):
+                bad('重製版的封面少了「重製」標示')
+            shot(pg, os.path.join(d, 'library_remake_%s.png' % tag), shots)
         pg.evaluate("location.hash = 'apps'")
         pg.wait_for_timeout(900)
         if cat.get('apps') and not pg.evaluate("document.querySelectorAll('#view-apps [data-act]').length"):

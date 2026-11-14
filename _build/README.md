@@ -30,6 +30,10 @@
 **動手前先讀 `engine/HANDBOOK.md`**；會動的範例是樣品館（`engine/lab/`），舊遊戲搬家的範例是《最後一單》（`sources/last-order/`）。
 冷眼（`coldeye-etf`）不在這個範圍：永遠獨立，不套引擎、不改。
 
+**重製版要標出來**（PZ 2026-11-14 要求，免得之後忘了哪幾款重做過）：舊遊戲搬到引擎重新上架時，在 `data/catalog_base.json` 那一款加
+`"remake": { "ver": "2.0", "date": "YYYY-MM-DD", "engine": "PZ 引擎", "what": "一句話：哪裡變了" }`。
+收藏庫會自動在封面加「2.0 重製」標示、遊戲頁加重製說明與「重製」欄、首頁多一排「重製 2.0」、遊戲庫多一個「重製 2.0」分類（`#library-remake`）；`smoke.py --shell` 會檢查分類和標示對不對。
+
 ```bash
 cd _build/engine
 python3 tools/pzbuild.py ../sources/<id>     # 組一款：dist/artifact（Claude 版）＋ dist/web（複製到 raw/<id>/）

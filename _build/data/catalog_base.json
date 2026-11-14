@@ -1782,7 +1782,13 @@
      "artifact": "https://claude.ai/artifact/FKfdaq7SNNk1Gurv9Hdc11"
     }
    ],
-   "chat": "https://claude.ai/chat/d46d3fc9-cd93-4cf2-801e-13c5f4abb6b1"
+   "chat": "https://claude.ai/chat/d46d3fc9-cd93-4cf2-801e-13c5f4abb6b1",
+   "remake": {
+    "ver": "2.0",
+    "date": "2026-11-14",
+    "engine": "PZ 引擎",
+    "what": "玩法、關卡、劇情不變，換上 PZ 引擎：打擊感（衝擊波、閃光、平滑震動）、手把、設定頁、存檔碼、Claude 版雲端存檔；舊進度自動接上。"
+   }
   },
   {
    "id": "justice-clash",

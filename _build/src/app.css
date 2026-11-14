@@ -266,6 +266,13 @@ img { display: block; max-width: 100%; }
 .chip.pick { color: #1b1404; background: linear-gradient(180deg, #ffe7a3, var(--gold)); border-color: rgba(255, 255, 255, .5); }
 .chip.pick svg { width: 13px; height: 13px; fill: currentColor; }
 .chip.new { color: #06070c; background: #fff; border-color: #fff; }
+/* 2.0 重製版：琥珀到青的漸層＋細光邊，一眼看得出是重做過的 */
+.chip.remake { color: #071019; background: linear-gradient(100deg, #ffc56b 0%, #ffe39a 45%, #7fe3ff 100%); border-color: rgba(255, 255, 255, .55); box-shadow: 0 0 12px rgba(127, 227, 255, .35); }
+.chip.remake svg { width: 12px; height: 12px; fill: currentColor; }
+.gp-note.remake { background: linear-gradient(100deg, rgba(255, 197, 107, .14), rgba(127, 227, 255, .12)); border-color: rgba(127, 227, 255, .35); color: var(--text); }
+.gp-note.remake svg { fill: #ffc56b; stroke: none; }
+.gp-note.remake b { margin-right: 6px; color: #ffe39a; }
+.fchip.remake:not(.on) { border-color: rgba(127, 227, 255, .45); color: #bfefff; }
 .chip.st-dev { color: var(--st-dev); }
 .chip.st-failed { color: var(--st-failed); }
 .chip.st-paused { color: var(--st-paused); }
@@ -282,7 +289,10 @@ img { display: block; max-width: 100%; }
 }
 .shelf-h h2 { flex: none; white-space: nowrap; margin: 0; font-family: var(--serif); font-weight: 900; font-size: 21px; letter-spacing: .04em; }
 .shelf-h .n { color: var(--mute); font-size: 13px; font-weight: 500; }
-.shelf-h .more { margin-left: auto; font-size: 13.5px; font-weight: 700; color: var(--text2); display: inline-flex; align-items: center; gap: 2px; padding: 4px 0 4px 8px; }
+.shelf-h .more { margin-left: auto; font-size: 13.5px; font-weight: 700; color: var(--text2); display: inline-flex; align-items: center; gap: 2px; padding: 4px 0 4px 8px; flex: none; white-space: nowrap; }
+/* 有「全部」又有說明的一排（重製 2.0）：說明換到下一行，「全部」不會被擠成直的 */
+.shelf-h:has(.more) { flex-wrap: wrap; }
+.shelf-h:has(.more) p { order: 3; flex-basis: 100%; margin-top: 2px; }
 .shelf-h .more svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; }
 .shelf-h p { flex-basis: 100%; margin: -4px 0 0; color: var(--mute); font-size: 13px; }
 .row {
@@ -319,6 +329,7 @@ img { display: block; max-width: 100%; }
 .card .tags .chip { height: 21px; padding: 0 7px; font-size: 11px; -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(8, 10, 18, .66); }
 .card .tags .chip.new { background: #fff; }
 .card .tags .chip.pick { background: linear-gradient(180deg, #ffe7a3, var(--gold)); }
+.card .tags .chip.remake { background: linear-gradient(100deg, #ffc56b 0%, #ffe39a 45%, #7fe3ff 100%); color: #071019; }
 .card .star { position: absolute; z-index: 3; top: 9px; right: 8px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #ffe7a3, var(--gold)); color: #2a1d00; box-shadow: 0 0 12px rgba(255, 211, 106, .7); }
 .card .star svg { width: 12px; height: 12px; fill: currentColor; }
 .card .t { margin-top: 9px; font-weight: 700; font-size: 14.5px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: .02em; }
