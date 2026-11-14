@@ -1756,9 +1756,9 @@
    "status": "shipped",
    "pick": true,
    "created": "2026-09-28",
-   "updated": "2026-09-28",
+   "updated": "2026-11-14",
    "tagline": "外送員魏子葳，颱風夜的最後一張單。",
-   "summary": "像素風殭屍求生動作。颱風夜裡，外送員魏子葳接了妹妹子晴的珍奶單，一路從捷運站殺到基隆港。",
+   "summary": "像素風殭屍求生動作。颱風夜裡，外送員魏子葳接了妹妹子晴的珍奶單，一路從捷運站殺到基隆港。2.0 換上 PZ 引擎：爆炸、受傷、Boss 更有打擊感，可以接手把，設定裡能調震動與閃光、複製存檔碼。",
    "highlights": [
     "5 章各有 Boss，約 40 分鐘",
     "自動瞄準、翻滾、汽油彈",
@@ -1778,7 +1778,7 @@
     {
      "id": "last-order",
      "label": "完整版",
-     "note": "5 章、雙結局、無盡模式",
+     "note": "2.0：5 章、雙結局、無盡模式",
      "artifact": "https://claude.ai/artifact/FKfdaq7SNNk1Gurv9Hdc11"
     }
    ],
@@ -2030,6 +2030,22 @@
    "glyph": "耳",
    "pin": true,
    "claude": "https://claude.ai/artifact/Dcws22E7CZzxpo9HLH8XUm"
+  },
+  {
+   "id": "engine-lab",
+   "title": "樣品館",
+   "en": "PZ ENGINE LAB",
+   "kind": "web",
+   "url": "https://pzwei0105.github.io/PZ-Games/apps/engine-lab/",
+   "tagline": "之後每款 2D 遊戲的底子，先在這裡玩給你看。",
+   "summary": "《PZ 引擎》的展示間：之後所有 2D 遊戲共用的引擎，手感、聲音、特效都從這裡來。七個展間——打擊感實驗室（同一下攻擊，停頓、震屏、火花、閃白、數字一項一項打開比較）、壓力測試（幾千隻怪物同時追過來、子彈亂飛還是順）、操控（觸控搖桿、按鈕、鍵盤、手把同一套）、鏡頭（雙指縮放、旋轉、拖曳慣性）、聲音（四十多種合成音效、三首用文字寫的配樂、緊張度分層、頻譜）、後製特效（泛光、衝擊波扭曲、色差、老電視、調色）、介面與劇情（五套主題、對話框、打字機劇情、選擇、設定頁）。",
+   "palette": [
+    "#3a2a10",
+    "#05070c",
+    "#ffb547"
+   ],
+   "glyph": "樣",
+   "claude": "https://claude.ai/artifact/Gc1xRDKdV3zE1jGCqn68SR"
   },
   {
    "id": "pz-host",

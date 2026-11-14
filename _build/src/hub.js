@@ -245,11 +245,15 @@
     render();
     loadCat().then(() => { if (isOpen) { const howOpen = !sheet.querySelector('.how').hidden; render(); if (howOpen) act('how'); } });
     scrim.classList.add('on'); sheet.classList.add('on'); hb.classList.add('hide'); tipEl.classList.remove('on');
+    tell(true);
   }
+  // 告訴遊戲選單開了／關了（PZ 引擎做的遊戲會自己暫停；其他遊戲不理它也沒關係）
+  function tell(on) { try { window.dispatchEvent(new CustomEvent('pzhub', { detail: { open: on } })); } catch (e) { /* old browser */ } }
   function close() {
     if (!isOpen) return;
     isOpen = false; clearTimeout(armT);
     scrim.classList.remove('on'); sheet.classList.remove('on'); hb.classList.remove('hide'); wake();
+    tell(false);
   }
   let backT = 0;
   function goHome() {
