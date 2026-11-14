@@ -20,6 +20,7 @@
      g.water(x, y, w, h, { mode: 'mirror' | 'flat', color, reflect })     水面（倒影、波紋）    g.haze(x, y, w, h)  熱浪扭曲
    ========================================================================== */
 const M_ID = [1, 0, 0, 1, 0, 0];
+let PolyScratch = new Float64Array(64);   // g.polyTex 用的暫存（螢幕座標＋材質座標）
 class Graphics {
   constructor() {
     this.m = new Float64Array(6); this.m.set(M_ID);
@@ -126,6 +127,27 @@ class Graphics {
     const X = (i) => m[0] * pts[i * 2] + m[2] * pts[i * 2 + 1] + m[4], Y = (i) => m[1] * pts[i * 2] + m[3] * pts[i * 2 + 1] + m[5];
     const x0 = X(0), y0 = Y(0);
     for (let i = 1; i < n - 1; i++) this.r.tri(x0, y0, X(i), Y(i), X(i + 1), Y(i + 1), col, add);
+    return this;
+  }
+  /**
+   * 貼材質的凸多邊形 [x0,y0, x1,y1, …]：材質照世界座標一直重複（PZ.art.pattern 做的圖），形狀怎麼切都接得起來
+   * o = { s（材質放大幾倍）, color（染色：乘上去）, a, add, ox, oy（材質的原點） }
+   */
+  polyTex(pts, f, o) {
+    if (typeof f === 'string') f = Art.get(f);
+    const n = pts.length / 2; if (n < 3) return this;
+    if (!f.tex || !f.pattern || this.r.kind === 'canvas2d') {   // Canvas2D：平均色×染色
+      const t = toColor(o && o.color != null ? o.color : WHITE), a = f.avg != null ? f.avg : 0xff808080;
+      return this.poly(pts, Color.rgb((cR(a) * cR(t)) / 255, (cG(a) * cG(t)) / 255, (cB(a) * cB(t)) / 255, cA(t)), o);
+    }
+    const m = this.m, col = this._col(o && o.color, o && o.a != null ? o.a : 1), add = (o && o.add) || 0;
+    const sc = (o && o.s) || 1, tw = f.w * sc, th = f.h * sc, ox = (o && o.ox) || 0, oy = (o && o.oy) || 0;
+    // 材質座標減掉整數（重複取樣下一樣），數字小，手機的半精度才不會糊
+    let bu = Infinity, bv = Infinity; for (let i = 0; i < n; i++) { const u = (pts[i * 2] - ox) / tw, v = (pts[i * 2 + 1] - oy) / th; if (u < bu) bu = u; if (v < bv) bv = v; }
+    bu = Math.floor(bu); bv = Math.floor(bv);
+    const S = PolyScratch.length >= n * 4 ? PolyScratch : (PolyScratch = new Float64Array(n * 4)), r = this.r, t = f.tex;
+    for (let i = 0; i < n; i++) { const x = pts[i * 2], y = pts[i * 2 + 1], j = i * 4; S[j] = m[0] * x + m[2] * y + m[4]; S[j + 1] = m[1] * x + m[3] * y + m[5]; S[j + 2] = (x - ox) / tw - bu; S[j + 3] = (y - oy) / th - bv; }
+    for (let i = 1; i < n - 1; i++) { const j = i * 4, k = j + 4; r.quadv(t, S[0], S[1], S[2], S[3], S[j], S[j + 1], S[j + 2], S[j + 3], S[k], S[k + 1], S[k + 2], S[k + 3], S[k], S[k + 1], S[k + 2], S[k + 3], col, col, MODE.sprite, add, 0); }
     return this;
   }
   /** 拖尾／光帶：pts 是 [{x,y}…]（頭在前面），寬度與顏色從頭漸變到尾 */

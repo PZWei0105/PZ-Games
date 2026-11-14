@@ -20,7 +20,7 @@
 .lab-card { position: relative; text-align: left; border: 0; cursor: pointer; padding: 18px 18px 16px 64px; border-radius: 16px; color: var(--pz-text); font: inherit; min-height: 84px;
   background: linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02)), var(--lab-glass); box-shadow: 0 0 0 1px rgba(255, 255, 255, .09) inset, 0 14px 40px rgba(0, 0, 0, .35);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform .18s cubic-bezier(.2, .9, .25, 1.2), box-shadow .2s; animation: lab-in .6s cubic-bezier(.2, .9, .25, 1.1) both; }
-.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; } .lab-card:nth-child(8) { animation-delay: .35s; } .lab-card:nth-child(9) { animation-delay: .4s; } .lab-card:nth-child(10) { animation-delay: .45s; }
+.lab-card:nth-child(2) { animation-delay: .05s; } .lab-card:nth-child(3) { animation-delay: .1s; } .lab-card:nth-child(4) { animation-delay: .15s; } .lab-card:nth-child(5) { animation-delay: .2s; } .lab-card:nth-child(6) { animation-delay: .25s; } .lab-card:nth-child(7) { animation-delay: .3s; } .lab-card:nth-child(8) { animation-delay: .35s; } .lab-card:nth-child(9) { animation-delay: .4s; } .lab-card:nth-child(10) { animation-delay: .45s; } .lab-card:nth-child(11) { animation-delay: .5s; }
 .lab-card:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255, 181, 71, .45) inset, 0 18px 50px rgba(0, 0, 0, .45); }
 .lab-card:active, .lab-card.pz-press { transform: scale(.97); }
 .lab-card.pz-focus { box-shadow: 0 0 0 2px var(--pz-accent2) inset, 0 0 28px rgba(70, 212, 255, .35); }
@@ -65,7 +65,7 @@
 </style></head>
 <body><div id="pz-root"><div id="pz-ui"></div></div>
 <script>/* PZ Engine dev */
-/*! PZ Engine v1.1.0 (2026-11-14.fbe86503) — 痞子葳 × Claude 的 2D 遊戲引擎。
+/*! PZ Engine v1.1.0 (2026-11-14.2bba4e18) — 痞子葳 × Claude 的 2D 遊戲引擎。
     說明書：PZ-Games repo 的 _build/engine/HANDBOOK.md */
 (function (global) {
 'use strict';
@@ -75,7 +75,7 @@
    整個引擎包在一個 IIFE 裡，只對外公開 window.PZ。
    模組之間共用這個閉包裡的變數（例如 Screen、Input、R），不必互相 import。
    ========================================================================== */
-const PZ = { version: '1.1.0', build: '2026-11-14.fbe86503' };
+const PZ = { version: '1.1.0', build: '2026-11-14.2bba4e18' };
 const HAS_DOM = typeof document !== 'undefined' && typeof window !== 'undefined';
 const nowMs = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
 const noop = () => { };
@@ -1560,7 +1560,7 @@ class GLRenderer {
   }
   /* ---- 貼圖 ---- */
   texCreate(w, h, o = {}) {
-    const t = { id: ++TexId, w, h, gl: null, nearest: !!o.nearest, rt: !!o.rt, restore: o.restore || null, fb: null };
+    const t = { id: ++TexId, w, h, gl: null, nearest: !!o.nearest, rt: !!o.rt, repeat: !!o.repeat, restore: o.restore || null, fb: null };
     this.texAlloc(t); this.textures.add(t); return t;
   }
   texAlloc(t) {
@@ -1568,7 +1568,8 @@ class GLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, t.w, t.h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     const f = t.nearest ? gl.NEAREST : gl.LINEAR;
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const wrap = t.repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;   // repeat：材質（Art.pattern）一直重複
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
     if (t.rt) { t.fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t.gl, 0); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.bindFramebuffer(gl.FRAMEBUFFER, null); }
   }
   /** 把 canvas／圖片貼到貼圖的 (x, y)（整張來源） */
@@ -2183,6 +2184,18 @@ function paintEntry(ctx, en, ox, oy) {
   if (en.nearest) ctx.imageSmoothingEnabled = false;
   try { en.draw(ctx, en.w, en.h, en.arg); } catch (e) { reportError(e, 'art:' + en.name); }
   ctx.restore();
+  if (en.wrap && en.pad > 0) wrapPad(ctx, en, ox, oy);
+}
+/* 可以鋪滿的材質（Art.make 的 wrap: true）：外圍的留白填上「另一邊」的內容，鋪起來接縫處的線性內插才不會混到透明而出現細線 */
+function wrapPad(ctx, en, ox, oy) {
+  const p = en.pad, iw = en.pw - p * 2, ih = en.ph - p * 2, X = ox + p, Y = oy + p, cv = ctx.canvas;
+  if (iw < p || ih < p) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(X - p, Y, p, ih); ctx.drawImage(cv, X + iw - p, Y, p, ih, X - p, Y, p, ih);
+  ctx.clearRect(X + iw, Y, p, ih); ctx.drawImage(cv, X, Y, p, ih, X + iw, Y, p, ih);
+  ctx.clearRect(X - p, Y - p, iw + p * 2, p); ctx.drawImage(cv, X - p, Y + ih - p, iw + p * 2, p, X - p, Y - p, iw + p * 2, p);
+  ctx.clearRect(X - p, Y + ih, iw + p * 2, p); ctx.drawImage(cv, X - p, Y, iw + p * 2, p, X - p, Y + ih, iw + p * 2, p);
+  ctx.restore();
 }
 function newPage(nearest, w = Art.pageSize, h = Art.pageSize, solo = false) {
   const r = Gfx.r;
@@ -2227,7 +2240,7 @@ function realize(en) {
 
 /**
  * 畫一張圖收進圖集。
- * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, arg（傳給 draw 的第 4 個參數）,
+ * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, wrap: true（要用 g.tile 鋪滿的材質：接縫不會有細線）, arg（傳給 draw 的第 4 個參數）,
  *      outline: 2（外框粗細，圖會變大一圈）, outlineColor: '#000', rim: '#9cf' 或 { color, a, w, angle }（朝光的亮邊）, shade: 0.25（下半部變暗） }
  * 同名會覆蓋（舊的位置不回收）。
  */
@@ -2241,7 +2254,7 @@ Art.make = (name, w, h, draw, o = {}) => {
     if (ol) { const an = o.anchor || [0.5, 0.5]; o = Object.assign({}, o, { anchor: [(an[0] * w + ol) / (w + ol * 2), (an[1] * h + ol) / (h + ol * 2)] }); w += ol * 2; h += ol * 2; }
   }
   const scale = o.scale || (o.pixel ? 1 : Art.scale), pad = o.pad != null ? o.pad : Art.pad;
-  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, fx, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
+  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, fx, wrap: !!o.wrap, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
   f.w = w; f.h = h; const an = o.anchor || [0.5, 0.5]; f.ax = an[0]; f.ay = an[1]; f.entry = en;
   if (Gfx.r) realize(en); else Art.pending.push(en);
   return f;
@@ -2308,7 +2321,7 @@ Art.live = (name, canvas, o = {}) => {
     // 舊貼圖：Canvas2D 模式下只拿掉包裝（canvas 是遊戲自己的，不能被清掉）；WebGL 才真的刪貼圖
     if (f.tex && r.textures.has(f.tex)) { if (f.tex.canvas === canvas) r.textures.delete(f.tex); else r.texDelete(f.tex); }
     if (r.kind === 'canvas2d') { f.tex = { id: ++TexId, w, h, canvas, ctx: canvas.getContext('2d'), nearest: !!o.pixel, restore: null, live: true }; r.textures.add(f.tex); }
-    else f.tex = r.texCreate(w, h, { nearest: !!o.pixel, restore: (t) => { if (Gfx.r.texAlloc) Gfx.r.texAlloc(t); if (Gfx.r.texUpload) Gfx.r.texUpload(t, canvas, 0, 0); } });
+    else f.tex = r.texCreate(w, h, { nearest: !!o.pixel, repeat: !!o.repeat, restore: (t) => { if (Gfx.r.texAlloc) Gfx.r.texAlloc(t); if (Gfx.r.texUpload) Gfx.r.texUpload(t, canvas, 0, 0); } });
     f.setRect(f.tex, 0, 0, w, h); f.w = w / (o.density || 1); f.h = h / (o.density || 1); f._w = w; f._h = h;
   };
   f.refresh = () => {
@@ -2321,6 +2334,21 @@ Art.live = (name, canvas, o = {}) => {
   return f;
 };
 PZ.on('renderer', () => { for (const f of Art.frames.values()) if (f.live) { f.tex = null; f.refresh(); } });
+
+/**
+ * 會一直重複的材質（草地、沙、岩石表面）：給 g.polyTex（任意形狀貼材質）、PZ.tiles.marching 的 tex 用
+ *   PZ.art.pattern('grass', 64, 64, (ctx, w, h) => { … })   畫的時候注意左右、上下要接得起來
+ * 自己一張貼圖（不放圖集），所以可以用 GPU 的重複取樣；Canvas2D 後備模式畫成平均色
+ */
+Art.pattern = (name, w, h, draw, o = {}) => {
+  const sc = o.scale || Art.scale, c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * sc)); c.height = Math.max(1, Math.round(h * sc));
+  const x = c.getContext('2d'); x.scale(c.width / w, c.height / h);
+  try { draw(x, w, h); } catch (e) { reportError(e, 'art.pattern:' + name); }
+  const p = document.createElement('canvas'); p.width = p.height = 1; const px = p.getContext('2d'); px.drawImage(c, 0, 0, 1, 1); const d = px.getImageData(0, 0, 1, 1).data;
+  const f = Art.live(name, c, { density: c.width / w, repeat: true });
+  f.avg = Color.rgb(d[0], d[1], d[2], d[3] / 255); f.pattern = true;
+  return f;
+};
 
 /** 動畫：PZ.anim(frames, fps, loop) → 回傳函式 (t秒) => frame */
 PZ.anim = (frames, fps = 10, loop = true) => {
@@ -2580,6 +2608,7 @@ if (HAS_DOM && document.fonts && document.fonts.addEventListener) document.fonts
      g.water(x, y, w, h, { mode: 'mirror' | 'flat', color, reflect })     水面（倒影、波紋）    g.haze(x, y, w, h)  熱浪扭曲
    ========================================================================== */
 const M_ID = [1, 0, 0, 1, 0, 0];
+let PolyScratch = new Float64Array(64);   // g.polyTex 用的暫存（螢幕座標＋材質座標）
 class Graphics {
   constructor() {
     this.m = new Float64Array(6); this.m.set(M_ID);
@@ -2686,6 +2715,27 @@ class Graphics {
     const X = (i) => m[0] * pts[i * 2] + m[2] * pts[i * 2 + 1] + m[4], Y = (i) => m[1] * pts[i * 2] + m[3] * pts[i * 2 + 1] + m[5];
     const x0 = X(0), y0 = Y(0);
     for (let i = 1; i < n - 1; i++) this.r.tri(x0, y0, X(i), Y(i), X(i + 1), Y(i + 1), col, add);
+    return this;
+  }
+  /**
+   * 貼材質的凸多邊形 [x0,y0, x1,y1, …]：材質照世界座標一直重複（PZ.art.pattern 做的圖），形狀怎麼切都接得起來
+   * o = { s（材質放大幾倍）, color（染色：乘上去）, a, add, ox, oy（材質的原點） }
+   */
+  polyTex(pts, f, o) {
+    if (typeof f === 'string') f = Art.get(f);
+    const n = pts.length / 2; if (n < 3) return this;
+    if (!f.tex || !f.pattern || this.r.kind === 'canvas2d') {   // Canvas2D：平均色×染色
+      const t = toColor(o && o.color != null ? o.color : WHITE), a = f.avg != null ? f.avg : 0xff808080;
+      return this.poly(pts, Color.rgb((cR(a) * cR(t)) / 255, (cG(a) * cG(t)) / 255, (cB(a) * cB(t)) / 255, cA(t)), o);
+    }
+    const m = this.m, col = this._col(o && o.color, o && o.a != null ? o.a : 1), add = (o && o.add) || 0;
+    const sc = (o && o.s) || 1, tw = f.w * sc, th = f.h * sc, ox = (o && o.ox) || 0, oy = (o && o.oy) || 0;
+    // 材質座標減掉整數（重複取樣下一樣），數字小，手機的半精度才不會糊
+    let bu = Infinity, bv = Infinity; for (let i = 0; i < n; i++) { const u = (pts[i * 2] - ox) / tw, v = (pts[i * 2 + 1] - oy) / th; if (u < bu) bu = u; if (v < bv) bv = v; }
+    bu = Math.floor(bu); bv = Math.floor(bv);
+    const S = PolyScratch.length >= n * 4 ? PolyScratch : (PolyScratch = new Float64Array(n * 4)), r = this.r, t = f.tex;
+    for (let i = 0; i < n; i++) { const x = pts[i * 2], y = pts[i * 2 + 1], j = i * 4; S[j] = m[0] * x + m[2] * y + m[4]; S[j + 1] = m[1] * x + m[3] * y + m[5]; S[j + 2] = (x - ox) / tw - bu; S[j + 3] = (y - oy) / th - bv; }
+    for (let i = 1; i < n - 1; i++) { const j = i * 4, k = j + 4; r.quadv(t, S[0], S[1], S[2], S[3], S[j], S[j + 1], S[j + 2], S[j + 3], S[k], S[k + 1], S[k + 2], S[k + 3], S[k], S[k + 1], S[k + 2], S[k + 3], col, col, MODE.sprite, add, 0); }
     return this;
   }
   /** 拖尾／光帶：pts 是 [{x,y}…]（頭在前面），寬度與顏色從頭漸變到尾 */
@@ -5868,10 +5918,848 @@ Graphics.prototype.swoosh = function (list, color, o = {}) {
   return this;
 };
 
+/* ---- 30_world.js ---- */
+/* ==========================================================================
+   30 世界與地圖：格子地圖、碰撞、射線、視野、尋路、流場、程序生成
+     const map = PZ.tilemap({ w: 64, h: 48, size: 32 })        格子地圖（size＝一格幾個世界單位）
+       map.set(x, y, 1)  map.get(x, y)  map.layer('deco')     多層（每層一個整數陣列）
+       map.fromText(`#####\n#..@#\n#####`, { '#': 1, '.': 0, '@': 0 })   用文字畫地圖；回傳每個符號出現的位置
+       map.isSolid(cx, cy)  map.solidAt(wx, wy)  map.cellX(wx)  map.cx(cx)（格子中心的世界座標）
+       map.move(body, dx, dy)  方塊角色撞牆滑動（body = { x, y, w, h } 中心點；可設單向平台）
+       map.raycast(x0, y0, x1, y1)  map.los(…)  map.fov(cx, cy, 半徑)（視野：哪些格子看得到）
+       map.rects()  合併成大方塊；map.lightBoxes({ lift }) 一行讓牆擋光（配 PZ.light；2.5D 牆 lift＝牆高）
+       map.nearestOpen(cx, cy)  最近的空地    map.behindWall(x, y, 離地高, 牆高)  2.5D：這一點有沒有被前面的牆擋住
+       map.draw(g, style, { actors, drawActor })   畫地圖：2.5D 牆面依前後跟角色交錯（見 31_tiles.js 的風格）
+     PZ.path.find(map, sx, sy, tx, ty)   A* 最短路（格子）    PZ.path.smooth(map, cells) 拉直成世界座標的折線
+     PZ.path.flow(map, { max })          流場：幾百隻怪同時繞牆追主角，每格只算一次
+     PZ.gen.dungeon / caves / island / scatter / noise / distance   程序生成：地牢、洞窟、島嶼、均勻散布（樹、草、寶箱）、離牆多遠
+   ========================================================================== */
+class Tilemap {
+  constructor(o = {}) {
+    this.w = o.w || 32; this.h = o.h || 32; this.size = o.size || 32; this.ox = o.x || 0; this.oy = o.y || 0;
+    this.layers = { main: new Int32Array(this.w * this.h) }; if (o.fill) this.layers.main.fill(o.fill);
+    this.outside = o.outside != null ? o.outside : 1;       // 地圖外面當成什麼（預設牆）
+    this.oneway = o.oneway || null;                        // (v) => true：單向平台（只擋往下掉，從下面跳得上來）
+    this.solidFn = o.solid || (this.oneway ? (v) => v > 0 && !this.oneway(v) : (v) => v > 0);
+    this.ver = 0; this.field = null;
+  }
+  idx(cx, cy) { return cx < 0 || cy < 0 || cx >= this.w || cy >= this.h ? -1 : cy * this.w + cx; }
+  layer(name, init = 0) { let L = this.layers[name]; if (!L) { L = this.layers[name] = new Int32Array(this.w * this.h); if (init) L.fill(init); } return L; }
+  get(cx, cy, layer = 'main') { const i = this.idx(cx, cy); if (i < 0) return layer === 'main' ? this.outside : 0; return this.layers[layer] ? this.layers[layer][i] : 0; }
+  set(cx, cy, v, layer = 'main') { const i = this.idx(cx, cy); if (i < 0) return this; this.layer(layer)[i] = v; this.ver++; return this; }
+  fill(v, layer = 'main') { this.layer(layer).fill(v); this.ver++; return this; }
+  rect(cx, cy, w, h, v, layer = 'main') { for (let y = cy; y < cy + h; y++) for (let x = cx; x < cx + w; x++) this.set(x, y, v, layer); return this; }
+  forEach(fn, layer = 'main') { const L = this.layer(layer); for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) fn(x, y, L[y * this.w + x]); return this; }
+  isSolid(cx, cy) { return this.solidFn(this.get(cx, cy)); }
+  cellX(wx) { return Math.floor((wx - this.ox) / this.size); }
+  cellY(wy) { return Math.floor((wy - this.oy) / this.size); }
+  /** 格子中心的世界座標 */
+  cx(cx) { return this.ox + (cx + 0.5) * this.size; }
+  cy(cy) { return this.oy + (cy + 0.5) * this.size; }
+  get width() { return this.w * this.size; }
+  get height() { return this.h * this.size; }
+  solidAt(wx, wy) { return this.isSolid(this.cellX(wx), this.cellY(wy)); }
+  /** 文字地圖：每行一列、每個字一格；legend: { '#': 1, '.': 0, '~': { v: 2, layer: 'water' } }；回傳 { 字: [[cx, cy]…] } */
+  fromText(text, legend = { '#': 1 }) {
+    const rows = text.replace(/^\n+|\n+\s*$/g, '').split('\n'), found = {};
+    const w = Math.max(...rows.map((r) => r.length)), h = rows.length;
+    if (w !== this.w || h !== this.h) { this.w = w; this.h = h; for (const k in this.layers) this.layers[k] = new Int32Array(w * h); }
+    rows.forEach((row, y) => { for (let x = 0; x < w; x++) {
+      const ch = row[x] || ' ', L = legend[ch];
+      if (L != null) { if (typeof L === 'object') this.set(x, y, L.v || 0, L.layer || 'main'); else this.set(x, y, L); }
+      (found[ch] || (found[ch] = [])).push([x, y]);
+    } });
+    this.ver++; return found;
+  }
+  /** 從 0/1 陣列（例如 PZ.gen 產生的 grid）載入 */
+  fromGrid(grid, w = this.w, h = this.h, layer = 'main') { if (w !== this.w || h !== this.h) { this.w = w; this.h = h; for (const k in this.layers) this.layers[k] = new Int32Array(w * h); } this.layer(layer).set(grid); this.ver++; return this; }
+  /** 四方向相同（自動接邊）：上 1、右 2、下 4、左 8 */
+  mask4(cx, cy, test = (x, y) => this.isSolid(x, y)) { return (test(cx, cy - 1) ? 1 : 0) | (test(cx + 1, cy) ? 2 : 0) | (test(cx, cy + 1) ? 4 : 0) | (test(cx - 1, cy) ? 8 : 0); }
+  /** 八方向（47 種接邊）：角落只有兩邊都相連才算 → 回傳 0～255 的遮罩 */
+  mask8(cx, cy, test = (x, y) => this.isSolid(x, y)) {
+    const n = test(cx, cy - 1), e = test(cx + 1, cy), s = test(cx, cy + 1), w = test(cx - 1, cy);
+    let m = (n ? 1 : 0) | (e ? 4 : 0) | (s ? 16 : 0) | (w ? 64 : 0);
+    if (n && e && test(cx + 1, cy - 1)) m |= 2; if (s && e && test(cx + 1, cy + 1)) m |= 8; if (s && w && test(cx - 1, cy + 1)) m |= 32; if (n && w && test(cx - 1, cy - 1)) m |= 128;
+    return m;
+  }
+  /** 射線（格子 DDA）：回傳 { hit, x, y, t（0～1）, cx, cy, nx, ny（撞到的面朝哪） } */
+  raycast(x0, y0, x1, y1, test) {
+    const s = this.size, solid = test || ((x, y) => this.isSolid(x, y));
+    let x = (x0 - this.ox) / s, y = (y0 - this.oy) / s; const dx = (x1 - this.ox) / s - x, dy = (y1 - this.oy) / s - y;
+    let cx = Math.floor(x), cy = Math.floor(y); const sx = Math.sign(dx), sy = Math.sign(dy);
+    const tdx = dx ? Math.abs(1 / dx) : Infinity, tdy = dy ? Math.abs(1 / dy) : Infinity;
+    let tx = dx > 0 ? (cx + 1 - x) / dx : dx < 0 ? (x - cx) / -dx : Infinity, ty = dy > 0 ? (cy + 1 - y) / dy : dy < 0 ? (y - cy) / -dy : Infinity;
+    const r = this._ray || (this._ray = {});
+    if (solid(cx, cy)) { Object.assign(r, { hit: true, t: 0, x: x0, y: y0, cx, cy, nx: 0, ny: 0 }); return r; }
+    let nx = 0, ny = 0, t = 0;
+    for (let i = 0; i < 4096; i++) {
+      if (tx < ty) { t = tx; tx += tdx; cx += sx; nx = -sx; ny = 0; } else { t = ty; ty += tdy; cy += sy; ny = -sy; nx = 0; }
+      if (t > 1) break;
+      if (solid(cx, cy)) { Object.assign(r, { hit: true, t, x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, cx, cy, nx, ny }); return r; }
+    }
+    Object.assign(r, { hit: false, t: 1, x: x1, y: y1, cx, cy, nx: 0, ny: 0 }); return r;
+  }
+  los(x0, y0, x1, y1) { return !this.raycast(x0, y0, x1, y1).hit; }
+  /** 視野（遞迴陰影投射）：從 (cx, cy) 看得到哪些格子（含牆面）；out 是 Uint8Array（看得到的設 1），回傳 out */
+  fov(ox, oy, r, out, opaque = (x, y) => this.isSolid(x, y)) {
+    out = out || new Uint8Array(this.w * this.h);
+    const W = this.w, H = this.h, set = (x, y) => { if (x >= 0 && y >= 0 && x < W && y < H) out[y * W + x] = 1; };
+    set(ox, oy);
+    const M = [[1, 0, 0, -1, -1, 0, 0, 1], [0, 1, -1, 0, 0, -1, 1, 0], [0, 1, 1, 0, 0, -1, -1, 0], [1, 0, 0, 1, -1, 0, 0, -1]];
+    const cast = (row, start, end, xx, xy, yx, yy) => {
+      if (start < end) return;
+      let newStart = 0;
+      for (let j = row; j <= r; j++) {
+        let dx = -j - 1; const dy = -j; let blocked = false;
+        while (dx <= 0) {
+          dx++;
+          const X = ox + dx * xx + dy * xy, Y = oy + dx * yx + dy * yy, ls = (dx - 0.5) / (dy + 0.5), rs = (dx + 0.5) / (dy - 0.5);
+          if (start < rs) continue; else if (end > ls) break;
+          if (dx * dx + dy * dy <= r * r) set(X, Y);
+          if (blocked) { if (opaque(X, Y)) { newStart = rs; continue; } blocked = false; start = newStart; }
+          else if (opaque(X, Y) && j < r) { blocked = true; cast(j + 1, start, ls, xx, xy, yx, yy); newStart = rs; }
+        }
+        if (blocked) break;
+      }
+    };
+    for (let o = 0; o < 8; o++) cast(1, 1, 0, M[0][o], M[1][o], M[2][o], M[3][o]);
+    return out;
+  }
+  /**
+   * 方塊撞牆：body = { x, y（中心）, w, h }，移動 (dx, dy)，撞到就貼著牆滑；回傳 { left, right, up, down }（down＝站在地上／平台上）
+   * 單向平台：map.oneway = (v) => v === 2，只有從上面掉下來時會擋。移動太快時自動分段（不會穿牆）
+   */
+  move(b, dx, dy) {
+    const res = this._mv || (this._mv = {}); res.left = res.right = res.up = res.down = false;
+    const s = this.size, steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / (s * 0.45)));
+    for (let k = 0; k < steps; k++) { this._moveX(b, dx / steps, res); this._moveY(b, dy / steps, res); }
+    return res;
+  }
+  _moveX(b, dx, res) {
+    if (!dx) return;
+    const hw = b.w / 2, hh = b.h / 2, s = this.size; b.x += dx;
+    const y0 = this.cellY(b.y - hh + 0.01), y1 = this.cellY(b.y + hh - 0.01);
+    if (dx > 0) { const cx = this.cellX(b.x + hw); for (let cy = y0; cy <= y1; cy++) if (this.isSolid(cx, cy)) { b.x = this.ox + cx * s - hw - 0.001; res.right = true; return; } }
+    else { const cx = this.cellX(b.x - hw); for (let cy = y0; cy <= y1; cy++) if (this.isSolid(cx, cy)) { b.x = this.ox + (cx + 1) * s + hw + 0.001; res.left = true; return; } }
+  }
+  _moveY(b, dy, res) {
+    if (!dy) return;
+    const hw = b.w / 2, hh = b.h / 2, s = this.size, prevBottom = b.y + hh; b.y += dy;
+    const x0 = this.cellX(b.x - hw + 0.01), x1 = this.cellX(b.x + hw - 0.01);
+    if (dy > 0) {
+      const cy = this.cellY(b.y + hh), top = this.oy + cy * s;
+      for (let cx = x0; cx <= x1; cx++) {
+        const v = this.get(cx, cy);
+        if (this.solidFn(v) || (this.oneway && this.oneway(v) && prevBottom <= top + 0.5 && !b.dropping)) { b.y = top - hh - 0.001; res.down = true; return; }
+      }
+    } else { const cy = this.cellY(b.y - hh); for (let cx = x0; cx <= x1; cx++) if (this.isSolid(cx, cy)) { b.y = this.oy + (cy + 1) * s + hh + 0.001; res.up = true; return; } }
+  }
+  /** 把相鄰的格子合併成大方塊（貪婪）：[{ cx, cy, w, h }]（格子單位） */
+  rects(test = (x, y) => this.isSolid(x, y)) {
+    const W = this.w, H = this.h, used = new Uint8Array(W * H), out = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (used[y * W + x] || !test(x, y)) continue;
+      let rw = 1; while (x + rw < W && !used[y * W + x + rw] && test(x + rw, y)) rw++;
+      let rh = 1;
+      outer: while (y + rh < H) { for (let k = 0; k < rw; k++) if (used[(y + rh) * W + x + k] || !test(x + k, y + rh)) break outer; rh++; }
+      for (let yy = y; yy < y + rh; yy++) for (let xx = x; xx < x + rw; xx++) used[yy * W + xx] = 1;
+      out.push({ cx: x, cy: y, w: rw, h: rh });
+    }
+    return out;
+  }
+  /**
+   * 牆擋光：合併後的方塊各加一個 PZ.light.box；回傳那些形狀（地圖變了先 .forEach(s => s.remove()) 再重加）
+   * o = { test(cx, cy), lift（2.5D 牆往上抬幾單位：擋光的是畫出來的牆頂，牆面留在外面才照得到火把） }
+   */
+  lightBoxes(o = {}) {
+    if (typeof o === 'function') o = { test: o };
+    const s = this.size, lift = o.lift || 0;
+    return this.rects(o.test).map((r) => Light.box(this.ox + r.cx * s, this.oy + r.cy * s - lift, r.w * s, r.h * s));
+  }
+  /** 離 (cx, cy) 最近、走得到的格子（點到牆上時用）：回傳 [cx, cy] 或 null */
+  nearestOpen(cx, cy, maxR = 6, pass = (x, y) => !this.isSolid(x, y)) {
+    if (pass(cx, cy)) return [cx, cy];
+    let best = null, bd = Infinity;
+    for (let r = 1; r <= maxR && !best; r++) for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+      if (Math.max(Math.abs(x - cx), Math.abs(y - cy)) !== r || x < 0 || y < 0 || x >= this.w || y >= this.h || !pass(x, y)) continue;
+      const d = (x - cx) * (x - cx) + (y - cy) * (y - cy); if (d < bd) { bd = d; best = [x, y]; }
+    }
+    return best;
+  }
+  /** 2.5D：站在 (wx, wy)、離地 z 高的那一點，會不會被前面（南邊）的牆頂擋住（發光的眼睛、頭上的字要不要畫）；wallH＝牆高（世界單位） */
+  behindWall(wx, wy, z, wallH) {
+    const s = this.size, row = this.cellY(wy), r = Math.floor((wy - z + wallH - this.oy) / s);
+    return r > row && this.isSolid(this.cellX(wx), r);
+  }
+  /** 畫面上看得到的格子範圍（多留 margin 格） */
+  view(margin = 1) {
+    const v = Cam.view, s = this.size;
+    return [Math.max(0, Math.floor((v.x - this.ox) / s) - margin), Math.max(0, Math.floor((v.y - this.oy) / s) - margin), Math.min(this.w - 1, Math.floor((v.x + v.w - this.ox) / s) + margin), Math.min(this.h - 1, Math.floor((v.y + v.h - this.oy) / s) + margin)];
+  }
+  /**
+   * 畫地圖。style（見 PZ.tiles）：{ under(g, map, view), floor(g, map, cx, cy, x, y, s), ground(g, map, view),
+   *   row(g, map, cy, view)（一整列的牆，2.5D 用）, wall(g, map, cx, cy, x, y, s)（一格牆）, over(g, map, view) }
+   * o = { actors: [...]（有 y＝腳底的物件）, drawActor(g, a) }：牆跟角色一列一列交錯畫——
+   *   同一列先畫牆再畫角色（站在牆旁邊不會被切掉），南邊的牆後畫（走到牆後面會被牆頂擋住）
+   */
+  draw(g, style, o = {}) {
+    const view = this.view(style.margin != null ? style.margin : 2), [x0, y0, x1, y1] = view, s = this.size, L = this.layers.main, W = this.w;
+    if (style.under) style.under(g, this, view);
+    if (style.floor) for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) { if (!this.solidFn(L[cy * W + cx])) style.floor(g, this, cx, cy, this.ox + cx * s, this.oy + cy * s, s); }
+    if (style.ground) style.ground(g, this, view);
+    const actors = o.actors || [], draw = o.drawActor; let ai = 0;
+    if (actors.length > 1) PZ.sortBy(actors, (a) => a.y);
+    while (ai < actors.length && actors[ai].y < this.oy + y0 * s) draw(g, actors[ai++]);
+    for (let cy = y0; cy <= y1; cy++) {
+      if (style.row) style.row(g, this, cy, view);
+      if (style.wall) for (let cx = x0; cx <= x1; cx++) if (this.solidFn(L[cy * W + cx])) style.wall(g, this, cx, cy, this.ox + cx * s, this.oy + cy * s, s);
+      const rowBottom = this.oy + (cy + 1) * s;
+      while (ai < actors.length && actors[ai].y < rowBottom) draw(g, actors[ai++]);
+    }
+    while (ai < actors.length) draw(g, actors[ai++]);
+    if (style.over) style.over(g, this, view);
+    return this;
+  }
+}
+PZ.tilemap = (o) => new Tilemap(o);
+PZ.Tilemap = Tilemap;
+
+/* ---------- 尋路 ---------- */
+class Heap {
+  constructor() { this.k = []; this.v = []; }
+  get size() { return this.k.length; }
+  push(v, k) { const K = this.k, V = this.v; let i = K.length; K.push(k); V.push(v); while (i > 0) { const p = (i - 1) >> 1; if (K[p] <= k) break; K[i] = K[p]; V[i] = V[p]; i = p; } K[i] = k; V[i] = v; }
+  pop() {
+    const K = this.k, V = this.v, top = V[0], lk = K.pop(), lv = V.pop(), n = K.length;
+    if (n) { let i = 0; for (;;) { let c = 2 * i + 1; if (c >= n) break; if (c + 1 < n && K[c + 1] < K[c]) c++; if (K[c] >= lk) break; K[i] = K[c]; V[i] = V[c]; i = c; } K[i] = lk; V[i] = lv; }
+    return top;
+  }
+}
+PZ.Heap = Heap;
+const DIRS8 = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, 1, Math.SQRT2], [-1, -1, Math.SQRT2]];
+const Path = PZ.path = {
+  /** A*：回傳 [[cx, cy]…]（含起點、終點），走不到回傳 null。o = { diag（預設 true）, passable(cx, cy), cost(cx, cy)（額外成本）, max（最多展開幾格） } */
+  find(map, sx, sy, tx, ty, o = {}) {
+    const W = map.w, H = map.h, pass = o.passable || ((x, y) => !map.isSolid(x, y)), diag = o.diag !== false, cost = o.cost;
+    if (!pass(tx, ty) || !pass(sx, sy)) return null;
+    const N = W * H, g = new Float32Array(N).fill(Infinity), from = new Int32Array(N).fill(-1), closed = new Uint8Array(N), heap = new Heap();
+    const s = sy * W + sx, t = ty * W + tx, hfn = (x, y) => { const dx = Math.abs(x - tx), dy = Math.abs(y - ty); return diag ? Math.max(dx, dy) + (Math.SQRT2 - 1) * Math.min(dx, dy) : dx + dy; };
+    g[s] = 0; heap.push(s, hfn(sx, sy)); let n = 0; const max = o.max || N;
+    while (heap.size) {
+      const c = heap.pop(); if (closed[c]) continue; closed[c] = 1;
+      if (c === t) break; if (++n > max) return null;
+      const cx = c % W, cy = (c / W) | 0;
+      for (let d = 0; d < (diag ? 8 : 4); d++) {
+        const [ddx, ddy, dc] = DIRS8[d], nx = cx + ddx, ny = cy + ddy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H || !pass(nx, ny)) continue;
+        if (ddx && ddy && (!pass(cx + ddx, cy) || !pass(cx, cy + ddy))) continue;   // 不切牆角
+        const ni = ny * W + nx; if (closed[ni]) continue;
+        const ng = g[c] + dc + (cost ? cost(nx, ny) : 0);
+        if (ng < g[ni]) { g[ni] = ng; from[ni] = c; heap.push(ni, ng + hfn(nx, ny)); }
+      }
+    }
+    if (from[t] < 0 && s !== t) return null;
+    const out = []; for (let c = t; c >= 0; c = from[c]) { out.push([c % W, (c / W) | 0]); if (c === s) break; }
+    return out.reverse();
+  },
+  /** 把格子路徑拉直（看得到的就直接走過去）：回傳 [{ x, y }…]（世界座標） */
+  smooth(map, cells) {
+    if (!cells || !cells.length) return [];
+    const pts = cells.map(([x, y]) => ({ x: map.cx(x), y: map.cy(y) })), out = [pts[0]];
+    let i = 0;
+    while (i < pts.length - 1) { let j = pts.length - 1; while (j > i + 1 && !Path._clear(map, pts[i], pts[j])) j--; out.push(pts[j]); i = j; }
+    return out;
+  },
+  _clear(map, a, b) { const r = map.size * 0.3, nx = -(b.y - a.y), ny = b.x - a.x, l = Math.hypot(nx, ny) || 1; for (const k of [-1, 0, 1]) if (!map.los(a.x + (nx / l) * r * k, a.y + (ny / l) * r * k, b.x + (nx / l) * r * k, b.y + (ny / l) * r * k)) return false; return true; },
+  /** 流場：PZ.path.flow(map, { max: 60（最遠算幾步）, passable }) → f.update(目標世界座標) 每格；f.dirAt(x, y) 往目標的方向 */
+  flow(map, o = {}) { return new FlowField(map, o); },
+};
+class FlowField {
+  constructor(map, o) {
+    this.map = map; this.max = o.max || 1e9; this.pass = o.passable || ((x, y) => !map.isSolid(x, y));
+    const N = map.w * map.h; this.dist = new Float32Array(N); this.vx = new Float32Array(N); this.vy = new Float32Array(N); this.tx = 0; this.ty = 0; this.tcx = -1; this.tcy = -1; this.heap = new Heap(); this._v = { x: 0, y: 0 };
+  }
+  /** 目標換格子才重算（同一格內移動不用算） */
+  update(wx, wy, force) {
+    const m = this.map, cx = clamp(m.cellX(wx), 0, m.w - 1), cy = clamp(m.cellY(wy), 0, m.h - 1); this.tx = wx; this.ty = wy;
+    if (!force && cx === this.tcx && cy === this.tcy) return this;
+    this.tcx = cx; this.tcy = cy;
+    const W = m.w, H = m.h, D = this.dist, heap = this.heap; D.fill(Infinity);
+    const s = cy * W + cx; D[s] = 0; heap.push(s, 0);
+    while (heap.size) {
+      const c = heap.pop(), dc0 = D[c]; if (dc0 > this.max) continue;
+      const x = c % W, y = (c / W) | 0;
+      for (const [dx, dy, dc] of DIRS8) {
+        const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H || !this.pass(nx, ny)) continue;
+        if (dx && dy && (!this.pass(x + dx, y) || !this.pass(x, y + dy))) continue;
+        const ni = ny * W + nx, nd = dc0 + dc; if (nd < D[ni]) { D[ni] = nd; heap.push(ni, nd); }
+      }
+    }
+    // 每格的方向：往距離最小的鄰居
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x; let best = D[i], bx = 0, by = 0;
+      if (best === Infinity) { this.vx[i] = this.vy[i] = 0; continue; }
+      for (const [dx, dy] of DIRS8) {
+        const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+        if (dx && dy && (!this.pass(x + dx, y) || !this.pass(x, y + dy))) continue;
+        const d = D[ny * W + nx]; if (d < best) { best = d; bx = dx; by = dy; }
+      }
+      const l = Math.hypot(bx, by) || 1; this.vx[i] = bx / l; this.vy[i] = by / l;
+    }
+    return this;
+  }
+  distAt(wx, wy) { const m = this.map, i = m.idx(m.cellX(wx), m.cellY(wy)); return i < 0 ? Infinity : this.dist[i]; }
+  /** 往目標的方向（平滑內插；在目標那一格就直接朝目標點） */
+  dirAt(wx, wy) {
+    const m = this.map, s = m.size, out = this._v, fx = (wx - m.ox) / s - 0.5, fy = (wy - m.oy) / s - 0.5, x0 = Math.floor(fx), y0 = Math.floor(fy), tx = fx - x0, ty = fy - y0;
+    if (m.cellX(wx) === this.tcx && m.cellY(wy) === this.tcy) { const dx = this.tx - wx, dy = this.ty - wy, l = Math.hypot(dx, dy) || 1; out.x = dx / l; out.y = dy / l; return out; }
+    let vx = 0, vy = 0, wsum = 0;
+    const W = m.w, Hh = m.h, D = this.dist, VX = this.vx, VY = this.vy;
+    for (let k = 0; k < 4; k++) {   // 四個角（不建陣列：這裡每隻怪每格都會叫）
+      const ox = k & 1, oy = k >> 1, x = x0 + ox, y = y0 + oy; if (x < 0 || y < 0 || x >= W || y >= Hh) continue;
+      const i = y * W + x; if (D[i] === Infinity || (!VX[i] && !VY[i])) continue;
+      const w = (ox ? tx : 1 - tx) * (oy ? ty : 1 - ty); vx += VX[i] * w; vy += VY[i] * w; wsum += w;
+    }
+    if (!wsum) { const i = m.idx(m.cellX(wx), m.cellY(wy)); vx = i >= 0 ? this.vx[i] : 0; vy = i >= 0 ? this.vy[i] : 0; }
+    const l = Math.hypot(vx, vy); out.x = l ? vx / l : 0; out.y = l ? vy / l : 0; return out;
+  }
+}
+PZ.FlowField = FlowField;
+
+/* ---------- 程序生成 ---------- */
+const Gen = PZ.gen = {
+  /** 地牢：房間＋走廊。o = { rooms: 14, min: 5, max: 11, seed, loops: 0.15（多連幾條形成環） } → { grid（1 牆 0 地）, w, h, rooms, start, end } */
+  dungeon(w, h, o = {}) {
+    const R = makeRng(o.seed != null ? o.seed : (Math.random() * 1e9) | 0), grid = new Int32Array(w * h).fill(1), rooms = [];
+    const minS = o.min || 5, maxS = o.max || 11, want = o.rooms || 14;
+    for (let t = 0; t < want * 30 && rooms.length < want; t++) {
+      const rw = R.int(minS, maxS), rh = R.int(minS, Math.max(minS, maxS - 2)), rx = R.int(1, w - rw - 2), ry = R.int(1, h - rh - 2);
+      if (rooms.some((r) => rx < r.x + r.w + 2 && rx + rw + 2 > r.x && ry < r.y + r.h + 2 && ry + rh + 2 > r.y)) continue;
+      rooms.push({ x: rx, y: ry, w: rw, h: rh, cx: rx + (rw >> 1), cy: ry + (rh >> 1) });
+    }
+    for (const r of rooms) for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) grid[y * w + x] = 0;
+    // 最小生成樹把房間接起來，再多接幾條形成環路
+    const dig = (a, b) => {
+      const horizFirst = R.chance(0.5), wid = R.chance(0.35) ? 2 : 1;
+      const line = (x0, y0, x1, y1) => { const dx = Math.sign(x1 - x0), dy = Math.sign(y1 - y0); let x = x0, y = y0; for (;;) { for (let k = 0; k < wid; k++) { const xx = dy ? x + k : x, yy = dx ? y + k : y; if (xx > 0 && yy > 0 && xx < w - 1 && yy < h - 1) grid[yy * w + xx] = 0; } if (x === x1 && y === y1) break; x += dx; y += dy; } };
+      if (horizFirst) { line(a.cx, a.cy, b.cx, a.cy); line(b.cx, a.cy, b.cx, b.cy); } else { line(a.cx, a.cy, a.cx, b.cy); line(a.cx, b.cy, b.cx, b.cy); }
+    };
+    const inTree = new Set([0]), edges = [];
+    while (inTree.size < rooms.length) {
+      let best = null, bd = Infinity;
+      for (const i of inTree) for (let j = 0; j < rooms.length; j++) { if (inTree.has(j)) continue; const d = dist2(rooms[i].cx, rooms[i].cy, rooms[j].cx, rooms[j].cy); if (d < bd) { bd = d; best = [i, j]; } }
+      if (!best) break; inTree.add(best[1]); edges.push(best);
+    }
+    for (const [i, j] of edges) dig(rooms[i], rooms[j]);
+    const loops = Math.round(rooms.length * (o.loops != null ? o.loops : 0.15));
+    for (let k = 0; k < loops; k++) { const a = R.pick(rooms), b = R.pick(rooms); if (a !== b) dig(a, b); }
+    // 起點：第一間；終點：離起點最遠的一間
+    const start = rooms[0]; let end = start, far = -1; for (const r of rooms) { const d = dist2(r.cx, r.cy, start.cx, start.cy); if (d > far) { far = d; end = r; } }
+    return { grid, w, h, rooms, start, end };
+  },
+  /** 洞窟（細胞自動機）：o = { fill: 0.47, steps: 5, seed } → { grid, w, h, regions }；只留最大的一塊連通區 */
+  caves(w, h, o = {}) {
+    const R = makeRng(o.seed != null ? o.seed : (Math.random() * 1e9) | 0);
+    let g = new Int32Array(w * h); for (let i = 0; i < g.length; i++) g[i] = R.chance(o.fill || 0.47) ? 1 : 0;
+    const at = (a, x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 1 : a[y * w + x]);
+    for (let s = 0; s < (o.steps || 5); s++) {
+      const n = new Int32Array(w * h);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let c = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) c += at(g, x + dx, y + dy); n[y * w + x] = c > 4 || (c === 4 && g[y * w + x]) ? 1 : 0; }
+      g = n;
+    }
+    for (let x = 0; x < w; x++) { g[x] = 1; g[(h - 1) * w + x] = 1; } for (let y = 0; y < h; y++) { g[y * w] = 1; g[y * w + w - 1] = 1; }
+    const regions = Gen.regions(g, w, h, 0); regions.sort((a, b) => b.length - a.length);
+    for (let i = 1; i < regions.length; i++) for (const c of regions[i]) g[c] = 1;
+    return { grid: g, w, h, regions: regions.slice(0, 1) };
+  },
+  /** 連通區（四方向）：回傳 [[index…]…] */
+  regions(grid, w, h, value = 0) {
+    const seen = new Uint8Array(w * h), out = [];
+    for (let i = 0; i < grid.length; i++) {
+      if (seen[i] || grid[i] !== value) continue;
+      const reg = [], st = [i]; seen[i] = 1;
+      while (st.length) { const c = st.pop(); reg.push(c); const x = c % w, y = (c / w) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, ni = ny * w + nx; if (nx >= 0 && ny >= 0 && nx < w && ny < h && !seen[ni] && grid[ni] === value) { seen[ni] = 1; st.push(ni); } } }
+      out.push(reg);
+    }
+    return out;
+  },
+  /** 離牆多遠（格子數，八方向）：grid 裡不是 value 的格子＝牆。找「最空曠的地方」放出生點、王房、營火用 */
+  distance(grid, w, h, value = 0) {
+    const D = new Float32Array(w * h), BIG = 1e6, d1 = 1, d2 = Math.SQRT2;
+    for (let i = 0; i < w * h; i++) D[i] = grid[i] === value ? BIG : 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (!D[i]) continue; let v = D[i]; if (x > 0) v = Math.min(v, D[i - 1] + d1); else v = Math.min(v, d1); if (y > 0) { v = Math.min(v, D[i - w] + d1); if (x > 0) v = Math.min(v, D[i - w - 1] + d2); if (x < w - 1) v = Math.min(v, D[i - w + 1] + d2); } else v = Math.min(v, d1); D[i] = v; }
+    for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) { const i = y * w + x; if (!D[i]) continue; let v = D[i]; if (x < w - 1) v = Math.min(v, D[i + 1] + d1); else v = Math.min(v, d1); if (y < h - 1) { v = Math.min(v, D[i + w] + d1); if (x < w - 1) v = Math.min(v, D[i + w + 1] + d2); if (x > 0) v = Math.min(v, D[i + w - 1] + d2); } else v = Math.min(v, d1); D[i] = v; }
+    return D;
+  },
+  /** 雜訊高度圖（0～1）：o = { scale: 0.08, octaves: 4, seed } */
+  noise(w, h, o = {}) {
+    const out = new Float32Array(w * h), sc = o.scale || 0.08, oc = o.octaves || 4, seed = o.seed != null ? o.seed : (Math.random() * 1e5) | 0;
+    const dx = (seed % 997) * 13.7, dy = (seed % 541) * 7.3;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) out[y * w + x] = fbm2(x * sc + dx, y * sc + dy, oc) * 0.5 + 0.5;
+    return out;
+  },
+  /** 島嶼高度圖：雜訊＋中間高、外圈低（海）。o = { scale, seed, falloff: 1.6 } → Float32Array（0～1） */
+  island(w, h, o = {}) {
+    const n = Gen.noise(w, h, { scale: o.scale || 0.07, octaves: 5, seed: o.seed }), f = o.falloff || 1.6;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const nx = (x / (w - 1)) * 2 - 1, ny = (y / (h - 1)) * 2 - 1, d = Math.min(1, Math.hypot(nx, ny)); n[y * w + x] = clamp01(n[y * w + x] * 1.15 - Math.pow(d, f) * 0.75 + 0.18); }
+    return n;
+  },
+  /** 均勻散布（Poisson disc，Bridson）：在 (x, y, w, h) 範圍、彼此至少相距 r；o = { seed, test(px, py)（要不要這點）, max } → [{ x, y }…] */
+  scatter(x, y, w, h, r, o = {}) {
+    const R = makeRng(o.seed != null ? o.seed : (Math.random() * 1e9) | 0), cs = r / Math.SQRT2, gw = Math.ceil(w / cs), gh = Math.ceil(h / cs), grid = new Int32Array(gw * gh).fill(-1), pts = [], active = [];
+    const ok = (px, py) => {
+      if (px < x || py < y || px >= x + w || py >= y + h) return false;
+      const gx = Math.floor((px - x) / cs), gy = Math.floor((py - y) / cs);
+      for (let yy = Math.max(0, gy - 2); yy <= Math.min(gh - 1, gy + 2); yy++) for (let xx = Math.max(0, gx - 2); xx <= Math.min(gw - 1, gx + 2); xx++) { const i = grid[yy * gw + xx]; if (i >= 0 && dist2(px, py, pts[i].x, pts[i].y) < r * r) return false; }
+      return true;
+    };
+    const add = (px, py) => { pts.push({ x: px, y: py }); active.push(pts.length - 1); grid[Math.floor((py - y) / cs) * gw + Math.floor((px - x) / cs)] = pts.length - 1; };
+    add(x + R.next() * w, y + R.next() * h);
+    const max = o.max || 1e5;
+    while (active.length && pts.length < max) {
+      const ai = R.int(0, active.length - 1), p = pts[active[ai]]; let found = false;
+      for (let k = 0; k < 24; k++) { const a = R.angle(), d = r * (1 + R.next()), px = p.x + Math.cos(a) * d, py = p.y + Math.sin(a) * d; if (ok(px, py)) { add(px, py); found = true; break; } }
+      if (!found) active.splice(ai, 1);
+    }
+    return o.test ? pts.filter((p) => o.test(p.x, p.y)) : pts;
+  },
+};
+
+/* ---------- 等角（斜 45°）投影小工具 ---------- */
+PZ.iso = {
+  /** 格子 (cx, cy, 高度 z) → 畫面座標（世界單位）；tw、th＝菱形的寬、高 */
+  toScreen(cx, cy, z = 0, tw = 64, th = 32) { return { x: (cx - cy) * tw / 2, y: (cx + cy) * th / 2 - z }; },
+  /** 畫面座標 → 格子（小數） */
+  toCell(x, y, tw = 64, th = 32) { return { x: (x / (tw / 2) + y / (th / 2)) / 2, y: (y / (th / 2) - x / (tw / 2)) / 2 }; },
+};
+
+/* ---- 31_tiles.js ---- */
+/* ==========================================================================
+   31 地圖的畫法（風格）：給 map.draw(g, style) 用
+     PZ.tiles.dungeon({ floor, brick, top, height })          2.5D 地牢：石板地（每格隨機花色、雜物）、牆頂＋磚牆正面、牆腳陰影、亮邊
+     PZ.tiles.cave(map, { ground, rock, face, rim, height })   洞窟：圓滑的岩壁（marching squares）、兩段懸崖面、接地陰影、亮邊、地上的碎石菇類
+     PZ.tiles.island(map, 高度圖, { levels })                  島嶼：深海 → 淺灘（浪花一進一退）→ 沙灘 → 草地 → 岩石，一層一層的等高線
+       style.height：牆高（格子的幾倍）；配光影：dungeon 用 map.lightBoxes({ lift: style.lift(map) })，cave 用 PZ.light.occluders(style.occlude)
+     PZ.tiles.marching(g, map, 數值圖, 門檻, { color, dy, rim, rows })   把數值圖畫成圓滑的區塊（做自己的風格用）
+     PZ.tiles.soften(map)   0/1 格子 → 柔化的數值圖（岩壁、海岸線變圓）
+   顏色都可以換；材質是程式畫的（第一次用到才畫，放進圖集）。
+   ========================================================================== */
+const tileHash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return (h ^ (h >>> 16)) >>> 0; };
+const Tiles = PZ.tiles = { hash: tileHash };
+
+/* ---------- marching squares ---------- */
+// 角落：A 左上（8）、B 右上（4）、C 右下（2）、D 左下（1）；邊上的點 AB、BC、CD、DA 依數值內插
+const MS_POLY = [null, [['DA', 'CD', 'D']], [['BC', 'C', 'CD']], [['DA', 'BC', 'C', 'D']], [['AB', 'B', 'BC']], [['AB', 'B', 'BC'], ['DA', 'CD', 'D']], [['AB', 'B', 'C', 'CD']], [['DA', 'AB', 'B', 'C', 'D']],
+  [['A', 'AB', 'DA']], [['A', 'AB', 'CD', 'D']], [['A', 'AB', 'DA'], ['BC', 'C', 'CD']], [['A', 'AB', 'BC', 'C', 'D']], [['A', 'B', 'BC', 'DA']], [['A', 'B', 'BC', 'CD', 'D']], [['A', 'B', 'C', 'CD', 'DA']], null];
+const MS_EDGE = [null, [['DA', 'CD']], [['BC', 'CD']], [['DA', 'BC']], [['AB', 'BC']], [['AB', 'BC'], ['DA', 'CD']], [['AB', 'CD']], [['DA', 'AB']], [['AB', 'DA']], [['AB', 'CD']], [['AB', 'DA'], ['BC', 'CD']], [['AB', 'BC']], [['BC', 'DA']], [['BC', 'CD']], [['CD', 'DA']], null];
+const MSP = { A: [0, 0], B: [0, 0], C: [0, 0], D: [0, 0], AB: [0, 0], BC: [0, 0], CD: [0, 0], DA: [0, 0] }, MS_A = [], MS_B = [], MS_R = [0, 0, 0, 0, 0, 0, 0, 0];
+/** 凸多邊形（扁平陣列）在水平線 yc 切一刀，留下 y ≥ yc（ge）或 y ≤ yc 的那半 */
+function msClip(src, yc, ge, dst) {
+  dst.length = 0; const n = src.length / 2;
+  for (let i = 0; i < n; i++) {
+    const ax = src[i * 2], ay = src[i * 2 + 1], j = (i + 1) % n, bx = src[j * 2], by = src[j * 2 + 1];
+    const ain = ge ? ay >= yc : ay <= yc, bin = ge ? by >= yc : by <= yc;
+    if (ain) dst.push(ax, ay);
+    if (ain !== bin) dst.push(ax + (bx - ax) * ((yc - ay) / (by - ay)), yc);
+  }
+  return dst;
+}
+/**
+ * 把數值圖 field（長寬＝map 的格子，數值取在格子中心）在 thr 以上的地方畫成圓滑的色塊。
+ * o = { color, a, dy（整片往下移；負的往上，畫 2.5D 的頂面）, fill（false＝只畫輪廓）, view（格子範圍）, tex（PZ.art.pattern 材質，乘上 color）, texS（材質縮放）,
+ *       rows: [y0, y1]（只畫世界座標這段 y 之間的部分，2.5D 一列一列跟角色交錯畫用）,
+ *       rim: { color, w, a, back（不朝南的邊亮幾成，預設 0.35）, mode: 'south'（只畫朝南的邊：懸崖底的接地陰影） }, outside（地圖外當成多少） }
+ */
+Tiles.marching = (g, map, field, thr, o = {}) => {
+  const view = o.view || map.view(2), W = map.w, H = map.h, s = map.size, ox = map.ox + s / 2, oy = map.oy + s / 2, dy = o.dy || 0;
+  const col = toColor(o.color || '#fff'), al = o.a != null ? o.a : 1, rim = o.rim, fill = o.fill !== false, out = o.outside != null ? o.outside : 0;
+  const rc = rim ? toColor(rim.color || '#fff') : 0, rw = rim ? rim.w || 2 : 0, ra = rim ? (rim.a != null ? rim.a : 0.5) : 0, back = rim && rim.back != null ? rim.back : 0.35, southOnly = rim && rim.mode === 'south';
+  let ylo = -Infinity, yhi = Infinity, cy0 = view[1] - 1, cy1 = view[3];
+  if (o.rows) { ylo = o.rows[0]; yhi = o.rows[1]; cy0 = Math.max(cy0, Math.floor((ylo - oy) / s)); cy1 = Math.min(cy1, Math.ceil((yhi - oy) / s) - 1); }
+  const val = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? out : field[y * W + x]);
+  const lt = (va, vb) => (vb === va ? 0.5 : clamp01((thr - va) / (vb - va)));
+  const P = MSP, fo = { a: al }, lo = { a: 0 }, tex = o.tex ? Art.get(o.tex) : null, to = tex ? { color: col, a: al, s: o.texS || 1 } : null;
+  const runOut = (cx0, cx1, y0, y1) => {   // 一排整格：材質的話切成幾段（材質座標不要太大）
+    const xa0 = ox + cx0 * s, xb0 = ox + cx1 * s;
+    if (!tex) { g.rect(xa0, y0, xb0 - xa0, y1 - y0, col, fo); return; }
+    const step = tex.w * to.s * 2;
+    for (let xa = xa0; xa < xb0 - 0.01; xa += step) { const xb = Math.min(xb0, xa + step); MS_R[0] = xa; MS_R[1] = y0; MS_R[2] = xb; MS_R[3] = y0; MS_R[4] = xb; MS_R[5] = y1; MS_R[6] = xa; MS_R[7] = y1; g.polyTex(MS_R, tex, to); }
+  };
+  for (let cy = cy0; cy <= cy1; cy++) {
+    const Y = oy + cy * s, ry0 = Math.max(Y, ylo), ry1 = Math.min(Y + s, yhi), clip = Y < ylo || Y + s > yhi;
+    if (ry1 <= ry0) continue;
+    let run = -1;   // 整格都在裡面（case 15）的連續一排合成一個長方形
+    for (let cx = view[0] - 1; cx <= view[2] + 1; cx++) {
+      const a = val(cx, cy), b = val(cx + 1, cy), c = val(cx + 1, cy + 1), d = val(cx, cy + 1);
+      const k = (a >= thr ? 8 : 0) | (b >= thr ? 4 : 0) | (c >= thr ? 2 : 0) | (d >= thr ? 1 : 0);
+      if (k === 15 && cx <= view[2]) { if (run < 0) run = cx; continue; }
+      if (run >= 0) { if (fill) runOut(run, cx, ry0 + dy, ry1 + dy); run = -1; }
+      if (!k || k === 15) continue;
+      const X = ox + cx * s;
+      P.A[0] = X; P.A[1] = Y; P.B[0] = X + s; P.B[1] = Y; P.C[0] = X + s; P.C[1] = Y + s; P.D[0] = X; P.D[1] = Y + s;
+      P.AB[0] = X + s * lt(a, b); P.AB[1] = Y; P.BC[0] = X + s; P.BC[1] = Y + s * lt(b, c); P.CD[0] = X + s * (1 - lt(c, d)); P.CD[1] = Y + s; P.DA[0] = X; P.DA[1] = Y + s * (1 - lt(d, a));
+      if (fill) for (const poly of MS_POLY[k]) {
+        let pts = MS_A; pts.length = 0; for (const n of poly) pts.push(P[n][0], P[n][1]);
+        if (clip) { if (Y < ylo) pts = msClip(pts, ylo, true, MS_B); if (Y + s > yhi) pts = msClip(pts, yhi, false, pts === MS_A ? MS_B : MS_A); if (pts.length < 6) continue; }
+        if (dy) for (let i = 1; i < pts.length; i += 2) pts[i] += dy;
+        if (tex) g.polyTex(pts, tex, to); else g.poly(pts, col, fo);
+      }
+      if (rim) {
+        // 朝哪邊：數值往低的方向＝外面；朝南（往下）的邊最亮（懸崖邊緣迎光）
+        const gx = b + c - a - d, gy = d + c - a - b, gl = Math.hypot(gx, gy) || 1, south = clamp01(-gy / gl);
+        const k2 = southOnly ? south : back + (1 - back) * south; if (k2 <= 0.02) continue;
+        lo.a = ra * k2;
+        for (const [e0, e1] of MS_EDGE[k]) {
+          let x0 = P[e0][0], y0 = P[e0][1], x1 = P[e1][0], y1 = P[e1][1];
+          if (clip) {
+            if ((y0 < ylo && y1 < ylo) || (y0 > yhi && y1 > yhi)) continue;
+            const cl = (yc) => { const t = (yc - y0) / (y1 - y0); return [x0 + (x1 - x0) * t, yc]; };
+            if (y0 < ylo) [x0, y0] = cl(ylo); else if (y0 > yhi) [x0, y0] = cl(yhi);
+            if (y1 < ylo) [x1, y1] = cl(ylo); else if (y1 > yhi) [x1, y1] = cl(yhi);
+          }
+          g.line(x0, y0 + dy, x1, y1 + dy, rw, rc, lo);
+        }
+      }
+    }
+    if (run >= 0 && fill) runOut(run, view[2] + 1, ry0 + dy, ry1 + dy);
+  }
+};
+/**
+ * 等高線快取：地圖不會變，輪廓算一次存起來（按列），之後每格只剩「畫」——比每格重算 Tiles.marching 快很多
+ *   const c = PZ.tiles.contour(map, field, 0.5)      c.draw(g, map.view(2), { color, tex, dy, rim })      c.drawRow(g, 列, x0, x1, 層)
+ * 層（layer）= { color, a, dy, tex, texS, rim: { color, w, a, back, mode } }（同 Tiles.marching 的選項；第一次用會記住換算好的值，之後別改）
+ */
+class Contour {
+  constructor(map, field, thr, outside = 0) { this.map = map; this.field = field; this.thr = thr; this.out = outside; this.rows = []; }
+  /** 第 r 列（世界 y 在 r×格～(r+1)×格）的幾何：runs [xa, xb, ya, yb…]（整格一長條）、polys [{ x, pts }]、rims [x, x0, y0, x1, y1, 朝南…] */
+  row(r) {
+    let R = this.rows[r + 1]; if (R) return R;
+    R = this.rows[r + 1] = { runs: [], polys: [], rims: [] };
+    const m = this.map, s = m.size, ox = m.ox + s / 2, oy = m.oy + s / 2, W = m.w, H = m.h, F = this.field, thr = this.thr, out = this.out, P = MSP;
+    const val = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? out : F[y * W + x]);
+    const lt = (va, vb) => (vb === va ? 0.5 : clamp01((thr - va) / (vb - va)));
+    const ylo = m.oy + r * s, yhi = ylo + s;
+    for (let cy = r - 1; cy <= r; cy++) {
+      const Y = oy + cy * s, ry0 = Math.max(Y, ylo), ry1 = Math.min(Y + s, yhi); if (ry1 <= ry0) continue;
+      let run = -9;
+      for (let cx = -1; cx <= W; cx++) {
+        const a = val(cx, cy), b = val(cx + 1, cy), c = val(cx + 1, cy + 1), d = val(cx, cy + 1);
+        const k = (a >= thr ? 8 : 0) | (b >= thr ? 4 : 0) | (c >= thr ? 2 : 0) | (d >= thr ? 1 : 0);
+        if (k === 15) { if (run === -9) run = cx; continue; }
+        if (run !== -9) { R.runs.push(ox + run * s, ox + cx * s, ry0, ry1); run = -9; }
+        if (!k) continue;
+        const X = ox + cx * s;
+        P.A[0] = X; P.A[1] = Y; P.B[0] = X + s; P.B[1] = Y; P.C[0] = X + s; P.C[1] = Y + s; P.D[0] = X; P.D[1] = Y + s;
+        P.AB[0] = X + s * lt(a, b); P.AB[1] = Y; P.BC[0] = X + s; P.BC[1] = Y + s * lt(b, c); P.CD[0] = X + s * (1 - lt(c, d)); P.CD[1] = Y + s; P.DA[0] = X; P.DA[1] = Y + s * (1 - lt(d, a));
+        for (const poly of MS_POLY[k]) {
+          let pts = MS_A; pts.length = 0; for (const n of poly) pts.push(P[n][0], P[n][1]);
+          if (Y < ylo) pts = msClip(pts, ylo, true, MS_B); if (Y + s > yhi) pts = msClip(pts, yhi, false, pts === MS_A ? MS_B : MS_A);
+          if (pts.length >= 6) R.polys.push({ x: X, pts: Float32Array.from(pts) });
+        }
+        const gx = b + c - a - d, gy = d + c - a - b, south = clamp01(-gy / (Math.hypot(gx, gy) || 1));
+        for (const [e0, e1] of MS_EDGE[k]) {
+          let x0 = P[e0][0], y0 = P[e0][1], x1 = P[e1][0], y1 = P[e1][1];
+          if ((y0 < ylo && y1 < ylo) || (y0 > yhi && y1 > yhi)) continue;
+          if (y0 < ylo || y0 > yhi) { const yc = y0 < ylo ? ylo : yhi; x0 += ((x1 - x0) * (yc - y0)) / (y1 - y0); y0 = yc; }
+          if (y1 < ylo || y1 > yhi) { const yc = y1 < ylo ? ylo : yhi; x1 = x0 + ((x1 - x0) * (yc - y0)) / (y1 - y0); y1 = yc; }
+          if (Math.abs(x1 - x0) + Math.abs(y1 - y0) > 0.01) R.rims.push(X, x0, y0, x1, y1, south);
+        }
+      }
+      if (run !== -9) R.runs.push(ox + run * s, ox + (W + 1) * s, ry0, ry1);
+    }
+    return R;
+  }
+  /** 第一次用某一層：把顏色、材質換算好記在層上 */
+  _prep(L) {
+    if (L._p) return L;
+    L._p = true; L._col = toColor(L.color || '#fff'); L._fo = { a: L.a != null ? L.a : 1 }; L._tex = L.tex ? Art.get(L.tex) : null;
+    L._to = L._tex ? { color: L._col, a: L._fo.a, s: L.texS || 1 } : null;
+    if (L.rim) { const q = L.rim; L._rc = toColor(q.color || '#fff'); L._rw = q.w || 2; L._ra = q.a != null ? q.a : 0.5; L._rb = q.back != null ? q.back : 0.35; L._rs = q.mode === 'south'; L._lo = { a: 0 }; }
+    return L;
+  }
+  drawRow(g, r, x0w, x1w, L) {
+    if (r < -1 || r > this.map.h) return;
+    const R = this.row(r), s = this.map.size, dy = L.dy || 0; this._prep(L);
+    if (L.fill !== false) {
+      const runs = R.runs, tex = L._tex;
+      for (let i = 0; i < runs.length; i += 4) {
+        const xa0 = Math.max(runs[i], x0w), xb0 = Math.min(runs[i + 1], x1w); if (xb0 <= xa0) continue;
+        const y0 = runs[i + 2] + dy, y1 = runs[i + 3] + dy;
+        if (!tex) { g.rect(xa0, y0, xb0 - xa0, y1 - y0, L._col, L._fo); continue; }
+        const step = tex.w * L._to.s * 2;
+        for (let xa = xa0; xa < xb0 - 0.01; xa += step) { const xb = Math.min(xb0, xa + step); MS_R[0] = xa; MS_R[1] = y0; MS_R[2] = xb; MS_R[3] = y0; MS_R[4] = xb; MS_R[5] = y1; MS_R[6] = xa; MS_R[7] = y1; g.polyTex(MS_R, tex, L._to); }
+      }
+      for (const Pg of R.polys) {
+        if (Pg.x + s < x0w || Pg.x > x1w) continue;
+        const src = Pg.pts, pts = MS_A; pts.length = src.length;
+        for (let i = 0; i < src.length; i += 2) { pts[i] = src[i]; pts[i + 1] = src[i + 1] + dy; }
+        if (tex) g.polyTex(pts, tex, L._to); else g.poly(pts, L._col, L._fo);
+      }
+    }
+    if (L.rim) {
+      const rm = R.rims, lo = L._lo;
+      for (let i = 0; i < rm.length; i += 6) {
+        if (rm[i] + s < x0w || rm[i] > x1w) continue;
+        const k = L._rs ? rm[i + 5] : L._rb + (1 - L._rb) * rm[i + 5]; if (k <= 0.02) continue;
+        lo.a = L._ra * k; g.line(rm[i + 1], rm[i + 2] + dy, rm[i + 3], rm[i + 4] + dy, L._rw, L._rc, lo);
+      }
+    }
+  }
+  /** 畫整個畫面看得到的範圍（view＝map.view() 的格子範圍） */
+  draw(g, view, L) {
+    const m = this.map, s = m.size, x0w = m.ox + (view[0] - 1) * s, x1w = m.ox + (view[2] + 2) * s, dy = L.dy || 0;
+    const r0 = Math.max(-1, view[1] - 1 - Math.ceil(Math.max(0, dy) / s)), r1 = Math.min(m.h, view[3] + 1 + Math.ceil(Math.max(0, -dy) / s));
+    for (let r = r0; r <= r1; r++) this.drawRow(g, r, x0w, x1w, L);
+  }
+}
+Tiles.contour = (map, field, thr, outside) => new Contour(map, field, thr, outside);
+Tiles.Contour = Contour;
+/** 0/1 格子 → 柔化過的數值圖（洞窟岩壁、海岸線用）：blur 次數越多越圓 */
+Tiles.soften = (map, test = (x, y) => map.isSolid(x, y), blur = 1) => {
+  const W = map.w, H = map.h; let f = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) f[y * W + x] = test(x, y) ? 1 : 0;
+  for (let k = 0; k < blur; k++) {
+    const n = new Float32Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let s = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; s += xx < 0 || yy < 0 || xx >= W || yy >= H ? 1 : f[yy * W + xx]; } n[y * W + x] = (s / 9) * 0.6 + f[y * W + x] * 0.4; }
+    f = n;
+  }
+  return f;
+};
+const MUSH = [[8, 14, 4.2], [14, 11.9, 5.7], [18, 15.2, 3.4]];   // 螢光菇（洞窟雜物第 1 種）三朵菇傘的位置與大小
+const tileKey = (...cs) => cs.join('').replace(/[^a-z0-9]/gi, '').slice(0, 40);
+/** 一格裡隨機放一個小東西：回傳 0～1 的位置（避開邊緣） */
+const tileJit = (h, k) => 0.22 + (((h >>> k) & 255) / 255) * 0.56;
+
+/* ---------- 共用材質（淡色，乘上地形的顏色）：岩石、草、沙 ---------- */
+/** 左右上下接得起來地畫：fn 在九個位置各畫一次（超出邊界的部分會從另一邊冒出來） */
+const wrapDraw = (c, w, h, fn) => { for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) { c.save(); c.translate(ox, oy); fn(); c.restore(); } };
+Tiles.patterns = () => {
+  if (Art.has('tl.pat.rock')) return;
+  Art.pattern('tl.pat.rock', 64, 64, (c, w, h) => {
+    const R = makeRng(12); c.fillStyle = '#e4e4e4'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 14; i++) { const x = R.range(0, w), y = R.range(0, h), r = R.range(6, 16), a = R.range(0.05, 0.13), dark = R.chance(0.6); wrapDraw(c, w, h, () => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${dark ? '0,0,0' : '255,255,255'},${a})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); }); }
+    for (let i = 0; i < 7; i++) { const pts = [[R.range(0, w), R.range(0, h)]]; for (let k = 0; k < 4; k++) { const [px, py] = pts[pts.length - 1]; pts.push([px + R.spread(9), py + R.spread(9)]); } wrapDraw(c, w, h, () => { c.strokeStyle = 'rgba(0,0,0,.32)'; c.lineWidth = 0.9; c.beginPath(); pts.forEach(([x, y], k) => (k ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = 0.6; c.beginPath(); pts.forEach(([x, y], k) => (k ? c.lineTo(x + 0.8, y + 0.8) : c.moveTo(x + 0.8, y + 0.8))); c.stroke(); }); }
+    for (let i = 0; i < 90; i++) { const x = R.range(0, w), y = R.range(0, h), r = R.range(0.4, 1.4); c.fillStyle = `rgba(${R.chance(0.5) ? '0,0,0' : '255,255,255'},${R.range(0.08, 0.2)})`; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+  });
+  Art.pattern('tl.pat.grass', 64, 64, (c, w, h) => {
+    const R = makeRng(21); c.fillStyle = '#ececec'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 12; i++) { const x = R.range(0, w), y = R.range(0, h), r = R.range(8, 18), a = R.range(0.04, 0.1), dark = R.chance(0.5); wrapDraw(c, w, h, () => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${dark ? '0,0,0' : '255,255,255'},${a})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); }); }
+    for (let i = 0; i < 220; i++) { const x = R.range(0, w), y = R.range(0, h), l = R.range(1.6, 3.6), b = R.spread(1.2), dark = R.chance(0.55); wrapDraw(c, w, h, () => { c.strokeStyle = `rgba(${dark ? '0,40,0' : '255,255,230'},${R.range(0.1, 0.22)})`; c.lineWidth = 0.7; c.beginPath(); c.moveTo(x, y); c.lineTo(x + b, y - l); c.stroke(); }); }
+  });
+  Art.pattern('tl.pat.sand', 64, 64, (c, w, h) => {
+    const R = makeRng(33); c.fillStyle = '#f2f2f2'; c.fillRect(0, 0, w, h);
+    for (let k = 0; k < 6; k++) { const y0 = R.range(0, h), amp = R.range(1, 2.4), ph = R.angle(); wrapDraw(c, w, h, () => { c.strokeStyle = 'rgba(120,90,40,.12)'; c.lineWidth = 1.1; c.beginPath(); for (let x = 0; x <= w; x += 2) { const y = y0 + Math.sin((x / w) * TAU * 2 + ph) * amp; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }); }
+    for (let i = 0; i < 320; i++) { c.fillStyle = `rgba(${R.chance(0.6) ? '90,70,40' : '255,255,255'},${R.range(0.08, 0.24)})`; c.fillRect(R.range(0, w), R.range(0, h), R.range(0.4, 1), R.range(0.4, 1)); }
+  });
+};
+
+/* ---------- 2.5D 地牢 ---------- */
+// 靠近地板的牆畫「牆頂」（石材＋亮邊），更裡面的實心岩不畫（深色背景＝看不見的黑暗）；朝南、底下是地板的牆畫磚牆正面
+Tiles.dungeon = (o = {}) => {
+  const C = Object.assign({ floor: '#3f434e', cap: '#4a4e5a', brick: '#6a5248', height: 0.8, rim: 'rgba(255,238,215,.4)', deco: 0.07 }, o);
+  const key = 'tl.dg' + tileKey(C.floor, C.cap, C.brick);
+  if (!Art.has(key + '.floor')) {
+    // 地板：128×128 一整片不規則石板（四格一循環，跟世界座標對齊，看不出格子）
+    Art.make(key + '.floor', 128, 128, (c, w, h) => {
+      const R = makeRng(31), base = toColor(C.floor);
+      c.fillStyle = Color.css(Color.darken(base, 0.62)); c.fillRect(0, 0, w, h);
+      const stone = (x, y, sw, sh) => {
+        const l = R.range(-12, 10), col = Color.mix(base, l > 0 ? '#ffffff' : '#000000', Math.abs(l) / 100), warm = R.range(-6, 6);
+        const gr = c.createLinearGradient(x, y, x + sw, y + sh); gr.addColorStop(0, Color.css(Color.lighten(col, 0.06))); gr.addColorStop(1, Color.css(Color.darken(col, 0.1 + warm / 200)));
+        for (const ox of [0, -w]) {
+          c.fillStyle = gr; c.save(); c.translate(ox, 0); c.beginPath(); c.roundRect(x + 1.1, y + 1.1, sw - 2.2, sh - 2.2, 2.2); c.fill();
+          c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(x + 2, y + 1.3, sw - 4, 1); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x + 2, y + sh - 2.4, sw - 4, 1.1);
+          c.restore();
+        }
+      };
+      let y = 0;
+      for (const rh of [30, 22, 40, 36]) { let x = -R.range(0, 20); const x0 = x; while (x < x0 + w) { const sw = Math.min(R.range(22, 44), x0 + w - x); if (sw > 6) stone(x < 0 ? x + w : x, y, sw, rh); x += sw; } y += rh; }
+      for (let n = 0; n < 260; n++) { c.fillStyle = `rgba(${R.chance(0.5) ? '255,255,255' : '0,0,0'},${R.range(0.03, 0.08)})`; c.fillRect(R.range(0, w), R.range(0, h), R.range(0.5, 2), R.range(0.5, 2)); }
+      c.strokeStyle = 'rgba(0,0,0,.42)'; c.lineWidth = 0.9;
+      for (let k = 0; k < 5; k++) { let px = R.range(8, w - 8), py = R.range(8, h - 8); c.beginPath(); c.moveTo(px, py); for (let j = 0; j < 4; j++) { px += R.spread(8); py += R.range(3, 8); c.lineTo(px, py); } c.stroke(); }
+      for (let k = 0; k < 4; k++) { const x = R.range(10, w - 10), y2 = R.range(10, h - 10), gr = c.createRadialGradient(x, y2, 0, x, y2, R.range(10, 18)); gr.addColorStop(0, 'rgba(84,124,62,.26)'); gr.addColorStop(1, 'rgba(84,124,62,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }
+    }, { anchor: [0, 0], wrap: true });
+    Art.make(key + '.cap', 32, 32, (c, w, h) => {
+      const R = makeRng(5); c.fillStyle = C.cap; c.fillRect(0, 0, w, h);
+      for (let n = 0; n < 7; n++) { const x = R.range(0, w), y = R.range(0, h), gr = c.createRadialGradient(x, y, 0, x, y, R.range(6, 12)); gr.addColorStop(0, `rgba(${R.chance(0.5) ? '255,255,255' : '0,0,0'},${R.range(0.03, 0.06)})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }
+      for (let n = 0; n < 60; n++) { c.fillStyle = `rgba(${R.chance(0.5) ? '255,255,255' : '0,0,0'},${R.range(0.03, 0.08)})`; c.fillRect(R.range(0, w), R.range(0, h), R.range(0.6, 2.4), R.range(0.6, 1.6)); }
+    }, { anchor: [0, 0], wrap: true });
+    Art.make(key + '.face', 32, 16, (c, w, h) => {
+      const base = toColor(C.brick), R = makeRng(9); c.fillStyle = Color.css(Color.darken(base, 0.6)); c.fillRect(0, 0, w, h);
+      for (let row = 0; row < 2; row++) for (let i = -1; i < 3; i++) { const x = i * 16 + (row ? 8 : 0), y = row * 8; c.fillStyle = Color.css(Color.mix(base, '#000', R.range(0, 0.32))); c.fillRect(x + 0.6, y + 0.6, 14.8, 6.8); c.fillStyle = 'rgba(255,255,255,.1)'; c.fillRect(x + 0.6, y + 0.6, 14.8, 0.8); c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(x + 0.6, y + 6.6, 14.8, 0.8); }
+    }, { anchor: [0, 0], wrap: true });
+    Art.make(key + '.ao', 8, 16, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(0,0,0,.62)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }, { anchor: [0, 0], scale: 1 });
+    // 地上的雜物：骨頭、頭骨、碎石、排水孔、水窪、苔蘚
+    Art.sheet(key + '.deco', 6, 24, 24, (c, w, h, i) => {
+      const R = makeRng(70 + i);
+      if (i === 0) { c.strokeStyle = '#d8cdb4'; c.lineCap = 'round'; c.lineWidth = 2.4; for (const [a, b, d, e] of [[4, 17, 19, 8], [6, 7, 18, 18]]) { c.beginPath(); c.moveTo(a, b); c.lineTo(d, e); c.stroke(); } c.fillStyle = '#e9e0c8'; for (const [x, y] of [[4, 17], [19, 8], [6, 7], [18, 18]]) { c.beginPath(); c.arc(x, y, 1.9, 0, TAU); c.fill(); } }
+      if (i === 1) { c.fillStyle = '#e2d8be'; c.beginPath(); c.arc(12, 10, 6.5, 0, TAU); c.fill(); c.fillRect(8.5, 13, 7, 5); c.fillStyle = '#1b1612'; c.beginPath(); c.arc(9.6, 10.5, 1.7, 0, TAU); c.arc(14.4, 10.5, 1.7, 0, TAU); c.fill(); c.fillRect(10, 16, 1, 2); c.fillRect(12.5, 16, 1, 2); }
+      if (i === 2) for (let k = 0; k < 6; k++) { const x = R.range(4, 20), y = R.range(6, 20), r = R.range(1.5, 3.5); c.fillStyle = `hsl(220,6%,${R.range(28, 44)}%)`; c.beginPath(); c.moveTo(x - r, y); c.lineTo(x - r * 0.3, y - r); c.lineTo(x + r, y - r * 0.4); c.lineTo(x + r * 0.6, y + r * 0.7); c.closePath(); c.fill(); }
+      if (i === 3) { c.fillStyle = '#121418'; c.fillRect(3, 3, 18, 18); c.fillStyle = '#4b5059'; for (let x = 4; x < 21; x += 4) c.fillRect(x, 3, 2, 18); c.strokeStyle = '#5e646e'; c.lineWidth = 1.4; c.strokeRect(3, 3, 18, 18); }
+      if (i === 4) { c.fillStyle = 'rgba(30,48,70,.75)'; c.beginPath(); c.ellipse(12, 13, 10, 6, 0.2, 0, TAU); c.fill(); c.fillStyle = 'rgba(170,210,255,.28)'; c.beginPath(); c.ellipse(9, 11, 4, 1.5, 0.2, 0, TAU); c.fill(); }
+      if (i === 5) for (let k = 0; k < 5; k++) { const x = R.range(4, 20), y = R.range(4, 20), gr = c.createRadialGradient(x, y, 0, x, y, R.range(4, 8)); gr.addColorStop(0, 'rgba(96,140,64,.55)'); gr.addColorStop(1, 'rgba(96,140,64,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }
+    }, { anchor: [0.5, 0.5] });
+    // 牆面上的東西：滴下來的苔蘚、裂縫、鐵環
+    Art.sheet(key + '.fdeco', 3, 32, 20, (c, w, h, i) => {
+      if (i === 0) { const R = makeRng(4); for (let k = 0; k < 4; k++) { const x = R.range(4, 28), l = R.range(5, 15); c.fillStyle = 'rgba(80,130,60,.55)'; c.fillRect(x, 0, R.range(2, 4), l); c.beginPath(); c.arc(x + 1.5, l, 1.8, 0, TAU); c.fill(); } c.fillStyle = 'rgba(80,130,60,.6)'; c.fillRect(0, 0, w, 2.5); }
+      if (i === 1) { c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(18, 0); c.lineTo(15, 5); c.lineTo(19, 9); c.lineTo(14, 15); c.moveTo(19, 9); c.lineTo(24, 12); c.stroke(); }
+      if (i === 2) { c.strokeStyle = '#2b2b2f'; c.lineWidth = 2; c.beginPath(); c.arc(16, 9, 4.5, 0, TAU); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = 0.8; c.beginPath(); c.arc(16, 9, 4.5, Math.PI * 1.1, Math.PI * 1.6); c.stroke(); c.fillStyle = '#2b2b2f'; c.fillRect(14.5, 2.5, 3, 3); }
+    }, { anchor: [0, 0] });
+  }
+  const floor = Art.get(key + '.floor'), cap = Art.get(key + '.cap'), face = Art.get(key + '.face'), ao = Art.get(key + '.ao');
+  const deco = [0, 1, 2, 3, 4, 5].map((i) => Art.get(key + '.deco:' + i)), fdeco = [0, 1, 2].map((i) => Art.get(key + '.fdeco:' + i));
+  const fo = { s: 1 }, flo = { s: 1, ox: 0, oy: 0 }, decoK = Math.round(C.deco * 1000), rimC = toColor(C.rim), lipC = Color.alpha(C.rim, Color.a(C.rim) * 0.7);
+  return {
+    margin: 2, height: C.height,
+    lift: (m) => m.size * C.height,
+    floor(g, m, cx, cy, x, y, s) {
+      flo.s = s / 32; flo.ox = x; flo.oy = y; g.tile(floor, x, y, s, s, flo);
+      const h = tileHash(cx, cy);
+      if (((h >>> 9) % 1000) < decoK) { const d = deco[(h >>> 19) % 6]; g.spr(d, x + s * tileJit(h, 2), y + s * tileJit(h, 12), ((h >>> 22) % 628) / 100, s / 34, s / 34); }
+      if (m.isSolid(cx, cy - 1)) g.spr(ao, x, y, 0, s / ao.w, (s * 0.62) / ao.h);           // 牆腳的陰影
+      if (m.isSolid(cx - 1, cy)) g.spr(ao, x, y + s, -Math.PI / 2, s / ao.w, (s * 0.3) / ao.h);
+      if (m.isSolid(cx + 1, cy)) g.spr(ao, x + s, y, Math.PI / 2, s / ao.w, (s * 0.3) / ao.h);
+    },
+    wall(g, m, cx, cy, x, y, s) {
+      const n = !m.isSolid(cx, cy - 1), e = !m.isSolid(cx + 1, cy), so = !m.isSolid(cx, cy + 1), w = !m.isSolid(cx - 1, cy);
+      // 八方向都是牆＝實心岩裡面：不畫（黑暗）
+      if (!(n || e || so || w || !m.isSolid(cx - 1, cy - 1) || !m.isSolid(cx + 1, cy - 1) || !m.isSolid(cx - 1, cy + 1) || !m.isSolid(cx + 1, cy + 1))) return;
+      const H = s * C.height;
+      if (so) {
+        fo.s = s / face.w; g.tile(face, x, y + s - H, s, H, fo);
+        const h = tileHash(cx, cy); if ((h >>> 5) % 100 < 16) { const d = fdeco[(h >>> 13) % 3]; g.spr(d, x, y + s - H, 0, s / d.w, (H * 0.8) / d.h); }
+        g.rect(x, y + s - H * 0.32, s, H * 0.32, 'rgba(0,0,0,.3)'); g.rect(x, y + s - H, s, 1.6, 'rgba(0,0,0,.55)');
+        if (w) g.rect(x, y + s - H, 1.4, H, 'rgba(255,240,220,.1)');
+        if (e) g.rect(x + s - 1.4, y + s - H, 1.4, H, 'rgba(0,0,0,.32)');
+      }
+      g.spr(cap, x, y - H, 0, s / cap.w, s / cap.h);
+      // 牆頂的邊：朝地板的那幾邊有亮邊（看得出牆的厚度）；朝南、下面是牆面的那條是「牆緣」
+      if (n) g.rect(x, y - H, s, 1.8, rimC);
+      if (w) g.rect(x, y - H, 1.8, s, rimC);
+      if (e) g.rect(x + s - 1.8, y - H, 1.8, s, rimC);
+      if (so) { g.rect(x, y + s - H - 2.2, s, 2.2, lipC); g.rect(x, y + s - H - 0.2, s, 0.8, 'rgba(0,0,0,.6)'); }
+    },
+  };
+};
+
+/* ---------- 洞窟：圓滑岩壁 ---------- */
+Tiles.cave = (map, o = {}) => {
+  const C = Object.assign({ ground: '#4a4037', rock: '#544d46', rock2: '#615950', face: '#14110e', face2: '#231d19', rim: '#d2b796', height: 0.6, deco: 0.1, glow: '#5ff2dc' }, o);
+  const field = C.field || Tiles.soften(map, undefined, 2), lift = map.size * C.height;
+  const key = 'tl.cv' + tileKey(C.ground, C.rock);
+  if (!Art.has(key + '.g')) {
+    Art.make(key + '.g', 64, 64, (c, w, h) => {
+      const R = makeRng(17); c.fillStyle = C.ground; c.fillRect(0, 0, w, h);
+      for (let n = 0; n < 6; n++) { const x = R.range(0, w), y = R.range(0, h), gr = c.createRadialGradient(x, y, 0, x, y, R.range(10, 22)); gr.addColorStop(0, `rgba(0,0,0,${R.range(0.08, 0.16)})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) { c.save(); c.translate(ox, oy); c.fillRect(-ox, -oy, w, h); c.restore(); } }
+      for (let n = 0; n < 140; n++) { c.fillStyle = `rgba(${R.chance(0.5) ? '255,240,220' : '0,0,0'},${R.range(0.03, 0.09)})`; c.beginPath(); c.arc(R.range(0, w), R.range(0, h), R.range(0.4, 2.2), 0, TAU); c.fill(); }
+    }, { anchor: [0, 0], wrap: true });
+    // 地上：碎石、會發光的小菇、骨頭、水窪
+    Art.sheet(key + '.deco', 4, 24, 24, (c, w, h, i) => {
+      const R = makeRng(90 + i);
+      if (i === 0) for (let k = 0; k < 5; k++) { const x = R.range(4, 20), y = R.range(8, 20), r = R.range(1.6, 3.6); c.fillStyle = `hsl(28,12%,${R.range(26, 40)}%)`; c.beginPath(); c.ellipse(x, y, r * 1.2, r * 0.8, 0, 0, TAU); c.fill(); c.fillStyle = 'rgba(255,240,220,.18)'; c.beginPath(); c.ellipse(x - r * 0.3, y - r * 0.3, r * 0.5, r * 0.3, 0, 0, TAU); c.fill(); }
+      if (i === 1) for (const [x, s] of [[8, 1], [14, 1.35], [18, 0.8]]) { c.fillStyle = '#d9d1c0'; c.fillRect(x - 1, 20 - 6 * s, 2, 6 * s); const gr = c.createRadialGradient(x, 20 - 6 * s, 0, x, 20 - 6 * s, 4.5 * s); gr.addColorStop(0, '#b6fff1'); gr.addColorStop(1, '#2bb6a8'); c.fillStyle = gr; c.beginPath(); c.ellipse(x, 20 - 6 * s, 4.2 * s, 2.6 * s, 0, Math.PI, 0); c.fill(); }
+      if (i === 2) { c.strokeStyle = '#cfc4aa'; c.lineCap = 'round'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(5, 16); c.lineTo(19, 10); c.stroke(); c.fillStyle = '#ddd2b8'; for (const [x, y] of [[5, 16], [19, 10]]) { c.beginPath(); c.arc(x, y, 1.8, 0, TAU); c.fill(); } }
+      if (i === 3) { c.fillStyle = 'rgba(22,30,40,.7)'; c.beginPath(); c.ellipse(12, 13, 10, 5.5, -0.15, 0, TAU); c.fill(); c.fillStyle = 'rgba(160,200,255,.22)'; c.beginPath(); c.ellipse(9, 11.5, 4, 1.4, -0.15, 0, TAU); c.fill(); }
+    }, { anchor: [0.5, 0.5] });
+  }
+  Tiles.patterns();
+  const gtex = Art.get(key + '.g'), deco = [0, 1, 2, 3].map((i) => Art.get(key + '.deco:' + i)), decoK = Math.round(C.deco * 1000);
+  const C5 = new Contour(map, field, 0.5, 1), C7 = new Contour(map, field, 0.74, 1);
+  const LY = [
+    [C5, { color: '#000', a: 0.3, dy: 7 }],                                                                  // 接地陰影
+    [C5, { color: C.face, rim: { color: '#000', a: 0.5, w: 3, mode: 'south' } }],                           // 懸崖面（下半，最暗）＋懸崖底的陰影線
+    [C5, { color: C.face2, dy: -lift * 0.55 }],                                                             // 懸崖面（上半）
+    [C5, { color: C.rock, tex: 'tl.pat.rock', texS: 1.1, dy: -lift, rim: { color: C.rim, a: 0.9, w: 2.4, back: 0.38 } }],   // 岩頂
+    [C7, { color: C.rock2, tex: 'tl.pat.rock', texS: 1.1, dy: -lift, rim: { color: C.rim, a: 0.16, w: 1.4, back: 0.5 } }],  // 岩頂內圈（厚度）
+  ];
+  const OCC = { color: '#fff', dy: -lift };
+  const st = {
+    field, margin: 3, height: C.height, lift: () => lift, contour: C5,
+    under(g, m, view) { const s = m.size, x = m.ox + view[0] * s, y = m.oy + view[1] * s; g.tile(gtex, x, y, (view[2] - view[0] + 1) * s, (view[3] - view[1] + 1) * s, { s: 1.25, ox: -x, oy: -y }); },
+    floor(g, m, cx, cy, x, y, s) {
+      const h = tileHash(cx, cy); if (((h >>> 9) % 1000) >= decoK) return;
+      const i = (h >>> 19) % 4; g.spr(deco[i], x + s * tileJit(h, 2), y + s * tileJit(h, 12), i === 1 ? 0 : ((h >>> 22) % 628) / 100, s / 30, s / 30);
+    },
+    /** 一列一列畫（跟角色交錯）：接地陰影 → 懸崖面（兩段深淺）→ 岩頂（材質＋亮邊）→ 岩頂的內圈（看起來有厚度） */
+    row(g, m, cy, view) {
+      const s = m.size, x0w = m.ox + (view[0] - 1) * s, x1w = m.ox + (view[2] + 2) * s;
+      for (const [c, L] of LY) c.drawRow(g, cy, x0w, x1w, L);
+    },
+    /** 擋光用：PZ.light.occluders(style.occlude)（擋光的是畫出來的岩頂，懸崖面照得到） */
+    occlude: (g) => C5.draw(g, map.view(2), OCC),
+    /** 會自己發光的東西（螢光菇）：在 g.lighting() 之後呼叫 */
+    emissive(g, m) {
+      const [x0, y0, x1, y1] = m.view(1), s = m.size, k = s / 30, t = Time.t;
+      for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+        if (m.isSolid(cx, cy)) continue;
+        const h = tileHash(cx, cy); if (((h >>> 9) % 1000) >= decoK || (h >>> 19) % 4 !== 1) continue;
+        const px = m.ox + cx * s + s * tileJit(h, 2), py = m.oy + cy * s + s * tileJit(h, 12);
+        if (m.behindWall(px, py, 6, lift)) continue;
+        const pulse = 0.75 + 0.25 * Math.sin(t * 1.7 + (h & 63));
+        for (const [ax, ay, r] of MUSH) g.glow(px + (ax - 12) * k, py + (ay - 12) * k, r * k * 2.2, C.glow, { a: 0.55 * pulse, core: 0.7 });
+      }
+    },
+  };
+  return st;
+};
+
+/* ---------- 島嶼：一層一層的等高線 ---------- */
+Tiles.island = (map, height, o = {}) => {
+  // [門檻, 顏色, 亮邊, 材質]
+  const L = o.levels || [[0.42, '#f0dca6', 0.5, 'sand'], [0.47, '#8fc463', 0.32, 'grass'], [0.57, '#74b253', 0.22, 'grass'], [0.68, '#5d9a45', 0.22, 'grass'], [0.78, '#a59a87', 0.42, 'rock'], [0.88, '#d3cbbb', 0.45, 'rock']];
+  Tiles.patterns();
+  const key = 'tl.is';
+  if (!Art.has(key + '.tuft:0')) {
+    Art.sheet(key + '.tuft', 3, 20, 16, (c, w, h, i) => {
+      const R = makeRng(40 + i);
+      for (let k = 0; k < 7; k++) { const x = R.range(4, 16), l = R.range(6, 13), b = R.spread(4); c.strokeStyle = `hsl(${R.range(88, 110)},${R.range(40, 55)}%,${R.range(30, 46)}%)`; c.lineWidth = 1.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, h - 1); c.quadraticCurveTo(x + b * 0.3, h - l * 0.6, x + b, h - l); c.stroke(); }
+    }, { anchor: [0.5, 0.9] });
+    Art.sheet(key + '.flower', 3, 14, 14, (c, w, h, i) => {
+      const col = ['#ffe27a', '#ff8fb8', '#ffffff'][i];
+      c.strokeStyle = '#3f7a34'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(7, 13); c.lineTo(7, 7); c.stroke();
+      c.fillStyle = col; for (let k = 0; k < 5; k++) { const a = (k / 5) * TAU; c.beginPath(); c.arc(7 + Math.cos(a) * 2.4, 5 + Math.sin(a) * 2.4, 1.8, 0, TAU); c.fill(); }
+      c.fillStyle = '#f2a33a'; c.beginPath(); c.arc(7, 5, 1.3, 0, TAU); c.fill();
+    }, { anchor: [0.5, 0.92] });
+    Art.make(key + '.shell', 10, 8, (c) => { c.fillStyle = '#f6e7d6'; c.beginPath(); c.moveTo(1, 7); c.quadraticCurveTo(5, -3, 9, 7); c.closePath(); c.fill(); c.strokeStyle = 'rgba(160,120,100,.6)'; c.lineWidth = 0.7; for (const x of [3.5, 5, 6.5]) { c.beginPath(); c.moveTo(5, 7); c.lineTo(x, 2); c.stroke(); } }, { anchor: [0.5, 0.8] });
+  }
+  const tufts = [0, 1, 2].map((i) => Art.get(key + '.tuft:' + i)), flowers = [0, 1, 2].map((i) => Art.get(key + '.flower:' + i)), shell = Art.get(key + '.shell');
+  const crest = { a: 0 }, s0 = map.size;
+  const SEA = [[0.27, '#1b6888'], [0.35, '#2585a6'], [0.395, '#3ea3bd']].map(([t, c]) => [new Contour(map, height, t), { color: c }]);
+  const LV = L.map(([thr, col, ra, pat]) => [new Contour(map, height, thr), { color: Color.darken(col, 0.32), dy: s0 * 0.16 }, { color: col, tex: pat ? 'tl.pat.' + pat : null, texS: 1.2, rim: { color: '#ffffff', w: 1.6, a: ra * 0.55, back: 0.5 } }]);
+  return {
+    margin: 2, field: height, height: 0,
+    under(g, m, view) {
+      const s = m.size, x = m.ox + view[0] * s, y = m.oy + view[1] * s, w = (view[2] - view[0] + 1) * s, h = (view[3] - view[1] + 1) * s, t = Time.t;
+      g.rect(x, y, w, h, o.sea || '#155a7c');
+      for (const [c, Ly] of SEA) c.draw(g, view, Ly);
+      // 浪：海面上一閃一閃的浪頭；岸邊的白浪一進一退
+      for (let cy = view[1]; cy <= view[3]; cy++) for (let cx = view[0]; cx <= view[2]; cx++) {
+        const i = cy * m.w + cx, hh = height[i]; if (hh > 0.36) continue;
+        const k = tileHash(cx, cy); if (k % 4) continue;
+        const ph = ((k >>> 8) % 1000) / 1000, v = Math.sin((t * 0.35 + ph) * TAU); if (v < 0.35) continue;
+        crest.a = (v - 0.35) * 0.6; const px = m.ox + (cx + tileJit(k, 3)) * s, py = m.oy + (cy + tileJit(k, 13)) * s;
+        g.line(px - 5, py, px + 5, py - 0.8, 1.6, '#d8f6ff', crest);
+      }
+      const wv = Math.sin(t * 1.25);
+      Tiles.marching(g, m, height, 0.402 - wv * 0.012, { fill: false, view, rim: { color: '#ffffff', a: 0.55 + wv * 0.15, w: 2.6, back: 1 } });
+      Tiles.marching(g, m, height, 0.37 - wv * 0.012, { fill: false, view, rim: { color: '#e6fbff', a: 0.22, w: 1.6, back: 1 } });
+    },
+    ground(g, m, view) {
+      for (const [c, under, top] of LV) { c.draw(g, view, under); c.draw(g, view, top); }
+      const s = m.size;
+      for (let cy = view[1]; cy <= view[3]; cy++) for (let cx = view[0]; cx <= view[2]; cx++) {
+        const i = cy * m.w + cx, hh = height[i], k = tileHash(cx, cy), px = m.ox + (cx + tileJit(k, 3)) * s, py = m.oy + (cy + tileJit(k, 13)) * s;
+        if (hh > 0.5 && hh < 0.77) { if (k % 3 === 0) g.spr(tufts[(k >>> 5) % 3], px, py, 0, (k & 32) ? -1 : 1, 1); else if (k % 11 === 1) g.spr(flowers[(k >>> 7) % 3], px, py); }
+        else if (hh > 0.43 && hh < 0.47 && k % 9 === 0) g.spr(shell, px, py, ((k >>> 9) % 100) / 30);
+      }
+    },
+  };
+};
+
 global.PZ = PZ;
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
-<script>window.PZ_GAME = {"id": "engine-lab", "title": "樣品館", "version": "1.0.0", "engine": "dev", "built": "2026-11-14 21:13"};
+<script>window.PZ_GAME = {"id": "engine-lab", "title": "樣品館", "version": "1.0.0", "engine": "dev", "built": "2026-11-14 22:05"};
 /* ---- 01_art.js ---- */
 /* 樣品館：用程式畫的美術（也是「怎麼畫出有質感的程式美術」的範例） */
 const LabArt = {};
@@ -6057,6 +6945,7 @@ const HUB_ITEMS = [
   ['light', '☀', '光影', '動態光源、柔和陰影、手電筒、火把、照明彈；角色會投影，空殼怕光'],
   ['weather', '☂', '天氣與水面', '雨夜港口：水面倒影、雨雪霧雷、路燈光柱、電影調色與黑邊'],
   ['anim', '♞', '角色動畫', '骨架騎士：走跑跳、三連段、腳踩高低地形、披風羽飾飄動；一張圖的史萊姆也會呼吸跳躍'],
+  ['world', '⌖', '世界與地圖', '一鍵生成地牢、洞窟、島嶼：2.5D 牆、點哪走哪、上百隻怪繞牆追人、戰爭迷霧、小地圖'],
   ['ui', '▤', '介面與劇情', '五套主題、對話框、劇情對話、選擇、設定頁'],
 ];
 PZ.scene('hub', {
@@ -7225,6 +8114,250 @@ PZ.scene('anim', {
     if (this.st.cloth) g.rig(K, P.x, P.y, { bones: this.st.bones });
     else { const ch = K.chains; K.chains = []; g.rig(K, P.x, P.y, { bones: this.st.bones }); K.chains = ch; }
     PZ.particles.draw(g, 'under');
+  },
+});
+
+/* ---- 22_world.js ---- */
+/* 樣品館：世界與地圖（程序生成的地牢／洞窟／島嶼、2.5D 牆、怪物潮用流場繞牆追人、點地圖自動尋路、戰爭迷霧、小地圖） */
+const WD = { size: 32 };
+WD.art = () => {
+  if (PZ.art.has('wd.tree')) return;
+  const A = PZ.art;
+  A.make('wd.tree', 60, 82, (c, w, h) => {
+    const tr = c.createLinearGradient(w / 2 - 5, 0, w / 2 + 5, 0); tr.addColorStop(0, '#6b4a2c'); tr.addColorStop(1, '#3a2716');
+    c.fillStyle = tr; c.beginPath(); c.moveTo(w / 2 - 5, h - 2); c.lineTo(w / 2 - 3, h - 30); c.lineTo(w / 2 + 3, h - 30); c.lineTo(w / 2 + 6, h - 2); c.closePath(); c.fill();
+    const blob = (x, y, r, c1, c2) => { const g = c.createRadialGradient(x - r * 0.35, y - r * 0.45, 1, x, y, r); g.addColorStop(0, c1); g.addColorStop(1, c2); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); };
+    blob(w / 2 - 11, h - 38, 15, '#5fae4a', '#2a6630'); blob(w / 2 + 12, h - 40, 14, '#5fae4a', '#2a6630'); blob(w / 2 - 2, h - 52, 19, '#7fcf5c', '#337a36'); blob(w / 2 + 6, h - 62, 12, '#93dc6c', '#3f8a3c');
+    c.fillStyle = 'rgba(255,255,220,.2)'; c.beginPath(); c.arc(w / 2 - 7, h - 62, 6, 0, Math.PI * 2); c.fill();
+  }, { anchor: [0.5, 0.95], outline: 1.2, outlineColor: '#173518' });
+  A.make('wd.rock', 44, 32, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#c4bcae'); g.addColorStop(1, '#6a635a'); c.fillStyle = g;
+    c.beginPath(); c.moveTo(3, h - 2); c.lineTo(8, 10); c.lineTo(20, 2); c.lineTo(33, 6); c.lineTo(41, h - 3); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.moveTo(22, h - 2); c.lineTo(26, 12); c.lineTo(33, 6); c.lineTo(41, h - 3); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(8, 10); c.lineTo(20, 2); c.lineTo(33, 6); c.stroke();
+  }, { anchor: [0.5, 0.92], outline: 1, outlineColor: '#2c2a26' });
+  A.make('wd.crystal', 28, 42, (c, w, h) => {
+    const sh = (x, y, s, hue) => { const g = c.createLinearGradient(x - s, y, x + s, y); g.addColorStop(0, `hsl(${hue},90%,82%)`); g.addColorStop(0.5, `hsl(${hue},85%,62%)`); g.addColorStop(1, `hsl(${hue},80%,40%)`); c.fillStyle = g; c.beginPath(); c.moveTo(x, y - s * 2.7); c.lineTo(x + s, y - s); c.lineTo(x + s * 0.6, y); c.lineTo(x - s * 0.6, y); c.lineTo(x - s, y - s); c.closePath(); c.fill(); c.fillStyle = 'rgba(255,255,255,.45)'; c.beginPath(); c.moveTo(x, y - s * 2.7); c.lineTo(x - s, y - s); c.lineTo(x - s * 0.2, y - s * 1.1); c.closePath(); c.fill(); };
+    sh(9, h - 2, 5, 200); sh(19, h - 1, 6.5, 190); sh(14, h - 3, 4.2, 280);
+  }, { anchor: [0.5, 0.95] });
+  A.make('wd.chest', 32, 26, (c, w, h) => {
+    c.fillStyle = '#5a3a1e'; c.fillRect(2, 9, w - 4, h - 11);
+    const lid = c.createLinearGradient(0, 2, 0, 12); lid.addColorStop(0, '#9a6a3a'); lid.addColorStop(1, '#6e4a26'); c.fillStyle = lid; c.beginPath(); c.roundRect(2, 2, w - 4, 11, [5, 5, 1, 1]); c.fill();
+    c.fillStyle = '#d9a94a'; c.fillRect(2, 11, w - 4, 2.5); c.fillRect(7, 2, 2.5, h - 4); c.fillRect(w - 9.5, 2, 2.5, h - 4); c.fillRect(w / 2 - 3, 10, 6, 8);
+    c.fillStyle = '#3a2410'; c.fillRect(w / 2 - 1, 13, 2, 3); c.fillStyle = 'rgba(255,240,200,.35)'; c.fillRect(4, 3.5, w - 8, 1.2);
+  }, { anchor: [0.5, 0.9], outline: 1, outlineColor: '#1e1208' });
+};
+const WD_KINDS = [['地牢', 'dungeon'], ['洞窟', 'cave'], ['島嶼', 'island']];
+const WD_LOOK = { dungeon: { grade: 'cinema', amount: 0.55, song: 'dread' }, cave: { grade: 'cold', amount: 0.35, song: 'dread' }, island: { grade: 'warm', amount: 0.45, song: 'drive' } };
+
+PZ.scene('world', {
+  bg: '#05060a',
+  ui: () => `${Lab.bar('世界與地圖', '點地圖：自動找路走過去')}<div class="lab-stat"></div>
+    <div class="lab-panel" data-ui>
+      <div class="lab-row">${WD_KINDS.map(([n, k], i) => `<button class="lab-chip cyan${i ? '' : ' on'}" data-kind="${k}">${n}</button>`).join('')}<button class="lab-chip" data-act="regen">↻ 新地圖</button></div>
+      <div class="lab-row"><button class="lab-chip" data-chip="horde">怪物潮</button><button class="lab-chip" data-chip="fog">戰爭迷霧</button><button class="lab-chip" data-chip="light">光影</button><button class="lab-chip" data-chip="flow">流場</button></div>
+    </div>`,
+  enter() {
+    WD.art(); LT.art(); AN.art();
+    const box = PZ.scenes.uiEl; Lab.bindBack(box); this.stat = box.querySelector('.lab-stat');
+    this.st = { horde: true, fog: true, light: true, flow: false };
+    Lab.chips(box, this.st, (k) => { if (k === 'light') this.setupLight(); if (k === 'fog') this.updateFov(true); });
+    box.querySelectorAll('[data-kind]').forEach((b) => b.addEventListener('click', () => { box.querySelectorAll('[data-kind]').forEach((x) => x.classList.toggle('on', x === b)); this.kind = b.dataset.kind; this.build(); PZ.uiSound('confirm'); }));
+    box.querySelector('[data-act=regen]').addEventListener('click', () => { this.seed++; this.build(); PZ.uiSound('confirm'); });
+    this.kind = 'dungeon'; this.seed = 7;
+    this.H = { x: 0, y: 0, w: 16, h: 10, vx: 0, vy: 0, walk: 0, face: 1, path: null, pi: 0 };
+    this.stick = PZ.input.stick({ target: 'move', zone: { l: 0, t: 0.35, r: 0.55, b: 0.8 } });
+    this.offTap = PZ.on('tap', (t) => { if (t.y > PZ.screen.h - 140 && !Lab.side()) return; this.goTo(t.wx, t.wy); });
+    this.lay = () => { PZ.cam.fit(PZ.screen.portrait ? 500 : 540); PZ.cam.offX = Lab.shift(); }; this.lay(); this.offR = PZ.on('resize', this.lay);
+    this.base = { grade: PZ.post.gradeName }; this.song = null;
+    this.build();
+  },
+  exit() { this.offTap(); this.offR(); PZ.input.clearTouch(); PZ.post.grade(this.base.grade, { time: 0 }); },
+  build() {
+    const k = this.kind, S = WD.size; let map, spawn;
+    if (k === 'dungeon') {
+      const D = PZ.gen.dungeon(64, 52, { rooms: 15, seed: this.seed });
+      map = PZ.tilemap({ w: D.w, h: D.h, size: S }); map.fromGrid(D.grid);
+      // 出生在夠大的房間（第一眼就有東西看）
+      const score = (r) => r.w * r.h - Math.hypot(r.cx - D.w / 2, r.cy - D.h / 2) * 4;   // 大、又靠近中間（四周都有路可以探索）
+      const big = D.rooms.reduce((a, r) => (score(r) > score(a) ? r : a), D.rooms[0]); spawn = [big.cx, big.cy]; this.rooms = D.rooms; this.startRoom = big;
+      this.style = PZ.tiles.dungeon({ floor: '#3b3f4a', brick: '#6a5248' });
+    } else if (k === 'cave') {
+      const D = PZ.gen.caves(76, 58, { seed: this.seed, fill: 0.5 });
+      map = PZ.tilemap({ w: D.w, h: D.h, size: S }); map.fromGrid(D.grid);
+      // 出生點：最空曠的洞室（離岩壁最遠），同樣空曠就選靠中間的
+      const dist = PZ.gen.distance(D.grid, D.w, D.h, 0); let best = 0, bs = -1e9;
+      for (let i = 0; i < dist.length; i++) { if (D.grid[i]) continue; const x = i % D.w, y = (i / D.w) | 0, sc = Math.min(dist[i], 6) - Math.hypot(x - D.w / 2, y - D.h / 2) * 0.08; if (sc > bs) { bs = sc; best = i; } }
+      this.caveDist = dist;
+      spawn = [best % D.w, (best / D.w) | 0];
+      this.style = PZ.tiles.cave(map);
+    } else {
+      const W = 72, Hh = 56, hgt = PZ.gen.island(W, Hh, { seed: this.seed });
+      map = PZ.tilemap({ w: W, h: Hh, size: S }); for (let i = 0; i < hgt.length; i++) map.layers.main[i] = hgt[i] < 0.42 ? 1 : 0;
+      this.style = PZ.tiles.island(map, hgt);
+      let best = 0; for (let i = 0; i < hgt.length; i++) if (hgt[i] > hgt[best] && hgt[i] < 0.66) best = i; spawn = [best % W, (best / W) | 0];
+      // 樹、石頭：散布在陸地上，佔一格（會擋路）
+      this.props = PZ.gen.scatter(0, 0, W * S, Hh * S, 76, { seed: this.seed, test: (x, y) => { const h = hgt[map.idx(map.cellX(x), map.cellY(y))]; return h > 0.48 && h < 0.86; } }).map((p) => {
+        const cx = map.cellX(p.x), cy = map.cellY(p.y), h = hgt[map.idx(cx, cy)], rock = h > 0.77;
+        if (Math.abs(cx - spawn[0]) + Math.abs(cy - spawn[1]) < 4) return null;
+        map.set(cx, cy, 2); return { x: map.cx(cx), y: map.cy(cy) + S * 0.3, f: rock ? 'wd.rock' : 'wd.tree', s: rock ? PZ.rand.range(0.85, 1.1) : PZ.rand.range(0.9, 1.2), sway: PZ.rand.angle() };
+      }).filter(Boolean);
+    }
+    if (k !== 'island') this.props = [];
+    this.map = map; const H = this.H; H.x = map.cx(spawn[0]); H.y = map.cy(spawn[1]); H.path = null; H.vx = H.vy = 0;
+    PZ.cam.bounds = { x: -S * 2, y: -S * 3, w: map.width + S * 4, h: map.height + S * 5 }; PZ.cam.follow(H, { lerp: 7, lead: 0.12 }); PZ.cam.snap();
+    this.flow = PZ.path.flow(map, { max: 60 }); this.flow.update(H.x, H.y, true);
+    // 戰爭迷霧與小地圖：每格一個像素的小畫布放大畫（線性內插 → 邊緣柔和）
+    const W = map.w, Hh = map.h;
+    this.seen = new Uint8Array(W * Hh); this.vis = new Uint8Array(W * Hh);
+    this.fogCv = this.fogCv || document.createElement('canvas'); this.fogCv.width = W; this.fogCv.height = Hh; this.fogImg = this.fogCv.getContext('2d').createImageData(W, Hh);
+    this.fogF = PZ.art.live('wd.fog', this.fogCv);
+    this.miniCv = this.miniCv || document.createElement('canvas'); this.miniCv.width = W; this.miniCv.height = Hh; this.miniImg = this.miniCv.getContext('2d').createImageData(W, Hh);
+    this.miniF = PZ.art.live('wd.mini', this.miniCv, { pixel: true });
+    this.fovCell = -1; this.updateFov(true);
+    // 怪物：在離主角遠的地方生
+    this.mobs = []; const R = PZ.rng(this.seed + 3), free = [];
+    map.forEach((x, y, v) => { if (!map.solidFn(v) && Math.abs(x - spawn[0]) + Math.abs(y - spawn[1]) > 16) free.push([x, y]); });
+    // 地牢、洞窟是空殼；島上是史萊姆（一跳一跳）
+    for (let i = 0; i < 110 && free.length; i++) { const [x, y] = R.pick(free); this.mobs.push({ x: map.cx(x) + R.spread(8), y: map.cy(y) + R.spread(8), w: 14, h: 9, vx: 0, vy: 0, f: k === 'island' ? 'cr.slime' : R.chance(0.15) ? 'husk2' : 'husk', ph: R.angle(), sp: R.range(55, 85), r: 9, va: 0, hue: R.pick([0, 0, 0, 1]) }); }
+    this.grid = new PZ.Grid(48);
+    // 寶箱（地牢放在房間角落；洞窟散在地上）
+    this.chests = k === 'island' ? [] : k === 'dungeon'
+      ? this.rooms.filter((r, i) => i % 3 === 1 || r === this.startRoom).map((r) => ({ x: map.cx(r.x + 1), y: map.cy(r.y + 1) + 6, chest: true }))
+      : PZ.gen.scatter(0, 0, map.width, map.height, 420, { seed: this.seed, test: (x, y) => !map.solidAt(x, y) && !map.solidAt(x, y + 24) && !map.solidAt(x, y - 24) }).slice(0, 8).map((p) => ({ x: p.x, y: p.y, chest: true }));
+    const look = WD_LOOK[k]; PZ.post.grade(look.grade, { time: 0.6, amount: look.amount });
+    if (this.song !== look.song) { this.song = look.song; PZ.music.play(look.song, { intensity: 0.45, fade: 1.5 }); }
+    this.setupLight();
+  },
+  setupLight() {
+    const map = this.map, k = this.kind, L = PZ.light, S = WD.size, R = PZ.rng(this.seed + 11);
+    L.reset(); this.torches = []; this.crystals = [];
+    // 擺設（火把、水晶）不管光影開不開都在
+    if (k === 'dungeon') {
+      // 火把：掛在朝南、底下是地板、左右都是牆的牆面上，彼此隔開
+      const spots = []; map.forEach((x, y, v) => { if (map.solidFn(v) && !map.isSolid(x, y + 1) && map.isSolid(x - 1, y) && map.isSolid(x + 1, y)) spots.push([x, y]); });
+      R.shuffle(spots); const used = [];
+      for (const [x, y] of spots) { if (used.length >= 28) break; if (used.some(([a, b]) => Math.abs(a - x) + Math.abs(b - y) < 7)) continue; used.push([x, y]); }
+      this.torches = used.map(([x, y]) => ({ x: map.cx(x), y: map.oy + (y + 1) * S - 1, fy: map.oy + (y + 1) * S - S * 0.62 }));
+    } else if (k === 'cave') {
+      // 水晶：長在岩壁腳下（北邊是岩石、南邊是空地的格子），彼此至少隔 5 格
+      const spots = []; map.forEach((x, y, v) => { if (!map.solidFn(v) && map.isSolid(x, y - 1) && !map.isSolid(x, y + 1)) spots.push([x, y]); });
+      R.shuffle(spots); const used = [];
+      for (const [x, y] of spots) { if (used.length >= 40) break; if (used.some(([a, b]) => Math.abs(a - x) + Math.abs(b - y) < 9)) continue; used.push([x, y]); }
+      this.crystals = used.map(([x, y]) => ({ x: map.cx(x) + R.spread(6), y: map.oy + (y + 0.35) * S, c: R.pick(['#46d4ff', '#a86bff', '#5dffb0', '#46d4ff']), crystal: true }));
+    }
+    if (!this.st.light || k === 'island') return;
+    L.on({ ambient: k === 'dungeon' ? '#1c2234' : '#45415f', soak: k === 'dungeon' ? 30 : 22 });   // soak 大一點：光滲進牆頂，房間的輪廓才看得出來
+    if (k === 'dungeon') map.lightBoxes({ lift: this.style.lift(map) }); else L.occluders(this.style.occlude);
+    this.heroL = L.add({ follow: this.H, oy: -18, r: k === 'cave' ? 360 : 300, color: '#ffe2b0', intensity: 1.05, size: 6, flicker: 0.05 });
+    for (const t of this.torches) t.L = L.add({ x: t.x, y: t.y + 10, r: 270, color: '#ff9a3c', intensity: 1.3, flicker: 0.22, flickerSpeed: 10, size: 9 });
+    for (const c of this.crystals) c.L = L.add({ x: c.x, y: c.y - 10, r: 250, color: c.c, intensity: 1.0, flicker: 0.12, flickerSpeed: 2, size: 8, haze: 0.03 });
+  },
+  goTo(wx, wy) {
+    const m = this.map, H = this.H, tgt = m.nearestOpen(m.cellX(wx), m.cellY(wy), 4);
+    const cells = tgt && PZ.path.find(m, m.cellX(H.x), m.cellY(H.y), tgt[0], tgt[1]);
+    if (!cells) { PZ.uiSound('error'); this.mark = { x: wx, y: wy, t: 0, bad: true }; return; }
+    H.path = PZ.path.smooth(m, cells); H.pi = 1; PZ.uiSound('click');
+    this.mark = { x: m.cx(tgt[0]), y: m.cy(tgt[1]), t: 0 };
+  },
+  updateFov(force) {
+    const m = this.map, H = this.H, c = m.idx(m.cellX(H.x), m.cellY(H.y));
+    if (c === this.fovCell && !force) return; this.fovCell = c;
+    const W = m.w, Hh = m.h, vis = this.vis, seen = this.seen, L = m.layers.main, fogOn = this.st.fog, island = this.kind === 'island';
+    vis.fill(0); m.fov(m.cellX(H.x), m.cellY(H.y), island ? 15 : 12, vis, island ? () => false : undefined);   // 島上：海和樹不擋視線
+    const d = this.fogImg.data, md = this.miniImg.data;
+    for (let i = 0; i < W * Hh; i++) {
+      if (vis[i]) seen[i] = 1;
+      // 牆頂往上畫（2.5D），所以看得到的牆，它北邊那格也要亮（不然牆頂會被迷霧吃掉）
+      const up = !vis[i] && i + W < W * Hh && vis[i + W] && m.solidFn(L[i + W]);
+      d[i * 4 + 3] = !fogOn ? 0 : vis[i] || (up && m.solidFn(L[i])) ? 0 : up ? 60 : seen[i] ? 115 : 255;
+      const v = L[i], sn = seen[i] || !fogOn, j = i * 4;
+      const col = !sn ? 0x0a0c12 : island ? (v === 1 ? 0x2a6f95 : v === 2 ? 0x3e7a3a : 0x9ac476) : m.solidFn(v) ? 0x3c4050 : 0xa89e88;
+      md[j] = col >> 16; md[j + 1] = (col >> 8) & 255; md[j + 2] = col & 255; md[j + 3] = sn ? 255 : 170;
+    }
+    this.fogCv.getContext('2d').putImageData(this.fogImg, 0, 0); this.fogF.refresh();
+    this.miniCv.getContext('2d').putImageData(this.miniImg, 0, 0); this.miniF.refresh();
+  },
+  update(dt) {
+    const H = this.H, m = this.map, M = PZ.input.move;
+    let mx = M.mag > 0.12 ? M.x : 0, my = M.mag > 0.12 ? M.y : 0;
+    if (mx || my) H.path = null;
+    else if (H.path) {
+      const p = H.path[H.pi];
+      if (!p) H.path = null;
+      else { const dx = p.x - H.x, dy = p.y - H.y, d = Math.hypot(dx, dy); if (d < 8) { H.pi++; if (H.pi >= H.path.length) H.path = null; } else { const k = H.pi === H.path.length - 1 ? Math.min(1, d / 40) : 1; mx = (dx / d) * k; my = (dy / d) * k; } }
+    }
+    const sp = 175; H.vx = PZ.damp(H.vx, mx * sp, 14, dt); H.vy = PZ.damp(H.vy, my * sp, 14, dt);
+    m.move(H, H.vx * dt, H.vy * dt); H.walk += Math.hypot(H.vx, H.vy) * dt;
+    if (Math.abs(H.vx) > 12) H.face = Math.sign(H.vx);
+    this.updateFov();
+    this.flow.update(H.x, H.y);
+    if (this.mark) this.mark.t += dt;
+    // 怪物潮：跟著流場走（繞牆）、彼此推開、撞牆會滑；看不到的時候慢慢淡出
+    const G = this.grid; G.clear(); for (const e of this.mobs) G.insert(e, e.r);
+    const near = this._near || (this._near = []), fogOn = this.st.fog;
+    for (const e of this.mobs) {
+      e.ph += dt * 6;
+      const i = m.idx(m.cellX(e.x), m.cellY(e.y)); e.va = PZ.damp(e.va, !fogOn || (i >= 0 && this.vis[i]) ? 1 : 0, 8, dt);
+      let ax = 0, ay = 0;
+      if (this.st.horde) {
+        const dist = this.flow.distAt(e.x, e.y);
+        if (dist < 26) { const d = this.flow.dirAt(e.x, e.y); ax = d.x * e.sp; ay = d.y * e.sp; }
+        G.query(e.x, e.y, 22, near);
+        for (const o of near) { if (o === e) continue; const dx = e.x - o.x, dy = e.y - o.y, l = Math.hypot(dx, dy) || 1; if (l < 20) { ax += (dx / l) * (20 - l) * 9; ay += (dy / l) * (20 - l) * 9; } }
+        const hd = Math.hypot(H.x - e.x, H.y - e.y); if (hd < 26 && hd > 0.01) { ax -= ((H.x - e.x) / hd) * 300; ay -= ((H.y - e.y) / hd) * 300; }
+      }
+      e.vx = PZ.damp(e.vx, ax, 5, dt); e.vy = PZ.damp(e.vy, ay, 5, dt);
+      m.move(e, e.vx * dt, e.vy * dt);
+    }
+    this.statT = (this.statT || 0) - dt;
+    if (this.statT <= 0) { this.statT = 0.25; const lit = this.st.light && this.kind !== 'island' ? `　燈 ${PZ.gfx.r.stats.lights}` : ''; this.stat.textContent = `${m.w}×${m.h} 格　怪物 ${this.mobs.length}${lit}\n畫質 ${PZ.quality.cur.name}`; }
+  },
+  render(g) {
+    const m = this.map, H = this.H, S = WD.size, t = PZ.time.t, wallH = (this.style.height || 0) * S;
+    const actors = this._actors || (this._actors = []); actors.length = 0;
+    actors.push(H);
+    for (const e of this.mobs) if (e.va > 0.02 && g.visible(e.x, e.y, 60)) actors.push(e);
+    for (const p of this.props) if (g.visible(p.x, p.y, 100)) actors.push(p);
+    for (const c of this.chests) if (g.visible(c.x, c.y, 40)) actors.push(c);
+    for (const c of this.crystals) if (g.visible(c.x, c.y, 60)) actors.push(c);
+    for (const tc of this.torches) if (g.visible(tc.x, tc.y, 60)) actors.push(tc);
+    m.draw(g, this.style, { actors, drawActor: (gg, a) => {
+      if (a === H) { const sw = Math.sin(H.walk * 0.075); gg.ellipse(H.x, H.y, 13, 5, 'rgba(0,0,0,.42)'); gg.spr('hero', H.x, H.y - Math.abs(sw) * 2.4, sw * 0.05, 0.95 * H.face, 0.95); return; }
+      if (a.f === 'cr.slime') { const sp = Math.hypot(a.vx, a.vy), hop = sp > 15 ? Math.abs(Math.sin(a.ph * 0.7)) : 0, sq = 1 + (hop < 0.25 && sp > 15 ? (0.25 - hop) * 0.6 : 0) + Math.sin(a.ph * 0.5) * 0.03; gg.ellipse(a.x, a.y, 12 * (1 - hop * 0.3), 4, 'rgba(0,0,0,.3)', { a: a.va }); gg.spr(a.f, a.x, a.y - hop * 9, 0, (a.vx < 0 ? -0.75 : 0.75) * sq, 0.75 / sq, a.va, a.hue ? '#b8d8ff' : null); return; }
+      if (a.f === 'husk' || a.f === 'husk2') { const sp = Math.hypot(a.vx, a.vy), bob = Math.abs(Math.sin(a.ph)) * (sp > 20 ? 2 : 0.5); gg.ellipse(a.x, a.y, 11, 4, 'rgba(0,0,0,.35)', { a: a.va }); gg.spr(a.f, a.x, a.y - bob, Math.sin(a.ph) * 0.06, a.vx < 0 ? -0.8 : 0.8, 0.8, a.va); return; }
+      if (a.f) { gg.ellipse(a.x, a.y - 1, 17 * a.s, 6 * a.s, 'rgba(0,0,0,.28)'); gg.spr(a.f, a.x, a.y, a.f === 'wd.tree' ? Math.sin(t * 1.2 + a.sway) * 0.025 : 0, a.s, a.s); return; }
+      if (a.crystal) { gg.ellipse(a.x, a.y - 1, 12, 4, 'rgba(0,0,0,.3)'); gg.spr('wd.crystal', a.x, a.y); return; }
+      if (a.fy) { gg.spr('lt.torch', a.x, a.fy + 4, 0, 0.75, 0.75); return; }
+      gg.ellipse(a.x, a.y - 1, 16, 5, 'rgba(0,0,0,.35)'); gg.spr('wd.chest', a.x, a.y);
+    } });
+    // 要走的路線：流動的光點＋終點的圈
+    if (H.path) for (let i = H.pi; i < H.path.length; i++) { const a = i === H.pi ? H : H.path[i - 1], b = H.path[i], d = Math.hypot(b.x - a.x, b.y - a.y); for (let s = (t * 60) % 14; s < d; s += 14) g.circle(a.x + ((b.x - a.x) * s) / d, a.y + ((b.y - a.y) * s) / d, 2.1, '#7fe8ff', { a: 0.75 }); }
+    if (this.mark && this.mark.t < (this.mark.bad ? 0.5 : 9) && (H.path || this.mark.bad)) { const k = Math.min(1, this.mark.t * 6), c = this.mark.bad ? '#ff5a5a' : '#7fe8ff'; g.ring(this.mark.x, this.mark.y, (1.6 - k * 0.6) * (10 + Math.sin(t * 6) * 1.5), 2, c, { a: 0.9 * (this.mark.bad ? 1 - this.mark.t * 2 : 1) }); }
+    if (this.st.flow) {
+      const [x0, y0, x1, y1] = m.view(0), F = this.flow;
+      for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) { const i = m.idx(cx, cy); if (i < 0 || F.dist[i] === Infinity) continue; const x = m.cx(cx), y = m.cy(cy), vx = F.vx[i], vy = F.vy[i], k = Math.max(0.15, 1 - F.dist[i] / 30); g.line(x - vx * 7, y - vy * 7, x + vx * 5, y + vy * 5, 1.8, '#ffb547', { a: 0.75 * k }); g.circle(x + vx * 7, y + vy * 7, 2.4, '#ffd27a', { a: k }); }
+    }
+    g.lighting();
+    // 會發光的東西（不受明暗影響）：火焰、水晶、怪物的眼睛——被前面的牆擋住就不畫
+    for (const tc of this.torches) { if (!g.visible(tc.x, tc.y, 40)) continue; const k = tc.L ? tc.L._fi * tc.L._k : 1, fy = tc.fy + 1; g.glow(tc.x, fy, 14 * k, '#ffb050', { a: 0.9, core: 0.8 }); g.glow(tc.x, fy - 1, 6 * k, '#fff2c8', { core: 1 }); }
+    for (const c of this.crystals) if (g.visible(c.x, c.y, 40) && !m.behindWall(c.x, c.y, 14, wallH)) g.glow(c.x, c.y - 14, 18, c.c, { a: 0.4 + 0.18 * Math.sin(t * 2 + c.x), core: 0.5 });
+    if (this.style.emissive) this.style.emissive(g, m);
+    for (const e of this.mobs) {
+      if (e.f === 'cr.slime' || e.va < 0.05 || !g.visible(e.x, e.y, 40) || m.behindWall(e.x, e.y, 26, wallH)) continue;
+      const dir = e.vx < 0 ? -0.8 : 0.8; for (const ex of [-5, 5]) g.glow(e.x + ex * dir, e.y - 26, 3.4, e.f === 'husk2' ? '#ffd04f' : '#ff4fd8', { a: 0.85 * e.va, core: 1 });
+    }
+    // 戰爭迷霧：一格一像素的小圖放大蓋上去（邊緣自動柔和）
+    if (this.st.fog) g.spr(this.fogF, m.ox, m.oy, 0, m.width / this.fogF.w, m.height / this.fogF.h);
+    g.hud();
+    // 小地圖：右上角（手機橫拿時右邊是面板 → 改放左上角標題下面）
+    const side = Lab.side(), mw = Math.min(side ? 112 : 150, PZ.screen.w * 0.3), k = mw / m.w, mh = m.h * k;
+    const mx = side ? 16 + PZ.screen.safe.l : PZ.screen.w - mw - 14 - PZ.screen.safe.r, my = (side ? 62 : 58) + PZ.screen.safe.t;
+    g.rect(mx - 5, my - 5, mw + 10, mh + 10, 'rgba(6,8,14,.78)'); g.rect(mx - 5, my - 5, mw + 10, 1.2, 'rgba(255,255,255,.22)');
+    g.spr(this.miniF, mx, my, 0, k, k, 0.95);
+    for (const e of this.mobs) if (e.va > 0.5) g.rect(mx + (e.x / S) * k - 1.2, my + (e.y / S) * k - 1.2, 2.4, 2.4, '#ff4fd8');
+    if (this.mark && H.path) g.circle(mx + (this.mark.x / S) * k, my + (this.mark.y / S) * k, 2.2, '#7fe8ff', { a: 0.8 });
+    g.circle(mx + (H.x / S) * k, my + (H.y / S) * k, 3.2, '#ffffff'); g.circle(mx + (H.x / S) * k, my + (H.y / S) * k, 2.2, '#46d4ff');
   },
 });
 

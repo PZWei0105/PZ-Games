@@ -29,6 +29,7 @@ _build/engine/
     09_art  10_text  11_draw  12_camera  13_tween  14_particles  15_fx  16_audio  17_music
     18_save  19_cloud  20_scene  21_ui(.css/.js)  22_dialogue  23_debug  24_boot
     25_light（光影、陰影、水面）  26_weather（天氣）  27_cinema（調色、黑邊）  28_anim（程序動畫、鏈子、逐格動畫）  29_rig（骨架角色）
+    30_world（格子地圖、碰撞、視野、尋路、流場、程序生成）  31_tiles（地圖畫法：2.5D 地牢、洞窟、島嶼、等高線）
   build/pz-engine.js       開發版（每次 build_engine.py 覆蓋）
   releases/pz-engine-X.Y.Z.js   正式版（發了就不再改）
   tools/
@@ -38,7 +39,7 @@ _build/engine/
     webkit_check.py   在 WebKit（iPhone Safari 的引擎）裡跑自我檢查或任一頁
     shot.py / labshot.py   截圖
   tests/unit/         Node 單元測試（數學、顏色、事件、時間、存檔、音效合成）
-  tests/browser/      selftest.html（125 項）、interact（真的點擊／觸控）、run_cloud（雲端存檔九種情境）、run_example（範例能玩）
+  tests/browser/      selftest.html（136 項）、interact（真的點擊／觸控）、run_cloud（雲端存檔九種情境）、run_example（範例能玩）
   lab/                樣品館（自己也是一款用引擎做的 App）
   examples/hello/     最小範例（第 3 節那份程式，測試會實際玩它）
 ```
@@ -220,6 +221,7 @@ g.rect(x, y, w, h, color, { a, add, r, ax, ay })   g.fill(color, a)（整個畫�
 g.circle(x, y, r, color, { a, add })   g.ellipse(x, y, rx, ry, color)   g.ring(x, y, r, 粗細, color)
 g.glow(x, y, r, color, { a, core })     // 柔光（燈、火、槍口光）；預設疊加發光
 g.line(x1, y1, x2, y2, 粗細, color, { a, add, cap: 'round' })   g.poly([x0,y0, x1,y1, …], color)
+g.polyTex([x0,y0, …], 'grass', { s, color })            // 任意凸多邊形貼材質（PZ.art.pattern 做的，照世界座標一直重複）
 g.trail(點陣列, 頭寬, 尾寬, 頭色, 尾色, { add })        // 刀光、拖尾
 g.text('字', x, y, { size, color, weight, outline, outlineColor, shadow, align: 'left|center|right', baseline, maxWidth })
 g.bar(x, y, w, h, 比例, { bg, fg, back })               // 血條（back＝受傷時慢慢退的那段）
@@ -241,6 +243,8 @@ await PZ.art.image('bg', PZ_ASSETS['bg.png'], { density: 2 })   // 外部圖片
 PZ.art.canvas('hero') / PZ.art.url('hero')                      // 轉成 DOM 畫布／圖片網址（頭像、按鈕圖示）
 PZ.art.target('decals', w, h)  然後 g.into('decals', …)         // 畫布貼圖
 PZ.art.live('world', 畫布, { pixel: true })  每格畫完 f.refresh() // 一直在變的畫布（舊遊戲搬家、動態面板）
+PZ.art.pattern('grass', 64, 64, (c, w, h) => { … })              // 會一直重複的材質（自己一張貼圖）：給 g.polyTex、地圖的等高線用
+PZ.art.make('floor', 128, 128, draw, { wrap: true })            // 要用 g.tile 鋪滿的地板：留白填上另一邊的內容，接縫不會有細線
 ```
 
 - 畫圖時 `scale`（像素密度）預設 2：圖在高解析度螢幕上才清楚。像素風用 `pixel: true`（最近鄰，不模糊）。
@@ -321,6 +325,32 @@ PZ.fx.letterbox(0.12)                    // 電影黑邊（上下各 12%）；PZ
 
 
 ---
+
+### 6.7 世界與地圖（格子地圖、碰撞、視野、尋路、程序生成）
+
+```js
+const map = PZ.tilemap({ w: 64, h: 48, size: 32 });          // size＝一格幾個世界單位；地圖外預設當成牆
+map.fromText(`#####\n#.@.#\n#####`, { '#': 1, '.': 0 })      // 用文字畫，回傳每個字出現的位置；或 map.fromGrid(PZ.gen.dungeon(64, 48).grid)
+map.get(x, y)  map.set(x, y, 1)  map.layer('deco')  map.isSolid(x, y)  map.cellX(世界x)  map.cx(格x)（格子中心的世界座標）
+map.move(body, dx, dy)          // body = { x, y（中心）, w, h }：撞牆貼著滑，再快也不穿牆；回傳 { left, right, up, down }
+                                // 側視遊戲的單向平台：PZ.tilemap({ oneway: (v) => v === 2 })（從下面跳得上去、站得住；body.dropping 往下穿）
+map.raycast(x0, y0, x1, y1)     // { hit, x, y, t, cx, cy, nx, ny }（子彈、雷射、視線）；map.los(…) 看不看得到
+map.fov(cx, cy, 半徑, out)        // 視野（戰爭迷霧、潛行）：看得到的格子設 1；第 5 個參數換「什麼擋視線」（島上的海不擋）
+map.nearestOpen(cx, cy)  map.mask4 / mask8（自動接邊）  map.rects()（合併成大方塊）  map.forEach((x, y, v) => …)
+map.lightBoxes({ lift })        // 牆擋光：一行交給 PZ.light（2.5D 牆給 lift＝牆高，牆面才照得到火把）
+map.draw(g, style, { actors, drawActor: (g, a) => … })   // 畫地圖；角色依腳底 y 跟牆一列一列交錯：走到牆後面會被牆頂擋住
+```
+
+- **尋路**：`PZ.path.find(map, sx, sy, tx, ty)`（A*，八方向、不切牆角，走不到回 null）→ `PZ.path.smooth(map, 格子)` 拉直成世界座標的折線（看得到就直走）。
+- **上百隻怪追同一個目標用流場**（不要每隻跑 A*）：`const f = PZ.path.flow(map, { max: 60 })`；每格 `f.update(主角.x, 主角.y)`（主角換格子才重算）；怪 `const d = f.dirAt(x, y)` 往 `d.x, d.y` 走、`f.distAt(x, y)` 還有幾步（太遠的不追）。怪彼此推開用 `PZ.Grid`，撞牆一樣 `map.move`。
+- **程序生成**（同一個 seed 每次一樣）：`PZ.gen.dungeon(w, h, { rooms, min, max, loops, seed })`（房間＋走廊＋幾條環路 → `{ grid, rooms, start, end }`）、`caves(w, h, { fill, steps })`（細胞自動機、只留最大一塊）、`island(w, h)`（高度圖 0～1）、`noise`、`scatter(x, y, w, h, 間距, { test })`（均勻散布：樹、石頭、寶箱）、`distance(grid, w, h)`（離牆多遠：出生點、王房放最空曠的地方）、`regions`（連通區）。斜 45° 視角：`PZ.iso.toScreen / toCell`。
+- **畫法 `PZ.tiles`**（材質都是程式畫的）：
+  - `dungeon({ floor, cap, brick, height: 0.8 })`：2.5D 地牢——不規則石板地、靠地板的牆畫牆頂（更裡面的實心岩不畫＝黑暗）、朝南的牆畫磚牆正面（苔蘚、裂縫、鐵環）、牆腳陰影、雜物（骨頭、頭骨、排水孔、水窪）。配光影：`map.lightBoxes({ lift: style.lift(map) })`＋`PZ.light.on({ soak: 30 })`（光滲進牆頂，房間輪廓才看得出來）。
+  - `cave(map, {…})`：圓滑岩壁（marching squares）、兩段懸崖面＋接地陰影、岩頂材質＋朝南的亮邊、碎石與螢光菇。配光影：`PZ.light.occluders(style.occlude)`；`g.lighting()` 之後呼叫 `style.emissive(g, map)` 畫會發光的菇。
+  - `island(map, 高度圖)`：深海（一閃一閃的浪頭）→ 淺灘 → 岸邊白浪一進一退 → 沙灘 → 三層草地 → 岩石，一層一層的等高線，每層有材質。
+  - 自己做風格：物件 `{ under, floor(g, map, cx, cy, x, y, s), ground, row(g, map, cy, view), wall(g, map, cx, cy, x, y, s), over }`。圓滑的區塊用 `PZ.tiles.contour(map, 數值圖, 門檻)`：輪廓算一次存起來，`.draw(g, view, { color, tex, dy, rim })`、`.drawRow(g, 列, x0, x1, 層)`（2.5D 跟角色交錯）；每格會變的（浪花）才用 `PZ.tiles.marching` 現算。
+- 2.5D 的小細節：會發光的東西（眼睛、火焰）畫在 `g.lighting()` 之後，先用 `map.behindWall(x, y, 離地高度, 牆高)` 看有沒有被前面的牆擋住；戰爭迷霧用一格一像素的 `PZ.art.live` 畫布放大蓋上去（線性內插，邊緣自動柔和）。
+- 範例：`lab/src/22_world.js`（地牢／洞窟／島嶼、上百隻怪用流場繞牆追人、點地圖自動找路、戰爭迷霧、小地圖）。
 
 ## 7. 相機
 
