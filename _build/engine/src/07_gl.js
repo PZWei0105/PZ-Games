@@ -8,7 +8,7 @@
    ========================================================================== */
 const MAX_QUADS = 8192, VERT_WORDS = 6, QUAD_WORDS = VERT_WORDS * 4;
 const BLEND = { normal: 0, multiply: 1, screen: 2, erase: 3, add: 4 };
-const MODE = { sprite: 0, solid: 1, circle: 2, ring: 3, glow: 4, line: 5, silhouette: 6 };
+const MODE = { sprite: 0, solid: 1, circle: 2, ring: 3, glow: 4, line: 5, silhouette: 6, beam: 7 };
 
 const SPRITE_VS = `#version 300 es
 layout(location=0) in vec2 aPos;
@@ -52,8 +52,13 @@ void main(){
   } else if (vMode == 5) {
     float d = abs(vUV.y); float aa = max(fwidth(d), 1e-4);
     c = col * (1.0 - smoothstep(1.0 - aa, 1.0, d));
-  } else {
+  } else if (vMode == 6) {
     c = col * tx(vTex, vUV).a;
+  } else {
+    // 光束：v 是「到中線的距離 ÷ 寬端半寬」，除以這裡的半寬比例（窄端比例放在 param）才不會在梯形對角線折一下
+    float hw = mix(vParam, 1.0, clamp(vUV.x, 0.0, 1.0));
+    float a = clamp(1.0 - abs(vUV.y) / max(hw, 0.001), 0.0, 1.0);
+    c = col * (a * a * (3.0 - 2.0 * a));
   }
   c.a *= (1.0 - vAdd);
   o = c;
@@ -101,7 +106,15 @@ uniform vec2 uRes; uniform float uTime; uniform float uAspect;
 uniform vec4 uWave[4]; uniform vec4 uWaveP[4]; uniform int uWaves;
 uniform float uChroma; uniform float uBloomAmt; uniform float uVig; uniform vec3 uVigCol; uniform float uGrain;
 uniform float uSat; uniform float uContrast; uniform float uBright; uniform vec3 uTint; uniform vec4 uFlash; uniform float uScan; uniform float uWarp;
+uniform sampler2D uLut0; uniform sampler2D uLut1; uniform float uLutMix; uniform float uLutAmt;
 in vec2 vUV; out vec4 o;
+// 16³ 調色表（256×16 的長條：藍色分 16 片、每片 16×16 是紅×綠）
+vec3 lut(sampler2D t, vec3 c){
+  c = clamp(c, 0.0, 1.0);
+  float b = c.b * 15.0, b0 = floor(b), b1 = min(b0 + 1.0, 15.0);
+  float x = c.r * 15.0 + 0.5, y = (c.g * 15.0 + 0.5) / 16.0;
+  return mix(texture(t, vec2((b0 * 16.0 + x) / 256.0, y)).rgb, texture(t, vec2((b1 * 16.0 + x) / 256.0, y)).rgb, b - b0);
+}
 void main(){
   vec2 uv = vUV;
   if (uWarp > 0.0) { vec2 c = uv - 0.5; uv = 0.5 + c * (1.0 + dot(c, c) * uWarp); }
@@ -119,11 +132,150 @@ void main(){
   col = mix(vec3(l), col, uSat);
   col = (col - 0.5) * uContrast + 0.5 + uBright;
   col *= uTint;
+  if (uLutAmt > 0.0) { vec3 g = lut(uLut0, col); if (uLutMix > 0.0) g = mix(g, lut(uLut1, col), uLutMix); col = mix(col, g, uLutAmt); }
   if (uVig > 0.0) { vec2 q = vUV - 0.5; q.x *= mix(1.0, uAspect, 0.5); float v = 1.0 - smoothstep(0.2, 0.85, length(q) * 1.15); col = mix(uVigCol, col, mix(1.0, v, uVig)); }
   if (uScan > 0.0) col *= 1.0 - uScan * (0.5 + 0.5 * sin(vUV.y * uRes.y * 3.14159));
   col = mix(col, uFlash.rgb, uFlash.a);
   if (uGrain > 0.0) { float n = fract(sin(dot(vUV * uRes + fract(uTime) * 91.7, vec2(12.9898, 78.233))) * 43758.5453); col += (n - 0.5) * uGrain; }
   o = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
+
+/* ---- 光影（25_light.js 用）：遮光圖 → 跳躍填色（JFA）算距離場 → 每盞燈一個方塊，柔和陰影 ---- */
+// JFA 每個格子存「最近的牆邊格子的相對位移」：r、g＝dx、dy（偏 128，±127 格內），b＝那個牆邊格子被蓋住多少（0.5～1，0＝沒找到；用來算到次像素的邊），a＝這格自己在不在牆裡
+// 種子是「牆的邊緣」：牆外的點量到牆邊、牆裡的點量到出口 → 有正負號的距離場，光走進牆裡也能平順地算
+const JFA_SEED_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uTex; out vec4 o;
+void main(){
+  ivec2 p = ivec2(gl_FragCoord.xy), S = textureSize(uTex, 0);
+  float a = texelFetch(uTex, p, 0).a; bool ins = a > 0.5, edge = false;
+  if (ins) {
+    if (p.x + 1 < S.x && texelFetch(uTex, p + ivec2(1, 0), 0).a <= 0.5) edge = true;
+    if (p.x > 0 && texelFetch(uTex, p - ivec2(1, 0), 0).a <= 0.5) edge = true;
+    if (p.y + 1 < S.y && texelFetch(uTex, p + ivec2(0, 1), 0).a <= 0.5) edge = true;
+    if (p.y > 0 && texelFetch(uTex, p - ivec2(0, 1), 0).a <= 0.5) edge = true;
+  }
+  o = vec4(128.0 / 255.0, 128.0 / 255.0, edge ? max(a, 0.51) : 0.0, ins ? 1.0 : 0.0);
+}`;
+const JFA_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uTex; uniform int uStep; uniform ivec2 uSize; out vec4 o;
+void main(){
+  ivec2 p = ivec2(gl_FragCoord.xy); int best = 1 << 30; ivec2 bo = ivec2(0); float bc = 0.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    ivec2 q = p + ivec2(i, j) * uStep;
+    if (q.x < 0 || q.y < 0 || q.x >= uSize.x || q.y >= uSize.y) continue;
+    vec4 s = texelFetch(uTex, q, 0); if (s.b < 0.25) continue;
+    ivec2 off = q + ivec2(floor(s.rg * 255.0 + 0.5)) - 128 - p; int d = off.x * off.x + off.y * off.y;
+    if (d < best) { best = d; bo = off; bc = s.b; }
+  }
+  float ins = texelFetch(uTex, p, 0).a;
+  o = (bc > 0.25 && abs(bo.x) <= 127 && abs(bo.y) <= 127) ? vec4((vec2(bo) + 128.0) / 255.0, bc, ins) : vec4(128.0 / 255.0, 128.0 / 255.0, 0.0, ins);
+}`;
+// 畫布像素座標的方塊（燈、水面）：uRect＝x0,y0,x1,y1（畫布 px，y 往下）
+const RECT_VS = `#version 300 es
+uniform vec4 uRect; uniform vec2 uCanvas; out vec2 vP;
+void main(){ vec2 c = vec2(float(gl_VertexID & 1), float((gl_VertexID >> 1) & 1)); vec2 p = mix(uRect.xy, uRect.zw, c); vP = p; gl_Position = vec4(p.x / uCanvas.x * 2.0 - 1.0, 1.0 - p.y / uCanvas.y * 2.0, 0.0, 1.0); }`;
+const LIGHT_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uJfa; uniform vec2 uCanvas; uniform vec2 uMS; uniform ivec2 uMSize;
+uniform vec2 uPos; uniform float uRad; uniform vec3 uCol; uniform float uHaze; uniform vec4 uCone; uniform float uFall;
+uniform vec4 uSh; uniform float uSeed; uniform float uFar;
+in vec2 vP; layout(location=0) out vec4 o; layout(location=1) out vec4 oHaze;
+vec2 toM(vec2 p){ return vec2(p.x * uMS.x, (uCanvas.y - p.y) * uMS.y); }
+// 有正負號的距離（遮光圖的格子）：牆外＝到牆邊多遠，牆裡＝負的（到出口多遠）；畫面外當成空地
+float sdf(vec2 m){
+  if (m.x < 0.0 || m.y < 0.0 || m.x >= float(uMSize.x) || m.y >= float(uMSize.y)) return uFar;
+  ivec2 t = ivec2(floor(m)); vec4 s = texelFetch(uJfa, t, 0); float d = uFar;
+  float c = 1.0;
+  if (s.b > 0.25) { ivec2 off = ivec2(floor(s.rg * 255.0 + 0.5)) - 128; d = length(m - (vec2(t + off) + 0.5)); c = s.b; }
+  return s.a > 0.5 ? -(d + c - 0.5) : max(d + 0.5 - c, 0.0);
+}
+float shadow(vec2 p, vec2 l){
+  vec2 v = l - p; float len = length(v); if (len < 1.0) return 1.0;
+  vec2 dir = v / len; float res = 1.0, t = 0.0, tEnd = len, d;
+  // 燈本身嵌在牆裡（牆上的火把）：燈旁邊那段牆不擋
+  if (sdf(l) < 0.0) { float e = 0.0; for (int i = 0; i < 24; i++) { d = sdf(l - dir * e); if (d >= 0.0 || e >= len) break; e += max(-d, 0.5); } tEnd = len - e; }
+  // 自己就在牆裡：光只滲進表面一點點（牆面、柱子朝燈的那一側有亮邊）。走出自己這面牆之後，從出口再往燈算
+  float t0 = 0.0;
+  if (sdf(p) < 0.0) {
+    d = -1.0;
+    for (int i = 0; i < 24; i++) { d = sdf(p + dir * t); if (d >= 0.0 || t >= tEnd) break; t += max(-d, 0.35); }
+    float pen = d >= 0.0 ? max(t - d, 0.0) : t;
+    res = 1.0 - smoothstep(uSh.z * 0.3, uSh.z + 0.001, pen);
+    if (res < 0.003) return 0.0;
+    if (t >= tEnd) return res;
+    t0 = t; t += 1.0;
+  } else t = 1.0;
+  // 往燈的方向跳著走（距離場說可以放心跳多遠），順便量「擦邊」多近 → 半影
+  float k = len / max(uSh.y, 0.5); int steps = int(uSh.w);
+  for (int i = 0; i < 64; i++) {
+    if (i >= steps || t >= tEnd - max(uSh.y, 1.0)) break;   // 光源本身有大小：擦過燈旁邊（光源範圍內）的牆不算擋住
+    d = sdf(p + dir * t);
+    if (d <= 0.0) return 0.0;
+    res = min(res, k * d / (t - t0)); if (res < 0.003) return 0.0;
+    t += max(d, 0.75);
+  }
+  res = clamp(res, 0.0, 1.0); return res * res * (3.0 - 2.0 * res);
+}
+void main(){
+  vec2 d = vP - uPos; float L = length(d), s = L / uRad;
+  if (s >= 1.0) discard;
+  float w = clamp(1.0 - s * s * s * s, 0.0, 1.0), att = w * w / (1.0 + uFall * s * s);
+  if (uCone.z > -1.5) { vec2 dn = L > 0.001 ? d / L : uCone.xy; att *= max(smoothstep(uCone.z, uCone.w, dot(dn, uCone.xy)), (1.0 - smoothstep(0.0, 0.04, s)) * 0.5); }
+  if (att < 0.002) discard;
+  float sh = uSh.x > 0.5 ? shadow(toM(vP), toM(uPos)) : 1.0;
+  vec3 c = uCol * att * sh;
+  float n = fract(sin(dot(gl_FragCoord.xy + uSeed, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+  o = vec4(c + n * (1.5 / 255.0), 1.0); oHaze = vec4(c * uHaze, 1.0);
+}`;
+// 環境光區塊（室內暗、室外亮；側視遊戲的天空背景）：方塊內換成另一種環境光，邊緣柔和
+const ZONE_FS = `#version 300 es
+precision highp float;
+uniform vec4 uRect; uniform vec4 uCol; uniform float uSoft; in vec2 vP; layout(location=0) out vec4 o; layout(location=1) out vec4 oHaze;
+void main(){ vec2 d = min(vP - uRect.xy, uRect.zw - vP); float m = smoothstep(0.0, max(uSoft, 0.001), min(d.x, d.y)) * uCol.a; o = vec4(uCol.rgb * 0.5, m); oHaze = vec4(0.0); }`;
+const APPLY_FS = `#version 300 es
+precision mediump float;
+uniform sampler2D uTex; in vec2 vUV; out vec4 o;
+void main(){ o = vec4(texture(uTex, vUV).rgb, 1.0); }`;
+// 水面、熱浪：先把畫面「抓」下來，再用扭曲過的座標讀回去
+const GRAB_FS = `#version 300 es
+precision highp float;
+uniform sampler2D uGrab; uniform vec2 uCanvas; uniform vec4 uRect; uniform float uTime;
+uniform vec4 uCol; uniform vec4 uP; uniform vec4 uW; uniform vec4 uSky; uniform float uShape;
+in vec2 vP; out vec4 o;
+vec2 uvOf(vec2 p){ p = clamp(p, vec2(0.5), uCanvas - 0.5); return vec2(p.x / uCanvas.x, 1.0 - p.y / uCanvas.y); }
+void main(){
+  vec2 sz = max(uRect.zw - uRect.xy, vec2(1.0)), q = (vP - uRect.xy) / sz;
+  vec2 wp = (vP - uRect.xy) / uW.x + uW.yz; float t = uTime * uW.w; int mode = int(uP.x + 0.5);
+  if (mode == 2) {
+    float edge = smoothstep(0.0, 0.25, q.x) * smoothstep(1.0, 0.75, q.x) * smoothstep(0.0, 0.35, q.y) * smoothstep(1.0, 0.8, q.y);
+    vec2 off = vec2(sin(wp.y * 0.09 + t * 5.0) + sin(wp.y * 0.23 - t * 7.0 + wp.x * 0.05) * 0.5, sin(wp.x * 0.11 + t * 4.0) * 0.4) * uP.y * edge;
+    float m = uShape > 0.5 ? 1.0 - smoothstep(0.82, 1.0, length(q * 2.0 - 1.0)) : 1.0;
+    o = vec4(texture(uGrab, uvOf(vP + off)).rgb * m, m); return;
+  }
+  float depth = mode == 0 ? q.y : 0.5;
+  float ax = sin(wp.x * 0.045 + t * 1.7) * 0.6 + sin(wp.x * 0.13 - t * 2.3 + wp.y * 0.07) * 0.4;
+  float ay = sin(wp.y * 0.09 + t * 1.9 + wp.x * 0.02) * 0.5 + sin(wp.x * 0.07 + t * 1.1) * 0.5;
+  vec2 rip = vec2(ax, ay) * uP.y * (0.35 + depth * 0.9);
+  vec3 col = texture(uGrab, uvOf(vP + rip * 0.6)).rgb;
+  if (mode == 0) {
+    vec2 src = vec2(vP.x + rip.x * 1.4, 2.0 * uRect.y - vP.y + rip.y * 1.8);
+    vec3 refl = texture(uGrab, uvOf(src)).rgb;
+    if (src.y < 0.0) refl = uSky.rgb;
+    float f = uP.z * (0.25 + 0.75 * (1.0 - smoothstep(0.0, 1.0, depth)));
+    col = mix(col, refl, f);
+    float line = 1.0 - smoothstep(0.0, max(1.5, uW.x * 1.2), abs(vP.y - uRect.y - ay * uP.y * 0.3));
+    col += line * uP.w * 0.5;
+  } else {
+    float c1 = sin(wp.x * 0.08 + t * 1.3 + sin(wp.y * 0.07 + t)) * sin(wp.y * 0.09 - t * 1.1 + sin(wp.x * 0.05));
+    col += vec3(pow(max(c1, 0.0), 6.0)) * uP.z * 0.45;
+  }
+  col = mix(col, uCol.rgb, uCol.a * (0.3 + 0.7 * depth));
+  // 橢圓（水窪、池塘）：邊緣柔和地淡掉，還有一圈亮邊
+  float m = 1.0;
+  if (uShape > 0.5) { float e = length(q * 2.0 - 1.0); m = 1.0 - smoothstep(0.86, 1.0, e); col += smoothstep(0.7, 0.93, e) * (1.0 - smoothstep(0.93, 1.0, e)) * uP.w * 0.25; }
+  o = vec4(col * m, m);
 }`;
 
 /** 後製參數（PZ.post）：特效模組會去動它們；遊戲也可以直接設 */
@@ -157,7 +309,7 @@ class GLRenderer {
     if (!gl) throw new Error('這台裝置不支援 WebGL2');
     this.gl = gl;
     this.textures = new Set();
-    this.stats = { draws: 0, quads: 0, flushes: 0, tex: 0 };
+    this.stats = { draws: 0, quads: 0, flushes: 0, tex: 0, lights: 0 };
     this.buf = new ArrayBuffer(MAX_QUADS * QUAD_WORDS * 4);
     this.f32 = new Float32Array(this.buf); this.u32 = new Uint32Array(this.buf);
     this.n = 0; this.slots = []; this.blend = 0; this.target = null; this.inScene = false; this.lost = false;
@@ -175,7 +327,10 @@ class GLRenderer {
     this.pBright = program(gl, FULL_VS, BRIGHT_FS, ['uTex', 'uTexel', 'uThresh']);
     this.pDown = program(gl, FULL_VS, DOWN_FS, ['uTex', 'uTexel']);
     this.pUp = program(gl, FULL_VS, UP_FS, ['uTex', 'uTexel']);
-    this.pComp = program(gl, FULL_VS, COMP_FS, ['uScene', 'uBloom', 'uRes', 'uTime', 'uAspect', 'uWave', 'uWaveP', 'uWaves', 'uChroma', 'uBloomAmt', 'uVig', 'uVigCol', 'uGrain', 'uSat', 'uContrast', 'uBright', 'uTint', 'uFlash', 'uScan', 'uWarp']);
+    this.pComp = program(gl, FULL_VS, COMP_FS, ['uScene', 'uBloom', 'uRes', 'uTime', 'uAspect', 'uWave', 'uWaveP', 'uWaves', 'uChroma', 'uBloomAmt', 'uVig', 'uVigCol', 'uGrain', 'uSat', 'uContrast', 'uBright', 'uTint', 'uFlash', 'uScan', 'uWarp', 'uLut0', 'uLut1', 'uLutMix', 'uLutAmt']);
+    // 光影、水面用的著色器：第一次用到才編譯（沒用光影的遊戲不花這個時間）
+    this.pl = null; this.lfbo = {}; this.lfboKey = ''; this.grabTex = null; this.grabW = 0; this.grabH = 0;
+    this.lut = [null, null]; this.lutVer = [-1, -1];
     this.vao = gl.createVertexArray(); gl.bindVertexArray(this.vao);
     this.vbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo); gl.bufferData(gl.ARRAY_BUFFER, this.buf.byteLength, gl.DYNAMIC_DRAW);
     const stride = VERT_WORDS * 4;
@@ -222,22 +377,31 @@ class GLRenderer {
   texClear(t) { if (this.lost || !t.gl) return; this.flush(); const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, t.gl); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, t.w, t.h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); }
   texDelete(t) { if (t.gl && !this.lost) { this.flush(); this.gl.deleteTexture(t.gl); if (t.fb) this.gl.deleteFramebuffer(t.fb); } t.gl = null; t.fb = null; this.textures.delete(t); }
   /* ---- 離屏畫布（場景、泛光）---- */
+  /** 建一張離屏畫布：o.nearest（不內插）、o.extra（多一張同大小的貼圖接在第二個出口，畫光的時候順便畫霧裡的光） */
+  makeFbo(w, h, o = {}) {
+    const gl = this.gl; w = Math.max(1, w | 0); h = Math.max(1, h | 0);
+    const tx = () => {
+      const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      const f = o.nearest ? gl.NEAREST : gl.LINEAR;
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return tex;
+    };
+    const tex = tx(), fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const out = { tex, fb, w, h, tex2: null };
+    if (o.extra) { out.tex2 = tx(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, out.tex2, 0); }
+    return out;
+  }
+  dropFbo(f) { if (!f) return; const gl = this.gl; gl.deleteTexture(f.tex); if (f.tex2) gl.deleteTexture(f.tex2); gl.deleteFramebuffer(f.fb); }
   ensureFbos() {
     const key = this.w + 'x' + this.h + ':' + (Quality.cur.bloom || 0);
     if (key === this.fboSize) return;
     this.fboSize = key;
     const gl = this.gl;
-    for (const k in this.fbo) { const f = this.fbo[k]; gl.deleteTexture(f.tex); gl.deleteFramebuffer(f.fb); }
+    for (const k in this.fbo) this.dropFbo(this.fbo[k]);
     this.fbo = {};
-    const mk = (name, w, h) => {
-      w = Math.max(1, w | 0); h = Math.max(1, h | 0);
-      const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-      this.fbo[name] = { tex, fb, w, h };
-    };
+    const mk = (name, w, h) => { this.fbo[name] = this.makeFbo(w, h); };
     mk('scene', this.w, this.h);
     const b = Quality.cur.bloom || 0;
     if (b) { const d = b >= 2 ? 2 : 4; mk('b0', this.w / d, this.h / d); mk('b1', this.w / d / 2, this.h / d / 2); mk('b2', this.w / d / 4, this.h / d / 4); }
@@ -249,17 +413,17 @@ class GLRenderer {
     if (this.lost) return;
     const gl = this.gl;
     this.w = this.canvas.width; this.h = this.canvas.height;
-    this.stats.draws = this.stats.quads = this.stats.flushes = 0;
-    this.n = 0; this.slots.length = 0;
+    this.stats.draws = this.stats.quads = this.stats.flushes = this.stats.lights = 0;
+    this.n = 0; this.slots.length = 0; this.inTarget = false;
     this.inScene = this.usePost();
     if (this.inScene) { this.ensureFbos(); this.bindTarget(this.fbo.scene.fb, this.w, this.h, false); }
     else this.bindTarget(null, this.w, this.h, false);
     const c = toColor(clear == null ? '#000' : clear);
     gl.clearColor(cR(c) / 255, cG(c) / 255, cB(c) / 255, 1); gl.clear(gl.COLOR_BUFFER_BIT);
   }
-  bindTarget(fb, w, h, rt) {
+  bindTarget(fb, w, h, rt, vw, vh) {
     const gl = this.gl; this.flush();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0, 0, w, h);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0, 0, vw || w, vh || h);
     gl.useProgram(this.sp.p); gl.bindVertexArray(this.vao);
     // 畫到貼圖（rt）時 y 不翻：貼圖第 0 列在下面，之後當貼圖用時 UV 翻一下
     gl.uniform2f(this.sp.u.uView, 2 / w, rt ? 2 / h : -2 / h); gl.uniform2f(this.sp.u.uOff, -1, rt ? -1 : 1);
@@ -269,12 +433,12 @@ class GLRenderer {
   /** 開始畫到某張貼圖（rt：用 texCreate(w, h, {rt:true}) 建的）；endTarget() 回到原本的地方 */
   beginTarget(t, clear) {
     if (this.lost) return;
-    this.flush(); this._prevTarget = this.inScene ? this.fbo.scene : null;
+    this.flush(); this._prevTarget = this.inScene ? this.fbo.scene : null; this.inTarget = true;
     if (!t.gl) this.texAlloc(t);
     this.bindTarget(t.fb, t.w, t.h, true);
     if (clear !== undefined) { const gl = this.gl, c = toColor(clear); gl.clearColor(cR(c) / 255 * cA(c), cG(c) / 255 * cA(c), cB(c) / 255 * cA(c), cA(c)); gl.clear(gl.COLOR_BUFFER_BIT); }
   }
-  endTarget() { if (this.lost) return; const p = this._prevTarget; this.bindTarget(p ? p.fb : null, this.w, this.h, false); }
+  endTarget() { this.inTarget = false; if (this.lost) return; const p = this._prevTarget; this.bindTarget(p ? p.fb : null, this.w, this.h, false); }
   applyBlend(b, force) {
     if (b === this.blend && !force) return;
     this.flush(); this.blend = b; const gl = this.gl;
@@ -309,7 +473,9 @@ class GLRenderer {
     this.n++;
   }
   /** 任意四個角的四邊形（拖尾、梯形光束）：0→1→2→3 順時針；c0 給 0、3 角，c1 給 1、2 角（可以一頭濃一頭淡） */
-  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add, param) {
+  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add, param) { this.quadv(t, x0, y0, u0, v0, x1, y1, u1, v0, x2, y2, u1, v1, x3, y3, u0, v1, c0, c1, mode, add, param); }
+  /** 同上，但四個角各自給貼圖座標（光束要用） */
+  quadv(t, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, x3, y3, u3, v3, c0, c1, mode, add, param) {
     if (this.lost) return;
     if (t && !t.gl) { if (t.restore) t.restore(t); if (!t.gl) return; }
     if (this.n >= MAX_QUADS) this.flush();
@@ -317,9 +483,9 @@ class GLRenderer {
     const ext = ((((param * 255) & 255) << 24) | (((add * 255) & 255) << 16) | ((mode & 255) << 8) | slot) >>> 0;
     const F = this.f32, U = this.u32; let i = this.n * QUAD_WORDS;
     F[i] = x0; F[i + 1] = y0; F[i + 2] = u0; F[i + 3] = v0; U[i + 4] = c0; U[i + 5] = ext; i += 6;
-    F[i] = x1; F[i + 1] = y1; F[i + 2] = u1; F[i + 3] = v0; U[i + 4] = c1; U[i + 5] = ext; i += 6;
-    F[i] = x2; F[i + 1] = y2; F[i + 2] = u1; F[i + 3] = v1; U[i + 4] = c1; U[i + 5] = ext; i += 6;
-    F[i] = x3; F[i + 1] = y3; F[i + 2] = u0; F[i + 3] = v1; U[i + 4] = c0; U[i + 5] = ext;
+    F[i] = x1; F[i + 1] = y1; F[i + 2] = u1; F[i + 3] = v1; U[i + 4] = c1; U[i + 5] = ext; i += 6;
+    F[i] = x2; F[i + 1] = y2; F[i + 2] = u2; F[i + 3] = v2; U[i + 4] = c1; U[i + 5] = ext; i += 6;
+    F[i] = x3; F[i + 1] = y3; F[i + 2] = u3; F[i + 3] = v3; U[i + 4] = c0; U[i + 5] = ext;
     this.n++;
   }
   /** 實心三角形（多邊形拆成三角形用）：第二個三角形退化 */
@@ -341,6 +507,125 @@ class GLRenderer {
     gl.drawElements(gl.TRIANGLES, this.n * 6, gl.UNSIGNED_SHORT, 0);
     this.stats.draws++; this.stats.quads += this.n;
     this.n = 0; this.slots.length = 0;
+  }
+  /* ---- 光影、水面（著色器第一次用到才編譯）---- */
+  lightProgs() {
+    if (this.pl) return this.pl;
+    const gl = this.gl;
+    this.pl = {
+      seed: program(gl, FULL_VS, JFA_SEED_FS, ['uTex']),
+      jfa: program(gl, FULL_VS, JFA_FS, ['uTex', 'uStep', 'uSize']),
+      light: program(gl, RECT_VS, LIGHT_FS, ['uRect', 'uCanvas', 'uJfa', 'uMS', 'uMSize', 'uPos', 'uRad', 'uCol', 'uHaze', 'uCone', 'uFall', 'uSh', 'uSeed', 'uFar']),
+      apply: program(gl, FULL_VS, APPLY_FS, ['uTex']),
+      zone: program(gl, RECT_VS, ZONE_FS, ['uRect', 'uCanvas', 'uCol', 'uSoft']),
+      grab: program(gl, RECT_VS, GRAB_FS, ['uRect', 'uCanvas', 'uGrab', 'uTime', 'uCol', 'uP', 'uW', 'uSky', 'uShape']),
+    };
+    return this.pl;
+  }
+  /**
+   * 光影（25_light.js 呼叫）。S = { ambient: [r,g,b]（0～1）, zones: [{ x0,y0,x1,y1（畫布 px）, r,g,b,a, soft }], lights, n, scale（光照圖解析度）, mask（遮光圖解析度）, shadows, steps, drawOcc()（畫遮光物）, haze }
+   * 每盞燈：{ x, y, r（畫布 px）, cr, cg, cb（已乘強度）, cone: null | [dx, dy, cos外, cos內], size, soak（畫布 px）, sh, haze, fall }
+   */
+  lighting(S) {
+    if (this.lost || this.inTarget) return false;
+    const gl = this.gl, P = this.lightProgs();
+    this.flush();
+    const W = this.w, H = this.h, prev = this.inScene ? this.fbo.scene : null;
+    const lw = Math.max(1, Math.ceil(W * S.scale)), lh = Math.max(1, Math.ceil(H * S.scale));
+    const mk = S.mask || S.scale, mw = Math.max(1, Math.ceil(W * mk)), mh = Math.max(1, Math.ceil(H * mk)), key = lw + 'x' + lh + '/' + mw + 'x' + mh;
+    if (key !== this.lfboKey) {
+      for (const k in this.lfbo) this.dropFbo(this.lfbo[k]);
+      this.lfbo = { lm: this.makeFbo(lw, lh, { extra: true }), mask: this.makeFbo(mw, mh), j0: this.makeFbo(mw, mh, { nearest: true }), j1: this.makeFbo(mw, mh, { nearest: true }) };
+      this.lfboKey = key;
+    }
+    const F = this.lfbo; let jfa = null;
+    if (S.shadows && S.drawOcc) {
+      // 1) 遮光圖：用平常的畫圖程式、照相機畫，只是畫在小張的圖上
+      const pb = this.blend; this.applyBlend(0, true);
+      this.bindTarget(F.mask.fb, W, H, false, mw, mh);
+      gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      try { S.drawOcc(); } catch (e) { reportError(e, 'light.occluders'); }
+      this.flush(); this.blend = pb;
+      // 2) 距離場（JFA：步長 reach、reach/2 … 1；最遠量到 2×reach 格，再遠就當「很遠」）
+      gl.disable(gl.BLEND); gl.bindVertexArray(this.emptyVao);
+      const pass = (prog, src, dst) => { gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.viewport(0, 0, mw, mh); gl.useProgram(prog.p); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, src.tex); gl.uniform1i(prog.u.uTex, 0); };
+      pass(P.seed, F.mask, F.j0); gl.drawArrays(gl.TRIANGLES, 0, 3);
+      let a = F.j0, b = F.j1;
+      for (let st = S.reach || 64; st >= 1; st >>= 1) { pass(P.jfa, a, b); gl.uniform1i(P.jfa.u.uStep, st); gl.uniform2i(P.jfa.u.uSize, mw, mh); gl.drawArrays(gl.TRIANGLES, 0, 3); const t = a; a = b; b = t; }
+      jfa = a;
+    }
+    // 3) 光照圖：先鋪環境光，每盞燈一個方塊加上去；「霧裡的光」同時畫進第二張
+    gl.bindFramebuffer(gl.FRAMEBUFFER, F.lm.fb); gl.viewport(0, 0, lw, lh);
+    gl.drawBuffers(S.haze ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1] : [gl.COLOR_ATTACHMENT0, gl.NONE]);
+    const amb = this._amb || (this._amb = new Float32Array(4));
+    amb[0] = S.ambient[0] * 0.5; amb[1] = S.ambient[1] * 0.5; amb[2] = S.ambient[2] * 0.5; amb[3] = 1; gl.clearBufferfv(gl.COLOR, 0, amb);
+    if (S.haze) { amb[0] = amb[1] = amb[2] = 0; gl.clearBufferfv(gl.COLOR, 1, amb); }
+    gl.enable(gl.BLEND); gl.bindVertexArray(this.emptyVao);
+    if (S.zones && S.zones.length) {
+      const Z = P.zone, zu = Z.u; gl.useProgram(Z.p); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform2f(zu.uCanvas, W, H);
+      for (const z of S.zones) { gl.uniform4f(zu.uRect, z.x0, z.y0, z.x1, z.y1); gl.uniform4f(zu.uCol, z.r, z.g, z.b, z.a); gl.uniform1f(zu.uSoft, z.soft); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
+    }
+    gl.blendFunc(gl.ONE, gl.ONE);
+    const L = P.light, u = L.u, ms = mw / W; gl.useProgram(L.p);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, jfa ? jfa.tex : this.white); gl.uniform1i(u.uJfa, 0);
+    gl.uniform2f(u.uCanvas, W, H); gl.uniform2f(u.uMS, mw / W, mh / H); gl.uniform2i(u.uMSize, mw, mh); gl.uniform1f(u.uSeed, (Time.frame % 64) * 1.7); gl.uniform1f(u.uFar, Math.min(127, (S.reach || 64) * 2 - 1));
+    for (let i = 0; i < S.n; i++) {
+      const l = S.lights[i];
+      gl.uniform4f(u.uRect, l.x - l.r, l.y - l.r, l.x + l.r, l.y + l.r);
+      gl.uniform2f(u.uPos, l.x, l.y); gl.uniform1f(u.uRad, l.r); gl.uniform3f(u.uCol, l.cr, l.cg, l.cb); gl.uniform1f(u.uHaze, l.haze); gl.uniform1f(u.uFall, l.fall);
+      if (l.cone) gl.uniform4f(u.uCone, l.cone[0], l.cone[1], l.cone[2], l.cone[3]); else gl.uniform4f(u.uCone, 1, 0, -2, -1.9);
+      gl.uniform4f(u.uSh, jfa && l.sh ? 1 : 0, l.size * ms, l.soak * ms, S.steps);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    // 4) 乘回場景（2× 相乘：光照圖 0.5＝原色，最亮可到原色的兩倍），霧裡的光再加上去
+    gl.bindFramebuffer(gl.FRAMEBUFFER, prev ? prev.fb : null); gl.viewport(0, 0, W, H);
+    const A = P.apply; gl.useProgram(A.p); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(A.u.uTex, 0);
+    gl.bindTexture(gl.TEXTURE_2D, F.lm.tex); gl.blendFunc(gl.DST_COLOR, gl.SRC_COLOR); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (S.haze) { gl.bindTexture(gl.TEXTURE_2D, F.lm.tex2); gl.blendFunc(gl.ONE, gl.ONE); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    this.stats.lights += S.n;
+    this.bindTarget(prev ? prev.fb : null, W, H, false);
+    return true;
+  }
+  /**
+   * 水面、熱浪：把畫面一塊抓下來，扭曲後畫回去。o = { mode: 0 倒影（側視）| 1 俯視水面 | 2 熱浪, rect: [x0,y0,x1,y1]（畫布 px）,
+   *   src: [x0,y0,x1,y1] 要抓的範圍, col: [r,g,b,a], amp（畫布 px）, reflect, foam, scale（畫布 px／世界單位）, wx, wy（方塊左上角的世界座標）, speed, sky: [r,g,b] }
+   */
+  grab(o) {
+    if (this.lost || this.inTarget) return false;
+    const gl = this.gl, P = this.lightProgs(); this.flush();
+    const W = this.w, H = this.h;
+    if (!this.grabTex || this.grabW !== W || this.grabH !== H) {
+      if (this.grabTex) gl.deleteTexture(this.grabTex);
+      this.grabTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.grabTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, W, H, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.grabW = W; this.grabH = H;
+    }
+    const s = o.src, x0 = clamp(Math.floor(s[0]), 0, W), y0 = clamp(Math.floor(s[1]), 0, H), x1 = clamp(Math.ceil(s[2]), 0, W), y1 = clamp(Math.ceil(s[3]), 0, H);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.grabTex);
+    if (x1 > x0 && y1 > y0) gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, x0, H - y1, x0, H - y1, x1 - x0, y1 - y0);
+    const G = P.grab, u = G.u; gl.useProgram(G.p); gl.bindVertexArray(this.emptyVao); gl.uniform1i(u.uGrab, 0);
+    const r = o.rect; gl.uniform4f(u.uRect, r[0], r[1], r[2], r[3]); gl.uniform2f(u.uCanvas, W, H); gl.uniform1f(u.uTime, o.time);
+    gl.uniform4f(u.uCol, o.col[0], o.col[1], o.col[2], o.col[3]); gl.uniform4f(u.uP, o.mode, o.amp, o.reflect, o.foam);
+    gl.uniform4f(u.uW, o.scale, o.wx, o.wy, o.speed); gl.uniform4f(u.uSky, o.sky[0], o.sky[1], o.sky[2], 1); gl.uniform1f(u.uShape, o.shape ? 1 : 0);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    this.bindTarget(this.inScene ? this.fbo.scene.fb : null, W, H, false);
+    return true;
+  }
+  /** 調色表（PZ.post.grade）：兩張 256×16，換的時候淡入淡出 */
+  lutSync(i, data, ver) {
+    const gl = this.gl;
+    if (!this.lut[i]) {
+      this.lut[i] = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.lut[i]);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 16, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.lutVer[i] = -1;
+    }
+    gl.bindTexture(gl.TEXTURE_2D, this.lut[i]);
+    if (this.lutVer[i] !== ver) { gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 16, gl.RGBA, gl.UNSIGNED_BYTE, data); this.lutVer[i] = ver; }
   }
   /** 場景畫完：做後製並換到螢幕；之後畫的東西（HUD）不受震動、色差影響 */
   hud() {
@@ -376,6 +661,15 @@ class GLRenderer {
     gl.uniform3f(u.uTint, Post.tint[0], Post.tint[1], Post.tint[2]);
     const fl = Post.flash; gl.uniform4f(u.uFlash, fl[0], fl[1], fl[2], fl[3] * Settings.flashScale());
     gl.uniform1f(u.uScan, Post.scan); gl.uniform1f(u.uWarp, Post.warp);
+    const lt = Post._lut; gl.uniform1i(u.uLut0, 2); gl.uniform1i(u.uLut1, 3);
+    if (lt && lt.amt > 0.001 && lt.a) {
+      gl.activeTexture(gl.TEXTURE2); this.lutSync(0, lt.a, lt.va);
+      gl.activeTexture(gl.TEXTURE3); if (lt.b && lt.mix > 0.001) this.lutSync(1, lt.b, lt.vb); else gl.bindTexture(gl.TEXTURE_2D, this.lut[0]);
+      gl.uniform1f(u.uLutMix, lt.b ? lt.mix : 0); gl.uniform1f(u.uLutAmt, Math.min(1, lt.amt));
+    } else {
+      gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, this.white); gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, this.white);
+      gl.uniform1f(u.uLutMix, 0); gl.uniform1f(u.uLutAmt, 0);
+    }
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.enable(gl.BLEND);
     this.bindTarget(null, this.w, this.h, false);

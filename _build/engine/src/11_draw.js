@@ -4,6 +4,7 @@
      g.world()   世界座標（跟著相機：位移、縮放、旋轉、震動）← render 一開始就是這個
      g.screen()  螢幕座標（CSS px，左上角 0,0），不跟相機
      g.hud()     場景畫完：做後製（泛光、扭曲…），之後畫的 HUD 不受震動與後製影響；自動切到 screen
+     g.lighting() 套用光影（PZ.light）與霧；之後畫的東西不受明暗影響（發光的燈泡、火焰）。沒呼叫的話 g.hud() 會自動套用
    變形跟 Canvas2D 一樣：g.save() / g.translate() / g.rotate() / g.scale() / g.restore() / g.alpha(a)
    常用：
      g.sprite('hero', x, y, { r: 角度, s: 縮放, sx, sy, a: 透明度, color: 上色, add: 發光 0～1, flash: 閃白 0～1, ax, ay })
@@ -15,6 +16,8 @@
      g.text('字', x, y, { size, color, weight, outline, outlineColor, shadow, align, baseline, maxWidth })
      g.bar(x, y, w, h, 比例, { bg, fg, back })  血條
      g.into('decals', () => { …畫進畫布貼圖… })
+     g.castShadow('hero', x, y, { len, a })   角色投影（朝離燈的方向）    g.beam(x, y, 角度, 長度, 起寬, 終寬, color)  光束
+     g.water(x, y, w, h, { mode: 'mirror' | 'flat', color, reflect })     水面（倒影、波紋）    g.haze(x, y, w, h)  熱浪扭曲
    ========================================================================== */
 const M_ID = [1, 0, 0, 1, 0, 0];
 class Graphics {
@@ -33,7 +36,14 @@ class Graphics {
   }
   world() { this._base('world'); return this; }
   screen() { this._base('screen'); return this; }
-  hud() { if (this._hudDone) { this._base('screen'); return this; } Fx._drawAuto(this); this.r.hud(); this._base('screen'); this._hudDone = true; return this; }
+  hud() {
+    if (this._hudDone) { this._base('screen'); return this; }
+    this.lighting(); Weather._drawOver(this); Fx._drawAuto(this);
+    this.r.hud(); this._base('screen'); Cinema._drawBars(this);
+    this._hudDone = true; return this;
+  }
+  /** 套用光影（PZ.light）與霧：之前畫的東西被照亮／變暗，之後畫的（燈泡、火焰、發光字）照原樣。沒呼叫的話 g.hud() 會自動套用 */
+  lighting() { if (this._litDone) return this; this._litDone = true; Weather._drawUnder(this); Light._apply(this); return this; }
   /* ---- 變形 ---- */
   save() { this.stack.push([this.m[0], this.m[1], this.m[2], this.m[3], this.m[4], this.m[5], this.al, this.blendName]); return this; }
   restore() { const s = this.stack.pop(); if (s) { this.m.set(s.slice(0, 6)); this.al = s[6]; if (s[7] !== this.blendName) this.blend(s[7]); } return this; }

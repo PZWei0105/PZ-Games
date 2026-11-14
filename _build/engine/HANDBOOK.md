@@ -28,6 +28,7 @@ _build/engine/
     00_head  01_math  02_color  03_events  04_time  05_screen  06_input  07_gl  08_c2d
     09_art  10_text  11_draw  12_camera  13_tween  14_particles  15_fx  16_audio  17_music
     18_save  19_cloud  20_scene  21_ui(.css/.js)  22_dialogue  23_debug  24_boot
+    25_light（光影、陰影、水面）  26_weather（天氣）  27_cinema（調色、黑邊）
   build/pz-engine.js       開發版（每次 build_engine.py 覆蓋）
   releases/pz-engine-X.Y.Z.js   正式版（發了就不再改）
   tools/
@@ -37,7 +38,7 @@ _build/engine/
     webkit_check.py   在 WebKit（iPhone Safari 的引擎）裡跑自我檢查或任一頁
     shot.py / labshot.py   截圖
   tests/unit/         Node 單元測試（數學、顏色、事件、時間、存檔、音效合成）
-  tests/browser/      selftest.html（74 項）、interact（真的點擊／觸控）、run_cloud（雲端存檔九種情境）、run_example（範例能玩）
+  tests/browser/      selftest.html（101 項）、interact（真的點擊／觸控）、run_cloud（雲端存檔九種情境）、run_example（範例能玩）
   lab/                樣品館（自己也是一款用引擎做的 App）
   examples/hello/     最小範例（第 3 節那份程式，測試會實際玩它）
 ```
@@ -249,6 +250,75 @@ PZ.art.live('world', 畫布, { pixel: true })  每格畫完 f.refresh() // 一�
 ### 6.2 文字
 
 `g.text` 用中文字型圖集：每個字第一次出現時畫一次，之後跟圖片一樣批次畫。`PZ.text.measure(字串, 樣式)`、`PZ.text.wrap(字串, { size, maxWidth })`（中文斷行規則）。大段文字、可選取的字、輸入框用 DOM（`#pz-ui`）。
+
+### 6.3 光影與陰影（PZ.light）
+
+夜晚、地牢、恐怖、潛行類遊戲的靈魂。開了之後整個畫面先變暗（環境光），燈照到的地方才亮，牆會擋光、影子邊緣是柔的。
+
+```js
+PZ.light.on({ ambient: '#1a2234' })                 // 環境光：沒照到的地方剩多亮（'#fff'＝白天，看起來跟沒開一樣）
+const torch = PZ.light.add({ x, y, r: 300, color: '#ff9a3c', intensity: 1.3, flicker: 0.22, glow: 0.6 })
+const flash = PZ.light.add({ follow: hero, oy: -24, r: 520, cone: 0.4, dir: 角度, color: '#fff1d6', intensity: 1.5 })   // 手電筒
+flash.dir = hero.aim;  torch.fade(0, 0.5);  torch.remove();
+PZ.light.box(x, y, w, h)  PZ.light.circle(x, y, r)  PZ.light.poly([…])     // 會擋光的牆、柱子、箱子（回傳的物件可以改位置）
+PZ.light.occluders((g) => { for (const m of monsters) g.sprite(m.frame, m.x, m.y, { silhouette: true }); })   // 用圖形狀擋光（每格畫一次）
+PZ.light.zone(x, y, w, h, { ambient: '#fff', soft: 60 })   // 這一塊換一種環境光：屋內暗、院子亮；側視遊戲的天空與遠景
+PZ.light.flash(0.8, 0.25)                           // 打雷、爆炸：環境光瞬間變亮
+PZ.light.at(x, y)                                   // 這點多亮（0 全黑、1 原色）：潛行遊戲判斷「主角在不在光裡」、怕光的怪
+PZ.light.blocked(x0, y0, x1, y1)                    // 兩點之間有沒有被牆擋（視線、AI）
+```
+
+render 裡的順序：
+
+```js
+render(g) {
+  畫地板、牆、角色、地上的東西…            // 這些會被照亮／變暗
+  g.lighting();                             // ← 套用光影（沒寫的話 g.hud() 會自動套）
+  畫燈泡、火焰、霓虹字、怪物的眼睛…         // 之後畫的不受明暗影響：會「發光」
+}
+```
+
+- 燈的參數：`r` 半徑、`intensity`（1＝把原色照到最亮，超過 1 會曝光、配泛光會發光）、`flicker` 閃爍（火把 0.2、壞掉的燈 0.6）、`cone` 半張角（弧度，不給＝四面八方）、`dir` 方向、`size` 光源大小（越大陰影越柔）、`fall` 衰減（越大光越集中）、`haze` 霧裡看得到的光、`glow` 光源本身畫一顆光點、`shadows: false` 不算陰影、`screen: true` 用螢幕座標。
+- 牆上的火把放在牆裡也可以（引擎會忽略燈旁邊那段牆）；牆面、柱子朝燈那一側會有一圈亮邊（`PZ.light.on({ soak })` 調寬度）。
+- 角色投影：`g.castShadow('hero', x, y, { len, a })` 自動朝「離最亮那盞燈」的方向拖（沒有燈就用 `PZ.light.sun`）；側視遊戲加 `flat: true`（影子貼在地上）。
+- 光束：`g.beam(x, y, 角度, 長度, 起寬, 終寬, color, { a, end })`（窗戶的光、探照燈、路燈下的光柱）。
+- 畫質自動調：低畫質時光照圖解析度降低、陰影步數變少，最低一階不算陰影；Canvas2D 後備模式只有光、沒有陰影。
+- 側視遊戲：天空與遠景用 `PZ.light.zone()` 圈起來保持原色，燈光只影響近景（範例：樣品館「天氣與水面」）。
+
+### 6.4 天氣（PZ.weather）
+
+```js
+PZ.weather.set('rain')                              // 'rain' 'drizzle' 'storm'（雷雨）'snow' 'blizzard' 'fog' 'mist' 'clear'
+PZ.weather.set('snow', { amount: 0.6, wind: -0.3, time: 4 })   // 強度、風、幾秒變過去
+PZ.weather.mix({ rain: 0.5, fog: 0.8, lightning: 0.3 })        // 自己調配方
+PZ.weather.wind = 0.4;  PZ.weather.strike({ x, y })            // 馬上打一道雷（閃光、照亮、延遲的雷聲）
+PZ.weather.ground = (x) => y                        // 側視遊戲：雨滴濺在哪條線上（俯視不用設）
+```
+
+霧畫在光影之前（會被燈照亮，手電筒照進霧裡有光柱）；雨雪畫在光影之後（燈下閃亮、黑暗裡淡淡的）。數量跟著畫質自動調；場景切換時清掉。
+
+### 6.5 水面與熱浪
+
+```js
+g.water(x, y, w, h, { mode: 'mirror', color: '#123a4a', depth: 0.45, reflect: 0.65, ripple: 3, foam: 0.5, sky })   // 側視：倒映水面上方
+g.water(x, y, w, h, { mode: 'flat', shape: 'ellipse' })   // 俯視水窪、池塘：波光＋水下扭曲
+g.haze(x, y, w, h, { strength: 4 })                        // 火堆上方、沙漠、傳送門的熱浪扭曲
+```
+
+水面會「抓」目前畫好的畫面來倒映：**要畫在被倒映的東西後面**（側視：放在 g.lighting() 和發光物之後，倒影裡才有燈和霓虹）。
+
+### 6.6 調色與電影黑邊
+
+```js
+PZ.post.grade('cinema')                  // 青橘電影；還有 warm cold noir sepia horror dream night sunset neon toxic vivid bleach retro（PZ.post.grades 有中文名）
+PZ.post.grade('noir', { time: 1.5, amount: 0.8 })     // 1.5 秒換過去、強度八成
+PZ.post.grade({ temp: 0.4, sat: 1.2, contrast: 0.2, lift: [0, 0, 0.05], split: { shadow: '#0f6f7d', highlight: '#ffad6a', amount: 0.3 } })
+PZ.post.grade(null)                      // 回到原色
+PZ.fx.letterbox(0.12)                    // 電影黑邊（上下各 12%）；PZ.fx.letterbox(0) 收起來
+```
+
+調色是一張 16³ 的調色表（LUT），在後製一次算完，幾乎不花效能；換調色會自動淡入淡出。過場、回憶、夢境、中毒、夜晚都可以用。
+
 
 ---
 
