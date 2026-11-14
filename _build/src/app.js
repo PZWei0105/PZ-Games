@@ -11,6 +11,22 @@ const DAY = 864e5;
 const isTouch = matchMedia('(hover: none)').matches || 'ontouchstart' in window;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const vib = (ms) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* no haptics */ } };
+// A real "tap" for the moments that should be felt (picking up a cartridge, clicking it in).
+// Android: the vibration API. iPhone (Safari 18+) has none, but a switch control taps the Taptic
+// Engine when it toggles, so a hidden one is toggled. It only works inside a touch or a release,
+// which is when it is called; anywhere else it quietly does nothing.
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let hapT = 0;
+function haptic(ms = 10) {
+  try {
+    if (navigator.vibrate) { navigator.vibrate(ms); return; }
+    if (!IOS || !S.settings.sfx) return;
+    const now = performance.now(); if (now - hapT < 60) return; hapT = now;
+    const l = document.createElement('label'); l.className = 'hap'; l.setAttribute('aria-hidden', 'true');
+    const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); i.tabIndex = -1;
+    l.appendChild(i); document.head.appendChild(l); l.click(); l.remove();
+  } catch (e) { /* no haptics */ }
+}
 
 function hexRgb(hex) {
   const h = String(hex || '#8fd3ff').replace('#', '');
@@ -96,6 +112,10 @@ const I = {
   me: '<svg viewBox="0 0 24 24"><path d="M12 2.8 19.5 7v10L12 21.2 4.5 17V7z"/><circle cx="12" cy="10.2" r="2.6"/><path d="M7.8 16.4a4.6 4.6 0 0 1 8.4 0"/></svg>',
   bolt: '<svg viewBox="0 0 24 24"><path d="M13.5 2.5 5 13.5h6l-1 8 8.5-11h-6z"/></svg>',
   fire: '<svg viewBox="0 0 24 24"><path d="M12 21a6.5 6.5 0 0 0 6.5-6.5c0-3.2-2-5.4-3.6-7.2-.4 1.6-1.3 2.6-2.4 3.1C12.6 7 11.2 4.6 9 3c.3 3-1.4 4.8-2.8 6.6A7.2 7.2 0 0 0 5.5 14.5 6.5 6.5 0 0 0 12 21z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  eject: '<svg viewBox="0 0 24 24"><path d="M12 5.5 5 14h14z"/><path d="M5.5 18.5h13"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  cart: '<svg viewBox="0 0 24 24"><path d="M6.5 3h11a1.5 1.5 0 0 1 1.5 1.5V17l-2 2v2H7v-2l-2-2V4.5A1.5 1.5 0 0 1 6.5 3z"/><path d="M8.5 7h7v6h-7zM10 21v-2M14 21v-2"/></svg>',
 };
 // trophy cups, one gradient per tier (each call gets its own id: the same id twice on one page breaks in Safari)
 const CUP_COL = { b: ['#ffd2ad', '#b8713f'], s: ['#ffffff', '#9aa7c0'], g: ['#fff1b8', '#d9961a'], p: ['#f3fbff', '#8ab4ff'] };
@@ -126,6 +146,12 @@ const S = {
   flags: Store.get('flags', {}),
   builds: Store.get('builds', {}),
   seen: Store.get('seen', null),
+  // 3.0: the four cartridges in the console (null = an empty slot) and the order of the rest on the rack;
+  // both null until this device arranges anything, so the defaults (and new Apps) still fall in place
+  dock: Store.get('dock', null),
+  appOrder: Store.get('appOrder', null),
+  appSeen: Store.get('appSeen', null),
+  editing: false,
   base: 'home',
   lib: { q: '', genre: 'all', status: 'all', sort: 'new', fav: false },
   current: null,
@@ -328,6 +354,68 @@ const Sound = (() => {
       noise({ f: 160, f1: 5200, d: 1.7, a: 1.4, g: 0.06, q: 1.0, wet: 0.5 });
       tone({ f: N(45), f1: N(57), d: 1.7, g: 0.05, type: 'sawtooth', lp: 1100, a: 1.2, wet: 0.5 });
     },
+    /* ── 3.0: cartridges ── */
+    // holding a cartridge: a soft whirr winding up while the light runs round its edge
+    charge(sec = 0.32) {
+      if (!on()) return;
+      tone({ f: 300, f1: 1100, d: sec, a: sec * 0.8, g: 0.032, type: 'triangle', lp: 2800 });
+      noise({ f: 700, f1: 4200, d: sec, a: sec * 0.8, g: 0.018, q: 1.3, wet: 0.2 });
+    },
+    // pulled out of its slot: a plastic slide, a pluck and a little air
+    pull() {
+      if (!on()) return;
+      noise({ f: 900, f1: 3800, d: 0.15, g: 0.07, q: 1.6, a: 0.004, wet: 0.12 });
+      tone({ f: 240, f1: 560, d: 0.13, g: 0.08, type: 'triangle' });
+      tone({ t: 0.04, f: N(root + 31), d: 0.34, g: 0.03, wet: 0.6 });
+    },
+    // carried across the rack, every slot it passes is a note of the scale: moving cartridges plays a tune
+    step(i = 0) {
+      if (!on()) return;
+      const pent = [0, 2, 4, 7, 9], n = pent[i % 5] + 12 * (Math.floor(i / 5) % 2);
+      tone({ f: N(root + 24 + n), d: 0.16, g: 0.04, type: 'triangle', wet: 0.35 });
+      noise({ f: 5200, type: 'highpass', d: 0.014, g: 0.02, wet: 0 });
+    },
+    // clicked into place: a thump, the latch, and a short metal ring
+    lock() {
+      if (!on()) return;
+      tone({ f: 170, f1: 52, d: 0.2, g: 0.3 });
+      noise({ f: 2600, d: 0.035, g: 0.12, q: 2.5, a: 0.002, wet: 0.1 });
+      tone({ t: 0.01, f: 2380, d: 0.36, g: 0.016, wet: 0.5 });
+      tone({ t: 0.01, f: 3170, d: 0.28, g: 0.011, wet: 0.5 });
+    },
+    // into the console: the latch, then the console powers that cartridge up in the cartridge's own key
+    insert(hex) {
+      if (!on()) return;
+      const k = 52 + ((Math.round(hueOf(hexRgb(hex || '#8fd3ff')) / 30) % 12) * 7) % 12;
+      tone({ f: 150, f1: 46, d: 0.24, g: 0.34 });
+      noise({ f: 2200, d: 0.04, g: 0.13, q: 2.2, a: 0.002, wet: 0.1 });
+      tone({ t: 0.1, f: N(k - 12), d: 0.9, g: 0.09, type: 'triangle' });
+      [0, 7, 12, 19, 24].forEach((s, i) => tone({ t: 0.12 + i * 0.05, f: N(k + 12 + s), d: 0.85, g: 0.04, type: 'square', lp: 3000, wet: 0.6 }));
+      noise({ t: 0.12, f: 7000, type: 'highpass', d: 0.8, g: 0.028, a: 0.2, wet: 0.7 });
+    },
+    // out of the console: a spring and the slide back up
+    eject() {
+      if (!on()) return;
+      tone({ f: 180, f1: 460, d: 0.16, g: 0.06, type: 'sine' });
+      tone({ t: 0.03, f: 720, f1: 260, d: 0.22, g: 0.06, type: 'triangle' });
+      noise({ f: 3200, f1: 600, d: 0.24, g: 0.05, q: 1.2, wet: 0.2 });
+    },
+    // into arrange mode: the workbench lights up; out of it: saved
+    editOn() {
+      if (!on()) return;
+      noise({ f: 200, f1: 2600, d: 0.42, a: 0.3, g: 0.05, q: 1, wet: 0.4 });
+      tone({ f: N(root + 12), d: 0.12, g: 0.05, type: 'square', lp: 2000 });
+      tone({ t: 0.09, f: N(root + 19), d: 0.34, g: 0.05, type: 'square', lp: 2400, wet: 0.4 });
+    },
+    editOff() {
+      if (!on()) return;
+      tone({ f: N(root + 24), d: 0.1, g: 0.05, type: 'square', lp: 3000 });
+      tone({ t: 0.08, f: N(root + 31), d: 0.46, g: 0.05, type: 'square', lp: 3400, wet: 0.5 });
+      noise({ t: 0.08, f: 7000, type: 'highpass', d: 0.4, g: 0.025, wet: 0.6 });
+    },
+    cancel() { if (!on()) return; tone({ f: N(root + 19), f1: N(root + 7), d: 0.24, g: 0.05, type: 'triangle' }); },
+    // switching screens: the scan line passing down the glass
+    scan() { if (!on()) return; noise({ f: 1600, f1: 7200, d: 0.34, g: 0.026, q: 2.2, a: 0.03, wet: 0.35 }); },
   };
   /* lobby music: a bright, bouncy chiptune-pop loop (major key, 112 BPM, light swing).
      Section A carries the tune, section B lets an arpeggio breathe; the key follows the game in focus,
@@ -419,7 +507,9 @@ const Sound = (() => {
     if (!mBus) {
       mBus = ctx.createGain(); mBus.gain.value = 1;
       const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 38;
-      mBus.connect(hp); hp.connect(mus);
+      // the music goes muffled, as if through a wall, while the cartridges are being arranged
+      mLp = ctx.createBiquadFilter(); mLp.type = 'lowpass'; mLp.Q.value = 0.6; mLp.frequency.value = muffled ? 900 : 18000;
+      mBus.connect(hp); hp.connect(mLp); mLp.connect(mus);
       const send = ctx.createGain(); send.gain.value = 0.12; mBus.connect(send); send.connect(verb);
     }
     if (mPendingKey != null) { mKey = mPendingKey; mPendingKey = null; }
@@ -433,6 +523,8 @@ const Sound = (() => {
     musGain(0.0001, fade);
   }
   function duck(on) { mDucked = on; if (ctx && mOn) musGain(on ? 0.08 : MUS_LEVEL, 0.6); }
+  let mLp = null, muffled = false;
+  function muffle(on) { muffled = on; if (mLp && ctx) mLp.frequency.setTargetAtTime(on ? 900 : 18000, ctx.currentTime, on ? 0.12 : 0.25); }
   function setRoot(hex) {                          // UI sounds follow the colour in focus at once
     const semi = Math.round(hueOf(hexRgb(hex)) / 30) % 12;
     root = 52 + ((semi * 7) % 12);
@@ -444,7 +536,7 @@ const Sound = (() => {
   function setVol(v) { if (master) master.gain.setTargetAtTime(v, ctx.currentTime, 0.05); }
   function suspend() { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); }
   function resume() { if (ctx && unlocked && ctx.state !== 'running') ctx.resume().catch(() => {}); }
-  return { unlock, play, startMusic, stopMusic, duck, setRoot, musicKey, setVol, suspend, resume, get unlocked() { return unlocked; }, get root() { return root; } };
+  return { unlock, play, startMusic, stopMusic, duck, muffle, setRoot, musicKey, setVol, suspend, resume, get unlocked() { return unlocked; }, get root() { return root; } };
 })();
 
 /* ───────────── ambient light ───────────── */
@@ -481,14 +573,17 @@ const Motes = (() => {
     cv.width = w * dpr; cv.height = h * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   const mk = (y) => ({ x: Math.random() * w, y: y == null ? h + Math.random() * 40 : y, r: 0.5 + Math.random() * 1.9, vy: -(5 + Math.random() * 18), vx: (Math.random() - 0.5) * 7, a: 0, ta: 0.18 + Math.random() * 0.5, tw: Math.random() * 6.3, sp: 0.6 + Math.random() * 1.6 });
+  let boost = 0; // a moment of speed when the screen changes
   function frame(t) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t;
     cx.clearRect(0, 0, w, h);
     const [r, g, b] = rgb;
+    boost *= Math.exp(-dt * 3.2);
+    const sp = 1 + boost;
     for (let i = 0; i < ps.length; i++) {
       const p = ps[i];
-      p.x += p.vx * dt; p.y += p.vy * dt; p.tw += dt * p.sp;
+      p.x += p.vx * dt * sp; p.y += p.vy * dt * sp; p.tw += dt * p.sp;
       p.a += (p.ta - p.a) * dt * 0.8;
       if (p.y < -20 || p.x < -20 || p.x > w + 20) { ps[i] = mk(); continue; }
       const al = p.a * (0.55 + 0.45 * Math.sin(p.tw));
@@ -508,7 +603,7 @@ const Motes = (() => {
   }
   function stop() { running = false; cancelAnimationFrame(raf); }
   addEventListener('resize', () => resize());
-  return { start, stop, color(c) { rgb = c; } };
+  return { start, stop, color(c) { rgb = c; }, kick(v = 9) { boost = Math.max(boost, v); } };
 })();
 
 /* ───────────── catalog ───────────── */
@@ -702,10 +797,10 @@ function cover(g, cls = '') {
   const pips = tr >= 0 ? `<span class="mp" title="精通度：${TIERS[tr].name}" style="--tc:${TIERS[tr].c}">${TIERS.map((_, i) => `<i${i <= tr ? ' class="on"' : ''}></i>`).join('')}</span>` : '';
   return `<div class="cv ${cls}">${img}${pips}${g.pick ? `<span class="star" title="PZ 推薦">${I.star}</span>` : ''}<div class="tags">${tags.join('')}</div></div>`;
 }
-function card(g, sub) {
+function card(g, sub, drag) {
   const s = sub != null ? sub : (S.genres[g.genre] ? S.genres[g.genre].label : '');
   const dim = g.kind === 'archive' || g.status === 'failed' ? ' dim' : '';
-  return `<button class="card${dim}" style="${cssVars(g)}" data-act="${g.kind === 'archive' ? 'arch' : 'open'}" data-id="${esc(g.id)}" aria-label="${esc(g.title)}">${cover(g)}<div class="t">${esc(g.title)}</div><div class="s">${esc(s)}</div></button>`;
+  return `<button class="card${dim}" style="${cssVars(g)}" data-act="${g.kind === 'archive' ? 'arch' : 'open'}" data-id="${esc(g.id)}"${drag ? ` data-drag="${drag}" draggable="false"` : ''} aria-label="${esc(g.title)}">${cover(g)}<div class="t">${esc(g.title)}</div><div class="s">${esc(s)}</div></button>`;
 }
 function contCard(g) {
   const st = statOf(g.id), m = g.media || {};
@@ -718,8 +813,8 @@ function contCard(g) {
 function shelf(title, items, opts = {}) {
   if (!items.length) return '';
   const more = opts.more ? `<button class="more" data-act="${opts.more.act}" data-arg="${esc(opts.more.arg || '')}">全部${I.chev}</button>` : '';
-  const body = items.map((g) => (opts.cont ? contCard(g) : card(g, opts.sub ? opts.sub(g) : undefined))).join('');
-  return `<section class="shelf"><div class="shelf-h"><h2>${esc(title)}</h2>${opts.more ? '' : `<span class="n">${items.length}</span>`}${more}${opts.desc ? `<p>${esc(opts.desc)}</p>` : ''}</div><div class="row">${body}</div></section>`;
+  const body = items.map((g) => (opts.cont ? contCard(g) : card(g, opts.sub ? opts.sub(g) : undefined, opts.drag))).join('');
+  return `<section class="shelf${opts.drag ? ' sortable' : ''}"><div class="shelf-h"><h2>${esc(title)}</h2>${opts.more ? '' : `<span class="n">${items.length}</span>`}${more}${opts.desc ? `<p>${esc(opts.desc)}</p>` : ''}</div><div class="row">${body}</div></section>`;
 }
 function splitChars(t) {
   return [...t].map((ch, i) => `<span class="ch" style="animation-delay:${(0.08 + i * 0.07).toFixed(2)}s">${esc(ch)}</span>`).join('');
@@ -776,18 +871,24 @@ function playerStrip() {
     <span class="ps-st"><span>${I.trophy}<b>${got}</b><em>/${TROPHIES.length}</em></span><span>${I.games}<b>${c.played}</b><em>/${c.n}</em></span></span>
   </button>`;
 }
+// the console on the home page: the four Apps plugged in, one tap away
+function dockbarHtml() {
+  if (!S.apps.length) return '';
+  return `<section class="dockbar"><div class="shelf-h"><h2>主機</h2><span class="n">插著的 App</span><button class="more" data-act="tab" data-arg="apps">卡匣架${I.chev}</button></div>${consoleHtml(appLayout().dock, { mini: true })}</section>`;
+}
 function renderHome() {
   const v = $('#view-home');
   Hero.list = heroList();
   const vis = visible();
   const live = vis.filter((g) => g.status !== 'failed');
   const recent = vis.filter((g) => statOf(g.id).last).sort((a, b) => statOf(b.id).last - statOf(a.id).last).slice(0, 10);
-  const favs = vis.filter((g) => S.favs.has(g.id));
+  // favourites in the order PZ arranged them (hold a cover to move it)
+  const favs = [...S.favs].map((id) => S.byId[id]).filter((g) => g && g.kind === 'game' && !S.hidden.has(g.id));
   const picks = live.filter((g) => g.pick);
   const fresh = [...live].sort((a, b) => (b.created || '').localeCompare(a.created || '')).slice(0, 10);
   let shelves = '';
   shelves += shelf('繼續遊玩', recent, { cont: true });
-  shelves += shelf('我的最愛', favs);
+  shelves += shelf('我的最愛', favs, { drag: 'fav', desc: favs.length > 1 ? '按住封面就能排順序。' : '' });
   shelves += shelf('PZ 推薦', picks, { desc: '你玩過、親口說好的那幾款。' });
   shelves += shelf('最新入庫', fresh, { sub: (g) => fmtDate(g.created).replace(/^\d+ 年 /, '') + '入庫' });
   shelves += shelf('重製 2.0', live.filter((g) => g.remake).sort((a, b) => (b.remake.date || '').localeCompare(a.remake.date || '')), { desc: '換上 PZ 引擎、重新打磨過的舊作：玩法不變，手感升級。', sub: (g) => fmtDate(g.remake.date).replace(/^\d+ 年 /, '') + '重製', more: { act: 'lib-genre', arg: 'remake' } });
@@ -801,7 +902,7 @@ function renderHome() {
   for (let k = 0; k < 3 && fanPool.length; k++) fan.push(fanPool.splice((Math.random() * fanPool.length) | 0, 1)[0]);
   const lucky = fan.length ? `<button class="lucky" data-act="spin"><span class="lk-fan">${fan.map((g) => `<img src="${esc(g.media.cover)}" alt="" loading="lazy">`).join('')}</span><span class="lk-txt"><small>手氣不錯</small><b>今天玩什麼？</b><span>不知道玩哪款，就讓收藏庫替你轉一款</span></span><span class="lk-go">${I.dice}</span></button>` : '';
   v.innerHTML = `<section class="hero" id="hero">${Hero.list.map(heroSlide).join('')}</section>
-    <div class="shelves"><div class="duo">${stats}${lucky}</div>${shelves}
+    <div class="shelves"><div class="duo">${stats}${lucky}</div>${dockbarHtml()}${shelves}
       <button class="browse-all" data-act="tab" data-arg="library"><div><b>瀏覽全部 ${vis.length} 款遊戲</b><span>依類型、狀態篩選，或直接搜尋</span></div>${I.chev}</button>
     </div>`;
   Hero.el = $('#hero');
@@ -956,26 +1057,513 @@ function searchText(g) {
   return g._st;
 }
 
-/* ───────────── apps ───────────── */
+/* ───────────── 3.0：卡匣與主機 ─────────────
+   Every App is a cartridge. The four used most are plugged into the console at the top of the App page
+   (the home page shows the same console, small); the rest stand on the rack. Hold a cartridge to pull it
+   out and carry it anywhere; in arrange mode (整理) a plain drag is enough. The favourite games on the home
+   page move the same way. All of it is kept on this device only (localStorage: dock, appOrder, favs). */
+const DOCK_N = 4;
+// the console as it comes, before this device has arranged anything: the Apps PZ opens every day
+const DOCK_DEFAULT = ['coldeye', 'forreal', 'next-chapter', 'reignite'];
+const isApp = (id) => !!(id && S.byId[id] && S.byId[id].kind === 'app');
+function appLayout() {
+  const used = new Set();
+  let dock = Array.isArray(S.dock) ? S.dock.slice(0, DOCK_N)
+    : [...DOCK_DEFAULT, ...S.apps.filter((a) => a.pin).map((a) => a.id)].filter(isApp).filter((id, i, a) => a.indexOf(id) === i).slice(0, DOCK_N);
+  dock = dock.map((id) => (isApp(id) && !used.has(id) ? (used.add(id), id) : null));
+  while (dock.length < DOCK_N) dock.push(null);
+  const rack = [];
+  for (const id of Array.isArray(S.appOrder) ? S.appOrder : []) if (isApp(id) && !used.has(id)) { used.add(id); rack.push(id); }
+  for (const a of S.apps) if (!used.has(a.id)) { used.add(a.id); rack.push(a.id); } // a new App joins at the end of the rack
+  return { dock, rack };
+}
+function saveLayout(dock, rack) {
+  S.dock = dock; S.appOrder = rack;
+  Store.set('dock', dock); Store.set('appOrder', rack);
+}
+function cartHtml(a, where, i = 0) {
+  const cl = a.type === 'claude';
+  const g = a.glyph || a.title.slice(0, 1), long = [...g].length > 1;
+  const fresh = where === 'rack' && S.appSeen && !S.appSeen.includes(a.id);
+  const link = MODE === 'claude' || cl;
+  const open = link ? `<a class="cart${cl ? ' cl' : ''}" href="${esc(a.url)}" target="_blank" rel="noopener" data-act="ext"`
+    : `<button type="button" class="cart" data-act="app" data-id="${esc(a.id)}"`;
+  const badge = where === 'rack' ? `<span class="ct-act in" data-act="dock-in" data-id="${esc(a.id)}" role="button" aria-label="插上主機">${I.plus}主機</span>`
+    : where === 'dock' ? `<span class="ct-act out" data-act="dock-out" data-id="${esc(a.id)}" role="button" aria-label="從主機拔出">${I.eject}</span>` : '';
+  return `${open} data-cart="${esc(a.id)}" data-drag="${where}" style="${cssVars(a)};--i:${i}" aria-label="${esc(a.title)}" draggable="false">`
+    + `<span class="ct-body"><span class="ct-grip"></span>`
+    + `<span class="ct-lbl"><span class="ct-gl${long ? ' long' : ''}">${esc(g)}</span>${cl ? '<span class="ct-ext">Claude</span>' : ''}${fresh ? '<span class="ct-new">新</span>' : ''}</span>`
+    + `<span class="ct-nm${[...a.title].length > 6 ? ' long' : ''}"><b>${esc(a.title)}</b>${a.en ? `<small>${esc(a.en)}</small>` : ''}</span>`
+    + `${where === 'rack' && a.tagline ? `<span class="ct-tag">${esc(a.tagline)}</span>` : ''}</span>`
+    + `<span class="ct-pins"></span>${badge}</${link ? 'a' : 'button'}>`;
+}
+// the console: four slots on top (a plugged-in cartridge sinks into its slot), a face with a light and a
+// name for every slot, and a light strip mixed from the colours of whatever is plugged in
+function consoleHtml(dock, opts = {}) {
+  const where = opts.mini ? 'mini' : opts.preview ? 'pv' : 'dock';
+  const apps = dock.map((id) => (isApp(id) ? S.byId[id] : null));
+  const slots = apps.map((a, k) => `<div class="slot${a ? ' on' : ''}" data-slot="${k}"${a ? ` style="${cssVars(a)}"` : ''}>`
+    + (a ? cartHtml(a, where, k) : `<div class="slot-ghost"${opts.mini ? ' data-act="tab" data-arg="apps"' : ''}><span>${I.plus}</span><small>${opts.mini ? '去插卡匣' : '空插槽'}</small></div>`) + `</div>`).join('');
+  const face = apps.map((a, k) => `<div class="cs-ch${a ? ' on' : ''}"${a ? ` style="${cssVars(a)}"` : ''}><i class="led"></i><b>${a ? esc(a.title) : '插槽 ' + (k + 1)}</b></div>`).join('');
+  const cols = apps.map((a) => (a ? a.accent : '#262b3a'));
+  const strip = `linear-gradient(90deg, ${cols.map((c, k) => `${c} ${(((k + 0.5) / cols.length) * 100).toFixed(1)}%`).join(', ')})`;
+  const id = opts.mini ? ' id="minicon"' : opts.preview ? '' : ' id="console"';
+  return `<section class="console${opts.mini ? ' mini' : ''}${opts.preview ? ' preview' : ''}"${id} style="--strip:${strip}">`
+    + `<div class="cs-bay">${slots}</div>`
+    + `<div class="cs-body"><div class="cs-mouths">${apps.map((a) => (a ? `<i class="on" style="${cssVars(a)}"></i>` : '<i></i>')).join('')}</div><div class="cs-face">${face}</div>`
+    + `<div class="cs-strip"></div><div class="cs-brand">${MARK('cs' + where)}<span>PZ CONSOLE</span></div></div></section>`;
+}
 function renderApps() {
   const v = $('#view-apps');
-  const web = S.apps.filter((a) => a.kind === 'app' && a.type === 'web');
-  const tools = S.apps.filter((a) => a.type === 'claude');
-  const tile = (a) => {
-    const long = (a.glyph || '').length > 1;
-    const open = MODE === 'claude'
-      ? `<a class="app-tile" style="${cssVars(a)}" href="${esc(a.url)}" target="_blank" rel="noopener" data-act="ext">`
-      : `<button class="app-tile" style="${cssVars(a)}" data-act="app" data-id="${esc(a.id)}">`;
-    const close = MODE === 'claude' ? '</a>' : '</button>';
-    return `${open}<span class="ic${long ? ' long' : ''}">${esc(a.glyph || a.title.slice(0, 1))}</span>
-      ${MODE === 'web' ? `<a class="out" href="${esc(a.url)}" target="_blank" rel="noopener" data-act="ext" aria-label="用瀏覽器開啟">${I.out}</a>` : ''}
-      <b>${esc(a.title)}</b>${a.en ? `<div class="en">${esc(a.en)}</div>` : ''}<p>${esc(a.tagline)}</p>${close}`;
-  };
-  const tool = (a) => `<a class="tool" style="${cssVars(a)}" href="${esc(a.url)}" target="_blank" rel="noopener" data-act="ext"><span class="ic">${esc((a.glyph || a.title).slice(0, 2))}</span><div><b>${esc(a.title)}</b><span>${esc(a.tagline)}</span></div>${I.out}</a>`;
-  v.innerHTML = `<header class="phead"><h1>專屬 App</h1><p>每天會打開的工具，都收在這一頁。</p></header>
-    <div class="apps-grid">${web.map(tile).join('')}</div>
-    <div class="sec-title"><h2>在 Claude 裡的工具</h2><p>這些要登入 Claude 才能開，會在新視窗打開。</p></div>
-    <div class="tool-list">${tools.map(tool).join('')}</div>`;
+  const { dock, rack } = appLayout();
+  const anyClaude = S.apps.some((a) => a.type === 'claude');
+  v.innerHTML = `<div class="apps-wrap"><header class="phead apps-h"><div class="ph-row"><h1>專屬 App</h1>${edBtn()}</div>
+      <p>最常用的插在主機上，首頁也點得到；其他的收在卡匣架。按住卡匣就能搬位置。</p></header>
+    ${consoleHtml(dock)}
+    <div class="sec-title rk-h"><h2>卡匣架</h2><p>${rack.length} 片卡匣・拖進上面的主機，就是你的最愛</p></div>
+    <div class="rack" id="rack">${rack.map((id, i) => cartHtml(S.byId[id], 'rack', i + DOCK_N)).join('')}</div>
+    ${anyClaude ? '<p class="rk-note">標著 Claude 的卡匣要登入 Claude 才能開，會在新視窗打開。</p>' : ''}</div>`;
+  // the 「新」 sticker is for the first time this device sees an App here
+  const ids = S.apps.map((a) => a.id);
+  if (!S.appSeen || ids.some((id) => !S.appSeen.includes(id))) { S.appSeen = ids; Store.set('appSeen', ids); }
+}
+const edBtn = () => `<button class="ed-btn${S.editing ? ' on' : ''}" data-act="${S.editing ? 'ed-done' : 'ed-on'}">${S.editing ? I.check + '完成' : I.grid + '整理'}</button>`;
+
+// arrange mode: the room turns into a workbench, the cartridges come up out of their slots
+function setEditing(on) {
+  on = !!on;
+  if (S.editing === on) return;
+  S.editing = on; S.resetArm = false;
+  const v = $('#view-apps'); if (v) v.classList.toggle('editing', on);
+  const b = $('#view-apps .ed-btn'); if (b) b.outerHTML = edBtn();
+  $('#bench').classList.toggle('on', on);
+  $('#editbar').classList.toggle('on', on);
+  $('#tabbar').classList.toggle('edhide', on);
+  const r = $('#editbar [data-act="reset-apps"]'); if (r) { r.classList.remove('armed'); r.textContent = '恢復預設'; }
+  Sound.muffle(on);
+  if (on) { Sound.play.editOn(); haptic(10); } else Sound.play.editOff();
+}
+function resetApps(t) {
+  if (!S.resetArm) {
+    S.resetArm = true; Sound.play.err(); t.classList.add('armed'); t.textContent = '再按一次';
+    setTimeout(() => { S.resetArm = false; if (t.isConnected) { t.classList.remove('armed'); t.textContent = t.dataset.label || '恢復預設'; } }, 3000);
+    return;
+  }
+  S.resetArm = false; t.classList.remove('armed'); t.textContent = t.dataset.label || '恢復預設';
+  S.dock = null; S.appOrder = null; Store.set('dock', null); Store.set('appOrder', null);
+  if ($('#view-apps').innerHTML) flipRender($('#view-apps'), renderApps);
+  if ($('#minicon')) { const m = $('#minicon'); m.outerHTML = consoleHtml(appLayout().dock, { mini: true }); }
+  Sound.play.toggle(true); toast('主機和卡匣架回到一開始的樣子了', 2200);
+}
+
+/* moving things around: FLIP (measure, change, measure, play the difference) */
+function flipList(box, mutate, dur = 280) {
+  const kids = [...box.children];
+  const first = kids.map((c) => c.getBoundingClientRect());
+  kids.forEach((c) => { if (c.getAnimations) c.getAnimations().forEach((an) => an.cancel()); });
+  mutate();
+  const now = performance.now();
+  kids.forEach((c, i) => {
+    if (!c.isConnected || c.parentNode !== box) return;
+    const a = first[i], b = c.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    c._fl = now + dur * 0.85;
+    c.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: reduced ? 1 : dur, easing: 'cubic-bezier(.2,.9,.3,1.12)' });
+  });
+}
+// redraw a whole page and let every cartridge slide from where it was to where it is now
+function flipRender(root, render, fly) {
+  const first = new Map();
+  $$('[data-cart]', root).forEach((e) => { if (!e.classList.contains('ph')) first.set(e.dataset.cart, e.getBoundingClientRect()); });
+  const sc = root.scrollTop;
+  render();
+  root.scrollTop = sc;
+  let target = null;
+  const now = performance.now();
+  $$('[data-cart]', root).forEach((e) => {
+    if (fly && e.dataset.cart === fly.id) { target = e; return; }
+    const a = first.get(e.dataset.cart); if (!a) return;
+    const b = e.getBoundingClientRect();
+    const dx = (a.left + a.width / 2) - (b.left + b.width / 2), dy = (a.top + a.height / 2) - (b.top + b.height / 2), sx = a.width / b.width;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(sx - 1) < 0.01) return;
+    e._fl = now + 300;
+    e.animate([{ transform: `translate(${dx}px, ${dy}px) scale(${sx})` }, { transform: 'none' }], { duration: reduced ? 1 : 360, easing: 'cubic-bezier(.2,.9,.3,1.08)' });
+  });
+  if (fly && fly.av) { if (target) arrive(target, fly.av, fly.mode); else fly.av.remove(); }
+}
+
+/* the floating cartridge that follows your finger */
+function avatarOf(el) {
+  const r = el.getBoundingClientRect();
+  const av = el.cloneNode(true);
+  av.classList.add('avatar'); av.classList.remove('charging', 'ph', 'locked');
+  ['data-act', 'data-drag', 'data-cart', 'href', 'id'].forEach((k) => av.removeAttribute(k));
+  $$('[data-act]', av).forEach((n) => n.removeAttribute('data-act'));
+  av.setAttribute('aria-hidden', 'true'); av.tabIndex = -1;
+  av.style.width = r.width + 'px'; av.style.height = r.height + 'px';
+  av.style.transform = `translate3d(${r.left}px, ${r.top}px, 0)`;
+  document.body.appendChild(av);
+  return av;
+}
+function flyAvatar(av, to, dur, easing) {
+  const W = parseFloat(av.style.width) || 1, H = parseFloat(av.style.height) || 1;
+  const tr = `translate3d(${(to.cx - W / 2).toFixed(1)}px, ${(to.cy - H / 2).toFixed(1)}px, 0) rotate(0deg) scale(${(to.w / W).toFixed(3)})`;
+  av.classList.add('landing');
+  const an = av.animate([{ transform: av.style.transform || 'none' }, { transform: tr }], { duration: reduced ? 1 : dur, easing, fill: 'forwards' });
+  return an.finished.catch(() => {});
+}
+// a cartridge coming home: onto the rack it simply lands; into the console it first hangs over the slot,
+// then drops in (the console's body hides the part that went in) and the console powers it up
+function arrive(el, av, mode) {
+  const r = el.getBoundingClientRect(), slot = el.closest('.slot');
+  el.style.visibility = 'hidden';
+  if (!slot) av.classList.remove('docked'); // landing on the rack: it shows its name again
+  const box = { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width };
+  if (slot) {
+    const up = r.height * 0.6;
+    flyAvatar(av, { cx: box.cx, cy: box.cy - up, w: r.width }, 230, 'cubic-bezier(.2,.8,.3,1)').then(() => {
+      av.remove(); el.style.visibility = '';
+      if (!el.isConnected) return;
+      el.animate([{ transform: `translateY(${-up}px)` }, { transform: 'none' }], { duration: reduced ? 1 : 170, easing: 'cubic-bezier(.6,0,.8,.4)' })
+        .finished.then(() => fx(el, mode === 'cancel' || mode === 'drop' ? mode : 'insert')).catch(() => {});
+    });
+  } else {
+    flyAvatar(av, box, 280, 'cubic-bezier(.25,1.3,.45,1)').then(() => { av.remove(); el.style.visibility = ''; if (el.isConnected) fx(el, mode); });
+  }
+}
+// light and sound once it is home
+function fx(el, mode) {
+  const r = el.getBoundingClientRect(), rgb = getComputedStyle(el).getPropertyValue('--c-rgb').trim() || '143,211,255';
+  const cx = r.left + r.width / 2;
+  if (mode === 'insert') {
+    const slot = el.closest('.slot'), con = el.closest('.console');
+    const a = S.byId[el.dataset.cart];
+    Sound.play.insert(a && a.accent); haptic(16);
+    el.classList.remove('locked'); void el.offsetWidth; el.classList.add('locked');
+    if (con) { con.classList.remove('boom'); void con.offsetWidth; con.classList.add('boom'); }
+    if (slot) {
+      slot.classList.remove('beam'); void slot.offsetWidth; slot.classList.add('beam');
+      const k = +slot.dataset.slot, ch = con && con.querySelectorAll('.cs-ch')[k], mouth = con && con.querySelectorAll('.cs-mouths i')[k];
+      if (ch) { ch.classList.remove('pulse'); void ch.offsetWidth; ch.classList.add('pulse'); }
+      const my = mouth ? mouth.getBoundingClientRect().top : r.bottom - r.height * 0.3;
+      burst(cx, my, rgb, 16, 72);
+    }
+  } else if (mode === 'lock') {
+    Sound.play.lock(); haptic(10);
+    el.classList.remove('locked'); void el.offsetWidth; el.classList.add('locked');
+    burst(cx, r.top + r.height / 2, rgb, 10, 56);
+  } else if (mode === 'cancel') Sound.play.cancel();
+  else if (mode === 'drop') Sound.play.tick();
+}
+// sparks thrown out from a point
+function burst(x, y, rgb, n = 12, spread = 60) {
+  if (reduced) return;
+  const ring = document.createElement('i'); ring.className = 'bring'; ring.style.cssText = `left:${x}px;top:${y}px;--s-rgb:${rgb}`;
+  document.body.appendChild(ring); setTimeout(() => ring.remove(), 700);
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('i'); s.className = 'bst'; s.style.cssText = `left:${x}px;top:${y}px;--s-rgb:${rgb}`;
+    document.body.appendChild(s);
+    const ang = Math.random() * 6.283, d = spread * (0.45 + Math.random() * 0.75);
+    s.animate([{ transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${(Math.cos(ang) * d).toFixed(1)}px), calc(-50% + ${(Math.sin(ang) * d).toFixed(1)}px)) scale(.15)`, opacity: 0 }],
+    { duration: 480 + Math.random() * 320, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' }).finished.then(() => s.remove()).catch(() => s.remove());
+  }
+}
+// a cartridge tapped while arranging just rocks in its slot
+function nudge(el) { el.animate([{ transform: 'none' }, { transform: 'rotate(-3deg)' }, { transform: 'rotate(3deg)' }, { transform: 'none' }], { duration: 280 }); Sound.play.tick(); }
+
+/* light trail behind the carried cartridge (a canvas that only exists while something is carried) */
+const TRL = { cv: null, cx: null, ps: [], raf: 0, rgb: '255,255,255', on: false, t: 0, dpr: 1 };
+function trailStart(rgb) {
+  if (reduced) return;
+  TRL.rgb = rgb; TRL.on = true; TRL.ps.length = 0;
+  if (!TRL.cv) {
+    TRL.cv = document.createElement('canvas'); TRL.cv.id = 'trail';
+    TRL.cx = TRL.cv.getContext('2d');
+  }
+  TRL.dpr = Math.min(1.5, devicePixelRatio || 1);
+  TRL.cv.width = innerWidth * TRL.dpr; TRL.cv.height = innerHeight * TRL.dpr;
+  TRL.cx.setTransform(TRL.dpr, 0, 0, TRL.dpr, 0, 0);
+  document.body.appendChild(TRL.cv);
+  cancelAnimationFrame(TRL.raf); TRL.t = performance.now(); TRL.raf = requestAnimationFrame(trailFrame);
+}
+// sparks shed from the gold pins along the bottom edge (cx, bottom y, visual width), more when it moves fast
+function trailEmit(cx, by, w, vx) {
+  if (!TRL.on || TRL.ps.length > 120) return;
+  const n = Math.min(4, 1 + Math.abs(vx) / 380);
+  for (let i = 0; i < n; i++) {
+    TRL.ps.push({ x: cx + (Math.random() - 0.5) * w * 0.7, y: by - 4 + Math.random() * 6, vx: -vx * 0.05 + (Math.random() - 0.5) * 40, vy: 30 + Math.random() * 70, l: 1, r: 1.4 + Math.random() * 2.6, d: 1.5 + Math.random() * 0.8 });
+  }
+}
+function trailFrame(t) {
+  const dt = Math.min(0.05, (t - TRL.t) / 1000 || 0.016); TRL.t = t;
+  const c = TRL.cx;
+  c.clearRect(0, 0, innerWidth, innerHeight);
+  c.globalCompositeOperation = 'lighter';
+  for (let i = TRL.ps.length - 1; i >= 0; i--) {
+    const p = TRL.ps[i];
+    p.l -= dt * p.d; if (p.l <= 0) { TRL.ps.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 120 * dt;
+    c.fillStyle = `rgba(${TRL.rgb},${(p.l * 0.32).toFixed(3)})`; c.beginPath(); c.arc(p.x, p.y, p.r * 3.2 * p.l + 1, 0, 6.283); c.fill();
+    c.fillStyle = `rgba(255,255,255,${(p.l * 0.8).toFixed(3)})`; c.beginPath(); c.arc(p.x, p.y, p.r * 0.55, 0, 6.283); c.fill();
+  }
+  c.globalCompositeOperation = 'source-over';
+  if (TRL.on || TRL.ps.length) TRL.raf = requestAnimationFrame(trailFrame);
+  else if (TRL.cv) TRL.cv.remove();
+}
+function trailStop() { TRL.on = false; }
+
+/* the drag itself */
+const HOLD = 380;
+const DG = { p: null, on: false, av: null, src: null, ctx: null, zones: [], tgt: null, last: null, tmp: null, raf: 0, t: 0,
+  x: 0, y: 0, tx: 0, ty: 0, px: 0, vx: 0, s: 1, rot: 0, w: 0, h: 0, ox: 0, oy: 0, cool: 0, noClick: 0, rgb: '255,255,255' };
+function dragCtx(it) {
+  const k = it.dataset.drag;
+  if (k === 'rack' || k === 'dock') {
+    const v = $('#view-apps'); if (!v.classList.contains('on')) return null;
+    return { page: 'apps', editing: S.editing, root: v, scroller: v, resolve: resolveApps,
+      zones: () => [{ kind: 'slots', id: 'dock', el: $('#console .cs-bay'), box: $('#console') }, { kind: 'list', id: 'rack', el: $('#rack') }] };
+  }
+  if (k === 'mini') return { page: 'home', editing: false, root: $('#view-home'), scroller: $('#view-home'), resolve: resolveMini,
+    zones: () => [{ kind: 'slots', id: 'mini', el: $('#minicon .cs-bay'), box: $('#minicon') }] };
+  if (k === 'fav') {
+    const row = it.closest('.row');
+    return { page: 'home', editing: false, root: $('#view-home'), scroller: $('#view-home'), hscroll: row, resolve: resolveFav,
+      zones: () => [{ kind: 'list', id: 'fav', el: row, axis: 'x' }] };
+  }
+  return null;
+}
+function dgDown(e) {
+  if (DG.on || DG.p || L.item) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  const it = e.target.closest && e.target.closest('[data-drag]');
+  if (!it || e.target.closest('.ct-act') || it.dataset.drag === 'pv') return;
+  const ctx = dragCtx(it); if (!ctx) return;
+  // a mouse press would focus the button, and focusing scrolls its row to show it whole: the row would
+  // slide out from under the pointer before anything is picked up
+  if (e.pointerType === 'mouse') e.preventDefault();
+  const p = DG.p = { it, ctx, id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY };
+  if (ctx.editing) return; // arranging already: the first small move picks it up
+  // a short delay before the charge shows, so an ordinary tap never flickers
+  p.chgT = setTimeout(() => { if (DG.p === p) { it.classList.add('charging'); Sound.play.charge(HOLD / 1000 - 0.08); } }, 100);
+  p.holdT = setTimeout(() => { if (DG.p === p) pickUp(); }, HOLD);
+}
+function dgMove(e) {
+  const p = DG.p; if (!p || e.pointerId !== p.id) return;
+  p.x = e.clientX; p.y = e.clientY;
+  if (DG.on) {
+    DG.tx = p.x - DG.ox; DG.ty = p.y - DG.oy;
+    if (!DG.moved && Math.hypot(p.x - DG.mx, p.y - DG.my) > 8) DG.moved = true;
+    return;
+  }
+  const d = Math.hypot(p.x - p.x0, p.y - p.y0);
+  if (p.ctx.editing) { if (d > 6) pickUp(); } else if (d > 10) holdOff(); // moving before the hold is up: that was a scroll
+}
+function dgUp(e) {
+  const p = DG.p; if (!p || e.pointerId !== p.id) return;
+  if (e.type === 'pointerup') { p.x = e.clientX; p.y = e.clientY; }
+  if (DG.on) drop(); else holdOff();
+  DG.p = null;
+}
+function holdOff() {
+  const p = DG.p; if (!p) return;
+  clearTimeout(p.chgT); clearTimeout(p.holdT); p.it.classList.remove('charging');
+  if (!DG.on) DG.p = null;
+}
+function pickUp() {
+  const p = DG.p; if (!p || DG.on) return;
+  clearTimeout(p.chgT); clearTimeout(p.holdT);
+  const it = p.it; it.classList.remove('charging');
+  if (!it.isConnected) { DG.p = null; return; }
+  if (p.ctx.page === 'apps') setEditing(true);
+  const r = it.getBoundingClientRect(), slot = it.closest('.slot');
+  Object.assign(DG, { on: true, ctx: p.ctx, w: r.width, h: r.height, ox: p.x - r.left, oy: p.y - r.top, x: r.left, y: r.top, tx: r.left, ty: r.top,
+    px: r.left, vx: 0, s: 1, rot: 0, tgt: null, last: null, tmp: null, cool: 0, t: performance.now(), moved: false, mx: p.x, my: p.y });
+  DG.src = { zone: it.dataset.drag, id: it.dataset.cart || it.dataset.id, el: it, k: slot ? +slot.dataset.slot : -1 };
+  DG.rgb = getComputedStyle(it).getPropertyValue('--c-rgb').trim() || '143,211,255';
+  DG.av = avatarOf(it);
+  // out of the console it keeps its plugged-in look, and grows to the size of the cartridges on the rack
+  DG.sT = 1.1;
+  if (slot) {
+    DG.av.classList.add('docked');
+    const rk = $('#rack .cart:not(.ph)');
+    DG.sT = clamp((rk ? rk.getBoundingClientRect().width : r.width * 1.3) / r.width * 1.05, 1.1, 1.7);
+  }
+  it.classList.add('ph');
+  DG.zones = p.ctx.zones().filter((z) => z.el);
+  document.documentElement.classList.add('dragging');
+  trailStart(DG.rgb);
+  if (slot) Sound.play.eject(); else Sound.play.pull();
+  haptic(12);
+  DG.raf = requestAnimationFrame(dgFrame);
+}
+function dgFrame(t) {
+  DG.raf = requestAnimationFrame(dgFrame);
+  const dt = Math.min(0.05, (t - DG.t) / 1000 || 0.016); DG.t = t;
+  const k = 1 - Math.exp(-dt * 34);
+  DG.x += (DG.tx - DG.x) * k; DG.y += (DG.ty - DG.y) * k;
+  const v = (DG.x - DG.px) / dt; DG.px = DG.x;
+  DG.vx += (v - DG.vx) * Math.min(1, dt * 12);
+  DG.rot += (clamp(DG.vx * 0.012, -13, 13) - DG.rot) * Math.min(1, dt * 14);
+  DG.s += ((DG.sT || 1.1) - DG.s) * Math.min(1, dt * 14);
+  DG.av.style.transform = `translate3d(${DG.x.toFixed(1)}px, ${DG.y.toFixed(1)}px, 0) rotate(${DG.rot.toFixed(2)}deg) scale(${DG.s.toFixed(3)})`;
+  trailEmit(DG.x + DG.w / 2, DG.y + DG.h / 2 + (DG.h * DG.s) / 2, DG.w * DG.s, DG.vx);
+  findTarget(t);
+  autoScroll(dt);
+}
+function findTarget(now) {
+  const x = DG.p ? DG.p.x : -1, y = DG.p ? DG.p.y : -1;
+  let tgt = null;
+  for (const z of DG.zones) {
+    const r = (z.box || z.el).getBoundingClientRect();
+    if (z.kind === 'slots') {
+      if (x >= r.left - 12 && x <= r.right + 12 && y >= r.top - 40 && y <= r.bottom + 8) {
+        let best = null, bd = 1e9;
+        $$('.slot', z.el).forEach((s) => { const sr = s.getBoundingClientRect(), d = Math.abs(x - (sr.left + sr.width / 2)); if (d < bd) { bd = d; best = s; } });
+        if (best) tgt = { z, k: +best.dataset.slot, el: best };
+      }
+    } else if (x >= r.left - 24 && x <= r.right + 24 && y >= r.top - 30 && y <= r.bottom + 80) tgt = { z, k: -1 };
+    if (tgt) break;
+  }
+  setTarget(tgt);
+  if (tgt && tgt.z.kind === 'list') { DG.last = tgt; if (now > DG.cool) listMove(tgt.z, x, y, now); }
+}
+function setTarget(tgt) {
+  const prev = DG.tgt;
+  if ((!prev && !tgt) || (prev && tgt && prev.z === tgt.z && prev.k === tgt.k)) return;
+  if (prev && prev.el) prev.el.classList.remove('hot');
+  if (tgt && tgt.el) { tgt.el.classList.add('hot'); tgt.el.style.setProperty('--h-rgb', DG.rgb); Sound.play.step(tgt.k + 5); }
+  // carried out of the console onto the rack: the rack opens a hole for it (and closes it again if it leaves)
+  if (DG.src.zone === 'dock' && tgt && tgt.z.kind === 'list' && !DG.tmp) {
+    const ph = document.createElement('div');
+    ph.className = 'cart ph tmp'; ph.setAttribute('style', DG.src.el.getAttribute('style') || ''); ph.innerHTML = '<span class="ct-body"></span>';
+    const box = tgt.z.el; flipList(box, () => box.appendChild(ph));
+    DG.tmp = ph;
+  } else if (DG.tmp && !(tgt && tgt.z.kind === 'list')) {
+    const ph = DG.tmp; DG.tmp = null; DG.last = null;
+    if (ph.parentNode) { const box = ph.parentNode; flipList(box, () => ph.remove()); }
+  }
+  DG.tgt = tgt;
+}
+function listMove(z, x, y, now) {
+  const hole = DG.src.zone === z.id ? DG.src.el : DG.tmp;
+  if (!hole || hole.parentNode !== z.el) return;
+  const kids = [...z.el.children];
+  let over = null;
+  for (const c of kids) {
+    if (c === hole || (c._fl || 0) > now) continue;
+    const r = c.getBoundingClientRect(), ix = r.width * 0.14, iy = r.height * 0.1;
+    if (x > r.left + ix && x < r.right - ix && y > r.top + iy && y < r.bottom - iy) { over = c; break; }
+  }
+  if (!over) {
+    const rest = kids.filter((c) => c !== hole), last = rest[rest.length - 1];
+    if (!last || kids[kids.length - 1] === hole) return;
+    const r = last.getBoundingClientRect();
+    if (z.axis === 'x' ? x > r.right : (y > r.bottom || (y > r.top && x > r.right))) over = 'end';
+    else return;
+  }
+  flipList(z.el, () => {
+    if (over === 'end') z.el.appendChild(hole);
+    else if (kids.indexOf(hole) < kids.indexOf(over)) over.after(hole); else over.before(hole);
+  });
+  DG.cool = now + 90;
+  Sound.play.step([...z.el.children].indexOf(hole));
+}
+function autoScroll(dt) {
+  // only once it is actually being carried: a cover picked up near the edge must not set its row moving
+  const p = DG.p; if (!p || !DG.moved) return;
+  const sc = DG.ctx.scroller;
+  if (sc) {
+    const r = sc.getBoundingClientRect(), top = r.top + 96, bot = r.bottom - 110;
+    const v = p.y < top ? -(top - p.y) / 96 : p.y > bot ? (p.y - bot) / 110 : 0;
+    if (v) sc.scrollTop += clamp(v, -1, 1) * 900 * dt;
+  }
+  const h = DG.ctx.hscroll;
+  if (h) {
+    const r = h.getBoundingClientRect();
+    const e = 46, v = p.x < r.left + e ? -(r.left + e - p.x) / e : p.x > r.right - e ? (p.x - (r.right - e)) / e : 0;
+    if (v) h.scrollLeft += clamp(v, -1, 1) * 760 * dt;
+  }
+}
+function drop() {
+  cancelAnimationFrame(DG.raf);
+  // where it is let go counts, even if the last frame was drawn before the finger got there
+  if (DG.p) { DG.cool = 0; findTarget(performance.now()); }
+  document.documentElement.classList.remove('dragging');
+  trailStop();
+  const src = DG.src, ctx = DG.ctx, av = DG.av;
+  let tgt = DG.tgt;
+  if (tgt && tgt.el) tgt.el.classList.remove('hot');
+  // let go somewhere else: a cartridge stays where its hole is now
+  if (!tgt && DG.last && src.zone !== 'dock' && src.zone !== 'mini') tgt = DG.last;
+  DG.noClick = performance.now() + 450;
+  let res = null;
+  // held and let go without moving (that is how arrange mode is opened): it just sits back down
+  if (DG.moved) try { if (tgt) res = ctx.resolve(src, tgt); } catch (er) { res = null; }
+  if (DG.tmp && !(res && res.render)) { const ph = DG.tmp; if (ph.parentNode) { const box = ph.parentNode; flipList(box, () => ph.remove()); } }
+  DG.on = false; DG.tmp = null; DG.av = null; DG.tgt = null; DG.last = null;
+  if (res && res.render) flipRender(ctx.root, res.render, { id: src.id, av, mode: res.mode });
+  else { src.el.classList.remove('ph'); arrive(src.el, av, res ? res.mode : DG.moved ? 'cancel' : 'drop'); }
+  DG.src = null;
+}
+// what a drop means on the App page
+function resolveApps(src, tgt) {
+  const L0 = appLayout(), dock = L0.dock.slice();
+  const rackDom = () => [...$('#rack').children].map((c) => (c === DG.tmp ? src.id : c.dataset.cart)).filter(Boolean);
+  if (tgt.z.kind === 'list') {
+    const rack = rackDom();
+    if (src.zone === 'dock') { dock[src.k] = null; saveLayout(dock, rack); return { mode: 'lock', render: renderApps }; }
+    saveLayout(dock, rack); return { mode: 'lock' }; // the rack is already in its new order on screen
+  }
+  const k = tgt.k, occ = dock[k];
+  if (src.zone === 'dock') {
+    if (k === src.k) return { mode: 'insert' }; // back into its own slot
+    dock[src.k] = occ || null; dock[k] = src.id;
+    saveLayout(dock, L0.rack); return { mode: 'insert', render: renderApps };
+  }
+  // from the rack into a slot; whatever was in it goes to the rack, into the place the new one left
+  const rack = rackDom(), at = rack.indexOf(src.id);
+  if (occ) rack[at] = occ; else rack.splice(at, 1);
+  dock[k] = src.id;
+  saveLayout(dock, rack); return { mode: 'insert', render: renderApps };
+}
+// the small console on the home page: cartridges swap slots
+function resolveMini(src, tgt) {
+  if (tgt.z.kind !== 'slots' || tgt.k === src.k) return { mode: 'insert' };
+  const L0 = appLayout(), dock = L0.dock.slice(), t = dock[tgt.k];
+  dock[tgt.k] = dock[src.k]; dock[src.k] = t || null;
+  saveLayout(dock, L0.rack);
+  return { mode: 'insert', render: () => { const m = $('#minicon'); if (m) m.outerHTML = consoleHtml(appLayout().dock, { mini: true }); } };
+}
+// favourite games: the row on screen is the new order
+function resolveFav(src, tgt) {
+  const ids = [...tgt.z.el.children].map((c) => c.dataset.id).filter(Boolean);
+  S.favs = new Set([...ids, ...[...S.favs].filter((id) => !ids.includes(id))]); save.favs();
+  return { mode: 'lock' };
+}
+// the badges in arrange mode: plug in / pull out without dragging
+function dockIn(id) {
+  const L0 = appLayout(), k = L0.dock.indexOf(null);
+  if (k < 0) { Sound.play.err(); toast('主機四個插槽都插滿了：先拔一片下來，或直接把卡匣拖到想換掉的那一格', 3600); return; }
+  const el = $(`#rack [data-cart="${CSS.escape(id)}"]`); if (!el) return;
+  const dock = L0.dock.slice(); dock[k] = id;
+  saveLayout(dock, L0.rack.filter((x) => x !== id));
+  const av = avatarOf(el); el.classList.add('ph');
+  Sound.play.pull(); haptic(10);
+  flipRender($('#view-apps'), renderApps, { id, av, mode: 'insert' });
+}
+function dockOut(id) {
+  const L0 = appLayout(), k = L0.dock.indexOf(id);
+  const el = $(`#console [data-cart="${CSS.escape(id)}"]`); if (k < 0 || !el) return;
+  Sound.play.eject(); haptic(10);
+  const up = el.getBoundingClientRect().height * 0.6;
+  // up out of the slot first, then off to the front of the rack
+  el.animate([{ transform: 'none' }, { transform: `translateY(${-up}px)` }], { duration: reduced ? 1 : 170, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'forwards' }).finished.then(() => {
+    const dock = L0.dock.slice(); dock[k] = null;
+    saveLayout(dock, [id, ...L0.rack.filter((x) => x !== id)]);
+    const av = avatarOf(el);
+    flipRender($('#view-apps'), renderApps, { id, av, mode: 'lock' });
+  }).catch(() => {});
 }
 
 /* ───────────── 我的：玩家檔案 ───────────── */
@@ -1461,6 +2049,7 @@ function closeResults() {
   el.classList.remove('on'); el.classList.add('off');
   setTimeout(() => { el.classList.remove('off', 'done', 'lvup'); el.innerHTML = ''; }, 500);
   if (S.pendingNews) { S.pendingNews = false; checkNew(); }
+  if (S.pendingUp3) { S.pendingUp3 = false; setTimeout(showUpgrade3, 450); }
 }
 
 /* ───────────── 2.0 升級 ───────────── */
@@ -1481,6 +2070,25 @@ function showUpgrade(got) {
         <ul class="up-feat">${feats.map(([ic, b, s]) => `<li>${ic}<div><b>${esc(b)}</b><span>${esc(s)}</span></div></li>`).join('')}</ul>
         <div class="up-you">${lvRing(p)}<div>依你之前的遊玩紀錄：<b>Lv ${p.lv}・${esc(p.title)}</b><br>已經拿到 <b>${got.length}</b> 個獎盃</div></div>
         <div class="up-acts"><button class="play" data-act="up-me">${I.me}看我的玩家檔案</button><button class="ghost" data-act="up-close">開始</button></div></div></div>`;
+  el.classList.add('on');
+  Sound.play.install();
+  setTimeout(() => { if (!el.classList.contains('on')) return; el.classList.add('done'); Sound.play.levelUp(); }, reduced ? 0 : 1900);
+}
+/* ───────────── 3.0 升級：卡匣與主機 ───────────── */
+function showUpgrade3() {
+  const el = $('#upgrade'); if (!el) return;
+  const feats = [
+    [I.cart, '卡匣與主機', '每個 App 都是一片卡匣；最常用的四片插上主機，首頁一點就開'],
+    [I.touch, '按住就能搬', '卡匣、主機、首頁「我的最愛」的遊戲，按住就能拖到想要的位置'],
+    [I.bolt, '全新聲光', '畫面切換的掃描光，卡匣抽出、插入的手感、音效和震動'],
+  ];
+  el.innerHTML = `<div class="up-in v3">
+      <div class="up-kick">SYSTEM UPDATE</div><div class="up-ver">3.0</div>
+      <div class="up-bar"><i></i></div><div class="up-st">正在安裝卡匣槽…</div>
+      <div class="up-done"><h2>主機升級完成</h2><p>痞子葳，你的 App 都變成卡匣了。</p>
+        <div class="up-con">${consoleHtml(appLayout().dock, { preview: true })}</div>
+        <ul class="up-feat">${feats.map(([ic, b, s]) => `<li>${ic}<div><b>${esc(b)}</b><span>${esc(s)}</span></div></li>`).join('')}</ul>
+        <div class="up-acts"><button class="play" data-act="up3-go">${I.grid}去整理我的 App</button><button class="ghost" data-act="up-close">開始</button></div></div></div>`;
   el.classList.add('on');
   Sound.play.install();
   setTimeout(() => { if (!el.classList.contains('on')) return; el.classList.add('done'); Sound.play.levelUp(); }, reduced ? 0 : 1900);
@@ -1537,6 +2145,9 @@ function openLauncher(item, url, kind) {
   heroPause(true);
   const t0 = performance.now();
   setTimeout(() => {
+    // closed again before the frame was made (a quick back): don't build it into a closed launcher,
+    // which would then put the whole collection to sleep behind nothing
+    if (L.item !== item || !el.classList.contains('on')) return;
     const fr = document.createElement('iframe');
     fr.setAttribute('allow', 'autoplay; fullscreen; gamepad; clipboard-write; screen-wake-lock; accelerometer; gyroscope; web-share');
     fr.setAttribute('allowfullscreen', '');
@@ -1547,6 +2158,7 @@ function openLauncher(item, url, kind) {
       el.classList.remove('failed');
       const wait = Math.max(0, 1650 - (performance.now() - t0));
       setTimeout(() => {
+        if (L.frame !== fr) return;
         el.classList.add('ready'); try { fr.focus(); fr.contentWindow.focus(); } catch (e) { /* cross-origin */ } showHandle();
         // once the intro has faded, the collection behind the game goes to sleep
         setTimeout(() => { if (L.frame === fr && el.classList.contains('ready')) shellSleep(true); }, 700);
@@ -1661,6 +2273,7 @@ function openPlayMenu() {
       <button data-act="sheet-close">${I.play.replace('<svg', '<svg style="fill:currentColor;stroke:none"')}繼續${L.kind === 'game' ? '玩' : '使用'}</button>
       <button data-act="l-retry">${I.refresh}重新載入</button>
       ${canFull ? `<button data-act="l-full">${I.expand}全螢幕</button>` : ''}
+      ${L.kind === 'app' && it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener" data-act="ext">${I.out}用瀏覽器開啟</a>` : ''}
     </div>`);
 }
 
@@ -1693,6 +2306,7 @@ function openSettings() {
     <div class="opt"><div><b>遊玩結算</b><span>玩完回來時，顯示這次的時間、經驗、升級和新獎盃</span></div><button class="sw${st.results ? ' on' : ''}" data-act="set" data-arg="results" aria-label="遊玩結算"></button></div>
     <div class="opt" style="display:block"><b>隱藏的遊戲</b><span>${hidden.length ? '點一下就會回到收藏庫' : '目前沒有隱藏任何遊戲'}</span>
       ${hidden.length ? `<div class="hidden-list">${hidden.map((g) => `<button data-act="unhide" data-id="${esc(g.id)}">${esc(g.title)}<em>取消隱藏</em></button>`).join('')}</div>` : ''}</div>
+    <div class="opt"><div><b>App 的排列</b><span>主機和卡匣架回到一開始的樣子（只影響這台裝置）</span></div><button class="ghost sm" data-act="reset-apps" data-label="恢復">恢復</button></div>
     <div class="opt"><div><b>遊玩紀錄</b><span>${totalMs ? `總共玩了${esc(spacedDur(totalMs))}，只記在這台裝置；清除後等級、獎盃、精通度一起重來` : '還沒有遊玩紀錄，只會記在這台裝置'}</span></div><button class="ghost sm" data-act="clear-stats">清除</button></div>
     ${MODE === 'web' && !standalone ? `<div class="add-home">${isIOS ? '<b>加到主畫面：</b>用 Safari 打開這頁，點下方的「分享」按鈕，選「加入主畫面」。之後就能像 App 一樣從主畫面打開。' : (S.installEvt ? '<b>安裝成 App：</b><button class="ghost sm" data-act="install" style="margin-top:8px">安裝到這台裝置</button>' : '<b>加到主畫面：</b>在瀏覽器選單裡選「加到主畫面」或「安裝應用程式」。')}</div>` : ''}
     <div class="about">PZ 遊戲收藏　版本 ${esc(S.cat.version || '')}<br>${S.games.length} 款遊戲、${S.apps.length} 個 App，資料更新於 ${esc(fmtDate(S.cat.updated))}。${MODE === 'web' ? '<br>新遊戲做好後會直接放上來，重新打開收藏庫就會看到。' : ''}</div>`);
@@ -2004,9 +2618,12 @@ function setHash(h, replace) {
   applyRoute();
 }
 function setBase(name) {
-  const changed = S.base !== name || !$('#view-' + name).innerHTML;
+  const moved = S.base !== name;
+  const changed = moved || !$('#view-' + name).innerHTML;
+  if (name !== 'apps') setEditing(false);
   S.base = name;
   $$('.view').forEach((v) => v.classList.toggle('on', v.id === 'view-' + name));
+  if (moved) viewIntro($('#view-' + name));
   const tab = name === 'apps' || name === 'me' ? name : 'home';
   $$('#tabbar button').forEach((b) => b.classList.toggle('on', b.dataset.arg === tab));
   glideTab();
@@ -2018,7 +2635,17 @@ function setBase(name) {
   }
   $('#topbar').classList.toggle('solid', name !== 'home' || $('#view-' + name).scrollTop > 40);
   if (name === 'home') { heroPause(!!S.current); if (Hero.list[Hero.ix] && !S.current) Ambient.set(Hero.list[Hero.ix].g); } else heroPause(true);
-  if (name === 'apps' && S.apps[0] && !S.current) Ambient.set(S.apps[0]);
+  if (name === 'apps' && S.apps[0] && !S.current) { const d = appLayout().dock.find(Boolean); Ambient.set((d && S.byId[d]) || S.apps[0]); }
+}
+// switching screens: the new one rises into place while a scan line passes down the glass, and its
+// cartridges come in one after another
+function viewIntro(v) {
+  if (reduced || !S.ready || !v) return;
+  v.classList.remove('intro'); void v.offsetWidth; v.classList.add('intro');
+  const sc = $('#scan'); if (sc) { sc.classList.remove('go'); void sc.offsetWidth; sc.classList.add('go'); }
+  clearTimeout(v._intro); v._intro = setTimeout(() => { v.classList.remove('intro'); if (sc) sc.classList.remove('go'); }, 1200);
+  Sound.play.scan();
+  Motes.kick();
 }
 function refreshBase() {
   const v = $('#view-' + S.base), sc = v ? v.scrollTop : 0;
@@ -2077,12 +2704,23 @@ function applyRoute() {
 
 /* ───────────── events ───────────── */
 function onClick(e) {
+  if (e.target.closest && e.target.closest('.hap')) return; // the hidden switch that makes the iPhone tap
   if (S.swallowClick) { e.preventDefault(); return; }
+  // the click that comes after letting go of a carried cartridge or cover is not a tap
+  if (performance.now() < DG.noClick) { e.preventDefault(); e.stopPropagation(); return; }
   const t = e.target.closest('[data-act]');
   if (!t) return;
   const act = t.dataset.act, id = t.dataset.id, arg = t.dataset.arg;
   Sound.unlock();
+  // arranging: cartridges don't open, they rock in their slot (their badges still work)
+  if (S.editing && act !== 'dock-in' && act !== 'dock-out' && t.closest('#view-apps .cart')) { e.preventDefault(); nudge(t.closest('.cart')); return; }
   switch (act) {
+    case 'ed-on': setEditing(true); break;
+    case 'ed-done': setEditing(false); break;
+    case 'dock-in': e.preventDefault(); e.stopPropagation(); dockIn(id); break;
+    case 'dock-out': e.preventDefault(); e.stopPropagation(); dockOut(id); break;
+    case 'reset-apps': resetApps(t); break;
+    case 'up3-go': Sound.play.tab(); closeUpgrade(); setHash('apps', true); setTimeout(() => setEditing(true), 650); break;
     case 'ext': Sound.play.tap(); return; // let the link open
     case 'open': e.preventDefault(); Sound.play.open(); openGame(id); break;
     case 'play': e.preventDefault(); e.stopPropagation(); if (SP.el) closeSpin(true); if (TR.el) closeTrailer(true); launch(id || (S.current && S.current.id), t); break;
@@ -2109,7 +2747,7 @@ function onClick(e) {
       break;
     }
     case 'tab': {
-      Sound.play.tab();
+      Sound.play.tab(); if (!navigator.vibrate) haptic(6);
       const name = arg === 'library' || arg === 'apps' || arg === 'me' ? arg : 'home';
       if (S.current) hideGame();
       if (SP.el) closeSpin(true);
@@ -2133,6 +2771,7 @@ function onClick(e) {
     case 'fav': {
       const on = !S.favs.has(id); on ? S.favs.add(id) : S.favs.delete(id); save.favs();
       t.classList.toggle('on', on); Sound.play.fav(on); toast(on ? '已加入我的最愛' : '已從最愛移除');
+      if (on) { const r = t.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, '255,211,106', 16, 66); haptic(12); }
       if (on) setTimeout(() => trophyPop(trophyCheck()), 600);
       break;
     }
@@ -2216,7 +2855,9 @@ function onKey(e) {
     else if ((e.key === 'Enter' || e.key === ' ') && !SP.spinning && !(e.target && e.target.closest && e.target.closest('button,a'))) { e.preventDefault(); spinGo(); }
     return;
   }
+  if (DG.on && e.key === 'Escape') { DG.p = null; drop(); return; }
   if (e.key === 'Escape') {
+    if (S.editing) return setEditing(false);
     if ($('#lightbox').classList.contains('on')) return closeShot();
     if (S.sheet) return closeSheet();
     if ($('#search').classList.contains('on')) return closeSearch();
@@ -2237,14 +2878,17 @@ function shell() {
       <button class="ibtn" data-act="search" aria-label="搜尋">${I.search}</button>
       <button class="ibtn" id="snd-btn" data-act="snd" aria-label="聲音"></button>
       <button class="ibtn" data-act="settings" aria-label="設定">${I.gear}</button></header>
-    <main id="app"><div class="view" id="view-home"></div><div class="view" id="view-library"></div><div class="view" id="view-apps"></div><div class="view" id="view-me"></div></main>
+    <main id="app"><div id="bench" aria-hidden="true"></div><div class="view" id="view-home"></div><div class="view" id="view-library"></div><div class="view" id="view-apps"></div><div class="view" id="view-me"></div></main>
     <nav id="tabbar"><span class="glide"></span><button data-act="tab" data-arg="home">${I.games}遊戲</button><button data-act="tab" data-arg="apps">${I.apps}App</button><button data-act="tab" data-arg="me">${I.me}我的</button></nav>
     <section id="gamepage" aria-label="遊戲介紹"></section>
     <div id="lightbox"></div><div id="search"></div>
     <div id="launcher"></div><button id="handle" aria-label="收藏庫選單"></button>
     <div id="results" role="dialog" aria-label="遊玩結算"></div><div id="upgrade" role="dialog" aria-label="主機升級"></div>
     <div id="tpop" aria-live="polite"></div>
-    <div id="toast" role="status"></div>`);
+    <div id="toast" role="status"></div>
+    <div id="scan" aria-hidden="true"></div>
+    <div id="editbar" role="toolbar" aria-label="整理模式"><div class="eb-t"><b>${I.grid}整理模式</b><span>拖曳換位置，拖進主機是最愛</span></div>
+      <button class="ghost sm" data-act="reset-apps" data-label="恢復預設">恢復預設</button><button class="play sm" data-act="ed-done">${I.check}完成</button></div>`);
   updateSndBtn();
   bindHandle();
   // results: the first tap skips the count-up, the next one closes it
@@ -2254,7 +2898,7 @@ function shell() {
   $$('.view').forEach((v) => v.addEventListener('scroll', () => { if (v.classList.contains('on')) top.classList.toggle('solid', v.scrollTop > 40 || S.base !== 'home'); }, { passive: true }));
   document.addEventListener('click', onClick);
   if (!reduced) document.addEventListener('pointerdown', (e) => {
-    const t = e.target.closest('.card, .play, .ghost, .app-tile, .fchip, .tool, .sr-item, .menu-list button, .links a, .links button, #tabbar button, .lucky');
+    const t = e.target.closest('.card, .cart, .play, .ghost, .fchip, .sr-item, .menu-list button, .links a, .links button, #tabbar button, .lucky, .ed-btn');
     if (!t) return;
     const sp = document.createElement('span');
     sp.className = 'spark';
@@ -2264,6 +2908,15 @@ function shell() {
     setTimeout(() => sp.remove(), 650);
   }, { passive: true });
   document.addEventListener('keydown', onKey);
+  // hold-and-move (cartridges, the console, favourite covers)
+  document.addEventListener('pointerdown', dgDown);
+  addEventListener('pointermove', dgMove, { passive: true });
+  addEventListener('pointerup', dgUp);
+  addEventListener('pointercancel', dgUp);
+  // while something is carried the page must not scroll under the finger
+  document.addEventListener('touchmove', (e) => { if (DG.on) e.preventDefault(); }, { passive: false });
+  document.addEventListener('contextmenu', (e) => { if (DG.p || DG.on || (e.target.closest && e.target.closest('[data-drag]'))) e.preventDefault(); });
+  document.addEventListener('dragstart', (e) => { if (e.target.closest && e.target.closest('[data-drag]')) e.preventDefault(); });
   if (!reduced && matchMedia('(hover: hover) and (pointer: fine)').matches) {
     // cards lean toward the mouse and catch a little light
     let tc = null, raf = 0, ev = null;
@@ -2279,7 +2932,7 @@ function shell() {
     };
     document.addEventListener('pointermove', (e) => {
       if (e.pointerType !== 'mouse') return;
-      const c = e.target.closest ? e.target.closest('.card') : null;
+      const c = e.target.closest && !DG.on ? e.target.closest('.card, .cart') : null;
       if (c !== tc) {
         if (tc) { tc.classList.remove('tilt'); ['--rx', '--ry'].forEach((k) => tc.style.removeProperty(k)); }
         tc = c; if (tc) tc.classList.add('tilt');
@@ -2413,7 +3066,8 @@ async function start() {
   }
   // 2.0: the first time this version runs on a device, every trophy already earned is unlocked quietly.
   // Someone who used the collection before gets the upgrade screen; a new device just starts at level 1.
-  let upgrade = null, firstPops = [];
+  let upgrade = null, firstPops = [], up3 = false;
+  const had2 = !!S.trophies; // this device already ran 2.0
   if (!S.trophies) {
     const prior = !!S.seen;
     S.trophies = {};
@@ -2421,6 +3075,15 @@ async function start() {
     if (prior) upgrade = got; else firstPops = got;
     const n0 = (S.cat.changelog || [])[0];
     if (prior && n0) Store.set('noteSeen', n0.id); // the upgrade screen already says what's new
+  }
+  // 3.0 (cartridges and the console): shown once to a device that already had 2.0
+  if (!Store.get('v3', false)) {
+    Store.set('v3', true);
+    if (had2 && !upgrade && S.seen) {
+      up3 = true;
+      const n0 = (S.cat.changelog || [])[0];
+      if (n0) Store.set('noteSeen', n0.id);
+    }
   }
   // back from a game: settle the session (and any trophies it earned) before anything is drawn,
   // so the player card and covers already show the new level; then trophies earned some other way
@@ -2435,6 +3098,8 @@ async function start() {
   boot((tapped) => {
     if (tapped && Hero.el && S.base === 'home' && !S.current) heroGo(0, false);
     if (upgrade) showUpgrade(upgrade);
+    // (back from a game with a results screen: the 3.0 screen waits until that is closed)
+    else if (up3) setTimeout(() => { if ($('#results.on')) S.pendingUp3 = true; else showUpgrade3(); }, 0);
     else if (firstPops.length) setTimeout(() => trophyPop(firstPops), 900);
     const q = S.afterBoot; S.afterBoot = null;
     if (q) q.forEach((f) => f());
@@ -2456,8 +3121,9 @@ async function start() {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
   unveil();
+  S.ready = true;
 }
-window.__pz = { S, Sound, Hero, heroGo, heroPause, openGame, renderHome, setBase, launch, openSettings, openSearch, toast };
+window.__pz = { S, Sound, Hero, heroGo, heroPause, openGame, renderHome, setBase, launch, openSettings, openSearch, toast, DG, appLayout };
 // a failure while starting must never leave the launch backdrop over the screen; the error is still reported
 start().catch((e) => { unveil(true); setTimeout(() => { throw e; }); });
 })();
