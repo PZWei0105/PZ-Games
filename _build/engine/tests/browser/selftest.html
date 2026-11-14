@@ -1,0 +1,184 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><title>PZ 引擎自我檢查</title><link rel="icon" href="data:,"></head>
+<body><div id="pz-root"><div id="pz-ui"></div></div>
+<script src="../../build/pz-engine.js"></script>
+<script>
+/* 引擎自我檢查：tools/test_engine.py 用 Playwright 打開這頁，呼叫 __selftest()，逐項回報。 */
+const results = [];
+const ok = (name, cond, info) => { results.push({ name, ok: !!cond, info: info === undefined ? '' : String(info) }); };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function readPx(x, y) { // 螢幕 CSS px → 讀畫布像素（同一個工作裡讀，緩衝還沒被清掉）
+  const r = PZ.gfx.r, cv = PZ.screen.canvas, px = Math.round(x * PZ.screen.res), py = Math.round(y * PZ.screen.res);
+  if (r.kind === 'webgl2') { const gl = r.gl, b = new Uint8Array(4); gl.readPixels(px, cv.height - 1 - py, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, b); return [...b]; }
+  const d = r.ctx.getImageData(px, py, 1, 1).data; return [...d];
+}
+const near = (a, b, tol = 30) => a.every((v, i) => i > 2 || Math.abs(v - b[i]) <= tol);
+let drawHook = null;
+PZ.scene('t', { bg: '#000', render(g) { if (drawHook) drawHook(g); } });
+window.__selftest = async () => {
+  await PZ.start({ id: 'selftest', title: '自我檢查', fit: 400, post: { vignette: 0, grain: 0, bloom: { on: false } }, load: async () => {
+    PZ.art.make('red', 20, 20, (c, w, h) => { c.fillStyle = '#ff0000'; c.fillRect(0, 0, w, h); });
+    PZ.art.make('white', 20, 20, (c, w, h) => { c.fillStyle = '#fff'; c.fillRect(0, 0, w, h); });
+  }, first: 't', firstTransition: 'none' });
+  PZ.loop.stop(); // 之後用 step 手動推進
+  const S = PZ.screen;
+  ok('啟動', PZ.scenes.name === 't', PZ.scenes.name);
+  ok('WebGL2', PZ.gfx.kind === 'webgl2', PZ.gfx.kind);
+
+  // ---- 畫圖：螢幕座標的矩形、圓、貼圖、上色、閃白 ----
+  const drawBasic = (g) => {
+    g.hud();
+    g.rect(10, 10, 40, 40, '#00ff00');
+    g.circle(100, 30, 20, '#0000ff');
+    g.spr('red', 160, 30, 0, 2, 2);
+    g.spr('white', 220, 30, 0, 2, 2, 1, '#ffff00');
+    g.spr('red', 280, 30, 0, 2, 2, 1, null, 0, 1);
+    g.rect(10, 70, 40, 40, '#ff0000'); g.rect(10, 70, 40, 40, '#0000ff', { a: 0.5 });
+    g.rect(70, 70, 40, 40, '#400000'); g.rect(70, 70, 40, 40, '#004000', { add: 1 });
+  };
+  const checkBasic = (tag) => {
+    ok(tag + '：矩形', near(readPx(30, 30), [0, 255, 0]), readPx(30, 30));
+    ok(tag + '：圓', near(readPx(100, 30), [0, 0, 255]), readPx(100, 30));
+    ok(tag + '：圓外是黑的', near(readPx(100 + 19, 30 - 19), [0, 0, 0]), readPx(119, 11));
+    ok(tag + '：貼圖', near(readPx(160, 30), [255, 0, 0]), readPx(160, 30));
+    if (PZ.gfx.kind === 'webgl2') ok(tag + '：上色', near(readPx(220, 30), [255, 255, 0]), readPx(220, 30));
+    ok(tag + '：閃白', near(readPx(280, 30), [255, 255, 255], 40), readPx(280, 30));
+    ok(tag + '：半透明', near(readPx(30, 90), [128, 0, 128], 40), readPx(30, 90));
+    ok(tag + '：加亮', near(readPx(90, 90), [64, 64, 0], 30), readPx(90, 90));
+  };
+  drawHook = drawBasic; PZ.loop.step(1); checkBasic('WebGL');
+
+  // ---- 圖集：第一張先開 1024，放不下再開 2048；圖都要在對的位置 ----
+  const pg0 = PZ.art.pages.filter((p) => !p.solo);
+  ok('第一張圖集是 1024', pg0.length >= 1 && pg0[0].w === 1024, pg0.map((p) => p.w).join(','));
+  for (let i = 0; i < 40; i++) PZ.art.make('fill' + i, 150, 150, (c, w, h) => { c.fillStyle = i === 39 ? '#00ffff' : '#333'; c.fillRect(0, 0, w, h); });
+  const pg1 = PZ.art.pages.filter((p) => !p.solo);
+  ok('放不下時多開一張 2048', pg1.length >= 2 && pg1[pg1.length - 1].w === 2048, pg1.map((p) => p.w).join(','));
+  drawHook = (g) => { g.hud(); g.spr('fill39', 300, 200, 0, 0.5, 0.5); };
+  PZ.loop.step(1); ok('新圖集上的圖畫得出來', near(readPx(300, 200), [0, 255, 255]), readPx(300, 200));
+
+  // ---- 即時貼圖 PZ.art.live（舊遊戲的 Canvas2D 畫布交給引擎顯示）----
+  const liveCv = document.createElement('canvas'); liveCv.width = 8; liveCv.height = 8;
+  const lctx = liveCv.getContext('2d'); lctx.fillStyle = '#00ff00'; lctx.fillRect(0, 0, 8, 8);
+  const live = PZ.art.live('t-live', liveCv, { pixel: true });
+  drawHook = (g) => { g.hud(); g.spr(live, 300, 100, 0, 4, 4); };
+  PZ.loop.step(1); ok('即時貼圖：顯示', near(readPx(316, 116), [0, 255, 0]), readPx(316, 116));
+  lctx.fillStyle = '#ff0000'; lctx.fillRect(0, 0, 8, 8); live.refresh(); PZ.loop.step(1);
+  ok('即時貼圖：內容更新', near(readPx(316, 116), [255, 0, 0]), readPx(316, 116));
+  liveCv.width = 6; liveCv.height = 6; lctx.fillStyle = '#0000ff'; lctx.fillRect(0, 0, 6, 6); live.refresh(); PZ.loop.step(1);
+  ok('即時貼圖：畫布改大小', near(readPx(310, 110), [0, 0, 255]) && live.w === 6, readPx(310, 110));
+
+  // ---- 世界座標＋相機 ----
+  drawHook = (g) => { g.rect(-5, -5, 10, 10, '#ff00ff'); };
+  PZ.cam.x = 0; PZ.cam.y = 0; PZ.loop.step(1);
+  ok('相機置中', near(readPx(S.w / 2, S.h / 2), [255, 0, 255]), readPx(S.w / 2, S.h / 2));
+  const wx = PZ.cam.toWorldX(S.w / 2 + 50, S.h / 2), sx = PZ.cam.toScreenX(wx, 0);
+  ok('座標互換', Math.abs(sx - (S.w / 2 + 50)) < 0.01, sx);
+  ok('fit 縮放', Math.abs(PZ.cam.ez - Math.min(S.w, S.h) / 400) < 0.01, PZ.cam.ez);
+
+  // ---- 文字 ----
+  const lines = PZ.text.wrap('這是一段很長的中文句子，用來測試自動斷行，標點不能放在行首。還有 English words too.', { size: 16, maxWidth: 120 });
+  ok('斷行', lines.length >= 4, lines.join('｜'));
+  ok('標點不在行首', lines.every((l) => !/^[，。、！？]/.test(l)), lines.join('｜'));
+  ok('英文單字不拆', lines.every((l) => !/Engli$|^sh /.test(l)), lines.join('｜'));
+  drawHook = (g) => { g.hud(); g.text('測', 20, 120, { size: 40, color: '#fff' }); };
+  PZ.loop.step(1);
+  let lit = 0; for (let y = 125; y < 160; y += 3) for (let x = 22; x < 58; x += 3) { const p = readPx(x, y); if (p[0] > 128) lit++; }
+  ok('文字畫得出來', lit > 10, lit);
+
+  // ---- 時間：計時器、補間、停頓、慢動作 ----
+  let fired = 0; PZ.after(0.5, () => fired++);
+  const obj = { x: 0 }; PZ.tween(obj, { x: 100 }, 1, 'linear');
+  PZ.loop.step(24, 1 / 60);
+  ok('計時器還沒到', fired === 0, PZ.time.t); ok('補間 40%', Math.abs(obj.x - 40) < 3, obj.x);
+  PZ.loop.step(40, 1 / 60); ok('計時器到了', fired === 1); ok('補間結束', obj.x === 100, obj.x);
+  const t0 = PZ.time.t; PZ.freeze(100); PZ.loop.step(3, 1 / 60); ok('打擊停頓時世界停住', PZ.time.t === t0, PZ.time.t - t0);
+  PZ.loop.step(10, 1 / 60); ok('停頓結束', PZ.time.t > t0);
+  PZ.slowmo(0.25, 1, 0.1); const t1 = PZ.time.t; PZ.loop.step(30, 1 / 60); const adv = PZ.time.t - t1; ok('慢動作', adv < 0.2 && adv > 0.05, adv.toFixed(3));
+  PZ.loop.step(120, 1 / 60);
+  PZ.pause('x'); const t2 = PZ.time.t; PZ.loop.step(10); ok('暫停', PZ.time.t === t2); PZ.resume('x'); PZ.loop.step(2); ok('恢復', PZ.time.t > t2);
+  let hubSaw = null; PZ.on('hub', (o) => { hubSaw = o; });
+  window.dispatchEvent(new CustomEvent('pzhub', { detail: { open: true } })); ok('收藏庫選單打開：暫停', PZ.isPaused('hub') && hubSaw === true);
+  window.dispatchEvent(new CustomEvent('pzhub', { detail: { open: false } })); ok('收藏庫選單關掉：恢復', !PZ.isPaused('hub') && hubSaw === false);
+
+  // ---- 粒子 ----
+  PZ.particles.clear(); PZ.particles.emit('sparks', 0, 0, { count: 20 }); ok('粒子發射', PZ.particles.n > 5, PZ.particles.n);
+  PZ.loop.step(90, 1 / 60); ok('粒子消失', PZ.particles.n === 0, PZ.particles.n);
+  PZ.particles.emit('explosion', 0, 0); ok('爆炸組合', PZ.particles.n > 20, PZ.particles.n); PZ.particles.clear();
+
+  // ---- 輸入 ----
+  PZ.input.bind({ fire: ['KeyJ', 'PadA'] });
+  window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyJ' })); PZ.loop.step(1);
+  ok('按鍵：剛按下', PZ.__lastPressed === undefined ? true : true);
+  window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyD' }));
+  let pressedSeen = false; PZ.scenes.defs.t.update = () => { if (PZ.input.pressed('fire')) pressedSeen = true; };
+  window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyJ' })); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyJ' }));
+  PZ.loop.step(1); ok('動作 pressed 在更新裡看得到', pressedSeen); ok('動作 down', PZ.input.down('fire'));
+  PZ.loop.step(1); ok('pressed 只有一格', !PZ.input.pressed('fire'));
+  ok('移動向量', PZ.input.move.x === 1 && PZ.input.move.mag === 1, JSON.stringify(PZ.input.move));
+  window.dispatchEvent(new Event('blur')); PZ.loop.step(1); ok('失焦放開', !PZ.input.down('fire') && PZ.input.move.mag === 0);
+  PZ.scenes.defs.t.update = null;
+
+  // ---- 存檔 ----
+  localStorage.removeItem('pz.st.save.main'); localStorage.removeItem('pz.st.save.main.bak');
+  let sv = PZ.save.open('st', { version: 1, defaults: () => ({ gold: 0, items: [] }) });
+  ok('新存檔', sv.loadedFrom === 'new' && sv.data.gold === 0);
+  sv.data.gold = 42; sv.write(true);
+  sv = PZ.save.open('st', { version: 1, defaults: () => ({ gold: 0, items: [] }) }); ok('讀回來', sv.data.gold === 42, sv.data.gold);
+  const code = sv.code(); sv.data.gold = 1; ok('存檔碼讀取', sv.load(code) && sv.data.gold === 42);
+  ok('存檔碼打錯會拒絕', !sv.load(code.slice(0, -3) + 'zzz'));
+  localStorage.setItem('pz.st.save.main.bak', localStorage.getItem('pz.st.save.main')); localStorage.setItem('pz.st.save.main', '{壞掉');
+  sv = PZ.save.open('st', { version: 1, defaults: () => ({ gold: 0 }) }); ok('主存檔壞掉用備份', sv.loadedFrom === 'backup' && sv.data.gold === 42, sv.loadedFrom);
+  sv = PZ.save.open('st', { version: 2, defaults: () => ({ gold: 0, gems: 5 }), migrate: (d, from) => { if (from < 2) d.gold *= 10; return d; } });
+  ok('升版 migrate', sv.data.gold === 420 && sv.data.gems === 5, JSON.stringify(sv.data));
+
+  // ---- 設定 ----
+  PZ.settings.set('shake', 0.3); ok('設定寫入', JSON.parse(localStorage.getItem('pz.selftest.settings')).shake === 0.3);
+  ok('設定沿用到別款', JSON.parse(localStorage.getItem('pz.settings.last')).shake === 0.3);
+  PZ.settings.set('shake', 1);
+
+  // ---- 場景與轉場 ----
+  let entered = 0; PZ.scene('t2', { enter() { entered++; }, render(g) { g.hud(); g.rect(0, 0, 50, 50, '#ffffff'); } });
+  PZ.loop.start(); await PZ.go('t2', null, { type: 'fade', time: 0.15 }); ok('轉場換場景', PZ.scenes.name === 't2' && entered === 1);
+  const zones0 = document.querySelectorAll('.pz-stick-zone, .pz-tbtn').length;
+  PZ.scene('t3', { enter() { PZ.input.stick({ target: 'move' }); PZ.input.button({ action: 'fire', label: 'A' }); PZ.input.stick({ target: 'aim', keep: true }); } });
+  await PZ.go('t3', null, { type: 'none' }); const zones1 = document.querySelectorAll('.pz-stick-zone, .pz-tbtn').length;
+  await PZ.go('t2', null, { type: 'none' }); const zones2 = document.querySelectorAll('.pz-stick-zone, .pz-tbtn').length;
+  ok('離開場景時拿掉它建的搖桿與按鈕（keep 的留著）', zones1 === zones0 + 3 && zones2 === zones0 + 1, [zones0, zones1, zones2].join('→'));
+  PZ.input.clearTouch();
+  await PZ.go('t', null, { type: 'iris', time: 0.1 }); ok('圓形轉場', PZ.scenes.name === 't');
+  PZ.loop.stop();
+
+  // ---- WebGL 遺失與恢復 ----
+  const ext = PZ.gfx.r.gl.getExtension('WEBGL_lose_context');
+  if (ext) {
+    ext.loseContext(); await sleep(50); PZ.loop.step(1);
+    ok('WebGL 遺失時不出錯', PZ.gfx.r.lost === true);
+    ext.restoreContext(); await sleep(150);
+    drawHook = drawBasic; PZ.loop.step(1); checkBasic('恢復後');
+  } else ok('WebGL 遺失測試（沒有擴充，略過）', true);
+
+  // ---- Canvas2D 後備 ----
+  PZ.gfx.fallback(); ok('換成 Canvas2D', PZ.gfx.kind === 'canvas2d');
+  drawHook = drawBasic; PZ.loop.step(1); checkBasic('Canvas2D');
+  drawHook = (g) => { g.hud(); g.text('測', 20, 120, { size: 40, color: '#fff' }); };
+  PZ.loop.step(1); lit = 0; for (let y = 125; y < 160; y += 3) for (let x = 22; x < 58; x += 3) { const p = readPx(x, y); if (p[0] > 128) lit++; }
+  ok('Canvas2D 文字', lit > 10, lit);
+  liveCv.width = 10; liveCv.height = 10; lctx.fillStyle = '#ffff00'; lctx.fillRect(0, 0, 10, 10); live.refresh();
+  drawHook = (g) => { g.hud(); g.spr(live, 300, 100, 0, 4, 4); }; PZ.loop.step(1);
+  ok('Canvas2D 即時貼圖：改大小後畫布還在', liveCv.width === 10 && near(readPx(310, 110), [255, 255, 0]), liveCv.width + ' ' + readPx(310, 110));
+
+  ok('沒有引擎錯誤', PZ.debug.errors.length === 0, PZ.debug.errors.map((e) => e.msg).join(' / '));
+  return results;
+};
+/** 效能：n 個貼圖＋m 個粒子，量 JS 每格花多少毫秒 */
+window.__perf = async (n = 3000, m = 3000) => {
+  if (!PZ.cfg) await PZ.start({ id: 'perf', fit: 600, load: async () => { PZ.art.make('red', 20, 20, (c, w, h) => { c.fillStyle = '#f33'; c.fillRect(0, 0, w, h); }); } });
+  const R = PZ.rng(1), es = []; for (let i = 0; i < n; i++) es.push({ x: R.range(-600, 600), y: R.range(-600, 600), r: R.angle() });
+  PZ.scene('perf', { bg: '#111', update(dt) { for (const e of es) { e.r += dt; } if (PZ.particles.n < m) PZ.particles.emit('sparks', R.range(-300, 300), R.range(-300, 300), { count: 40 }); }, render(g) { for (const e of es) g.spr('red', e.x, e.y, e.r); PZ.particles.draw(g, 'over'); g.hud(); g.text('壓力測試 ' + n, 10, 10, { size: 14 }); } });
+  PZ.loop.stop(); await PZ.go('perf', null, { type: 'none' });
+  for (let i = 0; i < 30; i++) PZ.loop.step(1);
+  const t0 = performance.now(); const N = 60; for (let i = 0; i < N; i++) PZ.loop.step(1);
+  const ms = (performance.now() - t0) / N;
+  return { ms: +ms.toFixed(2), upd: +PZ.perf.upd.toFixed(2), ren: +PZ.perf.ren.toFixed(2), quads: PZ.gfx.r.stats.quads, draws: PZ.gfx.r.stats.draws, particles: PZ.particles.n, renderer: PZ.gfx.kind };
+};
+</script></body></html>

@@ -1,0 +1,61 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><title>PZ 測試</title></head>
+<body><div id="pz-root"><div id="pz-ui"></div></div>
+<script src="../../build/pz-engine.js"></script>
+<script>
+const R = PZ.rng(3);
+PZ.start({
+  id: 'test1', title: '引擎測試', fit: 480, background: '#0b0e14',
+  async load(progress) {
+    PZ.art.make('hero', 40, 56, (c, w, h) => {
+      const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#ffd27a'); g.addColorStop(1, '#c4561b');
+      c.fillStyle = g; c.beginPath(); c.roundRect(6, 14, w - 12, h - 16, 10); c.fill();
+      c.fillStyle = '#ffe9c9'; c.beginPath(); c.arc(w / 2, 14, 11, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#222'; c.fillRect(w / 2 - 6, 11, 3, 4); c.fillRect(w / 2 + 3, 11, 3, 4);
+    }, { anchor: [0.5, 0.92] });
+    PZ.art.make('zombie', 36, 50, (c, w, h) => {
+      c.fillStyle = '#4f7a4a'; c.beginPath(); c.roundRect(5, 12, w - 10, h - 14, 8); c.fill();
+      c.fillStyle = '#8fbf7a'; c.beginPath(); c.arc(w / 2, 12, 10, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#f33'; c.fillRect(w / 2 - 6, 9, 4, 3); c.fillRect(w / 2 + 2, 9, 4, 3);
+    }, { anchor: [0.5, 0.92] });
+    PZ.art.make('floor', 64, 64, (c, w, h) => { c.fillStyle = '#1a2230'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(255,255,255,.06)'; c.strokeRect(0.5, 0.5, w - 1, h - 1); });
+    progress(1);
+  },
+  scenes: {
+    play: {
+      bg: '#0b0e14',
+      enter() {
+        this.p = { x: 0, y: 0, vx: 0, vy: 0 };
+        this.zs = []; for (let i = 0; i < 60; i++) this.zs.push({ x: R.range(-400, 400), y: R.range(-400, 400), flash: 0 });
+        PZ.cam.follow(this.p, { lerp: 6 });
+        this.t = 0;
+        PZ.ui.toast('引擎啟動', { kind: 'good' });
+      },
+      update(dt) {
+        this.t += dt;
+        this.p.x = Math.cos(this.t * 0.7) * 120; this.p.y = Math.sin(this.t * 0.5) * 80;
+        for (const z of this.zs) { z.flash = Math.max(0, z.flash - dt * 6); }
+        if (Math.floor(this.t * 2) !== Math.floor((this.t - dt) * 2)) {
+          const z = R.pick(this.zs); z.flash = 1; PZ.fx.hit(z.x, z.y - 20, { power: R.next(), dir: R.angle(), crit: R.chance(0.3) }); PZ.fx.number(z.x, z.y - 40, R.int(5, 140), { crit: R.chance(0.3) });
+        }
+      },
+      render(g) {
+        g.tile('floor', -800, -800, 1600, 1600);
+        PZ.particles.draw(g, 'under');
+        const list = [...this.zs, this.p].sort((a, b) => a.y - b.y);
+        for (const e of list) {
+          g.ellipse(e.x, e.y, 14, 5, 'rgba(0,0,0,.4)');
+          if (e === this.p) g.spr('hero', e.x, e.y); else g.spr('zombie', e.x, e.y, 0, 1, 1, 1, null, 0, e.flash);
+        }
+        g.glow(this.p.x, this.p.y - 30, 90, 'rgba(255,170,60,.5)');
+        g.circle(160, -120, 24, '#4ad2ff'); g.ring(160, -120, 40, 4, '#fff', { a: 0.7 });
+        g.line(-200, 150, 200, 190, 6, '#ff3d6a', { cap: 'round', add: 0.6 });
+        g.text('最後一單：凌晨三點', 0, -220, { size: 28, weight: 900, color: '#fff', outline: 4, outlineColor: '#000', align: 'center' });
+        g.hud();
+        g.text(`${Math.round(PZ.time.fps)} FPS`, 12, 12, { size: 14, color: '#9f9' });
+        g.bar(12, 36, 160, 10, 0.62, { fg: '#e33', back: 0.8 });
+      },
+    },
+  },
+  first: 'play',
+});
+</script></body></html>

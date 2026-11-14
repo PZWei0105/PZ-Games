@@ -1,0 +1,134 @@
+<canvas id="scv" class="px" aria-hidden="true"></canvas>
+<div id="stage" hidden>
+  <div id="fxHurt"></div><div id="fxLow"></div>
+  <div id="danmaku" aria-hidden="true"></div>
+  <div id="hud">
+    <div class="hud-top">
+      <div id="stat">
+        <img id="hudFace" class="pix" alt="魏子葳">
+        <div class="stat-body">
+          <div class="stat-row"><span class="nm">魏子葳</span><span id="hudLv" class="lv">LV 1</span></div>
+          <div class="bar hp"><i id="hpFill"></i><span id="hpTxt">100/100</span></div>
+          <div class="bar xp"><i id="xpFill"></i></div>
+        </div>
+      </div>
+      <div class="right-top">
+        <button id="btnPause" type="button" aria-label="暫停"><span></span><span></span></button>
+        <div id="kills"><b id="killN">0</b><small>擊倒</small></div>
+      </div>
+    </div>
+    <div id="obj"><div id="objTxt"></div><div id="objSub"></div><div class="objbar"><i id="objFill"></i></div></div>
+    <div id="bossbar" hidden><div id="bossName"></div><div class="bbar"><i id="bossFill"></i></div></div>
+    <div id="combo" hidden><b id="comboN">0</b><span>連殺</span><i id="comboBar"></i></div>
+    <div id="radio" hidden><img id="radioFace" class="pix" alt=""><div><b id="radioName"></b><p id="radioTxt"></p></div></div>
+    <div id="banner" class="banner" hidden><b id="bannerT"></b><span id="bannerS"></span></div>
+    <div id="hint" hidden></div>
+    <div id="rail">
+      <div id="slots"></div>
+      <div class="acts">
+        <button id="btnMolo" class="act" type="button" aria-label="丟汽油彈"><small>F</small><img id="moloIco" class="pix" alt=""><b id="moloN">3</b></button>
+        <button id="btnDodge" class="act" type="button" aria-label="翻滾"><small>SPACE</small><span>翻滾</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast" hidden></div>
+
+<section id="scrTitle" class="screen title" hidden>
+  <div class="logo-wrap">
+    <div class="order-tag"><b>訂單 #0923-2341</b><span>颱風「霧鯨」夜</span><span>台北 → 基隆</span></div>
+    <h1 class="logo">最後一單</h1>
+    <div class="logo-en">LAST ORDER</div>
+  </div>
+  <div>
+    <nav class="menu">
+      <button id="bStart" class="btn primary" type="button">開始故事</button>
+      <button id="bChapters" class="btn" type="button">章節選擇<small id="bChN"></small></button>
+      <button id="bEndless" class="btn" type="button">最後的碼頭<small id="bEnN"></small></button>
+      <button id="bAch" class="btn" type="button">成就<small id="bAchN"></small></button>
+      <button id="bSound" class="btn" type="button">設定<small id="bSoundN">音量・震動・存檔碼</small></button>
+    </nav>
+    <p class="foot">外送員魏子葳，颱風夜的最後一張單。五章劇情約四十分鐘。進度會自動存檔，設定裡可以複製存檔碼帶到別台裝置。</p>
+  </div>
+</section>
+
+<section id="scrChapters" class="screen sub-screen" hidden>
+  <div class="bar-top"><h2>章節</h2><button id="bChBack" class="btn" type="button">返回</button></div>
+  <div id="chList" class="ch-list"></div>
+</section>
+
+<section id="scrAch" class="screen sub-screen" hidden>
+  <div class="bar-top"><h2>成就 <span id="achCount" class="count"></span></h2><button id="bAchBack" class="btn" type="button">返回</button></div>
+  <div id="achList" class="ach-grid"></div>
+</section>
+
+<section id="scrStory" class="screen" hidden>
+  <button id="stSkip" class="btn" type="button">跳過</button>
+  <div id="stPhone" class="stage-card" hidden></div>
+  <div id="stCard" class="stage-card" hidden></div>
+  <div id="stEnd" hidden></div>
+  <div id="stChoice" hidden></div>
+  <div id="stBox" class="st-box" hidden>
+    <img id="stFace" class="pix" alt="">
+    <b id="stName"></b>
+    <p id="stText"></p>
+    <span id="stNext">▼</span>
+  </div>
+</section>
+
+<section id="scrEnd" class="screen" hidden>
+  <div class="credits">
+    <h2>最後一單</h2>
+    <p id="endLine"></p>
+    <p><b>主角</b>　魏子葳</p>
+    <p><b>劇本・程式・像素美術・音效</b>　Claude</p>
+    <p><b>字型</b>　俐方體11號（Cubic 11）改名子集，SIL Open Font License 1.1</p>
+    <p id="endHint" class="hint2"></p>
+    <div class="row"><button id="bEndBack" class="btn primary" type="button">回主選單</button></div>
+  </div>
+</section>
+
+<div id="mLv" class="modal" hidden>
+  <div class="panel pbox wide">
+    <h3 id="lvTitle">升級</h3>
+    <p id="lvSub" class="lead"></p>
+    <div id="lvCards" class="lv-cards"></div>
+    <div class="row"><button id="lvReroll" class="btn" type="button">重抽</button></div>
+  </div>
+</div>
+<div id="mPause" class="modal" hidden>
+  <div class="panel pbox">
+    <h3>暫停</h3>
+    <p id="pInfo" class="lead"></p>
+    <div id="pBuild" class="chips"></div>
+    <div class="row">
+      <button id="pResume" class="btn primary" type="button">繼續</button>
+      <button id="pRestart" class="btn" type="button">重新開始本章</button>
+    </div>
+    <div class="row">
+      <button id="pSound" class="btn" type="button">設定</button>
+      <button id="pQuit" class="btn" type="button">回主選單</button>
+    </div>
+    <p id="pKeys" class="keys"></p>
+  </div>
+</div>
+<div id="mDead" class="modal" hidden>
+  <div class="panel pbox">
+    <h3 id="dTitle">你倒下了</h3>
+    <p id="dLine" class="lead"></p>
+    <div id="dStats" class="stats"></div>
+    <div class="row">
+      <button id="dRetry" class="btn primary" type="button">再來一次</button>
+      <button id="dMenu" class="btn" type="button">回主選單</button>
+    </div>
+  </div>
+</div>
+<div id="mClear" class="modal" hidden>
+  <div class="panel pbox">
+    <h3 id="cTitle"></h3>
+    <p id="cSub" class="lead"></p>
+    <div id="cStats" class="stats"></div>
+    <div id="cAch" class="chips"></div>
+    <div class="row"><button id="cNext" class="btn primary" type="button">繼續劇情</button></div>
+  </div>
+</div>

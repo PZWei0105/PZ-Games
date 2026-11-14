@@ -1,0 +1,12 @@
+{
+  "id": "last-order",
+  "title": "最後一單",
+  "en": "LAST ORDER",
+  "version": "2.0.0",
+  "engine": "1.0",
+  "background": "#0a0d14",
+  "accent": "#ffb347",
+  "orientation": "any",
+  "icon_char": "單",
+  "head": "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Silkscreen&display=swap\">"
+}
