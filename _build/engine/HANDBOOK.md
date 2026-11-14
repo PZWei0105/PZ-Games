@@ -12,7 +12,7 @@
 3. 每款遊戲都要有 **Claude 版（artifact）＋獨立網頁版**，並且**自動加進《PZ 遊戲收藏》、推上 GitHub**（不用等 PZ 開口）。流程見第 15 節。
 4. 品質門檻：**至少《潮界》的水準**。不能看起來廉價、角色不能太小（手機直拿時主角至少佔畫面短邊的 8～10%；`PZ.cam.fit(360～440)` 是常見範圍）。用程式畫的美術要有光影：漸層、邊光、陰影（照 `lab/src/01_art.js` 的做法）。
 5. 遊戲裡所有文字、說明、這份文件：**繁體中文**。寫給玩家看的字不要出現程式用語。
-6. 引擎**鎖版本**：遊戲在 `pz.json` 寫 `"engine": "1.0"`，組建時把那一版引擎整份包進遊戲。改引擎不會讓已上架的遊戲壞掉，除非重新組建那款遊戲（第 16 節）。
+6. 引擎**鎖版本**：遊戲在 `pz.json` 寫 `"engine": "1.1"`（新遊戲用最新的 1.1；《最後一單》還在 1.0），組建時把那一版引擎整份包進遊戲。改引擎不會讓已上架的遊戲壞掉，除非重新組建那款遊戲（第 16 節）。
 
 ---
 
@@ -30,6 +30,7 @@ _build/engine/
     18_save  19_cloud  20_scene  21_ui(.css/.js)  22_dialogue  23_debug  24_boot
     25_light（光影、陰影、水面）  26_weather（天氣）  27_cinema（調色、黑邊）  28_anim（程序動畫、鏈子、逐格動畫）  29_rig（骨架角色）
     30_world（格子地圖、碰撞、視野、尋路、流場、程序生成）  31_tiles（地圖畫法：2.5D 地牢、洞窟、島嶼、等高線）
+    32_hud（血條、數字滾動、技能冷卻、圓弧扇形圓角框）  33_amb（環境音：雨、風、森林、營火…十一種音景）
   build/pz-engine.js       開發版（每次 build_engine.py 覆蓋）
   releases/pz-engine-X.Y.Z.js   正式版（發了就不再改）
   tools/
@@ -39,7 +40,7 @@ _build/engine/
     webkit_check.py   在 WebKit（iPhone Safari 的引擎）裡跑自我檢查或任一頁
     shot.py / labshot.py   截圖
   tests/unit/         Node 單元測試（數學、顏色、事件、時間、存檔、音效合成）
-  tests/browser/      selftest.html（136 項）、interact（真的點擊／觸控）、run_cloud（雲端存檔九種情境）、run_example（範例能玩）
+  tests/browser/      selftest.html（154 項）、interact（真的點擊／觸控）、run_cloud（雲端存檔九種情境）、run_example（範例能玩）
   lab/                樣品館（自己也是一款用引擎做的 App）
   examples/hello/     最小範例（第 3 節那份程式，測試會實際玩它）
 ```
@@ -58,10 +59,13 @@ _build/engine/
 | 畫質 | 自動畫質：連續卡頓就降一階（解析度、泛光、粒子），夠順再升回去；降過的會記在這台裝置 |
 | 輸入 | 動作對應（鍵盤＋滑鼠＋手把＋觸控同一套）、浮動／固定虛擬搖桿、觸控按鈕、手勢（點、雙擊、長按、雙指縮放旋轉、滾輪）、手把震動、手機觸覺（iPhone 也有）、失焦自動放開按鍵 |
 | 手感 | 震動（trauma 模型）、後座力、鏡頭推近、打擊停頓、慢動作、閃光、色差、暗角、衝擊波扭曲、傷害數字、18 種粒子、一行完整打擊感 `PZ.fx.hit` |
-| 聲音 | 第一次點擊同步解鎖、**iPhone 側邊靜音鍵打開也有聲音**、4 條音量匯流排、限幅器、殘響、47 個內建合成音效（背景執行緒算好）、文字寫譜的配樂＋緊張度分層 |
+| 光影與天氣 | 動態光源＋柔和陰影（JFA 距離場）、手電筒、角色投影、光束、環境光區塊；雨、雷雨、雪、霧；水面倒影、熱浪；電影調色 16³ 調色表、黑邊 |
+| 動畫 | 程序動畫 `PZ.juice`、鏈子（披風、尾巴）、逐格動畫機、骨架角色（走跑跳、七種招式連段、兩段 IK 踩地形）、刀光 |
+| 世界 | 格子地圖（碰撞、射線、視野）、A* 尋路＋流場（上百隻怪一起追）、程序生成（地牢、洞窟、島嶼、散布）、2.5D 地圖畫法、等高線、材質多邊形 |
+| 聲音 | 第一次點擊同步解鎖、**iPhone 側邊靜音鍵打開也有聲音**、4 條音量匯流排、限幅器、殘響、64 個內建合成音效（背景執行緒算好）、文字寫譜的配樂＋緊張度分層＋對拍子換歌、十一種即時合成的環境音 |
 | 存檔 | 自動存＋備份＋版本升級 migrate＋存檔碼（換手機、Claude 版↔網頁版）＋多存檔欄；**Claude 版自動雲端存檔** |
 | 設定 | 標準設定頁：音樂、音效、畫面震動、閃光、觸覺、傷害數字、畫質、鎖幀、觸控按鈕大小、存檔碼；新遊戲沿用玩家上次在別款調好的偏好 |
-| 介面 | DOM 介面元件（對話框、選擇、提示泡泡、大標題、載入畫面、暫停選單）、主題、手把／鍵盤焦點導覽、劇情對話（打字機、選擇、自動、快轉、紀錄） |
+| 介面 | DOM 介面元件（對話框、選擇、提示泡泡、大標題、載入畫面、暫停選單、提示框、閃卡、格子背包、標題畫面）、主題、手把／鍵盤焦點導覽、劇情對話（打字機、選擇、自動、快轉、紀錄）；畫布 HUD（血條殘影、數字滾動、技能冷卻）；八種轉場 |
 | 除錯 | 出錯時畫面下方跳紅色面板（可複製錯誤給 Claude、繼續玩）、效能面板（網址加 `?debug` 或按 F3）、測試掛鉤 `window.__pz` |
 | 收藏庫 | 在《PZ 遊戲收藏》裡打開 PZ 圓鈕選單時自動暫停（`PZ.on('hub', open => …)`） |
 
@@ -87,14 +91,14 @@ _build/sources/<遊戲 id>/
 ```json
 {
   "id": "night-shift", "title": "夜班", "en": "NIGHT SHIFT", "version": "1.0.0",
-  "engine": "1.0",
+  "engine": "1.1",
   "background": "#07090d", "accent": "#ffb547", "orientation": "any", "icon_char": "夜",
   "fonts": { "PZ Sans": "sans-black" },
   "head": "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Silkscreen&display=swap\">"
 }
 ```
 
-- `engine`：`"1.0"` 用 releases/ 裡最新的 1.0.x；`"1.0.0"` 鎖死這一版；`"dev"` 用開發版（只在改引擎時用）。
+- `engine`：`"1.1"` 用 releases/ 裡最新的 1.1.x；`"1.1.0"` 鎖死這一版；`"dev"` 用開發版（只在改引擎時用）。光影、天氣、骨架動畫、地圖、HUD、環境音都要 1.1 以上。
 - `fonts`：嵌入字型（只留遊戲用到的字，自動子集化）：`sans-regular/medium/bold/black`、`serif-regular/bold/black`，或字型檔路徑。標題用粗體、內文用一般體，不要整款只嵌一個 black（字會全部很粗）。
 - `orientation`：`portrait`／`landscape`／`any`（PZ.start 也要給一樣的值，拿錯方向時引擎會蓋提示並暫停）。
 
@@ -190,7 +194,7 @@ PZ.scene('play', {
   update(dt) {},                  // 遊戲邏輯；暫停、打擊停頓時不會被呼叫
   render(g) {},                   // 每格畫圖；一開始是世界座標
 });
-await PZ.go('play', { stage: 2 }, { type: 'fade', time: 0.35, color: '#000' });   // fade｜iris｜wipe｜none
+await PZ.go('play', { stage: 2 }, { type: 'fade', time: 0.35, color: '#000' });   // fade｜iris｜wipe｜diamond（菱形）｜blinds（百葉窗）｜shutter（快門）｜slide（推門）｜pixel（方塊）｜none
 PZ.restartScene();
 ```
 
@@ -222,6 +226,8 @@ g.circle(x, y, r, color, { a, add })   g.ellipse(x, y, rx, ry, color)   g.ring(x
 g.glow(x, y, r, color, { a, core })     // 柔光（燈、火、槍口光）；預設疊加發光
 g.line(x1, y1, x2, y2, 粗細, color, { a, add, cap: 'round' })   g.poly([x0,y0, x1,y1, …], color)
 g.polyTex([x0,y0, …], 'grass', { s, color })            // 任意凸多邊形貼材質（PZ.art.pattern 做的，照世界座標一直重複）
+g.quad([x0,y0, x1,y1, x2,y2, x3,y3], 左色, 右色)          // 任意四邊形＋左右漸層（角順序轉一下就是上下漸層）
+g.rrect(x, y, w, h, 圓角, color, { border, borderColor })   g.arc(x, y, r, 粗細, 起角, 終角, color, { cap: 'round' })   g.pie(x, y, r, 起角, 終角, color)
 g.trail(點陣列, 頭寬, 尾寬, 頭色, 尾色, { add })        // 刀光、拖尾
 g.text('字', x, y, { size, color, weight, outline, outlineColor, shadow, align: 'left|center|right', baseline, maxWidth })
 g.bar(x, y, w, h, 比例, { bg, fg, back })               // 血條（back＝受傷時慢慢退的那段）
@@ -351,6 +357,22 @@ map.draw(g, style, { actors, drawActor: (g, a) => … })   // 畫地圖；角色
   - 自己做風格：物件 `{ under, floor(g, map, cx, cy, x, y, s), ground, row(g, map, cy, view), wall(g, map, cx, cy, x, y, s), over }`。圓滑的區塊用 `PZ.tiles.contour(map, 數值圖, 門檻)`：輪廓算一次存起來，`.draw(g, view, { color, tex, dy, rim })`、`.drawRow(g, 列, x0, x1, 層)`（2.5D 跟角色交錯）；每格會變的（浪花）才用 `PZ.tiles.marching` 現算。
 - 2.5D 的小細節：會發光的東西（眼睛、火焰）畫在 `g.lighting()` 之後，先用 `map.behindWall(x, y, 離地高度, 牆高)` 看有沒有被前面的牆擋住；戰爭迷霧用一格一像素的 `PZ.art.live` 畫布放大蓋上去（線性內插，邊緣自動柔和）。
 - 範例：`lab/src/22_world.js`（地牢／洞窟／島嶼、上百隻怪用流場繞牆追人、點地圖自動找路、戰爭迷霧、小地圖）。
+
+### 6.8 HUD（血條、數字、技能冷卻）
+
+畫在 `g.hud()` 之後（不受震動、後製影響），每格引擎自動更新動畫：
+
+```js
+const hp = PZ.meter({ max: 120 });       hp.hit(18)  hp.heal(30)  hp.set(v)  hp.setMax(150, true)
+g.meter(hp, x, y, 寬, 高, { color: '#ff3b55', color2: '#ff8a5a', shape: 'skew'|'round'|'flat', segments: 10, low: 0.3, text: true, label: 'HP' })
+const score = PZ.count(0);                score.add(120)          // 一路往上滾、每跳一下 tick、變大一下（{ sound: null } 不要聲音）
+g.count(score, x, y, { size: 30, align: 'right', color: '#ffe9b0' })        PZ.fmt(12345) → '12,345'
+g.cooldown(x, y, r, 剩下比例, { color, flash })   // 技能冷卻：暗色扇形一圈掃開、外圈亮邊；flash（0～1）好了的瞬間閃一下
+```
+
+- 血條的手感：受傷時主條馬上掉、**白色殘影停一下再慢慢退**、整條閃白抖一下；補血時**綠色預覽先長出來**、主條再追上；低於 `low` 一閃一閃。魔力這種「花掉」的：`m.set(m.value - 花費)`（只有殘影、不閃不抖）。
+- 換場景時，舊場景建的 `PZ.meter`、`PZ.count` 自動停止更新（`{ keep: true }` 跨場景留著）。
+- 範例：`lab/src/23_hud.js`（頭像＋經驗值環、血條、魔力條、分數、連擊、四個技能）。
 
 ## 7. 相機
 
@@ -488,7 +510,7 @@ await PZ.sfx.load('door', PZ_ASSETS['door.mp3'])                 // 外部音檔
 PZ.audio.duck(0.45, 0.6)                                         // 配樂暫時變小聲（大爆炸、對話）
 ```
 
-內建 47 個：`hit hitHeavy crit kill slash clang block shoot rifle shotgun laser reload empty explosion thunder splash glass pickup xp coin powerup levelup heal magic charge whoosh dash jump land step hurt death growl heartbeat click hover confirm cancel error open close tick type notify card alarm bell`。
+內建 64 個：`hit hitHeavy crit kill slash clang block shoot rifle shotgun laser reload empty explosion thunder splash glass pickup xp coin powerup levelup heal magic charge whoosh dash jump land step hurt death growl heartbeat click hover confirm cancel error open close tick type notify card alarm bell`，不同地面的腳步 `stepGrass stepStone stepWood stepWater stepSnow stepMetal`，介面第二組 `select back toggleOn toggleOff slider unlock purchase equip page rare combo`。
 合成層的欄位：`w` 波形（sine square saw tri noise pink brown）、`f→f1` 音高（`fc: 'lin'` 線性）、`t` 長度、`d` 延遲、`a` 起音、`h` 持續、`p` 衰減曲線、`v` 音量、`lp/hp/bp: [起, 終, Q]` 濾波掃頻、`dist` 失真、`crush` 位元壓縮、`fm: [倍率, 深度, 衰減]`、`vib: [速度, 半音]`、`jump: [[秒, 倍率]]`、`duty`、`hold`。聲音在背景執行緒算好，播的時候只是放片段。
 
 配樂（文字寫譜，即時演奏）：
@@ -501,10 +523,26 @@ PZ.music.define('battle', { bpm: 128, tracks: [
   { inst: 'pad',   chords: 'Am F C G', vol: 0.3 },                      // 一小節一個和弦
 ] });
 PZ.music.play('battle', { fade: 1.5, intensity: 0.5 });  PZ.music.intensity(0.8);  PZ.music.stop({ fade: 2 });
-PZ.music.stinger('win');  PZ.music.file('theme', PZ_ASSETS['theme.mp3']);  PZ.music.onBeat(fn);
+PZ.music.stinger('win', { sync: 'beat' });  PZ.music.file('theme', PZ_ASSETS['theme.mp3']);  PZ.music.onBeat(fn);
+PZ.music.play('boss', { sync: 'bar' })      // 等到下一小節（'half' 半小節、'beat' 下一拍）才切：探索 → 戰鬥 → 頭目，不會亂拍
+PZ.music.muffle(0.8)  PZ.music.muffle(0)    // 配樂悶住／恢復（暫停選單、水底、被打暈）
+PZ.music.phase()                            // 這一拍走到哪（0～1）：畫面跟著節奏一跳一跳
 ```
 
-樂器：取樣式 `kick snare hat ohat clap tom crash shaker rim bass sub pluck harp zither keys bell marimba arp stab`；即時合成 `pad strings lead choir flute organ`。和弦：`A Am A7 Am7 Amaj7 Asus2 Asus4 Adim Aaug A6 Am6 A9 Aadd9`，可加 `/E`。範例：`lab/src/02_music.js`（四首）。
+樂器：取樣式 `kick snare hat ohat clap tom crash shaker rim bass sub pluck harp zither keys bell marimba arp stab epiano piano guitar kalimba`；即時合成 `pad strings lead choir flute organ brass supersaw`。和弦：`A Am A7 Am7 Amaj7 Asus2 Asus4 Adim Aaug A6 Am6 A9 Aadd9`，可加 `/E`。
+聲部效果：`delay: 0.35`（跟拍子對齊的回音；歌曲可設 `delaySteps`、`feedback`、`delayTone`）、`lp: 1800` 或 `lp: [600, 6000]`（給兩個值＝緊張度越高越亮：打得越兇濾波越開）、`pump: 0.6`（跟著大鼓一縮一放，電子樂那種呼吸感）、`rev`、`pan`。範例：`lab/src/02_music.js`（四首）、`lab/src/23_hud.js`（探索／戰鬥／頭目三首，對拍子切換）。
+
+環境音（音景，全部即時合成）：
+
+```js
+PZ.amb.play('rain')                       // 換成這個音景（其他淡出）
+PZ.amb.mix({ fire: 1, night: 0.6, ocean: 0.7 })   // 同時好幾種
+PZ.amb.set('wind', 0.4)   PZ.amb.stop({ fade: 2 })
+PZ.amb.follow(true)                       // 跟著 PZ.weather：下雨有雨聲、雷雨有遠雷、下雪起霧有風（只管 rain／storm／wind，其他照遊戲設的）
+PZ.amb.define('lab', { beds: [{ noise: 'brown', lp: 300, vol: 0.3, swell: [2, 6, 0.5] }], events: [{ sfx: 'amb.drip', rate: 0.5, vol: [0.1, 0.3], pan: 0.9 }] })
+```
+
+內建：`rain storm wind forest night cave ocean city fire ship stream`。底（beds）是循環的濾波雜訊，可以 `swell` 陣風起伏、`wave` 浪湧上來又退、`sweep` 濾波掃動；事件（events）隨機冒出來（鳥叫、水滴、木柴爆裂、喇叭、船板嘎吱），每次位置、大小、音高都不同。音景走 `amb` 匯流排，換場景不會自己停（跟配樂一樣，場景自己決定）。
 
 - **不要自己 `new AudioContext()`**：引擎在第一次點擊時同步建立（iPhone 一定要這樣），並設 `navigator.audioSession.type = 'playback'`（側邊靜音鍵打開也有聲音）。舊遊戲自己的 WebAudio 程式：改用 `PZ.audio.ctx`，輸出接 `PZ.audio.bus.sfx`／`bus.music`（音量才會跟設定走）。
 - 玩家自己的音樂檔（例如重新點火、耳目一新）**不要接進 Web Audio**（iPhone 鎖屏會沒聲音），用 `<audio>`。
@@ -553,9 +591,15 @@ PZ.ui.pause({ items: [{ label, onClick }], save })            // 標準暫停選
 const L = PZ.ui.loading('標題', '載入中'); L.progress(0.5, '畫地圖'); L.done();
 await PZ.ui.say([['魏子葳', '……又是凌晨三點。'], [null, '旁白'], ['老闆', '這單送完就收工。', { face: 'boss_face', side: 'right' }]], { faces: { 魏子葳: 'face_wei' } })
 const i = await PZ.ui.ask('要怎麼做？', ['衝進去', '先觀察'])
+PZ.ui.tip(按鈕, '<b>騎士長劍</b><em>武器・傳說</em><div>說明文字</div>')   // 提示框：滑鼠移上去、手指按住、手把焦點移到就出現（自動擺在上方或下方、不超出螢幕）
+PZ.ui.holo(卡片元素, { tilt: 14, foil: true })                         // 閃卡：跟著手指／滑鼠傾斜、亮面跟著跑、彩虹箔（卡牌遊戲的稀有卡）
+const grid = PZ.ui.slots({ items: [{ icon: 'gem' 或 '🧪', name, tag, desc, count, rarity: 'common'|'rare'|'epic'|'legend', new: true }], cols: 5, size: 60, min: 15, onPick })   // 格子背包；grid.set(新的 items)
+const v = await PZ.ui.title({ kicker: '痞子葳 出品', title: '夜行', sub: 'NIGHT RUN', items: [{ label: '開始遊戲', value: 'start', primary: true }, …], foot: 'v1.0', backdrop })   // 標題畫面
 ```
 
 - 按鈕加 class `pz-btn`（或 `pz-focusable`）就有按下音效、觸覺、按壓動畫，手把／鍵盤也選得到。
+- 標題畫面：字一個一個浮上來、標題定時掃過一道光、選單依序出現；沒給 `items` 就是「點一下開始」（回傳 `'start'`）。背景讓遊戲自己畫（動態的最好看），`backdrop: true` 蓋一層深色。
+- 稀有度顏色：普通灰、稀有藍、史詩紫、傳說金（傳說的格子外圈會繞一道光）。提示框的標題也跟著變色（`{ cls: 'r-legend' }`）。
 - 自己做的選單層：`const layer = PZ.ui.push(元素, 返回函式)`、關掉時 `PZ.ui.pop(layer)`；方向鍵移動焦點、A／Enter 按、B／Esc 呼叫返回函式。`PZ.ui.setFocus(元素)`。
 - 對話框預設會暫停遊戲（`pause: false` 不暫停）。劇情對話時遊戲自動暫停；點一下：字還在跑就一次顯示完，跑完下一句；按住快轉；右上角有自動、快轉、紀錄。
 - 安全區：HUD 的位置加上 `var(--pz-safe-t)` 等（iPhone 瀏海、圓角、Home 條）。收藏庫的 PZ 圓鈕預設在右邊 42% 高度（`PZ.screen.hub()` 拿得到位置），HUD 不要放那裡。
@@ -604,6 +648,7 @@ const i = await PZ.ui.ask('要怎麼做？', ['衝進去', '先觀察'])
 
 - 版本號 `主.次.修`。**修**（1.0.1）：修 bug、不改用法——寫 `"engine": "1.0"` 的遊戲下次組建自動用到。**次**（1.1.0）：加新功能、舊寫法照常能用——遊戲要自己把 `pz.json` 改成 `"1.1"` 才會用。**主**（2.0.0）：改了用法——舊遊戲不受影響，要搬才搬。
 - 遊戲組建時把引擎整份包進去：**已上架的遊戲不會因為引擎更新而改變**，重新組建那款才會。重新組建＝要重新測那款。
+- 目前：1.0.2（《最後一單》用）、**1.1.0**（四塊精緻化：光影、角色動畫、世界與地圖、介面與聲音；樣品館用；新遊戲用這個）。
 - 發正式版：改 `VERSION` → 寫 `CHANGELOG.md` → `python3 tools/test_engine.py --perf`（有 WebKit 就加 `--webkit`）全過 → `python3 tools/build_engine.py --release`。
 - **已經發出去的 `releases/pz-engine-X.Y.Z.js` 永遠不改**（build_engine.py 會拒絕；不要用 `--force` 蓋已發布的版本）。要修就發下一個修訂版。
 

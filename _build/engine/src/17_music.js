@@ -15,8 +15,12 @@
      PZ.music.stinger('win')（播一次、自動壓低主配樂）   PZ.music.file('theme', 'music.mp3')（用音檔）
    鼓的字：x 一般、X 重音、o 輕；數字 1～9 是力度。音名：C4＝中央 Do，可寫 C#4、Eb3。
    和弦：A、Am、A7、Am7、Amaj7、Asus2、Asus4、Adim、Aaug、A6、Am6、A9、Aadd9，可加 /E 指定低音。
-   樂器（取樣式，便宜）：kick snare hat ohat clap tom crash shaker rim bass sub pluck harp zither keys bell marimba arp stab
-   樂器（即時合成，長音）：pad strings lead choir flute organ
+   樂器（取樣式，便宜）：kick snare hat ohat clap tom crash shaker rim bass sub pluck harp zither keys bell marimba arp stab epiano piano guitar kalimba
+   樂器（即時合成，長音）：pad strings lead choir flute organ brass supersaw
+   聲部效果：{ delay: 0.35（跟拍子對齊的回音）, lp: 1800 或 [600, 6000]（低通；給兩個值＝緊張度越高越亮）, pump: 0.6（跟著大鼓一縮一放）, rev, pan }
+     歌曲：{ delaySteps: 3（回音隔幾格，預設附點八分）, feedback: 0.38, delayTone: 2600 }
+   換歌對拍子：PZ.music.play('boss', { sync: 'bar' | 'half' | 'beat' })   下一小節（半小節、下一拍）才切過去，不會亂拍
+   PZ.music.muffle(0.8)  配樂悶住（暫停選單、水底）；muffle(0) 恢復      PZ.music.phase()  這一拍走到哪（0～1，畫面跟著節奏跳）
    ========================================================================== */
 const NOTE_IDX = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 function noteToMidi(tok) {
@@ -71,6 +75,15 @@ buf('bell', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.55, lay
 buf('marimba', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.65, layers: [{ w: 'sine', f, t: 0.6, a: 0.001, p: 3, v: 0.9, fm: [4, 1.2, 18] }, { w: 'sine', f: f * 4, t: 0.08, a: 0.001, p: 3, v: 0.15 }] }, sr, 24); });
 buf('arp', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.45, layers: [{ w: 'square', f, t: Math.min(0.5, dur + 0.12), a: 0.002, p: 2.2, v: 0.5, duty: 0.3, lp: [f * 10, f * 3, 1.2] }] }, sr, 25); });
 buf('stab', (m, dur, sr) => { const f = midiHz(m), t = Math.min(1, dur + 0.1); return synth({ vol: 0.5, layers: [-8, 0, 8].map((c) => ({ w: 'saw', f: f * Math.pow(2, c / 1200), t, a: 0.003, h: dur * 0.3, p: 2, v: 0.35, lp: [f * 12, f * 2, 1] })) }, sr, 26); });
+buf('epiano', (m, dur, sr) => { const f = midiHz(m), t = Math.min(3.2, dur + 1); return synth({ vol: 0.6, layers: [{ w: 'sine', f, t, a: 0.002, h: dur * 0.3, p: 2.2, v: 0.85, fm: [1, 1.1, 1.6] }, { w: 'sine', f, t: 0.6, a: 0.001, p: 3.4, v: 0.26, fm: [14, 1.6, 12] }, { w: 'sine', f: f * 2, t: Math.min(t, 1.2), a: 0.002, p: 3, v: 0.1 }] }, sr, 27); });
+buf('piano', (m, dur, sr) => { // 鋼琴：泛音稍微偏高（弦的非諧和性），高的泛音衰減快，加一點擊槌聲
+  const f = midiHz(m), t = Math.min(3.6, dur + 1.6), B = 0.0004 * Math.pow(2, (m - 60) / 24), L = [];
+  for (let k = 1; k <= 7; k++) { const fk = f * k * Math.sqrt(1 + B * k * k); if (fk > sr * 0.4) break; L.push({ w: 'sine', f: fk, t: t / (1 + (k - 1) * 0.35), a: 0.0015, p: 2.4 + k * 0.45, v: (0.9 / Math.pow(k, 1.15)) * (k === 1 ? 1 : 0.8) }); }
+  L.push({ w: 'noise', t: 0.03, a: 0.0005, p: 2, v: 0.12, lp: [Math.min(9000, f * 8), f * 2, 0.7] });
+  return synth({ vol: 0.62, layers: L }, sr, 28);
+});
+buf('guitar', (m, dur, sr) => { const o = ks(midiHz(m), Math.min(2.6, dur + 1), sr, 0.62, 0.9965, m + 11); let lp = 0; for (let i = 0; i < o.length; i++) { lp += (o[i] - lp) * 0.04; o[i] = o[i] * 0.85 + lp * 1.6; } return normalizeBuf(o, 0.62); });
+buf('kalimba', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.6, layers: [{ w: 'sine', f, t: 1.5, a: 0.0015, p: 3.2, v: 0.9 }, { w: 'sine', f: f * 5.94, t: 0.16, a: 0.0008, p: 3, v: 0.22 }, { w: 'sine', f: f * 2.01, t: 0.5, a: 0.001, p: 3, v: 0.12 }, { w: 'noise', t: 0.012, a: 0.0003, p: 2, v: 0.12, bp: [f * 4, f * 4, 1.5] }] }, sr, 29); });
 function normalizeBuf(o, target) { let pk = 0; for (let i = 0; i < o.length; i++) pk = Math.max(pk, Math.abs(o[i])); if (pk > 0) { const g = target / pk; for (let i = 0; i < o.length; i++) o[i] *= g; } const fd = Math.min(o.length, 400); for (let i = 0; i < fd; i++) o[o.length - 1 - i] *= i / fd; return o; }
 
 /** 即時合成的長音樂器：c＝AudioContext、out＝輸出節點 */
@@ -100,10 +113,17 @@ node('choir', (c, m, t0, dur, vel, out) => {
   oscs(c, 'sawtooth', f, [-7, 0, 7], t0, t0 + dur + rel * 1.5, mix);
 });
 node('organ', (c, m, t0, dur, vel, out) => { const f = midiHz(m), rel = 0.12, g = envGain(c, t0, dur, 0.1 * vel, 0.01, rel, 1); g.connect(out); for (const [k, a] of [[1, 1], [2, 0.5], [3, 0.3], [4, 0.2]]) { const o = c.createOscillator(); o.frequency.value = f * k; const og = c.createGain(); og.gain.value = a; o.connect(og); og.connect(g); o.start(t0); o.stop(t0 + dur + rel * 3); } });
+node('brass', (c, m, t0, dur, vel, out) => { // 銅管：兩支鋸齒波、濾波器一開始猛地打開、音高從下面滑上來
+  const f = midiHz(m), rel = 0.18, g = envGain(c, t0, dur, 0.12 * vel, 0.035, rel, 0.85), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 1.2;
+  lp.frequency.setValueAtTime(f * 1.2, t0); lp.frequency.linearRampToValueAtTime(Math.min(9000, f * 7), t0 + 0.06); lp.frequency.setTargetAtTime(Math.min(7000, f * 4), t0 + 0.06, 0.15);
+  lp.connect(g); g.connect(out);
+  for (const d of [-6, 5]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.setValueAtTime(d - 35, t0); o.detune.linearRampToValueAtTime(d, t0 + 0.07); o.connect(lp); o.start(t0); o.stop(t0 + dur + rel * 3); }
+});
+node('supersaw', (c, m, t0, dur, vel, out) => { const f = midiHz(m), rel = 0.4, g = envGain(c, t0, dur, 0.07 * vel, 0.02, rel, 0.9), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(9000, f * 9); lp.Q.value = 0.6; lp.connect(g); g.connect(out); oscs(c, 'sawtooth', f, [-22, -11, 0, 11, 22], t0, t0 + dur + rel * 3, lp); });
 const DRUMS = new Set(['kick', 'snare', 'hat', 'ohat', 'clap', 'crash', 'shaker', 'rim']);
 
 /* ---------- 編曲器 ---------- */
-const Music = PZ.music = { songs: {}, cur: null, level: 0.5, _bufs: new Map(), _beats: [], _beatFns: [], _timer: 0, look: 0.18 };
+const Music = PZ.music = { songs: {}, cur: null, level: 0.5, _bufs: new Map(), _beats: [], _beatFns: [], _timer: 0, look: 0.18, _out: [] };
 Music.define = (name, song) => { Music.songs[name] = song; return song; };
 Music.instrument = (name, def) => { INST[name] = def; };
 function tokensOf(tr, steps) {
@@ -151,6 +171,11 @@ function scheduleStep(rt, step, time) {
     if (tr.chords) { const ns = chordNotes(tok, tr.base || 52); if (ns) for (const m of ns) playNote(rt, tr, m + (tr.shift || 0), t, dur, (tr.vel || 1) * 0.8); continue; }
     const midi = noteToMidi(tok); if (midi != null) playNote(rt, tr, midi + (tr.shift || 0), t, dur, tr.vel || 1);
   }
+  if (rt.pumpers.length) {   // 跟著大鼓一縮一放（沒有大鼓就每一拍）
+    const kick = rt.tracks.find((tr) => tr.inst === 'kick' && tr.on); let hit;
+    if (kick) { const tk = kick.toks[step % kick.toks.length]; hit = !!tk && /^[xXo1-9]$/.test(tk); } else hit = step % ((def.steps || 16) / 4) === 0;
+    if (hit) for (const tr of rt.pumpers) { const g = tr.pg.gain; g.cancelScheduledValues(time); g.setValueAtTime(1 - tr.def.pump, time); g.setTargetAtTime(1, time + 0.02, sd * 0.9); }
+  }
   if (step % (def.steps || 16) === 0) PZ.emit('bar', step / (def.steps || 16));
   if (step % ((def.steps || 16) / 4) === 0) Music._beats.push({ t: time, n: step / ((def.steps || 16) / 4) });
 }
@@ -159,24 +184,42 @@ function runSong(rt) {
   const c = Aud.ctx; if (!c || rt.stopped) return;
   if (rt.file) return;
   while (rt.next < c.currentTime + Music.look) {
+    if (rt.endStep != null && rt.step >= rt.endStep) { fadeOutAt(rt, rt.endAt, rt.endFade); return; }   // 對拍換歌：排到切換點就收
     if (rt.once && rt.step >= rt.len) { rt.stopped = true; PZ.after(rt.stepDur * 8, () => { try { rt.gain.disconnect(); } catch (e) { /* ignore */ } }, { real: true }); return; }
     scheduleStep(rt, rt.step, rt.next);
     rt.next += rt.stepDur; rt.step++;
   }
 }
+/** 低通截止頻率：lp 給兩個值時跟著緊張度在中間滑（指數內插） */
+function trackCut(td, lv) { const L = td.lp; if (!Array.isArray(L)) return L; return L[0] * Math.pow(L[1] / L[0], clamp01(lv)); }
+/** 跟拍子對齊的回音（附點八分）：輸入 → 延遲 ⇄ 回授（低通，越回越暗）→ 歌曲音量 */
+function makeDelay(c, rt, def) {
+  const input = c.createGain(), dl = c.createDelay(2), fb = c.createGain(), lp = c.createBiquadFilter();
+  dl.delayTime.value = Math.min(1.9, rt.stepDur * (def.delaySteps || 3)); fb.gain.value = def.feedback != null ? def.feedback : 0.38; lp.type = 'lowpass'; lp.frequency.value = def.delayTone || 2600;
+  input.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(rt.gain);
+  return input;
+}
+/** 下一個小節／半小節／拍子的位置 */
+function syncPoint(rt, sync) { const steps = rt.def.steps || 16, q = sync === 'beat' ? steps / 4 : sync === 'half' ? steps / 2 : steps, step = Math.ceil(rt.step / q) * q; return { step, time: rt.next + (step - rt.step) * rt.stepDur }; }
 function makeRuntime(name, o = {}) {
   const def = Music.songs[name]; if (!def) { warnOnce('song:' + name, '沒有這首配樂：' + name); return null; }
   const c = Aud.ctx, steps = def.steps || 16, stepDur = 60 / (def.bpm || 110) / (steps / 4);
   const gain = c.createGain(); gain.gain.value = 0.0001; gain.connect(o.bus || Aud.bus.music);
-  const rt = { name, def, stepDur, step: 0, next: c.currentTime + 0.06, gain, tracks: [], stopped: false, once: !!o.once || !!def.once, len: 0 };
+  const rt = { name, def, stepDur, step: 0, next: c.currentTime + 0.06, gain, tracks: [], pumpers: [], stopped: false, once: !!o.once || !!def.once, len: 0, delay: null };
+  rt.t0 = rt.next;
   if (def.file) { rt.file = true; return rt; }
   for (const td of def.tracks || []) {
     const out = c.createGain(), on = trackActive({ def: td }, Music.level);
     out.gain.value = on ? (td.vol != null ? td.vol : 0.7) : 0.0001;
-    let dst = out; if (td.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = td.pan; out.connect(p); dst = p; }
+    let dst = out, lpf = null, pg = null;
+    if (td.lp) { lpf = c.createBiquadFilter(); lpf.type = 'lowpass'; lpf.Q.value = td.q || 0.7; lpf.frequency.value = trackCut(td, Music.level); dst.connect(lpf); dst = lpf; }
+    if (td.pump) { pg = c.createGain(); pg.gain.value = 1; dst.connect(pg); dst = pg; }
+    if (td.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = td.pan; dst.connect(p); dst = p; }
     dst.connect(gain);
     if (td.rev) { const rg = c.createGain(); rg.gain.value = td.rev; out.connect(rg); rg.connect(Aud.revIn); }
-    const tr = Object.assign({}, td, { def: td, out, on, toks: tokensOf(td, steps) });
+    if (td.delay) { const D = rt.delay || (rt.delay = makeDelay(c, rt, def)), sg = c.createGain(); sg.gain.value = td.delay; dst.connect(sg); sg.connect(D); }
+    const tr = Object.assign({}, td, { def: td, out, on, lpf, pg, toks: tokensOf(td, steps) });
+    if (pg) rt.pumpers.push(tr);
     rt.len = Math.max(rt.len, tr.toks.length);
     rt.tracks.push(tr);
   }
@@ -189,14 +232,30 @@ Music.play = (name, o = {}) => {
   if (!Aud.ctx) return; // 還沒解鎖：解鎖後自動開始
   if (Music.cur && Music.cur.name === name && !Music.cur.stopped) { Music.intensity(Music.level); return; }
   const old = Music.cur, fade = o.fade != null ? o.fade : 1.2, c = Aud.ctx;
-  if (old) fadeOut(old, fade);
   const def = Music.songs[name];
   const rt = makeRuntime(name, o); if (!rt) return;
-  if (def && def.file) { startFile(rt, def); }
-  rt.gain.gain.setValueAtTime(0.0001, c.currentTime); rt.gain.gain.exponentialRampToValueAtTime(def && def.vol != null ? def.vol : 1, c.currentTime + Math.max(0.05, fade));
+  const vol = def && def.vol != null ? def.vol : 1;
+  if (o.sync && old && !old.stopped && !old.file && !(def && def.file)) {
+    // 對拍子換歌：舊的排到下一個小節（拍子）就收，新的剛好從那裡開始
+    const sp = syncPoint(old, o.sync); old.endStep = sp.step; old.endAt = sp.time; old.endFade = o.outFade != null ? o.outFade : 0.12;
+    Music._out.push(old); rt.next = rt.t0 = sp.time;
+    rt.gain.gain.setValueAtTime(0.0001, c.currentTime); rt.gain.gain.setValueAtTime(0.0001, sp.time); rt.gain.gain.exponentialRampToValueAtTime(vol, sp.time + Math.max(0.02, o.inFade != null ? o.inFade : 0.04));
+    Music.switchAt = sp.time;
+  } else {
+    if (old) fadeOut(old, fade);
+    if (def && def.file) { startFile(rt, def); }
+    rt.gain.gain.setValueAtTime(0.0001, c.currentTime); rt.gain.gain.exponentialRampToValueAtTime(vol, c.currentTime + Math.max(0.05, fade));
+    Music.switchAt = c.currentTime;
+  }
   Music.cur = rt;
   runSong(rt);
 };
+/** 在指定時間（音訊時間）淡出收掉 */
+function fadeOutAt(rt, at, fade = 0.12) {
+  rt.stopped = true; const c = Aud.ctx, g = rt.gain.gain, now = c.currentTime;
+  try { const v = Math.max(0.0001, g.value); g.cancelScheduledValues(now); g.setValueAtTime(v, now); g.setValueAtTime(v, Math.max(now, at)); g.exponentialRampToValueAtTime(0.0001, Math.max(now, at) + Math.max(0.02, fade)); } catch (e) { /* ignore */ }
+  PZ.after(Math.max(0, at - now) + fade + 0.6, () => { try { rt.gain.disconnect(); } catch (e) { /* ignore */ } }, { real: true });
+}
 function fadeOut(rt, fade) {
   rt.stopped = true; const c = Aud.ctx, t = c.currentTime;
   try { rt.gain.gain.cancelScheduledValues(t); rt.gain.gain.setValueAtTime(Math.max(0.0001, rt.gain.gain.value), t); rt.gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.05, fade)); } catch (e) { /* ignore */ }
@@ -209,6 +268,7 @@ Music.intensity = (v, fade = 1.2) => {
   Music.level = clamp01(v); const rt = Music.cur; if (!rt || !Aud.ctx || rt.file) return Music.level;
   const t = Aud.ctx.currentTime;
   for (const tr of rt.tracks) {
+    if (tr.lpf && Array.isArray(tr.def.lp)) tr.lpf.frequency.setTargetAtTime(trackCut(tr.def, Music.level), t, fade / 3);
     const on = trackActive(tr, Music.level); if (on === tr.on) continue;
     tr.on = on; const target = on ? (tr.def.vol != null ? tr.def.vol : 0.7) : 0.0001;
     tr.out.gain.cancelScheduledValues(t); tr.out.gain.setValueAtTime(Math.max(0.0001, tr.out.gain.value), t); tr.out.gain.exponentialRampToValueAtTime(target, t + fade);
@@ -221,7 +281,8 @@ Music.stinger = (name, o = {}) => {
   if (!Aud.ctx) return;
   if (Sfx.has(name) && !Music.songs[name]) { Aud.duck(0.35, o.duck || 1.2); Sfx.play(name, o); return; }
   const rt = makeRuntime(name, { once: true, bus: Aud.bus.sfx }); if (!rt) return;
-  Aud.duck(0.3, rt.len * rt.stepDur + 0.5);
+  if (o.sync && Music.cur && !Music.cur.stopped && !Music.cur.file) { const sp = syncPoint(Music.cur, o.sync); rt.next = rt.t0 = sp.time; }
+  Aud.duck(0.3, rt.len * rt.stepDur + 0.5 + Math.max(0, rt.next - Aud.ctx.currentTime));
   rt.gain.gain.setValueAtTime(o.vol || 1, Aud.ctx.currentTime);
   (Music._stingers || (Music._stingers = [])).push(rt);
   runSong(rt);
@@ -237,14 +298,27 @@ async function startFile(rt, def) {
     s.connect(rt.gain); s.start(); rt.src = s;
   } catch (e) { reportError(e, 'music.file'); }
 }
+/** 配樂悶住（0～1；暫停選單、水底、被打暈）：低通慢慢壓下去／打開 */
+Music.muffle = (amount = 1, time = 0.4) => {
+  Music._muffle = amount; if (!Aud.ctx || !Aud.musicLP) return;
+  const f = amount <= 0.001 ? 20000 : 20000 * Math.pow(380 / 20000, clamp01(amount));
+  Aud.musicLP.frequency.setTargetAtTime(f, Aud.ctx.currentTime, Math.max(0.01, time / 3));
+};
+/** 這一拍走到哪（0＝拍點、接近 1＝下一拍之前）：畫面跟著節奏一跳一跳 */
+Music.phase = () => {
+  const rt = Music.cur; if (!rt || !Aud.ctx || rt.file || rt.stopped) return 0;
+  const beat = rt.stepDur * ((rt.def.steps || 16) / 4), t = Aud.ctx.currentTime - rt.t0;
+  return t < 0 ? 0 : (t / beat) % 1;
+};
 /** 每一拍呼叫（跟音樂對拍：UI 脈動、燈光閃爍） */
 Music.onBeat = (fn) => { Music._beatFns.push(fn); return () => { const i = Music._beatFns.indexOf(fn); if (i >= 0) Music._beatFns.splice(i, 1); }; };
-PZ.on('audio', () => { if (Music._want) Music.play(Music._want.name, Object.assign({}, Music._want.o, { fade: 1.5 })); });
+PZ.on('audio', () => { if (Music._want) Music.play(Music._want.name, Object.assign({}, Music._want.o, { fade: 1.5, sync: null })); if (Music._muffle) Music.muffle(Music._muffle, 0.05); });
 addSystem({
   name: 'music', order: 32,
   frame() {
     if (!Aud.ctx) return;
     if (Music.cur) runSong(Music.cur);
+    for (let i = 0; i < Music._out.length; i++) { const r = Music._out[i]; runSong(r); if (r.stopped) Music._out.splice(i--, 1); }
     if (Music._stingers) for (let i = 0; i < Music._stingers.length; i++) { const s = Music._stingers[i]; runSong(s); if (s.stopped) Music._stingers.splice(i--, 1); }
     const t = Aud.ctx.currentTime;
     while (Music._beats.length && Music._beats[0].t <= t) { const b = Music._beats.shift(); for (const f of Music._beatFns) safeCall(f, null, b.n); }
@@ -252,4 +326,4 @@ addSystem({
   },
 });
 // 背景時 requestAnimationFrame 會停：用計時器補排程（避免切回來時斷拍）
-if (HAS_DOM) setInterval(() => { if (Aud.ctx && Aud.ctx.state === 'running' && Music.cur && document.hidden === false) runSong(Music.cur); }, 50);
+if (HAS_DOM) setInterval(() => { if (Aud.ctx && Aud.ctx.state === 'running' && document.hidden === false) { if (Music.cur) runSong(Music.cur); for (const r of Music._out) runSong(r); } }, 50);

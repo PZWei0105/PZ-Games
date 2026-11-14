@@ -1,0 +1,7258 @@
+/*! PZ Engine v1.1.0 (2026-11-14.042ba4d2) — 痞子葳 × Claude 的 2D 遊戲引擎。
+    說明書：PZ-Games repo 的 _build/engine/HANDBOOK.md */
+(function (global) {
+'use strict';
+/* ---- 00_head.js ---- */
+/* ==========================================================================
+   00 開頭：命名空間、環境偵測、小工具
+   整個引擎包在一個 IIFE 裡，只對外公開 window.PZ。
+   模組之間共用這個閉包裡的變數（例如 Screen、Input、R），不必互相 import。
+   ========================================================================== */
+const PZ = { version: '1.1.0', build: '2026-11-14.042ba4d2' };
+const HAS_DOM = typeof document !== 'undefined' && typeof window !== 'undefined';
+const nowMs = () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
+const noop = () => { };
+
+/** 裝置與環境（只在有 DOM 的時候才有意義；Node 測試時都是 false） */
+const Env = PZ.env = (() => {
+  const e = { ios: false, android: false, mobile: false, touch: false, safari: false, standalone: false, inFrame: false, claude: false, webkit: false, desktop: true };
+  if (!HAS_DOM) return e;
+  const ua = navigator.userAgent || '';
+  const mt = navigator.maxTouchPoints || 0;
+  e.ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && mt > 1); // iPadOS 會假裝成 Mac
+  e.android = /Android/.test(ua);
+  e.touch = mt > 0 || 'ontouchstart' in window;
+  e.mobile = e.ios || e.android || (e.touch && Math.min(screen.width, screen.height) < 820);
+  e.desktop = !e.mobile;
+  e.webkit = /AppleWebKit/.test(ua) && !/Chrome|CriOS|Edg|OPR|Android/.test(ua);
+  e.safari = e.webkit;
+  try { e.standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); } catch (er) { /* 舊瀏覽器 */ }
+  try { e.inFrame = window.top !== window; } catch (er) { e.inFrame = true; }
+  e.claude = !!(window.claude && typeof window.claude.use === 'function');
+  e.lowMemory = !!(navigator.deviceMemory && navigator.deviceMemory <= 3);
+  return e;
+})();
+
+/** 安全地執行使用者（遊戲）的回呼：出錯時交給除錯面板，不讓整個迴圈停掉 */
+function safeCall(fn, self, a, b, c) {
+  try { return fn.call(self, a, b, c); } catch (err) { reportError(err, 'callback'); return undefined; }
+}
+let reportError = (err) => { if (typeof console !== 'undefined') console.error(err); }; // 22_debug 會換掉
+
+/** 只警告一次 */
+const _warned = new Set();
+function warnOnce(key, msg) { if (_warned.has(key)) return; _warned.add(key); if (typeof console !== 'undefined') console.warn('[PZ] ' + msg); }
+
+/** 簡單的 DOM 小工具（UI 模組會大量用到） */
+function el(tag, cls, html) {
+  const d = document.createElement(tag);
+  if (cls) d.className = cls;
+  if (html != null) d.innerHTML = html;
+  return d;
+}
+PZ.el = el;
+
+/** 安全的 localStorage（被擋住或滿了就退回記憶體） */
+const Store = PZ.store = (() => {
+  const mem = new Map();
+  let ok = null;
+  const test = () => {
+    if (ok !== null) return ok;
+    try { const k = '__pz_t'; localStorage.setItem(k, '1'); localStorage.removeItem(k); ok = true; } catch (e) { ok = false; }
+    return ok;
+  };
+  return {
+    get available() { return test(); },
+    get(k) { if (test()) { try { const v = localStorage.getItem(k); if (v !== null) return v; } catch (e) { /* 讀不到就看記憶體 */ } } return mem.has(k) ? mem.get(k) : null; },
+    set(k, v) {
+      v = String(v);
+      mem.set(k, v);
+      if (!test()) return false;
+      try { localStorage.setItem(k, v); return true; } catch (e) { return false; } // 空間滿了：記憶體裡仍有一份
+    },
+    remove(k) { mem.delete(k); if (test()) { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } } },
+    getJSON(k, d) { const s = this.get(k); if (s == null) return d; try { return JSON.parse(s); } catch (e) { return d; } },
+    setJSON(k, v) { return this.set(k, JSON.stringify(v)); },
+    keys(prefix) {
+      const out = new Set();
+      if (test()) { try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) out.add(k); } } catch (e) { /* ignore */ } }
+      for (const k of mem.keys()) if (k.startsWith(prefix)) out.add(k);
+      return [...out];
+    },
+    _reset() { ok = null; mem.clear(); }, // 測試用
+  };
+})();
+
+/* ---- 01_math.js ---- */
+/* ==========================================================================
+   01 數學：常用函式、亂數、雜訊、緩動、空間格網、碰撞
+   ========================================================================== */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const invLerp = (a, b, v) => (b === a ? 0 : (v - a) / (b - a));
+const remap = (v, a0, a1, b0, b1, clampIt) => { let t = invLerp(a0, a1, v); if (clampIt) t = clamp01(t); return b0 + (b1 - b0) * t; };
+const smoothstep = (a, b, v) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+/** 與幀率無關的平滑追趕：每秒剩下 e^(-k) 的距離。k 越大越快（相機跟隨常用 6～12） */
+const damp = (a, b, k, dt) => b + (a - b) * Math.exp(-k * dt);
+const approach = (a, b, step) => (a < b ? Math.min(a + step, b) : Math.max(a - step, b));
+const wrapAngle = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
+const angleDiff = (a, b) => wrapAngle(b - a);
+const lerpAngle = (a, b, t) => a + angleDiff(a, b) * t;
+const dampAngle = (a, b, k, dt) => a + angleDiff(a, b) * (1 - Math.exp(-k * dt));
+const dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+const dist2 = (x1, y1, x2, y2) => { const dx = x2 - x1, dy = y2 - y1; return dx * dx + dy * dy; };
+const angleTo = (x1, y1, x2, y2) => Math.atan2(y2 - y1, x2 - x1);
+const sign = (v) => (v > 0 ? 1 : v < 0 ? -1 : 0);
+const fract = (v) => v - Math.floor(v);
+
+PZ.math = { TAU, clamp, clamp01, lerp, invLerp, remap, smoothstep, damp, approach, wrapAngle, angleDiff, lerpAngle, dampAngle, dist, dist2, angleTo, sign, fract };
+Object.assign(PZ, { clamp, lerp, damp, approach, TAU });
+
+/* ---------- 亂數：mulberry32（快、可重現）---------- */
+function makeRng(seed) {
+  let s = (seed >>> 0) || 0x9e3779b9;
+  const r = {
+    get seed() { return s; },
+    reseed(v) { s = (v >>> 0) || 0x9e3779b9; return r; },
+    next() { s = (s + 0x6D2B79F5) | 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; },
+    /** [a, b) 的小數；只給一個參數就是 [0, a) */
+    range(a, b) { if (b === undefined) { b = a; a = 0; } return a + (b - a) * r.next(); },
+    /** [a, b] 的整數 */
+    int(a, b) { if (b === undefined) { b = a; a = 0; } return a + Math.floor(r.next() * (b - a + 1)); },
+    chance(p) { return r.next() < p; },
+    pick(arr) { return arr[Math.floor(r.next() * arr.length)]; },
+    /** 照權重挑：items 是陣列、weight(item) 回傳權重 */
+    weighted(items, weight) { let tot = 0; for (const it of items) tot += Math.max(0, weight(it)); let x = r.next() * tot; for (const it of items) { x -= Math.max(0, weight(it)); if (x < 0) return it; } return items[items.length - 1]; },
+    sign() { return r.next() < 0.5 ? -1 : 1; },
+    angle() { return r.next() * TAU; },
+    /** 常態分布（平均 0、標準差 1） */
+    gauss() { let u = 0, v = 0; while (u === 0) u = r.next(); v = r.next(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); },
+    /** 在 [-v, v] 之間 */
+    spread(v) { return (r.next() * 2 - 1) * v; },
+    shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(r.next() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; } return arr; },
+  };
+  return r;
+}
+PZ.rng = makeRng;
+const Rand = PZ.rand = makeRng((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0);
+/** 給測試用：讓全域亂數可重現 */
+PZ.seed = (v) => Rand.reseed(v);
+
+/* ---------- 雜訊（震屏、地形、紋理）---------- */
+const _perm = new Uint8Array(512);
+const _grad = new Float32Array(256);
+function noiseSeed(seed) {
+  const r = makeRng(seed);
+  const p = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) p[i] = i;
+  r.shuffle(p);
+  for (let i = 0; i < 512; i++) _perm[i] = p[i & 255];
+  for (let i = 0; i < 256; i++) _grad[i] = r.next() * 2 - 1;
+}
+noiseSeed(1337);
+const _fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+/** 一維梯度雜訊，回傳約 -1～1，平滑連續（震屏用） */
+function noise1(x) {
+  const i = Math.floor(x), f = x - i, a = _grad[_perm[i & 255]] * f, b = _grad[_perm[(i + 1) & 255]] * (f - 1);
+  return lerp(a, b, _fade(f)) * 2;
+}
+/** 二維 Perlin 雜訊，約 -1～1 */
+function noise2(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  const X = xi & 255, Y = yi & 255;
+  const g = (h, dx, dy) => { switch (h & 7) { case 0: return dx + dy; case 1: return -dx + dy; case 2: return dx - dy; case 3: return -dx - dy; case 4: return dx; case 5: return -dx; case 6: return dy; default: return -dy; } };
+  const aa = _perm[_perm[X] + Y], ab = _perm[_perm[X] + Y + 1], ba = _perm[_perm[X + 1] + Y], bb = _perm[_perm[X + 1] + Y + 1];
+  const u = _fade(xf), v = _fade(yf);
+  const x1 = lerp(g(aa, xf, yf), g(ba, xf - 1, yf), u), x2 = lerp(g(ab, xf, yf - 1), g(bb, xf - 1, yf - 1), u);
+  return lerp(x1, x2, v) * 0.7071 * 1.414;
+}
+/** 疊幾層的雜訊（fbm） */
+function fbm2(x, y, oct = 4, lac = 2, gain = 0.5) { let s = 0, a = 1, f = 1, n = 0; for (let i = 0; i < oct; i++) { s += a * noise2(x * f, y * f); n += a; a *= gain; f *= lac; } return s / n; }
+PZ.noise = { seed: noiseSeed, n1: noise1, n2: noise2, fbm: fbm2 };
+
+/* ---------- 緩動 ---------- */
+const Ease = PZ.ease = (() => {
+  const c1 = 1.70158, c2 = c1 * 1.525, c3 = c1 + 1, c4 = TAU / 3, c5 = TAU / 4.5;
+  const outBounce = (t) => { const n = 7.5625, d = 2.75; if (t < 1 / d) return n * t * t; if (t < 2 / d) return n * (t -= 1.5 / d) * t + 0.75; if (t < 2.5 / d) return n * (t -= 2.25 / d) * t + 0.9375; return n * (t -= 2.625 / d) * t + 0.984375; };
+  return {
+    linear: (t) => t,
+    inQuad: (t) => t * t, outQuad: (t) => 1 - (1 - t) * (1 - t), inOutQuad: (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2),
+    inCubic: (t) => t * t * t, outCubic: (t) => 1 - Math.pow(1 - t, 3), inOutCubic: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+    inQuart: (t) => t * t * t * t, outQuart: (t) => 1 - Math.pow(1 - t, 4), inOutQuart: (t) => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2),
+    inQuint: (t) => t * t * t * t * t, outQuint: (t) => 1 - Math.pow(1 - t, 5),
+    inSine: (t) => 1 - Math.cos((t * Math.PI) / 2), outSine: (t) => Math.sin((t * Math.PI) / 2), inOutSine: (t) => -(Math.cos(Math.PI * t) - 1) / 2,
+    inExpo: (t) => (t === 0 ? 0 : Math.pow(2, 10 * t - 10)), outExpo: (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
+    inOutExpo: (t) => (t === 0 ? 0 : t === 1 ? 1 : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2),
+    inCirc: (t) => 1 - Math.sqrt(1 - t * t), outCirc: (t) => Math.sqrt(1 - Math.pow(t - 1, 2)),
+    inBack: (t) => c3 * t * t * t - c1 * t * t, outBack: (t) => 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2),
+    inOutBack: (t) => (t < 0.5 ? (Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2 : (Math.pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2),
+    inElastic: (t) => (t === 0 ? 0 : t === 1 ? 1 : -Math.pow(2, 10 * t - 10) * Math.sin((t * 10 - 10.75) * c4)),
+    outElastic: (t) => (t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1),
+    inOutElastic: (t) => (t === 0 ? 0 : t === 1 ? 1 : t < 0.5 ? -(Math.pow(2, 20 * t - 10) * Math.sin((20 * t - 11.125) * c5)) / 2 : (Math.pow(2, -20 * t + 10) * Math.sin((20 * t - 11.125) * c5)) / 2 + 1),
+    outBounce, inBounce: (t) => 1 - outBounce(1 - t),
+    /** 先衝過頭再回來的小彈跳（UI 彈出、數字跳出） */
+    pop: (t) => { const s = 2.4; return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2); },
+    /** 0→1→0（閃一下） */
+    blip: (t) => Math.sin(t * Math.PI),
+  };
+})();
+const easeOf = (e) => (typeof e === 'function' ? e : Ease[e] || Ease.outQuad);
+PZ.easeOf = easeOf;
+
+/* ---------- 排序：幾乎排好的陣列用插入排序（Y 軸前後遮擋每幀排一次很划算）---------- */
+PZ.sortBy = function sortBy(arr, key) {
+  for (let i = 1; i < arr.length; i++) {
+    const it = arr[i], k = key(it);
+    let j = i - 1;
+    while (j >= 0 && key(arr[j]) > k) { arr[j + 1] = arr[j]; j--; }
+    arr[j + 1] = it;
+  }
+  return arr;
+};
+
+/* ---------- 空間格網：大量敵人、子彈的鄰近查詢 ---------- */
+class Grid {
+  constructor(cell = 64) { this.cell = cell; this.inv = 1 / cell; this.map = new Map(); this.pool = []; this.count = 0; }
+  _key(cx, cy) { return (cx + 32768) * 65536 + (cy + 32768); }
+  clear() { for (const arr of this.map.values()) { arr.length = 0; this.pool.push(arr); } this.map.clear(); this.count = 0; }
+  /** 物件需要有 x、y；r 是半徑（會放進所有碰到的格子） */
+  insert(o, r = 0) {
+    const inv = this.inv, x0 = Math.floor((o.x - r) * inv), x1 = Math.floor((o.x + r) * inv), y0 = Math.floor((o.y - r) * inv), y1 = Math.floor((o.y + r) * inv);
+    for (let cx = x0; cx <= x1; cx++) for (let cy = y0; cy <= y1; cy++) {
+      const k = this._key(cx, cy); let arr = this.map.get(k);
+      if (!arr) { arr = this.pool.pop() || []; this.map.set(k, arr); }
+      arr.push(o);
+    }
+    this.count++;
+  }
+  /** 找出圓形範圍內的物件（距離用物件中心＋自己的 r 判斷）；回傳 out 陣列（不重複） */
+  query(x, y, r, out = [], filter) {
+    out.length = 0;
+    const inv = this.inv, x0 = Math.floor((x - r) * inv), x1 = Math.floor((x + r) * inv), y0 = Math.floor((y - r) * inv), y1 = Math.floor((y + r) * inv);
+    const stamp = (this._stamp = (this._stamp || 0) + 1);
+    for (let cx = x0; cx <= x1; cx++) for (let cy = y0; cy <= y1; cy++) {
+      const arr = this.map.get(this._key(cx, cy)); if (!arr) continue;
+      for (let i = 0; i < arr.length; i++) {
+        const o = arr[i]; if (o._gq === stamp) continue; o._gq = stamp;
+        const rr = r + (o.r || 0), dx = o.x - x, dy = o.y - y;
+        if (dx * dx + dy * dy <= rr * rr && (!filter || filter(o))) out.push(o);
+      }
+    }
+    return out;
+  }
+  /** 最近的一個（maxR 內），可加條件 */
+  nearest(x, y, maxR, filter) {
+    let best = null, bd = maxR * maxR;
+    const tmp = this.query(x, y, maxR, this._tmp || (this._tmp = []), filter);
+    for (const o of tmp) { const d = dist2(x, y, o.x, o.y); if (d < bd) { bd = d; best = o; } }
+    return best;
+  }
+}
+PZ.Grid = Grid;
+
+/* ---------- 碰撞小工具 ---------- */
+PZ.hit = {
+  circle(ax, ay, ar, bx, by, br) { const dx = bx - ax, dy = by - ay, r = ar + br; return dx * dx + dy * dy <= r * r; },
+  rect(ax, ay, aw, ah, bx, by, bw, bh) { return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by; },
+  point(px, py, x, y, w, h) { return px >= x && px <= x + w && py >= y && py <= y + h; },
+  circleRect(cx, cy, r, x, y, w, h) { const nx = clamp(cx, x, x + w), ny = clamp(cy, y, y + h), dx = cx - nx, dy = cy - ny; return dx * dx + dy * dy <= r * r; },
+  /** 線段 (x1,y1)-(x2,y2) 與圓：回傳最近的碰撞比例 t（0～1），沒有碰到回傳 -1 */
+  segCircle(x1, y1, x2, y2, cx, cy, r) {
+    const dx = x2 - x1, dy = y2 - y1, fx = x1 - cx, fy = y1 - cy;
+    const a = dx * dx + dy * dy, b = 2 * (fx * dx + fy * dy), c = fx * fx + fy * fy - r * r;
+    if (c <= 0) return 0;
+    let disc = b * b - 4 * a * c; if (disc < 0 || a === 0) return -1;
+    disc = Math.sqrt(disc);
+    const t = (-b - disc) / (2 * a);
+    return t >= 0 && t <= 1 ? t : -1;
+  },
+  /** 把圓推出矩形，回傳 {x,y} 修正量（沒重疊就是 null） */
+  pushCircleRect(cx, cy, r, x, y, w, h) {
+    const nx = clamp(cx, x, x + w), ny = clamp(cy, y, y + h); let dx = cx - nx, dy = cy - ny; const d2 = dx * dx + dy * dy;
+    if (d2 > r * r) return null;
+    if (d2 === 0) { // 圓心在矩形裡：從最近的邊推出去
+      const l = cx - x, rr = x + w - cx, t = cy - y, b = y + h - cy, m = Math.min(l, rr, t, b);
+      if (m === l) return { x: -(l + r), y: 0 }; if (m === rr) return { x: rr + r, y: 0 }; if (m === t) return { x: 0, y: -(t + r) }; return { x: 0, y: b + r };
+    }
+    const d = Math.sqrt(d2), k = (r - d) / d; return { x: dx * k, y: dy * k };
+  },
+};
+
+/* ---------- 物件池 ---------- */
+PZ.pool = function pool(make, reset) {
+  const free = [];
+  return {
+    get(...a) { const o = free.length ? free.pop() : make(); if (reset) reset(o, ...a); return o; },
+    put(o) { free.push(o); },
+    get size() { return free.length; },
+  };
+};
+
+/* ---- 02_color.js ---- */
+/* ==========================================================================
+   02 顏色
+   畫圖時顏色可以寫 CSS 字串（'#ff8800'、'rgba(…)'、'hsl(…)'），
+   或用 PZ.rgb()/PZ.hsl()/PZ.color() 先轉好的「打包數字」（熱迴圈裡比較快）。
+   打包格式是 0xAABBGGRR（直接寫進 WebGL 頂點，小端序）。
+   注意：直接寫 0xff8800 這種數字會被當成打包值（會變成透明），請用字串。
+   ========================================================================== */
+const WHITE = 0xffffffff;
+const _colorCache = new Map();
+const pack = (r, g, b, a) => (((clamp(Math.round(a * 255), 0, 255) << 24) | (clamp(Math.round(b), 0, 255) << 16) | (clamp(Math.round(g), 0, 255) << 8) | clamp(Math.round(r), 0, 255)) >>> 0);
+const cR = (c) => c & 255, cG = (c) => (c >>> 8) & 255, cB = (c) => (c >>> 16) & 255, cA = (c) => ((c >>> 24) & 255) / 255;
+
+const NAMED = { white: '#fff', black: '#000', red: '#f33', green: '#3d5', blue: '#38f', yellow: '#fd3', orange: '#f93', cyan: '#3ef', magenta: '#f3e', gray: '#888', grey: '#888', transparent: 'rgba(0,0,0,0)', gold: '#ffd24a', purple: '#a5f', pink: '#f8b' };
+
+function hslToRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360;
+  if (s === 0) return [l * 255, l * 255, l * 255];
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const f = (t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; };
+  return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255];
+}
+
+function parseColor(s) {
+  s = String(s).trim().toLowerCase();
+  if (NAMED[s]) s = NAMED[s];
+  if (s[0] === '#') {
+    let h = s.slice(1);
+    if (h.length === 3 || h.length === 4) h = h.split('').map((c) => c + c).join('');
+    const n = parseInt(h, 16);
+    if (h.length === 6) return pack((n >> 16) & 255, (n >> 8) & 255, n & 255, 1);
+    if (h.length === 8) return pack((n >>> 24) & 255, (n >> 16) & 255, (n >> 8) & 255, (n & 255) / 255);
+  }
+  let m = s.match(/^rgba?\(([^)]+)\)$/);
+  if (m) { const p = m[1].split(/[\s,/]+/).filter(Boolean).map(parseFloat); return pack(p[0], p[1], p[2], p.length > 3 ? p[3] : 1); }
+  m = s.match(/^hsla?\(([^)]+)\)$/);
+  if (m) { const p = m[1].split(/[\s,/]+/).filter(Boolean).map(parseFloat); const [r, g, b] = hslToRgb(p[0], p[1] / 100, p[2] / 100); return pack(r, g, b, p.length > 3 ? p[3] : 1); }
+  warnOnce('color:' + s, '看不懂的顏色：' + s);
+  return WHITE;
+}
+
+/** 任何顏色寫法 → 打包數字 */
+function toColor(c) {
+  if (typeof c === 'number') return c >>> 0;
+  if (c == null) return WHITE;
+  if (typeof c === 'string') { let v = _colorCache.get(c); if (v === undefined) { v = parseColor(c); if (_colorCache.size > 4096) _colorCache.clear(); _colorCache.set(c, v); } return v; }
+  if (Array.isArray(c)) return pack(c[0], c[1], c[2], c.length > 3 ? c[3] : 1);
+  return WHITE;
+}
+
+const Color = PZ.color = function color(c) { return toColor(c); };
+Object.assign(Color, {
+  WHITE, BLACK: 0xff000000, CLEAR: 0,
+  rgb: (r, g, b, a = 1) => pack(r, g, b, a),
+  hsl: (h, s, l, a = 1) => { const [r, g, b] = hslToRgb(h, s, l); return pack(r, g, b, a); },
+  r: (c) => cR(toColor(c)), g: (c) => cG(toColor(c)), b: (c) => cB(toColor(c)), a: (c) => cA(toColor(c)),
+  /** 換透明度（a 是 0～1） */
+  alpha: (c, a) => { c = toColor(c); return pack(cR(c), cG(c), cB(c), a); },
+  /** 兩色混合 */
+  mix: (a, b, t) => { a = toColor(a); b = toColor(b); return pack(lerp(cR(a), cR(b), t), lerp(cG(a), cG(b), t), lerp(cB(a), cB(b), t), lerp(cA(a), cA(b), t)); },
+  lighten: (c, t) => Color.mix(c, Color.alpha(WHITE, cA(toColor(c))), t),
+  darken: (c, t) => Color.mix(c, pack(0, 0, 0, cA(toColor(c))), t),
+  /** 打包數字 → CSS 字串（給 DOM、Canvas2D 用） */
+  css: (c) => { c = toColor(c); const a = cA(c); return a >= 1 ? '#' + ((1 << 24) | (cR(c) << 16) | (cG(c) << 8) | cB(c)).toString(16).slice(1) : `rgba(${cR(c)},${cG(c)},${cB(c)},${+a.toFixed(3)})`; },
+  /** 漸層取樣表：粒子顏色隨生命週期變化用；回傳 n 格的 Uint32Array */
+  ramp: (stops, n = 32) => {
+    const cs = stops.map(toColor), out = new Uint32Array(n);
+    if (cs.length === 1) { out.fill(cs[0]); return out; }
+    for (let i = 0; i < n; i++) { const t = (i / (n - 1)) * (cs.length - 1), k = Math.min(cs.length - 2, Math.floor(t)); out[i] = Color.mix(cs[k], cs[k + 1], t - k); }
+    return out;
+  },
+  /** 亮度 0～1（感知亮度） */
+  luma: (c) => { c = toColor(c); return (0.2126 * cR(c) + 0.7152 * cG(c) + 0.0722 * cB(c)) / 255; },
+});
+PZ.rgb = Color.rgb;
+PZ.hsl = Color.hsl;
+
+/* ---- 03_events.js ---- */
+/* ==========================================================================
+   03 事件
+   PZ.on('pause', fn) / PZ.off / PZ.once / PZ.emit
+   引擎會發出的事件見說明書「事件」一節（resize、pause、resume、hidden、visible、
+   device、quality、contextlost、contextrestored、scene、save…）。
+   ========================================================================== */
+function makeEmitter(target) {
+  const map = new Map();
+  target.on = (name, fn) => { let a = map.get(name); if (!a) map.set(name, (a = [])); a.push(fn); return () => target.off(name, fn); };
+  target.off = (name, fn) => { const a = map.get(name); if (!a) return; const i = a.indexOf(fn); if (i >= 0) a.splice(i, 1); };
+  target.once = (name, fn) => { const off = target.on(name, (...x) => { off(); fn(...x); }); return off; };
+  target.emit = (name, a, b, c) => { const arr = map.get(name); if (!arr || !arr.length) return; for (const fn of arr.slice()) safeCall(fn, target, a, b, c); };
+  return target;
+}
+makeEmitter(PZ);
+PZ.emitter = () => makeEmitter({});
+
+/* ---- 04_time.js ---- */
+/* ==========================================================================
+   04 時間與主迴圈
+   - 預設「可變步長」：每畫一格就更新一次，dt 是這格經過的秒數（長的格子會切成
+     不超過 1/60 秒的小段），在 60／120／240Hz 螢幕上都順。要可重現的物理就設
+     config.step = 1/60（固定步長），畫面用 PZ.time.alpha 插值。
+   - 打擊停頓 PZ.freeze(ms)、慢動作 PZ.slowmo(倍率, 秒數)、暫停 PZ.pause()。
+   - 計時器 PZ.after / PZ.every / await PZ.wait(秒)，跟著遊戲時間走（暫停、停頓時不動）；
+     要跟著真實時間走就加 { real: true }。
+   - 自動畫質：連續卡頓就降一階（解析度、泛光、粒子量），夠順再升回去。
+   ========================================================================== */
+const Time = PZ.time = {
+  t: 0, real: 0, dt: 0, rdt: 1 / 60, frame: 0,
+  scale: 1, paused: false, alpha: 1,
+  step: 0, maxStep: 1 / 60, maxSub: 6,
+  fps: 60, refresh: 60,
+  _freeze: 0, _slow: null, _pauseWhy: new Set(),
+};
+
+/** 目前實際套用的時間倍率（含慢動作與停頓） */
+Time.effScale = () => {
+  if (Time._freeze > 0) return 0;
+  let s = Time.scale;
+  const sm = Time._slow;
+  if (sm) s *= sm.cur;
+  return s;
+};
+
+/** 打擊停頓：世界停住 ms 毫秒（多次呼叫取最長的那個，不會累加） */
+PZ.freeze = (ms) => { Time._freeze = Math.max(Time._freeze, ms / 1000); };
+/** 慢動作：倍率 scale（例如 0.25）維持 sec 秒，最後 back 秒平滑回到 1 */
+PZ.slowmo = (scale, sec = 0.6, back = 0.25) => { Time._slow = { to: scale, cur: Math.min(scale, Time._slow ? Time._slow.cur : 1), hold: sec, back, t: 0 }; };
+
+/** 暫停：可以帶原因（'menu'、'hidden'、'rotate'…），全部原因解除才會恢復 */
+PZ.pause = (why = 'game') => {
+  const was = Time.paused; Time._pauseWhy.add(why); Time.paused = true;
+  if (!was) PZ.emit('pause', why);
+};
+PZ.resume = (why = 'game') => {
+  Time._pauseWhy.delete(why);
+  if (why === '*') Time._pauseWhy.clear();
+  if (Time.paused && Time._pauseWhy.size === 0) { Time.paused = false; Loop.last = 0; PZ.emit('resume', why); }
+};
+PZ.isPaused = (why) => (why ? Time._pauseWhy.has(why) : Time.paused);
+
+/* ---------- 計時器 ---------- */
+const Timers = { list: [], real: [] };
+function addTimer(sec, fn, every, real) {
+  const t = { at: (real ? Time.real : Time.t) + Math.max(0, sec), fn, every: every ? Math.max(0.001, sec) : 0, real: !!real, dead: false, cancel() { this.dead = true; } };
+  (real ? Timers.real : Timers.list).push(t);
+  return t;
+}
+function runTimers(list, now) {
+  for (let i = 0; i < list.length; i++) {
+    const t = list[i];
+    if (t.dead) { list.splice(i--, 1); continue; }
+    if (now >= t.at) {
+      safeCall(t.fn, null);
+      if (t.every && !t.dead) { t.at += t.every; if (t.at < now) t.at = now + t.every; } else { t.dead = true; list.splice(i--, 1); }
+    }
+  }
+}
+PZ.after = (sec, fn, o) => addTimer(sec, fn, false, o && o.real);
+PZ.every = (sec, fn, o) => addTimer(sec, fn, true, o && o.real);
+PZ.wait = (sec, o) => new Promise((res) => addTimer(sec, res, false, o && o.real));
+PZ.waitReal = (sec) => PZ.wait(sec, { real: true });
+PZ.nextFrame = () => new Promise((res) => Loop.once.push(res));
+/** 換場景時清掉遊戲時間的計時器（不影響 real 的） */
+PZ.clearTimers = () => { for (const t of Timers.list) t.dead = true; Timers.list.length = 0; };
+
+/* ---------- 系統登記：各模組把每格要做的事掛上來，依 order 排序 ---------- */
+const Systems = [];
+/** sys = { name, order, frame(rdt) 每畫面一次（真實時間）, update(dt) 每次遊戲更新, render(g) } */
+function addSystem(sys) { Systems.push(sys); Systems.sort((a, b) => (a.order || 0) - (b.order || 0)); return sys; }
+PZ.addSystem = addSystem;
+
+/* ---------- 效能監測與自動畫質 ---------- */
+const Quality = PZ.quality = {
+  tier: 3, start: 3, auto: true, ups: 0,
+  // 每一階：解析度倍率、泛光、後製、粒子量
+  tiers: [
+    { name: '流暢', res: 0.6, bloom: 0, post: false, particles: 0.45 },
+    { name: '平衡', res: 0.75, bloom: 0, post: true, particles: 0.65 },
+    { name: '精細', res: 0.88, bloom: 1, post: true, particles: 0.85 },
+    { name: '極致', res: 1.0, bloom: 2, post: true, particles: 1.0 },
+  ],
+  get cur() { return Quality.tiers[Quality.tier]; },
+  set(t, why) {
+    t = clamp(t | 0, 0, Quality.tiers.length - 1);
+    if (t === Quality.tier) return;
+    Quality.tier = t; Perf.reset();
+    PZ.emit('quality', t, why);
+  },
+};
+const Perf = PZ.perf = {
+  ema: 1 / 60, slowT: 0, fastT: 0, work: 0, workEma: 0, upd: 0, ren: 0, hold: 1.5,
+  samples: [],
+  reset() { this.slowT = 0; this.fastT = 0; this.hold = 1.5; },
+  frame(rdt) {
+    // 剛開始、剛恢復時前幾秒不算（載入、編譯著色器都會卡）
+    if (this.hold > 0) { this.hold -= rdt; return; }
+    this.ema = this.ema * 0.92 + rdt * 0.08;
+    // 估算螢幕更新率
+    if (this.samples.length < 120) { this.samples.push(rdt); if (this.samples.length === 120) { const s = this.samples.slice().sort((a, b) => a - b); const m = s[60]; Time.refresh = m > 0 ? Math.round(1 / m) : 60; } }
+    if (!Quality.auto || Time.paused) return;
+    if (this.ema > 1 / 48) { this.slowT += rdt; this.fastT = 0; } else { this.slowT = Math.max(0, this.slowT - rdt * 0.5); }
+    if (this.ema < 1 / 57) this.fastT += rdt; else this.fastT = 0;
+    if (this.slowT > 2.5 && Quality.tier > 0) { Quality.set(Quality.tier - 1, 'slow'); }
+    else if (this.fastT > 18 && Quality.tier < Quality.start && Quality.ups < 2) { Quality.ups++; Quality.set(Quality.tier + 1, 'fast'); }
+  },
+};
+
+/* ---------- 主迴圈 ---------- */
+const Loop = PZ.loop = { running: false, last: 0, raf: 0, acc: 0, once: [], fpsCap: 0, _skip: 0, onUpdate: null, onRender: null };
+
+function stepUpdate(dt, first) {
+  Time.dt = dt; Time.t += dt;
+  runTimers(Timers.list, Time.t);
+  for (const s of Systems) if (s.update) { try { s.update(dt, first); } catch (e) { reportError(e, s.name + '.update'); } }
+}
+
+function tick(rdt) {
+  const t0 = nowMs();
+  Time.rdt = rdt; Time.real += rdt; Time.frame++;
+  if (rdt > 0) Time.fps = Time.fps * 0.9 + (1 / rdt) * 0.1;
+  Perf.frame(rdt);
+  // 慢動作與停頓用真實時間倒數
+  if (Time._freeze > 0) Time._freeze = Math.max(0, Time._freeze - rdt);
+  const sm = Time._slow;
+  if (sm) {
+    sm.t += rdt;
+    if (sm.t < 0.06) sm.cur = lerp(sm.cur, sm.to, clamp01(sm.t / 0.06));
+    else if (sm.t < sm.hold) sm.cur = sm.to;
+    else if (sm.t < sm.hold + sm.back) sm.cur = lerp(sm.to, 1, Ease.inOutQuad((sm.t - sm.hold) / sm.back));
+    else Time._slow = null;
+  }
+  runTimers(Timers.real, Time.real);
+  for (const s of Systems) if (s.frame) { try { s.frame(rdt); } catch (e) { reportError(e, s.name + '.frame'); } }
+  const t1 = nowMs();
+  if (!Time.paused) {
+    const gdt = rdt * Time.effScale();
+    if (Time.step > 0) {
+      Loop.acc += gdt; let n = 0;
+      while (Loop.acc >= Time.step && n < Time.maxSub) { stepUpdate(Time.step, n === 0); Loop.acc -= Time.step; n++; }
+      if (n >= Time.maxSub) Loop.acc = 0;
+      Time.alpha = Loop.acc / Time.step;
+    } else if (gdt > 0) {
+      const n = Math.min(Time.maxSub, Math.ceil(gdt / Time.maxStep - 1e-6));
+      const sub = gdt / n;
+      for (let i = 0; i < n; i++) stepUpdate(sub, i === 0);
+      Time.alpha = 1;
+    } else {
+      Time.dt = 0;
+    }
+  }
+  const t2 = nowMs();
+  for (const s of Systems) if (s.render) { try { s.render(); } catch (e) { reportError(e, s.name + '.render'); } }
+  const t3 = nowMs();
+  Perf.upd = Perf.upd * 0.9 + (t2 - t1) * 0.1; Perf.ren = Perf.ren * 0.9 + (t3 - t2) * 0.1; Perf.work = Perf.work * 0.9 + (t3 - t0) * 0.1;
+  if (Loop.once.length) { const a = Loop.once; Loop.once = []; for (const f of a) f(); }
+}
+
+function frame(ts) {
+  if (!Loop.running) return;
+  Loop.raf = requestAnimationFrame(frame);
+  const t = ts / 1000;
+  let rdt = Loop.last ? t - Loop.last : 1 / 60;
+  // 鎖幀（省電）：太早到的格子先跳過
+  if (Loop.fpsCap > 0 && Loop.last && rdt < 1 / Loop.fpsCap - 0.002) return;
+  Loop.last = t;
+  if (rdt < 0) rdt = 0;
+  if (rdt > 0.1) rdt = 0.1; // 切回來、卡很久：最多算 0.1 秒，不讓世界一次跳太遠
+  tick(rdt);
+}
+
+Loop.start = () => {
+  if (Loop.running) return;
+  Loop.running = true; Loop.last = 0;
+  if (HAS_DOM && typeof requestAnimationFrame === 'function') Loop.raf = requestAnimationFrame(frame);
+};
+Loop.stop = () => { Loop.running = false; if (HAS_DOM) cancelAnimationFrame(Loop.raf); };
+/** 測試用：不經過 requestAnimationFrame，直接跑 n 格（每格 dt 秒） */
+Loop.step = (n = 1, dt = 1 / 60) => { for (let i = 0; i < n; i++) tick(dt); };
+Loop.tick = tick;
+
+/* 頁面被收起來／切回來 */
+if (HAS_DOM) {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { PZ.emit('hidden'); }
+    else { Loop.last = 0; Perf.reset(); PZ.emit('visible'); }
+  });
+  window.addEventListener('pagehide', () => PZ.emit('hidden', 'pagehide'));
+  window.addEventListener('pageshow', (e) => { if (e.persisted) { Loop.last = 0; PZ.emit('visible', 'pageshow'); } });
+}
+
+/* ---- 05_screen.js ---- */
+/* ==========================================================================
+   05 螢幕
+   建立 #pz-root（整個遊戲）、#pz-canvas（畫布）、#pz-ui（介面層，放 DOM 介面），
+   處理大小、裝置像素比（DPR）、iPhone 瀏海安全區、直橫、全螢幕、螢幕常亮。
+   畫布解析度 = min(DPR, 2) × 畫質倍率，並限制總像素（手機 320 萬、電腦 840 萬），
+   避免 iPhone 的畫布記憶體上限與發燙。
+   ========================================================================== */
+const Screen = PZ.screen = {
+  w: 0, h: 0, dpr: 1, res: 1, pw: 0, ph: 0,
+  portrait: true, landscape: false, short: 0, long: 0,
+  safe: { t: 0, r: 0, b: 0, l: 0 },
+  root: null, canvas: null, ui: null, touch: null,
+  resCap: 2, pixelCap: Env.mobile ? 3.2e6 : 8.4e6, resScale: 1,
+  orientation: 'any', bg: '#000',
+  _probe: null, _dirty: true, _rotating: false,
+};
+
+/** 取得或建立 DOM 結構 */
+Screen.init = (cfg = {}) => {
+  if (!HAS_DOM) return;
+  Screen.orientation = cfg.orientation || 'any';
+  if (cfg.background) Screen.bg = cfg.background;
+  let root = document.getElementById('pz-root');
+  if (!root) { root = el('div'); root.id = 'pz-root'; document.body.appendChild(root); }
+  Screen.root = root;
+  let cv = document.getElementById('pz-canvas');
+  if (!cv) { cv = document.createElement('canvas'); cv.id = 'pz-canvas'; root.insertBefore(cv, root.firstChild); }
+  Screen.canvas = cv;
+  let touch = document.getElementById('pz-touch');
+  if (!touch) { touch = el('div'); touch.id = 'pz-touch'; root.appendChild(touch); }
+  Screen.touch = touch;
+  let ui = document.getElementById('pz-ui');
+  if (!ui) { ui = el('div'); ui.id = 'pz-ui'; root.appendChild(ui); }
+  else root.appendChild(ui); // 確保介面層在觸控層上面
+  Screen.ui = ui;
+  root.style.background = Screen.bg;
+  document.documentElement.style.background = Screen.bg;
+  // 安全區探針
+  const p = el('div'); p.id = 'pz-safe-probe';
+  p.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+  document.body.appendChild(p); Screen._probe = p;
+  const mark = () => { Screen._dirty = true; };
+  window.addEventListener('resize', mark);
+  window.addEventListener('orientationchange', () => { mark(); setTimeout(mark, 250); setTimeout(mark, 700); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', mark);
+  if (typeof ResizeObserver === 'function') new ResizeObserver(mark).observe(root);
+  PZ.on('quality', () => { Screen._dirty = true; });
+  // DPR 變了（視窗拖到另一個螢幕）
+  const watchDpr = () => {
+    if (!window.matchMedia) return;
+    const mq = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+    const on = () => { mark(); watchDpr(); };
+    if (mq.addEventListener) mq.addEventListener('change', on, { once: true });
+  };
+  watchDpr();
+  Screen.measure(true);
+};
+
+/** 量大小；有變動才發 resize */
+Screen.measure = (force) => {
+  if (!HAS_DOM || !Screen.root) return false;
+  if (!Screen._dirty && !force) return false;
+  Screen._dirty = false;
+  const r = Screen.root.getBoundingClientRect();
+  const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const cs = getComputedStyle(Screen._probe);
+  const safe = { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+  let res = Math.min(dpr, Screen.resCap) * Quality.cur.res * Screen.resScale;
+  res = Math.max(0.5, res);
+  if (w * h * res * res > Screen.pixelCap) res = Math.sqrt(Screen.pixelCap / (w * h));
+  const pw = Math.max(1, Math.round(w * res)), ph = Math.max(1, Math.round(h * res));
+  const changed = w !== Screen.w || h !== Screen.h || pw !== Screen.pw || ph !== Screen.ph || dpr !== Screen.dpr;
+  Object.assign(Screen, { w, h, dpr, res: pw / w, pw, ph, safe, portrait: h >= w, landscape: w > h, short: Math.min(w, h), long: Math.max(w, h) });
+  if (Screen.canvas && (Screen.canvas.width !== pw || Screen.canvas.height !== ph)) { Screen.canvas.width = pw; Screen.canvas.height = ph; }
+  const st = Screen.root.style;
+  st.setProperty('--pz-safe-t', safe.t + 'px'); st.setProperty('--pz-safe-r', safe.r + 'px'); st.setProperty('--pz-safe-b', safe.b + 'px'); st.setProperty('--pz-safe-l', safe.l + 'px');
+  Screen.root.classList.toggle('pz-portrait', Screen.portrait);
+  Screen.root.classList.toggle('pz-landscape', Screen.landscape);
+  Screen.root.classList.toggle('pz-mobile', Env.mobile);
+  Screen.checkRotate();
+  if (changed) PZ.emit('resize', w, h);
+  return changed;
+};
+
+/* 收藏庫的 PZ 圓鈕選單打開時：引擎暫停（原因 'hub'）、放開所有輸入，並發出 PZ.on('hub', open)。
+   遊戲想在這時候叫出自己的暫停選單，就聽 'hub'。 */
+if (HAS_DOM) window.addEventListener('pzhub', (e) => {
+  const open = !!(e && e.detail && e.detail.open);
+  if (open) { PZ.pause('hub'); if (PZ.input && PZ.input.releaseAll) PZ.input.releaseAll(); } else PZ.resume('hub');
+  PZ.emit('hub', open);
+});
+/** 收藏庫的 PZ 圓鈕位置（遊戲在 PZ 遊戲收藏裡開時才有）；HUD 不要放在這裡 */
+Screen.hub = () => {
+  if (!HAS_DOM || !document.querySelector('script[data-game][src*="hub.js"]') || Env.inFrame) return null;
+  const p = Store.getJSON('pzgc.v1.handle', null), W = Screen.w, H = Screen.h;
+  let x = p ? clamp(p.x * W, 6, W - 50) : W - 52;
+  const y = p ? clamp(p.y * H, 50, H - 104) : H * 0.42;
+  x = x + 22 < W / 2 ? 6 : W - 50;
+  return { x, y, w: 44, h: 44, side: x < W / 2 ? 'left' : 'right' };
+};
+
+/* ---------- 直橫限制：手機拿錯方向時蓋一層提示並暫停 ---------- */
+Screen.checkRotate = () => {
+  if (!Env.mobile || Screen.orientation === 'any') return;
+  const wrong = (Screen.orientation === 'portrait' && Screen.landscape) || (Screen.orientation === 'landscape' && Screen.portrait);
+  if (wrong === Screen._rotating) return;
+  Screen._rotating = wrong;
+  let ov = document.getElementById('pz-rotate');
+  if (wrong) {
+    if (!ov) {
+      ov = el('div', 'pz-rotate', `<div class="pz-rotate-icon"></div><div>${Screen.orientation === 'portrait' ? '請把手機轉成直的' : '請把手機轉成橫的'}</div>`);
+      ov.id = 'pz-rotate'; Screen.root.appendChild(ov);
+    }
+    ov.classList.add('on'); PZ.pause('rotate');
+  } else {
+    if (ov) ov.classList.remove('on');
+    PZ.resume('rotate');
+  }
+};
+
+/* ---------- 全螢幕（iPhone 不支援，會回傳 false）---------- */
+Screen.canFullscreen = () => HAS_DOM && !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+Screen.isFullscreen = () => HAS_DOM && !!(document.fullscreenElement || document.webkitFullscreenElement);
+Screen.fullscreen = async (on = !Screen.isFullscreen()) => {
+  if (!Screen.canFullscreen()) return false;
+  try {
+    if (on) {
+      const d = document.documentElement;
+      await (d.requestFullscreen ? d.requestFullscreen({ navigationUI: 'hide' }) : d.webkitRequestFullscreen());
+      if (Screen.orientation !== 'any' && screen.orientation && screen.orientation.lock) { try { await screen.orientation.lock(Screen.orientation); } catch (e) { /* 不支援 */ } }
+    } else await (document.exitFullscreen ? document.exitFullscreen() : document.webkitExitFullscreen());
+    return true;
+  } catch (e) { return false; }
+};
+
+/* ---------- 螢幕常亮（玩的時候不要自己暗掉）---------- */
+const Wake = { want: false, lock: null };
+Screen.keepAwake = async (on = true) => {
+  Wake.want = on;
+  if (!HAS_DOM || !('wakeLock' in navigator)) return false;
+  try {
+    if (on && !Wake.lock) { Wake.lock = await navigator.wakeLock.request('screen'); Wake.lock.addEventListener('release', () => { Wake.lock = null; }); }
+    else if (!on && Wake.lock) { await Wake.lock.release(); Wake.lock = null; }
+    return true;
+  } catch (e) { return false; }
+};
+PZ.on('visible', () => { if (Wake.want) Screen.keepAwake(true); });
+
+addSystem({ name: 'screen', order: -100, frame() { Screen.measure(); } });
+
+/* ---- 06_input.js ---- */
+/* ==========================================================================
+   06 輸入：鍵盤、滑鼠／觸控、手把、手勢、虛擬搖桿與按鈕
+   遊戲裡只要問「動作」：
+     PZ.input.bind({ fire: ['Space', 'KeyJ', 'PadA', 'PadRT'], dash: ['ShiftLeft', 'PadB'] });
+     if (PZ.input.pressed('fire')) …    // 這一格剛按下
+     if (PZ.input.down('fire')) …       // 按住中
+     const m = PZ.input.move;           // 移動向量 {x, y, mag}：WASD／方向鍵／左類比／虛擬搖桿合併
+   手機：PZ.input.stick({ target: 'move' }) 浮動搖桿；PZ.input.button({ action: 'fire', label: '開火' }) 按鈕。
+   手勢：PZ.input.gesture（雙指縮放旋轉、拖曳、滾輪）＋ PZ.input.tap（點一下）。
+   視窗失焦、切到背景時會自動放開所有按鍵，不會「卡住一直走」。
+   ========================================================================== */
+const PAD_BTN = ['PadA', 'PadB', 'PadX', 'PadY', 'PadLB', 'PadRB', 'PadLT', 'PadRT', 'PadBack', 'PadStart', 'PadLS', 'PadRS', 'PadUp', 'PadDown', 'PadLeft', 'PadRight', 'PadHome'];
+const DEFAULT_BINDS = {
+  up: ['KeyW', 'ArrowUp', 'PadUp'], down: ['KeyS', 'ArrowDown', 'PadDown'], left: ['KeyA', 'ArrowLeft', 'PadLeft'], right: ['KeyD', 'ArrowRight', 'PadRight'],
+  confirm: ['Enter', 'Space', 'PadA'], cancel: ['Escape', 'Backspace', 'PadB'], pause: ['Escape', 'KeyP', 'PadStart'],
+};
+const GAME_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab']);
+
+class Action {
+  constructor(name) { this.name = name; this.binds = []; this.down = false; this.pressed = false; this.released = false; this._lp = false; this._lr = false; this._prev = false; this.time = 0; }
+}
+
+const Input = PZ.input = {
+  enabled: true, device: Env.mobile ? 'touch' : 'mouse',
+  keys: new Set(), mouse: new Set(), padDown: new Set(), virtDown: new Map(),
+  actions: new Map(),
+  move: { x: 0, y: 0, mag: 0 }, aim: { x: 0, y: 0, mag: 0, active: false },
+  pointers: new Map(),
+  pointer: { id: -1, x: 0, y: 0, down: false, pressed: false, released: false, type: 'mouse', sx: 0, sy: 0, t0: 0, moved: false, get wx() { return PZ.cam ? PZ.cam.toWorldX(this.x, this.y) : this.x; }, get wy() { return PZ.cam ? PZ.cam.toWorldY(this.x, this.y) : this.y; } },
+  gesture: { active: false, panX: 0, panY: 0, zoom: 1, rotate: 0, cx: 0, cy: 0, fingers: 0 },
+  wheel: 0, tap: null, doubleTap: null, longPress: null,
+  pad: null, padId: -1, deadzone: 0.2,
+  virt: { move: { x: 0, y: 0, on: false }, aim: { x: 0, y: 0, on: false } },
+  _updated: false, _edgeAge: 0, _lastTap: null, _handlers: new Map(),
+};
+
+/** 綁定動作：bind('fire', 'Space', 'PadA') 或 bind({ fire: [...], jump: [...] }) */
+Input.bind = (name, ...codes) => {
+  if (typeof name === 'object') { for (const k in name) Input.bind(k, ...[].concat(name[k])); return; }
+  let a = Input.actions.get(name); if (!a) { a = new Action(name); Input.actions.set(name, a); }
+  a.binds = codes.flat();
+  return a;
+};
+Input.unbind = (name) => Input.actions.delete(name);
+for (const k in DEFAULT_BINDS) Input.bind(k, DEFAULT_BINDS[k]);
+const _act = (n) => Input.actions.get(n);
+Input.down = (n) => { const a = _act(n); return !!(a && a.down); };
+Input.pressed = (n) => { const a = _act(n); return !!(a && a.pressed); };
+Input.released = (n) => { const a = _act(n); return !!(a && a.released); };
+/** 按住多久了（秒） */
+Input.held = (n) => { const a = _act(n); return a && a.down ? Time.real - a.time : 0; };
+/** 立即回呼（暫停中也會觸發，適合「暫停」「開選單」）：onPress('pause', fn) */
+Input.onPress = (n, fn) => { let arr = Input._handlers.get(n); if (!arr) Input._handlers.set(n, (arr = [])); arr.push(fn); return () => { const i = arr.indexOf(fn); if (i >= 0) arr.splice(i, 1); }; };
+function firePress(code) {
+  for (const a of Input.actions.values()) if (a.binds.includes(code)) { a._lp = true; const hs = Input._handlers.get(a.name); if (hs) for (const f of hs.slice()) safeCall(f, null, a.name); }
+}
+function fireRelease(code) { for (const a of Input.actions.values()) if (a.binds.includes(code)) a._lr = true; }
+function setDevice(d) { if (Input.device !== d) { Input.device = d; if (Screen.root) Screen.root.dataset.input = d; PZ.emit('device', d); } }
+
+/** 放開所有輸入（失焦、切背景、開選單時） */
+Input.releaseAll = () => {
+  for (const c of Input.keys) fireRelease(c);
+  Input.keys.clear(); Input.mouse.clear(); Input.padDown.clear(); Input.virtDown.clear();
+  for (const p of Input.pointers.values()) p.dead = true;
+  Input.pointers.clear();
+  Input.pointer.down = false;
+  Input.virt.move.x = Input.virt.move.y = 0; Input.virt.move.on = false;
+  Input.virt.aim.x = Input.virt.aim.y = 0; Input.virt.aim.on = false;
+  for (const s of Sticks) s.reset();
+  for (const b of TButtons) b._up();
+  Input.gesture.active = false; Input.gesture.fingers = 0;
+};
+
+/* ---------- 鍵盤 ---------- */
+const typing = (t) => t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+function onKeyDown(e) {
+  if (!Input.enabled || typing(e.target)) return;
+  setDevice('keyboard');
+  if (GAME_KEYS.has(e.code) && !e.ctrlKey && !e.metaKey) e.preventDefault();
+  if (e.repeat) return;
+  Input.keys.add(e.code); firePress(e.code);
+}
+function onKeyUp(e) { if (Input.keys.delete(e.code)) fireRelease(e.code); }
+
+/* ---------- 指標（滑鼠、觸控、筆）---------- */
+const UI_SEL = 'button,a,input,select,textarea,label,[data-ui],.pz-block,.pz-tbtn,.pz-stick-zone';
+function isUiTarget(t) { return t && t.closest && t !== Screen.canvas && !!t.closest(UI_SEL); }
+function ptrInfo(e) { return { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, px: e.clientX, py: e.clientY, t0: Time.real, type: e.pointerType || 'mouse', button: e.button, moved: false, long: false }; }
+function onPointerDown(e) {
+  if (!Input.enabled) return;
+  const wasTouch = Input.device === 'touch';
+  setDevice(e.pointerType === 'touch' ? 'touch' : 'mouse');
+  if (isUiTarget(e.target)) return;
+  // 剛從鍵盤／滑鼠／手把換回手指：觸控層原本是藏著的，這一下落在畫布上——交給底下那支搖桿，不要吃掉
+  if (e.pointerType === 'touch' && !wasTouch && Screen.touch && !Screen.touch.classList.contains('pz-ui-open')) {
+    for (const st of Sticks) if (st.contains(e.clientX, e.clientY) && st.begin(e)) return;
+  }
+  const p = ptrInfo(e);
+  Input.pointers.set(e.pointerId, p);
+  try { Screen.root.setPointerCapture(e.pointerId); } catch (er) { /* 合成事件 */ }
+  if (e.pointerType === 'mouse') { const code = 'Mouse' + e.button; Input.mouse.add(code); firePress(code); }
+  const P = Input.pointer;
+  if (!P.down || e.isPrimary) { Object.assign(P, { id: e.pointerId, x: p.x, y: p.y, sx: p.x, sy: p.y, t0: p.t0, type: p.type, down: true, pressed: true, moved: false }); }
+  gestureStart();
+}
+function onPointerMove(e) {
+  if (e.pointerType === 'mouse' && !Input.pointers.size) { Input.pointer.x = e.clientX; Input.pointer.y = e.clientY; return; }
+  const p = Input.pointers.get(e.pointerId); if (!p) return;
+  p.px = p.x; p.py = p.y; p.x = e.clientX; p.y = e.clientY;
+  if (!p.moved && Math.hypot(p.x - p.sx, p.y - p.sy) > (p.type === 'touch' ? 10 : 5)) p.moved = true;
+  if (e.pointerId === Input.pointer.id) { Input.pointer.x = p.x; Input.pointer.y = p.y; Input.pointer.moved = p.moved; }
+  gestureMove();
+}
+function onPointerUp(e) {
+  if (e.pointerType === 'mouse') { const code = 'Mouse' + e.button; if (Input.mouse.delete(code)) fireRelease(code); }
+  const p = Input.pointers.get(e.pointerId); if (!p) return;
+  Input.pointers.delete(e.pointerId);
+  const dur = Time.real - p.t0;
+  if (e.type === 'pointerup' && !p.moved && dur < 0.35 && !p.long && Input.gesture.fingers <= 1) {
+    const tap = { x: p.x, y: p.y, type: p.type, get wx() { return PZ.cam ? PZ.cam.toWorldX(this.x, this.y) : this.x; }, get wy() { return PZ.cam ? PZ.cam.toWorldY(this.x, this.y) : this.y; } };
+    Input.tap = tap;
+    const lt = Input._lastTap;
+    if (lt && Time.real - lt.t < 0.3 && Math.hypot(lt.x - p.x, lt.y - p.y) < 30) { Input.doubleTap = tap; Input._lastTap = null; } else Input._lastTap = { x: p.x, y: p.y, t: Time.real };
+    PZ.emit('tap', tap);
+  }
+  if (e.pointerId === Input.pointer.id) {
+    Input.pointer.down = false; Input.pointer.released = true; Input.pointer.x = p.x; Input.pointer.y = p.y;
+    // 換另一根手指當主要指標
+    for (const q of Input.pointers.values()) { Object.assign(Input.pointer, { id: q.id, x: q.x, y: q.y, down: true }); break; }
+  }
+  gestureStart();
+}
+function onWheel(e) {
+  if (!Input.enabled || isUiTarget(e.target)) return;
+  e.preventDefault();
+  let d = e.deltaY; if (e.deltaMode === 1) d *= 32; else if (e.deltaMode === 2) d *= 400;
+  Input.wheel += d;
+  Input.gesture.zoom *= Math.exp(-d * (e.ctrlKey ? 0.01 : 0.0015)); // 觸控板雙指縮放會帶 ctrlKey
+  Input.gesture.cx = e.clientX; Input.gesture.cy = e.clientY;
+}
+
+/* ---------- 手勢：雙指縮放／旋轉／平移 ---------- */
+const G0 = { d: 0, a: 0, cx: 0, cy: 0 };
+function twoFingers() { const arr = [...Input.pointers.values()]; return arr.length >= 2 ? [arr[0], arr[1]] : null; }
+function gestureStart() {
+  const g = Input.gesture; g.fingers = Input.pointers.size;
+  const tf = twoFingers();
+  if (tf) { const [a, b] = tf; G0.d = Math.hypot(b.x - a.x, b.y - a.y) || 1; G0.a = Math.atan2(b.y - a.y, b.x - a.x); G0.cx = (a.x + b.x) / 2; G0.cy = (a.y + b.y) / 2; g.active = true; }
+  else if (Input.pointers.size === 1) { const p = Input.pointers.values().next().value; G0.cx = p.x; G0.cy = p.y; g.active = false; }
+  else g.active = false;
+}
+function gestureMove() {
+  const g = Input.gesture, tf = twoFingers();
+  if (tf) {
+    const [a, b] = tf, d = Math.hypot(b.x - a.x, b.y - a.y) || 1, ang = Math.atan2(b.y - a.y, b.x - a.x), cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+    g.zoom *= d / G0.d; g.rotate += wrapAngle(ang - G0.a); g.panX += cx - G0.cx; g.panY += cy - G0.cy; g.cx = cx; g.cy = cy;
+    G0.d = d; G0.a = ang; G0.cx = cx; G0.cy = cy; g.active = true;
+  } else if (Input.pointers.size === 1) {
+    const p = Input.pointers.values().next().value;
+    if (p.moved) { g.panX += p.x - G0.cx; g.panY += p.y - G0.cy; }
+    G0.cx = p.x; G0.cy = p.y; g.cx = p.x; g.cy = p.y;
+  }
+}
+
+/* ---------- 手把 ---------- */
+function pollPads() {
+  if (!HAS_DOM || !navigator.getGamepads) return;
+  let pads; try { pads = navigator.getGamepads(); } catch (e) { return; }
+  let best = null;
+  for (const gp of pads) { if (!gp || !gp.connected) continue; if (!best || gp.timestamp > best.timestamp) best = gp; }
+  Input.pad = best;
+  const was = new Set(Input.padDown);
+  Input.padDown.clear();
+  if (!best) { for (const c of was) fireRelease(c); return; }
+  const std = best.mapping === 'standard' || best.buttons.length >= 16;
+  let any = false;
+  if (std) {
+    for (let i = 0; i < PAD_BTN.length && i < best.buttons.length; i++) {
+      const b = best.buttons[i], on = b.pressed || b.value > (i === 6 || i === 7 ? 0.35 : 0.5);
+      if (on) { Input.padDown.add(PAD_BTN[i]); any = true; if (!was.has(PAD_BTN[i])) firePress(PAD_BTN[i]); }
+    }
+  }
+  for (const c of was) if (!Input.padDown.has(c)) fireRelease(c);
+  const dz = (x, y) => { const m = Math.hypot(x, y); if (m < Input.deadzone) return [0, 0, 0]; const k = Math.min(1, (m - Input.deadzone) / (1 - Input.deadzone)) / m; return [x * k, y * k, Math.min(1, m)]; };
+  const ax = best.axes || [];
+  const L = dz(ax[0] || 0, ax[1] || 0), R = dz(ax[2] || 0, ax[3] || 0);
+  Input._padL = L; Input._padR = R;
+  if (any || L[2] > 0 || R[2] > 0) setDevice('gamepad');
+}
+/** 手把震動（Chrome、Edge 支援；不支援就安靜跳過） */
+Input.rumble = (strong = 0.6, weak = 0.4, ms = 120) => {
+  const p = Input.pad; if (!p || !p.vibrationActuator || !Settings.get('haptics')) return;
+  try { p.vibrationActuator.playEffect('dual-rumble', { startDelay: 0, duration: ms, strongMagnitude: clamp01(strong), weakMagnitude: clamp01(weak) }); } catch (e) { /* ignore */ }
+};
+
+/* ---------- 每格計算動作與搖桿 ---------- */
+function codeDown(c) {
+  if (c.startsWith('Pad')) return Input.padDown.has(c);
+  if (c.startsWith('Mouse')) return Input.mouse.has(c);
+  return Input.keys.has(c);
+}
+function computeActions() {
+  for (const a of Input.actions.values()) {
+    let d = Input.virtDown.get(a.name) > 0;
+    if (!d) for (const c of a.binds) if (codeDown(c)) { d = true; break; }
+    if (d && !a._prev) { a._lp = true; a.time = Time.real; }
+    if (!d && a._prev) a._lr = true;
+    a.down = d; a._prev = d;
+    a.pressed = a._lp; a.released = a._lr;
+  }
+}
+function computeAxes() {
+  const kx = (Input.down('right') ? 1 : 0) - (Input.down('left') ? 1 : 0), ky = (Input.down('down') ? 1 : 0) - (Input.down('up') ? 1 : 0);
+  const cands = [];
+  if (kx || ky) { const m = Math.hypot(kx, ky); cands.push([kx / m, ky / m, 1]); }
+  if (Input._padL && Input._padL[2] > 0) cands.push(Input._padL);
+  const vm = Input.virt.move; if (vm.on) { const m = Math.min(1, Math.hypot(vm.x, vm.y)); cands.push([vm.x, vm.y, m]); }
+  let best = null; for (const c of cands) if (!best || c[2] > best[2]) best = c;
+  const M = Input.move; if (best) { M.x = best[0]; M.y = best[1]; M.mag = best[2]; } else { M.x = M.y = M.mag = 0; }
+  const A = Input.aim, va = Input.virt.aim;
+  if (va.on) { A.x = va.x; A.y = va.y; A.mag = Math.min(1, Math.hypot(va.x, va.y)); A.active = A.mag > 0.15; }
+  else if (Input._padR && Input._padR[2] > 0) { A.x = Input._padR[0]; A.y = Input._padR[1]; A.mag = Input._padR[2]; A.active = A.mag > 0.3; }
+  else { A.x = A.y = A.mag = 0; A.active = false; }
+}
+function checkLongPress() {
+  for (const p of Input.pointers.values()) if (!p.long && !p.moved && Time.real - p.t0 > 0.5 && Input.pointers.size === 1) {
+    p.long = true; const lp = { x: p.x, y: p.y, get wx() { return PZ.cam ? PZ.cam.toWorldX(this.x, this.y) : this.x; }, get wy() { return PZ.cam ? PZ.cam.toWorldY(this.x, this.y) : this.y; } };
+    Input.longPress = lp; PZ.emit('longpress', lp);
+  }
+}
+function consumeEdges() {
+  for (const a of Input.actions.values()) { a._lp = a._lr = false; a.pressed = a.released = false; }
+  Input.pointer.pressed = Input.pointer.released = false;
+  Input._edgeAge = 0;
+}
+addSystem({
+  name: 'input', order: -90,
+  frame(rdt) { pollPads(); computeActions(); computeAxes(); checkLongPress(); Input._updated = false; Input._edgeAge += rdt; },
+  update(dt, first) { /* 動作的「剛按下」只在這格第一次更新看得到 */ },
+});
+addSystem({ name: 'input-consume', order: 1000, update(dt, first) { if (first) { Input._updated = true; } } });
+addSystem({
+  name: 'input-end', order: 1000,
+  render() {
+    // 更新過、或暫停中、或停頓太久（超過 0.2 秒就不再緩衝）→ 清掉這格的「剛按下」
+    if (Input._updated || Time.paused || Input._edgeAge > 0.2) consumeEdges();
+    Input.tap = Input.doubleTap = Input.longPress = null;
+    const g = Input.gesture; g.panX = g.panY = 0; g.zoom = 1; g.rotate = 0; Input.wheel = 0;
+  },
+});
+
+/* ---------- 虛擬搖桿（DOM，畫在 #pz-touch）---------- */
+const Sticks = [];
+/**
+ * PZ.input.stick({ target: 'move'|'aim', zone: {l,t,r,b}（0～1，畫面比例）, radius: 56, fixed: false, x, y, cls, keep })
+ * 在場景裡建的搖桿，離開那個場景時自動拿掉；在 load 裡建、或 keep: true 的會一直留著。
+ * 浮動式：手指在區域裡按下的地方出現搖桿；固定式（fixed:true）：永遠在 x,y（距左／下的 px）。
+ */
+Input.stick = (o = {}) => {
+  const s = { target: o.target || 'move', zone: Object.assign({ l: 0, t: 0.3, r: 0.55, b: 1 }, o.zone || {}), radius: o.radius || 56, fixed: !!o.fixed, x: o.x || 96, y: o.y || 120, id: null, ox: 0, oy: 0, visible: true };
+  const zoneEl = el('div', 'pz-stick-zone'), base = el('div', 'pz-stick' + (s.fixed ? ' fixed' : '')), knob = el('div', 'pz-stick-knob');
+  base.appendChild(knob); zoneEl.appendChild(base);
+  if (o.cls) base.classList.add(o.cls);
+  s.el = zoneEl; s.base = base; s.knob = knob;
+  const V = () => Input.virt[s.target];
+  const layout = () => {
+    const z = s.zone; Object.assign(zoneEl.style, { left: z.l * 100 + '%', top: z.t * 100 + '%', width: (z.r - z.l) * 100 + '%', height: (z.b - z.t) * 100 + '%' });
+    base.style.width = base.style.height = s.radius * 2 + 'px';
+    if (s.fixed) { base.style.left = s.x + 'px'; base.style.bottom = s.y + 'px'; base.style.top = 'auto'; }
+  };
+  const setKnob = (dx, dy) => { knob.style.transform = `translate(${dx}px,${dy}px)`; };
+  s.reset = () => { s.id = null; const v = V(); v.x = v.y = 0; v.on = false; base.classList.remove('on'); setKnob(0, 0); };
+  /** 開始拖：一般由區域自己的 pointerdown 呼叫；剛從鍵盤／滑鼠換回觸控的第一下由 onPointerDown 轉過來 */
+  s.begin = (e) => {
+    if (!Input.enabled || s.id !== null) return false;
+    e.preventDefault(); setDevice('touch');
+    s.id = e.pointerId; try { zoneEl.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ }
+    const r = zoneEl.getBoundingClientRect();
+    if (s.fixed) { const br = base.getBoundingClientRect(); s.ox = br.left + br.width / 2; s.oy = br.top + br.height / 2; }
+    else { s.ox = e.clientX; s.oy = e.clientY; base.style.left = (e.clientX - r.left) + 'px'; base.style.top = (e.clientY - r.top) + 'px'; }
+    base.classList.add('on'); move(e);
+    return true;
+  };
+  zoneEl.addEventListener('pointerdown', s.begin);
+  s.contains = (x, y) => { if (!s.visible || zoneEl.style.display === 'none') return false; const r = zoneEl.getBoundingClientRect(); return r.width > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; };
+  const move = (e) => {
+    if (e.pointerId !== s.id) return;
+    let dx = e.clientX - s.ox, dy = e.clientY - s.oy; const m = Math.hypot(dx, dy), R = s.radius;
+    // 浮動式：拉超過半徑時底座跟著手指走（不會「拉不動」）
+    if (!s.fixed && m > R * 1.35) { const k = (m - R * 1.35) / m; s.ox += dx * k; s.oy += dy * k; const r = zoneEl.getBoundingClientRect(); base.style.left = (s.ox - r.left) + 'px'; base.style.top = (s.oy - r.top) + 'px'; dx = e.clientX - s.ox; dy = e.clientY - s.oy; }
+    const mm = Math.hypot(dx, dy), k = mm > R ? R / mm : 1;
+    setKnob(dx * k, dy * k);
+    const v = V(), dzr = 0.12, nm = Math.min(1, mm / R);
+    if (nm < dzr) { v.x = v.y = 0; } else { const sc = (nm - dzr) / (1 - dzr) / (mm || 1); v.x = dx * sc; v.y = dy * sc; }
+    v.on = true;
+  };
+  zoneEl.addEventListener('pointermove', move);
+  const up = (e) => { if (e.pointerId === s.id) s.reset(); };
+  zoneEl.addEventListener('pointerup', up); zoneEl.addEventListener('pointercancel', up); zoneEl.addEventListener('lostpointercapture', up);
+  s.show = (on) => { s.visible = on; zoneEl.style.display = on ? '' : 'none'; if (!on) s.reset(); };
+  s.remove = () => { s.reset(); zoneEl.remove(); const i = Sticks.indexOf(s); if (i >= 0) Sticks.splice(i, 1); };
+  s.layout = layout;
+  layout();
+  if (Screen.touch) Screen.touch.appendChild(zoneEl);
+  s.scene = o.keep ? null : (typeof Scenes !== 'undefined' && Scenes.name) || null; // 在場景裡建的：離開場景時自動拿掉（o.keep 不拿）
+  Sticks.push(s);
+  return s;
+};
+
+/* ---------- 觸控按鈕 ---------- */
+const TButtons = [];
+/**
+ * PZ.input.button({ action: 'fire', label: '開火', icon: '<svg…>', right: 24, bottom: 110, size: 76, cls, keep })（跟搖桿一樣：場景裡建的離開場景自動拿掉）
+ * 按住就是 down(action)；b.cooldown(0～1) 顯示冷卻圈、b.badge(n) 顯示數量、b.disable(true)。
+ */
+Input.button = (o = {}) => {
+  const b = { action: o.action || 'fire', ids: new Set(), disabled: false };
+  const e = el('button', 'pz-tbtn' + (o.cls ? ' ' + o.cls : ''), (o.icon || '') + (o.label ? `<span class="pz-tbtn-label">${o.label}</span>` : ''));
+  e.type = 'button'; e.setAttribute('aria-label', o.label || o.action);
+  const size = o.size || 72; e.style.width = e.style.height = size + 'px';
+  for (const k of ['left', 'right', 'top', 'bottom']) if (o[k] != null) e.style[k] = typeof o[k] === 'number' ? `calc(${o[k]}px + var(--pz-safe-${k[0]}, 0px))` : o[k];
+  b.el = e;
+  const down = (ev) => {
+    ev.preventDefault(); ev.stopPropagation(); setDevice('touch');
+    if (b.disabled || !Input.enabled) return;
+    b.ids.add(ev.pointerId); try { e.setPointerCapture(ev.pointerId); } catch (er) { /* ignore */ }
+    Input.virtDown.set(b.action, (Input.virtDown.get(b.action) || 0) + 1);
+    e.classList.add('on');
+    const hs = Input._handlers.get(b.action); if (hs) for (const f of hs.slice()) safeCall(f, null, b.action);
+    if (o.haptic !== false) Haptics.tap('light');
+  };
+  const up = (ev) => { if (!b.ids.delete(ev.pointerId)) return; Input.virtDown.set(b.action, Math.max(0, (Input.virtDown.get(b.action) || 1) - 1)); if (!b.ids.size) e.classList.remove('on'); };
+  b._up = () => { if (b.ids.size) Input.virtDown.set(b.action, Math.max(0, (Input.virtDown.get(b.action) || 0) - b.ids.size)); b.ids.clear(); e.classList.remove('on'); };
+  e.addEventListener('pointerdown', down);
+  e.addEventListener('pointerup', up); e.addEventListener('pointercancel', up); e.addEventListener('lostpointercapture', up);
+  e.addEventListener('contextmenu', (ev) => ev.preventDefault());
+  b.cooldown = (f) => { e.style.setProperty('--pz-cd', clamp01(f).toFixed(3)); e.classList.toggle('cd', f > 0.001); };
+  b.badge = (n) => { e.dataset.badge = n == null || n === '' ? '' : String(n); };
+  b.disable = (on) => { b.disabled = on; e.classList.toggle('off', on); if (on) b._up(); };
+  b.label = (t) => { const s = e.querySelector('.pz-tbtn-label'); if (s) s.textContent = t; };
+  b.show = (on) => { e.style.display = on ? '' : 'none'; if (!on) b._up(); };
+  b.remove = () => { b._up(); e.remove(); const i = TButtons.indexOf(b); if (i >= 0) TButtons.splice(i, 1); };
+  if (Screen.touch) Screen.touch.appendChild(e);
+  b.scene = o.keep ? null : (typeof Scenes !== 'undefined' && Scenes.name) || null;
+  TButtons.push(b);
+  return b;
+};
+/** 虛擬按鈕／搖桿要不要顯示：'auto'（觸控時才出現）、true、false */
+Input.touchMode = 'auto';
+PZ.on('device', (d) => { if (Screen.touch && Input.touchMode === 'auto') Screen.touch.classList.toggle('pz-hide', d !== 'touch'); });
+Input.showTouch = (mode) => { Input.touchMode = mode; if (!Screen.touch) return; Screen.touch.classList.toggle('pz-hide', mode === false || (mode === 'auto' && Input.device !== 'touch')); };
+Input.clearTouch = () => { for (const s of Sticks.slice()) s.remove(); for (const b of TButtons.slice()) b.remove(); };
+
+/* ---------- 觸覺回饋：Android 用震動；iPhone（iOS 18+）用 switch 開關的系統觸感 ---------- */
+const Haptics = PZ.haptic = (() => {
+  let lbl = null, inp = null, last = 0;
+  const ios = () => {
+    if (!HAS_DOM) return;
+    if (!lbl) { lbl = el('label'); lbl.setAttribute('aria-hidden', 'true'); lbl.style.cssText = 'position:fixed;left:-99px;top:0;width:1px;height:1px;opacity:0;pointer-events:none'; inp = document.createElement('input'); inp.type = 'checkbox'; inp.setAttribute('switch', ''); inp.tabIndex = -1; lbl.appendChild(inp); document.body.appendChild(lbl); }
+    try { lbl.click(); } catch (e) { /* ignore */ }
+  };
+  const PAT = { light: [8], medium: [16], heavy: [30], success: [12, 60, 18], error: [24, 50, 24, 50, 24], tick: [5] };
+  const h = {
+    tap(kind = 'light') {
+      if (!HAS_DOM || !Settings.get('haptics')) return;
+      const t = nowMs(); if (t - last < 30) return; last = t;
+      const pat = PAT[kind] || PAT.light;
+      const act = navigator.userActivation; if (act && !act.hasBeenActive) return; // 使用者還沒碰過畫面：瀏覽器不准震
+      if (navigator.vibrate) { try { navigator.vibrate(pat); } catch (e) { /* ignore */ } return; }
+      if (Env.ios) { ios(); if (pat.length > 1) for (let i = 2; i < pat.length; i += 2) setTimeout(ios, pat.slice(0, i).reduce((a, b) => a + b, 0)); }
+    },
+  };
+  return h;
+})();
+
+/* ---------- 安裝事件 ---------- */
+Input.init = () => {
+  if (!HAS_DOM) return;
+  const R = Screen.root;
+  window.addEventListener('keydown', onKeyDown, { passive: false });
+  window.addEventListener('keyup', onKeyUp);
+  R.addEventListener('pointerdown', onPointerDown);
+  R.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' && !Input.pointers.size) { Input.pointer.x = e.clientX; Input.pointer.y = e.clientY; } });
+  R.addEventListener('pointerup', onPointerUp); R.addEventListener('pointercancel', onPointerUp);
+  R.addEventListener('lostpointercapture', (e) => { if (Input.pointers.has(e.pointerId)) onPointerUp(e); });
+  R.addEventListener('wheel', onWheel, { passive: false });
+  R.addEventListener('contextmenu', (e) => { if (!typing(e.target)) e.preventDefault(); });
+  // iPhone Safari：擋掉整頁雙指縮放、雙擊放大
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+  document.addEventListener('gesturechange', (e) => e.preventDefault());
+  document.addEventListener('dblclick', (e) => { if (!typing(e.target)) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  window.addEventListener('blur', Input.releaseAll);
+  PZ.on('hidden', Input.releaseAll);
+  window.addEventListener('gamepadconnected', () => { setDevice('gamepad'); PZ.emit('pad', true); });
+  window.addEventListener('gamepaddisconnected', () => PZ.emit('pad', false));
+  // 在 Claude 的頁面框裡，要先點一下畫面鍵盤才收得到：點畫面時把焦點拿回來
+  R.tabIndex = -1; R.style.outline = 'none';
+  R.addEventListener('pointerdown', () => { if (document.activeElement === document.body || !document.activeElement) { try { R.focus({ preventScroll: true }); } catch (e) { /* ignore */ } } });
+  R.dataset.input = Input.device;
+  Screen.touch.classList.toggle('pz-hide', Input.device !== 'touch');
+};
+
+/* ---- 07_gl.js ---- */
+/* ==========================================================================
+   07 WebGL2 繪圖器
+   - 所有東西都是「四邊形」：貼圖、圓、光暈、線、文字都走同一個批次，一次畫完。
+   - 一般混合與「加亮（發光）」可以在同一批裡混著畫（預乘透明度的技巧），粒子不會打斷批次。
+   - 同一批最多 8 張貼圖；換貼圖不必重送資料。
+   - 後製：場景先畫到離屏畫布，再一次做泛光、衝擊波扭曲、色差、調色、暗角、閃白、顆粒。
+   - iPhone 切到背景可能弄丟 WebGL（context lost）：會自動重建；一直救不回來就換成 Canvas2D。
+   ========================================================================== */
+const MAX_QUADS = 8192, VERT_WORDS = 6, QUAD_WORDS = VERT_WORDS * 4;
+const BLEND = { normal: 0, multiply: 1, screen: 2, erase: 3, add: 4 };
+const MODE = { sprite: 0, solid: 1, circle: 2, ring: 3, glow: 4, line: 5, silhouette: 6, beam: 7 };
+
+const SPRITE_VS = `#version 300 es
+layout(location=0) in vec2 aPos;
+layout(location=1) in vec2 aUV;
+layout(location=2) in vec4 aCol;
+layout(location=3) in vec4 aExt;
+uniform vec2 uView;
+uniform vec2 uOff;
+out vec2 vUV; out vec4 vCol; flat out int vTex; flat out int vMode; out float vAdd; out float vParam;
+void main(){
+  gl_Position = vec4(aPos * uView + uOff, 0.0, 1.0);
+  vUV = aUV; vCol = aCol;
+  vTex = int(aExt.x * 255.0 + 0.5); vMode = int(aExt.y * 255.0 + 0.5); vAdd = aExt.z; vParam = aExt.w;
+}`;
+const SPRITE_FS = `#version 300 es
+precision mediump float;
+uniform sampler2D uT[8];
+in vec2 vUV; in vec4 vCol; flat in int vTex; flat in int vMode; in float vAdd; in float vParam;
+out vec4 o;
+vec4 tx(int i, vec2 uv){
+  if(i==0) return texture(uT[0],uv); if(i==1) return texture(uT[1],uv); if(i==2) return texture(uT[2],uv); if(i==3) return texture(uT[3],uv);
+  if(i==4) return texture(uT[4],uv); if(i==5) return texture(uT[5],uv); if(i==6) return texture(uT[6],uv); return texture(uT[7],uv);
+}
+void main(){
+  vec4 col = vec4(vCol.rgb * vCol.a, vCol.a);
+  vec4 c;
+  if (vMode == 0) {
+    c = tx(vTex, vUV) * col;
+    if (vParam > 0.0) c.rgb = mix(c.rgb, vec3(c.a), vParam);
+  } else if (vMode == 1) {
+    c = col;
+  } else if (vMode == 2) {
+    float d = length(vUV); float aa = max(fwidth(d), 1e-4);
+    c = col * (1.0 - smoothstep(1.0 - aa, 1.0, d));
+  } else if (vMode == 3) {
+    float d = length(vUV); float aa = max(fwidth(d), 1e-4); float inner = 1.0 - max(vParam, aa * 1.5);
+    c = col * (smoothstep(inner - aa, inner, d) * (1.0 - smoothstep(1.0 - aa, 1.0, d)));
+  } else if (vMode == 4) {
+    float d = length(vUV); float a = max(0.0, 1.0 - d); a = a * a * (1.0 + vParam * 3.0 * a);
+    c = col * a;
+  } else if (vMode == 5) {
+    float d = abs(vUV.y); float aa = max(fwidth(d), 1e-4);
+    c = col * (1.0 - smoothstep(1.0 - aa, 1.0, d));
+  } else if (vMode == 6) {
+    c = col * tx(vTex, vUV).a;
+  } else {
+    // 光束：v 是「到中線的距離 ÷ 寬端半寬」，除以這裡的半寬比例（窄端比例放在 param）才不會在梯形對角線折一下
+    float hw = mix(vParam, 1.0, clamp(vUV.x, 0.0, 1.0));
+    float a = clamp(1.0 - abs(vUV.y) / max(hw, 0.001), 0.0, 1.0);
+    c = col * (a * a * (3.0 - 2.0 * a));
+  }
+  c.a *= (1.0 - vAdd);
+  o = c;
+}`;
+const FULL_VS = `#version 300 es
+out vec2 vUV;
+void main(){ vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); vUV = p; gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }`;
+const BRIGHT_FS = `#version 300 es
+precision mediump float;
+uniform sampler2D uTex; uniform vec2 uTexel; uniform float uThresh; in vec2 vUV; out vec4 o;
+void main(){
+  vec3 c = texture(uTex, vUV + uTexel * vec2(-0.5,-0.5)).rgb + texture(uTex, vUV + uTexel * vec2(0.5,-0.5)).rgb
+         + texture(uTex, vUV + uTexel * vec2(-0.5,0.5)).rgb + texture(uTex, vUV + uTexel * vec2(0.5,0.5)).rgb;
+  c *= 0.25;
+  // 亮度：以人眼亮度為主（飽和的橘、紅這類「顏色很鮮但不是光」的美術不會整片發光），
+  // 再參考最亮的通道（霓虹、火光這種純色光還是會微微發光）；疊加發光（add）疊出來的白光照樣強烈泛光
+  float l = max(dot(c, vec3(0.2126, 0.7152, 0.0722)), max(c.r, max(c.g, c.b)) * 0.85);
+  float k = smoothstep(uThresh, uThresh + 0.3, l) * (0.35 + 0.65 * min(l, 1.0));
+  o = vec4(c * k, 1.0);
+}`;
+const DOWN_FS = `#version 300 es
+precision mediump float;
+uniform sampler2D uTex; uniform vec2 uTexel; in vec2 vUV; out vec4 o;
+void main(){
+  vec3 s = texture(uTex, vUV).rgb * 4.0;
+  s += texture(uTex, vUV - uTexel).rgb; s += texture(uTex, vUV + uTexel).rgb;
+  s += texture(uTex, vUV + vec2(uTexel.x, -uTexel.y)).rgb; s += texture(uTex, vUV - vec2(uTexel.x, -uTexel.y)).rgb;
+  o = vec4(s / 8.0, 1.0);
+}`;
+const UP_FS = `#version 300 es
+precision mediump float;
+uniform sampler2D uTex; uniform vec2 uTexel; in vec2 vUV; out vec4 o;
+void main(){
+  vec2 h = uTexel * 0.5; vec3 s = vec3(0.0);
+  s += texture(uTex, vUV + vec2(-h.x * 2.0, 0.0)).rgb; s += texture(uTex, vUV + vec2(-h.x, h.y)).rgb * 2.0;
+  s += texture(uTex, vUV + vec2(0.0, h.y * 2.0)).rgb; s += texture(uTex, vUV + vec2(h.x, h.y)).rgb * 2.0;
+  s += texture(uTex, vUV + vec2(h.x * 2.0, 0.0)).rgb; s += texture(uTex, vUV + vec2(h.x, -h.y)).rgb * 2.0;
+  s += texture(uTex, vUV + vec2(0.0, -h.y * 2.0)).rgb; s += texture(uTex, vUV + vec2(-h.x, -h.y)).rgb * 2.0;
+  o = vec4(s / 12.0, 1.0);
+}`;
+const COMP_FS = `#version 300 es
+precision mediump float;
+uniform sampler2D uScene; uniform sampler2D uBloom;
+uniform vec2 uRes; uniform float uTime; uniform float uAspect;
+uniform vec4 uWave[4]; uniform vec4 uWaveP[4]; uniform int uWaves;
+uniform float uChroma; uniform float uBloomAmt; uniform float uVig; uniform vec3 uVigCol; uniform float uGrain;
+uniform float uSat; uniform float uContrast; uniform float uBright; uniform vec3 uTint; uniform vec4 uFlash; uniform float uScan; uniform float uWarp;
+uniform sampler2D uLut0; uniform sampler2D uLut1; uniform float uLutMix; uniform float uLutAmt;
+in vec2 vUV; out vec4 o;
+// 16³ 調色表（256×16 的長條：藍色分 16 片、每片 16×16 是紅×綠）
+vec3 lut(sampler2D t, vec3 c){
+  c = clamp(c, 0.0, 1.0);
+  float b = c.b * 15.0, b0 = floor(b), b1 = min(b0 + 1.0, 15.0);
+  float x = c.r * 15.0 + 0.5, y = (c.g * 15.0 + 0.5) / 16.0;
+  return mix(texture(t, vec2((b0 * 16.0 + x) / 256.0, y)).rgb, texture(t, vec2((b1 * 16.0 + x) / 256.0, y)).rgb, b - b0);
+}
+void main(){
+  vec2 uv = vUV;
+  if (uWarp > 0.0) { vec2 c = uv - 0.5; uv = 0.5 + c * (1.0 + dot(c, c) * uWarp); }
+  for (int i = 0; i < 4; i++) {
+    if (i >= uWaves) break;
+    vec4 w = uWave[i]; vec2 d = uv - w.xy; d.x *= uAspect; float dist = length(d);
+    float th = uWaveP[i].x; float k = 1.0 - smoothstep(0.0, th, abs(dist - w.z));
+    if (dist > 0.0001) { vec2 n = d / dist; n.x /= uAspect; uv -= n * k * w.w; }
+  }
+  vec3 col;
+  if (uChroma > 0.0) { vec2 off = (uv - 0.5) * uChroma; col = vec3(texture(uScene, uv + off).r, texture(uScene, uv).g, texture(uScene, uv - off).b); }
+  else col = texture(uScene, uv).rgb;
+  if (uBloomAmt > 0.0) col += texture(uBloom, uv).rgb * uBloomAmt;
+  float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
+  col = mix(vec3(l), col, uSat);
+  col = (col - 0.5) * uContrast + 0.5 + uBright;
+  col *= uTint;
+  if (uLutAmt > 0.0) { vec3 g = lut(uLut0, col); if (uLutMix > 0.0) g = mix(g, lut(uLut1, col), uLutMix); col = mix(col, g, uLutAmt); }
+  if (uVig > 0.0) { vec2 q = vUV - 0.5; q.x *= mix(1.0, uAspect, 0.5); float v = 1.0 - smoothstep(0.2, 0.85, length(q) * 1.15); col = mix(uVigCol, col, mix(1.0, v, uVig)); }
+  if (uScan > 0.0) col *= 1.0 - uScan * (0.5 + 0.5 * sin(vUV.y * uRes.y * 3.14159));
+  col = mix(col, uFlash.rgb, uFlash.a);
+  if (uGrain > 0.0) { float n = fract(sin(dot(vUV * uRes + fract(uTime) * 91.7, vec2(12.9898, 78.233))) * 43758.5453); col += (n - 0.5) * uGrain; }
+  o = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
+
+/* ---- 光影（25_light.js 用）：遮光圖 → 跳躍填色（JFA）算距離場 → 每盞燈一個方塊，柔和陰影 ---- */
+// JFA 每個格子存「最近的牆邊格子的相對位移」：r、g＝dx、dy（偏 128，±127 格內），b＝那個牆邊格子被蓋住多少（0.5～1，0＝沒找到；用來算到次像素的邊），a＝這格自己在不在牆裡
+// 種子是「牆的邊緣」：牆外的點量到牆邊、牆裡的點量到出口 → 有正負號的距離場，光走進牆裡也能平順地算
+const JFA_SEED_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uTex; out vec4 o;
+void main(){
+  ivec2 p = ivec2(gl_FragCoord.xy), S = textureSize(uTex, 0);
+  float a = texelFetch(uTex, p, 0).a; bool ins = a > 0.5, edge = false;
+  if (ins) {
+    if (p.x + 1 < S.x && texelFetch(uTex, p + ivec2(1, 0), 0).a <= 0.5) edge = true;
+    if (p.x > 0 && texelFetch(uTex, p - ivec2(1, 0), 0).a <= 0.5) edge = true;
+    if (p.y + 1 < S.y && texelFetch(uTex, p + ivec2(0, 1), 0).a <= 0.5) edge = true;
+    if (p.y > 0 && texelFetch(uTex, p - ivec2(0, 1), 0).a <= 0.5) edge = true;
+  }
+  o = vec4(128.0 / 255.0, 128.0 / 255.0, edge ? max(a, 0.51) : 0.0, ins ? 1.0 : 0.0);
+}`;
+const JFA_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uTex; uniform int uStep; uniform ivec2 uSize; out vec4 o;
+void main(){
+  ivec2 p = ivec2(gl_FragCoord.xy); int best = 1 << 30; ivec2 bo = ivec2(0); float bc = 0.0;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+    ivec2 q = p + ivec2(i, j) * uStep;
+    if (q.x < 0 || q.y < 0 || q.x >= uSize.x || q.y >= uSize.y) continue;
+    vec4 s = texelFetch(uTex, q, 0); if (s.b < 0.25) continue;
+    ivec2 off = q + ivec2(floor(s.rg * 255.0 + 0.5)) - 128 - p; int d = off.x * off.x + off.y * off.y;
+    if (d < best) { best = d; bo = off; bc = s.b; }
+  }
+  float ins = texelFetch(uTex, p, 0).a;
+  o = (bc > 0.25 && abs(bo.x) <= 127 && abs(bo.y) <= 127) ? vec4((vec2(bo) + 128.0) / 255.0, bc, ins) : vec4(128.0 / 255.0, 128.0 / 255.0, 0.0, ins);
+}`;
+// 畫布像素座標的方塊（燈、水面）：uRect＝x0,y0,x1,y1（畫布 px，y 往下）
+const RECT_VS = `#version 300 es
+uniform vec4 uRect; uniform vec2 uCanvas; out vec2 vP;
+void main(){ vec2 c = vec2(float(gl_VertexID & 1), float((gl_VertexID >> 1) & 1)); vec2 p = mix(uRect.xy, uRect.zw, c); vP = p; gl_Position = vec4(p.x / uCanvas.x * 2.0 - 1.0, 1.0 - p.y / uCanvas.y * 2.0, 0.0, 1.0); }`;
+const LIGHT_FS = `#version 300 es
+precision highp float; precision highp int;
+uniform sampler2D uJfa; uniform vec2 uCanvas; uniform vec2 uMS; uniform ivec2 uMSize;
+uniform vec2 uPos; uniform float uRad; uniform vec3 uCol; uniform float uHaze; uniform vec4 uCone; uniform float uFall;
+uniform vec4 uSh; uniform float uSeed; uniform float uFar;
+in vec2 vP; layout(location=0) out vec4 o; layout(location=1) out vec4 oHaze;
+vec2 toM(vec2 p){ return vec2(p.x * uMS.x, (uCanvas.y - p.y) * uMS.y); }
+// 有正負號的距離（遮光圖的格子）：牆外＝到牆邊多遠，牆裡＝負的（到出口多遠）；畫面外當成空地
+float sdf(vec2 m){
+  if (m.x < 0.0 || m.y < 0.0 || m.x >= float(uMSize.x) || m.y >= float(uMSize.y)) return uFar;
+  ivec2 t = ivec2(floor(m)); vec4 s = texelFetch(uJfa, t, 0); float d = uFar;
+  float c = 1.0;
+  if (s.b > 0.25) { ivec2 off = ivec2(floor(s.rg * 255.0 + 0.5)) - 128; d = length(m - (vec2(t + off) + 0.5)); c = s.b; }
+  return s.a > 0.5 ? -(d + c - 0.5) : max(d + 0.5 - c, 0.0);
+}
+float shadow(vec2 p, vec2 l){
+  vec2 v = l - p; float len = length(v); if (len < 1.0) return 1.0;
+  vec2 dir = v / len; float res = 1.0, t = 0.0, tEnd = len, d;
+  // 燈本身嵌在牆裡（牆上的火把）：燈旁邊那段牆不擋
+  if (sdf(l) < 0.0) { float e = 0.0; for (int i = 0; i < 24; i++) { d = sdf(l - dir * e); if (d >= 0.0 || e >= len) break; e += max(-d, 0.5); } tEnd = len - e; }
+  // 自己就在牆裡：光只滲進表面一點點（牆面、柱子朝燈的那一側有亮邊）。走出自己這面牆之後，從出口再往燈算
+  float t0 = 0.0;
+  if (sdf(p) < 0.0) {
+    d = -1.0;
+    for (int i = 0; i < 24; i++) { d = sdf(p + dir * t); if (d >= 0.0 || t >= tEnd) break; t += max(-d, 0.35); }
+    float pen = d >= 0.0 ? max(t - d, 0.0) : t;
+    res = 1.0 - smoothstep(uSh.z * 0.3, uSh.z + 0.001, pen);
+    if (res < 0.003) return 0.0;
+    if (t >= tEnd) return res;
+    t0 = t; t += 1.0;
+  } else t = 1.0;
+  // 往燈的方向跳著走（距離場說可以放心跳多遠），順便量「擦邊」多近 → 半影
+  float k = len / max(uSh.y, 0.5); int steps = int(uSh.w);
+  for (int i = 0; i < 64; i++) {
+    if (i >= steps || t >= tEnd - max(uSh.y, 1.0)) break;   // 光源本身有大小：擦過燈旁邊（光源範圍內）的牆不算擋住
+    d = sdf(p + dir * t);
+    if (d <= 0.0) return 0.0;
+    res = min(res, k * d / (t - t0)); if (res < 0.003) return 0.0;
+    t += max(d, 0.75);
+  }
+  res = clamp(res, 0.0, 1.0); return res * res * (3.0 - 2.0 * res);
+}
+void main(){
+  vec2 d = vP - uPos; float L = length(d), s = L / uRad;
+  if (s >= 1.0) discard;
+  float w = clamp(1.0 - s * s * s * s, 0.0, 1.0), att = w * w / (1.0 + uFall * s * s);
+  if (uCone.z > -1.5) { vec2 dn = L > 0.001 ? d / L : uCone.xy; att *= max(smoothstep(uCone.z, uCone.w, dot(dn, uCone.xy)), (1.0 - smoothstep(0.0, 0.04, s)) * 0.5); }
+  if (att < 0.002) discard;
+  float sh = uSh.x > 0.5 ? shadow(toM(vP), toM(uPos)) : 1.0;
+  vec3 c = uCol * att * sh;
+  float n = fract(sin(dot(gl_FragCoord.xy + uSeed, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+  o = vec4(c + n * (1.5 / 255.0), 1.0); oHaze = vec4(c * uHaze, 1.0);
+}`;
+// 環境光區塊（室內暗、室外亮；側視遊戲的天空背景）：方塊內換成另一種環境光，邊緣柔和
+const ZONE_FS = `#version 300 es
+precision highp float;
+uniform vec4 uRect; uniform vec4 uCol; uniform float uSoft; in vec2 vP; layout(location=0) out vec4 o; layout(location=1) out vec4 oHaze;
+void main(){ vec2 d = min(vP - uRect.xy, uRect.zw - vP); float m = smoothstep(0.0, max(uSoft, 0.001), min(d.x, d.y)) * uCol.a; o = vec4(uCol.rgb * 0.5, m); oHaze = vec4(0.0); }`;
+const APPLY_FS = `#version 300 es
+precision mediump float;
+uniform sampler2D uTex; in vec2 vUV; out vec4 o;
+void main(){ o = vec4(texture(uTex, vUV).rgb, 1.0); }`;
+// 水面、熱浪：先把畫面「抓」下來，再用扭曲過的座標讀回去
+const GRAB_FS = `#version 300 es
+precision highp float;
+uniform sampler2D uGrab; uniform vec2 uCanvas; uniform vec4 uRect; uniform float uTime;
+uniform vec4 uCol; uniform vec4 uP; uniform vec4 uW; uniform vec4 uSky; uniform float uShape;
+in vec2 vP; out vec4 o;
+vec2 uvOf(vec2 p){ p = clamp(p, vec2(0.5), uCanvas - 0.5); return vec2(p.x / uCanvas.x, 1.0 - p.y / uCanvas.y); }
+void main(){
+  vec2 sz = max(uRect.zw - uRect.xy, vec2(1.0)), q = (vP - uRect.xy) / sz;
+  vec2 wp = (vP - uRect.xy) / uW.x + uW.yz; float t = uTime * uW.w; int mode = int(uP.x + 0.5);
+  if (mode == 2) {
+    float edge = smoothstep(0.0, 0.25, q.x) * smoothstep(1.0, 0.75, q.x) * smoothstep(0.0, 0.35, q.y) * smoothstep(1.0, 0.8, q.y);
+    vec2 off = vec2(sin(wp.y * 0.09 + t * 5.0) + sin(wp.y * 0.23 - t * 7.0 + wp.x * 0.05) * 0.5, sin(wp.x * 0.11 + t * 4.0) * 0.4) * uP.y * edge;
+    float m = uShape > 0.5 ? 1.0 - smoothstep(0.82, 1.0, length(q * 2.0 - 1.0)) : 1.0;
+    o = vec4(texture(uGrab, uvOf(vP + off)).rgb * m, m); return;
+  }
+  float depth = mode == 0 ? q.y : 0.5;
+  float ax = sin(wp.x * 0.045 + t * 1.7) * 0.6 + sin(wp.x * 0.13 - t * 2.3 + wp.y * 0.07) * 0.4;
+  float ay = sin(wp.y * 0.09 + t * 1.9 + wp.x * 0.02) * 0.5 + sin(wp.x * 0.07 + t * 1.1) * 0.5;
+  vec2 rip = vec2(ax, ay) * uP.y * (0.35 + depth * 0.9);
+  vec3 col = texture(uGrab, uvOf(vP + rip * 0.6)).rgb;
+  if (mode == 0) {
+    vec2 src = vec2(vP.x + rip.x * 1.4, 2.0 * uRect.y - vP.y + rip.y * 1.8);
+    vec3 refl = texture(uGrab, uvOf(src)).rgb;
+    if (src.y < 0.0) refl = uSky.rgb;
+    float f = uP.z * (0.25 + 0.75 * (1.0 - smoothstep(0.0, 1.0, depth)));
+    col = mix(col, refl, f);
+    float line = 1.0 - smoothstep(0.0, max(1.5, uW.x * 1.2), abs(vP.y - uRect.y - ay * uP.y * 0.3));
+    col += line * uP.w * 0.5;
+  } else {
+    float c1 = sin(wp.x * 0.08 + t * 1.3 + sin(wp.y * 0.07 + t)) * sin(wp.y * 0.09 - t * 1.1 + sin(wp.x * 0.05));
+    col += vec3(pow(max(c1, 0.0), 6.0)) * uP.z * 0.45;
+  }
+  col = mix(col, uCol.rgb, uCol.a * (0.3 + 0.7 * depth));
+  // 橢圓（水窪、池塘）：邊緣柔和地淡掉，還有一圈亮邊
+  float m = 1.0;
+  if (uShape > 0.5) { float e = length(q * 2.0 - 1.0); m = 1.0 - smoothstep(0.86, 1.0, e); col += smoothstep(0.7, 0.93, e) * (1.0 - smoothstep(0.93, 1.0, e)) * uP.w * 0.25; }
+  o = vec4(col * m, m);
+}`;
+
+/** 後製參數（PZ.post）：特效模組會去動它們；遊戲也可以直接設 */
+const Post = PZ.post = {
+  enabled: true,
+  bloom: { on: true, strength: 0.6, threshold: 0.78 },
+  vignette: 0.35, vignetteColor: '#000', chroma: 0, grain: 0.035, scan: 0, warp: 0,
+  sat: 1, contrast: 1, bright: 0, tint: [1, 1, 1],
+  flash: [1, 1, 1, 0],
+  waves: [], // {x, y（螢幕 px）, r, strength, thick}
+};
+
+function compile(gl, type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS) && !gl.isContextLost()) { const log = gl.getShaderInfoLog(s); gl.deleteShader(s); throw new Error('著色器編譯失敗：' + log); }
+  return s;
+}
+function program(gl, vs, fs, names) {
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(gl, gl.VERTEX_SHADER, vs)); gl.attachShader(p, compile(gl, gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS) && !gl.isContextLost()) throw new Error('著色器連結失敗：' + gl.getProgramInfoLog(p));
+  const u = {}; for (const n of names) u[n] = gl.getUniformLocation(p, n);
+  return { p, u };
+}
+
+class GLRenderer {
+  constructor(canvas) {
+    this.kind = 'webgl2'; this.canvas = canvas;
+    const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance', desynchronized: false });
+    if (!gl) throw new Error('這台裝置不支援 WebGL2');
+    this.gl = gl;
+    this.textures = new Set();
+    this.stats = { draws: 0, quads: 0, flushes: 0, tex: 0, lights: 0 };
+    this.buf = new ArrayBuffer(MAX_QUADS * QUAD_WORDS * 4);
+    this.f32 = new Float32Array(this.buf); this.u32 = new Uint32Array(this.buf);
+    this.n = 0; this.slots = []; this.blend = 0; this.target = null; this.inScene = false; this.lost = false;
+    this.w = canvas.width; this.h = canvas.height;
+    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.lost = true; this.lostAt = Time.real; PZ.emit('contextlost'); }, false);
+    canvas.addEventListener('webglcontextrestored', () => { try { this.lost = false; this.setup(); for (const t of [...this.textures]) { t.gl = null; t.fb = null; if (t.restore) t.restore(t); else this.texAlloc(t); } PZ.emit('contextrestored'); } catch (e) { reportError(e, 'contextrestored'); } }, false);
+    this.setup();
+  }
+  setup() {
+    const gl = this.gl;
+    this.maxSlots = Math.min(8, gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) || 8);
+    this.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096;
+    this.sp = program(gl, SPRITE_VS, SPRITE_FS, ['uView', 'uOff', 'uT']);
+    gl.useProgram(this.sp.p); gl.uniform1iv(this.sp.u.uT, [0, 1, 2, 3, 4, 5, 6, 7]);
+    this.pBright = program(gl, FULL_VS, BRIGHT_FS, ['uTex', 'uTexel', 'uThresh']);
+    this.pDown = program(gl, FULL_VS, DOWN_FS, ['uTex', 'uTexel']);
+    this.pUp = program(gl, FULL_VS, UP_FS, ['uTex', 'uTexel']);
+    this.pComp = program(gl, FULL_VS, COMP_FS, ['uScene', 'uBloom', 'uRes', 'uTime', 'uAspect', 'uWave', 'uWaveP', 'uWaves', 'uChroma', 'uBloomAmt', 'uVig', 'uVigCol', 'uGrain', 'uSat', 'uContrast', 'uBright', 'uTint', 'uFlash', 'uScan', 'uWarp', 'uLut0', 'uLut1', 'uLutMix', 'uLutAmt']);
+    // 光影、水面用的著色器：第一次用到才編譯（沒用光影的遊戲不花這個時間）
+    this.pl = null; this.lfbo = {}; this.lfboKey = ''; this.grabTex = null; this.grabW = 0; this.grabH = 0;
+    this.lut = [null, null]; this.lutVer = [-1, -1];
+    this.vao = gl.createVertexArray(); gl.bindVertexArray(this.vao);
+    this.vbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo); gl.bufferData(gl.ARRAY_BUFFER, this.buf.byteLength, gl.DYNAMIC_DRAW);
+    const stride = VERT_WORDS * 4;
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, stride, 0);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, stride, 8);
+    gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.UNSIGNED_BYTE, true, stride, 16);
+    gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 4, gl.UNSIGNED_BYTE, true, stride, 20);
+    const idx = new Uint16Array(MAX_QUADS * 6);
+    for (let i = 0, v = 0; i < idx.length; i += 6, v += 4) { idx[i] = v; idx[i + 1] = v + 1; idx[i + 2] = v + 2; idx[i + 3] = v; idx[i + 4] = v + 2; idx[i + 5] = v + 3; }
+    this.ibo = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+    gl.bindVertexArray(null);
+    this.emptyVao = gl.createVertexArray();
+    // 1×1 白色貼圖：形狀用、沒用到的貼圖槽也綁它
+    this.white = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.white);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+    gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND);
+    this.applyBlend(0);
+    this.fbo = {}; // 場景、泛光鏈
+    this.fboSize = '';
+  }
+  /* ---- 貼圖 ---- */
+  texCreate(w, h, o = {}) {
+    const t = { id: ++TexId, w, h, gl: null, nearest: !!o.nearest, rt: !!o.rt, repeat: !!o.repeat, restore: o.restore || null, fb: null };
+    this.texAlloc(t); this.textures.add(t); return t;
+  }
+  texAlloc(t) {
+    const gl = this.gl; t.gl = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t.gl);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, t.w, t.h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    const f = t.nearest ? gl.NEAREST : gl.LINEAR;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
+    const wrap = t.repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;   // repeat：材質（Art.pattern）一直重複
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+    if (t.rt) { t.fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, t.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t.gl, 0); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); gl.bindFramebuffer(gl.FRAMEBUFFER, null); }
+  }
+  /** 把 canvas／圖片貼到貼圖的 (x, y)（整張來源） */
+  texUpload(t, src, x = 0, y = 0) {
+    if (this.lost) return;
+    const gl = this.gl; this.flush();
+    if (!t.gl) this.texAlloc(t);
+    gl.bindTexture(gl.TEXTURE_2D, t.gl);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  }
+  texClear(t) { if (this.lost || !t.gl) return; this.flush(); const gl = this.gl; gl.bindTexture(gl.TEXTURE_2D, t.gl); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, t.w, t.h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); }
+  texDelete(t) { if (t.gl && !this.lost) { this.flush(); this.gl.deleteTexture(t.gl); if (t.fb) this.gl.deleteFramebuffer(t.fb); } t.gl = null; t.fb = null; this.textures.delete(t); }
+  /* ---- 離屏畫布（場景、泛光）---- */
+  /** 建一張離屏畫布：o.nearest（不內插）、o.extra（多一張同大小的貼圖接在第二個出口，畫光的時候順便畫霧裡的光） */
+  makeFbo(w, h, o = {}) {
+    const gl = this.gl; w = Math.max(1, w | 0); h = Math.max(1, h | 0);
+    const tx = () => {
+      const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      const f = o.nearest ? gl.NEAREST : gl.LINEAR;
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return tex;
+    };
+    const tex = tx(), fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const out = { tex, fb, w, h, tex2: null };
+    if (o.extra) { out.tex2 = tx(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, out.tex2, 0); }
+    return out;
+  }
+  dropFbo(f) { if (!f) return; const gl = this.gl; gl.deleteTexture(f.tex); if (f.tex2) gl.deleteTexture(f.tex2); gl.deleteFramebuffer(f.fb); }
+  ensureFbos() {
+    const key = this.w + 'x' + this.h + ':' + (Quality.cur.bloom || 0);
+    if (key === this.fboSize) return;
+    this.fboSize = key;
+    const gl = this.gl;
+    for (const k in this.fbo) this.dropFbo(this.fbo[k]);
+    this.fbo = {};
+    const mk = (name, w, h) => { this.fbo[name] = this.makeFbo(w, h); };
+    mk('scene', this.w, this.h);
+    const b = Quality.cur.bloom || 0;
+    if (b) { const d = b >= 2 ? 2 : 4; mk('b0', this.w / d, this.h / d); mk('b1', this.w / d / 2, this.h / d / 2); mk('b2', this.w / d / 4, this.h / d / 4); }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+  /* ---- 一格的開始與結束 ---- */
+  usePost() { return Post.enabled && Quality.cur.post && !this.lost; }
+  begin(clear) {
+    if (this.lost) return;
+    const gl = this.gl;
+    this.w = this.canvas.width; this.h = this.canvas.height;
+    this.stats.draws = this.stats.quads = this.stats.flushes = this.stats.lights = 0;
+    this.n = 0; this.slots.length = 0; this.inTarget = false;
+    this.inScene = this.usePost();
+    if (this.inScene) { this.ensureFbos(); this.bindTarget(this.fbo.scene.fb, this.w, this.h, false); }
+    else this.bindTarget(null, this.w, this.h, false);
+    const c = toColor(clear == null ? '#000' : clear);
+    gl.clearColor(cR(c) / 255, cG(c) / 255, cB(c) / 255, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+  bindTarget(fb, w, h, rt, vw, vh) {
+    const gl = this.gl; this.flush();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.viewport(0, 0, vw || w, vh || h);
+    gl.useProgram(this.sp.p); gl.bindVertexArray(this.vao);
+    // 畫到貼圖（rt）時 y 不翻：貼圖第 0 列在下面，之後當貼圖用時 UV 翻一下
+    gl.uniform2f(this.sp.u.uView, 2 / w, rt ? 2 / h : -2 / h); gl.uniform2f(this.sp.u.uOff, -1, rt ? -1 : 1);
+    this.curW = w; this.curH = h;
+    this.applyBlend(this.blend, true);
+  }
+  /** 開始畫到某張貼圖（rt：用 texCreate(w, h, {rt:true}) 建的）；endTarget() 回到原本的地方 */
+  beginTarget(t, clear) {
+    if (this.lost) return;
+    this.flush(); this._prevTarget = this.inScene ? this.fbo.scene : null; this.inTarget = true;
+    if (!t.gl) this.texAlloc(t);
+    this.bindTarget(t.fb, t.w, t.h, true);
+    if (clear !== undefined) { const gl = this.gl, c = toColor(clear); gl.clearColor(cR(c) / 255 * cA(c), cG(c) / 255 * cA(c), cB(c) / 255 * cA(c), cA(c)); gl.clear(gl.COLOR_BUFFER_BIT); }
+  }
+  endTarget() { this.inTarget = false; if (this.lost) return; const p = this._prevTarget; this.bindTarget(p ? p.fb : null, this.w, this.h, false); }
+  applyBlend(b, force) {
+    if (b === this.blend && !force) return;
+    this.flush(); this.blend = b; const gl = this.gl;
+    if (b === 1) gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
+    else if (b === 2) gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+    else if (b === 3) gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);
+    else if (b === 4) gl.blendFunc(gl.ONE, gl.ONE);
+    else gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  }
+  setBlend(name) { this.applyBlend(BLEND[name] || 0); }
+  slotOf(t) {
+    if (!t) return 0;
+    const s = this.slots; for (let i = 0; i < s.length; i++) if (s[i] === t) return i;
+    if (s.length >= this.maxSlots) this.flush();
+    s.push(t); return s.length - 1;
+  }
+  /**
+   * 畫一個四邊形：單位正方形 (0,0)-(1,1) 經過仿射矩陣 [a c e; b d f] 變成畫面上的位置（畫布像素）。
+   * u0,v0,u1,v1：貼圖座標；形狀模式時是 -1～1。color：打包顏色；mode：MODE；add：0～1 發光；param：模式參數（閃白、環的粗細…）
+   */
+  quad(t, a, b, c, d, e, f, u0, v0, u1, v1, color, mode, add, param) {
+    if (this.lost) return;
+    if (t && !t.gl) { if (t.restore) t.restore(t); if (!t.gl) return; }
+    if (this.n >= MAX_QUADS) this.flush();
+    const slot = this.slotOf(t);
+    const ext = ((((param * 255) & 255) << 24) | (((add * 255) & 255) << 16) | ((mode & 255) << 8) | slot) >>> 0;
+    const F = this.f32, U = this.u32; let i = this.n * QUAD_WORDS;
+    F[i] = e; F[i + 1] = f; F[i + 2] = u0; F[i + 3] = v0; U[i + 4] = color; U[i + 5] = ext; i += 6;
+    F[i] = a + e; F[i + 1] = b + f; F[i + 2] = u1; F[i + 3] = v0; U[i + 4] = color; U[i + 5] = ext; i += 6;
+    F[i] = a + c + e; F[i + 1] = b + d + f; F[i + 2] = u1; F[i + 3] = v1; U[i + 4] = color; U[i + 5] = ext; i += 6;
+    F[i] = c + e; F[i + 1] = d + f; F[i + 2] = u0; F[i + 3] = v1; U[i + 4] = color; U[i + 5] = ext;
+    this.n++;
+  }
+  /** 任意四個角的四邊形（拖尾、梯形光束）：0→1→2→3 順時針；c0 給 0、3 角，c1 給 1、2 角（可以一頭濃一頭淡） */
+  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add, param) { this.quadv(t, x0, y0, u0, v0, x1, y1, u1, v0, x2, y2, u1, v1, x3, y3, u0, v1, c0, c1, mode, add, param); }
+  /** 同上，但四個角各自給貼圖座標（光束要用） */
+  quadv(t, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, x3, y3, u3, v3, c0, c1, mode, add, param) {
+    if (this.lost) return;
+    if (t && !t.gl) { if (t.restore) t.restore(t); if (!t.gl) return; }
+    if (this.n >= MAX_QUADS) this.flush();
+    const slot = this.slotOf(t);
+    const ext = ((((param * 255) & 255) << 24) | (((add * 255) & 255) << 16) | ((mode & 255) << 8) | slot) >>> 0;
+    const F = this.f32, U = this.u32; let i = this.n * QUAD_WORDS;
+    F[i] = x0; F[i + 1] = y0; F[i + 2] = u0; F[i + 3] = v0; U[i + 4] = c0; U[i + 5] = ext; i += 6;
+    F[i] = x1; F[i + 1] = y1; F[i + 2] = u1; F[i + 3] = v1; U[i + 4] = c1; U[i + 5] = ext; i += 6;
+    F[i] = x2; F[i + 1] = y2; F[i + 2] = u2; F[i + 3] = v2; U[i + 4] = c1; U[i + 5] = ext; i += 6;
+    F[i] = x3; F[i + 1] = y3; F[i + 2] = u3; F[i + 3] = v3; U[i + 4] = c0; U[i + 5] = ext;
+    this.n++;
+  }
+  /** 實心三角形（多邊形拆成三角形用）：第二個三角形退化 */
+  tri(x1, y1, x2, y2, x3, y3, color, add) {
+    if (this.lost) return;
+    if (this.n >= MAX_QUADS) this.flush();
+    const ext = ((((add * 255) & 255) << 16) | (MODE.solid << 8)) >>> 0;
+    const F = this.f32, U = this.u32; let i = this.n * QUAD_WORDS;
+    const put = (x, y) => { F[i] = x; F[i + 1] = y; F[i + 2] = 0; F[i + 3] = 0; U[i + 4] = color; U[i + 5] = ext; i += 6; };
+    put(x1, y1); put(x2, y2); put(x3, y3); put(x3, y3);
+    this.n++;
+  }
+  flush() {
+    if (!this.n || this.lost) { this.n = 0; return; }
+    const gl = this.gl;
+    for (let i = 0; i < this.maxSlots; i++) { gl.activeTexture(gl.TEXTURE0 + i); const t = this.slots[i]; gl.bindTexture(gl.TEXTURE_2D, t && t.gl ? t.gl : this.white); }
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vbo);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.f32, 0, this.n * QUAD_WORDS);
+    gl.drawElements(gl.TRIANGLES, this.n * 6, gl.UNSIGNED_SHORT, 0);
+    this.stats.draws++; this.stats.quads += this.n;
+    this.n = 0; this.slots.length = 0;
+  }
+  /* ---- 光影、水面（著色器第一次用到才編譯）---- */
+  lightProgs() {
+    if (this.pl) return this.pl;
+    const gl = this.gl;
+    this.pl = {
+      seed: program(gl, FULL_VS, JFA_SEED_FS, ['uTex']),
+      jfa: program(gl, FULL_VS, JFA_FS, ['uTex', 'uStep', 'uSize']),
+      light: program(gl, RECT_VS, LIGHT_FS, ['uRect', 'uCanvas', 'uJfa', 'uMS', 'uMSize', 'uPos', 'uRad', 'uCol', 'uHaze', 'uCone', 'uFall', 'uSh', 'uSeed', 'uFar']),
+      apply: program(gl, FULL_VS, APPLY_FS, ['uTex']),
+      zone: program(gl, RECT_VS, ZONE_FS, ['uRect', 'uCanvas', 'uCol', 'uSoft']),
+      grab: program(gl, RECT_VS, GRAB_FS, ['uRect', 'uCanvas', 'uGrab', 'uTime', 'uCol', 'uP', 'uW', 'uSky', 'uShape']),
+    };
+    return this.pl;
+  }
+  /**
+   * 光影（25_light.js 呼叫）。S = { ambient: [r,g,b]（0～1）, zones: [{ x0,y0,x1,y1（畫布 px）, r,g,b,a, soft }], lights, n, scale（光照圖解析度）, mask（遮光圖解析度）, shadows, steps, drawOcc()（畫遮光物）, haze }
+   * 每盞燈：{ x, y, r（畫布 px）, cr, cg, cb（已乘強度）, cone: null | [dx, dy, cos外, cos內], size, soak（畫布 px）, sh, haze, fall }
+   */
+  lighting(S) {
+    if (this.lost || this.inTarget) return false;
+    const gl = this.gl, P = this.lightProgs();
+    this.flush();
+    const W = this.w, H = this.h, prev = this.inScene ? this.fbo.scene : null;
+    const lw = Math.max(1, Math.ceil(W * S.scale)), lh = Math.max(1, Math.ceil(H * S.scale));
+    const mk = S.mask || S.scale, mw = Math.max(1, Math.ceil(W * mk)), mh = Math.max(1, Math.ceil(H * mk)), key = lw + 'x' + lh + '/' + mw + 'x' + mh;
+    if (key !== this.lfboKey) {
+      for (const k in this.lfbo) this.dropFbo(this.lfbo[k]);
+      this.lfbo = { lm: this.makeFbo(lw, lh, { extra: true }), mask: this.makeFbo(mw, mh), j0: this.makeFbo(mw, mh, { nearest: true }), j1: this.makeFbo(mw, mh, { nearest: true }) };
+      this.lfboKey = key;
+    }
+    const F = this.lfbo; let jfa = null;
+    if (S.shadows && S.drawOcc) {
+      // 1) 遮光圖：用平常的畫圖程式、照相機畫，只是畫在小張的圖上
+      const pb = this.blend; this.applyBlend(0, true);
+      this.bindTarget(F.mask.fb, W, H, false, mw, mh);
+      gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      try { S.drawOcc(); } catch (e) { reportError(e, 'light.occluders'); }
+      this.flush(); this.blend = pb;
+      // 2) 距離場（JFA：步長 reach、reach/2 … 1；最遠量到 2×reach 格，再遠就當「很遠」）
+      gl.disable(gl.BLEND); gl.bindVertexArray(this.emptyVao);
+      const pass = (prog, src, dst) => { gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.viewport(0, 0, mw, mh); gl.useProgram(prog.p); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, src.tex); gl.uniform1i(prog.u.uTex, 0); };
+      pass(P.seed, F.mask, F.j0); gl.drawArrays(gl.TRIANGLES, 0, 3);
+      let a = F.j0, b = F.j1;
+      for (let st = S.reach || 64; st >= 1; st >>= 1) { pass(P.jfa, a, b); gl.uniform1i(P.jfa.u.uStep, st); gl.uniform2i(P.jfa.u.uSize, mw, mh); gl.drawArrays(gl.TRIANGLES, 0, 3); const t = a; a = b; b = t; }
+      jfa = a;
+    }
+    // 3) 光照圖：先鋪環境光，每盞燈一個方塊加上去；「霧裡的光」同時畫進第二張
+    gl.bindFramebuffer(gl.FRAMEBUFFER, F.lm.fb); gl.viewport(0, 0, lw, lh);
+    gl.drawBuffers(S.haze ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1] : [gl.COLOR_ATTACHMENT0, gl.NONE]);
+    const amb = this._amb || (this._amb = new Float32Array(4));
+    amb[0] = S.ambient[0] * 0.5; amb[1] = S.ambient[1] * 0.5; amb[2] = S.ambient[2] * 0.5; amb[3] = 1; gl.clearBufferfv(gl.COLOR, 0, amb);
+    if (S.haze) { amb[0] = amb[1] = amb[2] = 0; gl.clearBufferfv(gl.COLOR, 1, amb); }
+    gl.enable(gl.BLEND); gl.bindVertexArray(this.emptyVao);
+    if (S.zones && S.zones.length) {
+      const Z = P.zone, zu = Z.u; gl.useProgram(Z.p); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.uniform2f(zu.uCanvas, W, H);
+      for (const z of S.zones) { gl.uniform4f(zu.uRect, z.x0, z.y0, z.x1, z.y1); gl.uniform4f(zu.uCol, z.r, z.g, z.b, z.a); gl.uniform1f(zu.uSoft, z.soft); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
+    }
+    gl.blendFunc(gl.ONE, gl.ONE);
+    const L = P.light, u = L.u, ms = mw / W; gl.useProgram(L.p);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, jfa ? jfa.tex : this.white); gl.uniform1i(u.uJfa, 0);
+    gl.uniform2f(u.uCanvas, W, H); gl.uniform2f(u.uMS, mw / W, mh / H); gl.uniform2i(u.uMSize, mw, mh); gl.uniform1f(u.uSeed, (Time.frame % 64) * 1.7); gl.uniform1f(u.uFar, Math.min(127, (S.reach || 64) * 2 - 1));
+    for (let i = 0; i < S.n; i++) {
+      const l = S.lights[i];
+      gl.uniform4f(u.uRect, l.x - l.r, l.y - l.r, l.x + l.r, l.y + l.r);
+      gl.uniform2f(u.uPos, l.x, l.y); gl.uniform1f(u.uRad, l.r); gl.uniform3f(u.uCol, l.cr, l.cg, l.cb); gl.uniform1f(u.uHaze, l.haze); gl.uniform1f(u.uFall, l.fall);
+      if (l.cone) gl.uniform4f(u.uCone, l.cone[0], l.cone[1], l.cone[2], l.cone[3]); else gl.uniform4f(u.uCone, 1, 0, -2, -1.9);
+      gl.uniform4f(u.uSh, jfa && l.sh ? 1 : 0, l.size * ms, l.soak * ms, S.steps);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    // 4) 乘回場景（2× 相乘：光照圖 0.5＝原色，最亮可到原色的兩倍），霧裡的光再加上去
+    gl.bindFramebuffer(gl.FRAMEBUFFER, prev ? prev.fb : null); gl.viewport(0, 0, W, H);
+    const A = P.apply; gl.useProgram(A.p); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(A.u.uTex, 0);
+    gl.bindTexture(gl.TEXTURE_2D, F.lm.tex); gl.blendFunc(gl.DST_COLOR, gl.SRC_COLOR); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (S.haze) { gl.bindTexture(gl.TEXTURE_2D, F.lm.tex2); gl.blendFunc(gl.ONE, gl.ONE); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    this.stats.lights += S.n;
+    this.bindTarget(prev ? prev.fb : null, W, H, false);
+    return true;
+  }
+  /**
+   * 水面、熱浪：把畫面一塊抓下來，扭曲後畫回去。o = { mode: 0 倒影（側視）| 1 俯視水面 | 2 熱浪, rect: [x0,y0,x1,y1]（畫布 px）,
+   *   src: [x0,y0,x1,y1] 要抓的範圍, col: [r,g,b,a], amp（畫布 px）, reflect, foam, scale（畫布 px／世界單位）, wx, wy（方塊左上角的世界座標）, speed, sky: [r,g,b] }
+   */
+  grab(o) {
+    if (this.lost || this.inTarget) return false;
+    const gl = this.gl, P = this.lightProgs(); this.flush();
+    const W = this.w, H = this.h;
+    if (!this.grabTex || this.grabW !== W || this.grabH !== H) {
+      if (this.grabTex) gl.deleteTexture(this.grabTex);
+      this.grabTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.grabTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, W, H, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.grabW = W; this.grabH = H;
+    }
+    const s = o.src, x0 = clamp(Math.floor(s[0]), 0, W), y0 = clamp(Math.floor(s[1]), 0, H), x1 = clamp(Math.ceil(s[2]), 0, W), y1 = clamp(Math.ceil(s[3]), 0, H);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.grabTex);
+    if (x1 > x0 && y1 > y0) gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, x0, H - y1, x0, H - y1, x1 - x0, y1 - y0);
+    const G = P.grab, u = G.u; gl.useProgram(G.p); gl.bindVertexArray(this.emptyVao); gl.uniform1i(u.uGrab, 0);
+    const r = o.rect; gl.uniform4f(u.uRect, r[0], r[1], r[2], r[3]); gl.uniform2f(u.uCanvas, W, H); gl.uniform1f(u.uTime, o.time);
+    gl.uniform4f(u.uCol, o.col[0], o.col[1], o.col[2], o.col[3]); gl.uniform4f(u.uP, o.mode, o.amp, o.reflect, o.foam);
+    gl.uniform4f(u.uW, o.scale, o.wx, o.wy, o.speed); gl.uniform4f(u.uSky, o.sky[0], o.sky[1], o.sky[2], 1); gl.uniform1f(u.uShape, o.shape ? 1 : 0);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    this.bindTarget(this.inScene ? this.fbo.scene.fb : null, W, H, false);
+    return true;
+  }
+  /** 調色表（PZ.post.grade）：兩張 256×16，換的時候淡入淡出 */
+  lutSync(i, data, ver) {
+    const gl = this.gl;
+    if (!this.lut[i]) {
+      this.lut[i] = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.lut[i]);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 16, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.lutVer[i] = -1;
+    }
+    gl.bindTexture(gl.TEXTURE_2D, this.lut[i]);
+    if (this.lutVer[i] !== ver) { gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 16, gl.RGBA, gl.UNSIGNED_BYTE, data); this.lutVer[i] = ver; }
+  }
+  /** 場景畫完：做後製並換到螢幕；之後畫的東西（HUD）不受震動、色差影響 */
+  hud() {
+    if (this.lost) return;
+    if (!this.inScene) { this.flashOverlay(); return; }
+    this.flush(); this.inScene = false;
+    const gl = this.gl, S = this.fbo.scene;
+    gl.bindVertexArray(this.emptyVao); gl.disable(gl.BLEND);
+    let bloomTex = null;
+    const bq = Quality.cur.bloom || 0;
+    if (bq && Post.bloom.on && Post.bloom.strength > 0 && this.fbo.b0) {
+      const pass = (prog, src, dst, uni) => { gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.viewport(0, 0, dst.w, dst.h); gl.useProgram(prog.p); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, src.tex); gl.uniform1i(prog.u.uTex, 0); gl.uniform2f(prog.u.uTexel, 1 / src.w, 1 / src.h); if (uni) uni(prog); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+      const { b0, b1, b2 } = this.fbo;
+      pass(this.pBright, S, b0, (p) => gl.uniform1f(p.u.uThresh, Post.bloom.threshold));
+      pass(this.pDown, b0, b1); pass(this.pDown, b1, b2);
+      gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+      pass(this.pUp, b2, b1); pass(this.pUp, b1, b0);
+      gl.disable(gl.BLEND);
+      bloomTex = b0.tex;
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, this.w, this.h);
+    const P = this.pComp, u = P.u; gl.useProgram(P.p);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, S.tex); gl.uniform1i(u.uScene, 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, bloomTex || this.white); gl.uniform1i(u.uBloom, 1);
+    gl.uniform2f(u.uRes, this.w, this.h); gl.uniform1f(u.uTime, Time.real); gl.uniform1f(u.uAspect, this.w / this.h);
+    const ws = Post.waves, n = Math.min(4, ws.length), W = this._W || (this._W = new Float32Array(16)), WP = this._WP || (this._WP = new Float32Array(16)), sw = Screen.w || 1, sh = Screen.h || 1;
+    for (let i = 0; i < n; i++) { const w = ws[i]; W[i * 4] = w.x / sw; W[i * 4 + 1] = 1 - w.y / sh; W[i * 4 + 2] = w.r / sh; W[i * 4 + 3] = w.strength; WP[i * 4] = Math.max(0.002, w.thick / sh); }
+    gl.uniform4fv(u.uWave, W); gl.uniform4fv(u.uWaveP, WP); gl.uniform1i(u.uWaves, n);
+    gl.uniform1f(u.uChroma, Post.chroma * Settings.flashScale()); gl.uniform1f(u.uBloomAmt, bloomTex ? Post.bloom.strength : 0);
+    const vc = toColor(Post.vignetteColor);
+    gl.uniform1f(u.uVig, Post.vignette); gl.uniform3f(u.uVigCol, cR(vc) / 255, cG(vc) / 255, cB(vc) / 255); gl.uniform1f(u.uGrain, Post.grain);
+    gl.uniform1f(u.uSat, Post.sat); gl.uniform1f(u.uContrast, Post.contrast); gl.uniform1f(u.uBright, Post.bright);
+    gl.uniform3f(u.uTint, Post.tint[0], Post.tint[1], Post.tint[2]);
+    const fl = Post.flash; gl.uniform4f(u.uFlash, fl[0], fl[1], fl[2], fl[3] * Settings.flashScale());
+    gl.uniform1f(u.uScan, Post.scan); gl.uniform1f(u.uWarp, Post.warp);
+    const lt = Post._lut; gl.uniform1i(u.uLut0, 2); gl.uniform1i(u.uLut1, 3);
+    if (lt && lt.amt > 0.001 && lt.a) {
+      gl.activeTexture(gl.TEXTURE2); this.lutSync(0, lt.a, lt.va);
+      gl.activeTexture(gl.TEXTURE3); if (lt.b && lt.mix > 0.001) this.lutSync(1, lt.b, lt.vb); else gl.bindTexture(gl.TEXTURE_2D, this.lut[0]);
+      gl.uniform1f(u.uLutMix, lt.b ? lt.mix : 0); gl.uniform1f(u.uLutAmt, Math.min(1, lt.amt));
+    } else {
+      gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, this.white); gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, this.white);
+      gl.uniform1f(u.uLutMix, 0); gl.uniform1f(u.uLutAmt, 0);
+    }
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.enable(gl.BLEND);
+    this.bindTarget(null, this.w, this.h, false);
+  }
+  /** 沒有後製時：閃白用一個全螢幕方塊蓋上去 */
+  flashOverlay() {
+    const fl = Post.flash, a = fl[3] * Settings.flashScale();
+    if (a <= 0.001) return;
+    this.quad(null, this.w, 0, 0, this.h, 0, 0, 0, 0, 1, 1, pack(fl[0] * 255, fl[1] * 255, fl[2] * 255, a), MODE.solid, 0, 0);
+  }
+  end() { if (this.lost) return; if (this.inScene) this.hud(); this.flush(); }
+  destroy() { const ext = this.gl.getExtension('WEBGL_lose_context'); if (ext) ext.loseContext(); }
+}
+let TexId = 0;
+
+/* ---- 08_c2d.js ---- */
+/* ==========================================================================
+   08 Canvas2D 後備繪圖器
+   沒有 WebGL2、或 WebGL 一直救不回來時用。介面跟 GLRenderer 一樣，遊戲不用改。
+   做不到的：後製（泛光、扭曲、色差、調色）、上色（tint）。閃白、暗角、加亮照常。
+   ========================================================================== */
+class C2DRenderer {
+  constructor(canvas) {
+    this.kind = 'canvas2d'; this.canvas = canvas;
+    this.ctx = canvas.getContext('2d', { alpha: false });
+    if (!this.ctx) throw new Error('沒有 Canvas2D');
+    this.cur = this.ctx; this.textures = new Set();
+    this.stats = { draws: 0, quads: 0, flushes: 0, tex: 0 };
+    this.blendOp = 'source-over'; this.lost = false; this.inScene = false;
+    this.w = canvas.width; this.h = canvas.height;
+    this._glow = new Map(); this._vig = null; this._vigKey = '';
+  }
+  texCreate(w, h, o = {}) {
+    const t = { id: ++TexId, w, h, canvas: document.createElement('canvas'), nearest: !!o.nearest, rt: !!o.rt, restore: o.restore || null };
+    t.canvas.width = w; t.canvas.height = h; t.ctx = t.canvas.getContext('2d');
+    this.textures.add(t); return t;
+  }
+  texUpload(t, src, x = 0, y = 0) { t.ctx.drawImage(src, x, y); t._white = null; t._sil = null; }
+  texClear(t) { t.ctx.clearRect(0, 0, t.w, t.h); t._white = null; }
+  texDelete(t) { if (t.canvas && !t.live) { t.canvas.width = t.canvas.height = 0; } t.canvas = null; this.textures.delete(t); } // live＝遊戲自己的畫布，不清
+  begin(clear) {
+    this.w = this.canvas.width; this.h = this.canvas.height;
+    this.stats.draws = this.stats.quads = this.stats.lights = 0;
+    const c = this.ctx; this.cur = c;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+    c.fillStyle = Color.css(Color.alpha(clear == null ? '#000' : clear, 1)); c.fillRect(0, 0, this.w, this.h);
+    this.inScene = true;
+  }
+  beginTarget(t, clear) {
+    this._prev = this.cur; this.cur = t.ctx; t._white = null;
+    if (clear !== undefined) { t.ctx.setTransform(1, 0, 0, 1, 0, 0); t.ctx.clearRect(0, 0, t.w, t.h); const cc = toColor(clear); if (cA(cc) > 0) { t.ctx.fillStyle = Color.css(cc); t.ctx.fillRect(0, 0, t.w, t.h); } }
+  }
+  endTarget() { this.cur = this._prev || this.ctx; }
+  setBlend(name) { this.blendOp = name === 'multiply' ? 'multiply' : name === 'screen' ? 'screen' : name === 'erase' ? 'destination-out' : name === 'add' ? 'lighter' : 'source-over'; }
+  whiteOf(t) {
+    if (t._white) return t._white;
+    const w = document.createElement('canvas'); w.width = t.w; w.height = t.h; const x = w.getContext('2d');
+    x.drawImage(t.canvas, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = '#fff'; x.fillRect(0, 0, t.w, t.h);
+    t._white = w; return w;
+  }
+  glowOf(color) {
+    const key = color & 0xffffff; let g = this._glow.get(key);
+    if (g) return g;
+    g = document.createElement('canvas'); g.width = g.height = 64; const x = g.getContext('2d');
+    const r = cR(color), gg = cG(color), b = cB(color), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, `rgba(${r},${gg},${b},1)`); gr.addColorStop(0.35, `rgba(${r},${gg},${b},0.45)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+    if (this._glow.size > 64) this._glow.clear();
+    this._glow.set(key, g); return g;
+  }
+  quad(t, a, b, c, d, e, f, u0, v0, u1, v1, color, mode, add, param) {
+    const x = this.cur; this.stats.quads++;
+    const al = cA(color); if (al <= 0.002) return;
+    x.setTransform(a, b, c, d, e, f);
+    x.globalAlpha = al;
+    x.globalCompositeOperation = add > 0.5 ? 'lighter' : this.blendOp;
+    if (mode === MODE.sprite || mode === MODE.silhouette) {
+      if (!t || !t.canvas) return;
+      let sx = u0 * t.w, sy = v0 * t.h, sw = (u1 - u0) * t.w, sh = (v1 - v0) * t.h;
+      if (sw < 0) { x.transform(-1, 0, 0, 1, 1, 0); sx += sw; sw = -sw; }
+      if (sh < 0) { x.transform(1, 0, 0, -1, 0, 1); sy += sh; sh = -sh; }
+      if (sw <= 0 || sh <= 0) return;
+      if (mode === MODE.silhouette) { x.drawImage(this.whiteOf(t), sx, sy, sw, sh, 0, 0, 1, 1); return; }
+      x.drawImage(t.canvas, sx, sy, sw, sh, 0, 0, 1, 1);
+      if (param > 0.01) { x.globalAlpha = al * param; x.drawImage(this.whiteOf(t), sx, sy, sw, sh, 0, 0, 1, 1); }
+    } else if (mode === MODE.solid || mode === MODE.line) {
+      x.fillStyle = Color.css(color | 0xff000000); x.fillRect(0, 0, 1, 1);
+    } else if (mode === MODE.circle) {
+      x.fillStyle = Color.css(color | 0xff000000); x.beginPath(); x.arc(0.5, 0.5, 0.5, 0, TAU); x.fill();
+    } else if (mode === MODE.ring) {
+      const th = Math.max(0.02, param) * 0.5; x.strokeStyle = Color.css(color | 0xff000000); x.lineWidth = th; x.beginPath(); x.arc(0.5, 0.5, 0.5 - th / 2, 0, TAU); x.stroke();
+    } else if (mode === MODE.glow) {
+      x.drawImage(this.glowOf(color), 0, 0, 1, 1);
+    }
+  }
+  quad4(t, x0, y0, x1, y1, x2, y2, x3, y3, u0, v0, u1, v1, c0, c1, mode, add) { this.quadv(t, x0, y0, 0, 0, x1, y1, 0, 0, x2, y2, 0, 0, x3, y3, 0, 0, c0, c1, mode, add); }
+  quadv(t, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, x3, y3, u3, v3, c0, c1, mode, add) {
+    const x = this.cur; x.setTransform(1, 0, 0, 1, 0, 0);
+    x.globalCompositeOperation = add > 0.5 ? 'lighter' : this.blendOp;
+    if (mode === MODE.beam) { // 光束：沿長度漸層（橫向柔邊做不到，用整塊淡一點代替）
+      x.globalAlpha = 0.7; const g = x.createLinearGradient((x0 + x3) / 2, (y0 + y3) / 2, (x1 + x2) / 2, (y1 + y2) / 2);
+      g.addColorStop(0, Color.css(c0)); g.addColorStop(1, Color.css(c1)); x.fillStyle = g;
+    } else {
+      x.globalAlpha = (cA(c0) + cA(c1)) / 2; if (x.globalAlpha <= 0.002) return;
+      x.fillStyle = Color.css(Color.mix(c0, c1, 0.5) | 0xff000000);
+    }
+    x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.lineTo(x2, y2); x.lineTo(x3, y3); x.closePath(); x.fill();
+  }
+  tri(x1, y1, x2, y2, x3, y3, color, add) {
+    const x = this.cur; x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = cA(color);
+    x.globalCompositeOperation = add > 0.5 ? 'lighter' : this.blendOp;
+    x.fillStyle = Color.css(color | 0xff000000); x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.lineTo(x3, y3); x.closePath(); x.fill();
+  }
+  flush() { }
+  /** 光影（沒有陰影）：小張的光照圖，用 multiply 疊上去 */
+  lighting(S) {
+    if (this.cur !== this.ctx) return false;
+    const sc = 0.25, lw = Math.max(1, Math.ceil(this.w * sc)), lh = Math.max(1, Math.ceil(this.h * sc));
+    const lc = this._lc || (this._lc = document.createElement('canvas'));
+    if (lc.width !== lw || lc.height !== lh) { lc.width = lw; lc.height = lh; }
+    const x = lc.getContext('2d'), a = S.ambient, b = (v) => Math.max(0, Math.min(255, v * 255)) | 0;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+    x.fillStyle = `rgb(${b(a[0])},${b(a[1])},${b(a[2])})`; x.fillRect(0, 0, lw, lh);
+    if (S.zones) for (const z of S.zones) { x.globalAlpha = z.a; x.fillStyle = `rgb(${b(z.r)},${b(z.g)},${b(z.b)})`; x.fillRect(z.x0 * sc, z.y0 * sc, (z.x1 - z.x0) * sc, (z.y1 - z.y0) * sc); }
+    x.globalAlpha = 1; x.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < S.n; i++) {
+      const l = S.lights[i], px = l.x * sc, py = l.y * sc, r = Math.max(1, l.r * sc), rgb = `${b(l.cr * 2)},${b(l.cg * 2)},${b(l.cb * 2)}`;
+      const g = x.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0, `rgba(${rgb},1)`); g.addColorStop(0.3, `rgba(${rgb},.62)`); g.addColorStop(0.65, `rgba(${rgb},.2)`); g.addColorStop(1, `rgba(${rgb},0)`);
+      x.fillStyle = g; x.beginPath();
+      if (l.cone) { const ang = Math.atan2(l.cone[1], l.cone[0]), half = Math.acos(clamp(l.cone[2], -1, 1)); x.moveTo(px, py); x.arc(px, py, r, ang - half, ang + half); x.closePath(); }
+      else x.arc(px, py, r, 0, TAU);
+      x.fill();
+    }
+    const c = this.ctx; c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.globalCompositeOperation = 'multiply'; c.imageSmoothingEnabled = true;
+    c.drawImage(lc, 0, 0, this.w, this.h); c.restore();
+    this.stats.lights = (this.stats.lights || 0) + S.n;
+    return true;
+  }
+  /** 水面：倒影＋上色（扭曲、熱浪做不到） */
+  grab(o) {
+    if (this.cur !== this.ctx || o.mode === 2) return false;
+    const c = this.ctx, r = o.rect, w = r[2] - r[0], h = r[3] - r[1]; if (w <= 0 || h <= 0) return false;
+    c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over';
+    c.beginPath(); if (o.shape) c.ellipse(r[0] + w / 2, r[1] + h / 2, w / 2, h / 2, 0, 0, TAU); else c.rect(r[0], r[1], w, h); c.clip();
+    if (o.mode === 0 && o.reflect > 0) {
+      const sy = Math.max(0, r[1] - h), sh = r[1] - sy;
+      if (sh > 1) { c.save(); c.globalAlpha = o.reflect * 0.75; c.translate(0, 2 * r[1]); c.scale(1, -1); c.drawImage(this.canvas, r[0], sy, w, sh, r[0], sy, w, sh); c.restore(); }
+    }
+    const k = o.col; c.globalAlpha = k[3] * 0.65; c.fillStyle = `rgb(${k[0] * 255 | 0},${k[1] * 255 | 0},${k[2] * 255 | 0})`; c.fillRect(r[0], r[1], w, h);
+    if (o.mode === 0 && o.foam > 0) { c.globalAlpha = o.foam * 0.5; c.fillStyle = '#fff'; c.fillRect(r[0], r[1], w, Math.max(1, o.scale)); }
+    c.restore();
+    return true;
+  }
+  hud() {
+    if (!this.inScene) return; this.inScene = false;
+    const x = this.ctx; x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over';
+    if (Post.vignette > 0.01) {
+      const key = this.w + 'x' + this.h + ':' + Post.vignette.toFixed(2) + Post.vignetteColor;
+      if (key !== this._vigKey) {
+        this._vigKey = key; const v = this._vig || (this._vig = document.createElement('canvas')); v.width = Math.max(1, this.w / 4 | 0); v.height = Math.max(1, this.h / 4 | 0);
+        const vx = v.getContext('2d'), cx = v.width / 2, cy = v.height / 2, R = Math.hypot(cx, cy), g = vx.createRadialGradient(cx, cy, R * 0.25, cx, cy, R);
+        const vc = toColor(Post.vignetteColor); g.addColorStop(0, `rgba(${cR(vc)},${cG(vc)},${cB(vc)},0)`); g.addColorStop(1, `rgba(${cR(vc)},${cG(vc)},${cB(vc)},${Math.min(0.9, Post.vignette * 1.6)})`);
+        vx.fillStyle = g; vx.fillRect(0, 0, v.width, v.height);
+      }
+      x.globalAlpha = 1; x.drawImage(this._vig, 0, 0, this.w, this.h);
+    }
+    const fl = Post.flash, a = fl[3] * Settings.flashScale();
+    if (a > 0.002) { x.globalAlpha = a; x.fillStyle = `rgb(${fl[0] * 255 | 0},${fl[1] * 255 | 0},${fl[2] * 255 | 0})`; x.fillRect(0, 0, this.w, this.h); }
+    x.globalAlpha = 1;
+  }
+  end() { if (this.inScene) this.hud(); }
+  destroy() { }
+}
+
+/* ---------- 選擇繪圖器、處理 WebGL 遺失 ---------- */
+const Gfx = PZ.gfx = { r: null, kind: '', forced: null };
+Gfx.create = (prefer) => {
+  const cv = Screen.canvas;
+  if (prefer !== 'canvas2d') {
+    try { Gfx.r = new GLRenderer(cv); Gfx.kind = 'webgl2'; return Gfx.r; }
+    catch (e) { warnOnce('gl', 'WebGL2 用不了，改用 Canvas2D：' + e.message); }
+  }
+  // 已經拿過 WebGL context 的畫布不能再拿 2D：換一張新的
+  const fresh = document.createElement('canvas'); fresh.id = 'pz-canvas'; fresh.width = cv.width; fresh.height = cv.height;
+  cv.replaceWith(fresh); Screen.canvas = fresh;
+  Gfx.r = new C2DRenderer(fresh); Gfx.kind = 'canvas2d';
+  return Gfx.r;
+};
+/** 換成 Canvas2D（WebGL 救不回來時自動呼叫；也可以手動測試） */
+Gfx.fallback = () => {
+  if (Gfx.kind === 'canvas2d') return;
+  const old = Gfx.r, texs = old ? [...old.textures] : [];
+  try { if (old) old.destroy(); } catch (e) { /* ignore */ }
+  const r = Gfx.create('canvas2d');
+  for (const t of texs) { // 把貼圖搬到新的繪圖器：由各自的 restore 重畫
+    t.gl = null; t.fb = null; t.canvas = document.createElement('canvas'); t.canvas.width = t.w; t.canvas.height = t.h; t.ctx = t.canvas.getContext('2d');
+    r.textures.add(t); if (t.restore) safeCall(t.restore, null, t);
+  }
+  PZ.emit('renderer', 'canvas2d');
+};
+// WebGL 遺失超過 4 秒（畫面看得到的狀態下）還沒恢復：換 Canvas2D
+addSystem({ name: 'gfx-watch', order: -80, frame() { const r = Gfx.r; if (r && r.lost && !document.hidden && Time.real - (r.lostAt || Time.real) > 4) Gfx.fallback(); } });
+PZ.on('visible', () => { if (Gfx.r && Gfx.r.lost) Gfx.r.lostAt = Time.real; });
+
+/* ---- 09_art.js ---- */
+/* ==========================================================================
+   09 美術：用程式畫的圖收進圖集（atlas）
+     PZ.art.make('zombie', 48, 64, (ctx, w, h) => { …用 Canvas2D 畫… }, { anchor: [0.5, 0.9] });
+     g.sprite('zombie', x, y);           // 之後用名字畫
+   - 在 w×h 的「邏輯大小」裡畫，實際以 scale 倍（預設 2）的像素存，放大也清楚。
+   - 很多小圖會擠在同一張 2048 的大貼圖裡：同一批畫完，iPhone 的記憶體也省。
+   - WebGL 模式下 CPU 端不留畫布（畫完就上傳），WebGL 遺失時用原本的畫法重畫。
+   - 外部圖片：await PZ.art.image('hero', 'data:image/png;base64,…')。
+   - 要在 DOM 裡用（立繪、頭像）：PZ.art.canvas('portrait') 回傳一張新畫布。
+   ========================================================================== */
+class Skyline {
+  constructor(w, h) { this.w = w; this.h = h; this.nodes = [{ x: 0, y: 0, w }]; this.used = 0; }
+  fit(i, w, h) {
+    const n = this.nodes[i]; if (n.x + w > this.w) return -1;
+    let y = n.y, left = w, j = i;
+    while (left > 0) { if (j >= this.nodes.length) return -1; y = Math.max(y, this.nodes[j].y); if (y + h > this.h) return -1; left -= this.nodes[j].w; j++; }
+    return y;
+  }
+  insert(w, h) {
+    let best = -1, by = Infinity, bw = Infinity, bx = 0;
+    for (let i = 0; i < this.nodes.length; i++) { const y = this.fit(i, w, h); if (y >= 0 && (y + h < by || (y + h === by && this.nodes[i].w < bw))) { best = i; by = y + h; bw = this.nodes[i].w; bx = this.nodes[i].x; } }
+    if (best < 0) return null;
+    const y = by - h;
+    this.nodes.splice(best, 0, { x: bx, y: by, w });
+    for (let i = best + 1; i < this.nodes.length; i++) {
+      const n = this.nodes[i], p = this.nodes[i - 1];
+      if (n.x < p.x + p.w) { const shrink = p.x + p.w - n.x; n.x += shrink; n.w -= shrink; if (n.w <= 0) { this.nodes.splice(i, 1); i--; } else break; } else break;
+    }
+    for (let i = 0; i < this.nodes.length - 1; i++) { if (this.nodes[i].y === this.nodes[i + 1].y) { this.nodes[i].w += this.nodes[i + 1].w; this.nodes.splice(i + 1, 1); i--; } }
+    this.used += w * h;
+    return { x: bx, y };
+  }
+}
+PZ.Skyline = Skyline;
+
+class Frame {
+  constructor(name) { this.name = name; this.tex = null; this.sx = 0; this.sy = 0; this.sw = 0; this.sh = 0; this.w = 0; this.h = 0; this.ax = 0.5; this.ay = 0.5; this.u0 = 0; this.v0 = 0; this.u1 = 1; this.v1 = 1; this.entry = null; }
+  setRect(tex, sx, sy, sw, sh) { this.tex = tex; this.sx = sx; this.sy = sy; this.sw = sw; this.sh = sh; this.u0 = sx / tex.w; this.v0 = sy / tex.h; this.u1 = (sx + sw) / tex.w; this.v1 = (sy + sh) / tex.h; }
+}
+PZ.Frame = Frame;
+
+const Art = PZ.art = {
+  scale: 2, pageSize: 2048, firstPageSize: 1024, pad: 2,   // 第一張圖集先開 1024（小遊戲省 12 MB），放不下再開 2048
+  frames: new Map(), pages: [], pending: [], entries: [],
+  _scratch: null, _sctx: null,
+};
+function scratch(w, h) {
+  if (!Art._scratch) { Art._scratch = document.createElement('canvas'); Art._sctx = Art._scratch.getContext('2d', { willReadFrequently: false }); }
+  const c = Art._scratch; if (c.width !== w || c.height !== h) { c.width = w; c.height = h; } else Art._sctx.clearRect(0, 0, w, h);
+  const x = Art._sctx; x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.filter = 'none'; x.imageSmoothingEnabled = true;
+  return x;
+}
+/** 依條目的畫法畫到 ctx（左上角＝(ox, oy)，已經含 pad） */
+/* 圖的後加工（Art.make 的 outline / rim / shade）：先畫到暫存畫布，加工完再貼上 */
+let FxCv = null, FxCv2 = null;
+function fxCanvas(w, h, second) {
+  let c = second ? FxCv2 : FxCv; if (!c) { c = document.createElement('canvas'); if (second) FxCv2 = c; else FxCv = c; }
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; } else c.getContext('2d').clearRect(0, 0, w, h);
+  const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; return c;
+}
+function applyFx(c, fx, scale) {
+  const w = c.width, h = c.height, x = c.getContext('2d');
+  x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';   // 畫圖時的縮放、位移不能帶進來
+  if (fx.shade) { // 下半部稍微暗（立體感）
+    const k = typeof fx.shade === 'number' ? fx.shade : 0.25, g = x.createLinearGradient(0, h * 0.35, 0, h);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${k})`);
+    x.globalCompositeOperation = 'source-atop'; x.fillStyle = g; x.fillRect(0, 0, w, h); x.globalCompositeOperation = 'source-over';
+  }
+  if (fx.rim) { // 朝光那一側的亮邊
+    const R = typeof fx.rim === 'object' ? fx.rim : { color: typeof fx.rim === 'string' ? fx.rim : '#ffffff' };
+    const a = R.angle != null ? R.angle : -2.3, d = (R.w || 1.5) * scale, m = fxCanvas(w, h, true), mx = m.getContext('2d');
+    mx.drawImage(c, 0, 0); mx.globalCompositeOperation = 'destination-out'; mx.drawImage(c, -Math.cos(a) * d, -Math.sin(a) * d);
+    mx.globalCompositeOperation = 'source-in'; mx.fillStyle = R.color || '#fff'; mx.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-atop'; x.globalAlpha = R.a != null ? R.a : 0.55; x.drawImage(m, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+  }
+  if (fx.outline) { // 外框（往外長一圈）
+    const r = fx.outline * scale, m = fxCanvas(w, h, true), mx = m.getContext('2d'), n = Math.max(8, Math.ceil(r * 5));
+    for (let i = 0; i < n; i++) { const t = (i / n) * TAU; mx.drawImage(c, Math.cos(t) * r, Math.sin(t) * r); }
+    mx.globalCompositeOperation = 'source-in'; mx.fillStyle = fx.outlineColor || '#000'; mx.fillRect(0, 0, w, h);
+    mx.globalCompositeOperation = 'source-over'; mx.drawImage(c, 0, 0);
+    x.clearRect(0, 0, w, h); x.drawImage(m, 0, 0);
+  }
+}
+function paintEntry(ctx, en, ox, oy) {
+  if (en.fx) {
+    const iw = en.pw - en.pad * 2, ih = en.ph - en.pad * 2, c = fxCanvas(iw, ih), x = c.getContext('2d');
+    x.scale(en.scale, en.scale); if (en.nearest) x.imageSmoothingEnabled = false;
+    x.translate(en.fx.ol || 0, en.fx.ol || 0);
+    try { en.draw(x, en.w - (en.fx.ol || 0) * 2, en.h - (en.fx.ol || 0) * 2, en.arg); } catch (e) { reportError(e, 'art:' + en.name); }
+    applyFx(c, en.fx, en.scale);
+    ctx.save(); ctx.drawImage(c, ox + en.pad, oy + en.pad); ctx.restore();
+    return;
+  }
+  ctx.save();
+  ctx.translate(ox + en.pad, oy + en.pad);
+  ctx.beginPath(); ctx.rect(0, 0, en.pw - en.pad * 2, en.ph - en.pad * 2); ctx.clip();
+  ctx.scale(en.scale, en.scale);
+  if (en.nearest) ctx.imageSmoothingEnabled = false;
+  try { en.draw(ctx, en.w, en.h, en.arg); } catch (e) { reportError(e, 'art:' + en.name); }
+  ctx.restore();
+  if (en.wrap && en.pad > 0) wrapPad(ctx, en, ox, oy);
+}
+/* 可以鋪滿的材質（Art.make 的 wrap: true）：外圍的留白填上「另一邊」的內容，鋪起來接縫處的線性內插才不會混到透明而出現細線 */
+function wrapPad(ctx, en, ox, oy) {
+  const p = en.pad, iw = en.pw - p * 2, ih = en.ph - p * 2, X = ox + p, Y = oy + p, cv = ctx.canvas;
+  if (iw < p || ih < p) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(X - p, Y, p, ih); ctx.drawImage(cv, X + iw - p, Y, p, ih, X - p, Y, p, ih);
+  ctx.clearRect(X + iw, Y, p, ih); ctx.drawImage(cv, X, Y, p, ih, X + iw, Y, p, ih);
+  ctx.clearRect(X - p, Y - p, iw + p * 2, p); ctx.drawImage(cv, X - p, Y + ih - p, iw + p * 2, p, X - p, Y - p, iw + p * 2, p);
+  ctx.clearRect(X - p, Y + ih, iw + p * 2, p); ctx.drawImage(cv, X - p, Y, iw + p * 2, p, X - p, Y + ih, iw + p * 2, p);
+  ctx.restore();
+}
+function newPage(nearest, w = Art.pageSize, h = Art.pageSize, solo = false) {
+  const r = Gfx.r;
+  const page = { nearest, w, h, sky: solo ? null : new Skyline(w, h), entries: [], tex: null, solo };
+  page.tex = r.texCreate(w, h, { nearest, restore: () => restorePage(page) });
+  Art.pages.push(page);
+  return page;
+}
+function uploadEntry(en) {
+  const r = Gfx.r, page = en.page;
+  if (r.kind === 'canvas2d') { paintEntry(page.tex.ctx, en, en.x, en.y); page.tex._white = null; return; }
+  const ctx = scratch(en.pw, en.ph); paintEntry(ctx, en, 0, 0);
+  r.texUpload(page.tex, Art._scratch, en.x, en.y);
+}
+function restorePage(page) {
+  const r = Gfx.r;
+  if (r.kind !== 'canvas2d') { page.tex.gl = null; r.texAlloc(page.tex); }
+  else page.tex.ctx.clearRect(0, 0, page.w, page.h);
+  for (const en of page.entries) uploadEntry(en);
+}
+function place(en) {
+  const ps = Art.pageSize;
+  if (en.pw > ps || en.ph > ps) {
+    const maxT = (Gfx.r && Gfx.r.maxTex) || 4096;
+    if (en.pw > maxT || en.ph > maxT) { warnOnce('big:' + en.name, `圖「${en.name}」太大（${en.pw}×${en.ph}），自動縮小`); const k = Math.min(maxT / en.pw, maxT / en.ph) * 0.98; en.scale *= k; en.pw = Math.ceil(en.w * en.scale) + en.pad * 2; en.ph = Math.ceil(en.h * en.scale) + en.pad * 2; }
+    const pg = newPage(en.nearest, en.pw, en.ph, true); en.page = pg; en.x = 0; en.y = 0; pg.entries.push(en); return;
+  }
+  for (const pg of Art.pages) {
+    if (pg.solo || pg.nearest !== en.nearest) continue;
+    const p = pg.sky.insert(en.pw, en.ph);
+    if (p) { en.page = pg; en.x = p.x; en.y = p.y; pg.entries.push(en); return; }
+  }
+  const first = !Art.pages.some((p) => !p.solo && p.nearest === en.nearest), fs = Art.firstPageSize;
+  const pg = first && en.pw <= fs && en.ph <= fs ? newPage(en.nearest, fs, fs) : newPage(en.nearest);
+  const p = pg.sky.insert(en.pw, en.ph);
+  en.page = pg; en.x = p.x; en.y = p.y; pg.entries.push(en);
+}
+function realize(en) {
+  place(en); uploadEntry(en);
+  const f = en.frame; f.setRect(en.page.tex, en.x + en.pad, en.y + en.pad, en.pw - en.pad * 2, en.ph - en.pad * 2);
+}
+
+/**
+ * 畫一張圖收進圖集。
+ * o: { scale（像素密度，預設 2）, anchor: [ax, ay]（0～1，預設置中）, pixel: true（像素風、不模糊）, pad, wrap: true（要用 g.tile 鋪滿的材質：接縫不會有細線）, arg（傳給 draw 的第 4 個參數）,
+ *      outline: 2（外框粗細，圖會變大一圈）, outlineColor: '#000', rim: '#9cf' 或 { color, a, w, angle }（朝光的亮邊）, shade: 0.25（下半部變暗） }
+ * 同名會覆蓋（舊的位置不回收）。
+ */
+Art.make = (name, w, h, draw, o = {}) => {
+  let f = Art.frames.get(name);
+  if (!f) { f = new Frame(name); Art.frames.set(name, f); }
+  // 後加工：外框會讓圖變大一圈（anchor 跟著調，圖不會跑位）
+  let fx = null;
+  if (o.outline || o.rim || o.shade) {
+    const ol = o.outline || 0; fx = { outline: ol, outlineColor: o.outlineColor, rim: o.rim, shade: o.shade, ol };
+    if (ol) { const an = o.anchor || [0.5, 0.5]; o = Object.assign({}, o, { anchor: [(an[0] * w + ol) / (w + ol * 2), (an[1] * h + ol) / (h + ol * 2)] }); w += ol * 2; h += ol * 2; }
+  }
+  const scale = o.scale || (o.pixel ? 1 : Art.scale), pad = o.pad != null ? o.pad : Art.pad;
+  const en = { name, w, h, draw, scale, pad, nearest: !!o.pixel, arg: o.arg, fx, wrap: !!o.wrap, pw: Math.ceil(w * scale) + pad * 2, ph: Math.ceil(h * scale) + pad * 2, page: null, x: 0, y: 0, frame: f };
+  f.w = w; f.h = h; const an = o.anchor || [0.5, 0.5]; f.ax = an[0]; f.ay = an[1]; f.entry = en;
+  if (Gfx.r) realize(en); else Art.pending.push(en);
+  return f;
+};
+/** 一整排動畫格：回傳 frames 陣列（名字是 name:0、name:1…） */
+Art.sheet = (name, count, w, h, draw, o = {}) => {
+  const out = [];
+  for (let i = 0; i < count; i++) out.push(Art.make(`${name}:${i}`, w, h, (ctx, ww, hh) => draw(ctx, ww, hh, i), o));
+  return out;
+};
+/** 載入圖片（網址或 data URL）。o: { w, h（邏輯大小，預設＝原圖大小 ÷ density）, density（預設 1）, anchor, pixel } */
+Art.image = (name, src, o = {}) => new Promise((res, rej) => {
+  const img = new Image();
+  img.onload = () => {
+    const d = o.density || 1, w = o.w || img.naturalWidth / d, h = o.h || img.naturalHeight / d;
+    res(Art.make(name, w, h, (ctx, ww, hh) => ctx.drawImage(img, 0, 0, ww, hh), Object.assign({ scale: img.naturalWidth / w }, o)));
+  };
+  img.onerror = () => rej(new Error('圖片載入失敗：' + name));
+  img.src = src;
+});
+const MISSING = new Frame('missing');
+Art.get = (name) => {
+  if (typeof name !== 'string') return name;
+  const f = Art.frames.get(name);
+  if (f) return f;
+  warnOnce('missing:' + name, '找不到圖：' + name);
+  return MISSING;
+};
+Art.has = (name) => Art.frames.has(name);
+/** 把一張圖重畫成新的 DOM 畫布（立繪、頭像、按鈕圖示用）。scale 預設跟裝置像素比一樣清楚 */
+Art.canvas = (name, scale) => {
+  const f = Art.get(name), en = f.entry; if (!en) return document.createElement('canvas');
+  const s = scale || Math.min(3, (HAS_DOM && window.devicePixelRatio) || 2);
+  const c = document.createElement('canvas'); c.width = Math.ceil(en.w * s); c.height = Math.ceil(en.h * s);
+  const x = c.getContext('2d'); x.scale(s, s); if (en.nearest) x.imageSmoothingEnabled = false;
+  const ol = en.fx ? en.fx.ol || 0 : 0; if (ol) x.translate(ol, ol);
+  try { en.draw(x, en.w - ol * 2, en.h - ol * 2, en.arg); } catch (e) { reportError(e, 'art.canvas:' + name); }
+  if (en.fx) applyFx(c, en.fx, s);
+  return c;
+};
+Art.url = (name, scale) => Art.canvas(name, scale).toDataURL('image/png');
+
+/** 畫布貼圖（render target）：可以把東西「畫進去」留著（地上的血跡、彈孔、迷你地圖）。用 g.into(name, () => {...}) 畫 */
+Art.target = (name, w, h, o = {}) => {
+  const r = Gfx.r; let f = Art.frames.get(name);
+  if (!f) { f = new Frame(name); Art.frames.set(name, f); }
+  const res = o.res || 1, pw = Math.ceil(w * res), ph = Math.ceil(h * res);
+  const tex = r.texCreate(pw, ph, { rt: true, nearest: !!o.pixel, restore: (t) => { if (Gfx.r.kind !== 'canvas2d') { t.gl = null; Gfx.r.texAlloc(t); } } });
+  f.setRect(tex, 0, 0, pw, ph); f.w = w; f.h = h; f.ax = 0; f.ay = 0; f.rt = true; f.res = res;
+  return f;
+};
+
+/**
+ * 把一張「一直在變的畫布」當成貼圖（舊遊戲遷移、小地圖、動態文字面板）：
+ *   const f = PZ.art.live('world', canvas, { pixel: true });  每次畫布畫完呼叫 f.refresh()
+ * 畫布大小變了會自動重新配置。Canvas2D 模式下直接用那張畫布，不複製。
+ */
+Art.live = (name, canvas, o = {}) => {
+  let f = Art.frames.get(name);
+  if (!f) { f = new Frame(name); Art.frames.set(name, f); }
+  f.live = canvas; f.ax = o.anchor ? o.anchor[0] : 0; f.ay = o.anchor ? o.anchor[1] : 0;
+  const alloc = () => {
+    const r = Gfx.r, w = canvas.width, h = canvas.height;
+    // 舊貼圖：Canvas2D 模式下只拿掉包裝（canvas 是遊戲自己的，不能被清掉）；WebGL 才真的刪貼圖
+    if (f.tex && r.textures.has(f.tex)) { if (f.tex.canvas === canvas) r.textures.delete(f.tex); else r.texDelete(f.tex); }
+    if (r.kind === 'canvas2d') { f.tex = { id: ++TexId, w, h, canvas, ctx: canvas.getContext('2d'), nearest: !!o.pixel, restore: null, live: true }; r.textures.add(f.tex); }
+    else f.tex = r.texCreate(w, h, { nearest: !!o.pixel, repeat: !!o.repeat, restore: (t) => { if (Gfx.r.texAlloc) Gfx.r.texAlloc(t); if (Gfx.r.texUpload) Gfx.r.texUpload(t, canvas, 0, 0); } });
+    f.setRect(f.tex, 0, 0, w, h); f.w = w / (o.density || 1); f.h = h / (o.density || 1); f._w = w; f._h = h;
+  };
+  f.refresh = () => {
+    const r = Gfx.r; if (!r) return f;
+    if (!f.tex || f._w !== canvas.width || f._h !== canvas.height || (r.kind === 'canvas2d') !== !!f.tex.canvas) alloc();
+    if (r.kind !== 'canvas2d') r.texUpload(f.tex, canvas, 0, 0); else f.tex._white = null;
+    return f;
+  };
+  if (Gfx.r) f.refresh();
+  return f;
+};
+PZ.on('renderer', () => { for (const f of Art.frames.values()) if (f.live) { f.tex = null; f.refresh(); } });
+
+/**
+ * 會一直重複的材質（草地、沙、岩石表面）：給 g.polyTex（任意形狀貼材質）、PZ.tiles.marching 的 tex 用
+ *   PZ.art.pattern('grass', 64, 64, (ctx, w, h) => { … })   畫的時候注意左右、上下要接得起來
+ * 自己一張貼圖（不放圖集），所以可以用 GPU 的重複取樣；Canvas2D 後備模式畫成平均色
+ */
+Art.pattern = (name, w, h, draw, o = {}) => {
+  const sc = o.scale || Art.scale, c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * sc)); c.height = Math.max(1, Math.round(h * sc));
+  const x = c.getContext('2d'); x.scale(c.width / w, c.height / h);
+  try { draw(x, w, h); } catch (e) { reportError(e, 'art.pattern:' + name); }
+  const p = document.createElement('canvas'); p.width = p.height = 1; const px = p.getContext('2d'); px.drawImage(c, 0, 0, 1, 1); const d = px.getImageData(0, 0, 1, 1).data;
+  const f = Art.live(name, c, { density: c.width / w, repeat: true });
+  f.avg = Color.rgb(d[0], d[1], d[2], d[3] / 255); f.pattern = true;
+  return f;
+};
+
+/** 動畫：PZ.anim(frames, fps, loop) → 回傳函式 (t秒) => frame */
+PZ.anim = (frames, fps = 10, loop = true) => {
+  const fr = frames.map((f) => Art.get(f));
+  return (t) => { let i = Math.floor(t * fps); i = loop ? ((i % fr.length) + fr.length) % fr.length : Math.min(fr.length - 1, Math.max(0, i)); return fr[i]; };
+};
+
+/* ---------- 內建圖：粒子與特效常用 ---------- */
+function makeBuiltins() {
+  const soft = (ctx, w, h) => { const g = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); g.addColorStop(0, '#fff'); g.addColorStop(0.4, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); };
+  Art.make('pz.soft', 32, 32, soft);
+  Art.make('pz.spark', 32, 8, (ctx, w, h) => { const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.7, 'rgba(255,255,255,.9)'); g.addColorStop(1, '#fff'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.quadraticCurveTo(w * 0.7, 0, w, h / 2); ctx.quadraticCurveTo(w * 0.7, h, 0, h / 2); ctx.fill(); });
+  Art.make('pz.star', 32, 32, (ctx, w, h) => {
+    ctx.translate(w / 2, h / 2); ctx.fillStyle = '#fff';
+    for (const [l, t] of [[w / 2, 2.2], [w / 3.2, 2.2]]) { ctx.beginPath(); for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4, r = i % 2 ? t : l; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.rotate(Math.PI / 4); ctx.globalAlpha = 0.6; }
+    ctx.globalAlpha = 1; const g = ctx.createRadialGradient(0, 0, 0, 0, 0, w / 4); g.addColorStop(0, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(-w / 2, -h / 2, w, h);
+  });
+  Art.make('pz.smoke', 48, 48, (ctx, w, h) => {
+    const r = makeRng(7);
+    for (let i = 0; i < 14; i++) { const x = w / 2 + r.spread(w * 0.18), y = h / 2 + r.spread(h * 0.18), rad = w * r.range(0.16, 0.3), g = ctx.createRadialGradient(x, y, 0, x, y, rad); g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h); }
+  });
+  Art.make('pz.shard', 16, 16, (ctx, w, h) => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(w * 0.1, h * 0.2); ctx.lineTo(w * 0.95, h * 0.45); ctx.lineTo(w * 0.3, h * 0.95); ctx.closePath(); ctx.fill(); });
+  Art.make('pz.drop', 16, 24, (ctx, w, h) => { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.quadraticCurveTo(w, h * 0.6, w / 2, h); ctx.quadraticCurveTo(0, h * 0.6, w / 2, 0); ctx.fill(); });
+  Art.make('pz.ring', 64, 64, (ctx, w, h) => { ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(w / 2, h / 2, w / 2 - 3, 0, TAU); ctx.stroke(); });
+  Art.make('pz.square', 8, 8, (ctx, w, h) => { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }, { pad: 1 });
+  Art.make('pz.flare', 64, 64, (ctx, w, h) => {
+    soft(ctx, w, h);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,.8)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, h / 2 - 1.5, w, 3); ctx.save(); ctx.translate(w / 2, h / 2); ctx.rotate(Math.PI / 2); ctx.translate(-w / 2, -h / 2); ctx.fillRect(0, h / 2 - 1.5, w, 3); ctx.restore();
+  });
+}
+Art.init = () => {
+  for (const en of Art.pending.splice(0)) realize(en);
+  if (!Art.frames.has('pz.soft')) makeBuiltins();
+};
+
+/* ---- 10_text.js ---- */
+/* ==========================================================================
+   10 文字：中文字型圖集
+   每個字第一次出現時用瀏覽器畫一次、收進字型貼圖，之後跟圖片一樣一批畫完。
+   會依實際顯示大小挑最接近的光柵大小，放大縮小都清楚。
+   斷行照中文習慣：逗號句號不放行首、左括號不放行尾，英文整個單字一起換行。
+   g.text('第一章 最後一單', x, y, { size: 24, color: '#fff', weight: 900, outline: 3, outlineColor: '#000', align: 'center' })
+   ========================================================================== */
+const Text = PZ.text = {
+  font: '"PZ Sans","Noto Sans TC","PingFang TC","Heiti TC","Microsoft JhengHei","Noto Sans CJK TC",system-ui,sans-serif',
+  sizes: [12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128, 160],
+  pageSize: 1024, maxPages: 8,
+  pages: [], glyphs: new Map(), _measure: new Map(), _ctx: null,
+};
+const NO_START = new Set('，。、；：！？）」』】》〉…—～,.;:!?)]}’”%·．'.split(''));
+const NO_END = new Set('（「『【《〈([{‘“'.split(''));
+const isWide = (c) => { const k = c.codePointAt(0); return k >= 0x2e80 || (k >= 0x1100 && k <= 0x11ff); };
+const EMOJI = /\p{Extended_Pictographic}/u;
+
+function textCtx() {
+  if (!Text._ctx) { const c = document.createElement('canvas'); c.width = c.height = 4; Text._ctx = c.getContext('2d'); }
+  return Text._ctx;
+}
+function fontSpec(st, px) { return `${st.italic ? 'italic ' : ''}${st.weight || 400} ${px}px ${st.font || Text.font}`; }
+function rasterSize(need) { for (const s of Text.sizes) if (s >= need) return s; return Text.sizes[Text.sizes.length - 1]; }
+
+function newGlyphPage() {
+  const r = Gfx.r, S = Text.pageSize;
+  const pg = { sky: new Skyline(S, S), tex: null };
+  pg.tex = r.texCreate(S, S, { restore: () => Text.reset() });
+  Text.pages.push(pg); return pg;
+}
+/** 字型圖集滿了或繪圖器換了：全部清掉，之後要用時再畫 */
+Text.reset = () => {
+  const r = Gfx.r;
+  for (const pg of Text.pages) { if (r && r.textures.has(pg.tex)) r.texDelete(pg.tex); }
+  Text.pages.length = 0; Text.glyphs.clear();
+};
+function glyph(ch, st, R, stroke) {
+  const fam = st.font || Text.font, key = `${fam}|${st.weight || 400}|${st.italic ? 1 : 0}|${R}|${stroke}|${ch}`;
+  let g = Text.glyphs.get(key);
+  if (g) return g;
+  const r = Gfx.r;
+  const mc = textCtx(); mc.font = fontSpec(st, R);
+  const m = mc.measureText(ch);
+  const asc = m.fontBoundingBoxAscent || R * 0.95, desc = m.fontBoundingBoxDescent || R * 0.28;
+  const left = Math.max(0, m.actualBoundingBoxLeft || 0), right = Math.max(m.width, m.actualBoundingBoxRight || m.width);
+  const pad = 2 + Math.ceil(stroke), cw = Math.ceil(left + right) + pad * 2, chh = Math.ceil(asc + desc) + pad * 2;
+  g = { page: null, sx: 0, sy: 0, sw: cw, sh: chh, ox: -(pad + left), oy: -(pad + asc), adv: m.width, R, color: EMOJI.test(ch), empty: ch === ' ' || ch === '　' };
+  if (g.empty || !r) { Text.glyphs.set(key, g); return g; }
+  let pg = null, p = null;
+  for (const q of Text.pages) { p = q.sky.insert(cw, chh); if (p) { pg = q; break; } }
+  if (!p) {
+    if (Text.pages.length >= Text.maxPages) { Text.reset(); return glyph(ch, st, R, stroke); }
+    pg = newGlyphPage(); p = pg.sky.insert(cw, chh);
+    if (!p) { Text.glyphs.set(key, g); g.empty = true; return g; }
+  }
+  g.page = pg; g.sx = p.x; g.sy = p.y;
+  const draw = (ctx, ox, oy) => {
+    ctx.save(); ctx.font = fontSpec(st, R); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    const bx = ox + pad + left, by = oy + pad + asc;
+    if (stroke > 0) { ctx.lineJoin = 'round'; ctx.miterLimit = 2; ctx.lineWidth = stroke * 2; ctx.strokeStyle = '#fff'; ctx.strokeText(ch, bx, by); }
+    ctx.fillStyle = '#fff'; ctx.fillText(ch, bx, by);
+    ctx.restore();
+  };
+  if (r.kind === 'canvas2d') { draw(pg.tex.ctx, p.x, p.y); pg.tex._white = null; }
+  else { const ctx = scratch(cw, chh); draw(ctx, 0, 0); r.texUpload(pg.tex, Art._scratch, p.x, p.y); }
+  Text.glyphs.set(key, g);
+  return g;
+}
+
+/** 把字串切成「斷行單位」：中文一字一個、英文一個單字一個、空白獨立 */
+function tokens(str) {
+  const out = []; let cur = '';
+  for (const ch of str) {
+    if (ch === '\n') { if (cur) out.push(cur); cur = ''; out.push('\n'); continue; }
+    if (ch === ' ' || ch === '\t') { if (cur) out.push(cur); cur = ''; out.push(' '); continue; }
+    if (isWide(ch) || EMOJI.test(ch)) { if (cur) out.push(cur); cur = ''; out.push(ch); continue; }
+    cur += ch;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+/** 量寬度（邏輯 px） */
+Text.measure = (str, st = {}) => {
+  const size = st.size || 16, ls = st.letterSpacing || 0;
+  const key = (st.font || '') + '|' + (st.weight || 400) + '|' + (st.italic ? 1 : 0) + '|' + size + '|' + ls + '|' + str;
+  let w = Text._measure.get(key);
+  if (w !== undefined) return w;
+  const mc = textCtx(); mc.font = fontSpec(st, 64);
+  w = 0; for (const ch of str) w += mc.measureText(ch).width * size / 64 + ls;
+  if (str.length) w -= ls;
+  if (Text._measure.size > 4000) Text._measure.clear();
+  Text._measure.set(key, w);
+  return w;
+};
+/** 斷行：回傳每一行的字串 */
+Text.wrap = (str, st = {}) => {
+  str = String(str);
+  const maxW = st.maxWidth || 0;
+  if (!maxW) return str.split('\n');
+  const lines = []; let line = '', lw = 0;
+  const sp = Text.measure(' ', st);
+  const toks = tokens(str);
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t === '\n') { lines.push(line); line = ''; lw = 0; continue; }
+    const tw = t === ' ' ? sp : Text.measure(t, st);
+    if (line && lw + tw > maxW && t !== ' ') {
+      if (NO_START.has(t[0]) && t.length === 1) { line += t; lw += tw; continue; } // 標點掛在行尾
+      // 行尾是左括號：把它一起帶到下一行
+      let carry = '';
+      while (line && NO_END.has(line[line.length - 1])) { carry = line[line.length - 1] + carry; line = line.slice(0, -1); }
+      lines.push(line.replace(/\s+$/, '')); line = carry + t; lw = Text.measure(line, st);
+      continue;
+    }
+    if (!line && t === ' ') continue;
+    line += t; lw += tw;
+  }
+  lines.push(line.replace(/\s+$/, ''));
+  return lines;
+};
+
+/**
+ * 把字畫出來（由 g.text 呼叫）。m：目前矩陣 [a,b,c,d,e,f]（邏輯座標 → 畫布像素）
+ * 回傳 {w, h}（邏輯大小）
+ */
+Text.draw = (r, m, str, x, y, st, alphaMul) => {
+  if (r.kind === 'canvas2d') return drawNative(r, m, str, x, y, st, alphaMul);
+  const size = st.size || 16, lh = (st.lineHeight || 1.25) * size, ls = st.letterSpacing || 0;
+  const lines = Text.wrap(str, st);
+  const msc = Math.hypot(m[0], m[1]);
+  const R = rasterSize(size * msc * (st.sharp || 1)), k = size / R;
+  const align = st.align || 'left', base = st.baseline || 'top';
+  const totalH = lines.length * lh;
+  let y0 = y;
+  if (base === 'middle') y0 = y - totalH / 2; else if (base === 'bottom') y0 = y - totalH; else if (base === 'alphabetic') y0 = y - size * 0.95;
+  const asc = size * 0.95 + (lh - size * 1.23) / 2; // 第一行基線離頂端的距離
+  let maxW = 0;
+  const widths = lines.map((l) => { const w = Text.measure(l, st); if (w > maxW) maxW = w; return w; });
+  const color = toColor(st.color || '#fff'), a = alphaMul;
+  const passes = [];
+  if (st.shadow) { const s = st.shadow === true ? {} : st.shadow; passes.push({ stroke: st.outline || 0, color: toColor(s.color || 'rgba(0,0,0,.55)'), dx: s.x != null ? s.x : size * 0.06, dy: s.y != null ? s.y : size * 0.08 }); }
+  if (st.outline) passes.push({ stroke: st.outline, color: toColor(st.outlineColor || '#000'), dx: 0, dy: 0 });
+  passes.push({ stroke: 0, color, dx: 0, dy: 0, fill: true });
+  const [ma, mb, mc, md, me, mf] = m;
+  for (const ps of passes) {
+    const strokeR = ps.stroke / k;
+    const col = Color.alpha(ps.color, cA(ps.color) * a), add = st.add || 0;
+    for (let li = 0; li < lines.length; li++) {
+      const line = lines[li]; let px = x + ps.dx;
+      if (align === 'center') px -= widths[li] / 2; else if (align === 'right') px -= widths[li];
+      const by = y0 + li * lh + asc + ps.dy;
+      for (const ch of line) {
+        const g = glyph(ch, st, R, Math.round(strokeR));
+        if (!g.empty && g.page) {
+          const gx = px + g.ox * k, gy = by + g.oy * k, gw = g.sw * k, gh = g.sh * k;
+          // 單位正方形 → 字的格子
+          const a1 = ma * gw, b1 = mb * gw, c1 = mc * gh, d1 = md * gh, e1 = ma * gx + mc * gy + me, f1 = mb * gx + md * gy + mf;
+          const tex = g.page.tex, cc = g.color && ps.fill ? Color.alpha(WHITE, cA(col)) : col;
+          r.quad(tex, a1, b1, c1, d1, e1, f1, g.sx / tex.w, g.sy / tex.h, (g.sx + g.sw) / tex.w, (g.sy + g.sh) / tex.h, cc, MODE.sprite, add, 0);
+        }
+        px += g.adv * k + ls;
+      }
+    }
+  }
+  return { w: maxW, h: totalH, lines: lines.length };
+};
+
+/** Canvas2D 模式：直接用瀏覽器畫字（不經過字型圖集，才能上色、描邊） */
+function drawNative(r, m, str, x, y, st, alphaMul) {
+  const ctx = r.cur, size = st.size || 16, lh = (st.lineHeight || 1.25) * size, ls = st.letterSpacing || 0;
+  const lines = Text.wrap(str, st), totalH = lines.length * lh, base = st.baseline || 'top', align = st.align || 'left';
+  let y0 = y; if (base === 'middle') y0 = y - totalH / 2; else if (base === 'bottom') y0 = y - totalH; else if (base === 'alphabetic') y0 = y - size * 0.95;
+  const asc = size * 0.95 + (lh - size * 1.23) / 2;
+  ctx.save(); ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+  ctx.font = fontSpec(st, size); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+  ctx.globalCompositeOperation = st.add ? 'lighter' : 'source-over'; ctx.lineJoin = 'round';
+  if ('letterSpacing' in ctx && ls) ctx.letterSpacing = ls + 'px';
+  let maxW = 0;
+  for (let li = 0; li < lines.length; li++) {
+    const line = lines[li], w = Text.measure(line, st); maxW = Math.max(maxW, w);
+    let px = x; if (align === 'center') px -= w / 2; else if (align === 'right') px -= w;
+    const by = y0 + li * lh + asc;
+    if (st.shadow) { const sh = st.shadow === true ? {} : st.shadow, sc = toColor(sh.color || 'rgba(0,0,0,.55)'); ctx.globalAlpha = cA(sc) * alphaMul; ctx.fillStyle = ctx.strokeStyle = Color.css(sc | 0xff000000); const dx = sh.x != null ? sh.x : size * 0.06, dy = sh.y != null ? sh.y : size * 0.08; if (st.outline) { ctx.lineWidth = st.outline * 2; ctx.strokeText(line, px + dx, by + dy); } ctx.fillText(line, px + dx, by + dy); }
+    if (st.outline) { const oc = toColor(st.outlineColor || '#000'); ctx.globalAlpha = cA(oc) * alphaMul; ctx.strokeStyle = Color.css(oc | 0xff000000); ctx.lineWidth = st.outline * 2; ctx.strokeText(line, px, by); }
+    const fc = toColor(st.color || '#fff'); ctx.globalAlpha = cA(fc) * alphaMul; ctx.fillStyle = Color.css(fc | 0xff000000); ctx.fillText(line, px, by);
+  }
+  ctx.restore();
+  return { w: maxW, h: totalH, lines: lines.length };
+}
+/** 等字型載好（嵌入字型、網路字型）再畫字，不然會先用到替代字型 */
+Text.ready = async (families = [], timeout = 2500) => {
+  if (!HAS_DOM || !document.fonts) return;
+  const loads = families.map((f) => document.fonts.load(`700 32px "${f}"`, '測試字ABC').catch(() => null));
+  await Promise.race([Promise.all(loads).then(() => document.fonts.ready), new Promise((r) => setTimeout(r, timeout))]);
+};
+if (HAS_DOM && document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { if (Gfx.r) Text.reset(); Text._measure.clear(); });
+
+/* ---- 11_draw.js ---- */
+/* ==========================================================================
+   11 畫圖 API（場景的 render(g) 拿到的 g）
+   座標空間：
+     g.world()   世界座標（跟著相機：位移、縮放、旋轉、震動）← render 一開始就是這個
+     g.screen()  螢幕座標（CSS px，左上角 0,0），不跟相機
+     g.hud()     場景畫完：做後製（泛光、扭曲…），之後畫的 HUD 不受震動與後製影響；自動切到 screen
+     g.lighting() 套用光影（PZ.light）與霧；之後畫的東西不受明暗影響（發光的燈泡、火焰）。沒呼叫的話 g.hud() 會自動套用
+   變形跟 Canvas2D 一樣：g.save() / g.translate() / g.rotate() / g.scale() / g.restore() / g.alpha(a)
+   常用：
+     g.sprite('hero', x, y, { r: 角度, s: 縮放, sx, sy, a: 透明度, color: 上色, add: 發光 0～1, flash: 閃白 0～1, ax, ay })
+     g.spr(frame, x, y, r, sx, sy, a, color, add, flash)    ← 熱迴圈用，不產生物件
+     g.rect(x, y, w, h, color, { a, add, r, ax, ay })
+     g.circle(x, y, r, color, { a, add })    g.ring(x, y, r, 粗細, color)    g.glow(x, y, r, color, { a, core })
+     g.line(x1, y1, x2, y2, 粗細, color, { a, add, cap: 'round' })
+     g.poly([x0,y0, x1,y1, …], color)         g.trail(點陣列, 頭寬, 尾寬, 頭色, 尾色, { add })
+     g.text('字', x, y, { size, color, weight, outline, outlineColor, shadow, align, baseline, maxWidth })
+     g.bar(x, y, w, h, 比例, { bg, fg, back })  血條
+     g.into('decals', () => { …畫進畫布貼圖… })
+     g.castShadow('hero', x, y, { len, a })   角色投影（朝離燈的方向）    g.beam(x, y, 角度, 長度, 起寬, 終寬, color)  光束
+     g.water(x, y, w, h, { mode: 'mirror' | 'flat', color, reflect })     水面（倒影、波紋）    g.haze(x, y, w, h)  熱浪扭曲
+   ========================================================================== */
+const M_ID = [1, 0, 0, 1, 0, 0];
+let PolyScratch = new Float64Array(64);   // g.polyTex 用的暫存（螢幕座標＋材質座標）
+class Graphics {
+  constructor() {
+    this.m = new Float64Array(6); this.m.set(M_ID);
+    this.stack = []; this.al = 1; this.space = 'world'; this.blendName = 'normal';
+    this._opt = {};
+  }
+  get r() { return Gfx.r; }
+  /* ---- 座標空間 ---- */
+  _base(space) {
+    const res = Screen.res, m = this.m;
+    if (space === 'world') { const v = Cam.mat; m[0] = v[0] * res; m[1] = v[1] * res; m[2] = v[2] * res; m[3] = v[3] * res; m[4] = v[4] * res; m[5] = v[5] * res; }
+    else { m[0] = res; m[1] = 0; m[2] = 0; m[3] = res; m[4] = 0; m[5] = 0; }
+    this.space = space; this.stack.length = 0; this.al = 1;
+  }
+  world() { this._base('world'); return this; }
+  screen() { this._base('screen'); return this; }
+  hud() {
+    if (this._hudDone) { this._base('screen'); return this; }
+    this.lighting(); Weather._drawOver(this); Fx._drawAuto(this);
+    this.r.hud(); this._base('screen'); Cinema._drawBars(this);
+    this._hudDone = true; return this;
+  }
+  /** 套用光影（PZ.light）與霧：之前畫的東西被照亮／變暗，之後畫的（燈泡、火焰、發光字）照原樣。沒呼叫的話 g.hud() 會自動套用 */
+  lighting() { if (this._litDone) return this; this._litDone = true; Weather._drawUnder(this); Light._apply(this); return this; }
+  /* ---- 變形 ---- */
+  save() { this.stack.push([this.m[0], this.m[1], this.m[2], this.m[3], this.m[4], this.m[5], this.al, this.blendName]); return this; }
+  restore() { const s = this.stack.pop(); if (s) { this.m.set(s.slice(0, 6)); this.al = s[6]; if (s[7] !== this.blendName) this.blend(s[7]); } return this; }
+  translate(x, y) { const m = this.m; m[4] += m[0] * x + m[2] * y; m[5] += m[1] * x + m[3] * y; return this; }
+  scale(sx, sy = sx) { const m = this.m; m[0] *= sx; m[1] *= sx; m[2] *= sy; m[3] *= sy; return this; }
+  rotate(a) { if (!a) return this; const m = this.m, c = Math.cos(a), s = Math.sin(a), a0 = m[0], b0 = m[1], c0 = m[2], d0 = m[3]; m[0] = a0 * c + c0 * s; m[1] = b0 * c + d0 * s; m[2] = c0 * c - a0 * s; m[3] = d0 * c - b0 * s; return this; }
+  transform(a, b, c, d, e, f) { const m = this.m, a0 = m[0], b0 = m[1], c0 = m[2], d0 = m[3]; m[0] = a0 * a + c0 * b; m[1] = b0 * a + d0 * b; m[2] = a0 * c + c0 * d; m[3] = b0 * c + d0 * d; m[4] += a0 * e + c0 * f; m[5] += b0 * e + d0 * f; return this; }
+  /** 乘上透明度（save/restore 會記住） */
+  alpha(a) { this.al *= a; return this; }
+  /** 混合模式：'normal' | 'add' | 'multiply' | 'screen' | 'erase' */
+  blend(name = 'normal') { this.blendName = name; this.r.setBlend(name); return this; }
+  /* ---- 內部：把單位正方形經過 L 再經過目前矩陣送出去 ---- */
+  _emit(t, la, lb, lc, ld, le, lf, u0, v0, u1, v1, color, mode, add, param) {
+    const m = this.m;
+    this.r.quad(t, m[0] * la + m[2] * lb, m[1] * la + m[3] * lb, m[0] * lc + m[2] * ld, m[1] * lc + m[3] * ld, m[0] * le + m[2] * lf + m[4], m[1] * le + m[3] * lf + m[5], u0, v0, u1, v1, color, mode, add > 1 ? 1 : add < 0 ? 0 : add, param > 1 ? 1 : param < 0 ? 0 : param);
+  }
+  _col(color, a) { const c = color == null ? WHITE : typeof color === 'number' ? color : toColor(color); const al = cA(c) * a * this.al; return al >= 0.999 ? (c | 0xff000000) >>> 0 : (((Math.round(clamp01(al) * 255) << 24) | (c & 0xffffff)) >>> 0); }
+  /* ---- 貼圖 ---- */
+  spr(f, x, y, r = 0, sx = 1, sy = sx, a = 1, color, add = 0, flash = 0, ax, ay) {
+    if (typeof f === 'string') f = Art.get(f);
+    if (!f.tex) return this;
+    const W = f.w * sx, H = f.h * sy, axx = ax == null ? f.ax : ax, ayy = ay == null ? f.ay : ay;
+    let la, lb, lc, ld;
+    if (r) { const c = Math.cos(r), s = Math.sin(r); la = c * W; lb = s * W; lc = -s * H; ld = c * H; } else { la = W; lb = 0; lc = 0; ld = H; }
+    this._emit(f.tex, la, lb, lc, ld, x - axx * la - ayy * lc, y - axx * lb - ayy * ld, f.u0, f.v0, f.u1, f.v1, this._col(color, a), MODE.sprite, add, flash);
+    return this;
+  }
+  sprite(f, x, y, o) {
+    if (!o) return this.spr(f, x, y);
+    const s = o.s != null ? o.s : 1;
+    let sx = o.sx != null ? o.sx * s : s, sy = o.sy != null ? o.sy * s : s;
+    if (o.flipX) sx = -sx; if (o.flipY) sy = -sy;
+    if (o.silhouette) { // 純色剪影（上色受擊、陰影）
+      if (typeof f === 'string') f = Art.get(f); if (!f.tex) return this;
+      const W = f.w * sx, H = f.h * sy, r = o.r || 0, c = Math.cos(r), sn = Math.sin(r), la = c * W, lb = sn * W, lc = -sn * H, ld = c * H, ax = o.ax == null ? f.ax : o.ax, ay = o.ay == null ? f.ay : o.ay;
+      this._emit(f.tex, la, lb, lc, ld, x - ax * la - ay * lc, y - ax * lb - ay * ld, f.u0, f.v0, f.u1, f.v1, this._col(o.color || '#000', o.a == null ? 1 : o.a), MODE.silhouette, o.add || 0, 0);
+      return this;
+    }
+    return this.spr(f, x, y, o.r || 0, sx, sy, o.a == null ? 1 : o.a, o.color, o.add || 0, o.flash || 0, o.ax, o.ay);
+  }
+  /** 把一張圖鋪滿一個矩形（背景、地板）；u/v 可以平移（捲動） */
+  tile(f, x, y, w, h, o = {}) {
+    if (typeof f === 'string') f = Art.get(f); if (!f.tex) return this;
+    const tw = f.w * (o.s || 1), th = f.h * (o.s || 1), ox = ((o.ox || 0) % tw + tw) % tw, oy = ((o.oy || 0) % th + th) % th;
+    const col = this._col(o.color, o.a == null ? 1 : o.a);
+    for (let ty = y - oy; ty < y + h; ty += th) for (let tx = x - ox; tx < x + w; tx += tw) {
+      const x0 = Math.max(tx, x), y0 = Math.max(ty, y), x1 = Math.min(tx + tw, x + w), y1 = Math.min(ty + th, y + h);
+      if (x1 <= x0 || y1 <= y0) continue;
+      const fu0 = (x0 - tx) / tw, fv0 = (y0 - ty) / th, fu1 = (x1 - tx) / tw, fv1 = (y1 - ty) / th, du = f.u1 - f.u0, dv = f.v1 - f.v0;
+      this._emit(f.tex, x1 - x0, 0, 0, y1 - y0, x0, y0, f.u0 + du * fu0, f.v0 + dv * fv0, f.u0 + du * fu1, f.v0 + dv * fv1, col, MODE.sprite, o.add || 0, 0);
+    }
+    return this;
+  }
+  /* ---- 形狀 ---- */
+  rect(x, y, w, h, color, o) {
+    const a = o && o.a != null ? o.a : 1, add = (o && o.add) || 0, r = (o && o.r) || 0;
+    if (r) { const ax = o.ax == null ? 0.5 : o.ax, ay = o.ay == null ? 0.5 : o.ay, c = Math.cos(r), s = Math.sin(r), la = c * w, lb = s * w, lc = -s * h, ld = c * h; this._emit(null, la, lb, lc, ld, x - ax * la - ay * lc, y - ax * lb - ay * ld, 0, 0, 1, 1, this._col(color, a), MODE.solid, add, 0); }
+    else this._emit(null, w, 0, 0, h, x, y, 0, 0, 1, 1, this._col(color, a), MODE.solid, add, 0);
+    return this;
+  }
+  /** 整個畫面填色（不管相機） */
+  fill(color, a = 1) { this.save(); this._base('screen'); this.rect(0, 0, Screen.w, Screen.h, color, { a }); this.restore(); return this; }
+  circle(x, y, r, color, o) { this._emit(null, r * 2, 0, 0, r * 2, x - r, y - r, -1, -1, 1, 1, this._col(color, o && o.a != null ? o.a : 1), MODE.circle, (o && o.add) || 0, 0); return this; }
+  /** 橢圓（影子很好用） */
+  ellipse(x, y, rx, ry, color, o) { this._emit(null, rx * 2, 0, 0, ry * 2, x - rx, y - ry, -1, -1, 1, 1, this._col(color, o && o.a != null ? o.a : 1), MODE.circle, (o && o.add) || 0, 0); return this; }
+  ring(x, y, r, thick, color, o) { this._emit(null, r * 2, 0, 0, r * 2, x - r, y - r, -1, -1, 1, 1, this._col(color, o && o.a != null ? o.a : 1), MODE.ring, (o && o.add) || 0, clamp01(thick / r)); return this; }
+  /** 柔光：預設加亮（add=1）；core 0～1 讓中心更亮 */
+  glow(x, y, r, color, o) { this._emit(null, r * 2, 0, 0, r * 2, x - r, y - r, -1, -1, 1, 1, this._col(color, o && o.a != null ? o.a : 1), MODE.glow, o && o.add != null ? o.add : 1, (o && o.core) || 0); return this; }
+  line(x1, y1, x2, y2, w, color, o) {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy); if (len < 1e-6) return this;
+    const nx = -dy / len, ny = dx / len, col = this._col(color, o && o.a != null ? o.a : 1), add = (o && o.add) || 0;
+    this._emit(null, dx, dy, nx * w, ny * w, x1 - nx * w / 2, y1 - ny * w / 2, -1, -1, 1, 1, col, MODE.line, add, 0);
+    if (o && o.cap === 'round') { const r = w / 2; this._emit(null, w, 0, 0, w, x1 - r, y1 - r, -1, -1, 1, 1, col, MODE.circle, add, 0); this._emit(null, w, 0, 0, w, x2 - r, y2 - r, -1, -1, 1, 1, col, MODE.circle, add, 0); }
+    return this;
+  }
+  /** 凸多邊形：[x0,y0, x1,y1, …] */
+  poly(pts, color, o) {
+    const n = pts.length / 2; if (n < 3) return this;
+    const m = this.m, col = this._col(color, o && o.a != null ? o.a : 1), add = (o && o.add) || 0;
+    const X = (i) => m[0] * pts[i * 2] + m[2] * pts[i * 2 + 1] + m[4], Y = (i) => m[1] * pts[i * 2] + m[3] * pts[i * 2 + 1] + m[5];
+    const x0 = X(0), y0 = Y(0);
+    for (let i = 1; i < n - 1; i++) this.r.tri(x0, y0, X(i), Y(i), X(i + 1), Y(i + 1), col, add);
+    return this;
+  }
+  /**
+   * 貼材質的凸多邊形 [x0,y0, x1,y1, …]：材質照世界座標一直重複（PZ.art.pattern 做的圖），形狀怎麼切都接得起來
+   * o = { s（材質放大幾倍）, color（染色：乘上去）, a, add, ox, oy（材質的原點） }
+   */
+  polyTex(pts, f, o) {
+    if (typeof f === 'string') f = Art.get(f);
+    const n = pts.length / 2; if (n < 3) return this;
+    if (!f.tex || !f.pattern || this.r.kind === 'canvas2d') {   // Canvas2D：平均色×染色
+      const t = toColor(o && o.color != null ? o.color : WHITE), a = f.avg != null ? f.avg : 0xff808080;
+      return this.poly(pts, Color.rgb((cR(a) * cR(t)) / 255, (cG(a) * cG(t)) / 255, (cB(a) * cB(t)) / 255, cA(t)), o);
+    }
+    const m = this.m, col = this._col(o && o.color, o && o.a != null ? o.a : 1), add = (o && o.add) || 0;
+    const sc = (o && o.s) || 1, tw = f.w * sc, th = f.h * sc, ox = (o && o.ox) || 0, oy = (o && o.oy) || 0;
+    // 材質座標減掉整數（重複取樣下一樣），數字小，手機的半精度才不會糊
+    let bu = Infinity, bv = Infinity; for (let i = 0; i < n; i++) { const u = (pts[i * 2] - ox) / tw, v = (pts[i * 2 + 1] - oy) / th; if (u < bu) bu = u; if (v < bv) bv = v; }
+    bu = Math.floor(bu); bv = Math.floor(bv);
+    const S = PolyScratch.length >= n * 4 ? PolyScratch : (PolyScratch = new Float64Array(n * 4)), r = this.r, t = f.tex;
+    for (let i = 0; i < n; i++) { const x = pts[i * 2], y = pts[i * 2 + 1], j = i * 4; S[j] = m[0] * x + m[2] * y + m[4]; S[j + 1] = m[1] * x + m[3] * y + m[5]; S[j + 2] = (x - ox) / tw - bu; S[j + 3] = (y - oy) / th - bv; }
+    for (let i = 1; i < n - 1; i++) { const j = i * 4, k = j + 4; r.quadv(t, S[0], S[1], S[2], S[3], S[j], S[j + 1], S[j + 2], S[j + 3], S[k], S[k + 1], S[k + 2], S[k + 3], S[k], S[k + 1], S[k + 2], S[k + 3], col, col, MODE.sprite, add, 0); }
+    return this;
+  }
+  /** 拖尾／光帶：pts 是 [{x,y}…]（頭在前面），寬度與顏色從頭漸變到尾 */
+  trail(pts, w0, w1, c0, c1, o) {
+    const n = pts.length; if (n < 2) return this;
+    const m = this.m, add = o && o.add != null ? o.add : 0, a = o && o.a != null ? o.a : 1;
+    const A = this._col(c0, a), B = this._col(c1 == null ? Color.alpha(c0, 0) : c1, a);
+    let px = 0, py = 0, pl = 0, pr = 0, plx = 0, ply = 0, prx = 0, pry = 0;
+    for (let i = 0; i < n; i++) {
+      const p = pts[i], q = pts[Math.min(n - 1, i + 1)], o2 = pts[Math.max(0, i - 1)];
+      let dx = q.x - o2.x, dy = q.y - o2.y; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+      const t = i / (n - 1), w = lerp(w0, w1, t) / 2, nx = -dy * w, ny = dx * w;
+      const lx = p.x + nx, ly = p.y + ny, rx = p.x - nx, ry = p.y - ny;
+      const LX = m[0] * lx + m[2] * ly + m[4], LY = m[1] * lx + m[3] * ly + m[5], RX = m[0] * rx + m[2] * ry + m[4], RY = m[1] * rx + m[3] * ry + m[5];
+      if (i > 0) { const ca = Color.mix(A, B, (i - 1) / (n - 1)), cb = Color.mix(A, B, t); this.r.quad4(null, plx, ply, LX, LY, RX, RY, prx, pry, -1, -1, 1, 1, ca, cb, MODE.line, add, 0); }
+      plx = LX; ply = LY; prx = RX; pry = RY; px = p.x; py = p.y; pl = w; pr = w;
+    }
+    return this;
+  }
+  /** 血條：frac 0～1；back 是「剛被扣掉、慢慢追上」的那一截 */
+  bar(x, y, w, h, frac, o = {}) {
+    this.rect(x, y, w, h, o.bg || 'rgba(0,0,0,.55)');
+    if (o.back != null && o.back > frac) this.rect(x, y, w * clamp01(o.back), h, o.backColor || '#fff', { a: 0.85 });
+    this.rect(x, y, w * clamp01(frac), h, o.fg || '#e33');
+    return this;
+  }
+  /* ---- 文字 ---- */
+  text(str, x, y, st) {
+    if (str == null || str === '') return { w: 0, h: 0 };
+    st = st || this._opt;
+    return Text.draw(this.r, this.m, String(str), x, y, st, (st.a == null ? 1 : st.a) * this.al);
+  }
+  measure(str, st) { return Text.measure(String(str), st || {}); }
+  /* ---- 畫進畫布貼圖 ---- */
+  into(target, fn, clear) {
+    const f = typeof target === 'string' ? Art.get(target) : target; if (!f.rt) { warnOnce('into', 'g.into 只能畫進 PZ.art.target() 建的貼圖'); return this; }
+    const r = this.r; this.save();
+    r.beginTarget(f.tex, clear);
+    const m = this.m; m[0] = f.res; m[1] = 0; m[2] = 0; m[3] = f.res; m[4] = 0; m[5] = 0; this.al = 1;
+    try { fn(this); } catch (e) { reportError(e, 'g.into'); }
+    r.flush(); r.endTarget();
+    this.restore();
+    return this;
+  }
+  /** 這個點在不在畫面裡（世界座標、加邊界），畫之前先問可以省很多 */
+  visible(x, y, margin = 64) { return Cam.inView(x, y, margin); }
+}
+const G = PZ.g = new Graphics();
+
+/* ---- 12_camera.js ---- */
+/* ==========================================================================
+   12 相機
+     PZ.cam.follow(player, { lerp: 8, lead: 0.25 })   跟著目標（lead＝往移動方向多看一點）
+     PZ.cam.fit(420)        讓畫面短邊至少看得到 420 個世界單位（手機、平板、電腦看到的範圍一致）
+     PZ.cam.shake(0.4)      震動（trauma 模型：疊加、會自己消退，強度是平方，小震很輕、大震很猛）
+     PZ.cam.kick(角度, 12)  往某方向頓一下（後座力、被打）
+     PZ.cam.punch(0.06)     鏡頭瞬間推近再彈回
+     PZ.cam.controls({ pan: true, zoom: [0.5, 3], rotate: true })   戰略／模擬類：拖曳平移、雙指縮放旋轉、滾輪縮放
+     PZ.cam.toWorldX/Y(螢幕x, 螢幕y)、toScreenX/Y(世界x, 世界y)、inView(x, y, 邊界)
+   ========================================================================== */
+const Cam = PZ.cam = {
+  x: 0, y: 0, zoom: 1, rot: 0, fitSize: 0, userZoom: 1,
+  target: null, lerpK: 8, lead: 0, dead: 0, offX: 0, offY: 0, bounds: null,
+  trauma: 0, decay: 1.15, maxX: 16, maxY: 12, maxR: 0.03, freq: 22,
+  kx: 0, ky: 0, kvx: 0, kvy: 0, pz: 0, pv: 0,
+  sx: 0, sy: 0, sr: 0, ez: 1, er: 0,
+  mat: new Float64Array([1, 0, 0, 1, 0, 0]), inv: new Float64Array([1, 0, 0, 1, 0, 0]),
+  view: { x: 0, y: 0, w: 0, h: 0 },
+  ctl: null, external: false,
+};
+Cam.follow = (t, o = {}) => { Cam.target = t; if (o.lerp != null) Cam.lerpK = o.lerp; if (o.lead != null) Cam.lead = o.lead; if (o.dead != null) Cam.dead = o.dead; if (o.snap !== false && t) Cam.snap(); return Cam; };
+Cam.snap = () => { if (Cam.target) { Cam.x = Cam.target.x + Cam.offX; Cam.y = Cam.target.y + Cam.offY; } Cam.clampBounds(); Cam.compute(); return Cam; };
+Cam.fit = (size) => { Cam.fitSize = size; Cam.compute(); return Cam; };
+Cam.baseZoom = () => (Cam.fitSize > 0 ? Math.max(0.05, Math.min(Screen.w, Screen.h) / Cam.fitSize) : 1);
+Cam.shake = (amount) => { Cam.trauma = Math.min(1, Cam.trauma + amount); return Cam; };
+Cam.kick = (angle, px) => { const s = Settings.get('shake'); Cam.kvx += Math.cos(angle) * px * 22 * s; Cam.kvy += Math.sin(angle) * px * 22 * s; return Cam; };
+Cam.punch = (amount) => { Cam.pv += amount * 26 * Settings.get('shake'); return Cam; };
+Cam.reset = () => { Object.assign(Cam, { x: 0, y: 0, zoom: 1, rot: 0, userZoom: 1, target: null, bounds: null, trauma: 0, external: false, kx: 0, ky: 0, kvx: 0, kvy: 0, pz: 0, pv: 0, offX: 0, offY: 0, ctl: null }); Cam.compute(); };
+
+Cam.clampBounds = () => {
+  const b = Cam.bounds; if (!b) return;
+  const z = Cam.ez || 1, hw = Screen.w / z / 2, hh = Screen.h / z / 2;
+  if (b.w <= hw * 2) Cam.x = b.x + b.w / 2; else Cam.x = clamp(Cam.x, b.x + hw, b.x + b.w - hw);
+  if (b.h <= hh * 2) Cam.y = b.y + b.h / 2; else Cam.y = clamp(Cam.y, b.y + hh, b.y + b.h - hh);
+};
+/** 算出世界 → 螢幕（CSS px）的矩陣 */
+Cam.compute = () => {
+  // external：相機由遊戲自己控制（舊遊戲遷移），震動與後座力的位移不套進矩陣，遊戲自己讀 Cam.offsetX/Y
+  const ext = Cam.external;
+  const z = Cam.baseZoom() * Cam.zoom * Cam.userZoom * (ext ? 1 : 1 + Cam.pz);
+  const r = Cam.rot + (ext ? 0 : Cam.sr);
+  Cam.ez = z; Cam.er = r;
+  const c = Math.cos(-r) * z, s = Math.sin(-r) * z;
+  const cx = Screen.w / 2 + (ext ? 0 : Cam.sx + Cam.kx), cy = Screen.h / 2 + (ext ? 0 : Cam.sy + Cam.ky);
+  const m = Cam.mat; m[0] = c; m[1] = s; m[2] = -s; m[3] = c; m[4] = cx - (c * Cam.x - s * Cam.y); m[5] = cy - (s * Cam.x + c * Cam.y);
+  const det = m[0] * m[3] - m[1] * m[2] || 1, iv = Cam.inv;
+  iv[0] = m[3] / det; iv[1] = -m[1] / det; iv[2] = -m[2] / det; iv[3] = m[0] / det; iv[4] = (m[2] * m[5] - m[3] * m[4]) / det; iv[5] = (m[1] * m[4] - m[0] * m[5]) / det;
+  // 看得到的世界範圍（旋轉時取外接框）
+  const hw = Screen.w / z / 2, hh = Screen.h / z / 2, ac = Math.abs(Math.cos(r)), as = Math.abs(Math.sin(r));
+  const ew = hw * ac + hh * as, eh = hw * as + hh * ac;
+  const v = Cam.view; v.x = Cam.x - ew; v.y = Cam.y - eh; v.w = ew * 2; v.h = eh * 2;
+};
+/** 目前震動＋後座力造成的畫面位移（CSS px）；external 模式的遊戲自己加到鏡頭上 */
+Object.defineProperty(Cam, 'offsetX', { get: () => Cam.sx + Cam.kx });
+Object.defineProperty(Cam, 'offsetY', { get: () => Cam.sy + Cam.ky });
+Cam.toWorldX = (sx, sy) => Cam.inv[0] * sx + Cam.inv[2] * sy + Cam.inv[4];
+Cam.toWorldY = (sx, sy) => Cam.inv[1] * sx + Cam.inv[3] * sy + Cam.inv[5];
+Cam.toScreenX = (wx, wy) => Cam.mat[0] * wx + Cam.mat[2] * wy + Cam.mat[4];
+Cam.toScreenY = (wx, wy) => Cam.mat[1] * wx + Cam.mat[3] * wy + Cam.mat[5];
+Cam.inView = (x, y, m = 0) => { const v = Cam.view; return x >= v.x - m && x <= v.x + v.w + m && y >= v.y - m && y <= v.y + v.h + m; };
+
+/** 戰略／模擬類的鏡頭操作 */
+Cam.controls = (o = {}) => {
+  if (o === false) { Cam.ctl = null; return Cam; }
+  Cam.ctl = Object.assign({ pan: true, zoom: [0.4, 3], rotate: false, inertia: true, vx: 0, vy: 0, drag: true, keys: true }, o);
+  return Cam;
+};
+function camControls(dt) {
+  const c = Cam.ctl; if (!c) return;
+  const g = Input.gesture, z = Cam.ez || 1;
+  const panning = c.pan && (Input.pointers.size >= 2 || (c.drag && Input.pointers.size === 1));
+  if (panning && (g.panX || g.panY)) {
+    const cr = Math.cos(Cam.er), sr = Math.sin(Cam.er), wx = (g.panX * cr - g.panY * sr) / z, wy = (g.panX * sr + g.panY * cr) / z;
+    Cam.x -= wx; Cam.y -= wy;
+    if (dt > 0) { c.vx = lerp(c.vx, -wx / dt, 0.5); c.vy = lerp(c.vy, -wy / dt, 0.5); }
+  } else if (c.inertia && !Input.pointers.size) {
+    Cam.x += c.vx * dt; Cam.y += c.vy * dt; const k = Math.exp(-5 * dt); c.vx *= k; c.vy *= k;
+  } else { c.vx = c.vy = 0; }
+  if (c.keys && c.pan) {
+    const m = Input.move; if (m.mag > 0 && !Cam.target) { const sp = 600 / z * dt; Cam.x += (m.x * Math.cos(Cam.er) - m.y * Math.sin(Cam.er)) * sp; Cam.y += (m.x * Math.sin(Cam.er) + m.y * Math.cos(Cam.er)) * sp; }
+  }
+  const zoomBy = g.zoom, rot = c.rotate ? g.rotate : 0;
+  if (zoomBy !== 1 || rot) {
+    // 讓手指（游標）下面那一點保持不動
+    const cx = g.cx || Screen.w / 2, cy = g.cy || Screen.h / 2, wx = Cam.toWorldX(cx, cy), wy = Cam.toWorldY(cx, cy);
+    if (zoomBy !== 1) { const zr = c.zoom || [0.4, 3]; Cam.userZoom = clamp(Cam.userZoom * zoomBy, zr[0], zr[1]); }
+    if (rot) Cam.rot += rot;
+    Cam.compute();
+    const nx = Cam.toWorldX(cx, cy), ny = Cam.toWorldY(cx, cy); Cam.x += wx - nx; Cam.y += wy - ny;
+  }
+}
+
+addSystem({
+  name: 'camera', order: 50,
+  update(dt) {
+    const t = Cam.target;
+    if (t) {
+      let tx = t.x + Cam.offX, ty = t.y + Cam.offY;
+      if (Cam.lead && (t.vx || t.vy)) { tx += (t.vx || 0) * Cam.lead; ty += (t.vy || 0) * Cam.lead; }
+      if (Cam.dead > 0) { const dx = tx - Cam.x, dy = ty - Cam.y, d = Math.hypot(dx, dy); if (d > Cam.dead) { const k = (d - Cam.dead) / d; tx = Cam.x + dx * k; ty = Cam.y + dy * k; } else { tx = Cam.x; ty = Cam.y; } }
+      Cam.x = damp(Cam.x, tx, Cam.lerpK, dt); Cam.y = damp(Cam.y, ty, Cam.lerpK, dt);
+    }
+    camControls(dt);
+    Cam.clampBounds();
+  },
+  frame(rdt) {
+    // 震動、後座力、推近用真實時間（打擊停頓時還在晃，才有「定格」的力道）
+    const s = Settings.get('shake');
+    Cam.trauma = Math.max(0, Cam.trauma - Cam.decay * rdt);
+    const sh = Cam.trauma * Cam.trauma * s, t = Time.real * Cam.freq;
+    Cam.sx = Cam.maxX * sh * noise1(t); Cam.sy = Cam.maxY * sh * noise1(t + 37.1); Cam.sr = Cam.maxR * sh * noise1(t + 71.9);
+    // 彈簧：切成小步算（低幀率時一大步會發散）
+    const k = 260, d = 22, n = Math.max(1, Math.ceil(rdt / 0.006)), h = rdt / n;
+    for (let i = 0; i < n; i++) {
+      Cam.kvx += (-k * Cam.kx - d * Cam.kvx) * h; Cam.kvy += (-k * Cam.ky - d * Cam.kvy) * h; Cam.kx += Cam.kvx * h; Cam.ky += Cam.kvy * h;
+      Cam.pv += (-200 * Cam.pz - 18 * Cam.pv) * h; Cam.pz += Cam.pv * h;
+    }
+    Cam.pz = clamp(Cam.pz, -0.5, 1); Cam.kx = clamp(Cam.kx, -200, 200); Cam.ky = clamp(Cam.ky, -200, 200);
+    if (Math.abs(Cam.kx) < 0.01 && Math.abs(Cam.kvx) < 0.01) Cam.kx = Cam.kvx = 0;
+    if (Math.abs(Cam.ky) < 0.01 && Math.abs(Cam.kvy) < 0.01) Cam.ky = Cam.kvy = 0;
+  },
+  render() { Cam.compute(); },
+});
+
+/* ---- 13_tween.js ---- */
+/* ==========================================================================
+   13 補間與彈簧
+     PZ.tween(obj, { x: 100, alpha: 0 }, 0.4, 'outBack').then(() => …)
+     o: { delay, yoyo, repeat（-1＝無限）, real（跟真實時間，暫停中也會動）, from: {…}, onUpdate, onDone }
+     await PZ.tween(…)        // 可以直接 await
+     PZ.tweens.killOf(obj)    // 停掉某物件的所有補間
+     const sp = PZ.spring(1, { k: 320, d: 16 }); sp.target = 1.3; …每格讀 sp.value（UI 彈跳、縮放回彈）
+   ========================================================================== */
+class Tween {
+  constructor(target, to, dur, ease, o) {
+    this.target = target; this.to = to; this.dur = Math.max(0.0001, dur); this.ease = easeOf(ease);
+    this.delay = o.delay || 0; this.yoyo = !!o.yoyo; this.repeat = o.repeat || 0; this.real = !!o.real;
+    this.onUpdate = o.onUpdate || null; this.onDone = o.onDone || null; this.from = o.from || null;
+    this.t = 0; this.started = false; this.dead = false; this.dir = 1; this.props = null; this._p = null; this._res = null;
+  }
+  _start() {
+    this.started = true; this.props = [];
+    for (const k in this.to) {
+      const from = this.from && this.from[k] != null ? this.from[k] : this.target[k];
+      if (this.from && this.from[k] != null) this.target[k] = from;
+      this.props.push(k, +from || 0, +this.to[k]);
+    }
+  }
+  step(dt) {
+    if (this.dead) return true;
+    if (this.delay > 0) { this.delay -= dt; if (this.delay > 0) return false; dt = -this.delay; this.delay = 0; }
+    if (!this.started) this._start();
+    this.t += dt;
+    let k = clamp01(this.t / this.dur); const e = this.ease(this.dir > 0 ? k : 1 - k);
+    const P = this.props, T = this.target;
+    for (let i = 0; i < P.length; i += 3) T[P[i]] = P[i + 1] + (P[i + 2] - P[i + 1]) * e;
+    if (this.onUpdate) safeCall(this.onUpdate, null, T, e);
+    if (k >= 1) {
+      if (this.yoyo && this.dir > 0) { this.dir = -1; this.t = 0; return false; }
+      if (this.repeat !== 0) { if (this.repeat > 0) this.repeat--; this.t = 0; this.dir = 1; return false; }
+      this.finish(); return true;
+    }
+    return false;
+  }
+  finish() { if (this.dead) return; this.dead = true; if (this.onDone) safeCall(this.onDone, null, this.target); if (this._res) this._res(this.target); }
+  /** 停掉；complete=true 直接跳到終點 */
+  kill(complete) { if (this.dead) return; if (complete) { if (!this.started) this._start(); const P = this.props; for (let i = 0; i < P.length; i += 3) this.target[P[i]] = this.yoyo ? P[i + 1] : P[i + 2]; this.finish(); } else { this.dead = true; if (this._res) this._res(this.target); } }
+  then(a, b) { if (!this._p) this._p = new Promise((res) => { this._res = res; if (this.dead) res(this.target); }); return this._p.then(a, b); }
+}
+const Tweens = PZ.tweens = { list: [], real: [] };
+PZ.tween = (target, to, dur = 0.3, ease = 'outQuad', o = {}) => { const t = new Tween(target, to, dur, ease, o); (t.real ? Tweens.real : Tweens.list).push(t); return t; };
+Tweens.killOf = (target, complete) => { for (const t of Tweens.list) if (t.target === target) t.kill(complete); for (const t of Tweens.real) if (t.target === target) t.kill(complete); };
+Tweens.clear = () => { for (const t of Tweens.list) t.dead = true; Tweens.list.length = 0; };
+function stepTweens(list, dt) { for (let i = 0; i < list.length; i++) { const t = list[i]; if (t.step(dt)) { list[i] = list[list.length - 1]; list.pop(); i--; } } }
+
+class Spring {
+  constructor(v, o = {}) { this.value = v; this.target = v; this.v = 0; this.k = o.k || 300; this.d = o.d || 18; this.real = o.real !== false; this.dead = false; }
+  /** 往某方向踢一下（不改目標） */
+  kick(vel) { this.v += vel; return this; }
+  set(v) { this.value = this.target = v; this.v = 0; return this; }
+  step(dt) { const a = -this.k * (this.value - this.target) - this.d * this.v; this.v += a * dt; this.value += this.v * dt; }
+  kill() { this.dead = true; }
+}
+const Springs = [];
+PZ.spring = (v, o) => { const s = new Spring(v, o); s.scene = typeof Scenes !== 'undefined' && o && o.keep ? null : (typeof Scenes !== 'undefined' ? Scenes.name : null); Springs.push(s); return s; };
+PZ.springs = Springs;
+
+addSystem({
+  name: 'tween', order: 20,
+  frame(rdt) {
+    stepTweens(Tweens.real, rdt);
+    for (let i = 0; i < Springs.length; i++) { const s = Springs[i]; if (s.dead) { Springs.splice(i--, 1); continue; } if (s.real) { const n = Math.ceil(rdt / 0.008); for (let k = 0; k < n; k++) s.step(rdt / n); } }
+  },
+  update(dt) {
+    stepTweens(Tweens.list, dt);
+    for (const s of Springs) if (!s.real && !s.dead) { const n = Math.ceil(dt / 0.008); for (let k = 0; k < n; k++) s.step(dt / n); }
+  },
+});
+
+/* ---- 14_particles.js ---- */
+/* ==========================================================================
+   14 粒子
+     PZ.particles.emit('sparks', x, y, { angle: 方向, spread: 0.8, count: 12, scale: 1.2, colors: [...] })
+     PZ.particles.define('myDust', { …同下面的格式… })
+   格式（全部可省略）：
+     count: [8,14]  life: [0.3,0.6]  speed: [80,300]  angle: 0  spread: TAU  drag: 2  grav: 0（正數往下）
+     size: [3,6]  end: 0（結束時是開始大小的幾倍）  colors: ['#fff', '#fc6', 'rgba(255,80,0,0)']
+     shape: 'glow' | 'circle' | 'ring' | 'square' | 圖名（例如 'pz.spark'、自己畫的圖）
+     add: 1（發光，0～1）  stretch: 0（沿速度拉長，火花用 0.02～0.05）  spin: [-4,4]  rot: 'random'|'dir'
+     layer: 'over'|'under'  flicker: 0（閃爍）  offset: 0（出生點隨機偏移半徑）  ease: 'outQuad'（大小變化曲線）
+     inherit: { vx, vy }（加上發射者速度的比例）
+   預設粒子層：'under' 畫在角色下面（血跡、塵土），'over' 畫在上面（火花、爆炸）。
+   場景沒自己畫的話，引擎會在 g.hud() 前自動畫 over 層；under 層要在 render 裡呼叫 PZ.particles.draw(g, 'under')。
+   ========================================================================== */
+const PF = { X: 0, Y: 1, VX: 2, VY: 3, LIFE: 4, MAX: 5, S0: 6, S1: 7, R: 8, VR: 9, DRAG: 10, GRAV: 11, ADD: 12, STR: 13, FLK: 14, SEED: 15 };
+const PSTRIDE = 16;
+const Particles = PZ.particles = {
+  cap: 8000, n: 0,
+  f: new Float32Array(8000 * PSTRIDE),
+  ramp: new Array(8000), shape: new Uint8Array(8000), frame: new Array(8000), layer: new Uint8Array(8000), ease: new Array(8000),
+  presets: {}, _ramps: new Map(), drawn: { 0: false, 1: false },
+};
+const SHAPE = { glow: 0, circle: 1, ring: 2, square: 3, sprite: 4 };
+const rangeOf = (v, r) => (Array.isArray(v) ? r.range(v[0], v[1]) : v);
+function rampOf(colors) {
+  const key = Array.isArray(colors) ? colors.join('|') : String(colors);
+  let r = Particles._ramps.get(key);
+  if (!r) { r = Color.ramp(Array.isArray(colors) ? colors : [colors, Color.alpha(colors, 0)], 32); Particles._ramps.set(key, r); }
+  return r;
+}
+Particles.define = (name, spec) => { Particles.presets[name] = spec; return spec; };
+
+/** 發射：preset 可以是名字或格式物件；o 覆蓋 preset 的欄位，另外有 scale（大小與速度倍率）、angle、count */
+Particles.emit = (preset, x, y, o) => {
+  const p = typeof preset === 'string' ? Particles.presets[preset] : preset;
+  if (!p) { warnOnce('pfx:' + preset, '沒有這種粒子：' + preset); return; }
+  if (o) { if (o.burst) { for (const b of o.burst) Particles.emit(b, x, y, Object.assign({}, o, { burst: null })); return; } }
+  if (p.burst) { for (const b of p.burst) Particles.emit(b, x, y, o); return; }
+  const r = Rand, sc = (o && o.scale) || 1, q = Quality.cur.particles * ((o && o.density) || 1);
+  let count = Math.round(rangeOf(o && o.count != null ? o.count : p.count != null ? p.count : 10, r) * q);
+  if (count <= 0) return;
+  const colors = (o && o.colors) || (o && o.color ? [o.color, Color.alpha(o.color, 0)] : null) || p.colors || ['#fff', 'rgba(255,255,255,0)'];
+  const ramp = rampOf(colors);
+  let shapeName = (o && o.shape) || p.shape || 'glow', shape = SHAPE[shapeName], frame = null;
+  if (shape === undefined) { shape = SHAPE.sprite; frame = Art.get(shapeName); }
+  const ang = o && o.angle != null ? o.angle : p.angle || 0, spread = o && o.spread != null ? o.spread : p.spread != null ? p.spread : TAU;
+  const speed = (o && o.speed) || p.speed || [60, 200], life = (o && o.life) || p.life || [0.3, 0.6], size = (o && o.size) || p.size || [3, 6];
+  const end = p.end != null ? p.end : 0, drag = p.drag != null ? p.drag : 2, grav = (p.grav || 0) * sc, add = o && o.add != null ? o.add : p.add != null ? p.add : 1;
+  const stretch = p.stretch || 0, spin = p.spin || 0, rotMode = p.rot != null ? p.rot : 'random', flk = p.flicker || 0, off = ((o && o.offset) || p.offset || 0) * sc;
+  const layer = ((o && o.layer) || p.layer) === 'under' ? 0 : 1, ease = easeOf(p.ease || 'outQuad');
+  const ivx = o && o.vx ? o.vx * (p.inherit || 0.5) : 0, ivy = o && o.vy ? o.vy * (p.inherit || 0.5) : 0;
+  const F = Particles.f;
+  for (let k = 0; k < count; k++) {
+    if (Particles.n >= Particles.cap) break;
+    const i = Particles.n++, b = i * PSTRIDE;
+    const a = ang + (spread >= TAU - 0.001 ? r.next() * TAU : (r.next() - 0.5) * spread), sp = rangeOf(speed, r) * sc;
+    const oa = r.next() * TAU, orr = off * Math.sqrt(r.next());
+    F[b] = x + Math.cos(oa) * orr; F[b + 1] = y + Math.sin(oa) * orr;
+    F[b + 2] = Math.cos(a) * sp + ivx; F[b + 3] = Math.sin(a) * sp + ivy;
+    const lf = rangeOf(life, r); F[b + 4] = lf; F[b + 5] = lf;
+    const s0 = rangeOf(size, r) * sc; F[b + 6] = s0; F[b + 7] = s0 * end;
+    F[b + 8] = rotMode === 'dir' ? a : typeof rotMode === 'number' ? rotMode : r.next() * TAU; F[b + 9] = rangeOf(spin, r);
+    F[b + 10] = drag; F[b + 11] = grav; F[b + 12] = add; F[b + 13] = stretch; F[b + 14] = flk; F[b + 15] = r.next() * 100;
+    Particles.ramp[i] = ramp; Particles.shape[i] = shape; Particles.frame[i] = frame; Particles.layer[i] = layer; Particles.ease[i] = ease;
+  }
+};
+Particles.clear = () => { Particles.n = 0; };
+function moveParticle(from, to) {
+  const F = Particles.f; F.copyWithin(to * PSTRIDE, from * PSTRIDE, from * PSTRIDE + PSTRIDE);
+  Particles.ramp[to] = Particles.ramp[from]; Particles.shape[to] = Particles.shape[from]; Particles.frame[to] = Particles.frame[from]; Particles.layer[to] = Particles.layer[from]; Particles.ease[to] = Particles.ease[from];
+}
+Particles.update = (dt) => {
+  const F = Particles.f;
+  for (let i = 0; i < Particles.n; i++) {
+    const b = i * PSTRIDE;
+    F[b + 4] -= dt;
+    if (F[b + 4] <= 0) { Particles.n--; if (i !== Particles.n) moveParticle(Particles.n, i); i--; continue; }
+    const k = Math.exp(-F[b + 10] * dt);
+    F[b + 2] *= k; F[b + 3] = F[b + 3] * k + F[b + 11] * dt;
+    F[b] += F[b + 2] * dt; F[b + 1] += F[b + 3] * dt; F[b + 8] += F[b + 9] * dt;
+  }
+};
+/** 畫某一層（'under'｜'over'）。在 world() 空間裡呼叫 */
+Particles.draw = (g, layerName = 'over') => {
+  const L = layerName === 'under' ? 0 : 1; Particles.drawn[L] = true;
+  const F = Particles.f, m = g.m, rr = g.r, al = g.al, v = Cam.view, mg = 40;
+  for (let i = 0; i < Particles.n; i++) {
+    if (Particles.layer[i] !== L) continue;
+    const b = i * PSTRIDE, x = F[b], y = F[b + 1];
+    if (x < v.x - mg || x > v.x + v.w + mg || y < v.y - mg || y > v.y + v.h + mg) continue;
+    const t = 1 - F[b + 4] / F[b + 5], e = Particles.ease[i](t);
+    let s = F[b + 6] + (F[b + 7] - F[b + 6]) * e; if (s <= 0.05) continue;
+    const ramp = Particles.ramp[i]; let col = ramp[Math.min(31, (t * 31.999) | 0)];
+    let a = cA(col) * al; if (F[b + 14] > 0) a *= 1 - F[b + 14] * (0.5 + 0.5 * Math.sin(F[b + 15] + Time.real * 40));
+    if (a <= 0.01) continue;
+    col = ((Math.round(clamp01(a) * 255) << 24) | (col & 0xffffff)) >>> 0;
+    const shape = Particles.shape[i], add = F[b + 12];
+    let w = s * 2, h = s * 2, rot = F[b + 8];
+    const st = F[b + 13];
+    if (st > 0) { const vx = F[b + 2], vy = F[b + 3], sp = Math.hypot(vx, vy); w = s * 2 + sp * st * 2; rot = Math.atan2(vy, vx); }
+    let tex = null, u0 = -1, v0 = -1, u1 = 1, v1 = 1, mode;
+    if (shape === SHAPE.sprite) { const f = Particles.frame[i]; if (!f.tex) continue; tex = f.tex; u0 = f.u0; v0 = f.v0; u1 = f.u1; v1 = f.v1; mode = MODE.sprite; if (st <= 0) { w = s * 2 * (f.w / Math.max(f.w, f.h)); h = s * 2 * (f.h / Math.max(f.w, f.h)); } }
+    else mode = shape === SHAPE.glow ? MODE.glow : shape === SHAPE.circle ? MODE.circle : shape === SHAPE.ring ? MODE.ring : MODE.solid;
+    const c = Math.cos(rot), sn = Math.sin(rot), la = c * w, lb = sn * w, lc = -sn * h, ld = c * h, le = x - 0.5 * la - 0.5 * lc, lf = y - 0.5 * lb - 0.5 * ld;
+    rr.quad(tex, m[0] * la + m[2] * lb, m[1] * la + m[3] * lb, m[0] * lc + m[2] * ld, m[1] * lc + m[3] * ld, m[0] * le + m[2] * lf + m[4], m[1] * le + m[3] * lf + m[5], u0, v0, u1, v1, col, mode, add, shape === SHAPE.ring ? 0.18 : 0);
+  }
+};
+addSystem({ name: 'particles', order: 60, update(dt) { Particles.update(dt); } });
+PZ.on('quality', () => { Particles.cap = Math.min(8000, Math.round(8000 * Math.max(0.4, Quality.cur.particles))); if (Particles.n > Particles.cap) Particles.n = Particles.cap; });
+
+/* ---------- 內建粒子 ---------- */
+const D = Particles.define;
+D('sparks', { count: [8, 14], life: [0.15, 0.4], speed: [180, 520], spread: 1.1, drag: 5, size: [1.6, 3], end: 0.2, colors: ['#fff', '#ffe08a', '#ff8a2b', 'rgba(255,60,0,0)'], shape: 'pz.spark', stretch: 0.035, add: 1 });
+D('hit', { count: [5, 9], life: [0.08, 0.22], speed: [120, 360], spread: 1.4, drag: 6, size: [2, 4], end: 0, colors: ['#fff', '#fff6c8', 'rgba(255,200,120,0)'], shape: 'pz.spark', stretch: 0.03, add: 1 });
+D('flare', { count: 1, life: [0.12, 0.16], speed: 0, size: [22, 28], end: 1.6, colors: ['#fff', 'rgba(255,240,200,0)'], shape: 'pz.flare', add: 1, rot: 0, ease: 'outCubic' });
+D('ring', { count: 1, life: [0.25, 0.3], speed: 0, size: [6, 6], end: 6, colors: ['rgba(255,255,255,.9)', 'rgba(255,255,255,0)'], shape: 'ring', add: 1, ease: 'outCubic' });
+D('blood', { count: [6, 12], life: [0.3, 0.6], speed: [60, 260], spread: 1.3, drag: 4, grav: 420, size: [1.6, 3.4], end: 0.5, colors: ['#c4162a', '#7d0b18', 'rgba(70,0,10,0)'], shape: 'circle', add: 0 });
+D('smoke', { count: [4, 7], life: [0.6, 1.2], speed: [10, 60], drag: 1.2, grav: -18, size: [10, 18], end: 2.2, colors: ['rgba(70,70,76,.55)', 'rgba(40,40,46,.3)', 'rgba(20,20,24,0)'], shape: 'pz.smoke', add: 0, spin: [-1, 1], ease: 'outQuad', layer: 'over' });
+D('dust', { count: [4, 8], life: [0.3, 0.6], speed: [20, 90], spread: TAU, drag: 3, grav: -10, size: [4, 8], end: 1.8, colors: ['rgba(210,190,160,.45)', 'rgba(160,140,110,0)'], shape: 'pz.smoke', add: 0, layer: 'under' });
+D('fire', { count: [10, 16], life: [0.25, 0.55], speed: [40, 240], drag: 3.2, grav: -60, size: [7, 14], end: 0.2, colors: ['#fff6d0', '#ffc24a', '#ff5a1f', 'rgba(120,20,0,0)'], shape: 'glow', add: 1, offset: 6 });
+D('debris', { count: [5, 9], life: [0.5, 0.9], speed: [120, 380], drag: 1.5, grav: 700, size: [1.5, 3.5], end: 1, colors: ['#5b4a3a', '#3a2e24', 'rgba(30,24,18,0)'], shape: 'pz.shard', spin: [-14, 14], add: 0 });
+D('core', { count: 1, life: [0.12, 0.16], speed: 0, size: [26, 30], end: 2, colors: ['#fff', '#ffe9a8', 'rgba(255,170,60,0)'], shape: 'glow', add: 1, ease: 'outCubic' });
+D('explosion', { burst: ['core', 'fire', 'sparks', 'smoke', 'debris', 'ring'] });
+D('magic', { count: [10, 16], life: [0.4, 0.8], speed: [30, 140], drag: 2, grav: -40, size: [2, 4], end: 0, colors: ['#fff', '#b9a4ff', '#6a5cff', 'rgba(80,60,255,0)'], shape: 'pz.star', spin: [-6, 6], add: 1, flicker: 0.5 });
+D('heal', { count: [8, 12], life: [0.6, 1], speed: [10, 50], spread: TAU, drag: 1, grav: -90, size: [2.5, 4.5], end: 0, colors: ['#fff', '#8dffb0', 'rgba(40,220,120,0)'], shape: 'pz.star', add: 1, offset: 14 });
+D('pickup', { count: [6, 9], life: [0.25, 0.45], speed: [60, 180], drag: 4, size: [1.5, 3], end: 0, colors: ['#fff', '#ffe58a', 'rgba(255,200,40,0)'], shape: 'pz.star', add: 1, spin: [-8, 8] });
+D('confetti', { count: [30, 44], life: [1.2, 2], speed: [200, 520], angle: -Math.PI / 2, spread: 1.4, drag: 1.6, grav: 380, size: [2.5, 4.5], end: 1, colors: ['#ff5a7a', '#ffd54a', '#4ad8ff', '#8cff6a', '#c78bff'], shape: 'square', spin: [-12, 12], add: 0 });
+D('ember', { count: [1, 2], life: [0.8, 1.6], speed: [10, 40], angle: -Math.PI / 2, spread: 1.2, drag: 0.6, grav: -30, size: [1, 2.2], end: 0, colors: ['#ffd27a', '#ff7a2a', 'rgba(255,60,0,0)'], shape: 'glow', add: 1, flicker: 0.6, offset: 30 });
+D('muzzle', { count: [3, 5], life: [0.04, 0.08], speed: [60, 200], spread: 0.5, drag: 8, size: [3, 6], end: 0.2, colors: ['#fff', '#ffe18a', 'rgba(255,160,40,0)'], shape: 'pz.spark', stretch: 0.03, add: 1 });
+D('shockring', { count: 1, life: [0.35, 0.4], speed: 0, size: [10, 10], end: 9, colors: ['rgba(255,255,255,.8)', 'rgba(255,255,255,0)'], shape: 'ring', add: 1, ease: 'outQuart' });
+
+/* ---- 15_fx.js ---- */
+/* ==========================================================================
+   15 手感特效（打擊感）
+   一行就有完整的打擊感：
+     PZ.fx.hit(x, y, { power: 0.6, dir: 角度, crit: true, kill: false, sound: 'hit' })
+       → 打擊停頓 + 震屏 + 鏡頭頓一下 + 火花 + （爆擊）閃光、色差、星芒 + 手機震動 + 音效
+     PZ.fx.explode(x, y, { power: 1, radius: 120 })   爆炸：衝擊波扭曲、閃白、火球、碎片、煙
+     PZ.fx.number(x, y, 128, { crit: true })          傷害數字（跳出來、彈一下、淡出）
+     PZ.fx.hurt(0.5)    主角受傷：紅色暗角、色差、震動
+   單項：shake / kick / punch / freeze / slowmo / flash / shockwave / chroma / vignette / text / haptic / rumble
+   設定裡「畫面震動」「閃光」「傷害數字」會自動套用（照顧怕暈、怕閃的人）。
+   ========================================================================== */
+const Fx = PZ.fx = {
+  nums: [], _vig: null, _chroma: 0, _chromaT: 0, _chromaD: 0, _flashT: 0, _flashD: 0, _flashA: 0, _waves: [],
+  numStyle: { size: 18, weight: 900, color: '#fff', outline: 3, outlineColor: 'rgba(0,0,0,.85)', align: 'center', baseline: 'middle' },
+  critStyle: { size: 26, weight: 900, color: '#ffd84a', outline: 4, outlineColor: '#3a0a00', align: 'center', baseline: 'middle' },
+  healStyle: { size: 18, weight: 900, color: '#7dffa8', outline: 3, outlineColor: 'rgba(0,40,20,.9)', align: 'center', baseline: 'middle' },
+};
+Fx.shake = (t) => Cam.shake(t);
+Fx.kick = (angle, px) => Cam.kick(angle, px);
+Fx.punch = (z) => Cam.punch(z);
+Fx.freeze = (ms) => PZ.freeze(ms);
+Fx.slowmo = (s, sec, back) => PZ.slowmo(s, sec, back);
+Fx.haptic = (k) => Haptics.tap(k);
+Fx.rumble = (s, w, ms) => Input.rumble(s, w, ms);
+/** 全畫面閃一下：color、強度 a（0～1）、秒數 */
+Fx.flash = (color = '#fff', a = 0.5, dur = 0.12) => {
+  const c = toColor(color); Post.flash[0] = cR(c) / 255; Post.flash[1] = cG(c) / 255; Post.flash[2] = cB(c) / 255;
+  Fx._flashA = Math.max(Fx._flashA * (Fx._flashD > 0 ? 1 - Fx._flashT / Fx._flashD : 0), a); Fx._flashT = 0; Fx._flashD = dur;
+};
+/** 色差（爆擊、受傷）：amount 約 0.006～0.02 */
+Fx.chroma = (amount = 0.012, dur = 0.25) => { Fx._chroma = Math.max(Fx._chroma, amount); Fx._chromaT = 0; Fx._chromaD = dur; };
+/** 暗角脈衝：受傷變紅、低血量 */
+Fx.vignette = (color = '#a00010', amount = 0.6, dur = 0.5) => { const base = Fx._vig ? Fx._vig.base : null; Fx._vig = { color: toColor(color), amount, dur, t: 0, base }; };
+/** 衝擊波扭曲（世界座標）：strength 0.01～0.05、radius 擴散到多大（世界單位） */
+Fx.shockwave = (x, y, o = {}) => {
+  if (!Post.enabled) return;
+  Fx._waves.push({ x, y, t: 0, dur: o.dur || 0.55, radius: o.radius || 260, strength: o.strength != null ? o.strength : 0.03, thick: o.thick || 50 });
+  if (Fx._waves.length > 4) Fx._waves.shift();
+};
+/** 跳出文字（世界座標） */
+Fx.text = (x, y, str, style, o = {}) => {
+  const n = { x, y, vx: o.vx != null ? o.vx : Rand.spread(20), vy: o.vy != null ? o.vy : -70, t: 0, life: o.life || 0.9, str: String(str), st: style || Fx.numStyle, pop: o.pop != null ? o.pop : 1, grav: o.grav != null ? o.grav : 120 };
+  Fx.nums.push(n); if (Fx.nums.length > 160) Fx.nums.shift();
+  return n;
+};
+/** 傷害數字：o { crit, heal, color, size, miss } */
+Fx.number = (x, y, value, o = {}) => {
+  if (!Settings.get('numbers')) return null;
+  const st = o.heal ? Fx.healStyle : o.crit ? Fx.critStyle : Fx.numStyle;
+  const style = (o.color || o.size) ? Object.assign({}, st, o.color ? { color: o.color } : null, o.size ? { size: o.size } : null) : st;
+  const txt = o.miss ? 'MISS' : (o.heal ? '+' : '') + (typeof value === 'number' ? Math.round(value) : value) + (o.crit ? '!' : '');
+  return Fx.text(x, y, txt, style, { vy: o.crit ? -110 : -80, life: o.crit ? 1.05 : 0.8, pop: o.crit ? 1.6 : 1.15 });
+};
+
+/** 一次完整的「打中了」 */
+Fx.hit = (x, y, o = {}) => {
+  const p = clamp01(o.power != null ? o.power : 0.4), dir = o.dir != null ? o.dir : Rand.angle(), crit = !!o.crit, kill = !!o.kill;
+  const fz = o.freeze != null ? o.freeze : Math.min(140, 18 + p * 50 + (crit ? 40 : 0) + (kill ? 45 : 0));
+  if (fz > 0) PZ.freeze(fz);
+  Cam.shake(o.shake != null ? o.shake : 0.06 + p * 0.22 + (crit ? 0.14 : 0) + (kill ? 0.1 : 0));
+  Cam.kick(dir, 2 + p * 7 + (crit ? 4 : 0));
+  const col = o.color;
+  Particles.emit('hit', x, y, { angle: dir, scale: 0.8 + p * 0.6, colors: col ? ['#fff', col, Color.alpha(col, 0)] : undefined });
+  if (p > 0.45 || crit) Particles.emit('sparks', x, y, { angle: dir, count: Math.round(4 + p * 10), scale: 0.8 + p * 0.5 });
+  if (crit) { Particles.emit('flare', x, y, { scale: 1 + p }); Particles.emit('ring', x, y, { scale: 0.8 + p }); Fx.chroma(0.008 + p * 0.008, 0.22); Cam.punch(0.025 + p * 0.02); }
+  if (kill) { Particles.emit('ring', x, y, { scale: 0.7 + p * 0.6 }); }
+  if (o.blood) Particles.emit('blood', x, y, { angle: dir, scale: 0.8 + p * 0.5, colors: o.blood === true ? undefined : [o.blood, Color.darken(o.blood, 0.5), Color.alpha(o.blood, 0)] });
+  if (crit || kill || p > 0.7) Fx.flash('#fff', 0.06 + p * 0.08 + (crit ? 0.06 : 0), 0.07);
+  Haptics.tap(crit || kill ? 'medium' : p > 0.6 ? 'medium' : 'light');
+  Input.rumble(0.2 + p * 0.6, 0.3 + p * 0.4, 60 + p * 80);
+  if (o.sound !== false) { const s = o.sound || 'hit'; if (Sfx.has(s)) Sfx.at(s, x, y, { pitch: 1.08 - p * 0.18 + Rand.spread(0.06), vol: 0.75 + p * 0.35 }); if (crit && Sfx.has('crit')) Sfx.at('crit', x, y); if (kill && Sfx.has('kill')) Sfx.at('kill', x, y, { vol: 0.8 }); }
+};
+/** 爆炸 */
+Fx.explode = (x, y, o = {}) => {
+  const p = clamp01(o.power != null ? o.power : 0.8), rad = o.radius || 120;
+  PZ.freeze(o.freeze != null ? o.freeze : 40 + p * 70);
+  Cam.shake(0.3 + p * 0.5); Cam.punch(0.03 + p * 0.04);
+  Fx.shockwave(x, y, { radius: rad * 2.4, strength: 0.018 + p * 0.025, dur: 0.5 + p * 0.2 });
+  Fx.flash(o.flashColor || '#fff2d8', 0.18 + p * 0.25, 0.1 + p * 0.06);
+  Fx.chroma(0.008 + p * 0.01, 0.3);
+  Particles.emit('explosion', x, y, { scale: (0.6 + p * 0.8) * (rad / 120), colors: o.colors });
+  Haptics.tap('heavy'); Input.rumble(1, 0.8, 220);
+  if (o.sound !== false) { const s = o.sound || 'explosion'; if (Sfx.has(s)) Sfx.at(s, x, y, { vol: 0.8 + p * 0.3, pitch: 1.1 - p * 0.25 }); }
+};
+/** 主角受傷 */
+Fx.hurt = (amount = 0.5, o = {}) => {
+  const a = clamp01(amount);
+  // 紅暗角要短、要淡：被一群怪連續咬時才不會整個畫面一直是紅的（o.vignette: false 不要暗角）
+  if (o.vignette !== false) Fx.vignette(o.color || '#b0001a', 0.28 + a * 0.3, 0.25 + a * 0.25);
+  Fx.chroma(0.006 + a * 0.012, 0.25); Cam.shake(0.18 + a * 0.35);
+  if (o.dir != null) Cam.kick(o.dir, 4 + a * 8);
+  PZ.freeze(o.freeze != null ? o.freeze : 25 + a * 50);
+  Haptics.tap(a > 0.5 ? 'heavy' : 'medium'); Input.rumble(0.6 + a * 0.4, 0.5, 140);
+  if (o.sound !== false) { const s = o.sound || 'hurt'; if (Sfx.has(s)) Sfx.play(s, { pitch: 1 - a * 0.15 }); }
+};
+/** 撿到東西 */
+Fx.pickup = (x, y, o = {}) => { Particles.emit('pickup', x, y, { colors: o.color ? ['#fff', o.color, Color.alpha(o.color, 0)] : undefined }); if (o.sound !== false) { const s = o.sound || 'pickup'; if (Sfx.has(s)) Sfx.at(s, x, y, { pitch: o.pitch || 1 }); } };
+/** 升級、過關的慶祝 */
+Fx.celebrate = (x, y, o = {}) => {
+  Particles.emit('confetti', x, y, { scale: o.scale || 1 }); Particles.emit('flare', x, y, { scale: 2 }); Particles.emit('shockring', x, y, { scale: 1.5 });
+  Fx.flash('#fff', 0.35, 0.18); Cam.punch(0.05); Haptics.tap('success');
+  if (o.sound !== false) { const s = o.sound || 'levelup'; if (Sfx.has(s)) Sfx.play(s); }
+};
+
+/** 畫傷害數字與跳字（世界座標）；場景沒畫的話 g.hud() 前會自動畫 */
+Fx.drawNumbers = (g) => {
+  Fx._numsDrawn = true;
+  for (const n of Fx.nums) {
+    const k = n.t / n.life, popT = Math.min(1, n.t / 0.16);
+    const s = (n.pop > 1 ? lerp(n.pop, 1, Ease.outBack(popT)) : 1) * (k > 0.75 ? lerp(1, 0.7, (k - 0.75) / 0.25) : 1);
+    const a = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+    g.save(); g.translate(n.x, n.y); g.scale(s, s); g.alpha(a);
+    g.text(n.str, 0, 0, n.st);
+    g.restore();
+  }
+};
+/** g.hud() 會呼叫：場景沒自己畫的粒子（over 層）與數字，在這裡補畫 */
+Fx._drawAuto = (g) => {
+  if (g.space !== 'world') g.world();
+  if (!Particles.drawn[1]) Particles.draw(g, 'over');
+  if (!Fx._numsDrawn) Fx.drawNumbers(g);
+};
+addSystem({
+  name: 'fx', order: 70,
+  update(dt) {
+    for (let i = 0; i < Fx.nums.length; i++) { const n = Fx.nums[i]; n.t += dt; n.vy += n.grav * dt; n.x += n.vx * dt; n.y += n.vy * dt; n.vx *= Math.exp(-3 * dt); if (n.t >= n.life) { Fx.nums.splice(i--, 1); } }
+  },
+  frame(rdt) {
+    // 閃光、色差、暗角、衝擊波用真實時間：打擊停頓時照樣在變化
+    if (Fx._flashD > 0) { Fx._flashT += rdt; const k = clamp01(Fx._flashT / Fx._flashD); Post.flash[3] = Fx._flashA * (1 - Ease.outQuad(k)); if (k >= 1) { Fx._flashD = 0; Fx._flashA = 0; Post.flash[3] = 0; } }
+    if (Fx._chromaD > 0) { Fx._chromaT += rdt; const k = clamp01(Fx._chromaT / Fx._chromaD); Post.chroma = Fx._chroma * (1 - k); if (k >= 1) { Fx._chromaD = 0; Fx._chroma = 0; Post.chroma = 0; } }
+    const v = Fx._vig;
+    if (v) {
+      if (!v.base) v.base = { vig: Post.vignette, col: Post.vignetteColor };
+      v.t += rdt; const k = clamp01(v.t / v.dur), e = Math.sin(Math.min(1, k * 4) * Math.PI / 2) * (1 - Ease.inQuad(k));
+      Post.vignette = lerp(v.base.vig, Math.max(v.base.vig, v.amount), e); Post.vignetteColor = Color.css(Color.mix(toColor(v.base.col), v.color, e));
+      if (k >= 1) { Post.vignette = v.base.vig; Post.vignetteColor = v.base.col; Fx._vig = null; }
+    }
+    Post.waves.length = 0;
+    for (let i = 0; i < Fx._waves.length; i++) {
+      const w = Fx._waves[i]; w.t += rdt; const k = w.t / w.dur;
+      if (k >= 1) { Fx._waves.splice(i--, 1); continue; }
+      const z = Cam.ez || 1;
+      Post.waves.push({ x: Cam.toScreenX(w.x, w.y), y: Cam.toScreenY(w.x, w.y), r: w.radius * Ease.outCubic(k) * z, strength: w.strength * (1 - k) * Settings.get('shake'), thick: w.thick * z * (1 - k * 0.5) });
+    }
+  },
+  render() { Particles.drawn[0] = Particles.drawn[1] = false; Fx._numsDrawn = false; },
+});
+
+/* ---- 16_audio.js ---- */
+/* ==========================================================================
+   16 聲音：音訊核心＋合成音效
+   - 第一次點擊／按鍵時「同步」建立 AudioContext（放在 await 後面會被瀏覽器擋）。
+   - iPhone 側邊靜音鍵打開時網頁遊戲會沒聲音：設 navigator.audioSession.type = 'playback' 解決
+     （設定裡「跟其他 App 的音樂一起播」打開時改成 'ambient'：會跟著靜音鍵）。
+   - 音效全部用純 JavaScript 合成成聲音片段（可重現、不用檔案、手機也省電），播的時候只是放片段：
+       PZ.sfx.play('hit', { vol, pitch, pan })     PZ.sfx.at('explosion', x, y)（依畫面位置左右聲道、遠近音量）
+       PZ.sfx.define('myShot', { layers: [...], vol: 0.8, pitchVar: 0.06, max: 4, gap: 0.03 })
+   - 同一個音效同時最多幾個聲部（max）、最短間隔（gap），機槍不會疊成爆音；總輸出有限幅器。
+   - 匯流排：sfx（音效）、music（配樂）、ui（介面）、amb（環境）；設定裡的音量直接套用。
+   ========================================================================== */
+const Aud = PZ.audio = { ctx: null, ready: false, failed: false, bus: {}, duckV: 1, _duckT: 0, _unlockers: [], sampleRate: 44100 };
+
+function setSession() {
+  try { if (HAS_DOM && navigator.audioSession) navigator.audioSession.type = Settings.get('mixOthers') ? 'ambient' : 'playback'; } catch (e) { /* 不支援 */ }
+}
+/** 建立音訊（一定要在使用者手勢裡同步呼叫；引擎已經自動掛好了） */
+Aud.unlock = () => {
+  if (!HAS_DOM || Aud.failed) return false;
+  if (Aud.ctx) { if (Aud.ctx.state !== 'running') { try { Aud.ctx.resume(); } catch (e) { /* ignore */ } } return true; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) { Aud.failed = true; return false; }
+  setSession();
+  let c;
+  try { c = new AC({ latencyHint: 'interactive' }); } catch (e) { try { c = new AC(); } catch (er) { Aud.failed = true; return false; } }
+  Aud.ctx = c; Aud.sampleRate = c.sampleRate;
+  const master = c.createGain(), comp = c.createDynamicsCompressor();
+  comp.threshold.value = -10; comp.knee.value = 6; comp.ratio.value = 12; comp.attack.value = 0.002; comp.release.value = 0.18;
+  master.connect(comp); comp.connect(c.destination);
+  Aud.master = master; Aud.comp = comp;
+  for (const k of ['sfx', 'music', 'ui', 'amb']) { const g = c.createGain(); g.connect(master); Aud.bus[k] = g; }
+  // 配樂多過一個低通（暫停選單、水底、被打暈時「悶住」：PZ.music.muffle）
+  Aud.musicLP = c.createBiquadFilter(); Aud.musicLP.type = 'lowpass'; Aud.musicLP.frequency.value = 20000; Aud.musicLP.Q.value = 0.6;
+  Aud.bus.music.disconnect(); Aud.bus.music.connect(Aud.musicLP); Aud.musicLP.connect(master);
+  // 殘響（短的房間感，給需要的音效加一點空間）
+  Aud.rev = c.createConvolver(); Aud.rev.buffer = makeIR(c, 1.6, 2.6); Aud.revIn = c.createGain(); Aud.revIn.gain.value = 1;
+  Aud.revIn.connect(Aud.rev); Aud.rev.connect(Aud.bus.sfx);
+  // iOS：先放一段無聲，正式解鎖
+  try { const b = c.createBuffer(1, 1, c.sampleRate), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) { /* ignore */ }
+  try { c.resume(); } catch (e) { /* ignore */ }
+  c.onstatechange = () => PZ.emit('audiostate', c.state);
+  Aud.ready = true;
+  Aud.applyVolumes();
+  Sfx.prewarm();
+  PZ.emit('audio', c);
+  return true;
+};
+function makeIR(c, sec, decay) {
+  const len = Math.floor(c.sampleRate * sec), b = c.createBuffer(2, len, c.sampleRate), r = makeRng(99);
+  for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); let lp = 0; for (let i = 0; i < len; i++) { lp += ((r.next() * 2 - 1) - lp) * 0.35; d[i] = lp * Math.pow(1 - i / len, decay) * 0.6; } }
+  return b;
+}
+Aud.applyVolumes = () => {
+  if (!Aud.ctx) return;
+  const t = Aud.ctx.currentTime, set = (g, v) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(v, t, 0.03); };
+  const mute = Settings.get('mute') ? 0 : 1;
+  set(Aud.master, mute * Settings.get('master'));
+  set(Aud.bus.sfx, Settings.get('sfx')); set(Aud.bus.ui, Settings.get('sfx') * 0.9); set(Aud.bus.amb, Settings.get('sfx') * 0.85);
+  set(Aud.bus.music, Settings.get('music') * Aud.duckV);
+};
+/** 頻譜分析（音樂視覺化）：回傳 AnalyserNode，接在總輸出上；沒有音訊時回傳 null */
+Aud.analyser = (size = 256) => {
+  if (!Aud.ctx) return null;
+  if (!Aud._an) { Aud._an = Aud.ctx.createAnalyser(); Aud._an.fftSize = size; Aud._an.smoothingTimeConstant = 0.78; Aud.comp.connect(Aud._an); }
+  return Aud._an;
+};
+/** 讓配樂暫時變小聲（大爆炸、劇情對話）：amount 降到幾成、sec 秒後恢復 */
+Aud.duck = (amount = 0.45, sec = 0.6) => { Aud.duckV = Math.min(Aud.duckV, amount); Aud._duckT = Math.max(Aud._duckT, sec); Aud.applyVolumes(); };
+Aud.now = () => (Aud.ctx ? Aud.ctx.currentTime : 0);
+if (HAS_DOM) {
+  const unlock = () => { Aud.unlock(); };
+  for (const ev of ['pointerdown', 'touchend', 'keydown', 'mousedown']) window.addEventListener(ev, unlock, { capture: true, passive: true });
+  PZ.on('hidden', () => { if (Aud.ctx && Aud.ctx.state === 'running') { try { Aud.ctx.suspend(); } catch (e) { /* ignore */ } } });
+  PZ.on('visible', () => { if (Aud.ctx && Aud.ctx.state !== 'running') { try { Aud.ctx.resume(); } catch (e) { /* ignore */ } } });
+}
+addSystem({ name: 'audio', order: 30, frame(rdt) { if (Aud._duckT > 0) { Aud._duckT -= rdt; if (Aud._duckT <= 0) { Aud.duckV = 1; Aud.applyVolumes(); } } } });
+
+/* ==========================================================================
+   合成：純 JS 的小型合成器（每一層是一個聲音元件，疊起來就是一個音效）
+   一層的欄位（全部可省略）：
+     w: 'sine'|'tri'|'square'|'saw'|'noise'|'pink'|'brown'  波形（預設 sine）
+     f: 起始頻率 Hz、f1: 結束頻率（滑音）、fc: 'exp'|'lin'
+     t: 長度（秒）、a: 起音（秒）、h: 持續（秒）、p: 衰減曲線（越大越快，預設 2）
+     v: 音量、d: 延遲開始（秒）、duty: 方波佔空比
+     vib: [速度 Hz, 深度半音]、jump: [[時間, 頻率倍率], …]（琶音）
+     fm: [頻率比, 調變量, 調變衰減速度]（金屬、鐘聲、電子琴）
+     lp/hp/bp: [截止頻率, 結束頻率, Q]（濾波，可以掃）
+     dist: 0～1（失真）、crush: 位元數（8-bit 味）、hold: 降取樣倍數
+   ========================================================================== */
+function bq(type, f, q, sr) {
+  f = clamp(f, 10, sr * 0.45); const w = TAU * f / sr, cs = Math.cos(w), sn = Math.sin(w), al = sn / (2 * Math.max(0.05, q));
+  let b0, b1, b2; const a0 = 1 + al, a1 = -2 * cs, a2 = 1 - al;
+  if (type === 'lp') { b0 = (1 - cs) / 2; b1 = 1 - cs; b2 = b0; } else if (type === 'hp') { b0 = (1 + cs) / 2; b1 = -(1 + cs); b2 = b0; } else { b0 = al; b1 = 0; b2 = -al; }
+  return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
+}
+function polyblep(t, dt) { if (t < dt) { t /= dt; return t + t - t * t - 1; } if (t > 1 - dt) { t = (t - 1) / dt; return t * t + t + t + 1; } return 0; }
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+function renderLayer(L, sr, out, rng) {
+  const t = L.t != null ? L.t : 0.2, start = Math.floor((L.d || 0) * sr), n = Math.min(out.length - start, Math.floor(t * sr));
+  if (n <= 0) return;
+  const w = L.w || 'sine', f0 = Math.max(1, L.f || 440), f1 = Math.max(1, L.f1 != null ? L.f1 : f0), expo = (L.fc || 'exp') === 'exp';
+  const a = L.a != null ? L.a : 0.002, h = L.h || 0, pw = L.p != null ? L.p : 2, vol = L.v != null ? L.v : 0.7, duty = L.duty || 0.5;
+  const fils = []; for (const k of ['lp', 'hp', 'bp']) if (L[k]) { const s = L[k]; fils.push({ type: k, f0: s[0], f1: s[1] != null ? s[1] : s[0], q: s[2] || 0.8, c: bq(k, s[0], s[2] || 0.8, sr), x1: 0, x2: 0, y1: 0, y2: 0 }); }
+  const drive = L.dist ? 1 + L.dist * 9 : 0, dn = drive ? Math.tanh(drive) : 1, crush = L.crush ? Math.pow(2, L.crush - 1) : 0, hold = L.hold || 1;
+  const jumps = L.jump || null, vib = L.vib || null, fm = L.fm || null;
+  let ph = 0, mph = 0, pink = [0, 0, 0, 0, 0, 0, 0], brown = 0, held = 0;
+  const decayLen = Math.max(1e-4, t - a - h);
+  for (let i = 0; i < n; i++) {
+    const tau = i / sr, x = tau / t;
+    let fr = expo ? f0 * Math.pow(f1 / f0, x) : f0 + (f1 - f0) * x;
+    if (jumps) for (const j of jumps) if (tau >= j[0]) fr *= j[1];
+    if (vib) fr *= Math.pow(2, (vib[1] * Math.sin(TAU * vib[0] * tau)) / 12);
+    const dt = fr / sr;
+    let s;
+    if (i % hold === 0) {
+      switch (w) {
+        case 'noise': s = rng.next() * 2 - 1; break;
+        case 'pink': { const wn = rng.next() * 2 - 1; pink[0] = 0.99886 * pink[0] + wn * 0.0555179; pink[1] = 0.99332 * pink[1] + wn * 0.0750759; pink[2] = 0.969 * pink[2] + wn * 0.153852; pink[3] = 0.8665 * pink[3] + wn * 0.3104856; pink[4] = 0.55 * pink[4] + wn * 0.5329522; pink[5] = -0.7616 * pink[5] - wn * 0.016898; s = (pink[0] + pink[1] + pink[2] + pink[3] + pink[4] + pink[5] + pink[6] + wn * 0.5362) * 0.11; pink[6] = wn * 0.115926; break; }
+        case 'brown': { brown = (brown + 0.02 * (rng.next() * 2 - 1)) / 1.02; s = brown * 3.5; break; }
+        case 'square': s = (ph < duty ? 1 : -1) + polyblep(ph, dt) - polyblep((ph + 1 - duty) % 1, dt); break;
+        case 'saw': s = 2 * ph - 1 - polyblep(ph, dt); break;
+        case 'tri': s = 1 - 4 * Math.abs(ph - 0.5); break;
+        default: {
+          let pm = 0;
+          if (fm) { const idx = fm[1] * (fm[2] ? Math.exp(-tau * fm[2]) : 1); pm = idx * Math.sin(TAU * mph); mph += fr * fm[0] / sr; mph -= Math.floor(mph); }
+          s = Math.sin(TAU * ph + pm);
+        }
+      }
+      held = s;
+    } else s = held;
+    ph += dt; ph -= Math.floor(ph);
+    for (const F of fils) {
+      if (F.f1 !== F.f0 && (i & 15) === 0) F.c = bq(F.type, F.f0 * Math.pow(F.f1 / F.f0, x), F.q, sr);
+      const c = F.c, y = c[0] * s + c[1] * F.x1 + c[2] * F.x2 - c[3] * F.y1 - c[4] * F.y2;
+      F.x2 = F.x1; F.x1 = s; F.y2 = F.y1; F.y1 = y; s = y;
+    }
+    if (drive) s = Math.tanh(s * drive) / dn;
+    if (crush) s = Math.round(s * crush) / crush;
+    const env = tau < a ? tau / a : tau < a + h ? 1 : Math.pow(Math.max(0, 1 - (tau - a - h) / decayLen), pw);
+    out[start + i] += s * env * vol;
+  }
+}
+/** 把一個音效規格算成取樣（Float32Array）；Node 測試也能跑 */
+function synth(spec, sr, seed = 1) {
+  const layers = spec.layers || [spec];
+  let len = 0; for (const L of layers) len = Math.max(len, (L.d || 0) + (L.t != null ? L.t : 0.2));
+  len += spec.tail || 0.01;
+  const out = new Float32Array(Math.ceil(len * sr)), rng = makeRng(seed);
+  for (const L of layers) renderLayer(L, sr, out, rng);
+  // 去直流、正規化、尾端淡出
+  let px = 0, py = 0, peak = 0;
+  for (let i = 0; i < out.length; i++) { const x = out[i], y = x - px + 0.997 * py; px = x; py = y; out[i] = y; const ab = y < 0 ? -y : y; if (ab > peak) peak = ab; }
+  const g = peak > 1e-6 ? (spec.norm === false ? 1 : 0.95 / peak) * (spec.vol != null ? spec.vol : 0.8) : 0;
+  const fade = Math.min(out.length, Math.floor(sr * 0.004));
+  for (let i = 0; i < out.length; i++) out[i] *= g;
+  for (let i = 0; i < fade; i++) out[out.length - 1 - i] *= i / fade;
+  return out;
+}
+
+const Sfx = PZ.sfx = { defs: {}, bufs: new Map(), voices: [], last: new Map(), maxVoices: 28, _warm: [] };
+Sfx.define = (name, spec) => { Sfx.defs[name] = spec; Sfx.bufs.delete(name); if (Aud.ctx) Sfx.prewarm(); return spec; };
+Sfx.has = (name) => !!Sfx.defs[name] || Sfx.bufs.has(name);
+/** 純取樣（不需要音訊）：測試、匯出用 */
+Sfx.render = (name, sr = 44100) => { const sp = Sfx.defs[name]; return sp ? synth(sp, sr, hashStr(name)) : null; };
+Sfx.buffer = (name) => {
+  let b = Sfx.bufs.get(name);
+  if (b) return b;
+  const sp = Sfx.defs[name]; if (!sp || !Aud.ctx) return null;
+  const data = synth(sp, Aud.ctx.sampleRate, hashStr(name));
+  b = Aud.ctx.createBuffer(1, data.length, Aud.ctx.sampleRate); b.getChannelData(0).set(data);
+  Sfx.bufs.set(name, b);
+  return b;
+};
+/** 載入外部音效檔（筆電素材工廠做的 mp3/ogg/wav，或 data URL） */
+Sfx.load = async (name, url, o = {}) => {
+  if (!Aud.ctx) await new Promise((r) => PZ.once('audio', r));
+  const res = await fetch(url), ab = await res.arrayBuffer();
+  const b = await new Promise((ok, no) => Aud.ctx.decodeAudioData(ab, ok, no));
+  Sfx.bufs.set(name, b); Sfx.defs[name] = Sfx.defs[name] || Object.assign({ file: url }, o);
+  return b;
+};
+/* 解鎖後先把所有音效算好：優先丟給背景執行緒（Worker）算，畫面完全不卡；
+   不能用 Worker 的環境（某些內嵌頁面）退回主執行緒、每格最多算一個。 */
+let synthWorker = null, workerTried = false, workerUrl = '', workerIdle = 0;
+const pendingW = new Set();
+// 算完就收掉背景執行緒（手機省記憶體）；之後又有新音效要算時再開一個
+function retireWorker() { if (pendingW.size || !synthWorker) return; try { synthWorker.terminate(); } catch (e) { /* ignore */ } synthWorker = null; workerTried = false; try { URL.revokeObjectURL(workerUrl); } catch (e) { /* ignore */ } workerUrl = ''; }
+function makeWorker() {
+  if (workerTried) return synthWorker; workerTried = true;
+  try {
+    const src = `const TAU=${TAU};const clamp=${clamp.toString()};${makeRng.toString()}${bq.toString()}${polyblep.toString()}${renderLayer.toString()}${synth.toString()}
+onmessage=(e)=>{const m=e.data;try{const d=synth(m.spec,m.sr,m.seed);postMessage({name:m.name,d},[d.buffer]);}catch(err){postMessage({name:m.name,err:String(err)});}};`;
+    const url = workerUrl = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+    synthWorker = new Worker(url);
+    synthWorker.onmessage = (e) => {
+      const { name, d, err } = e.data; pendingW.delete(name);
+      if (!pendingW.size) { clearTimeout(workerIdle); workerIdle = setTimeout(retireWorker, 1500); }
+      if (err || !d || !Aud.ctx || Sfx.bufs.has(name)) return;
+      const b = Aud.ctx.createBuffer(1, d.length, Aud.ctx.sampleRate); b.getChannelData(0).set(d); Sfx.bufs.set(name, b);
+    };
+    synthWorker.onerror = () => { synthWorker = null; for (const n of pendingW) Sfx._warm.push(n); pendingW.clear(); };
+  } catch (e) { synthWorker = null; }
+  return synthWorker;
+}
+Sfx.prewarm = () => {
+  clearTimeout(workerIdle);
+  const w = HAS_DOM && typeof Worker === 'function' ? makeWorker() : null;
+  for (const k in Sfx.defs) {
+    if (Sfx.bufs.has(k) || pendingW.has(k) || Sfx.defs[k].file) continue;
+    if (w) { pendingW.add(k); try { w.postMessage({ name: k, spec: Sfx.defs[k], sr: Aud.ctx.sampleRate, seed: hashStr(k) }); } catch (e) { pendingW.delete(k); Sfx._warm.push(k); } }
+    else Sfx._warm.push(k);
+  }
+};
+addSystem({ name: 'sfx-warm', order: 31, frame() { if (!Aud.ctx || !Sfx._warm.length) return; const k = Sfx._warm.shift(); if (!Sfx.bufs.has(k)) Sfx.buffer(k); } });
+
+/**
+ * 播放：o { vol, pitch（倍率）, pan（-1～1）, bus, rev（殘響量）, delay（秒）, loop }
+ * 回傳一個可以 stop() 的聲部（播不了回傳 null）
+ */
+Sfx.play = (name, o = {}) => {
+  if (!Aud.ctx || Aud.ctx.state === 'closed') return null;
+  const sp = Sfx.defs[name] || {}, buf = Sfx.buffer(name); if (!buf) return null;
+  const c = Aud.ctx, now = c.currentTime;
+  const gap = sp.gap != null ? sp.gap : 0.025, lt = Sfx.last.get(name) || -1;
+  if (now - lt < gap && !o.force) return null;
+  Sfx.last.set(name, now);
+  // 同一音效的聲部上限：停掉最舊的
+  const max = sp.max || 6, mine = Sfx.voices.filter((v) => v.name === name);
+  if (mine.length >= max) mine[0].stop(0.02);
+  if (Sfx.voices.length >= Sfx.maxVoices) { const ai = Sfx.voices.findIndex((v) => v.bus === 'amb'); Sfx.voices[ai >= 0 ? ai : 0].stop(0.02); }   // 聲部滿了先讓環境音讓位
+  const src = c.createBufferSource(); src.buffer = buf;
+  const pv = sp.pitchVar != null ? sp.pitchVar : 0.05;
+  src.playbackRate.value = Math.max(0.1, (o.pitch || 1) * (1 + Rand.spread(pv)));
+  if (o.loop) src.loop = true;
+  const g = c.createGain(); g.gain.value = (o.vol != null ? o.vol : 1);
+  src.connect(g);
+  let node = g;
+  if (o.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = clamp(o.pan, -1, 1); g.connect(p); node = p; }
+  node.connect(Aud.bus[o.bus || sp.bus || 'sfx'] || Aud.bus.sfx);
+  const rv = o.rev != null ? o.rev : sp.rev || 0;
+  if (rv > 0) { const rg = c.createGain(); rg.gain.value = rv; node.connect(rg); rg.connect(Aud.revIn); }
+  const at = now + (o.delay || 0);
+  src.start(at);
+  const v = { name, bus: o.bus || sp.bus || 'sfx', src, g, end: at + buf.duration / src.playbackRate.value, stop(fade = 0.03) { try { const t = c.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + fade); src.stop(t + fade + 0.01); } catch (e) { /* 已經停了 */ } rm(); } };
+  const rm = () => { const i = Sfx.voices.indexOf(v); if (i >= 0) Sfx.voices.splice(i, 1); };
+  src.onended = rm;
+  Sfx.voices.push(v);
+  return v;
+};
+/** 依世界座標播放：左右聲道跟著畫面位置，離畫面越遠越小聲 */
+Sfx.at = (name, x, y, o = {}) => {
+  const sx = Cam.toScreenX(x, y), sy = Cam.toScreenY(x, y), w = Screen.w || 1, h = Screen.h || 1;
+  const pan = clamp((sx - w / 2) / (w / 2), -1, 1) * 0.55;
+  const dx = Math.max(0, Math.abs(sx - w / 2) - w / 2), dy = Math.max(0, Math.abs(sy - h / 2) - h / 2), off = Math.hypot(dx, dy) / Math.max(w, h);
+  const vol = (o.vol != null ? o.vol : 1) * clamp(1 - off * 1.6, 0.12, 1);
+  return Sfx.play(name, Object.assign({}, o, { pan, vol }));
+};
+Sfx.stopAll = (name) => { for (const v of Sfx.voices.slice()) if (!name || v.name === name) v.stop(); };
+/** 介面音效（走 ui 匯流排） */
+PZ.uiSound = (name, o) => Sfx.play(name, Object.assign({ bus: 'ui' }, o));
+
+/* ---------- 內建音效庫 ---------- */
+const S = Sfx.define;
+// 打擊
+S('hit', { vol: 0.75, pitchVar: 0.08, max: 6, gap: 0.02, layers: [
+  { w: 'noise', t: 0.018, a: 0.0005, p: 1.5, v: 0.55, hp: [1800, 1800, 0.7] },
+  { w: 'tri', f: 240, f1: 70, t: 0.11, a: 0.001, p: 2.2, v: 1, dist: 0.35 },
+  { w: 'noise', t: 0.08, a: 0.001, p: 2.5, v: 0.45, lp: [3200, 500, 0.8] }] });
+S('hitHeavy', { vol: 0.9, pitchVar: 0.06, max: 4, layers: [
+  { w: 'noise', t: 0.025, a: 0.0005, p: 1.5, v: 0.6, hp: [1400, 1400, 0.7] },
+  { w: 'sine', f: 170, f1: 42, t: 0.22, a: 0.001, p: 2, v: 1, dist: 0.5 },
+  { w: 'brown', t: 0.18, a: 0.002, p: 2, v: 0.8, lp: [1800, 250, 0.7] }] });
+S('crit', { vol: 0.65, pitchVar: 0.04, max: 3, layers: [
+  { w: 'sine', f: 1900, t: 0.32, a: 0.001, p: 3, v: 0.5, fm: [3.51, 2.4, 9] },
+  { w: 'sine', f: 2850, t: 0.18, a: 0.001, p: 3, v: 0.25, fm: [2.01, 1.5, 12] },
+  { w: 'noise', t: 0.05, a: 0.0005, p: 2, v: 0.35, hp: [5000, 5000, 0.7] }] });
+S('kill', { vol: 0.7, pitchVar: 0.1, max: 5, layers: [
+  { w: 'noise', t: 0.13, a: 0.001, p: 1.8, v: 0.8, bp: [1100, 260, 1.1] },
+  { w: 'sine', f: 330, f1: 70, t: 0.14, a: 0.001, p: 2, v: 0.8, dist: 0.2 }] });
+S('slash', { vol: 0.6, pitchVar: 0.08, max: 4, layers: [
+  { w: 'noise', t: 0.16, a: 0.04, p: 2, v: 1, bp: [600, 3800, 1.4] },
+  { w: 'noise', t: 0.05, d: 0.06, a: 0.002, p: 2, v: 0.4, hp: [4000, 4000, 0.7] }] });
+S('clang', { vol: 0.6, pitchVar: 0.05, max: 3, layers: [
+  { w: 'sine', f: 760, t: 0.55, a: 0.001, p: 2.6, v: 0.6, fm: [1.41, 4.5, 6] },
+  { w: 'sine', f: 1520, t: 0.3, a: 0.001, p: 3, v: 0.3, fm: [2.73, 2, 8] },
+  { w: 'noise', t: 0.04, a: 0.0005, p: 2, v: 0.5, hp: [3000, 3000, 0.7] }] });
+S('block', { vol: 0.55, pitchVar: 0.05, max: 3, layers: [
+  { w: 'sine', f: 520, t: 0.18, a: 0.001, p: 2.5, v: 0.6, fm: [1.7, 3, 14] },
+  { w: 'noise', t: 0.06, a: 0.001, p: 2, v: 0.5, bp: [2400, 1200, 1] }] });
+// 射擊
+S('shoot', { vol: 0.55, pitchVar: 0.07, max: 5, gap: 0.03, layers: [
+  { w: 'noise', t: 0.09, a: 0.0005, p: 2.2, v: 1, lp: [7000, 1400, 0.7], dist: 0.35 },
+  { w: 'sine', f: 980, f1: 130, t: 0.06, a: 0.0005, p: 2, v: 0.5 },
+  { w: 'sine', f: 120, f1: 55, t: 0.08, a: 0.001, p: 2, v: 0.6 }] });
+S('rifle', { vol: 0.5, pitchVar: 0.06, max: 6, gap: 0.04, layers: [
+  { w: 'noise', t: 0.07, a: 0.0005, p: 2.4, v: 1, hp: [700, 700, 0.6], dist: 0.45 },
+  { w: 'square', f: 420, f1: 140, t: 0.04, a: 0.0005, p: 2, v: 0.25 },
+  { w: 'sine', f: 140, f1: 60, t: 0.06, a: 0.001, p: 2, v: 0.5 }] });
+S('shotgun', { vol: 0.7, pitchVar: 0.05, max: 3, gap: 0.08, layers: [
+  { w: 'noise', t: 0.26, a: 0.001, p: 2.2, v: 1, lp: [4500, 500, 0.7], dist: 0.6 },
+  { w: 'sine', f: 120, f1: 38, t: 0.22, a: 0.001, p: 2, v: 0.9 }] });
+S('laser', { vol: 0.45, pitchVar: 0.06, max: 5, gap: 0.03, layers: [
+  { w: 'square', f: 1500, f1: 260, t: 0.16, a: 0.001, p: 1.6, v: 0.6, lp: [6000, 1500, 0.8], duty: 0.35 },
+  { w: 'sine', f: 2200, f1: 500, t: 0.12, a: 0.001, p: 2, v: 0.4 }] });
+S('reload', { vol: 0.45, layers: [
+  { w: 'noise', t: 0.02, a: 0.0005, p: 2, v: 0.8, bp: [3200, 3200, 2] },
+  { w: 'noise', t: 0.12, d: 0.05, a: 0.02, p: 1.5, v: 0.35, bp: [1400, 2600, 1.2] },
+  { w: 'noise', t: 0.025, d: 0.2, a: 0.0005, p: 2, v: 0.9, bp: [2600, 2600, 2] },
+  { w: 'sine', f: 900, t: 0.03, d: 0.2, a: 0.0005, p: 2, v: 0.3 }] });
+S('empty', { vol: 0.35, layers: [{ w: 'noise', t: 0.015, a: 0.0005, p: 2, v: 1, bp: [4200, 4200, 3] }, { w: 'sine', f: 1400, t: 0.02, p: 2, v: 0.4 }] });
+// 爆炸、環境
+S('explosion', { vol: 0.95, pitchVar: 0.06, max: 3, gap: 0.05, rev: 0.25, layers: [
+  { w: 'noise', t: 0.05, a: 0.0005, p: 1.5, v: 0.7, hp: [1500, 1500, 0.6], dist: 0.4 },
+  { w: 'brown', t: 1.2, a: 0.003, p: 2.2, v: 1, lp: [1600, 90, 0.7], dist: 0.35 },
+  { w: 'sine', f: 75, f1: 26, t: 0.9, a: 0.002, p: 1.8, v: 0.9 },
+  { w: 'noise', t: 0.6, d: 0.04, a: 0.01, p: 2.5, v: 0.25, bp: [900, 300, 0.7] }] });
+S('thunder', { vol: 0.9, max: 2, rev: 0.4, layers: [
+  { w: 'noise', t: 0.08, a: 0.001, p: 1.5, v: 0.9, hp: [1200, 1200, 0.6], dist: 0.5 },
+  { w: 'brown', t: 2.4, a: 0.05, p: 1.6, v: 1, lp: [900, 60, 0.7] }] });
+S('splash', { vol: 0.6, pitchVar: 0.08, max: 3, layers: [
+  { w: 'noise', t: 0.35, a: 0.005, p: 2, v: 1, bp: [1800, 400, 0.9] },
+  { w: 'sine', f: 600, f1: 1200, t: 0.06, d: 0.08, p: 2, v: 0.25 },
+  { w: 'sine', f: 800, f1: 1600, t: 0.05, d: 0.16, p: 2, v: 0.2 }] });
+S('glass', { vol: 0.55, max: 3, layers: [
+  { w: 'sine', f: 2600, t: 0.6, a: 0.001, p: 3, v: 0.4, fm: [2.76, 2.5, 6] },
+  { w: 'sine', f: 3700, t: 0.4, d: 0.03, a: 0.001, p: 3, v: 0.3, fm: [1.93, 2, 8] },
+  { w: 'noise', t: 0.25, a: 0.001, p: 2.5, v: 0.5, hp: [5500, 3000, 0.8] }] });
+// 拾取、獎勵
+S('pickup', { vol: 0.42, pitchVar: 0.03, max: 4, gap: 0.03, bus: 'sfx', layers: [
+  { w: 'sine', f: 1046, f1: 1568, t: 0.07, a: 0.001, p: 1.6, v: 0.8 },
+  { w: 'sine', f: 1568, f1: 2093, t: 0.09, d: 0.045, a: 0.001, p: 1.8, v: 0.6 }] });
+S('xp', { vol: 0.32, pitchVar: 0.02, max: 6, gap: 0.015, layers: [{ w: 'sine', f: 1318, t: 0.06, a: 0.001, p: 2, v: 0.9, fm: [2, 0.6, 20] }] });
+S('coin', { vol: 0.4, pitchVar: 0.01, max: 4, layers: [{ w: 'square', f: 988, t: 0.32, a: 0.001, h: 0.05, p: 2.2, v: 0.5, jump: [[0.06, 1.335]], lp: [6000, 3000, 0.7], duty: 0.5 }] });
+S('powerup', { vol: 0.45, max: 2, layers: [{ w: 'square', f: 523, t: 0.42, a: 0.002, h: 0.2, p: 1.6, v: 0.45, jump: [[0.07, 1.26], [0.14, 1.19], [0.21, 1.335]], vib: [8, 0.15], lp: [5000, 2500, 0.7] }, { w: 'sine', f: 1046, t: 0.42, a: 0.002, h: 0.2, p: 1.6, v: 0.3, jump: [[0.07, 1.26], [0.14, 1.19], [0.21, 1.335]] }] });
+S('levelup', { vol: 0.55, max: 1, rev: 0.3, layers: [
+  { w: 'sine', f: 523, t: 0.5, a: 0.002, p: 2.4, v: 0.5, fm: [2, 1.2, 4] },
+  { w: 'sine', f: 659, t: 0.5, d: 0.08, a: 0.002, p: 2.4, v: 0.5, fm: [2, 1.2, 4] },
+  { w: 'sine', f: 784, t: 0.55, d: 0.16, a: 0.002, p: 2.4, v: 0.5, fm: [2, 1.2, 4] },
+  { w: 'sine', f: 1046, t: 0.9, d: 0.24, a: 0.002, p: 2.2, v: 0.55, fm: [3.5, 1.4, 3] },
+  { w: 'noise', t: 0.8, d: 0.2, a: 0.1, p: 2, v: 0.12, hp: [7000, 9000, 0.7] }] });
+S('heal', { vol: 0.4, max: 2, rev: 0.3, layers: [
+  { w: 'sine', f: 660, f1: 990, t: 0.5, a: 0.05, p: 2, v: 0.5, vib: [6, 0.2] },
+  { w: 'sine', f: 1320, f1: 1980, t: 0.5, d: 0.05, a: 0.05, p: 2, v: 0.25 },
+  { w: 'noise', t: 0.5, a: 0.1, p: 2, v: 0.1, hp: [6000, 8000, 0.7] }] });
+S('magic', { vol: 0.5, pitchVar: 0.05, max: 3, rev: 0.35, layers: [
+  { w: 'sine', f: 400, f1: 1600, t: 0.45, a: 0.03, p: 1.8, v: 0.5, fm: [1.5, 2, 3] },
+  { w: 'noise', t: 0.45, a: 0.05, p: 2, v: 0.25, bp: [2000, 7000, 2] }] });
+S('charge', { vol: 0.4, max: 1, layers: [{ w: 'saw', f: 140, f1: 620, t: 0.9, a: 0.3, p: 0.8, v: 0.4, lp: [600, 4000, 1.5], vib: [9, 0.3] }, { w: 'sine', f: 280, f1: 1240, t: 0.9, a: 0.3, p: 0.8, v: 0.3 }] });
+// 動作
+S('whoosh', { vol: 0.5, pitchVar: 0.1, max: 4, layers: [{ w: 'noise', t: 0.2, a: 0.07, p: 1.6, v: 1, bp: [400, 2400, 1.2] }] });
+S('dash', { vol: 0.5, pitchVar: 0.06, max: 2, layers: [{ w: 'noise', t: 0.22, a: 0.01, p: 1.8, v: 1, bp: [2600, 500, 1] }, { w: 'sine', f: 320, f1: 140, t: 0.15, a: 0.002, p: 2, v: 0.4 }] });
+S('jump', { vol: 0.4, pitchVar: 0.04, max: 2, layers: [{ w: 'square', f: 300, f1: 640, t: 0.13, a: 0.002, p: 1.6, v: 0.4, lp: [3000, 3000, 0.7] }] });
+S('land', { vol: 0.5, pitchVar: 0.08, max: 2, layers: [{ w: 'noise', t: 0.09, a: 0.001, p: 2, v: 0.8, lp: [700, 200, 0.7] }, { w: 'sine', f: 95, f1: 50, t: 0.1, a: 0.001, p: 2, v: 0.7 }] });
+S('step', { vol: 0.22, pitchVar: 0.15, max: 3, gap: 0.08, layers: [{ w: 'noise', t: 0.045, a: 0.001, p: 2, v: 1, lp: [900, 300, 0.7] }] });
+S('hurt', { vol: 0.6, pitchVar: 0.06, max: 2, gap: 0.08, layers: [
+  { w: 'saw', f: 320, f1: 110, t: 0.22, a: 0.002, p: 1.8, v: 0.5, lp: [2400, 600, 0.8], dist: 0.3 },
+  { w: 'noise', t: 0.1, a: 0.001, p: 2, v: 0.5, bp: [1200, 500, 0.9] }] });
+S('death', { vol: 0.7, max: 1, rev: 0.4, layers: [
+  { w: 'saw', f: 420, f1: 55, t: 0.9, a: 0.005, p: 1.4, v: 0.5, lp: [2200, 200, 0.8], vib: [7, 0.6] },
+  { w: 'brown', t: 0.9, a: 0.01, p: 1.6, v: 0.6, lp: [800, 100, 0.7] }] });
+S('growl', { vol: 0.45, pitchVar: 0.15, max: 3, gap: 0.25, layers: [{ w: 'saw', f: 95, f1: 70, t: 0.5, a: 0.06, p: 1.2, v: 0.6, lp: [700, 400, 2], vib: [13, 1.2] }, { w: 'noise', t: 0.5, a: 0.08, p: 1.4, v: 0.35, bp: [500, 350, 2] }] });
+S('heartbeat', { vol: 0.6, max: 1, gap: 0.5, layers: [{ w: 'sine', f: 70, f1: 42, t: 0.14, a: 0.003, p: 2, v: 1 }, { w: 'sine', f: 65, f1: 40, t: 0.16, d: 0.2, a: 0.003, p: 2, v: 0.8 }] });
+// 介面
+S('click', { vol: 0.3, pitchVar: 0.02, bus: 'ui', max: 3, layers: [{ w: 'sine', f: 1250, t: 0.035, a: 0.0005, p: 2, v: 0.8 }, { w: 'noise', t: 0.008, a: 0.0002, p: 1, v: 0.4, hp: [4000, 4000, 0.7] }] });
+S('hover', { vol: 0.12, pitchVar: 0.02, bus: 'ui', max: 2, gap: 0.04, layers: [{ w: 'sine', f: 2100, t: 0.02, a: 0.001, p: 2, v: 1 }] });
+S('confirm', { vol: 0.35, bus: 'ui', max: 2, layers: [{ w: 'tri', f: 660, t: 0.07, a: 0.002, p: 1.5, v: 0.7 }, { w: 'tri', f: 990, t: 0.12, d: 0.06, a: 0.002, p: 2, v: 0.7 }] });
+S('cancel', { vol: 0.3, bus: 'ui', max: 2, layers: [{ w: 'tri', f: 660, t: 0.07, a: 0.002, p: 1.5, v: 0.7 }, { w: 'tri', f: 440, t: 0.12, d: 0.06, a: 0.002, p: 2, v: 0.7 }] });
+S('error', { vol: 0.3, bus: 'ui', max: 1, layers: [{ w: 'square', f: 196, t: 0.08, a: 0.001, h: 0.04, p: 1, v: 0.5, lp: [1800, 1800, 0.7] }, { w: 'square', f: 185, t: 0.1, d: 0.11, a: 0.001, h: 0.04, p: 1, v: 0.5, lp: [1800, 1800, 0.7] }] });
+S('open', { vol: 0.3, bus: 'ui', max: 2, layers: [{ w: 'noise', t: 0.12, a: 0.02, p: 2, v: 0.6, bp: [900, 3000, 1.2] }, { w: 'sine', f: 520, f1: 880, t: 0.1, a: 0.005, p: 2, v: 0.4 }] });
+S('close', { vol: 0.28, bus: 'ui', max: 2, layers: [{ w: 'noise', t: 0.1, a: 0.01, p: 2, v: 0.6, bp: [2600, 800, 1.2] }, { w: 'sine', f: 760, f1: 480, t: 0.09, a: 0.005, p: 2, v: 0.4 }] });
+S('tick', { vol: 0.18, bus: 'ui', max: 4, gap: 0.03, layers: [{ w: 'sine', f: 1600, t: 0.014, a: 0.0005, p: 1.5, v: 1 }] });
+S('type', { vol: 0.1, bus: 'ui', pitchVar: 0.12, max: 2, gap: 0.035, layers: [{ w: 'noise', t: 0.012, a: 0.0005, p: 2, v: 1, bp: [3200, 3200, 1.5] }, { w: 'sine', f: 1700, t: 0.012, p: 2, v: 0.3 }] });
+S('notify', { vol: 0.35, bus: 'ui', max: 1, rev: 0.2, layers: [{ w: 'sine', f: 880, t: 0.2, a: 0.002, p: 2, v: 0.6, fm: [2, 0.8, 8] }, { w: 'sine', f: 1320, t: 0.3, d: 0.1, a: 0.002, p: 2, v: 0.5, fm: [2, 0.8, 8] }] });
+S('card', { vol: 0.35, pitchVar: 0.1, max: 4, gap: 0.03, layers: [{ w: 'noise', t: 0.07, a: 0.01, p: 2, v: 1, bp: [2600, 4200, 1.2] }] });
+S('alarm', { vol: 0.35, max: 1, layers: [{ w: 'square', f: 880, t: 0.7, a: 0.002, h: 0.65, p: 1, v: 0.35, jump: [[0.175, 0.75], [0.35, 1.333], [0.525, 0.75]], lp: [2500, 2500, 0.7] }] });
+S('bell', { vol: 0.5, max: 2, rev: 0.4, layers: [{ w: 'sine', f: 660, t: 1.6, a: 0.001, p: 2.6, v: 0.7, fm: [3.5, 2.2, 2.2] }, { w: 'sine', f: 1320, t: 1.1, a: 0.001, p: 3, v: 0.25, fm: [2.4, 1, 3] }] });
+// 腳步（不同地面）
+S('stepGrass', { vol: 0.24, pitchVar: 0.14, max: 3, gap: 0.07, layers: [{ w: 'pink', t: 0.08, a: 0.012, p: 1.8, v: 1, hp: [1400, 2200, 0.7], lp: [7000, 5000, 0.7] }] });
+S('stepStone', { vol: 0.26, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.03, a: 0.0008, p: 2.4, v: 0.8, bp: [2300, 1800, 1.2] }, { w: 'sine', f: 190, f1: 120, t: 0.035, a: 0.001, p: 2, v: 0.6 }] });
+S('stepWood', { vol: 0.3, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'sine', f: 240, f1: 175, t: 0.07, a: 0.001, p: 2.2, v: 0.9 }, { w: 'noise', t: 0.025, a: 0.0008, p: 2, v: 0.35, bp: [950, 950, 1.5] }] });
+S('stepWater', { vol: 0.3, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.14, a: 0.006, p: 2, v: 1, bp: [1500, 520, 1] }, { w: 'sine', f: 620, f1: 1250, t: 0.045, d: 0.03, a: 0.002, p: 2, v: 0.2 }] });
+S('stepSnow', { vol: 0.26, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.1, a: 0.012, p: 1.6, v: 1, lp: [3200, 1500, 0.7], crush: 6, hold: 3 }] });
+S('stepMetal', { vol: 0.24, pitchVar: 0.1, max: 3, gap: 0.07, layers: [{ w: 'sine', f: 880, t: 0.1, a: 0.0008, p: 2.6, v: 0.5, fm: [2.31, 2.2, 14] }, { w: 'noise', t: 0.02, a: 0.0005, p: 2, v: 0.4, hp: [3200, 3200, 0.7] }] });
+// 介面（第二組）
+S('select', { vol: 0.24, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'sine', f: 880, f1: 1320, t: 0.05, a: 0.002, p: 1.8, v: 0.8 }, { w: 'sine', f: 1760, t: 0.03, d: 0.03, a: 0.001, p: 2, v: 0.25 }] });
+S('back', { vol: 0.22, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'sine', f: 1100, f1: 700, t: 0.07, a: 0.002, p: 1.8, v: 0.8 }] });
+S('toggleOn', { vol: 0.24, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'tri', f: 740, t: 0.04, a: 0.001, p: 2, v: 0.7 }, { w: 'tri', f: 1110, t: 0.07, d: 0.035, a: 0.001, p: 2, v: 0.7 }] });
+S('toggleOff', { vol: 0.22, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'tri', f: 1110, t: 0.04, a: 0.001, p: 2, v: 0.6 }, { w: 'tri', f: 740, t: 0.07, d: 0.035, a: 0.001, p: 2, v: 0.6 }] });
+S('slider', { vol: 0.12, bus: 'ui', pitchVar: 0, max: 2, gap: 0.03, layers: [{ w: 'sine', f: 2400, t: 0.012, a: 0.0005, p: 1.5, v: 1 }] });
+S('unlock', { vol: 0.4, bus: 'ui', max: 1, rev: 0.35, layers: [523, 659, 784, 1046, 1318].map((f, i) => ({ w: 'sine', f, t: 0.5, d: i * 0.06, a: 0.002, p: 2.4, v: 0.45, fm: [2, 0.8, 6] })).concat([{ w: 'noise', t: 0.6, d: 0.1, a: 0.15, p: 2, v: 0.1, hp: [7000, 9000, 0.7] }]) });
+S('purchase', { vol: 0.42, bus: 'ui', max: 1, rev: 0.2, layers: [{ w: 'square', f: 1318, t: 0.08, a: 0.001, p: 2, v: 0.35, lp: [6000, 6000, 0.7] }, { w: 'square', f: 1760, t: 0.25, d: 0.07, a: 0.001, p: 2.2, v: 0.35, lp: [6000, 4000, 0.7] }, { w: 'sine', f: 2637, t: 0.5, d: 0.07, a: 0.001, p: 3, v: 0.2, fm: [3.5, 1.5, 6] }] });
+S('equip', { vol: 0.4, max: 2, layers: [{ w: 'noise', t: 0.14, a: 0.02, p: 2, v: 0.6, bp: [700, 2600, 1.1] }, { w: 'sine', f: 1250, t: 0.25, d: 0.1, a: 0.001, p: 2.8, v: 0.4, fm: [1.41, 3, 9] }, { w: 'noise', t: 0.02, d: 0.1, a: 0.0005, p: 2, v: 0.5, hp: [3500, 3500, 0.7] }] });
+S('page', { vol: 0.3, bus: 'ui', pitchVar: 0.1, max: 2, gap: 0.05, layers: [{ w: 'pink', t: 0.16, a: 0.03, p: 1.6, v: 1, bp: [2400, 5200, 0.9] }, { w: 'noise', t: 0.02, d: 0.13, a: 0.001, p: 2, v: 0.35, hp: [4000, 4000, 0.7] }] });
+S('rare', { vol: 0.42, max: 1, rev: 0.45, layers: [{ w: 'sine', f: 1568, f1: 3136, t: 0.7, a: 0.08, p: 2, v: 0.3, vib: [12, 0.3] }, { w: 'sine', f: 2093, t: 0.9, d: 0.1, a: 0.001, p: 2.6, v: 0.35, fm: [3.5, 2, 3] }, { w: 'noise', t: 0.9, a: 0.2, p: 1.6, v: 0.12, hp: [8000, 10000, 0.7] }] });
+S('combo', { vol: 0.32, pitchVar: 0, max: 3, gap: 0.04, layers: [{ w: 'square', f: 660, f1: 990, t: 0.09, a: 0.001, p: 1.8, v: 0.35, duty: 0.25, lp: [5000, 5000, 0.7] }, { w: 'sine', f: 1320, t: 0.12, d: 0.04, a: 0.001, p: 2, v: 0.35 }] });
+
+/* ---- 17_music.js ---- */
+/* ==========================================================================
+   17 配樂：用文字寫譜、引擎即時演奏
+     PZ.music.define('battle', {
+       bpm: 128, swing: 0,                   // steps：每小節幾格（預設 16）
+       tracks: [
+         { inst: 'kick',  pat: 'x...x...x...x...' },
+         { inst: 'snare', pat: '....x.......x...' },
+         { inst: 'hat',   pat: 'x.x.x.x.x.x.x.x.', vol: 0.35, min: 0.4 },   // 緊張度 ≥ 0.4 才出現
+         { inst: 'bass',  notes: 'A1 . A1 . . . G1 . F1 - - . F1 . G1 .' },  // 一格一個字：音名、. 休止、- 延長
+         { inst: 'pad',   chords: 'Am F C G', vol: 0.3 },                     // 一小節一個和弦
+         { inst: 'pluck', notes: 'A4 . C5 . E5 . C5 . …', min: 0.7 },
+       ],
+     });
+     PZ.music.play('battle', { fade: 1.5 });   PZ.music.intensity(0.8);   PZ.music.stop({ fade: 2 });
+     PZ.music.stinger('win')（播一次、自動壓低主配樂）   PZ.music.file('theme', 'music.mp3')（用音檔）
+   鼓的字：x 一般、X 重音、o 輕；數字 1～9 是力度。音名：C4＝中央 Do，可寫 C#4、Eb3。
+   和弦：A、Am、A7、Am7、Amaj7、Asus2、Asus4、Adim、Aaug、A6、Am6、A9、Aadd9，可加 /E 指定低音。
+   樂器（取樣式，便宜）：kick snare hat ohat clap tom crash shaker rim bass sub pluck harp zither keys bell marimba arp stab epiano piano guitar kalimba
+   樂器（即時合成，長音）：pad strings lead choir flute organ brass supersaw
+   聲部效果：{ delay: 0.35（跟拍子對齊的回音）, lp: 1800 或 [600, 6000]（低通；給兩個值＝緊張度越高越亮）, pump: 0.6（跟著大鼓一縮一放）, rev, pan }
+     歌曲：{ delaySteps: 3（回音隔幾格，預設附點八分）, feedback: 0.38, delayTone: 2600 }
+   換歌對拍子：PZ.music.play('boss', { sync: 'bar' | 'half' | 'beat' })   下一小節（半小節、下一拍）才切過去，不會亂拍
+   PZ.music.muffle(0.8)  配樂悶住（暫停選單、水底）；muffle(0) 恢復      PZ.music.phase()  這一拍走到哪（0～1，畫面跟著節奏跳）
+   ========================================================================== */
+const NOTE_IDX = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+function noteToMidi(tok) {
+  const m = /^([A-Ga-g])([#b]?)(-?\d)$/.exec(tok); if (!m) return null;
+  return 12 * (+m[3] + 1) + NOTE_IDX[m[1].toUpperCase()] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+}
+const midiHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+const CHORD_Q = { '': [0, 4, 7], m: [0, 3, 7], 7: [0, 4, 7, 10], m7: [0, 3, 7, 10], maj7: [0, 4, 7, 11], sus2: [0, 2, 7], sus4: [0, 5, 7], dim: [0, 3, 6], aug: [0, 4, 8], 6: [0, 4, 7, 9], m6: [0, 3, 7, 9], 9: [0, 4, 7, 10, 14], add9: [0, 4, 7, 14], m9: [0, 3, 7, 10, 14] };
+function chordNotes(name, base = 52) {
+  const m = /^([A-G])([#b]?)([a-z0-9]*)(?:\/([A-G][#b]?))?$/.exec(name); if (!m) return null;
+  const root = NOTE_IDX[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0), q = CHORD_Q[m[3]] || CHORD_Q[''];
+  // 把根音放在 base 附近（聲部不要一直跳）
+  let r = base - ((base - root) % 12 + 12) % 12; if (r < base - 6) r += 12;
+  const notes = q.map((iv) => r + iv);
+  if (m[4]) { const b = NOTE_IDX[m[4][0]] + (m[4][1] === '#' ? 1 : m[4][1] === 'b' ? -1 : 0); notes.unshift(r - 12 + ((b - root + 12) % 12)); }
+  return notes;
+}
+PZ.noteToMidi = noteToMidi; PZ.chordNotes = chordNotes;
+
+/* ---------- 樂器 ---------- */
+const INST = {};
+const buf = (name, render) => { INST[name] = { kind: 'buf', render }; };
+const node = (name, play) => { INST[name] = { kind: 'node', play }; };
+function ks(f, dur, sr, bright = 0.5, damp = 0.996, seed = 1) {
+  const N = Math.max(2, Math.round(sr / f)), d = new Float32Array(N), r = makeRng(seed);
+  let lp = 0; for (let i = 0; i < N; i++) { lp += ((r.next() * 2 - 1) - lp) * (0.15 + bright * 0.85); d[i] = lp; }
+  const len = Math.ceil(dur * sr), out = new Float32Array(len); let idx = 0;
+  for (let i = 0; i < len; i++) { const a = d[idx], b = d[(idx + 1) % N]; out[i] = a; d[idx] = (a + b) * 0.5 * damp; idx = (idx + 1) % N; }
+  return out;
+}
+buf('kick', (m, dur, sr) => synth({ vol: 1, layers: [{ w: 'sine', f: 160, f1: 44, t: 0.42, a: 0.001, p: 1.6, v: 1, dist: 0.15 }, { w: 'noise', t: 0.012, a: 0.0003, p: 1, v: 0.35, hp: [2500, 2500, 0.7] }] }, sr, 11));
+buf('snare', (m, dur, sr) => synth({ vol: 0.85, layers: [{ w: 'noise', t: 0.2, a: 0.001, p: 2, v: 1, bp: [1900, 1500, 0.8] }, { w: 'tri', f: 200, f1: 160, t: 0.09, a: 0.001, p: 2, v: 0.7 }] }, sr, 12));
+buf('hat', (m, dur, sr) => synth({ vol: 0.5, layers: [{ w: 'noise', t: 0.045, a: 0.0005, p: 2.5, v: 1, hp: [7500, 7500, 0.8] }] }, sr, 13));
+buf('ohat', (m, dur, sr) => synth({ vol: 0.5, layers: [{ w: 'noise', t: 0.32, a: 0.001, p: 1.6, v: 1, hp: [6800, 6800, 0.8] }] }, sr, 14));
+buf('clap', (m, dur, sr) => synth({ vol: 0.75, layers: [0, 0.011, 0.022].map((d) => ({ w: 'noise', d, t: d === 0.022 ? 0.18 : 0.012, a: 0.0005, p: 2, v: 1, bp: [1300, 1100, 1.4] })) }, sr, 15));
+buf('tom', (m, dur, sr) => synth({ vol: 0.85, layers: [{ w: 'sine', f: midiHz(m || 48) * 1.6, f1: midiHz(m || 48), t: 0.35, a: 0.001, p: 1.8, v: 1 }, { w: 'noise', t: 0.02, p: 1, v: 0.2, lp: [3000, 3000, 0.7] }] }, sr, 16));
+buf('crash', (m, dur, sr) => synth({ vol: 0.5, layers: [{ w: 'noise', t: 1.8, a: 0.002, p: 2.2, v: 1, hp: [4200, 6000, 0.6] }] }, sr, 17));
+buf('shaker', (m, dur, sr) => synth({ vol: 0.35, layers: [{ w: 'noise', t: 0.07, a: 0.02, p: 2, v: 1, bp: [6500, 6500, 1.2] }] }, sr, 18));
+buf('rim', (m, dur, sr) => synth({ vol: 0.5, layers: [{ w: 'noise', t: 0.02, a: 0.0005, p: 2, v: 1, bp: [2400, 2400, 3] }, { w: 'sine', f: 1700, t: 0.03, p: 2, v: 0.6 }] }, sr, 19));
+buf('bass', (m, dur, sr) => { const f = midiHz(m), t = Math.min(2, dur + 0.08); return synth({ vol: 0.8, layers: [{ w: 'saw', f, t, a: 0.004, h: dur * 0.6, p: 1.4, v: 0.6, lp: [f * 7, f * 2.2, 1.1] }, { w: 'sine', f, t, a: 0.004, h: dur * 0.6, p: 1.2, v: 0.8 }] }, sr, 20); });
+buf('sub', (m, dur, sr) => { const f = midiHz(m), t = Math.min(3, dur + 0.1); return synth({ vol: 0.85, layers: [{ w: 'sine', f, t, a: 0.01, h: dur * 0.7, p: 1.2, v: 1 }, { w: 'tri', f: f * 2, t, a: 0.01, h: dur * 0.5, p: 1.5, v: 0.15 }] }, sr, 21); });
+buf('pluck', (m, dur, sr) => { const o = ks(midiHz(m), Math.min(2.4, dur + 0.6), sr, 0.45, 0.995, m); return normalizeBuf(o, 0.7); });
+buf('harp', (m, dur, sr) => { const o = ks(midiHz(m), 2.4, sr, 0.75, 0.998, m + 3); return normalizeBuf(o, 0.65); });
+buf('zither', (m, dur, sr) => { // 古箏味：亮的撥弦＋開頭往下滑一點
+  const f = midiHz(m), o = ks(f * 1.012, 2.2, sr, 0.85, 0.997, m + 7);
+  const t = synth({ vol: 1, norm: false, layers: [{ w: 'sine', f: f * 1.02, f1: f, t: 0.12, a: 0.001, p: 2, v: 0.15 }] }, sr, 1);
+  for (let i = 0; i < t.length && i < o.length; i++) o[i] += t[i];
+  return normalizeBuf(o, 0.7);
+});
+buf('keys', (m, dur, sr) => { const f = midiHz(m), t = Math.min(3, dur + 0.5); return synth({ vol: 0.6, layers: [{ w: 'sine', f, t, a: 0.002, h: dur * 0.3, p: 2.4, v: 0.8, fm: [1, 1.6, 2.5] }, { w: 'sine', f: f * 2, t: Math.min(t, 0.6), a: 0.001, p: 3, v: 0.2, fm: [7, 1.4, 9] }] }, sr, 22); });
+buf('bell', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.55, layers: [{ w: 'sine', f, t: 2.2, a: 0.001, p: 2.8, v: 0.7, fm: [3.5, 2, 1.8] }, { w: 'sine', f: f * 2.01, t: 1.2, a: 0.001, p: 3, v: 0.2 }] }, sr, 23); });
+buf('marimba', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.65, layers: [{ w: 'sine', f, t: 0.6, a: 0.001, p: 3, v: 0.9, fm: [4, 1.2, 18] }, { w: 'sine', f: f * 4, t: 0.08, a: 0.001, p: 3, v: 0.15 }] }, sr, 24); });
+buf('arp', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.45, layers: [{ w: 'square', f, t: Math.min(0.5, dur + 0.12), a: 0.002, p: 2.2, v: 0.5, duty: 0.3, lp: [f * 10, f * 3, 1.2] }] }, sr, 25); });
+buf('stab', (m, dur, sr) => { const f = midiHz(m), t = Math.min(1, dur + 0.1); return synth({ vol: 0.5, layers: [-8, 0, 8].map((c) => ({ w: 'saw', f: f * Math.pow(2, c / 1200), t, a: 0.003, h: dur * 0.3, p: 2, v: 0.35, lp: [f * 12, f * 2, 1] })) }, sr, 26); });
+buf('epiano', (m, dur, sr) => { const f = midiHz(m), t = Math.min(3.2, dur + 1); return synth({ vol: 0.6, layers: [{ w: 'sine', f, t, a: 0.002, h: dur * 0.3, p: 2.2, v: 0.85, fm: [1, 1.1, 1.6] }, { w: 'sine', f, t: 0.6, a: 0.001, p: 3.4, v: 0.26, fm: [14, 1.6, 12] }, { w: 'sine', f: f * 2, t: Math.min(t, 1.2), a: 0.002, p: 3, v: 0.1 }] }, sr, 27); });
+buf('piano', (m, dur, sr) => { // 鋼琴：泛音稍微偏高（弦的非諧和性），高的泛音衰減快，加一點擊槌聲
+  const f = midiHz(m), t = Math.min(3.6, dur + 1.6), B = 0.0004 * Math.pow(2, (m - 60) / 24), L = [];
+  for (let k = 1; k <= 7; k++) { const fk = f * k * Math.sqrt(1 + B * k * k); if (fk > sr * 0.4) break; L.push({ w: 'sine', f: fk, t: t / (1 + (k - 1) * 0.35), a: 0.0015, p: 2.4 + k * 0.45, v: (0.9 / Math.pow(k, 1.15)) * (k === 1 ? 1 : 0.8) }); }
+  L.push({ w: 'noise', t: 0.03, a: 0.0005, p: 2, v: 0.12, lp: [Math.min(9000, f * 8), f * 2, 0.7] });
+  return synth({ vol: 0.62, layers: L }, sr, 28);
+});
+buf('guitar', (m, dur, sr) => { const o = ks(midiHz(m), Math.min(2.6, dur + 1), sr, 0.62, 0.9965, m + 11); let lp = 0; for (let i = 0; i < o.length; i++) { lp += (o[i] - lp) * 0.04; o[i] = o[i] * 0.85 + lp * 1.6; } return normalizeBuf(o, 0.62); });
+buf('kalimba', (m, dur, sr) => { const f = midiHz(m); return synth({ vol: 0.6, layers: [{ w: 'sine', f, t: 1.5, a: 0.0015, p: 3.2, v: 0.9 }, { w: 'sine', f: f * 5.94, t: 0.16, a: 0.0008, p: 3, v: 0.22 }, { w: 'sine', f: f * 2.01, t: 0.5, a: 0.001, p: 3, v: 0.12 }, { w: 'noise', t: 0.012, a: 0.0003, p: 2, v: 0.12, bp: [f * 4, f * 4, 1.5] }] }, sr, 29); });
+function normalizeBuf(o, target) { let pk = 0; for (let i = 0; i < o.length; i++) pk = Math.max(pk, Math.abs(o[i])); if (pk > 0) { const g = target / pk; for (let i = 0; i < o.length; i++) o[i] *= g; } const fd = Math.min(o.length, 400); for (let i = 0; i < fd; i++) o[o.length - 1 - i] *= i / fd; return o; }
+
+/** 即時合成的長音樂器：c＝AudioContext、out＝輸出節點 */
+function envGain(c, t0, dur, peak, a, rel, sus = 0.8) {
+  const g = c.createGain(); g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(peak, t0 + a); g.gain.setTargetAtTime(peak * sus, t0 + a, Math.max(0.05, dur * 0.4));
+  g.gain.setTargetAtTime(0.0001, t0 + Math.max(a, dur), rel / 3);
+  return g;
+}
+function oscs(c, type, f, detunes, t0, end, dest) { for (const d of detunes) { const o = c.createOscillator(); o.type = type; o.frequency.value = f; o.detune.value = d; o.connect(dest); o.start(t0); o.stop(end); } }
+node('pad', (c, m, t0, dur, vel, out) => { const f = midiHz(m), rel = 1.4, g = envGain(c, t0, dur, 0.16 * vel, 0.5, rel), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(4000, f * 4); lp.Q.value = 0.5; lp.connect(g); g.connect(out); oscs(c, 'sawtooth', f, [-9, 0, 9], t0, t0 + dur + rel * 1.5, lp); });
+node('strings', (c, m, t0, dur, vel, out) => { const f = midiHz(m), rel = 0.9, g = envGain(c, t0, dur, 0.14 * vel, 0.25, rel, 0.9), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(5000, f * 6); lp.connect(g); g.connect(out); oscs(c, 'sawtooth', f, [-12, -4, 5, 12], t0, t0 + dur + rel * 1.5, lp); });
+node('lead', (c, m, t0, dur, vel, out) => {
+  const f = midiHz(m), rel = 0.25, g = envGain(c, t0, dur, 0.13 * vel, 0.01, rel, 0.85), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(6000, f * 8); lp.Q.value = 2; lp.connect(g); g.connect(out);
+  const o = c.createOscillator(); o.type = 'square'; o.frequency.value = f; const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 5.5; lg.gain.setValueAtTime(0, t0); lg.gain.linearRampToValueAtTime(f * 0.012, t0 + Math.min(0.4, dur)); lfo.connect(lg); lg.connect(o.frequency);
+  o.connect(lp); o.start(t0); o.stop(t0 + dur + rel * 2); lfo.start(t0); lfo.stop(t0 + dur + rel * 2);
+});
+node('flute', (c, m, t0, dur, vel, out) => {
+  const f = midiHz(m), rel = 0.3, g = envGain(c, t0, dur, 0.16 * vel, 0.06, rel, 0.85); g.connect(out);
+  const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f; const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 4.8; lg.gain.value = f * 0.006; lfo.connect(lg); lg.connect(o.frequency); o.connect(g); o.start(t0); o.stop(t0 + dur + rel * 2); lfo.start(t0); lfo.stop(t0 + dur + rel * 2);
+  const o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2; const g2 = c.createGain(); g2.gain.value = 0.12; o2.connect(g2); g2.connect(g); o2.start(t0); o2.stop(t0 + dur + rel * 2);
+});
+node('choir', (c, m, t0, dur, vel, out) => {
+  const f = midiHz(m), rel = 1, g = envGain(c, t0, dur, 0.22 * vel, 0.35, rel, 0.9); g.connect(out);
+  const mix = c.createGain(); mix.gain.value = 1;
+  for (const [ff, q, a] of [[700, 6, 1], [1150, 8, 0.6], [2600, 10, 0.25]]) { const b = c.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = ff; b.Q.value = q; const bg = c.createGain(); bg.gain.value = a; mix.connect(b); b.connect(bg); bg.connect(g); }
+  oscs(c, 'sawtooth', f, [-7, 0, 7], t0, t0 + dur + rel * 1.5, mix);
+});
+node('organ', (c, m, t0, dur, vel, out) => { const f = midiHz(m), rel = 0.12, g = envGain(c, t0, dur, 0.1 * vel, 0.01, rel, 1); g.connect(out); for (const [k, a] of [[1, 1], [2, 0.5], [3, 0.3], [4, 0.2]]) { const o = c.createOscillator(); o.frequency.value = f * k; const og = c.createGain(); og.gain.value = a; o.connect(og); og.connect(g); o.start(t0); o.stop(t0 + dur + rel * 3); } });
+node('brass', (c, m, t0, dur, vel, out) => { // 銅管：兩支鋸齒波、濾波器一開始猛地打開、音高從下面滑上來
+  const f = midiHz(m), rel = 0.18, g = envGain(c, t0, dur, 0.12 * vel, 0.035, rel, 0.85), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 1.2;
+  lp.frequency.setValueAtTime(f * 1.2, t0); lp.frequency.linearRampToValueAtTime(Math.min(9000, f * 7), t0 + 0.06); lp.frequency.setTargetAtTime(Math.min(7000, f * 4), t0 + 0.06, 0.15);
+  lp.connect(g); g.connect(out);
+  for (const d of [-6, 5]) { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.setValueAtTime(d - 35, t0); o.detune.linearRampToValueAtTime(d, t0 + 0.07); o.connect(lp); o.start(t0); o.stop(t0 + dur + rel * 3); }
+});
+node('supersaw', (c, m, t0, dur, vel, out) => { const f = midiHz(m), rel = 0.4, g = envGain(c, t0, dur, 0.07 * vel, 0.02, rel, 0.9), lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(9000, f * 9); lp.Q.value = 0.6; lp.connect(g); g.connect(out); oscs(c, 'sawtooth', f, [-22, -11, 0, 11, 22], t0, t0 + dur + rel * 3, lp); });
+const DRUMS = new Set(['kick', 'snare', 'hat', 'ohat', 'clap', 'crash', 'shaker', 'rim']);
+
+/* ---------- 編曲器 ---------- */
+const Music = PZ.music = { songs: {}, cur: null, level: 0.5, _bufs: new Map(), _beats: [], _beatFns: [], _timer: 0, look: 0.18, _out: [] };
+Music.define = (name, song) => { Music.songs[name] = song; return song; };
+Music.instrument = (name, def) => { INST[name] = def; };
+function tokensOf(tr, steps) {
+  if (tr.chords) {
+    const out = []; for (const ch of tr.chords.trim().split(/\s+/)) { out.push(ch === '.' ? '.' : ch); for (let i = 1; i < (tr.per || steps); i++) out.push('-'); }
+    return out;
+  }
+  const src = (tr.pat || tr.notes || '').replace(/\|/g, ' ').trim();
+  if (tr.pat && !/\s/.test(src)) return src.split('');
+  return src.split(/\s+/).filter(Boolean);
+}
+function instBuf(inst, midi, dur) {
+  const sr = Aud.ctx.sampleRate, key = inst + '|' + midi + '|' + (DRUMS.has(inst) ? 0 : Math.round(dur * 8));
+  let b = Music._bufs.get(key);
+  if (!b) {
+    const data = INST[inst].render(midi, dur, sr);
+    b = Aud.ctx.createBuffer(1, data.length, sr); b.getChannelData(0).set(data);
+    if (Music._bufs.size > 400) Music._bufs.clear();
+    Music._bufs.set(key, b);
+  }
+  return b;
+}
+function playNote(rt, tr, midi, t0, dur, vel) {
+  const c = Aud.ctx, I = INST[tr.inst]; if (!I) { warnOnce('inst:' + tr.inst, '沒有這個樂器：' + tr.inst); return; }
+  if (I.kind === 'node') { I.play(c, midi, t0, dur, vel, tr.out); return; }
+  const s = c.createBufferSource(); s.buffer = instBuf(tr.inst, midi, dur);
+  const g = c.createGain(); g.gain.value = vel; s.connect(g); g.connect(tr.out); s.start(t0);
+  if (!DRUMS.has(tr.inst) && tr.inst !== 'tom') { const end = t0 + dur + 0.6; try { g.gain.setValueAtTime(vel, end - 0.08); g.gain.linearRampToValueAtTime(0, end); s.stop(end + 0.02); } catch (e) { /* ignore */ } }
+}
+function scheduleStep(rt, step, time) {
+  const def = rt.def, sd = rt.stepDur;
+  for (const tr of rt.tracks) {
+    if (!tr.on) continue;
+    const tok = tr.toks[step % tr.toks.length];
+    if (!tok || tok === '.' || tok === '-') continue;
+    let n = 1; while (n < tr.toks.length && tr.toks[(step + n) % tr.toks.length] === '-') n++;
+    const dur = n * sd * (tr.gate || 0.95);
+    const sw = (step % 2 === 1 ? (def.swing || 0) * sd * 0.5 : 0);
+    const t = time + sw + (tr.humanize ? Rand.spread(tr.humanize) : 0);
+    if (DRUMS.has(tr.inst) || tr.pat) {
+      const vel = tok === 'X' ? 1.25 : tok === 'o' ? 0.45 : /^[1-9]$/.test(tok) ? +tok / 6 : 1;
+      if (/^[xXo1-9]$/.test(tok)) { const mm = tr.inst === 'tom' ? (tr.note ? noteToMidi(tr.note) : 45) : 0; playNote(rt, tr, mm, t, dur, vel * (tr.vel || 1)); }
+      continue;
+    }
+    if (tr.chords) { const ns = chordNotes(tok, tr.base || 52); if (ns) for (const m of ns) playNote(rt, tr, m + (tr.shift || 0), t, dur, (tr.vel || 1) * 0.8); continue; }
+    const midi = noteToMidi(tok); if (midi != null) playNote(rt, tr, midi + (tr.shift || 0), t, dur, tr.vel || 1);
+  }
+  if (rt.pumpers.length) {   // 跟著大鼓一縮一放（沒有大鼓就每一拍）
+    const kick = rt.tracks.find((tr) => tr.inst === 'kick' && tr.on); let hit;
+    if (kick) { const tk = kick.toks[step % kick.toks.length]; hit = !!tk && /^[xXo1-9]$/.test(tk); } else hit = step % ((def.steps || 16) / 4) === 0;
+    if (hit) for (const tr of rt.pumpers) { const g = tr.pg.gain; g.cancelScheduledValues(time); g.setValueAtTime(1 - tr.def.pump, time); g.setTargetAtTime(1, time + 0.02, sd * 0.9); }
+  }
+  if (step % (def.steps || 16) === 0) PZ.emit('bar', step / (def.steps || 16));
+  if (step % ((def.steps || 16) / 4) === 0) Music._beats.push({ t: time, n: step / ((def.steps || 16) / 4) });
+}
+function trackActive(tr, lv) { return lv >= (tr.def.min || 0) && lv <= (tr.def.max != null ? tr.def.max : 1); }
+function runSong(rt) {
+  const c = Aud.ctx; if (!c || rt.stopped) return;
+  if (rt.file) return;
+  while (rt.next < c.currentTime + Music.look) {
+    if (rt.endStep != null && rt.step >= rt.endStep) { fadeOutAt(rt, rt.endAt, rt.endFade); return; }   // 對拍換歌：排到切換點就收
+    if (rt.once && rt.step >= rt.len) { rt.stopped = true; PZ.after(rt.stepDur * 8, () => { try { rt.gain.disconnect(); } catch (e) { /* ignore */ } }, { real: true }); return; }
+    scheduleStep(rt, rt.step, rt.next);
+    rt.next += rt.stepDur; rt.step++;
+  }
+}
+/** 低通截止頻率：lp 給兩個值時跟著緊張度在中間滑（指數內插） */
+function trackCut(td, lv) { const L = td.lp; if (!Array.isArray(L)) return L; return L[0] * Math.pow(L[1] / L[0], clamp01(lv)); }
+/** 跟拍子對齊的回音（附點八分）：輸入 → 延遲 ⇄ 回授（低通，越回越暗）→ 歌曲音量 */
+function makeDelay(c, rt, def) {
+  const input = c.createGain(), dl = c.createDelay(2), fb = c.createGain(), lp = c.createBiquadFilter();
+  dl.delayTime.value = Math.min(1.9, rt.stepDur * (def.delaySteps || 3)); fb.gain.value = def.feedback != null ? def.feedback : 0.38; lp.type = 'lowpass'; lp.frequency.value = def.delayTone || 2600;
+  input.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(rt.gain);
+  return input;
+}
+/** 下一個小節／半小節／拍子的位置 */
+function syncPoint(rt, sync) { const steps = rt.def.steps || 16, q = sync === 'beat' ? steps / 4 : sync === 'half' ? steps / 2 : steps, step = Math.ceil(rt.step / q) * q; return { step, time: rt.next + (step - rt.step) * rt.stepDur }; }
+function makeRuntime(name, o = {}) {
+  const def = Music.songs[name]; if (!def) { warnOnce('song:' + name, '沒有這首配樂：' + name); return null; }
+  const c = Aud.ctx, steps = def.steps || 16, stepDur = 60 / (def.bpm || 110) / (steps / 4);
+  const gain = c.createGain(); gain.gain.value = 0.0001; gain.connect(o.bus || Aud.bus.music);
+  const rt = { name, def, stepDur, step: 0, next: c.currentTime + 0.06, gain, tracks: [], pumpers: [], stopped: false, once: !!o.once || !!def.once, len: 0, delay: null };
+  rt.t0 = rt.next;
+  if (def.file) { rt.file = true; return rt; }
+  for (const td of def.tracks || []) {
+    const out = c.createGain(), on = trackActive({ def: td }, Music.level);
+    out.gain.value = on ? (td.vol != null ? td.vol : 0.7) : 0.0001;
+    let dst = out, lpf = null, pg = null;
+    if (td.lp) { lpf = c.createBiquadFilter(); lpf.type = 'lowpass'; lpf.Q.value = td.q || 0.7; lpf.frequency.value = trackCut(td, Music.level); dst.connect(lpf); dst = lpf; }
+    if (td.pump) { pg = c.createGain(); pg.gain.value = 1; dst.connect(pg); dst = pg; }
+    if (td.pan && c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = td.pan; dst.connect(p); dst = p; }
+    dst.connect(gain);
+    if (td.rev) { const rg = c.createGain(); rg.gain.value = td.rev; out.connect(rg); rg.connect(Aud.revIn); }
+    if (td.delay) { const D = rt.delay || (rt.delay = makeDelay(c, rt, def)), sg = c.createGain(); sg.gain.value = td.delay; dst.connect(sg); sg.connect(D); }
+    const tr = Object.assign({}, td, { def: td, out, on, lpf, pg, toks: tokensOf(td, steps) });
+    if (pg) rt.pumpers.push(tr);
+    rt.len = Math.max(rt.len, tr.toks.length);
+    rt.tracks.push(tr);
+  }
+  return rt;
+}
+/** 播一首（同一首正在播就只調整）；o: { fade（淡入秒數）, intensity } */
+Music.play = (name, o = {}) => {
+  if (o.intensity != null) Music.level = o.intensity;
+  Music._want = { name, o };
+  if (!Aud.ctx) return; // 還沒解鎖：解鎖後自動開始
+  if (Music.cur && Music.cur.name === name && !Music.cur.stopped) { Music.intensity(Music.level); return; }
+  const old = Music.cur, fade = o.fade != null ? o.fade : 1.2, c = Aud.ctx;
+  const def = Music.songs[name];
+  const rt = makeRuntime(name, o); if (!rt) return;
+  const vol = def && def.vol != null ? def.vol : 1;
+  if (o.sync && old && !old.stopped && !old.file && !(def && def.file)) {
+    // 對拍子換歌：舊的排到下一個小節（拍子）就收，新的剛好從那裡開始
+    const sp = syncPoint(old, o.sync); old.endStep = sp.step; old.endAt = sp.time; old.endFade = o.outFade != null ? o.outFade : 0.12;
+    Music._out.push(old); rt.next = rt.t0 = sp.time;
+    rt.gain.gain.setValueAtTime(0.0001, c.currentTime); rt.gain.gain.setValueAtTime(0.0001, sp.time); rt.gain.gain.exponentialRampToValueAtTime(vol, sp.time + Math.max(0.02, o.inFade != null ? o.inFade : 0.04));
+    Music.switchAt = sp.time;
+  } else {
+    if (old) fadeOut(old, fade);
+    if (def && def.file) { startFile(rt, def); }
+    rt.gain.gain.setValueAtTime(0.0001, c.currentTime); rt.gain.gain.exponentialRampToValueAtTime(vol, c.currentTime + Math.max(0.05, fade));
+    Music.switchAt = c.currentTime;
+  }
+  Music.cur = rt;
+  runSong(rt);
+};
+/** 在指定時間（音訊時間）淡出收掉 */
+function fadeOutAt(rt, at, fade = 0.12) {
+  rt.stopped = true; const c = Aud.ctx, g = rt.gain.gain, now = c.currentTime;
+  try { const v = Math.max(0.0001, g.value); g.cancelScheduledValues(now); g.setValueAtTime(v, now); g.setValueAtTime(v, Math.max(now, at)); g.exponentialRampToValueAtTime(0.0001, Math.max(now, at) + Math.max(0.02, fade)); } catch (e) { /* ignore */ }
+  PZ.after(Math.max(0, at - now) + fade + 0.6, () => { try { rt.gain.disconnect(); } catch (e) { /* ignore */ } }, { real: true });
+}
+function fadeOut(rt, fade) {
+  rt.stopped = true; const c = Aud.ctx, t = c.currentTime;
+  try { rt.gain.gain.cancelScheduledValues(t); rt.gain.gain.setValueAtTime(Math.max(0.0001, rt.gain.gain.value), t); rt.gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.05, fade)); } catch (e) { /* ignore */ }
+  if (rt.src) { try { rt.src.stop(t + fade + 0.05); } catch (e) { /* ignore */ } }
+  PZ.after(fade + 0.3, () => { try { rt.gain.disconnect(); } catch (e) { /* ignore */ } }, { real: true });
+}
+Music.stop = (o = {}) => { Music._want = null; if (Music.cur) { fadeOut(Music.cur, o.fade != null ? o.fade : 1); Music.cur = null; } };
+/** 緊張度 0～1：決定哪些聲部出現（track 的 min/max） */
+Music.intensity = (v, fade = 1.2) => {
+  Music.level = clamp01(v); const rt = Music.cur; if (!rt || !Aud.ctx || rt.file) return Music.level;
+  const t = Aud.ctx.currentTime;
+  for (const tr of rt.tracks) {
+    if (tr.lpf && Array.isArray(tr.def.lp)) tr.lpf.frequency.setTargetAtTime(trackCut(tr.def, Music.level), t, fade / 3);
+    const on = trackActive(tr, Music.level); if (on === tr.on) continue;
+    tr.on = on; const target = on ? (tr.def.vol != null ? tr.def.vol : 0.7) : 0.0001;
+    tr.out.gain.cancelScheduledValues(t); tr.out.gain.setValueAtTime(Math.max(0.0001, tr.out.gain.value), t); tr.out.gain.exponentialRampToValueAtTime(target, t + fade);
+    if (!on) { tr.on = true; PZ.after(fade, () => { if (!trackActive(tr, Music.level)) tr.on = false; }, { real: true }); }
+  }
+  return Music.level;
+};
+/** 短樂句（過關、升級）：播一次，主配樂暫時壓低 */
+Music.stinger = (name, o = {}) => {
+  if (!Aud.ctx) return;
+  if (Sfx.has(name) && !Music.songs[name]) { Aud.duck(0.35, o.duck || 1.2); Sfx.play(name, o); return; }
+  const rt = makeRuntime(name, { once: true, bus: Aud.bus.sfx }); if (!rt) return;
+  if (o.sync && Music.cur && !Music.cur.stopped && !Music.cur.file) { const sp = syncPoint(Music.cur, o.sync); rt.next = rt.t0 = sp.time; }
+  Aud.duck(0.3, rt.len * rt.stepDur + 0.5 + Math.max(0, rt.next - Aud.ctx.currentTime));
+  rt.gain.gain.setValueAtTime(o.vol || 1, Aud.ctx.currentTime);
+  (Music._stingers || (Music._stingers = [])).push(rt);
+  runSong(rt);
+};
+/** 用音檔當配樂：PZ.music.file('theme', 'data:audio/mp3;base64,…', { vol: 0.8 }) */
+Music.file = (name, url, o = {}) => { Music.songs[name] = Object.assign({ file: url, loop: true }, o); };
+async function startFile(rt, def) {
+  try {
+    let b = Music._bufs.get('file:' + def.file);
+    if (!b) { const res = await fetch(def.file), ab = await res.arrayBuffer(); b = await new Promise((ok, no) => Aud.ctx.decodeAudioData(ab, ok, no)); Music._bufs.set('file:' + def.file, b); }
+    if (rt.stopped) return;
+    const s = Aud.ctx.createBufferSource(); s.buffer = b; s.loop = def.loop !== false; if (def.loopStart != null) { s.loopStart = def.loopStart; s.loopEnd = def.loopEnd || b.duration; }
+    s.connect(rt.gain); s.start(); rt.src = s;
+  } catch (e) { reportError(e, 'music.file'); }
+}
+/** 配樂悶住（0～1；暫停選單、水底、被打暈）：低通慢慢壓下去／打開 */
+Music.muffle = (amount = 1, time = 0.4) => {
+  Music._muffle = amount; if (!Aud.ctx || !Aud.musicLP) return;
+  const f = amount <= 0.001 ? 20000 : 20000 * Math.pow(380 / 20000, clamp01(amount));
+  Aud.musicLP.frequency.setTargetAtTime(f, Aud.ctx.currentTime, Math.max(0.01, time / 3));
+};
+/** 這一拍走到哪（0＝拍點、接近 1＝下一拍之前）：畫面跟著節奏一跳一跳 */
+Music.phase = () => {
+  const rt = Music.cur; if (!rt || !Aud.ctx || rt.file || rt.stopped) return 0;
+  const beat = rt.stepDur * ((rt.def.steps || 16) / 4), t = Aud.ctx.currentTime - rt.t0;
+  return t < 0 ? 0 : (t / beat) % 1;
+};
+/** 每一拍呼叫（跟音樂對拍：UI 脈動、燈光閃爍） */
+Music.onBeat = (fn) => { Music._beatFns.push(fn); return () => { const i = Music._beatFns.indexOf(fn); if (i >= 0) Music._beatFns.splice(i, 1); }; };
+PZ.on('audio', () => { if (Music._want) Music.play(Music._want.name, Object.assign({}, Music._want.o, { fade: 1.5, sync: null })); if (Music._muffle) Music.muffle(Music._muffle, 0.05); });
+addSystem({
+  name: 'music', order: 32,
+  frame() {
+    if (!Aud.ctx) return;
+    if (Music.cur) runSong(Music.cur);
+    for (let i = 0; i < Music._out.length; i++) { const r = Music._out[i]; runSong(r); if (r.stopped) Music._out.splice(i--, 1); }
+    if (Music._stingers) for (let i = 0; i < Music._stingers.length; i++) { const s = Music._stingers[i]; runSong(s); if (s.stopped) Music._stingers.splice(i--, 1); }
+    const t = Aud.ctx.currentTime;
+    while (Music._beats.length && Music._beats[0].t <= t) { const b = Music._beats.shift(); for (const f of Music._beatFns) safeCall(f, null, b.n); }
+    if (Music._beats.length > 64) Music._beats.splice(0, Music._beats.length - 64);
+  },
+});
+// 背景時 requestAnimationFrame 會停：用計時器補排程（避免切回來時斷拍）
+if (HAS_DOM) setInterval(() => { if (Aud.ctx && Aud.ctx.state === 'running' && document.hidden === false) { if (Music.cur) runSong(Music.cur); for (const r of Music._out) runSong(r); } }, 50);
+
+/* ---- 18_save.js ---- */
+/* ==========================================================================
+   18 設定與存檔
+   設定（PZ.settings）：音量、畫面震動、閃光、觸覺、傷害數字、畫質、鎖幀…
+     每款遊戲各自記；新遊戲會沿用你上次在別款遊戲調好的偏好。
+     PZ.settings.get('sfx')、PZ.settings.set('shake', 0.5)、PZ.on('setting', (k, v) => …)
+   存檔（PZ.save.open）：
+     const save = PZ.save.open('last-order', { version: 2, defaults: () => ({ chapter: 1, gold: 0 }), migrate(d, from) { … return d; } });
+     save.data.gold += 10; save.write();        // 寫入（太頻繁會自動合併）
+     save.code() → 存檔碼字串；save.load(code) → 讀存檔碼（換手機、Claude 版↔網頁版）
+   保護：
+     - 寫入失敗（空間滿、被擋）會退回記憶體，save.persistent 變 false（UI 可以提醒）
+     - 每兩分鐘留一份備份；主存檔壞掉時自動用備份
+     - 頁面被收起來（切 App、鎖螢幕）時自動寫一次
+     - 版本號變了會跑 migrate，舊存檔不會壞
+   ========================================================================== */
+const SET_DEFAULTS = { master: 1, music: 0.7, sfx: 0.9, mute: false, shake: 1, flash: true, haptics: true, numbers: true, quality: 'auto', fpsCap: 0, mixOthers: false, textSpeed: 1, touchSize: 1 };
+const SHARED_KEYS = ['master', 'music', 'sfx', 'shake', 'flash', 'haptics', 'numbers', 'mixOthers', 'textSpeed', 'touchSize'];
+const Settings = PZ.settings = {
+  values: Object.assign({}, SET_DEFAULTS), defaults: Object.assign({}, SET_DEFAULTS), id: 'game',
+  get(k) { const v = this.values[k]; return v === undefined ? this.defaults[k] : v; },
+  /** o.local：只改這款，不沿用到別款（例如把舊版的「音效：關」搬過來） */
+  set(k, v, o) {
+    if (this.values[k] === v) return;
+    this.values[k] = v; this.apply(k);
+    Store.setJSON(`pz.${this.id}.settings`, this.values);
+    if (SHARED_KEYS.includes(k) && !(o && o.local)) { const g = Store.getJSON('pz.settings.last', {}); g[k] = v; Store.setJSON('pz.settings.last', g); }
+    PZ.emit('setting', k, v);
+  },
+  /** 閃光倍率：關掉「閃光」時剩兩成五 */
+  flashScale() { return this.get('flash') ? 1 : 0.25; },
+  load(id, extra) {
+    this.id = id || 'game';
+    if (extra) Object.assign(this.defaults, extra);
+    const shared = Store.getJSON('pz.settings.last', {}), mine = Store.getJSON(`pz.${this.id}.settings`, null);
+    this.values = Object.assign({}, this.defaults, mine ? {} : pick(shared, SHARED_KEYS), mine || {});
+    for (const k in this.values) this.apply(k);
+  },
+  reset() { this.values = Object.assign({}, this.defaults); Store.setJSON(`pz.${this.id}.settings`, this.values); for (const k in this.values) this.apply(k); PZ.emit('setting', '*'); },
+  apply(k) {
+    const v = this.get(k);
+    if (k === 'music' || k === 'sfx' || k === 'master' || k === 'mute') Aud.applyVolumes();
+    else if (k === 'quality') { if (v === 'auto') Quality.auto = true; else { Quality.auto = false; Quality.set(v === 'high' ? Quality.tiers.length - 1 : v === 'low' ? 0 : v === 'mid' ? 1 : +v || Quality.tier, 'setting'); } }
+    else if (k === 'fpsCap') Loop.fpsCap = +v || 0;
+    else if (k === 'mixOthers') setSession();
+    else if (k === 'touchSize' && Screen.root) Screen.root.style.setProperty('--pz-touch-scale', String(v));
+  },
+};
+function pick(o, keys) { const r = {}; for (const k of keys) if (o[k] !== undefined) r[k] = o[k]; return r; }
+
+/* ---------- 存檔 ---------- */
+function b64enc(s) { try { return btoa(unescape(encodeURIComponent(s))); } catch (e) { return ''; } }
+function b64dec(s) { return decodeURIComponent(escape(atob(s))); }
+function hash8(s) { return (hashStr(s) >>> 0).toString(36).padStart(7, '0').slice(-7); }
+const clone = (o) => JSON.parse(JSON.stringify(o));
+
+class SaveStore {
+  constructor(id, o) {
+    this.id = id; this.o = o; this.version = o.version || 1; this.slot = o.slot || 'main';
+    this.prefix = (o.code || id.replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase() || 'PZ') + this.version;
+    this.data = null; this.persistent = Store.available; this.dirty = false; this._t = 0; this._bakAt = 0; this.loadedFrom = 'new';
+    this.cloud = null; this.ready = Promise.resolve();
+  }
+  key(slot = this.slot) { return `pz.${this.id}.save.${slot}`; }
+  fresh() { const d = typeof this.o.defaults === 'function' ? this.o.defaults() : clone(this.o.defaults || {}); d._v = this.version; d._ts = 0; return d; }
+  /** 把讀到的資料整理成現在版本：補上新欄位、跑 migrate */
+  normalize(d) {
+    if (!d || typeof d !== 'object') return null;
+    let v = d._v || 1;
+    if (v < this.version && this.o.migrate) { try { d = this.o.migrate(d, v) || d; } catch (e) { reportError(e, 'save.migrate'); return null; } }
+    if (v > this.version) warnOnce('savever', '存檔是比較新的版本做的');
+    const base = this.fresh();
+    for (const k in base) if (d[k] === undefined) d[k] = base[k];
+    d._v = this.version;
+    return d;
+  }
+  read(slot = this.slot) {
+    for (const k of [this.key(slot), this.key(slot) + '.bak']) {
+      const s = Store.get(k); if (!s) continue;
+      try { const d = this.normalize(JSON.parse(s)); if (d) { this.loadedFrom = k.endsWith('.bak') ? 'backup' : 'local'; if (this.loadedFrom === 'backup') warnOnce('bak', '主存檔讀不出來，已改用備份'); return d; } } catch (e) { /* 壞掉：試下一份 */ }
+    }
+    return null;
+  }
+  /** 讀檔（沒有就用預設值）；回傳 data */
+  open() { const d = this.read(); this.data = d || this.fresh(); if (!d) this.loadedFrom = 'new'; return this.data; }
+  get exists() { return !!(Store.get(this.key()) || Store.get(this.key() + '.bak')); }
+  /** 寫入；預設會合併 0.4 秒內的多次呼叫，now=true 立刻寫 */
+  write(now) {
+    this.dirty = true;
+    if (now) return this.flush();
+    if (!this._t) this._t = setTimeout(() => this.flush(), 400);
+    return true;
+  }
+  flush() {
+    clearTimeout(this._t); this._t = 0;
+    if (!this.dirty || !this.data) return true;
+    this.dirty = false;
+    if (this.o.canSave && !safeCall(this.o.canSave, null, this.data)) { this.dirty = true; this._t = setTimeout(() => this.flush(), 1000); return false; } // 劇情演到一半等不能存的時候：一秒後再試
+    this.data._ts = Date.now(); this.data._v = this.version;
+    let s; try { s = JSON.stringify(this.data); } catch (e) { reportError(e, 'save.stringify'); return false; }
+    const k = this.key(), prev = Store.get(k);
+    if (prev && Date.now() - this._bakAt > 120000) { Store.set(k + '.bak', prev); this._bakAt = Date.now(); }
+    const ok = Store.set(k, s);
+    this.persistent = ok;
+    if (!ok) warnOnce('savefail', '存檔寫不進瀏覽器（空間滿了或被擋），這次先記在記憶體裡');
+    PZ.emit('save', this, ok);
+    if (this.cloud) this.cloud.push();
+    return ok;
+  }
+  /** 從頭開始（舊的留一份備份） */
+  reset() { const k = this.key(), prev = Store.get(k); if (prev) Store.set(k + '.bak', prev); this.data = this.fresh(); this.loadedFrom = 'new'; this.write(true); return this.data; }
+  /** 存檔碼 */
+  code() { const s = JSON.stringify(Object.assign({}, this.data, { _ts: this.data._ts || Date.now() })); return `${this.prefix}.${b64enc(s)}.${hash8(s)}`; }
+  decode(code) {
+    try {
+      code = String(code).trim().replace(/\s+/g, '');
+      const parts = code.split('.'); if (parts.length < 3) return null;
+      const s = b64dec(parts[1]); if (hash8(s) !== parts[2]) return null;
+      return this.normalize(JSON.parse(s));
+    } catch (e) { return null; }
+  }
+  /** 讀存檔碼：成功回傳 true（會立刻寫入這台裝置） */
+  load(code) { const d = this.decode(code); if (!d) return false; this.data = d; this.loadedFrom = 'code'; this.write(true); PZ.emit('saveload', this); return true; }
+  /** 多存檔欄：列出、切換、刪除 */
+  slots() { return Store.keys(`pz.${this.id}.save.`).filter((k) => !k.endsWith('.bak')).map((k) => { const slot = k.slice(`pz.${this.id}.save.`.length); const d = Store.getJSON(k, null); return { slot, ts: d && d._ts, data: d }; }); }
+  use(slot) { this.flush(); this.slot = slot; return this.open(); }
+  remove(slot = this.slot) { Store.remove(this.key(slot)); Store.remove(this.key(slot) + '.bak'); if (slot === this.slot) this.data = this.fresh(); }
+}
+const Saves = [];
+PZ.save = {
+  open(id, o = {}) {
+    const s = new SaveStore(id, o); s.open(); Saves.push(s);
+    if (o.cloud !== false && Env.claude) s.cloud = Cloud.attach(s, o);
+    return s;
+  },
+};
+// 頁面要被收起來：所有存檔立刻寫
+PZ.on('hidden', () => { for (const s of Saves) { s.flush(); if (s.cloud) s.cloud.now(); } });
+// 加到主畫面的 App：請瀏覽器不要清掉資料
+if (HAS_DOM && Env.standalone && navigator.storage && navigator.storage.persist) { try { navigator.storage.persist(); } catch (e) { /* ignore */ } }
+
+/* ---- 19_cloud.js ---- */
+/* ==========================================================================
+   19 雲端存檔（只有 Claude 版會動）
+   Claude 版的頁面可以把每個人自己的存檔放在頁面外面（db 的 data/users/<自己>/<存檔欄>）：
+   換裝置、清掉瀏覽器資料都接得回來。網頁版沒有 window.claude，這段完全不動——兩個版本同一份程式。
+   ※ 發布到 Claude 之後要宣告能力 { db: {}, user: {} } 才會動（見說明書「發布」）。
+   規則（沿用《墜庭》驗證過的做法）：
+   - 本機存檔照舊立刻寫；雲端內容真的變了才寫、隔幾秒寫一次、一次一筆。
+   - 開機比兩邊的時間：雲端比較新而且這台同步過 → 直接接上；這台有沒同步的進度 → 問玩家要哪份。
+   - save.ready：雲端回話前（最多 5 秒）讓標題畫面的「開始」先等一下，免得新遊戲蓋掉另一台的進度。
+   - 頁面收起來時，等著寫的那一筆馬上送。
+   - 暫時的錯誤自己重試（先隔幾秒、再不行每半分鐘）；沒權限、被收回這類就當「這次沒有雲端」。
+   ========================================================================== */
+const CLOUD_END = { invalid_argument: 1, quota_exceeded: 1, revoked: 1, not_granted: 1, capability_disabled: 1, capability_removed: 1, transform_error: 1, permission_denied: 1 };
+const Cloud = PZ.cloud = {
+  attach(save, o) {
+    const c = { state: 'wait', doc: null, remote: null, busy: false, dirty: false, timer: 0, failAt: 0, wait: 0, fails: 0, okAt: 0, sig: '', asked: false };
+    const syncKey = `pz.${save.id}.sync.${save.slot}`;
+    const sigOf = (d) => { try { const x = Object.assign({}, d); delete x._ts; if (o.volatile) for (const k of o.volatile) delete x[k]; return JSON.stringify(x); } catch (e) { return String(Math.random()); } };
+    const describe = (d) => (o.describe ? safeCall(o.describe, null, d) : '') || new Date(d._ts || 0).toLocaleString('zh-TW');
+    c.push = (now) => {
+      if (c.state !== 'on' || c.asking) return; c.dirty = true;
+      if (c.busy || c.timer || Date.now() - c.failAt < c.wait) return;
+      c.timer = setTimeout(flush, now ? 50 : 4000);
+    };
+    c.now = () => { if (c.state !== 'on' || !c.dirty || c.busy || Date.now() - c.failAt < c.wait) return; clearTimeout(c.timer); c.timer = 0; flush(); };
+    async function flush() {
+      c.timer = 0; if (c.state !== 'on' || c.busy || !c.dirty) return;
+      const d = save.data; if (!d) return;
+      const sig = sigOf(d); c.dirty = false;
+      if (sig === c.sig) return;
+      c.busy = true;
+      try {
+        await c.doc.set({ v: 1, code: save.code(), ts: d._ts || Date.now(), note: String(describe(d)).slice(0, 120) });
+        c.sig = sig; c.okAt = Date.now(); c.fails = 0; c.wait = 0; Store.set(syncKey, String(d._ts || 0));
+        PZ.emit('cloud', 'saved', save);
+      } catch (e) {
+        const code = e && e.code;
+        if (CLOUD_END[code]) { c.state = 'off'; PZ.emit('cloud', 'off', save); }
+        else { c.dirty = true; c.failAt = Date.now(); c.wait = code === 'resource_exhausted' || c.fails++ ? 30000 : 2000 + Math.random() * 3000; setTimeout(() => c.push(true), c.wait + 80); }
+      }
+      c.busy = false; if (c.dirty) c.push();
+    }
+    c.adopt = (d) => { save.data = d; save.loadedFrom = 'cloud'; Store.set(save.key(), JSON.stringify(d)); Store.set(syncKey, String(d._ts || 0)); c.sig = sigOf(d); PZ.emit('saveload', save); };
+    async function settle() {
+      const R = c.remote, local = save.read(), synced = +(Store.get(syncKey) || 0);
+      if (R) c.sig = sigOf(R.d);
+      if (!R) { if (local) c.push(true); return; }
+      const lts = local ? local._ts || 0 : -1;
+      if (lts === R.ts) { Store.set(syncKey, String(R.ts)); return; }
+      if (local && lts > R.ts && lts !== synced) { c.push(true); return; }            // 這台比較新
+      if (!local || lts === synced) { c.adopt(R.d); return; }                          // 雲端比較新、這台沒有別的進度
+      // 兩邊都有沒同步過的進度：問玩家
+      c.asking = true;
+      const yes = await UI.confirm({ title: '有兩份進度', body: `<div class="pz-two">這台裝置：${describe(local)}<br>另一台裝置：${describe(R.d)}</div><div class="pz-hint">只能留一份，沒選的那份會被蓋掉。</div>`, ok: '接另一台的', cancel: '留這台的' });
+      c.asking = false;
+      if (yes) c.adopt(R.d); else c.push(true);
+    }
+    save.ready = (async () => {
+      try {
+        const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+        if (!db || !user) throw new Error('none');
+        const uid = await user.id(); if (!uid) throw new Error('no id');
+        c.doc = db.doc(`data/users/${uid}/${save.slot === 'main' ? 'save' : 'save-' + save.slot}`);
+        const snap = await Promise.race([c.doc.get(), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 9000))]);
+        const x = snap && snap.exists ? snap.data() : null, d = x && typeof x.code === 'string' ? save.decode(x.code) : null;
+        c.remote = d ? { d, ts: d._ts || +x.ts || 0 } : null;
+        c.state = 'on';
+      } catch (e) { c.state = 'off'; }
+      try { if (c.state === 'on') await settle(); } catch (e) { reportError(e, 'cloud.settle'); }
+      PZ.emit('cloud', c.state, save);
+    })();
+    // 最多等 5 秒
+    const raw = save.ready; save.ready = Promise.race([raw, new Promise((r) => setTimeout(r, 5000))]);
+    /** 設定頁的一行說明 */
+    c.note = () => {
+      if (c.state === 'wait') return '正在連上你的帳號……';
+      if (c.state !== 'on') return '這次沒連上你的帳號：進度先只存在這台裝置。';
+      const m = c.okAt ? Math.floor((Date.now() - c.okAt) / 60000) : -1;
+      return '進度也跟著你的 Claude 帳號走：換一台裝置打開會自己接上。' + (m >= 0 ? `（${m < 1 ? '剛剛' : m + ' 分鐘前'}同步過）` : '');
+    };
+    return c;
+  },
+};
+
+/* ---- 20_scene.js ---- */
+/* ==========================================================================
+   20 場景
+     PZ.scene('play', {
+       enter(params) { … },          // 進場（可以是 async：載入中會蓋著轉場）
+       exit() { … },
+       update(dt) { … },             // 遊戲邏輯（暫停、停頓時不會被呼叫）
+       render(g) { … },              // 畫圖：一開始是世界座標；g.hud() 之後畫 HUD
+       bg: '#101418',                // 底色
+       ui: () => '<div class="hud">…</div>',   // 這個場景的 DOM 介面（進場放進 #pz-ui，離場拿掉）
+       keepCamera: false,            // 換場景時要不要保留相機
+     });
+     await PZ.go('play', { stage: 2 }, { type: 'fade', time: 0.35, color: '#000' });   // 轉場：fade｜iris｜wipe｜diamond｜blinds｜shutter｜slide｜pixel｜none
+   換場景時會清掉：遊戲時間的計時器與補間、粒子、跳字、震動、按住的按鍵。
+   ========================================================================== */
+const Scenes = PZ.scenes = { defs: {}, cur: null, name: '', trans: null, busy: false, uiEl: null };
+PZ.scene = (name, def) => { def.name = name; Scenes.defs[name] = def; return def; };
+PZ.go = async (name, params, o = {}) => {
+  const def = Scenes.defs[name]; if (!def) throw new Error('沒有這個場景：' + name);
+  if (Scenes.busy) { Scenes._queued = [name, params, o]; return; }
+  Scenes.busy = true;
+  const type = o.type || (Scenes.cur ? 'fade' : 'none'), time = o.time != null ? o.time : 0.35;
+  const T = { type, t: 0, time, phase: 'out', color: toColor(o.color || '#000'), cx: o.cx, cy: o.cy };
+  if (type !== 'none' && Scenes.cur) { Scenes.trans = T; await waitPhase(T); }
+  // 離開舊場景
+  const old = Scenes.cur;
+  if (old) {
+    if (old.exit) safeCall(old.exit, old);
+    for (const sp of Springs) if (sp.scene === Scenes.name) sp.dead = true;
+    // 這個場景建的虛擬搖桿、按鈕一起拿掉（在 load 裡、或加了 keep:true 建的會留著）
+    for (const s of Sticks.slice()) if (s.scene && s.scene === Scenes.name) s.remove();
+    for (const b of TButtons.slice()) if (b.scene && b.scene === Scenes.name) b.remove();
+  }
+  if (Scenes.uiEl) { Scenes.uiEl.remove(); Scenes.uiEl = null; }
+  PZ.clearTimers(); Tweens.clear(); Particles.clear(); Fx.nums.length = 0; Input.releaseAll();
+  Cam.trauma = 0; if (!def.keepCamera) Cam.reset();
+  Post.waves.length = 0; Fx._waves.length = 0; Post.flash[3] = 0; PZ.resume('*');
+  if (!def.keepLights) Light.reset();
+  if (!def.keepWeather) Weather.reset();
+  Cinema.reset();
+  Scenes.cur = def; Scenes.name = name;
+  if (def.ui) {
+    const u = typeof def.ui === 'function' ? def.ui(params) : def.ui;
+    const box = el('div', 'pz-scene-ui pz-scene-' + name);
+    if (typeof u === 'string') box.innerHTML = u; else if (u) box.appendChild(u);
+    Screen.ui.appendChild(box); Scenes.uiEl = box; UI.enhance(box);
+  }
+  if (def.enter) { try { await def.enter(params); } catch (e) { reportError(e, name + '.enter'); } }
+  PZ.emit('scene', name, params);
+  if (type !== 'none') { T.phase = 'in'; T.t = 0; if (!Scenes.trans) Scenes.trans = T; await waitPhase(T); }
+  Scenes.trans = null; Scenes.busy = false;
+  if (Scenes._queued) { const q = Scenes._queued; Scenes._queued = null; PZ.go(q[0], q[1], q[2]); }
+};
+function waitPhase(T) { return new Promise((res) => { T.done = res; }); }
+PZ.restartScene = (params, o) => PZ.go(Scenes.name, params, o);
+
+function drawTransition(g) {
+  const T = Scenes.trans; if (!T) return;
+  T.t += Time.rdt;
+  let k = clamp01(T.t / Math.max(0.001, T.time));
+  const cover = T.phase === 'out' ? Ease.inOutQuad(k) : 1 - Ease.inOutQuad(k);
+  const W = Screen.w, H = Screen.h, col = T.color;
+  if (T.type === 'iris') {
+    const cx = T.cx != null ? T.cx : W / 2, cy = T.cy != null ? T.cy : H / 2, R = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy)) + 4, r = R * (1 - cover);
+    if (cover > 0.001) g.ring(cx, cy, R + 2, R + 2 - r, col);
+  } else if (T.type === 'wipe') {
+    const w = (W + H * 0.6) * cover;
+    g.save(); g.translate(-H * 0.3, 0); g.poly([0, 0, w, 0, w - H * 0.3, H, -H * 0.3, H], col); g.restore();
+  } else if (T.type === 'diamond') {   // 菱形一格一格長出來，從左上掃到右下（回來時也從左上先亮）
+    const sz = Math.max(W, H) / 9, cols = Math.ceil(W / sz) + 1, rows = Math.ceil(H / sz) + 1, spread = 0.7;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const cx = i * sz, cy = j * sz, off = ((cx / W) * 0.65 + (cy / H) * 0.35) * spread, o2 = T.phase === 'in' ? spread - off : off;
+      const s = Ease.inOutQuad(clamp01(cover * (1 + spread) - o2)) * sz * 1.03;
+      if (s > 0.5) g.poly([cx, cy - s, cx + s, cy, cx, cy + s, cx - s, cy], col);
+    }
+  } else if (T.type === 'blinds') {   // 百葉窗
+    const n = 9, sh = H / n, spread = 0.5;
+    for (let i = 0; i < n; i++) { const c = Ease.inOutQuad(clamp01(cover * (1 + spread) - (i / n) * spread)); if (c > 0.001) g.rect(0, i * sh, W, sh * c + 0.5, col); }
+  } else if (T.type === 'shutter') {   // 上下兩片快門闔起來，接縫有一道光
+    const hh = (H / 2) * cover; if (hh > 0.5) { g.rect(0, 0, W, hh, col); g.rect(0, H - hh, W, hh, col); const e = Math.max(0, 1 - Math.abs(cover - 0.92) * 8); if (e > 0) { g.rect(0, hh - 2, W, 2, '#ffffff', { a: e * 0.6, add: 1 }); g.rect(0, H - hh, W, 2, '#ffffff', { a: e * 0.6, add: 1 }); } }
+  } else if (T.type === 'slide') {   // 一片從右邊推進來
+    const x0 = W * (1 - cover); if (cover > 0.001) { g.rect(x0, 0, W - x0 + 1, H, col); g.rect(x0, 0, 3, H, '#ffffff', { a: 0.25 * (1 - Math.abs(cover - 0.5) * 2), add: 1 }); }
+  } else if (T.type === 'pixel') {   // 方塊亂序蓋上
+    const sz = Math.max(W, H) / 14, cols = Math.ceil(W / sz), rows = Math.ceil(H / sz);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) { let h = (i * 374761393 + j * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); const th = ((h ^ (h >>> 16)) >>> 0) / 4294967296 * 0.85; if (cover > th) g.rect(i * sz, j * sz, sz + 0.5, sz + 0.5, col); }
+  } else if (cover > 0.001) g.rect(0, 0, W, H, col, { a: cover });
+  if (k >= 1 && T.done) { const d = T.done; T.done = null; d(); }
+}
+
+addSystem({
+  name: 'scene', order: 0,
+  update(dt) { const s = Scenes.cur; if (s && s.update && !Scenes.busy) { try { s.update(dt); } catch (e) { reportError(e, Scenes.name + '.update'); } } else if (s && s.update && Scenes.trans && Scenes.trans.phase === 'in') { try { s.update(dt); } catch (e) { reportError(e, Scenes.name + '.update'); } } },
+});
+addSystem({
+  name: 'draw', order: 100,
+  render() {
+    const r = Gfx.r; if (!r) return;
+    const s = Scenes.cur;
+    r.begin(s && s.bg != null ? s.bg : Screen.bg);
+    G._hudDone = false; G._litDone = false; G.world();
+    if (s && s.render) { try { s.render(G); } catch (e) { reportError(e, Scenes.name + '.render'); } }
+    if (!G._hudDone) G.hud();
+    drawTransition(G);
+    r.end();
+  },
+});
+
+/* ---- 21_ui.js ---- */
+/* ==========================================================================
+   21 介面元件（DOM，疊在畫布上）
+   外觀用 CSS 變數決定，每款遊戲自己定：PZ.ui.theme({ accent: '#e33', panel: '…', font: '…' })
+   內建主題：PZ.ui.theme('night' | 'ink' | 'neon' | 'steel' | 'paper')
+   元件：
+     await PZ.ui.alert('標題', '內容')                 await PZ.ui.confirm({ title, body, ok, cancel }) → true/false
+     await PZ.ui.choose({ title, body, options: [{ label, value, desc, disabled }] }) → value
+     await PZ.ui.modal({ title, body, buttons: [{ label, value, primary }], wide }) → value
+     PZ.ui.toast('撿到 金幣 ×3', { kind: 'good' })   PZ.ui.banner('BOSS 來襲', { sub: '屍王', style: 'boss' })
+     PZ.ui.settings({ save })   標準設定頁（音量、震動、閃光、觸覺、數字、畫質、存檔碼、雲端）
+     PZ.ui.pause({ items: [{ label, onClick }] })   標準暫停選單
+     PZ.ui.tip(元素, '說明', { side })              提示框：滑鼠移上去、手指按住、手把焦點移到就出現
+     PZ.ui.holo(卡片元素, { tilt: 14, foil: true })    閃卡：跟著手指傾斜、亮面跟著跑、彩虹箔
+     PZ.ui.slots({ items: [{ icon, name, desc, count, rarity, new }], cols, size, onPick })   格子背包（稀有度光暈、數量、新東西的小點）
+     await PZ.ui.title({ title, sub, kicker, items: [{ label, value, primary }], foot, backdrop })  標題畫面（字一個個浮上來、掃光；backdrop：蓋一層深色）
+   所有 .pz-btn 自動有按下音效、觸覺、按壓動畫；鍵盤方向鍵／手把十字鍵可以移動焦點，A／Enter 按、B／Esc 返回。
+   ========================================================================== */
+const ENGINE_CSS = "html,body{margin:0;padding:0;height:100%;overflow:hidden;overscroll-behavior:none;background:#000}body{-webkit-text-size-adjust:100%;text-size-adjust:100%}#pz-root{--pz-font:\"PZ Sans\",\"Noto Sans TC\",\"PingFang TC\",\"Heiti TC\",\"Microsoft JhengHei\",system-ui,sans-serif;--pz-font-display:var(--pz-font);--pz-text:#eef2f8;--pz-dim:rgba(238,242,248,.6);--pz-faint:rgba(238,242,248,.32);--pz-bg:rgba(6,8,14,.6);--pz-panel:rgba(16,20,30,.92);--pz-panel2:rgba(255,255,255,.05);--pz-line:rgba(255,255,255,.12);--pz-accent:#ffb547;--pz-accent2:#46d4ff;--pz-good:#5fe39a;--pz-bad:#ff4d5e;--pz-on-accent:#1a1206;--pz-radius:16px;--pz-radius-s:10px;--pz-shadow:0 24px 60px rgba(0,0,0,.55),0 2px 0 rgba(255,255,255,.04) inset;--pz-blur:10px;--pz-ease:cubic-bezier(.2,.9,.25,1.15);--pz-touch-scale:1;position:fixed;inset:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;font-family:var(--pz-font);color:var(--pz-text);line-height:1.5;font-feature-settings:\"palt\" 0;text-rendering:optimizeLegibility;contain:strict}#pz-canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;image-rendering:auto}#pz-touch{position:absolute;inset:0;pointer-events:none;z-index:5}#pz-touch.pz-hide{display:none}#pz-ui{position:absolute;inset:0;pointer-events:none;z-index:10}#pz-ui button,#pz-ui a,#pz-ui input,#pz-ui select,#pz-ui textarea,#pz-ui label,#pz-ui [data-ui],#pz-ui .pz-block{pointer-events:auto}.pz-scene-ui{position:absolute;inset:0;pointer-events:none}.pz-stick-zone{position:absolute;pointer-events:auto;touch-action:none}.pz-stick{position:absolute;transform:translate(-50%,-50%) scale(var(--pz-touch-scale));border-radius:50%;opacity:0;transition:opacity .18s;background:radial-gradient(circle,rgba(255,255,255,.06) 0 55%,rgba(255,255,255,.14) 56% 58%,rgba(255,255,255,.03) 59%);box-shadow:0 0 0 1px rgba(255,255,255,.1) inset;pointer-events:none}.pz-stick.on,.pz-stick.fixed{opacity:1}.pz-stick.fixed{transform:translate(-50%,50%) scale(var(--pz-touch-scale));opacity:.55}.pz-stick.fixed.on{opacity:1}.pz-stick-knob{position:absolute;left:50%;top:50%;width:42%;height:42%;margin:-21% 0 0 -21%;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(220,230,245,.75) 60%,rgba(160,175,200,.7));box-shadow:0 4px 14px rgba(0,0,0,.45),0 0 0 2px rgba(255,255,255,.25);transition:transform .03s linear}.pz-tbtn{position:absolute;pointer-events:auto;touch-action:none;border:0;padding:0;border-radius:50%;display:grid;place-items:center;color:#fff;font:900 15px/1 var(--pz-font);letter-spacing:.04em;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.22),rgba(255,255,255,.06) 62%),rgba(10,14,22,.42);box-shadow:0 0 0 1.5px rgba(255,255,255,.28) inset,0 8px 22px rgba(0,0,0,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transform:scale(var(--pz-touch-scale));transition:transform .08s,background .12s}.pz-tbtn svg{width:46%;height:46%}.pz-tbtn.on{transform:scale(calc(var(--pz-touch-scale) * .9));background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.4),rgba(255,255,255,.12) 62%),rgba(10,14,22,.5)}.pz-tbtn.off{opacity:.4}.pz-tbtn.cd::after{content:\"\";position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(0,0,0,.62) calc(var(--pz-cd,0) * 360deg),transparent 0)}.pz-tbtn[data-badge]:not([data-badge=\"\"])::before{content:attr(data-badge);position:absolute;right:-2px;top:-2px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:var(--pz-accent);color:var(--pz-on-accent);font:900 12px/20px var(--pz-font);text-align:center;z-index:1}.pz-tbtn-label{position:relative;z-index:1;text-shadow:0 1px 2px rgba(0,0,0,.6)}.pz-btn{-webkit-appearance:none;appearance:none;border:0;cursor:pointer;font:800 16px/1.2 var(--pz-font);letter-spacing:.06em;color:var(--pz-text);padding:14px 22px;min-height:48px;min-width:48px;border-radius:var(--pz-radius-s);background:var(--pz-panel2);box-shadow:0 0 0 1px var(--pz-line) inset;transition:transform .12s var(--pz-ease),background .15s,box-shadow .15s,opacity .15s;position:relative;outline:none}.pz-btn:hover{background:rgba(255,255,255,.1)}.pz-btn:active,.pz-btn.pz-press{transform:scale(.95)}.pz-btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--pz-accent) 92%,#fff),var(--pz-accent));color:var(--pz-on-accent);box-shadow:0 8px 24px color-mix(in srgb,var(--pz-accent) 35%,transparent),0 -2px 0 rgba(0,0,0,.2) inset}.pz-btn.danger{background:color-mix(in srgb,var(--pz-bad) 22%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--pz-bad) 60%,transparent) inset}.pz-btn.ghost{background:transparent;box-shadow:none;color:var(--pz-dim)}.pz-btn[disabled],.pz-btn.disabled{opacity:.38;pointer-events:none}.pz-btn.pz-focus,.pz-focusable.pz-focus{box-shadow:0 0 0 2px var(--pz-accent2),0 0 22px color-mix(in srgb,var(--pz-accent2) 45%,transparent)}.pz-btn.wide{width:100%}.pz-modal-wrap{position:absolute;inset:0;display:grid;place-items:center;padding:max(16px,var(--pz-safe-t,0px)) max(16px,var(--pz-safe-r,0px)) max(16px,var(--pz-safe-b,0px)) max(16px,var(--pz-safe-l,0px));background:var(--pz-bg);pointer-events:auto;z-index:50;opacity:0;transition:opacity .2s;backdrop-filter:blur(var(--pz-blur));-webkit-backdrop-filter:blur(var(--pz-blur))}#pz-touch{transition:opacity .2s}#pz-touch.pz-ui-open{opacity:0;pointer-events:none}#pz-touch.pz-ui-open *{pointer-events:none !important}.pz-modal-wrap.on{opacity:1}.pz-modal{width:min(440px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;padding:22px 20px 18px;border-radius:var(--pz-radius);background:var(--pz-panel);box-shadow:var(--pz-shadow),0 0 0 1px var(--pz-line) inset;transform:translateY(14px) scale(.96);transition:transform .32s var(--pz-ease)}.pz-modal-wrap.on .pz-modal{transform:none}.pz-modal.wide{width:min(640px,100%)}.pz-modal h2{margin:0 0 10px;font:900 21px/1.3 var(--pz-font-display);letter-spacing:.06em}.pz-modal .pz-body{color:var(--pz-dim);font-size:15px;line-height:1.75;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;min-height:0;flex:0 1 auto;margin:0 -6px;padding:0 6px}.pz-modal h2,.pz-modal .pz-actions{flex:none}.pz-modal .pz-list{overflow:auto;min-height:0;touch-action:pan-y}.pz-modal .pz-body b,.pz-modal .pz-body strong{color:var(--pz-text)}.pz-modal .pz-actions{display:flex;gap:10px;margin-top:18px}.pz-modal .pz-actions .pz-btn{flex:1}.pz-modal .pz-list{display:grid;gap:8px;margin-top:14px}.pz-modal .pz-list .pz-btn{text-align:left;display:flex;flex-direction:column;gap:3px;align-items:flex-start}.pz-modal .pz-list .pz-btn small{font-weight:500;color:var(--pz-dim);letter-spacing:.02em;font-size:13px}.pz-hint{color:var(--pz-faint);font-size:13px;margin-top:8px}.pz-two{text-align:left;line-height:1.9}.pz-set{display:grid;gap:4px;margin-top:6px}.pz-set-row{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--pz-line)}.pz-set-row:last-child{border-bottom:0}.pz-set-row>span{flex:1;font-weight:700;font-size:15px}.pz-set-row>span small{display:block;font-weight:400;color:var(--pz-faint);font-size:12px}.pz-set h3{margin:14px 0 2px;font-size:12px;letter-spacing:.2em;color:var(--pz-accent);font-weight:900}.pz-range{-webkit-appearance:none;appearance:none;width:46%;height:30px;background:transparent;touch-action:pan-x}.pz-range::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--pz-accent) var(--v,50%),rgba(255,255,255,.14) var(--v,50%))}.pz-range::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5)}.pz-range::-moz-range-track{height:6px;border-radius:3px;background:rgba(255,255,255,.14)}.pz-range::-moz-range-progress{height:6px;border-radius:3px;background:var(--pz-accent)}.pz-range::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff}.pz-toggle{position:relative;width:52px;height:30px;border-radius:15px;border:0;padding:0;background:rgba(255,255,255,.16);transition:background .2s;cursor:pointer}.pz-toggle::after{content:\"\";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.4);transition:transform .25s var(--pz-ease)}.pz-toggle.on{background:var(--pz-accent)}.pz-toggle.on::after{transform:translateX(22px)}.pz-seg{display:flex;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--pz-line) inset}.pz-seg button{border:0;background:transparent;color:var(--pz-dim);font:700 13px/1 var(--pz-font);padding:9px 10px;cursor:pointer}.pz-seg button.on{background:var(--pz-accent);color:var(--pz-on-accent)}.pz-code{width:100%;box-sizing:border-box;min-height:74px;resize:none;border-radius:10px;border:0;padding:10px;font:12px/1.4 ui-monospace,monospace;color:var(--pz-text);background:rgba(0,0,0,.35);box-shadow:0 0 0 1px var(--pz-line) inset;user-select:text;-webkit-user-select:text;touch-action:auto}.pz-toasts{position:absolute;left:50%;top:calc(14px + var(--pz-safe-t,0px));transform:translateX(-50%);display:grid;gap:8px;justify-items:center;z-index:60;pointer-events:none;width:min(92vw,420px)}.pz-toast{padding:10px 16px;border-radius:999px;background:rgba(12,16,26,.88);box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px var(--pz-line) inset;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:center;animation:pz-toast-in .38s var(--pz-ease) both;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.pz-toast.good{box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px color-mix(in srgb,var(--pz-good) 70%,transparent) inset}.pz-toast.bad{box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 1px color-mix(in srgb,var(--pz-bad) 70%,transparent) inset}.pz-toast.out{animation:pz-toast-out .3s ease-in both}@keyframes pz-toast-in{from{opacity:0;transform:translateY(-14px) scale(.9)}}@keyframes pz-toast-out{to{opacity:0;transform:translateY(-10px) scale(.96)}}.pz-banner{position:absolute;left:0;right:0;top:38%;transform:translateY(-50%);text-align:center;z-index:55;pointer-events:none}.pz-banner .pz-b-main{display:inline-block;font:900 clamp(30px,8vw,64px)/1.1 var(--pz-font-display);letter-spacing:.12em;padding:6px 26px;color:#fff;text-shadow:0 0 24px color-mix(in srgb,var(--pz-accent) 70%,transparent),0 4px 0 rgba(0,0,0,.35);animation:pz-ban-in .55s var(--pz-ease) both}.pz-banner .pz-b-sub{font:700 clamp(13px,3.4vw,17px)/1.4 var(--pz-font);letter-spacing:.3em;color:var(--pz-accent);margin-top:6px;animation:pz-fade-up .5s .12s both}.pz-banner::before{content:\"\";position:absolute;left:0;right:0;top:50%;height:120%;transform:translateY(-50%) scaleY(var(--s,1));background:linear-gradient(90deg,transparent,rgba(0,0,0,.55) 20%,rgba(0,0,0,.55) 80%,transparent);z-index:-1;animation:pz-ban-bar .5s var(--pz-ease) both}.pz-banner.boss .pz-b-main{color:#ffe1e1;text-shadow:0 0 30px rgba(255,40,60,.85),0 4px 0 rgba(0,0,0,.4)}.pz-banner.boss .pz-b-sub{color:#ff6b7a}.pz-banner.out{animation:pz-ban-out .35s ease-in both}@keyframes pz-ban-in{from{opacity:0;transform:scale(1.6);letter-spacing:.5em;filter:blur(6px)}}@keyframes pz-ban-bar{from{transform:translateY(-50%) scaleY(0)}}@keyframes pz-ban-out{to{opacity:0;transform:translateY(-50%) scale(.96)}}@keyframes pz-fade-up{from{opacity:0;transform:translateY(10px)}}.pz-say{position:absolute;left:0;right:0;bottom:0;padding:0 max(12px,var(--pz-safe-r,0px)) max(14px,calc(var(--pz-safe-b,0px) + 8px)) max(12px,var(--pz-safe-l,0px));z-index:40;pointer-events:auto;display:flex;justify-content:center}.pz-say-box{position:relative;width:min(760px,100%);min-height:132px;box-sizing:border-box;padding:22px 20px 18px;border-radius:var(--pz-radius);background:var(--pz-panel);box-shadow:var(--pz-shadow),0 0 0 1px var(--pz-line) inset;animation:pz-fade-up .3s var(--pz-ease) both;cursor:pointer}.pz-say-name{position:absolute;left:18px;top:-15px;padding:5px 14px;border-radius:8px;background:var(--pz-accent);color:var(--pz-on-accent);font:900 14px/1.2 var(--pz-font);letter-spacing:.12em}.pz-say-text{font-size:17px;line-height:1.85;letter-spacing:.03em;min-height:3.6em}.pz-say.narr .pz-say-text{color:var(--pz-dim);font-style:normal}.pz-say-more{position:absolute;right:16px;bottom:10px;width:10px;height:10px;border-right:2px solid var(--pz-accent);border-bottom:2px solid var(--pz-accent);transform:rotate(45deg);animation:pz-bob .9s ease-in-out infinite;opacity:0}.pz-say.done .pz-say-more{opacity:1}@keyframes pz-bob{50%{transform:translateY(4px) rotate(45deg)}}.pz-say-face{position:absolute;bottom:calc(100% - 24px);left:6px;width:min(36vw,220px);pointer-events:none;animation:pz-fade-up .35s var(--pz-ease) both;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5))}.pz-say-face img,.pz-say-face canvas{width:100%;height:auto;display:block}.pz-say.right .pz-say-face{left:auto;right:6px}.pz-say-tools{position:absolute;right:14px;top:-16px;display:flex;gap:6px}.pz-say-tools button{border:0;border-radius:8px;padding:5px 10px;font:700 12px/1 var(--pz-font);color:var(--pz-dim);background:rgba(20,24,34,.9);box-shadow:0 0 0 1px var(--pz-line) inset;cursor:pointer}.pz-say-tools button.on{color:var(--pz-on-accent);background:var(--pz-accent)}.pz-choices{display:grid;gap:8px;margin-top:12px}.pz-choices .pz-btn{text-align:left}.pz-log{max-height:60vh;overflow:auto;text-align:left;touch-action:pan-y}.pz-log p{margin:0 0 10px;color:var(--pz-dim)}.pz-log b{color:var(--pz-accent);margin-right:6px}.pz-loading{position:absolute;inset:0;display:grid;place-items:center;z-index:90;background:#000;pointer-events:auto;transition:opacity .4s}.pz-loading.out{opacity:0;pointer-events:none}.pz-loading-box{width:min(260px,70vw);text-align:center}.pz-loading-title{font:900 22px/1.3 var(--pz-font-display);letter-spacing:.14em;margin-bottom:16px}.pz-loading-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}.pz-loading-bar i{display:block;height:100%;width:0;background:var(--pz-accent);box-shadow:0 0 12px var(--pz-accent);transition:width .2s}.pz-loading-note{margin-top:10px;font-size:12px;color:var(--pz-faint);letter-spacing:.1em}.pz-rotate{position:absolute;inset:0;z-index:200;background:#05070b;display:none;place-items:center;text-align:center;font-weight:800;letter-spacing:.1em;pointer-events:auto}.pz-rotate.on{display:grid}.pz-rotate-icon{width:54px;height:86px;margin:0 auto 18px;border:3px solid var(--pz-text);border-radius:10px;animation:pz-rot 1.6s ease-in-out infinite}@keyframes pz-rot{40%,70%{transform:rotate(90deg)}}.pz-err{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(560px,calc(100vw - 24px));z-index:2147483000;box-sizing:border-box;padding:14px 14px 12px;border-radius:14px;background:rgba(28,10,14,.96);color:#ffe8ea;font:13px/1.5 var(--pz-font);box-shadow:0 20px 50px rgba(0,0,0,.6),0 0 0 1px rgba(255,90,110,.5) inset;pointer-events:auto}.pz-err b{display:block;font-size:15px;margin-bottom:4px}.pz-err pre{margin:6px 0 10px;max-height:30vh;overflow:auto;white-space:pre-wrap;word-break:break-all;font:11px/1.45 ui-monospace,monospace;color:#ffc7cd;background:rgba(0,0,0,.3);padding:8px;border-radius:8px;user-select:text;-webkit-user-select:text}.pz-err .pz-err-b{display:flex;gap:8px}.pz-err button{flex:1;border:0;border-radius:9px;padding:9px;font:800 13px/1 var(--pz-font);color:#fff;background:rgba(255,255,255,.12);cursor:pointer}.pz-stats{position:fixed;left:max(6px,env(safe-area-inset-left));top:max(6px,env(safe-area-inset-top));z-index:2147482000;pointer-events:none;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.66);color:#b9ffcf;font:11px/1.35 ui-monospace,monospace;white-space:pre}@media (prefers-reduced-motion:reduce){.pz-banner .pz-b-main,.pz-toast,.pz-modal{animation-duration:.01s !important;transition-duration:.01s !important}}.pz-tip{position:absolute;z-index:70;max-width:min(280px,80vw);padding:10px 13px;border-radius:12px;pointer-events:none;box-sizing:border-box;background:color-mix(in srgb,var(--pz-panel) 96%,#000);color:var(--pz-dim);font:500 13px/1.6 var(--pz-font);letter-spacing:.02em;box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 0 1px var(--pz-line) inset;opacity:0;transform:translateY(6px) scale(.97);transform-origin:var(--ax,50%) 100%;transition:opacity .16s,transform .2s var(--pz-ease)}.pz-tip.below{transform:translateY(-6px) scale(.97);transform-origin:var(--ax,50%) 0}.pz-tip.on{opacity:1;transform:none}.pz-tip::after{content:\"\";position:absolute;left:var(--ax,50%);top:100%;width:10px;height:10px;margin:-5px 0 0 -5px;background:inherit;transform:rotate(45deg);box-shadow:1px 1px 0 var(--pz-line)}.pz-tip.below::after{top:0;box-shadow:-1px -1px 0 var(--pz-line)}.pz-tip b{display:block;color:var(--pz-text);font-weight:900;font-size:14px;letter-spacing:.04em}.pz-tip em{display:block;font-style:normal;font-size:11px;letter-spacing:.12em;color:var(--pz-faint);margin:1px 0 3px}.pz-tip.r-rare b{color:#6fc3ff}.pz-tip.r-epic b{color:#c48bff}.pz-tip.r-legend b{color:#ffbf47}.pz-holo{position:relative;transform:perspective(820px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));will-change:transform;isolation:isolate;overflow:hidden}.pz-holo .pz-holo-shine{position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:3;background:radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.62),rgba(255,255,255,.14) 26%,transparent 56%);mix-blend-mode:overlay;opacity:calc(.2 + var(--hon,0) * .8)}.pz-holo.pz-foil::after{content:\"\";position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:2;background:repeating-linear-gradient(118deg,#ff4f8b 0%,#ffd64f 6%,#4fffb5 12%,#4fbaff 18%,#b44fff 24%,#ff4f8b 30%);background-size:260% 260%;background-position:var(--gx,50%) var(--gy,50%);mix-blend-mode:color-dodge;opacity:calc(.06 + var(--hon,0) * .32)}.pz-slots{display:grid;grid-template-columns:repeat(var(--cols,5),var(--sz,58px));gap:8px;justify-content:center;padding:6px 2px}.pz-slot{-webkit-appearance:none;appearance:none;position:relative;width:var(--sz,58px);height:var(--sz,58px);padding:0;border:0;border-radius:12px;cursor:pointer;display:grid;place-items:center;--rc:rgba(200,210,225,.55);background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--rc) 22%,transparent),rgba(255,255,255,.03) 70%),rgba(8,10,16,.55);box-shadow:0 0 0 1.5px color-mix(in srgb,var(--rc) 70%,transparent) inset,0 6px 14px rgba(0,0,0,.3);transition:transform .14s var(--pz-ease),box-shadow .15s;outline:none}.pz-slot.empty{--rc:rgba(255,255,255,.12);background:rgba(255,255,255,.025);box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}.pz-slot.r-rare{--rc:#4fa8ff}.pz-slot.r-epic{--rc:#b06bff}.pz-slot.r-legend{--rc:#ffb547}.pz-slot.r-legend::before{content:\"\";position:absolute;inset:-2px;border-radius:14px;background:conic-gradient(from var(--pz-spin,0deg),transparent 0 70%,rgba(255,220,140,.9) 82%,transparent 92%);z-index:-1;animation:pz-spin 2.6s linear infinite}.pz-slot:active,.pz-slot.pz-press{transform:scale(.92)}.pz-slot.sel{box-shadow:0 0 0 2.5px var(--pz-accent) inset,0 0 18px color-mix(in srgb,var(--pz-accent) 45%,transparent)}.pz-slot.pz-focus{box-shadow:0 0 0 2.5px var(--pz-accent2) inset,0 0 18px color-mix(in srgb,var(--pz-accent2) 45%,transparent)}.pz-slot-ico{width:70%;height:70%;display:grid;place-items:center;font-size:calc(var(--sz,58px) * .48);line-height:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45));pointer-events:none}canvas.pz-slot-ico{object-fit:contain}.pz-slot-n{position:absolute;right:4px;bottom:2px;font:900 12px/1.2 var(--pz-font);color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none}.pz-slot-new{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--pz-bad);box-shadow:0 0 0 2px rgba(0,0,0,.4),0 0 10px var(--pz-bad);animation:pz-blink 1.2s infinite}@property --pz-spin{syntax:\"<angle>\";inherits:false;initial-value:0deg}@keyframes pz-spin{to{--pz-spin:360deg}}.pz-title{position:absolute;inset:0;z-index:40;display:grid;place-items:center;text-align:center;pointer-events:auto;cursor:pointer;background:radial-gradient(ellipse at 50% 55%,transparent 35%,rgba(0,0,0,.5));transition:opacity .42s}.pz-title.out{opacity:0;pointer-events:none}.pz-title.solid{background:radial-gradient(ellipse at 50% 45%,rgba(10,12,24,.72),rgba(2,3,8,.94));backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}.pz-title-in{padding:max(24px,var(--pz-safe-t,0px)) 22px 60px}.pz-title-kicker{font:800 12px/1 var(--pz-font);letter-spacing:.55em;color:var(--pz-dim);margin-bottom:16px;animation:pz-fade-up .8s .05s both}.pz-title-main{position:relative;margin:0;font:900 clamp(40px,13vw,96px)/1.08 var(--pz-font-display);letter-spacing:.06em;color:#fff;white-space:nowrap;text-shadow:0 6px 30px rgba(0,0,0,.6),0 0 42px color-mix(in srgb,var(--pz-accent) 50%,transparent)}.pz-title-main span{display:inline-block;animation:pz-letter .75s calc(.2s + var(--i) * .075s) var(--pz-ease) both}.pz-title-main::after{content:attr(data-t);position:absolute;inset:0;color:transparent;text-shadow:none;pointer-events:none;background:linear-gradient(100deg,transparent 42%,rgba(255,255,255,.95) 50%,transparent 58%);background-size:260% 100%;background-position:160% 0;-webkit-background-clip:text;background-clip:text;animation:pz-shine 3.6s 1.6s infinite}.pz-title-sub{font:800 clamp(12px,3.4vw,16px)/1.3 var(--pz-font);letter-spacing:.45em;color:var(--pz-accent);margin-top:14px;animation:pz-fade-up .8s .85s both}.pz-title-menu{display:grid;gap:10px;width:min(280px,76vw);margin:34px auto 0}.pz-title-menu:empty{display:none}.pz-title-menu .pz-btn{animation:pz-fade-up .6s calc(1.05s + var(--i) * .08s) both}.pz-title-press{margin-top:46px;font:800 13px/1 var(--pz-font);letter-spacing:.34em;color:var(--pz-text);animation:pz-fade-up .6s 1.2s both,pz-blink 1.7s 1.9s infinite}.pz-title-foot{position:absolute;left:0;right:0;bottom:calc(14px + var(--pz-safe-b,0px));font:600 11px/1 var(--pz-font);letter-spacing:.22em;color:var(--pz-faint)}@keyframes pz-letter{from{opacity:0;transform:translateY(.5em) scale(.9);filter:blur(7px)}}@keyframes pz-shine{0%{background-position:160% 0}40%,100%{background-position:-60% 0}}@keyframes pz-blink{50%{opacity:.35}}";
+const THEMES = {
+  night: {},
+  ink: { text: '#1c1712', dim: 'rgba(28,23,18,.68)', faint: 'rgba(28,23,18,.4)', bg: 'rgba(236,228,212,.72)', panel: 'rgba(246,240,228,.97)', panel2: 'rgba(28,23,18,.06)', line: 'rgba(28,23,18,.18)', accent: '#b8232f', accent2: '#2c5d8a', 'on-accent': '#fff8ee', radius: '6px', 'radius-s': '4px', shadow: '0 18px 44px rgba(40,24,10,.35)', font: '"PZ Serif","Noto Serif TC","Songti TC","PMingLiU",serif' },
+  neon: { text: '#e9f6ff', dim: 'rgba(200,235,255,.65)', bg: 'rgba(4,2,16,.78)', panel: 'rgba(12,8,30,.92)', line: 'rgba(120,220,255,.25)', accent: '#ff2bd6', accent2: '#2bf3ff', 'on-accent': '#18001a', radius: '4px', 'radius-s': '3px', shadow: '0 0 40px rgba(255,43,214,.25), 0 20px 50px rgba(0,0,0,.6)' },
+  steel: { text: '#e8ece4', dim: 'rgba(220,228,214,.62)', bg: 'rgba(10,12,8,.8)', panel: 'rgba(28,32,26,.95)', line: 'rgba(200,214,180,.18)', accent: '#c9d94a', accent2: '#ff9a2e', 'on-accent': '#151a05', radius: '2px', 'radius-s': '2px' },
+  paper: { text: '#2a2620', dim: 'rgba(42,38,32,.66)', bg: 'rgba(250,246,238,.7)', panel: '#fffdf8', panel2: 'rgba(42,38,32,.05)', line: 'rgba(42,38,32,.14)', accent: '#ff7a3d', accent2: '#3d8bff', 'on-accent': '#fff', shadow: '0 18px 40px rgba(60,40,20,.18)' },
+};
+const UI = PZ.ui = { stack: [], focus: null, _toasts: null, _say: null };
+
+UI.init = (cfg = {}) => {
+  if (!HAS_DOM) return;
+  if (!document.getElementById('pz-css')) { const st = document.createElement('style'); st.id = 'pz-css'; st.textContent = ENGINE_CSS; document.head.insertBefore(st, document.head.firstChild); }
+  if (cfg.theme) UI.theme(cfg.theme);
+  UI.enhance(Screen.ui);
+  // 介面導覽：鍵盤、手把
+  const navKey = (dir) => () => { if (UI.top()) UI.move(dir); };
+  Input.onPress('up', navKey('up')); Input.onPress('down', navKey('down')); Input.onPress('left', navKey('left')); Input.onPress('right', navKey('right'));
+  Input.onPress('confirm', () => { const t = UI.top(); if (t && UI.focus && document.body.contains(UI.focus)) { UI.focus.click(); } });
+  Input.onPress('cancel', () => { const t = UI.top(); if (t && t.back) t.back(); });
+};
+/** 換主題：名字或變數物件（key 不用寫 --pz-） */
+UI.theme = (t) => {
+  const vars = typeof t === 'string' ? THEMES[t] || {} : t;
+  const st = Screen.root && Screen.root.style; if (!st) return;
+  if (typeof t === 'string') for (const k of ['text', 'dim', 'faint', 'bg', 'panel', 'panel2', 'line', 'accent', 'accent2', 'on-accent', 'radius', 'radius-s', 'shadow', 'font']) st.removeProperty('--pz-' + k);
+  for (const k in vars) st.setProperty('--pz-' + k, vars[k]);
+};
+UI.themes = THEMES;
+
+/** 幫一個 DOM 區塊裡的按鈕加上音效、觸覺、按壓感 */
+UI.enhance = (root) => {
+  if (!root || root._pzEnh) return; root._pzEnh = true;
+  root.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest && e.target.closest('.pz-btn,.pz-toggle,[data-sfx]'); if (!b || b.disabled) return;
+    b.classList.add('pz-press'); const up = () => { b.classList.remove('pz-press'); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+    window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    const s = b.dataset.sfx; if (s !== 'none') PZ.uiSound(s || 'click');
+    Haptics.tap('light');
+  });
+  root.addEventListener('pointerover', (e) => { if (e.pointerType !== 'mouse') return; const b = e.target.closest && e.target.closest('.pz-btn'); if (b && b !== UI._hover) { UI._hover = b; PZ.uiSound('hover'); } });
+};
+
+/* ---------- 焦點導覽（手把、鍵盤）---------- */
+UI.top = () => UI.stack[UI.stack.length - 1] || null;
+function focusables(root) { return [...root.querySelectorAll('.pz-btn,.pz-toggle,.pz-focusable,.pz-range,.pz-seg button')].filter((e) => !e.disabled && e.offsetParent !== null); }
+UI.setFocus = (elx) => {
+  if (UI.focus) { UI.focus.classList.remove('pz-focus'); if (UI.focus._tipHide) UI.focus._tipHide(); }
+  UI.focus = elx;
+  if (elx) { elx.classList.add('pz-focus'); try { elx.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ } if (elx._tipShow && (Input.device === 'gamepad' || Input.device === 'keyboard')) elx._tipShow(); }
+};
+UI.move = (dir) => {
+  const t = UI.top(); if (!t) return;
+  const list = focusables(t.el); if (!list.length) return;
+  const cur = UI.focus && list.includes(UI.focus) ? UI.focus : null;
+  if (!cur) { UI.setFocus(list[0]); PZ.uiSound('hover'); return; }
+  if (cur.classList.contains('pz-range') && (dir === 'left' || dir === 'right')) { cur.value = clamp(+cur.value + (dir === 'right' ? 0.1 : -0.1), +cur.min, +cur.max); cur.dispatchEvent(new Event('input', { bubbles: true })); return; }
+  const r0 = cur.getBoundingClientRect(), cx = r0.left + r0.width / 2, cy = r0.top + r0.height / 2;
+  let best = null, bs = Infinity;
+  for (const e of list) {
+    if (e === cur) continue; const r = e.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2, dx = x - cx, dy = y - cy;
+    const ok = dir === 'up' ? dy < -4 : dir === 'down' ? dy > 4 : dir === 'left' ? dx < -4 : dx > 4; if (!ok) continue;
+    const main = dir === 'up' || dir === 'down' ? Math.abs(dy) : Math.abs(dx), side = dir === 'up' || dir === 'down' ? Math.abs(dx) : Math.abs(dy), s = main + side * 2.2;
+    if (s < bs) { bs = s; best = e; }
+  }
+  if (best) { UI.setFocus(best); PZ.uiSound('hover'); }
+};
+/** 推一層（對話框、選單）：Esc／B 會呼叫 back */
+const syncTouch = () => { if (Screen.touch) Screen.touch.classList.toggle('pz-ui-open', UI.stack.length > 0); };
+UI.push = (elx, back) => { const layer = { el: elx, back }; UI.stack.push(layer); syncTouch(); if (Input.device === 'gamepad' || Input.device === 'keyboard') setTimeout(() => { const f = focusables(elx); const p = elx.querySelector('.primary') || f[0]; if (p) UI.setFocus(p); }, 30); return layer; };
+UI.pop = (layer) => { const i = UI.stack.indexOf(layer); if (i >= 0) UI.stack.splice(i, 1); UI.setFocus(null); syncTouch(); };
+
+/* ---------- 對話框 ---------- */
+UI.modal = (o = {}) => new Promise((resolve) => {
+  const wrap = el('div', 'pz-modal-wrap' + (o.cls ? ' ' + o.cls : ''));
+  const box = el('div', 'pz-modal' + (o.wide ? ' wide' : ''));
+  if (o.title) box.appendChild(el('h2', '', o.title));
+  if (o.body != null) { const b = el('div', 'pz-body'); if (typeof o.body === 'string') b.innerHTML = o.body; else b.appendChild(o.body); box.appendChild(b); }
+  let done = false;
+  const close = (v) => { if (done) return; done = true; UI.pop(layer); wrap.classList.remove('on'); setTimeout(() => wrap.remove(), 220); if (o.pause !== false) PZ.resume('modal'); if (o.onClose) safeCall(o.onClose, null, v); resolve(v); };
+  if (o.options) {
+    const list = el('div', 'pz-list');
+    for (const op of o.options) {
+      const b = el('button', 'pz-btn' + (op.primary ? ' primary' : ''), op.label + (op.desc ? `<small>${op.desc}</small>` : '')); b.type = 'button';
+      if (op.disabled) b.disabled = true;
+      b.onclick = () => close(op.value !== undefined ? op.value : op.label);
+      list.appendChild(b);
+    }
+    box.appendChild(list);
+  }
+  if (o.buttons && o.buttons.length) {
+    const acts = el('div', 'pz-actions');
+    for (const bt of o.buttons) { const b = el('button', 'pz-btn' + (bt.primary ? ' primary' : '') + (bt.danger ? ' danger' : '') + (bt.ghost ? ' ghost' : ''), bt.label); b.type = 'button'; if (bt.sfx) b.dataset.sfx = bt.sfx; b.onclick = () => { if (bt.onClick && safeCall(bt.onClick, null, close) === false) return; close(bt.value); }; acts.appendChild(b); }
+    box.appendChild(acts);
+  }
+  wrap.appendChild(box);
+  wrap.addEventListener('pointerdown', (e) => { if (e.target === wrap && o.closable !== false && o.backdrop !== false) close(o.cancelValue); });
+  Screen.ui.appendChild(wrap); UI.enhance(wrap);
+  if (o.pause !== false) PZ.pause('modal');
+  Input.releaseAll();
+  const layer = UI.push(wrap, o.closable === false ? null : () => close(o.cancelValue));
+  if (o.onOpen) safeCall(o.onOpen, null, box, close);
+  requestAnimationFrame(() => wrap.classList.add('on'));
+  if (o.sound !== false) PZ.uiSound('open');
+});
+UI.alert = (title, body, ok = '好') => UI.modal({ title, body, buttons: [{ label: ok, value: true, primary: true }], cancelValue: true });
+UI.confirm = (o) => UI.modal({ title: o.title, body: o.body, buttons: [{ label: o.cancel || '取消', value: false, sfx: 'cancel' }, { label: o.ok || '確定', value: true, primary: true, danger: o.danger, sfx: 'confirm' }], cancelValue: false, pause: o.pause });
+UI.choose = (o) => UI.modal({ title: o.title, body: o.body, options: o.options, cancelValue: o.cancelValue != null ? o.cancelValue : null, closable: o.closable, pause: o.pause });
+
+/* ---------- 提示泡泡、大標題 ---------- */
+UI.toast = (text, o = {}) => {
+  if (!UI._toasts) { UI._toasts = el('div', 'pz-toasts'); Screen.ui.appendChild(UI._toasts); }
+  const t = el('div', 'pz-toast' + (o.kind ? ' ' + o.kind : ''), (o.icon ? `<span>${o.icon}</span>` : '') + `<span>${text}</span>`);
+  UI._toasts.appendChild(t);
+  while (UI._toasts.children.length > 4) UI._toasts.firstChild.remove();
+  if (o.sound) PZ.uiSound(o.sound === true ? 'notify' : o.sound);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 320); }, o.ms || 2200);
+  return t;
+};
+UI.banner = (text, o = {}) => new Promise((res) => {
+  const b = el('div', 'pz-banner' + (o.style ? ' ' + o.style : ''), `<div class="pz-b-main">${text}</div>${o.sub ? `<div class="pz-b-sub">${o.sub}</div>` : ''}`);
+  Screen.ui.appendChild(b);
+  if (o.sound !== false) { const s = o.sound || (o.style === 'boss' ? 'alarm' : 'notify'); if (Sfx.has(s)) Sfx.play(s, { bus: 'ui' }); }
+  setTimeout(() => { b.classList.add('out'); setTimeout(() => { b.remove(); res(); }, 360); }, o.ms || 1900);
+});
+
+/* ---------- 提示框 ---------- */
+UI.tip = (target, content, o = {}) => {
+  let box = null, timer = 0;
+  const html = () => (typeof content === 'function' ? content() : content);
+  const place = () => {
+    if (!box) return;
+    const r = target.getBoundingClientRect(), R = Screen.ui.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight, sf = Screen.safe;
+    const sx = r.left - R.left + r.width / 2, above = r.top - R.top - 10, below = r.bottom - R.top + 10;
+    const up = o.side ? o.side === 'top' : above - bh > 8 + sf.t;
+    const x = clamp(sx - bw / 2, 8 + sf.l, Math.max(8 + sf.l, R.width - bw - 8 - sf.r)), y = up ? above - bh : below;
+    box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.setProperty('--ax', clamp(sx - x, 12, bw - 12) + 'px'); box.classList.toggle('below', !up);
+  };
+  const show = () => {
+    if (box || !document.body.contains(target)) return;
+    box = el('div', 'pz-tip' + (o.cls ? ' ' + o.cls : ''), html()); Screen.ui.appendChild(box); place();
+    requestAnimationFrame(() => box && box.classList.add('on'));
+  };
+  const hide = () => { clearTimeout(timer); if (!box) return; const b = box; box = null; b.classList.remove('on'); setTimeout(() => b.remove(), 180); };
+  const enter = (e) => { if (e.pointerType === 'mouse') show(); };
+  const down = (e) => { if (e.pointerType !== 'mouse') { clearTimeout(timer); timer = setTimeout(show, o.delay != null ? o.delay : 300); } };
+  const leave = () => hide();
+  target.addEventListener('pointerenter', enter); target.addEventListener('pointerdown', down);
+  target.addEventListener('pointerleave', leave); target.addEventListener('pointerup', leave); target.addEventListener('pointercancel', leave);
+  target._tipShow = show; target._tipHide = hide;
+  return {
+    show, hide,
+    set(c) { content = c; if (box) { box.innerHTML = html(); place(); } },
+    remove() { hide(); target.removeEventListener('pointerenter', enter); target.removeEventListener('pointerdown', down); target.removeEventListener('pointerleave', leave); target.removeEventListener('pointerup', leave); target.removeEventListener('pointercancel', leave); target._tipShow = target._tipHide = null; },
+  };
+};
+
+/* ---------- 閃卡 ---------- */
+UI.holo = (card, o = {}) => {
+  card.classList.add('pz-holo'); if (o.foil !== false) card.classList.add('pz-foil');
+  if (!card.querySelector(':scope > .pz-holo-shine')) card.appendChild(el('i', 'pz-holo-shine'));
+  const st = card.style, max = o.tilt != null ? o.tilt : 14; let tx = 0.5, ty = 0.5, cx = 0.5, cy = 0.5, on = 0, ton = 0, raf = 0;
+  const step = () => {
+    raf = 0; cx += (tx - cx) * 0.18; cy += (ty - cy) * 0.18; on += (ton - on) * 0.14;
+    st.setProperty('--rx', ((0.5 - cy) * max * 2 * on).toFixed(2) + 'deg'); st.setProperty('--ry', ((cx - 0.5) * max * 2 * on).toFixed(2) + 'deg');
+    st.setProperty('--gx', (cx * 100).toFixed(1) + '%'); st.setProperty('--gy', (cy * 100).toFixed(1) + '%'); st.setProperty('--hon', on.toFixed(3));
+    if (Math.abs(tx - cx) + Math.abs(ty - cy) + Math.abs(ton - on) > 0.002) raf = requestAnimationFrame(step);
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(step); };
+  const move = (e) => { const r = card.getBoundingClientRect(); tx = clamp01((e.clientX - r.left) / Math.max(1, r.width)); ty = clamp01((e.clientY - r.top) / Math.max(1, r.height)); ton = 1; kick(); };
+  const leave = () => { tx = 0.5; ty = 0.5; ton = 0; kick(); };
+  const up = (e) => { if (e.pointerType !== 'mouse') leave(); };
+  card.addEventListener('pointermove', move); card.addEventListener('pointerdown', move); card.addEventListener('pointerleave', leave); card.addEventListener('pointerup', up); card.addEventListener('pointercancel', leave);
+  return { remove() { card.removeEventListener('pointermove', move); card.removeEventListener('pointerdown', move); card.removeEventListener('pointerleave', leave); card.removeEventListener('pointerup', up); card.removeEventListener('pointercancel', leave); card.classList.remove('pz-holo', 'pz-foil'); } };
+};
+
+/* ---------- 格子背包 ---------- */
+const slotIcon = (icon) => { if (icon && Art.has(icon)) { const c = Art.canvas(icon); c.className = 'pz-slot-ico'; return c; } return el('span', 'pz-slot-ico', icon || ''); };
+UI.slots = (o = {}) => {
+  const grid = el('div', 'pz-slots'); grid.style.setProperty('--cols', o.cols || 5); grid.style.setProperty('--sz', (o.size || 58) + 'px');
+  const fill = (items) => {
+    grid.querySelectorAll('.pz-slot').forEach((b) => { if (b._tip) b._tip.remove(); });
+    grid.innerHTML = '';
+    const n = Math.max(items.length, o.min || 0);
+    for (let i = 0; i < n; i++) {
+      const it = items[i], r = it ? it.rarity || 'common' : '';
+      const b = el('button', 'pz-slot pz-focusable' + (it ? ' r-' + r : ' empty')); b.type = 'button'; b.dataset.sfx = it ? 'card' : 'none';
+      if (it) {
+        b.appendChild(slotIcon(it.icon));
+        if (it.count > 1) b.appendChild(el('b', 'pz-slot-n', '×' + it.count));
+        if (it.new) b.appendChild(el('i', 'pz-slot-new'));
+        if (it.name) b._tip = UI.tip(b, `<b>${it.name}</b>${it.tag ? `<em>${it.tag}</em>` : ''}${it.desc ? `<div>${it.desc}</div>` : ''}`, { cls: 'r-' + r });
+        b.onclick = () => {
+          grid.querySelectorAll('.pz-slot.sel').forEach((x) => x.classList.remove('sel')); b.classList.add('sel');
+          if (it.new) { it.new = false; const nn = b.querySelector('.pz-slot-new'); if (nn) nn.remove(); }
+          if (o.onPick) safeCall(o.onPick, null, it, i);
+        };
+      } else if (o.lockEmpty !== false) b.disabled = true;
+      grid.appendChild(b);
+    }
+  };
+  fill(o.items || []);
+  grid.set = fill;
+  return grid;
+};
+
+/* ---------- 標題畫面 ---------- */
+UI.title = (o = {}) => new Promise((resolve) => {
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const letters = [...String(o.title || '')].map((c, i) => (c === ' ' ? ' ' : `<span style="--i:${i}">${esc(c)}</span>`)).join('');
+  const box = el('div', 'pz-title' + (o.backdrop ? ' solid' : '') + (o.cls ? ' ' + o.cls : ''), `<div class="pz-title-in">${o.kicker ? `<div class="pz-title-kicker">${o.kicker}</div>` : ''}<h1 class="pz-title-main" data-t="${esc(o.title)}">${letters}</h1>${o.sub ? `<div class="pz-title-sub">${o.sub}</div>` : ''}<div class="pz-title-menu"></div>${o.items ? '' : `<div class="pz-title-press">${o.press || (Env.touch ? '點一下開始' : '按任意鍵開始')}</div>`}</div>${o.foot ? `<div class="pz-title-foot">${o.foot}</div>` : ''}`);
+  let done = false, layer = null, offPad = null;
+  const close = (v) => {
+    if (done) return; done = true; if (layer) UI.pop(layer); window.removeEventListener('keydown', key, true); if (offPad) offPad();
+    box.classList.add('out'); setTimeout(() => { box.remove(); resolve(v); }, 420);
+  };
+  const key = (e) => { if (!o.items && !e.repeat) { e.preventDefault(); PZ.uiSound('confirm'); close('start'); } };
+  if (o.items) {
+    const menu = box.querySelector('.pz-title-menu');
+    o.items.forEach((it, i) => { const b = el('button', 'pz-btn' + (it.primary ? ' primary' : ''), it.label); b.type = 'button'; b.style.setProperty('--i', i); b.onclick = () => close(it.value !== undefined ? it.value : it.label); menu.appendChild(b); });
+  } else {
+    box.addEventListener('pointerdown', () => { PZ.uiSound('confirm'); close('start'); });
+    setTimeout(() => { if (!done) window.addEventListener('keydown', key, true); }, 300);
+    offPad = Input.onPress('confirm', () => { if (Input.device === 'gamepad') { PZ.uiSound('confirm'); close('start'); } });
+  }
+  Screen.ui.appendChild(box); UI.enhance(box);
+  layer = UI.push(box, null);
+});
+
+/* ---------- 載入畫面 ---------- */
+UI.loading = (title, note) => {
+  let L = document.getElementById('pz-loading');
+  if (!L) { L = el('div', 'pz-loading', `<div class="pz-loading-box"><div class="pz-loading-title"></div><div class="pz-loading-bar"><i></i></div><div class="pz-loading-note"></div></div>`); L.id = 'pz-loading'; Screen.ui.appendChild(L); }
+  L.classList.remove('out');
+  L.querySelector('.pz-loading-title').textContent = title || '';
+  L.querySelector('.pz-loading-note').textContent = note || '';
+  return { progress(p, n) { L.querySelector('i').style.width = clamp01(p) * 100 + '%'; if (n != null) L.querySelector('.pz-loading-note').textContent = n; }, done() { L.classList.add('out'); setTimeout(() => L.remove(), 450); } };
+};
+
+/* ---------- 設定頁 ---------- */
+UI.settings = (o = {}) => {
+  const box = el('div', 'pz-set');
+  const row = (label, sub, ctl) => { const r = el('div', 'pz-set-row'); r.appendChild(el('span', '', label + (sub ? `<small>${sub}</small>` : ''))); r.appendChild(ctl); box.appendChild(r); return r; };
+  const head = (t) => box.appendChild(el('h3', '', t));
+  const slider = (k, onInput) => { const s = el('input', 'pz-range'); s.type = 'range'; s.min = 0; s.max = 1; s.step = 0.05; s.value = Settings.get(k); const paint = () => s.style.setProperty('--v', s.value * 100 + '%'); paint(); s.oninput = () => { Settings.set(k, +s.value); paint(); if (onInput) onInput(+s.value); }; return s; };
+  const toggle = (k, inv) => { const b = el('button', 'pz-toggle'); b.type = 'button'; const sync = () => b.classList.toggle('on', inv ? !Settings.get(k) : !!Settings.get(k)); sync(); b.onclick = () => { Settings.set(k, !Settings.get(k)); sync(); }; return b; };
+  const seg = (k, opts) => { const s = el('div', 'pz-seg'); for (const [v, l] of opts) { const b = el('button', String(Settings.get(k)) === String(v) ? 'on' : '', l); b.type = 'button'; b.onclick = () => { Settings.set(k, v); for (const x of s.children) x.classList.toggle('on', x === b); PZ.uiSound('click'); }; s.appendChild(b); } return s; };
+  head('聲音');
+  row('音樂', '', slider('music'));
+  row('音效', '', slider('sfx', () => PZ.uiSound('click', { force: true })));
+  if (Env.ios) row('跟其他 App 的音樂一起播', '打開後會跟著側邊靜音鍵', toggle('mixOthers'));
+  head('畫面與手感');
+  row('畫面震動', '怕暈可以調小', slider('shake'));
+  row('閃光', '怕閃可以關掉', toggle('flash'));
+  row('震動回饋', Env.ios ? 'iPhone 只有按按鈕時會震' : '', toggle('haptics'));
+  row('傷害數字', '', toggle('numbers'));
+  row('畫質', '自動：卡頓時會自己調低', seg('quality', [['auto', '自動'], ['high', '精細'], ['mid', '平衡'], ['low', '流暢']]));
+  if (!Env.mobile) row('省電', '鎖在 60 幀', seg('fpsCap', [[0, '不鎖'], [60, '60 幀']]));
+  if (Env.touch) row('觸控按鈕大小', '', slider('touchSize'));
+  if (o.extra) for (const x of o.extra) { if (x.head) head(x.head); else row(x.label, x.sub, x.control); }
+  if (o.save) {
+    const sv = o.save; head('存檔');
+    if (!sv.persistent) box.appendChild(el('div', 'pz-hint', '這個瀏覽器不讓遊戲存資料，進度只會留到關掉為止。可以用下面的存檔碼帶走。'));
+    if (sv.cloud) box.appendChild(el('div', 'pz-hint', sv.cloud.note()));
+    const r = el('div', 'pz-set-row'); const b1 = el('button', 'pz-btn', '複製存檔碼'), b2 = el('button', 'pz-btn', '貼上存檔碼'); b1.type = b2.type = 'button';
+    r.appendChild(b1); r.appendChild(b2); box.appendChild(r);
+    b1.onclick = async () => { const code = sv.code(); let ok = false; try { await navigator.clipboard.writeText(code); ok = true; } catch (e) { /* 不給用剪貼簿 */ } if (ok) UI.toast('存檔碼已複製', { kind: 'good' }); else { const ta = el('textarea', 'pz-code'); ta.value = code; ta.readOnly = true; UI.modal({ title: '存檔碼', body: ta, buttons: [{ label: '好', primary: true }], pause: false, onOpen: () => { ta.focus(); ta.select(); } }); } };
+    b2.onclick = async () => {
+      const ta = el('textarea', 'pz-code'); ta.placeholder = '把存檔碼貼在這裡';
+      const v = await UI.modal({ title: '讀取存檔碼', body: ta, buttons: [{ label: '取消', value: false }, { label: '讀取', value: true, primary: true }], pause: false, onOpen: () => setTimeout(() => ta.focus(), 50) });
+      if (!v) return;
+      if (sv.load(ta.value)) { UI.toast('讀取成功', { kind: 'good' }); if (o.onLoad) o.onLoad(); } else UI.toast('存檔碼不對，請整段複製再貼一次', { kind: 'bad' });
+    };
+  }
+  return UI.modal({ title: o.title || '設定', body: box, wide: false, buttons: [{ label: '重設', ghost: true, onClick: () => { Settings.reset(); UI.toast('已恢復預設'); return true; } }, { label: '完成', primary: true, value: true }], pause: o.pause });
+};
+
+/* ---------- 標準暫停選單 ---------- */
+UI.pause = (o = {}) => {
+  const items = [{ label: '繼續', value: 'resume', primary: true }].concat(o.items || []).concat(o.settings === false ? [] : [{ label: '設定', value: 'settings' }]);
+  return UI.choose({ title: o.title || '暫停', body: o.body, options: items, cancelValue: 'resume' }).then(async (v) => {
+    const it = items.find((x) => x.value === v || x.label === v);
+    if (v === 'settings') { await UI.settings({ save: o.save }); return UI.pause(o); }
+    if (it && it.onClick) safeCall(it.onClick, null);
+    return v;
+  });
+};
+
+/* ---- 22_dialogue.js ---- */
+/* ==========================================================================
+   22 劇情對話
+     await PZ.ui.say([
+       ['魏子葳', '……又是凌晨三點。'],
+       [null, '巷口的路燈閃了兩下。'],                 // 沒有名字＝旁白
+       ['老闆', '這單送完就收工。', { face: 'boss_face', side: 'right' }],
+     ], { faces: { 魏子葳: 'face_wei' }, voices: { 魏子葳: 0.9, 老闆: 0.75 } });
+     const i = await PZ.ui.ask('要怎麼做？', ['衝進去', '先觀察']);   // 回傳選了第幾個
+   點一下（或 A／Enter／空白）：字還在跑就一次顯示完，跑完就下一句；按住會快轉。
+   右上角：自動、快轉、紀錄（看前面說過的話）。對話時遊戲自動暫停。
+   ========================================================================== */
+const Say = { log: [], faceCache: new Map() };
+function faceEl(face) {
+  if (!face) return null;
+  if (face instanceof HTMLElement) return face;
+  let url = Say.faceCache.get(face);
+  if (!url) { url = Art.has(face) ? Art.url(face) : face; Say.faceCache.set(face, url); }
+  const img = new Image(); img.src = url; img.alt = ''; return img;
+}
+function sayBox() {
+  if (UI._say) return UI._say;
+  const wrap = el('div', 'pz-say', `<div class="pz-say-face"></div><div class="pz-say-box"><div class="pz-say-name"></div><div class="pz-say-text"></div><div class="pz-say-more"></div>
+    <div class="pz-say-tools"><button data-t="auto" data-sfx="click">自動</button><button data-t="skip" data-sfx="click">快轉</button><button data-t="log" data-sfx="click">紀錄</button></div></div>`);
+  Screen.ui.appendChild(wrap); UI.enhance(wrap);
+  const S = UI._say = { wrap, box: wrap.querySelector('.pz-say-box'), name: wrap.querySelector('.pz-say-name'), text: wrap.querySelector('.pz-say-text'), face: wrap.querySelector('.pz-say-face'), auto: false, skip: false, onAdv: null, holdT: 0 };
+  wrap.querySelectorAll('.pz-say-tools button').forEach((b) => b.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    const t = b.dataset.t;
+    if (t === 'auto') { S.auto = !S.auto; b.classList.toggle('on', S.auto); if (S.auto && S.onAdv && S.wrap.classList.contains('done')) S.onAdv(); }
+    else if (t === 'skip') { S.skip = !S.skip; b.classList.toggle('on', S.skip); if (S.onAdv) S.onAdv(); }
+    else if (t === 'log') { const lg = el('div', 'pz-log', Say.log.slice(-80).map((l) => `<p>${l[0] ? `<b>${l[0]}</b>` : ''}${l[1]}</p>`).join('') || '<p>還沒有對話。</p>'); UI.modal({ title: '對話紀錄', body: lg, buttons: [{ label: '關閉', primary: true }], pause: false, onOpen: () => { lg.scrollTop = lg.scrollHeight; } }); }
+  }));
+  wrap.addEventListener('pointerdown', (e) => { if (e.target.closest('.pz-say-tools,.pz-choices')) return; S.holdT = Time.real; if (S.onAdv) S.onAdv(); });
+  return S;
+}
+function closeSay() { const S = UI._say; if (!S) return; S.wrap.remove(); UI._say = null; }
+
+/** 一句一句播（回傳 Promise）；每句可以是 [名字, 文字, {face, side, voice}] 或字串（旁白） */
+UI.say = async (lines, o = {}) => {
+  if (!Array.isArray(lines)) lines = [lines];
+  const S = sayBox(); S.skip = false;
+  if (o.pause !== false) PZ.pause('say');
+  Input.releaseAll();
+  const layer = UI.push(S.wrap, null);
+  const advKey = Input.onPress('confirm', () => { S.holdT = Time.real; if (UI.top() === layer && S.onAdv) S.onAdv(); });
+  try {
+    for (const ln of lines) {
+      const L = typeof ln === 'string' ? [null, ln, {}] : Array.isArray(ln) ? [ln[0], ln[1], ln[2] || {}] : [ln.name, ln.text, ln];
+      const [name, text, lo] = L;
+      if (lo.do) { await lo.do(); continue; }
+      S.wrap.classList.toggle('narr', !name); S.wrap.classList.toggle('right', lo.side === 'right');
+      S.name.style.display = name ? '' : 'none'; S.name.textContent = name || '';
+      const face = lo.face || (o.faces && name && o.faces[name]) || null;
+      S.face.innerHTML = ''; const fe = faceEl(face); if (fe) S.face.appendChild(fe);
+      S.wrap.classList.remove('done');
+      Say.log.push([name, text]); if (Say.log.length > 300) Say.log.shift();
+      await typeLine(S, String(text), (o.voices && name && o.voices[name]) || lo.voice || 1, o);
+      S.wrap.classList.add('done');
+      await waitAdvance(S, String(text));
+    }
+  } finally {
+    advKey(); UI.pop(layer);
+    if (!o.keep) closeSay();
+    if (o.pause !== false) PZ.resume('say');
+  }
+};
+function typeLine(S, text, voice, o) {
+  return new Promise((res) => {
+    const chars = [...text]; let i = 0, wait = 0, last = nowMs();
+    S.text.textContent = '';
+    const span = document.createTextNode(''); S.text.appendChild(span);
+    const speed = 36 * (Settings.get('textSpeed') || 1) * (o.speed || 1);
+    let finished = false;
+    const finish = () => { if (finished) return; finished = true; clearInterval(timer); span.data = text; S.onAdv = null; res(); };
+    S.onAdv = finish;
+    const timer = setInterval(() => {
+      const now = nowMs(), dt = (now - last) / 1000; last = now;
+      const fast = S.skip || (Input.down('confirm') && Time.real - S.holdT > 0.35) || (Input.pointer.down && Time.real - S.holdT > 0.35);
+      if (fast) { finish(); return; }
+      wait -= dt; if (wait > 0) return;
+      let n = Math.max(1, Math.round(speed * dt));
+      while (n-- > 0 && i < chars.length) {
+        const c = chars[i++]; span.data += c;
+        if (o.blip !== false && i % 2 === 1 && c.trim() && Sfx.has('type')) Sfx.play('type', { pitch: voice, bus: 'ui' });
+        if ('。！？!?'.includes(c)) { wait = 0.22; break; } if ('，、；：,;:'.includes(c)) { wait = 0.1; break; } if (c === '…') { wait = 0.08; break; }
+      }
+      if (i >= chars.length) finish();
+    }, 16);
+  });
+}
+function waitAdvance(S, text) {
+  return new Promise((res) => {
+    let t = 0;
+    const go = () => { clearTimeout(t); S.onAdv = null; res(); };
+    S.onAdv = go;
+    if (S.skip) t = setTimeout(go, 60);
+    else if (S.auto) t = setTimeout(go, 900 + [...text].length * 45 / (Settings.get('textSpeed') || 1));
+  });
+}
+/** 對話中的選擇：回傳選了第幾個（0 起算）。options 可以是字串或 { label, desc, disabled } */
+UI.ask = (prompt, options, o = {}) => new Promise((res) => {
+  const S = sayBox();
+  if (o.pause !== false) PZ.pause('say');
+  S.wrap.classList.add('done'); S.wrap.classList.toggle('narr', !o.name);
+  S.name.style.display = o.name ? '' : 'none'; S.name.textContent = o.name || '';
+  S.text.textContent = prompt || '';
+  const box = el('div', 'pz-choices');
+  options.forEach((op, i) => {
+    const d = typeof op === 'string' ? { label: op } : op;
+    const b = el('button', 'pz-btn', d.label + (d.desc ? `<small style="display:block;color:var(--pz-dim);font-weight:500">${d.desc}</small>` : '')); b.type = 'button';
+    if (d.disabled) b.disabled = true;
+    b.onclick = (e) => { e.stopPropagation(); Say.log.push([null, '→ ' + d.label]); box.remove(); UI.pop(layer); if (!o.keep) closeSay(); if (o.pause !== false) PZ.resume('say'); PZ.uiSound('confirm'); res(i); };
+    box.appendChild(b);
+  });
+  S.box.appendChild(box); UI.enhance(box);
+  const layer = UI.push(S.wrap, null);
+  S.onAdv = null;
+});
+UI.closeSay = closeSay;
+
+/* ---- 23_debug.js ---- */
+/* ==========================================================================
+   23 除錯
+   - 遊戲出錯時畫面下方跳出紅色面板（不會整個當掉）：錯誤訊息、出錯位置、裝置資訊，
+     可以「複製錯誤」貼給 Claude、「繼續玩」或「重新載入」。
+   - 效能面板：網址加 ?debug、按 F3 或 `、或三指同時點一下：幀數、每格時間、繪圖次數、粒子、畫質。
+   - 測試掛鉤 window.__pz：step(n)、pause()、resume()、seed(n)、state()、errors（Playwright 用）。
+   ========================================================================== */
+const Debug = PZ.debug = { errors: [], shown: new Set(), statsOn: false, statsEl: null, cfg: {}, quiet: false };
+const BENIGN = [/ResizeObserver loop/i, /^Script error\.?$/i, /AbortError/i, /play\(\) request was interrupted/i, /The play\(\) request/i];
+reportError = (err, where) => {
+  const msg = (err && (err.message || err.reason)) || String(err);
+  if (BENIGN.some((r) => r.test(msg))) return;
+  const stack = (err && err.stack) || '';
+  Debug.errors.push({ msg, where, stack, t: Date.now() });
+  if (Debug.errors.length > 50) Debug.errors.shift();
+  if (typeof console !== 'undefined') console.error('[PZ]' + (where ? ' ' + where + '：' : ''), err);
+  if (HAS_DOM && !Debug.quiet) showError(msg, where, stack);
+  PZ.emit('error', err, where);
+};
+function deviceLine() {
+  return `${PZ.cfg && PZ.cfg.title ? PZ.cfg.title + ' ' + (PZ.cfg.version || '') + '｜' : ''}PZ ${PZ.version}｜${Gfx.kind || '—'}｜${Screen.w}×${Screen.h}@${(Screen.dpr || 1).toFixed(2)}｜${Env.ios ? 'iOS' : Env.android ? 'Android' : 'Desktop'}${Env.standalone ? '・主畫面' : ''}${Env.inFrame ? '・框內' : ''}｜${HAS_DOM ? navigator.userAgent.replace(/\s*\(KHTML.*$/, '').slice(0, 90) : ''}`;
+}
+function showError(msg, where, stack) {
+  const key = msg + '|' + where; if (Debug.shown.has(key)) return; Debug.shown.add(key);
+  let p = document.getElementById('pz-err');
+  const top = String(stack).split('\n').slice(0, 6).join('\n');
+  const text = `${msg}\n位置：${where || '—'}\n${top}\n${deviceLine()}`;
+  if (!p) { p = el('div', 'pz-err'); p.id = 'pz-err'; document.body.appendChild(p); }
+  p.innerHTML = `<b>遊戲出了點問題</b>可以先按「繼續玩」；如果一直出現，按「複製錯誤」貼給 Claude。<pre></pre><div class="pz-err-b"><button data-a="copy">複製錯誤</button><button data-a="go">繼續玩</button><button data-a="reload">重新載入</button></div>`;
+  p.querySelector('pre').textContent = text;
+  p.onclick = async (e) => {
+    const a = e.target.dataset && e.target.dataset.a; if (!a) return;
+    if (a === 'copy') { try { await navigator.clipboard.writeText(text); e.target.textContent = '已複製'; } catch (er) { const r = document.createRange(); r.selectNodeContents(p.querySelector('pre')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); e.target.textContent = '已選取，請按複製'; } }
+    else if (a === 'go') { p.remove(); }
+    else if (a === 'reload') { location.reload(); }
+  };
+}
+Debug.stats = (on = !Debug.statsOn) => {
+  Debug.statsOn = on;
+  if (on && !Debug.statsEl) { Debug.statsEl = el('div', 'pz-stats'); document.body.appendChild(Debug.statsEl); }
+  if (Debug.statsEl) Debug.statsEl.style.display = on ? '' : 'none';
+};
+addSystem({
+  name: 'debug', order: 2000,
+  render() {
+    if (!Debug.statsOn || !Debug.statsEl || Time.frame % 10) return;
+    const r = Gfx.r, st = r ? r.stats : {};
+    Debug.statsEl.textContent = `${Time.fps.toFixed(0)} fps  ${(Time.rdt * 1000).toFixed(1)} ms  (${Time.refresh}Hz)\n更新 ${Perf.upd.toFixed(2)} ms  繪圖 ${Perf.ren.toFixed(2)} ms\n${Gfx.kind}  批次 ${st.draws || 0}  方塊 ${st.quads || 0}${Light.active ? '  燈 ' + (st.lights || 0) : ''}${Weather.active() ? '  天氣 ' + Weather.name : ''}\n粒子 ${Particles.n}  畫質 ${Quality.cur.name}${Quality.auto ? '(自動)' : ''}  ${Screen.pw}×${Screen.ph}\n音訊 ${Aud.ctx ? Aud.ctx.state : '未啟動'}  聲部 ${Sfx.voices.length}${Debug.errors.length ? '  錯誤 ' + Debug.errors.length : ''}`;
+  },
+});
+Debug.init = (cfg) => {
+  Debug.cfg = cfg || {};
+  if (!HAS_DOM) return;
+  window.addEventListener('error', (e) => reportError(e.error || e.message, e.filename ? `${e.filename.split('/').pop()}:${e.lineno}` : 'window'));
+  window.addEventListener('unhandledrejection', (e) => reportError(e.reason || 'Promise 失敗', 'promise'));
+  if (/[?&#]debug\b/.test(location.href) || cfg.debug) Debug.stats(true);
+  window.addEventListener('keydown', (e) => { if (e.code === 'F3' || e.code === 'Backquote') { e.preventDefault(); Debug.stats(); } });
+  let three = 0; window.addEventListener('touchstart', (e) => { if (e.touches.length === 3) { three++; setTimeout(() => (three = 0), 400); if (three === 1) Debug.stats(); } }, { passive: true });
+};
+if (HAS_DOM) {
+  window.__pz = {
+    get PZ() { return PZ; },
+    step: (n = 1, dt = 1 / 60) => Loop.step(n, dt),
+    pause: () => { Loop.stop(); }, resume: () => { Loop.start(); },
+    seed: (n) => PZ.seed(n),
+    get errors() { return Debug.errors.map((e) => e.msg + ' @' + e.where); },
+    state: () => ({ scene: Scenes.name, fps: Math.round(Time.fps), renderer: Gfx.kind, tier: Quality.tier, particles: Particles.n, quads: Gfx.r ? Gfx.r.stats.quads : 0, draws: Gfx.r ? Gfx.r.stats.draws : 0, lights: Gfx.r ? Gfx.r.stats.lights || 0 : 0, w: Screen.w, h: Screen.h, res: Screen.res, audio: Aud.ctx ? Aud.ctx.state : 'none', errors: Debug.errors.length }),
+  };
+}
+
+/* ---- 24_boot.js ---- */
+/* ==========================================================================
+   24 啟動
+     PZ.start({
+       id: 'last-order', title: '最後一單', version: '2.0.0',
+       orientation: 'any',               // 'portrait' | 'landscape' | 'any'
+       background: '#07090d',
+       fit: 420,                         // 畫面短邊看得到的世界單位（相機自動縮放）
+       step: 0,                          // 0＝可變步長；1/60＝固定步長
+       theme: 'night' 或 { accent: '#f5a', … },
+       fonts: ['PZ Sans'],               // 嵌入字型：等它載好才畫字
+       settings: { music: 0.6 },         // 這款遊戲的預設設定
+       binds: { fire: ['Space', 'PadA'] },
+       async load(progress) { … 畫圖、定義音效 … progress(0.5) },
+       scenes: { title: {...}, play: {...} },   // 也可以另外用 PZ.scene() 定義
+       first: 'title',
+     });
+   ========================================================================== */
+PZ.cfg = null;
+PZ.start = async (cfg = {}) => {
+  if (!HAS_DOM) throw new Error('PZ.start 需要瀏覽器');
+  PZ.cfg = cfg;
+  if (document.readyState === 'loading') await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
+  Screen.init(cfg);
+  Debug.init(cfg);
+  UI.init(cfg);
+  Input.init();
+  if (cfg.binds) Input.bind(cfg.binds);
+  // 畫質起點：手機「精細」、電腦「極致」、記憶體小的手機「平衡」；之前在這台自動降過就從那一階開始
+  const start = cfg.quality != null ? cfg.quality : Env.lowMemory ? 1 : Env.mobile ? 2 : 3;
+  const dev = Store.getJSON('pz.device.tier', null);
+  Quality.start = start; Quality.tier = dev != null ? Math.min(start, dev + 1) : start;
+  PZ.on('quality', (t, why) => { if (why === 'slow' || why === 'fast') Store.setJSON('pz.device.tier', t); });
+  Settings.load(cfg.id || 'game', cfg.settings);
+  if (cfg.step) Time.step = cfg.step;
+  if (cfg.fit) Cam.fitSize = cfg.fit;
+  if (cfg.post === false) Post.enabled = false;
+  if (cfg.post && typeof cfg.post === 'object') { const p = cfg.post; for (const k in p) { if (k === 'bloom' && typeof p.bloom === 'object') Object.assign(Post.bloom, p.bloom); else Post[k] = p[k]; } }
+  if (cfg.title && !document.title) document.title = cfg.title;
+  Screen.measure(true);
+  Gfx.create(cfg.renderer || (/[?&]c2d\b/.test(location.href) ? 'canvas2d' : 'webgl2'));
+  Art.init();
+  if (cfg.scenes) for (const k in cfg.scenes) PZ.scene(k, cfg.scenes[k]);
+  Loop.start();
+  let L = null;
+  if (cfg.load) {
+    L = cfg.loading === false ? null : UI.loading(cfg.title || '', '載入中');
+    const progress = (p, note) => { if (L) L.progress(p, note); };
+    await Text.ready(cfg.fonts || []);
+    try { await cfg.load(progress); } catch (e) { reportError(e, 'load'); }
+    progress(1);
+  } else await Text.ready(cfg.fonts || []);
+  PZ.emit('ready');
+  if (L) L.done();
+  if (cfg.first) await PZ.go(cfg.first, cfg.firstParams, { type: cfg.firstTransition || 'fade', time: 0.5 });
+  return PZ;
+};
+
+/* ---- 25_light.js ---- */
+/* ==========================================================================
+   25 光影：動態光源、柔和陰影、投影、光束
+     PZ.light.on({ ambient: '#1b2333' })     打開光影；ambient＝沒被照到的地方剩多亮（'#fff'＝白天，看起來跟沒開一樣）
+     const lamp = PZ.light.add({ x, y, r: 260, color: '#ffb547', intensity: 1.2, flicker: 0.25, glow: 0.6 })
+       lamp.x = …（會動就直接改）  lamp.fade(0, 0.5)  lamp.remove()
+     手電筒：PZ.light.add({ follow: hero, r: 460, cone: 0.42, dir: 角度, color: '#fff2d6' })   cone＝半張角（弧度）
+     擋光的東西（產生陰影）：
+       PZ.light.box(x, y, w, h)、PZ.light.circle(x, y, r)、PZ.light.poly([x0,y0, x1,y1, …])   固定的牆、柱子、箱子（回傳的東西可以改位置、.remove()）
+       PZ.light.occluders((g) => { g.sprite('crate', c.x, c.y); … })                        每格畫一次（會動的、要用圖形狀的）
+     render(g) { …畫地板、牆、角色… g.lighting(); …畫燈泡、火焰、發光字… }   沒呼叫的話 g.hud() 會自動套用
+     PZ.light.zone(x, y, w, h, { ambient: '#fff', soft: 60 })   這一塊換一種環境光（屋內暗、院子亮；側視遊戲的天空、遠景不受影響）
+     PZ.light.at(x, y)        這一點有多亮（0＝全黑、1＝原色；潛行遊戲用）    PZ.light.blocked(x0, y0, x1, y1)  兩點之間有沒有被擋（視線）
+     g.castShadow('hero', x, y, { len, a })   角色的投影：自動朝「離最亮那盞燈」的方向，沒有燈就用 PZ.light.sun
+     g.beam(x, y, 角度, 長度, 起點寬, 終點寬, color, { a, end })   光束（窗戶透進來的光、探照燈、舞台燈）
+   做法：每盞燈一個方塊畫進低解析度的「光照圖」，最後跟畫面相乘（2×：光照圖一半＝原色，最亮到兩倍，搭泛光會發光）。
+   陰影：擋光的東西先畫成遮光圖，用 JFA 算出「到最近牆的距離」，每個像素往燈的方向跳著走，順便量擦邊多近 → 柔和的半影。
+   畫質低時自動降解析度、關陰影；Canvas2D 後備模式只有光、沒有陰影。
+   ========================================================================== */
+const Light = PZ.light = {
+  active: false, ambient: '#ffffff', soak: 10, haze: 0, shadows: true,
+  sun: { angle: 0.9, len: 0.75, a: 0.4 },          // 沒有燈的時候，角色投影的方向（白天的太陽）
+  lights: [], shapes: [], zones: [], fn: null,
+  _list: [], _vis: [], _flash: 0, _flashColor: [0.8, 0.86, 1], _wHaze: 0, _amb: [1, 1, 1],
+  /** 每一階畫質：光照圖解析度（scale）、遮光圖解析度（mask，0＝不算陰影）、陰影追蹤步數、距離場最遠量幾格（reach：JFA 從這個步長開始） */
+  tiers: [
+    { scale: 0.25, mask: 0, steps: 0, reach: 0 },
+    { scale: 0.34, mask: 0.25, steps: 14, reach: 32 },
+    { scale: 0.5, mask: 0.34, steps: 20, reach: 32 },
+    { scale: 0.5, mask: 0.5, steps: 28, reach: 64 },
+  ],
+};
+Light.quality = () => Light.tiers[clamp(Quality.tier, 0, Light.tiers.length - 1)];
+
+/** 打開光影。o: { ambient, soak（光滲進牆面幾單位，預設 10）, shadows（false＝全部不算陰影） } */
+Light.on = (o = {}) => {
+  Light.active = true;
+  if (o.ambient != null) Light.ambient = o.ambient;
+  if (o.soak != null) Light.soak = o.soak;
+  if (o.shadows != null) Light.shadows = !!o.shadows;
+  if (o.haze != null) Light.haze = o.haze;
+  return Light;
+};
+Light.off = () => { Light.active = false; return Light; };
+/** 全部清掉（場景切換時引擎會自動呼叫） */
+Light.reset = () => {
+  for (const l of Light.lights) l.dead = true;
+  for (const s of Light.shapes) s.dead = true;
+  Light.lights.length = 0; Light.shapes.length = 0; Light.zones.length = 0; Light.fn = null;
+  Light.active = false; Light.ambient = '#ffffff'; Light.soak = 10; Light.haze = 0; Light.shadows = true; Light._flash = 0;
+  Light.sun = { angle: 0.9, len: 0.75, a: 0.4 };
+};
+
+/* ---------- 燈 ---------- */
+let LightSeed = 1;
+class PZLight {
+  constructor(o) {
+    this.x = 0; this.y = 0; this.r = 240; this.color = '#fff'; this.intensity = 1;
+    this.flicker = 0; this.flickerSpeed = 9; this.cone = null; this.dir = 0; this.soft = null;
+    this.size = 10; this.shadows = true; this.haze = 0; this.glow = 0; this.glowR = null; this.fall = 6;
+    this.follow = null; this.ox = 0; this.oy = 0; this.screen = false; this.on = true;
+    this.dead = false; this._k = 1; this._fi = 1; this._seed = (LightSeed++ * 7.31) % 100; this._fade = null;
+    this.set(o);
+  }
+  set(o) { if (o) for (const k in o) this[k] = o[k]; return this; }
+  get color() { return this._color; }
+  set color(v) { this._color = v; this._col = toColor(v); }
+  /** 漸亮／漸暗到 k（強度倍率），time 秒；k＝0 且 o.remove 時順便移除 */
+  fade(k, time = 0.4, o = {}) { this._fade = { from: this._k, to: k, t: 0, time: Math.max(0.001, time), remove: !!o.remove }; return this; }
+  remove() { this.dead = true; const i = Light.lights.indexOf(this); if (i >= 0) Light.lights.splice(i, 1); }
+}
+/**
+ * 加一盞燈。o: { x, y, r（半徑）, color, intensity（1＝把原色照到最亮；2＝曝光過度會發光）,
+ *   flicker（0～1 閃爍，火把 0.2、壞掉的燈 0.6）, flickerSpeed, cone（半張角，弧度；不給＝四面八方）, dir（方向）, soft（邊緣柔和，弧度）,
+ *   size（光源大小，越大陰影越柔，預設 10）, shadows（false＝這盞不算陰影）, haze（0～1 霧裡看得到的光）,
+ *   glow（0～1 光源本身畫一顆光點）, glowR, fall（衰減，越大中心越集中，預設 6）, follow（跟著某個物件）, ox, oy, screen（用螢幕座標） }
+ */
+Light.add = (o = {}) => {
+  const l = new PZLight(o);
+  if (l.follow) { l.x = l.follow.x + l.ox; l.y = l.follow.y + l.oy; }
+  Light.lights.push(l);
+  return l;
+};
+
+/* ---------- 擋光的東西 ---------- */
+class PZShape {
+  constructor(kind, o) { this.kind = kind; Object.assign(this, o); this.dead = false; }
+  remove() { this.dead = true; const i = Light.shapes.indexOf(this); if (i >= 0) Light.shapes.splice(i, 1); }
+}
+/** 方塊（左上角 x, y） */
+Light.box = (x, y, w, h) => { const s = new PZShape('box', { x, y, w, h }); Light.shapes.push(s); return s; };
+/** 圓柱 */
+Light.circle = (x, y, r) => { const s = new PZShape('circle', { x, y, r }); Light.shapes.push(s); return s; };
+/** 凸多邊形 [x0,y0, x1,y1, …]（凹的請拆成幾塊） */
+Light.poly = (pts) => { const s = new PZShape('poly', { pts: pts.slice() }); Light.shapes.push(s); return s; };
+/** 每格自己畫擋光的東西（用平常的 g.sprite / g.rect / g.circle，顏色不重要，看透明度）。回傳取消用的函式 */
+Light.occluders = (fn) => { Light.fn = fn; return () => { if (Light.fn === fn) Light.fn = null; }; };
+
+/** 環境光區塊（世界座標的方塊；screen: true 用螢幕座標）。o: { ambient（預設白＝不變暗）, soft（邊緣柔和幾單位，預設 40）, a（0～1 蓋過多少）}。回傳的物件可以改 x/y/w/h/ambient、.remove() */
+Light.zone = (x, y, w, h, o = {}) => {
+  const z = { x, y, w, h, ambient: o.ambient || '#ffffff', soft: o.soft != null ? o.soft : 40, a: o.a != null ? o.a : 1, screen: !!o.screen, dead: false,
+    remove() { this.dead = true; const i = Light.zones.indexOf(this); if (i >= 0) Light.zones.splice(i, 1); } };
+  Light.zones.push(z); return z;
+};
+/** 打雷、爆炸：環境光短暫變亮（amount 0～1，time 秒，color 預設冷白） */
+Light.flash = (amount = 0.8, time = 0.25, color) => {
+  Light._flash = Math.max(Light._flash, amount * Settings.flashScale()); Light._flashDecay = 1 / Math.max(0.02, time);
+  if (color) { const c = toColor(color); Light._flashColor = [cR(c) / 255, cG(c) / 255, cB(c) / 255]; }
+};
+
+/* ---------- 每格 ---------- */
+function lightNoise(t) { return (noise1(t) + noise1(t * 2.7 + 13.1) * 0.5) * 0.66 * 0.5 + 0.5; } // 約 0～1
+/** 換到乾淨的座標空間畫一些東西，畫完把遊戲原本的狀態（變形、透明度、save 堆疊）原封不動還回去 */
+function withSpace(g, space, fn) {
+  const m = g.m, m0 = m[0], m1 = m[1], m2 = m[2], m3 = m[3], m4 = m[4], m5 = m[5], al = g.al, sp = g.space, st = g.stack, bn = g.blendName;
+  g.stack = []; g._base(space);
+  if (bn !== 'normal') g.blend('normal');
+  try { fn(g); } catch (e) { reportError(e, 'light'); }
+  if (g.blendName !== bn) g.blend(bn);
+  g.stack = st; m[0] = m0; m[1] = m1; m[2] = m2; m[3] = m3; m[4] = m4; m[5] = m5; g.al = al; g.space = sp;
+}
+function drawOccluders() {
+  withSpace(G, 'world', (g) => {
+    for (const s of Light.shapes) {
+      if (s.dead) continue;
+      if (s.kind === 'box') g.rect(s.x, s.y, s.w, s.h, WHITE);
+      else if (s.kind === 'circle') g.circle(s.x, s.y, s.r, WHITE);
+      else if (s.kind === 'poly') g.poly(s.pts, WHITE);
+    }
+    if (Light.fn) Light.fn(g);
+  });
+}
+Light._ambient = () => {
+  const c = toColor(Light.ambient), a = Light._amb, f = Light._flash, k = Light._flashColor;
+  a[0] = cR(c) / 255 + (k[0] - cR(c) / 255) * f; a[1] = cG(c) / 255 + (k[1] - cG(c) / 255) * f; a[2] = cB(c) / 255 + (k[2] - cB(c) / 255) * f;
+  return a;
+};
+addSystem({
+  name: 'light', order: 72,
+  frame(rdt) {
+    if (Light._flash > 0) Light._flash = Math.max(0, Light._flash - rdt * (Light._flashDecay || 4) * Math.max(0.2, Light._flash));
+    for (let i = Light.lights.length - 1; i >= 0; i--) {
+      const l = Light.lights[i], f = l._fade; if (!f) continue;
+      f.t += rdt; const k = clamp01(f.t / f.time); l._k = lerp(f.from, f.to, Ease.inOutQuad(k));
+      if (k >= 1) { l._fade = null; if (f.remove) l.remove(); }
+    }
+  },
+});
+
+Light._apply = (g) => {
+  const r = g.r; Light._vis.length = 0;
+  if (!Light.active || !r || r.lost || r.inTarget) return;
+  const q = Light.quality(), res = Screen.res, M = Cam.mat, z = Cam.ez || 1, W = r.w, H = r.h, T = Time.real;
+  const list = Light._list, vis = Light._vis; let n = 0, haze = false;
+  const amb = Light._ambient();
+  for (const L of Light.lights) {
+    if (L.dead || !L.on) continue;
+    if (L.follow) { const f = L.follow; if (f.dead || f.removed) { L.follow = null; } else { L.x = f.x + L.ox; L.y = f.y + L.oy; } }
+    let fi = 1;
+    if (L.flicker > 0) fi = 1 - L.flicker * lightNoise(T * L.flickerSpeed + L._seed);
+    L._fi = fi;
+    const I = L.intensity * L._k * fi; if (I <= 0.003) continue;
+    let sx, sy; const scl = L.screen ? 1 : z;
+    if (L.screen) { sx = L.x; sy = L.y; } else { sx = M[0] * L.x + M[2] * L.y + M[4]; sy = M[1] * L.x + M[3] * L.y + M[5]; }
+    const sr = L.r * scl * (1 - L.flicker * 0.06 * (1 - fi) * 4), px = sx * res, py = sy * res, pr = sr * res;
+    if (px + pr < 0 || px - pr > W || py + pr < 0 || py - pr > H || pr < 1) continue;
+    const o = list[n] || (list[n] = { cone: null, _cone: [0, 0, 0, 0] }); n++;
+    const c = L._col;
+    o.x = px; o.y = py; o.r = pr; o.cr = (cR(c) / 255) * I * 0.5; o.cg = (cG(c) / 255) * I * 0.5; o.cb = (cB(c) / 255) * I * 0.5;
+    let dx = 1, dy = 0;
+    if (L.cone != null && L.cone < Math.PI - 0.01) {
+      dx = Math.cos(L.dir); dy = Math.sin(L.dir);
+      if (!L.screen) { const tx = M[0] * dx + M[2] * dy, ty = M[1] * dx + M[3] * dy, l = Math.hypot(tx, ty) || 1; dx = tx / l; dy = ty / l; }
+      const soft = L.soft != null ? L.soft : Math.min(0.32, L.cone * 0.45), cn = o._cone;
+      cn[0] = dx; cn[1] = dy; cn[2] = Math.cos(Math.min(Math.PI, L.cone + soft * 0.5)); cn[3] = Math.cos(Math.max(0, L.cone - soft * 0.5)); o.cone = cn;
+    } else o.cone = null;
+    o.size = L.size * scl * res; o.soak = Light.soak * scl * res; o.sh = L.shadows !== false; o.fall = L.fall;
+    o.haze = Math.max(0, L.haze + Light.haze + Light._wHaze); if (o.haze > 0.002) haze = true;
+    vis.push({ x: sx, y: sy, r: sr, cr: o.cr * 2, cg: o.cg * 2, cb: o.cb * 2, cone: o.cone ? [dx, dy, o.cone[2], o.cone[3]] : null, fall: L.fall });
+  }
+  const zl = Light._zl || (Light._zl = []); zl.length = 0;
+  for (const Z of Light.zones) {
+    if (Z.dead) continue;
+    let x0, y0, x1, y1;
+    if (Z.screen) { x0 = Z.x * res; y0 = Z.y * res; x1 = (Z.x + Z.w) * res; y1 = (Z.y + Z.h) * res; }
+    else { const xs = [Z.x, Z.x + Z.w], ys = [Z.y, Z.y + Z.h]; x0 = y0 = Infinity; x1 = y1 = -Infinity; for (const xx of xs) for (const yy of ys) { const X = (M[0] * xx + M[2] * yy + M[4]) * res, Y = (M[1] * xx + M[3] * yy + M[5]) * res; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y); } }
+    if (x1 < 0 || y1 < 0 || x0 > W || y0 > H) continue;
+    const c = toColor(Z.ambient), k = Light._flash, fc = Light._flashColor;
+    zl.push({ x0: Math.max(-1e5, x0), y0: Math.max(-1e5, y0), x1: Math.min(1e5, x1), y1: Math.min(1e5, y1), r: lerp(cR(c) / 255, fc[0], k), g: lerp(cG(c) / 255, fc[1], k), b: lerp(cB(c) / 255, fc[2], k), a: Z.a, soft: Math.max(0.5, Z.soft * (Z.screen ? 1 : z) * res) });
+  }
+  const dark = amb[0] < 0.999 || amb[1] < 0.999 || amb[2] < 0.999 || zl.length > 0;
+  if (n || dark) {
+    const occ = Light.shadows && q.mask > 0 && (Light.shapes.length > 0 || !!Light.fn);
+    r.lighting({ ambient: amb, zones: zl, lights: list, n, scale: q.scale, mask: q.mask, reach: q.reach || 64, shadows: occ, steps: q.steps, drawOcc: occ ? drawOccluders : null, haze });
+  }
+  // 光源本身的光點（發光、不受明暗影響）
+  let anyGlow = false; for (const L of Light.lights) if (L.glow > 0 && L.on && !L.dead) { anyGlow = true; break; }
+  if (anyGlow) {
+    for (const space of ['world', 'screen']) withSpace(g, space, (gg) => {
+      for (const L of Light.lights) {
+        if (!(L.glow > 0) || !L.on || L.dead || (space === 'screen') !== !!L.screen) continue;
+        const k = L.glow * L._k * L._fi; if (k <= 0.01) continue;
+        const gr = L.glowR != null ? L.glowR : Math.max(6, L.r * 0.1);
+        gg.glow(L.x, L.y, gr * (0.85 + 0.15 * L._fi), L._col, { a: Math.min(1, k), core: 0.7 });
+        gg.glow(L.x, L.y, gr * 2.6, L._col, { a: Math.min(1, k) * 0.22 });
+      }
+    });
+  }
+};
+
+/** 給天氣用：螢幕上某一點（CSS px）被燈照到多少（不算陰影），回傳 0～ */
+Light.glint = (sx, sy) => {
+  let v = 0;
+  for (const l of Light._vis) {
+    const dx = sx - l.x, dy = sy - l.y, d2 = dx * dx + dy * dy, r2 = l.r * l.r; if (d2 >= r2) continue;
+    const s2 = d2 / r2, w = 1 - s2 * s2; let att = (w * w) / (1 + l.fall * s2);
+    if (l.cone) { const d = Math.sqrt(d2) || 1; att *= smoothstep(l.cone[2], l.cone[3], (dx * l.cone[0] + dy * l.cone[1]) / d); }
+    v += att * (0.2126 * l.cr + 0.7152 * l.cg + 0.0722 * l.cb);
+  }
+  return v;
+};
+
+/* ---------- 遊戲邏輯用：亮度、視線 ---------- */
+function segBox(x0, y0, x1, y1, b) {
+  let t0 = 0, t1 = 1; const dx = x1 - x0, dy = y1 - y0;
+  const p = [-dx, dx, -dy, dy], q = [x0 - b.x, b.x + b.w - x0, y0 - b.y, b.y + b.h - y0];
+  for (let i = 0; i < 4; i++) {
+    if (p[i] === 0) { if (q[i] < 0) return false; continue; }
+    const t = q[i] / p[i];
+    if (p[i] < 0) { if (t > t1) return false; if (t > t0) t0 = t; } else { if (t < t0) return false; if (t < t1) t1 = t; }
+  }
+  return true;
+}
+function segCircle(x0, y0, x1, y1, cx, cy, r) {
+  const dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy || 1, t = clamp01(((cx - x0) * dx + (cy - y0) * dy) / l2);
+  return dist2(x0 + dx * t, y0 + dy * t, cx, cy) < r * r;
+}
+function inPoly(x, y, p) {
+  let ins = false;
+  for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) { const xi = p[i], yi = p[i + 1], xj = p[j], yj = p[j + 1]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) ins = !ins; }
+  return ins;
+}
+function segSeg(ax, ay, bx, by, cx, cy, dx, dy) {
+  const d = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx); if (d === 0) return false;
+  const u = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / d, v = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / d;
+  return u >= 0 && u <= 1 && v >= 0 && v <= 1;
+}
+function shapeHas(s, x, y) {
+  if (s.kind === 'box') return x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h;
+  if (s.kind === 'circle') return dist2(x, y, s.x, s.y) <= s.r * s.r;
+  return inPoly(x, y, s.pts);
+}
+/** (x0,y0) 到 (x1,y1) 中間有沒有被擋光的形狀擋住（只看 box/circle/poly，不看 occluders 函式畫的）。端點所在的那塊不算（牆上的火把、貼牆站） */
+Light.blocked = (x0, y0, x1, y1) => {
+  for (const s of Light.shapes) {
+    if (s.dead || shapeHas(s, x0, y0) || shapeHas(s, x1, y1)) continue;
+    if (s.kind === 'box') { if (segBox(x0, y0, x1, y1, s)) return true; }
+    else if (s.kind === 'circle') { if (segCircle(x0, y0, x1, y1, s.x, s.y, s.r)) return true; }
+    else { const p = s.pts; for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) if (segSeg(x0, y0, x1, y1, p[j], p[j + 1], p[i], p[i + 1])) return true; }
+  }
+  return false;
+};
+function lightAtt(L, x, y) {
+  const dx = x - L.x, dy = y - L.y, d = Math.hypot(dx, dy), s = d / L.r; if (s >= 1) return 0;
+  const w = Math.max(0, 1 - s * s * s * s); let att = (w * w) / (1 + L.fall * s * s);
+  if (L.cone != null && L.cone < Math.PI - 0.01) {
+    const soft = L.soft != null ? L.soft : Math.min(0.32, L.cone * 0.45), ca = d > 1e-3 ? (dx * Math.cos(L.dir) + dy * Math.sin(L.dir)) / d : 1;
+    att *= Math.max(smoothstep(Math.cos(Math.min(Math.PI, L.cone + soft * 0.5)), Math.cos(Math.max(0, L.cone - soft * 0.5)), ca), (1 - smoothstep(0, 0.07, s)) * 0.55);
+  }
+  return att * L.intensity * L._k * L._fi;
+}
+/** 世界座標 (x, y) 有多亮：0＝全黑、1＝原色、>1＝曝光。o.shadows: false 不檢查遮擋 */
+Light.at = (x, y, o = {}) => {
+  if (!Light.active) return 1;
+  const a = Light._ambient(); let v = 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+  for (const Z of Light.zones) {
+    if (Z.dead || Z.screen) continue;
+    const d = Math.min(x - Z.x, Z.x + Z.w - x, y - Z.y, Z.y + Z.h - y); if (d <= 0) continue;
+    v = lerp(v, Color.luma(Z.ambient), smoothstep(0, Math.max(0.001, Z.soft), d) * Z.a);
+  }
+  for (const L of Light.lights) {
+    if (L.dead || !L.on || L.screen) continue;
+    const att = lightAtt(L, x, y); if (att <= 0.002) continue;
+    if (o.shadows !== false && L.shadows !== false && Light.blocked(x, y, L.x, L.y)) continue;
+    v += att * Color.luma(L._col);
+  }
+  return v;
+};
+/** 角色投影的方向：最亮的那盞燈的反方向；白天（環境光亮）用太陽 */
+Light.shadowDir = (x, y) => {
+  const sun = Light.sun; let best = null, bv = 0;
+  const amb = Light.active ? Light._ambient() : [1, 1, 1], sunK = Light.active ? 0.2126 * amb[0] + 0.7152 * amb[1] + 0.0722 * amb[2] : 1;
+  if (Light.active) for (const L of Light.lights) { if (L.dead || !L.on || L.screen) continue; const v = lightAtt(L, x, y) * Color.luma(L._col); if (v > bv) { bv = v; best = L; } }
+  if (best && bv * 1.4 > sunK * 0.6) {
+    const d = Math.hypot(x - best.x, y - best.y);
+    return { angle: Math.atan2(y - best.y, x - best.x), len: 0.45 + 1.1 * clamp01(d / best.r), k: clamp01(bv * 1.6) };
+  }
+  return { angle: sun.angle, len: sun.len, k: sunK * (sun.a / 0.4) };
+};
+
+/* ---------- 畫圖 API ---------- */
+/**
+ * 角色的投影（貼在地上的剪影）：o = { angle（不給＝自動）, len（相對身高，預設 0.7）, a（濃度，預設 0.42）, color, s/sx/sy, soft（預設 true：靠腳深、尾巴淡）,
+ *   flat（側視遊戲：影子落在地面上、從側面看是扁扁一條，往離燈的方向拖；flatY 扁的程度，預設 0.07） }
+ */
+Graphics.prototype.castShadow = function (f, x, y, o = {}) {
+  if (typeof f === 'string') f = Art.get(f); if (!f.tex) return this;
+  let ang = o.angle, len = o.len != null ? o.len : 0.7, a = o.a != null ? o.a : 0.42;
+  if (ang == null) { const s = Light.shadowDir(x, y); ang = s.angle; len *= s.len / 0.75; a *= Math.min(1, s.k); }
+  if (a <= 0.004 || len <= 0.01) return this;
+  const sc = o.s != null ? o.s : 1, Wd = f.w * sc * (o.sx || 1), Ht = f.h * sc * (o.sy || 1), dx = Math.cos(ang), dy = Math.sin(ang);
+  const col = o.color || '#000', layers = o.soft === false ? [[1, a]] : [[1, 0], [0.78, 0], [0.56, 0]];
+  if (o.soft !== false) { const k = 1 - Math.pow(1 - a, 1 / 3); for (const L of layers) L[1] = k; }
+  const fy = o.flatY != null ? o.flatY : 0.07;
+  for (const [lk, al] of layers) {
+    const la = o.flat ? Wd : -dy * Wd, lb = o.flat ? 0 : dx * Wd, lc = o.flat ? -dx * len * lk * Ht : -dx * len * lk * Ht, ld = o.flat ? -fy * Ht : -dy * len * lk * Ht;
+    this._emit(f.tex, la, lb, lc, ld, x - f.ax * la - f.ay * lc, y - f.ax * lb - f.ay * ld, f.u0, f.v0, f.u1, f.v1, this._col(col, al), MODE.silhouette, 0, 0);
+  }
+  return this;
+};
+/** 光束：從 (x, y) 往 angle 方向 len 長，寬度 w0 → w1；o = { a, add（預設 1 發光）, end（尾端濃度，預設 0）, color2（尾端顏色） } */
+Graphics.prototype.beam = function (x, y, angle, len, w0, w1, color, o) {
+  const a = o && o.a != null ? o.a : 1, add = o && o.add != null ? o.add : 1;
+  let c0 = this._col(color, a), c1 = this._col(o && o.color2 != null ? o.color2 : color, a * (o && o.end != null ? o.end : 0));
+  let dx = Math.cos(angle), dy = Math.sin(angle), hx = x, hy = y, n0 = Math.max(0.01, w0 / 2), n1 = Math.max(0.01, w1 / 2);
+  if (n0 > n1) { hx = x + dx * len; hy = y + dy * len; dx = -dx; dy = -dy; let t = n0; n0 = n1; n1 = t; t = c0; c0 = c1; c1 = t; }
+  const tx = hx + dx * len, ty = hy + dy * len, nx = -dy, ny = dx, k = n0 / n1, m = this.m;
+  const X = (px, py) => m[0] * px + m[2] * py + m[4], Y = (px, py) => m[1] * px + m[3] * py + m[5];
+  const ax = hx - nx * n0, ay = hy - ny * n0, bx = tx - nx * n1, by = ty - ny * n1, cx = tx + nx * n1, cy = ty + ny * n1, ex = hx + nx * n0, ey = hy + ny * n0;
+  this.r.quadv(null, X(ax, ay), Y(ax, ay), 0, -k, X(bx, by), Y(bx, by), 1, -1, X(cx, cy), Y(cx, cy), 1, 1, X(ex, ey), Y(ex, ey), 0, k, c0, c1, MODE.beam, clamp01(add), k);
+  return this;
+};
+
+/* ---------- 水面、熱浪（把畫面抓下來扭曲；要畫在被倒映的東西「之後」） ---------- */
+/**
+ * 水面：x, y, w, h 是水的範圍（世界座標，y＝水面那條線）。
+ * o = { mode: 'mirror'（側視：倒映水面上方的東西，預設）| 'flat'（俯視：波光＋水下扭曲）, shape: 'ellipse'（水窪、池塘：橢圓、邊緣柔和）,
+ *       color（水色，預設深藍綠）, depth（水色多濃 0～1，預設 0.45）, reflect（倒影多清楚 0～1，預設 0.65）,
+ *       ripple（波紋幅度，世界單位，預設 3）, speed（預設 1）, foam（水面亮線 0～1，預設 0.5）, sky（倒影超出畫面時用的顏色） }
+ */
+Graphics.prototype.water = function (x, y, w, h, o = {}) {
+  const m = this.m, X = (px, py) => m[0] * px + m[2] * py + m[4], Y = (px, py) => m[1] * px + m[3] * py + m[5];
+  const xs = [X(x, y), X(x + w, y), X(x, y + h), X(x + w, y + h)], ys = [Y(x, y), Y(x + w, y), Y(x, y + h), Y(x + w, y + h)];
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys), scale = Math.hypot(m[0], m[1]) || 1;
+  if (x1 <= 0 || y1 <= 0 || x0 >= this.r.w || y0 >= this.r.h) return this;
+  const mode = o.mode === 'flat' ? 1 : 0, amp = (o.ripple != null ? o.ripple : 3) * scale, c = toColor(o.color || '#123a4a'), sk = toColor(o.sky || '#05070c');
+  const src = mode === 0 ? [x0 - amp * 2, y0 - (y1 - y0) - amp * 3, x1 + amp * 2, y1 + amp * 2] : [x0 - amp * 2, y0 - amp * 2, x1 + amp * 2, y1 + amp * 2];
+  this.r.grab({ mode, rect: [x0, y0, x1, y1], src, time: Time.t, col: [cR(c) / 255, cG(c) / 255, cB(c) / 255, o.depth != null ? o.depth : 0.45],
+    amp, reflect: o.reflect != null ? o.reflect : 0.65, foam: o.foam != null ? o.foam : 0.5, scale, wx: x, wy: y, speed: o.speed != null ? o.speed : 1, sky: [cR(sk) / 255, cG(sk) / 255, cB(sk) / 255], shape: o.shape === 'ellipse' ? 1 : 0 });
+  return this;
+};
+/** 熱浪／扭曲（火堆上方、沙漠、傳送門）：o = { strength（世界單位，預設 4）, speed（預設 1）, shape: 'ellipse' } */
+Graphics.prototype.haze = function (x, y, w, h, o = {}) {
+  const m = this.m, scale = Math.hypot(m[0], m[1]) || 1, x0 = m[0] * x + m[2] * y + m[4], y0 = m[1] * x + m[3] * y + m[5], x1 = x0 + w * scale, y1 = y0 + h * scale, amp = (o.strength != null ? o.strength : 4) * scale;
+  if (x1 <= 0 || y1 <= 0 || x0 >= this.r.w || y0 >= this.r.h) return this;
+  this.r.grab({ mode: 2, rect: [x0, y0, x1, y1], src: [x0 - amp, y0 - amp, x1 + amp, y1 + amp], time: Time.t, col: [0, 0, 0, 0], amp, reflect: 0, foam: 0, scale, wx: x, wy: y, speed: o.speed != null ? o.speed : 1, sky: [0, 0, 0], shape: o.shape === 'ellipse' ? 1 : 0 });
+  return this;
+};
+
+/* ---- 26_weather.js ---- */
+/* ==========================================================================
+   26 天氣：雨、雪、霧、雷雨
+     PZ.weather.set('rain')                  'rain' 雨 | 'drizzle' 毛毛雨 | 'storm' 雷雨 | 'snow' 雪 | 'blizzard' 暴風雪 | 'fog' 濃霧 | 'mist' 薄霧 | 'clear' 放晴
+     PZ.weather.set('snow', { amount: 0.6, wind: -0.3, time: 4 })      強度、風、幾秒變過去（預設 2 秒）
+     PZ.weather.mix({ rain: 0.5, fog: 0.8, lightning: 0.3 })           自己調配方（0～1）
+     PZ.weather.wind = 0.4                   風（-1～1：雨絲斜、雪往旁邊飄、霧流動）
+     PZ.weather.strike()                     馬上打一道雷（閃光、照亮、雷聲）
+     PZ.weather.ground = (x) => y            側視遊戲：雨滴濺在哪條線上；俯視遊戲不用設（濺在畫面裡隨機的地方）
+     顏色：PZ.weather.rainColor / snowColor / fogColor / boltColor
+   - 霧畫在光影「之前」：會被燈照亮（手電筒照進霧裡有光柱）；雨、雪畫在光影「之後」：在燈下閃亮、黑暗裡淡淡的。
+   - 數量跟著畫質（粒子量）自動調；跟著鏡頭有一點視差，不會像貼在螢幕上。
+   - 場景切換時清掉（每個場景在 enter 自己設）。
+   ========================================================================== */
+const WEATHER_PRESETS = {
+  clear: {}, rain: { rain: 1, fog: 0.12 }, drizzle: { rain: 0.35, fog: 0.22 }, storm: { rain: 1, fog: 0.26, lightning: 1, wind: 0.45 },
+  snow: { snow: 1, fog: 0.16 }, blizzard: { snow: 1, fog: 0.5, wind: 0.85 }, fog: { fog: 1 }, mist: { fog: 0.5 },
+};
+const Weather = PZ.weather = {
+  name: 'clear', rain: 0, snow: 0, fog: 0, lightning: 0, wind: 0,
+  to: { rain: 0, snow: 0, fog: 0, lightning: 0 }, windTo: null, rate: 0.5, density: 1,
+  rainColor: '#b4c6de', snowColor: '#f4f8ff', fogColor: '#c3ccd8', boltColor: '#b9ccff',
+  ground: null, splashes: true,
+  drops: [], flakes: [], spl: [], bolts: [], _t: 0, _strikeIn: 3, _env: null, _cx: null, _cy: 0, _splAcc: 0,
+};
+Weather.set = (name, o = {}) => {
+  const p = WEATHER_PRESETS[name]; if (!p) { warnOnce('weather:' + name, '沒有這種天氣：' + name); return Weather; }
+  const k = o.amount != null ? o.amount : 1;
+  Weather.name = name;
+  Weather.mix({ rain: (p.rain || 0) * k, snow: (p.snow || 0) * k, fog: o.fog != null ? o.fog : Math.min(1, (p.fog || 0) * Math.max(k, 0.5)),
+    lightning: o.lightning != null ? o.lightning : p.lightning || 0, wind: o.wind != null ? o.wind : p.wind != null ? p.wind : (name === 'clear' ? 0 : undefined) }, o.time);
+  PZ.emit('weather', name);
+  return Weather;
+};
+Weather.mix = (o, time = 2) => {
+  for (const k of ['rain', 'snow', 'fog', 'lightning']) if (o[k] != null) Weather.to[k] = clamp01(o[k]);
+  if (o.wind != null) Weather.windTo = clamp(o.wind, -1, 1);
+  if (!(time > 0)) { for (const k in Weather.to) Weather[k] = Weather.to[k]; if (Weather.windTo != null) { Weather.wind = Weather.windTo; Weather.windTo = null; } }
+  Weather.rate = 1 / Math.max(0.01, time || 0.01);
+  if (Weather.to.lightning > 0 && Weather._strikeIn > 6) Weather._strikeIn = Rand.range(1.5, 4);
+  return Weather;
+};
+Weather.reset = () => {
+  Object.assign(Weather, { name: 'clear', rain: 0, snow: 0, fog: 0, lightning: 0, wind: 0, windTo: null, density: 1, ground: null, splashes: true, _env: null, _cx: null, _strikeIn: 3 });
+  Object.assign(Weather.to, { rain: 0, snow: 0, fog: 0, lightning: 0 });
+  Object.assign(Weather, { rainColor: '#b4c6de', snowColor: '#f4f8ff', fogColor: '#c3ccd8', boltColor: '#b9ccff' });
+  Weather.drops.length = 0; Weather.flakes.length = 0; Weather.spl.length = 0; Weather.bolts.length = 0;
+  Light._wHaze = 0;
+};
+Weather.active = () => Weather.rain > 0.002 || Weather.snow > 0.002 || Weather.fog > 0.002 || Weather.bolts.length > 0 || Weather.spl.length > 0 || Weather.drops.length > 0 || Weather.flakes.length > 0;
+
+/* ---------- 雷 ---------- */
+function boltPath(x0, y0, x1, y1, depth, disp) {
+  let pts = [{ x: x0, y: y0 }, { x: x1, y: y1 }];
+  for (let d = 0; d < depth; d++) {
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1], b = pts[i], nx = -(b.y - a.y), ny = b.x - a.x, l = Math.hypot(nx, ny) || 1, o = Rand.spread(disp);
+      out.push({ x: (a.x + b.x) / 2 + (nx / l) * o, y: (a.y + b.y) / 2 + (ny / l) * o }, b);
+    }
+    pts = out; disp *= 0.55;
+  }
+  return pts;
+}
+/** 打一道雷。o: { x, y（螢幕 CSS px，雷打到哪；不給隨機）, bolt: false 不畫閃電（只閃光）, delay（雷聲延遲秒，不給隨機）, sound: false } */
+Weather.strike = (o = {}) => {
+  const W = Screen.w, H = Screen.h;
+  Weather._env = { t: 0, p: [[0, 1], [0.085, 0.42], [0.165, 0.85]].map(([t, a]) => [t, a * Rand.range(0.75, 1)]) };
+  if (o.bolt !== false) {
+    const x0 = o.x != null ? o.x + Rand.spread(W * 0.12) : Rand.range(W * 0.12, W * 0.88), x1 = o.x != null ? o.x : x0 + Rand.spread(W * 0.18);
+    const y1 = o.y != null ? o.y : Rand.range(H * 0.3, H * 0.62), main = boltPath(x0, -12, x1, y1, 6, (y1 + 12) * 0.2), branches = [];
+    for (let k = Rand.int(1, 3); k > 0; k--) {
+      const p = main[Rand.int(4, main.length - 8)], a = Math.atan2(y1 + 12, x1 - x0) + Rand.sign() * Rand.range(0.35, 0.9), L = Rand.range(0.12, 0.3) * H;
+      branches.push(boltPath(p.x, p.y, p.x + Math.cos(a) * L, p.y + Math.sin(a) * L, 5, L * 0.22));
+    }
+    Weather.bolts.push({ main, branches, t: 0, life: 0.42 });
+    if (Weather.bolts.length > 3) Weather.bolts.shift();
+  }
+  Fx.flash('#dfe8ff', Light.active ? 0.14 : 0.42, 0.22);
+  if (o.sound !== false && Sfx.has('thunder')) {
+    const d = o.delay != null ? o.delay : Rand.range(0.2, 1.5);
+    PZ.after(d, () => { Sfx.play('thunder', { vol: clamp(1.15 - d * 0.4, 0.35, 1), pitch: Rand.range(0.85, 1.1) }); Cam.shake(Math.max(0, 0.12 - d * 0.06)); }, { real: true });
+  }
+  PZ.emit('lightning');
+};
+
+/* ---------- 霧的貼圖：可以無縫鋪的雜訊（第一次用到才做） ---------- */
+let FogCanvas = null;
+function fogFrame() {
+  if (Art.frames.has('pz.fog') && Art.frames.get('pz.fog').tex) return Art.frames.get('pz.fog');
+  const N = 128;
+  if (!FogCanvas) {
+    FogCanvas = document.createElement('canvas'); FogCanvas.width = FogCanvas.height = N;
+    const x = FogCanvas.getContext('2d'), img = x.createImageData(N, N), d = img.data, R = makeRng(41);
+    const octs = [[4, 0.52], [8, 0.27], [16, 0.14], [32, 0.07]], grids = octs.map(([P]) => { const a = new Float32Array(P * P); for (let i = 0; i < a.length; i++) a[i] = R.next(); return a; });
+    for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
+      let v = 0;
+      for (let k = 0; k < octs.length; k++) {
+        const P = octs[k][0], g = grids[k], fx = (xx / N) * P, fy = (y / N) * P, ix = Math.floor(fx), iy = Math.floor(fy), tx = fx - ix, ty = fy - iy;
+        const i0 = (iy % P) * P, i1 = ((iy + 1) % P) * P, j0 = ix % P, j1 = (ix + 1) % P, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+        v += octs[k][1] * lerp(lerp(g[i0 + j0], g[i0 + j1], sx), lerp(g[i1 + j0], g[i1 + j1], sx), sy);
+      }
+      const i = (y * N + xx) * 4; d[i] = d[i + 1] = d[i + 2] = 255; d[i + 3] = Math.round((0.18 + 0.82 * smoothstep(0.22, 0.85, v)) * 255);
+    }
+    x.putImageData(img, 0, 0);
+  }
+  // 自己一張貼圖（不放圖集：鋪的時候邊緣才不會有縫）；取樣範圍內縮半格
+  const f = Art.frames.get('pz.fog') || new Frame('pz.fog'); Art.frames.set('pz.fog', f);
+  const tex = Gfx.r.texCreate(N, N, { restore: (t) => { if (Gfx.r.texAlloc && Gfx.r.kind !== 'canvas2d') Gfx.r.texAlloc(t); Gfx.r.texUpload(t, FogCanvas, 0, 0); } });
+  Gfx.r.texUpload(tex, FogCanvas, 0, 0);
+  f.setRect(tex, 0.5, 0.5, N - 1, N - 1); f.w = N; f.h = N; f.ax = 0; f.ay = 0;
+  return f;
+}
+
+/* ---------- 模擬 ---------- */
+addSystem({
+  name: 'weather', order: 74,
+  update(dt) {
+    const W = Weather, st = W.rate * dt;
+    for (const k of ['rain', 'snow', 'fog', 'lightning']) W[k] = approach(W[k], W.to[k], st);
+    if (W.windTo != null) { W.wind = approach(W.wind, W.windTo, st * 1.2); if (W.wind === W.windTo) W.windTo = null; }
+    W._t += dt;
+    Light._wHaze = W.fog * 0.13 + W.rain * 0.06 + W.snow * 0.07;
+    if (!Weather.active()) { W._cx = null; return; }
+    const SW = Screen.w, SH = Screen.h, area = SW * SH, Q = Quality.cur.particles * W.density;
+    // 鏡頭視差：近的雨滴跟著世界走多一點
+    let px = 0, py = 0;
+    if (W._cx != null) { px = (Cam.x - W._cx) * (Cam.ez || 1); py = (Cam.y - W._cy) * (Cam.ez || 1); if (Math.abs(px) > SW || Math.abs(py) > SH) px = py = 0; }
+    W._cx = Cam.x; W._cy = Cam.y;
+    // 雨
+    const nR = Math.round(W.rain * Math.min(520, area / 2100) * Q), D = W.drops, wind = W.wind;
+    while (D.length < nR) D.push({ x: Rand.range(-60, SW + 60), y: Rand.range(-SH * 0.6, -10), z: Rand.range(0.3, 1), seed: Rand.next() });
+    for (let i = D.length - 1; i >= 0; i--) {
+      const d = D[i], sp = 650 + 950 * d.z;
+      d.x += (wind * 430 * d.z) * dt - px * (0.3 + 0.7 * d.z); d.y += sp * dt - py * (0.3 + 0.7 * d.z);
+      if (d.y > SH + 40 || d.x < -120 || d.x > SW + 120) {
+        if (i >= nR) { D.splice(i, 1); continue; }
+        d.z = Rand.range(0.3, 1); d.y = Rand.range(-SH * 0.25, -12); d.x = Rand.range(-60, SW + 60) - wind * 430 * d.z * (SH / (650 + 950 * d.z)) * 0.5;
+      }
+    }
+    // 雪
+    const nS = Math.round(W.snow * Math.min(420, area / 2500) * Q), Fl = W.flakes;
+    while (Fl.length < nS) Fl.push({ x: Rand.range(-20, SW + 20), y: Rand.range(-SH * 0.5, -6), z: Rand.range(0.25, 1), ph: Rand.angle(), f: Rand.range(0.6, 1.6), amp: Rand.range(14, 40) });
+    for (let i = Fl.length - 1; i >= 0; i--) {
+      const f = Fl[i];
+      f.x += (wind * 140 * f.z + Math.cos(W._t * f.f + f.ph) * f.amp * f.z) * dt - px * (0.25 + 0.75 * f.z); f.y += (26 + 78 * f.z) * dt - py * (0.25 + 0.75 * f.z);
+      if (f.x < -30) f.x += SW + 60; else if (f.x > SW + 30) f.x -= SW + 60;
+      if (f.y > SH + 20) { if (i >= nS) { Fl.splice(i, 1); continue; } f.y = Rand.range(-40, -6); f.x = Rand.range(-20, SW + 20); f.z = Rand.range(0.25, 1); }
+    }
+    // 水花（世界座標）
+    const S = W.spl;
+    for (let i = S.length - 1; i >= 0; i--) { S[i].t += dt; if (S[i].t >= S[i].life) S.splice(i, 1); }
+    if (W.splashes && W.rain > 0.02) {
+      W._splAcc += W.rain * 48 * (area / 360000) * Q * dt;
+      const v = Cam.view;
+      while (W._splAcc >= 1 && S.length < 160) {
+        W._splAcc -= 1;
+        const x = v.x + Rand.next() * v.w; let y = v.y + Rand.next() * v.h;
+        if (W.ground) { y = W.ground(x); if (y == null || !(y >= v.y - 20 && y <= v.y + v.h + 20)) continue; }
+        S.push({ x, y, t: 0, life: Rand.range(0.24, 0.38), s: Rand.range(0.6, 1.25) / Math.max(0.35, Math.min(2.5, Cam.ez || 1)) });
+      }
+      if (W._splAcc > 4) W._splAcc = 0;
+    }
+    // 雷
+    if (W.lightning > 0.03) { W._strikeIn -= dt; if (W._strikeIn <= 0) { Weather.strike(); W._strikeIn = Rand.range(2.5, 9) / Math.max(0.3, W.lightning); } }
+  },
+  frame(rdt) {
+    const W = Weather;
+    for (let i = W.bolts.length - 1; i >= 0; i--) { const b = W.bolts[i]; b.t += rdt; if (b.t >= b.life) W.bolts.splice(i, 1); }
+    const e = W._env;
+    if (e) {
+      e.t += rdt; let v = 0;
+      for (const [t0, a] of e.p) if (e.t >= t0) v += a * Math.exp(-(e.t - t0) * 16);
+      Light._flash = Math.max(Light._flash, Math.min(1, v * 0.85) * Settings.flashScale()); Light._flashDecay = 6;
+      W._envV = v; if (e.t > 1.2) { W._env = null; W._envV = 0; }
+    }
+  },
+});
+
+/* ---------- 畫 ---------- */
+/** 霧：光影之前（會被燈照亮） */
+Weather._drawUnder = (g) => {
+  if (Weather.fog < 0.004) return;
+  const f = fogFrame(); if (!f || !f.tex) return;
+  withSpace(g, 'world', (gg) => {
+    const v = Cam.view, t = Weather._t, w = Weather.wind, pad = 80, a = Weather.fog;
+    const x = v.x - pad, y = v.y - pad, W = v.w + pad * 2, H = v.h + pad * 2;
+    gg.rect(x, y, W, H, Weather.fogColor, { a: a * 0.12 });
+    gg.tile(f, x, y, W, H, { s: 6, ox: -t * (9 + w * 70), oy: -t * 3, a: a * 0.27, color: Weather.fogColor });
+    gg.tile(f, x, y, W, H, { s: 3.6, ox: -t * (16 + w * 110) + 300, oy: t * 2.5 + 170, a: a * 0.17, color: Weather.fogColor });
+  });
+};
+/** 雨、雪、水花、閃電：光影之後 */
+Weather._drawOver = (g) => {
+  const W = Weather;
+  if (!W.drops.length && !W.flakes.length && !W.spl.length && !W.bolts.length) return;
+  const lit = Light.active, amb = lit ? Light._ambient() : null, e = lit ? clamp(0.16 + (0.2126 * amb[0] + 0.7152 * amb[1] + 0.0722 * amb[2]), 0.16, 1.15) : 1;
+  const glint = lit && Light._vis.length > 0;
+  if (W.spl.length) withSpace(g, 'world', (gg) => {
+    const col = toColor(W.rainColor);
+    for (const s of W.spl) {
+      const k = s.t / s.life, r = (2 + 11 * Ease.outQuad(k)) * s.s, al = (1 - k) * 0.55 * Math.min(1, e + (glint ? Light.glint(Cam.toScreenX(s.x, s.y), Cam.toScreenY(s.x, s.y)) * 1.5 : 0));
+      if (al < 0.01) continue;
+      gg.save(); gg.translate(s.x, s.y); gg.scale(1, 0.38); gg.ring(0, 0, r, 1.2 * s.s, col, { a: al }); gg.restore();
+      const hy = (16 * k - 22 * k * k) * s.s * 1.4, hx = 6 * k * s.s;
+      if (hy > 0) { gg.circle(s.x - hx, s.y - hy, 0.9 * s.s, col, { a: al }); gg.circle(s.x + hx * 0.8, s.y - hy * 0.85, 0.8 * s.s, col, { a: al }); }
+    }
+  });
+  if (W.drops.length || W.flakes.length || W.bolts.length) withSpace(g, 'screen', (gg) => {
+    if (W.drops.length) {
+      const col = toColor(W.rainColor), wind = W.wind;
+      for (const d of W.drops) {
+        const sp = 650 + 950 * d.z, vx = wind * 430 * d.z, l = Math.hypot(vx, sp), len = (9 + 24 * d.z) * (0.7 + 0.3 * W.rain);
+        let b = e; if (glint) b = Math.min(1.6, e + Light.glint(d.x, d.y) * 1.6);
+        const al = (0.1 + 0.34 * d.z) * b * Math.min(1, W.rain * 3);
+        if (al < 0.012) continue;
+        gg.line(d.x, d.y, d.x - (vx / l) * len, d.y - (sp / l) * len, 0.8 + d.z * 1.1, col, { a: Math.min(0.85, al), add: b > 1 ? 0.5 : 0 });
+      }
+    }
+    if (W.flakes.length) {
+      const col = toColor(W.snowColor);
+      for (const f of W.flakes) {
+        let b = e; if (glint) b = Math.min(1.5, e + Light.glint(f.x, f.y) * 1.4);
+        const r = 1 + f.z * 2.8, al = (0.4 + 0.5 * f.z) * b * Math.min(1, W.snow * 3);
+        if (al < 0.015) continue;
+        if (f.z > 0.82) gg.glow(f.x, f.y, r * 2.6, col, { a: al * 0.55, add: 0.35 });
+        else gg.circle(f.x, f.y, r, col, { a: Math.min(1, al) });
+      }
+    }
+    for (const bo of W.bolts) {
+      const k = bo.t / bo.life, v = (1 - k) * (0.55 + 0.45 * (Math.sin(bo.t * 70) > -0.3 ? 1 : 0.2));
+      const seg = (pts, w) => { for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; gg.line(a.x, a.y, b.x, b.y, w * 5, W.boltColor, { a: 0.14 * v, add: 1 }); gg.line(a.x, a.y, b.x, b.y, w, '#fff', { a: 0.95 * v, add: 1 }); } };
+      seg(bo.main, 2.4); for (const br of bo.branches) seg(br, 1.3);
+    }
+  });
+};
+
+/* ---- 27_cinema.js ---- */
+/* ==========================================================================
+   27 電影感：調色（LUT）、黑邊
+     PZ.post.grade('cinema')                  套用調色（預設 0.8 秒淡過去）
+       'cinema' 青橘電影  'warm' 暖  'cold' 冷  'noir' 黑白  'sepia' 舊照片  'horror' 恐怖  'dream' 夢境
+       'night' 夜晚  'sunset' 夕陽  'neon' 霓虹  'toxic' 毒氣  'vivid' 鮮豔  'bleach' 漂白  'retro' 復古
+     PZ.post.grade('noir', { time: 1.5, amount: 0.8 })                 1.5 秒換過去、強度八成
+     PZ.post.grade({ temp: 0.4, sat: 1.2, contrast: 0.2, lift: [0, 0, 0.05] })   自己調（欄位見下面 gradeColor）
+     PZ.post.grade(null)                      回到原色
+     PZ.post.grades                           全部預設的名字＋中文
+     PZ.fx.letterbox(0.12)                    電影黑邊：上下各佔畫面高度 12%（預設 0.6 秒滑進來）；PZ.fx.letterbox(0) 收起來
+   調色只在有後製的時候有效（Canvas2D 後備模式、最低畫質沒有）；黑邊一直都有。
+   ========================================================================== */
+const GRADES = {
+  cinema: { name: '電影', temp: 0.04, contrast: 0.18, sat: 1.04, lift: [0, 0.008, 0.02], split: { shadow: '#0f6f7d', highlight: '#ffad6a', amount: 0.34 } },
+  warm: { name: '暖', temp: 0.42, sat: 1.07, contrast: 0.08, gain: [1.04, 1, 0.95] },
+  cold: { name: '冷', temp: -0.45, sat: 0.9, contrast: 0.12, lift: [0, 0.01, 0.04] },
+  noir: { name: '黑白', mono: 1, contrast: 0.5, gamma: 0.94, fade: 0.015 },
+  sepia: { name: '舊照片', mono: 1, monoColor: '#d1a877', fade: 0.09, contrast: -0.04 },
+  horror: { name: '恐怖', sat: 0.42, temp: -0.12, tint: 0.28, contrast: 0.32, gamma: 0.9, split: { shadow: '#1f3b29', highlight: '#cfdcb4', amount: 0.26 } },
+  dream: { name: '夢境', fade: 0.08, sat: 1.12, contrast: -0.12, gain: [1.03, 1, 1.04], split: { shadow: '#6b4ea0', highlight: '#ffd8ea', amount: 0.32 } },
+  night: { name: '夜晚', temp: -0.6, sat: 0.66, exposure: -0.4, contrast: 0.12, lift: [0, 0.01, 0.05] },
+  sunset: { name: '夕陽', temp: 0.55, tint: -0.16, sat: 1.15, contrast: 0.1, split: { shadow: '#5b2b6c', highlight: '#ffb45c', amount: 0.36 } },
+  neon: { name: '霓虹', sat: 1.32, vibrance: 0.4, contrast: 0.2, split: { shadow: '#3c1b8c', highlight: '#2fe6ff', amount: 0.3 } },
+  toxic: { name: '毒氣', sat: 0.9, tint: 0.5, contrast: 0.16, split: { shadow: '#1e3d10', highlight: '#c8ff6a', amount: 0.42 } },
+  vivid: { name: '鮮豔', sat: 1.28, vibrance: 0.3, contrast: 0.12 },
+  bleach: { name: '漂白', sat: 0.45, contrast: 0.42, gain: [1.02, 1.02, 1.02], fade: 0.02 },
+  retro: { name: '復古', fade: 0.12, sat: 0.84, temp: 0.2, contrast: -0.08, split: { shadow: '#2a4b5c', highlight: '#f2d18f', amount: 0.26 } },
+};
+const vec3of = (v, d) => (v == null ? [d, d, d] : typeof v === 'number' ? [v, v, v] : v);
+const rgb01 = (c) => { c = toColor(c); return [cR(c) / 255, cG(c) / 255, cB(c) / 255]; };
+/**
+ * 一個顏色經過調色。P 的欄位（都可以不給）：
+ *   exposure（曝光，格數，-1 暗一半）  temp（-1 冷～1 暖）  tint（-1 洋紅～1 綠）
+ *   contrast（-0.5～1，S 曲線）  lift / gamma / gain（暗部／中間調／亮部，數字或 [r,g,b]）
+ *   sat（飽和度，1＝原樣）  vibrance（只拉不飽和的顏色）  split: { shadow, highlight, amount, balance }（暗部、亮部各染一種顏色）
+ *   fade（黑色抬起來的霧面感）  mono（0～1 變黑白）, monoColor（黑白帶的顏色，例如舊照片的褐色）
+ */
+function gradeColor(r, g, b, P, sh, hi, mono) {
+  if (P.exposure) { const e = Math.pow(2, P.exposure); r *= e; g *= e; b *= e; }
+  if (P.temp) { r *= 1 + P.temp * 0.11; g *= 1 + P.temp * 0.015; b *= 1 - P.temp * 0.12; }
+  if (P.tint) { g *= 1 + P.tint * 0.09; r *= 1 - P.tint * 0.03; b *= 1 - P.tint * 0.03; }
+  const lift = vec3of(P.lift, 0), gam = vec3of(P.gamma, 1), gain = vec3of(P.gain, 1), out = [r, g, b];
+  for (let i = 0; i < 3; i++) {
+    let x = Math.max(0, out[i]);
+    if (P.contrast) { const k = 1 + P.contrast; x = Math.min(1, x); x = x < 0.5 ? 0.5 * Math.pow(2 * x, k) : 1 - 0.5 * Math.pow(2 - 2 * x, k); }
+    x = gain[i] * (x + lift[i] * (1 - x));
+    x = Math.pow(Math.max(0, x), 1 / Math.max(0.05, gam[i]));
+    out[i] = x;
+  }
+  [r, g, b] = out;
+  let l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const sat = P.sat != null ? P.sat : 1;
+  if (sat !== 1) { r = l + (r - l) * sat; g = l + (g - l) * sat; b = l + (b - l) * sat; }
+  if (P.vibrance) { const mx = Math.max(r, g, b), mn = Math.min(r, g, b), k = 1 + P.vibrance * (1 - clamp01((mx - mn) * 2)); r = l + (r - l) * k; g = l + (g - l) * k; b = l + (b - l) * k; }
+  if (sh) {
+    l = clamp01(0.2126 * r + 0.7152 * g + 0.0722 * b);
+    const bal = P.split.balance || 0, amt = P.split.amount != null ? P.split.amount : 0.3;
+    const ws = (1 - smoothstep(0, 0.55 + bal * 0.3, l)) * amt, wh = smoothstep(0.45 + bal * 0.3, 1, l) * amt;
+    r += (sh[0] - sh[3]) * ws + (hi[0] - hi[3]) * wh; g += (sh[1] - sh[3]) * ws + (hi[1] - hi[3]) * wh; b += (sh[2] - sh[3]) * ws + (hi[2] - hi[3]) * wh;
+  }
+  if (mono) { l = 0.2126 * r + 0.7152 * g + 0.0722 * b; const k = P.mono; r = lerp(r, l * mono[0], k); g = lerp(g, l * mono[1], k); b = lerp(b, l * mono[2], k); }
+  if (P.fade) { const f = P.fade; r = f + r * (1 - f); g = f + g * (1 - f); b = f + b * (1 - f); }
+  return [r, g, b];
+}
+/** 做一張 16³ 調色表（256×16 RGBA） */
+function makeLut(P) {
+  P = P || {};
+  const d = new Uint8Array(256 * 16 * 4), withL = (c) => { const v = rgb01(c); v.push(0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]); return v; };
+  const sh = P.split ? withL(P.split.shadow || '#000') : null, hi = P.split ? withL(P.split.highlight || '#fff') : null;
+  let mono = null; if (P.mono) { mono = rgb01(P.monoColor || '#fff'); const l = 0.2126 * mono[0] + 0.7152 * mono[1] + 0.0722 * mono[2] || 1; mono = mono.map((v) => v / l); }
+  for (let bi = 0; bi < 16; bi++) for (let gi = 0; gi < 16; gi++) for (let ri = 0; ri < 16; ri++) {
+    const c = gradeColor(ri / 15, gi / 15, bi / 15, P, sh, hi, mono), i = (gi * 256 + bi * 16 + ri) * 4;
+    d[i] = Math.round(clamp01(c[0]) * 255); d[i + 1] = Math.round(clamp01(c[1]) * 255); d[i + 2] = Math.round(clamp01(c[2]) * 255); d[i + 3] = 255;
+  }
+  return d;
+}
+let LutVer = 0, LutIdent = null;
+const lutIdent = () => LutIdent || (LutIdent = makeLut({}));
+function lutBlend(a, b, t) { const o = new Uint8Array(a.length); for (let i = 0; i < a.length; i++) o[i] = Math.round(a[i] + (b[i] - a[i]) * t); return o; }
+/* Post._lut：{ a, va, b, vb, mix（0～1 從 a 換到 b）, amt（整體強度）} 由 07_gl 的合成著色器讀 */
+const Cinema = PZ.cinema = { bars: 0, barsFrom: 0, barsTo: 0, barsT: 0, barsDur: 0, _gAmtTo: 0, _gAmtRate: 1, _gMixRate: 0 };
+Post.grades = Object.fromEntries(Object.entries(GRADES).map(([k, v]) => [k, v.name]));
+Post.gradeName = null;
+Post.grade = (p, o = {}) => {
+  const time = o.time != null ? o.time : 0.8, amount = o.amount != null ? clamp01(o.amount) : 1;
+  let P = null;
+  if (typeof p === 'string') { P = GRADES[p]; if (!P) { warnOnce('grade:' + p, '沒有這種調色：' + p); return; } }
+  else if (p && typeof p === 'object') P = p;
+  const L = Post._lut || (Post._lut = { a: lutIdent(), va: ++LutVer, b: null, vb: 0, mix: 0, amt: 0 });
+  if (L.b && L.mix > 0) { L.a = lutBlend(L.a, L.b, L.mix); L.va = ++LutVer; }
+  L.b = null; L.mix = 0;
+  Post.gradeName = typeof p === 'string' ? p : P ? 'custom' : null;
+  const rate = 1 / Math.max(0.001, time);
+  if (!P) { Cinema._gAmtTo = 0; Cinema._gAmtRate = rate; return; }
+  const data = makeLut(P);
+  if (L.amt <= 0.001 || time <= 0) { L.a = data; L.va = ++LutVer; if (time <= 0) L.amt = amount; }
+  else { L.b = data; L.vb = ++LutVer; Cinema._gMixRate = rate; }
+  Cinema._gAmtTo = amount; Cinema._gAmtRate = rate;
+};
+/** 電影黑邊：amount＝上下各佔畫面高度幾成（0～0.3），time 秒 */
+Fx.letterbox = (amount = 0.12, time = 0.6) => { const C = Cinema; C.barsFrom = C.bars; C.barsTo = clamp(amount, 0, 0.3); C.barsT = 0; C.barsDur = Math.max(0, time); if (time <= 0) C.bars = C.barsTo; };
+Cinema.reset = () => { Cinema.bars = Cinema.barsTo = Cinema.barsFrom = 0; Cinema.barsDur = 0; };
+addSystem({
+  name: 'cinema', order: 76,
+  frame(rdt) {
+    const C = Cinema, L = Post._lut;
+    if (C.bars !== C.barsTo) { C.barsT += rdt; C.bars = C.barsDur > 0 ? lerp(C.barsFrom, C.barsTo, Ease.inOutQuad(clamp01(C.barsT / C.barsDur))) : C.barsTo; }
+    if (L) {
+      if (L.b) { L.mix = Math.min(1, L.mix + C._gMixRate * rdt); if (L.mix >= 1) { L.a = L.b; L.va = L.vb; L.b = null; L.mix = 0; } }
+      if (L.amt !== C._gAmtTo) L.amt = approach(L.amt, C._gAmtTo, C._gAmtRate * rdt);
+    }
+  },
+});
+Cinema._drawBars = (g) => {
+  if (Cinema.bars < 0.0005) return;
+  const h = Screen.h * Cinema.bars;
+  g.rect(-2, -2, Screen.w + 4, h + 2, '#000'); g.rect(-2, Screen.h - h, Screen.w + 4, h + 2, '#000');
+};
+
+/* ---- 28_anim.js ---- */
+/* ==========================================================================
+   28 角色動畫（一）：讓「一張圖」的角色活起來、會飄的東西、逐格動畫
+     PZ.juice(o)       程序動畫：呼吸、走路起伏與搖擺、前傾、轉身、跳躍拉長、落地壓扁、受擊抖動與閃白
+       const j = PZ.juice();  每格 j.update(dt, { vx, vy, grounded, face });  畫：j.draw(g, 'slime', x, y, { s: 1.2 })
+       j.hit(力道, 方向)  j.land(力道)  j.jump()  j.pulse(0.2)  j.set({ breathe: 0 })
+     PZ.chain(o)       繩子、披風、圍巾、尾巴、頭髮、觸手（verlet）：每格 c.pin(x, y) → c.update(dt) → g.chain(c, { w0, w1, color })
+     PZ.animator(defs) 逐格動畫狀態機：播放、不循環播完接下一個、某一格發事件（腳步聲、出招判定）
+   ========================================================================== */
+
+/* ---------- PZ.juice：程序動畫 ---------- */
+const JUICE_DEF = { breathe: 0.022, breatheRate: 0.42, bob: 2.6, waddle: 0.07, step: 0.045, lean: 0.1, leanSpeed: 320, turn: 0.13, k: 420, d: 15, shake: 1 };
+class Juice {
+  constructor(o) {
+    this.o = Object.assign({}, JUICE_DEF, o);
+    this.sx = new Spring(1, { k: this.o.k, d: this.o.d }); this.sy = new Spring(1, { k: this.o.k, d: this.o.d }); this.rot = new Spring(0, { k: this.o.k * 0.6, d: this.o.d });
+    this.t = Rand.range(0, 10); this.phase = 0; this.move = 0; this.face = 1; this.turnT = 0; this.flash = 0; this.shakeT = 0; this.shakeA = 0; this.air = 0; this.grounded = true;
+    this.ox = 0; this.oy = 0;
+  }
+  set(o) { Object.assign(this.o, o); return this; }
+  /** 每格呼叫：s = { vx, vy, grounded, face }（都可以不給） */
+  update(dt, s) {
+    if (!(dt > 0)) return this;
+    const o = this.o, vx = (s && s.vx) || 0, vy = (s && s.vy) || 0, grounded = !s || s.grounded !== false, sp = Math.abs(vx);
+    this.t += dt;
+    let face = s && s.face != null ? Math.sign(s.face) : (sp > 8 ? Math.sign(vx) : 0);
+    if (face && face !== this.face) { this.face = face; this.turnT = o.turn; }
+    this.turnT = Math.max(0, this.turnT - dt);
+    if (grounded && sp > 6) { this.phase += sp * o.step * dt; this.move = Math.min(1, this.move + dt * 6); } else this.move = Math.max(0, this.move - dt * 5);
+    // 落地：從空中回到地面時自動壓扁
+    if (grounded && !this.grounded && this.air > 0.08) this.land(Math.min(1, Math.abs(this._vyLast || 0) / 600 + 0.25));
+    if (!grounded) this.air += dt; else this.air = 0;
+    this.grounded = grounded; this._vyLast = vy;
+    // 目標：空中依速度拉長；地上 1
+    const stretch = grounded ? 0 : clamp(-vy / 900, -0.12, 0.18);
+    this.sy.target = 1 + stretch; this.sx.target = 1 - stretch * 0.6;
+    this.rot.target = clamp(vx / o.leanSpeed, -1, 1) * o.lean * (grounded ? 1 : 0.6);
+    const n = Math.ceil(dt / 0.008); for (let i = 0; i < n; i++) { this.sx.step(dt / n); this.sy.step(dt / n); this.rot.step(dt / n); }
+    this.flash = Math.max(0, this.flash - dt * 7);
+    if (this.shakeT > 0) { this.shakeT = Math.max(0, this.shakeT - dt); }
+    return this;
+  }
+  /** 被打：力道 0～1（或更大）、方向（弧度，從哪裡被打過來；不給就原地抖） */
+  hit(power = 0.6, dir) {
+    const p = Math.max(0.1, power);
+    this.flash = Math.min(1, 0.6 + p * 0.5); this.shakeT = 0.12 + p * 0.18; this.shakeA = (2 + p * 5) * this.o.shake;
+    this.sx.kick(p * 7); this.sy.kick(-p * 7);
+    if (dir != null) this.rot.kick(Math.cos(dir) * p * 9);
+    return this;
+  }
+  /** 落地壓扁 */
+  land(power = 0.6) { this.sy.kick(-power * 9); this.sx.kick(power * 7); return this; }
+  /** 起跳拉長 */
+  jump(power = 0.7) { this.sy.kick(power * 8); this.sx.kick(-power * 5); return this; }
+  /** 一下脈動（撿到東西、升級、被選到） */
+  pulse(k = 0.25) { this.sx.kick(k * 14); this.sy.kick(k * 14); return this; }
+  /** 算出這一格的變形（不畫）：{ dx, dy, r, sx, sy, flash } */
+  pose() {
+    const o = this.o, br = Math.sin(this.t * Math.PI * 2 * o.breatheRate) * o.breathe * (1 - this.move);
+    const stepS = Math.sin(this.phase * Math.PI * 2), bob = Math.abs(stepS) * o.bob * this.move;
+    let fx = this.face;
+    if (this.turnT > 0) fx *= Math.max(0.05, Math.abs(Math.cos((1 - this.turnT / o.turn) * Math.PI)));   // 轉身：像紙片一樣翻過去
+    const sh = this.shakeT > 0 ? this.shakeA * (this.shakeT / 0.3) : 0;
+    const p = this._p || (this._p = {});
+    p.dx = sh ? Rand.spread(sh) : 0; p.dy = -bob + (sh ? Rand.spread(sh * 0.5) : 0);
+    p.r = this.rot.value + stepS * o.waddle * this.move;
+    p.sx = this.sx.value * (1 - br * 0.5) * fx; p.sy = this.sy.value * (1 + br); p.flash = this.flash;
+    return p;
+  }
+  /** 直接畫：o = { s, sx, sy, a, color, add, r, ax, ay } */
+  draw(g, f, x, y, o) {
+    const p = this.pose(), s = o && o.s != null ? o.s : 1;
+    g.spr(f, x + p.dx, y + p.dy, p.r + ((o && o.r) || 0), p.sx * s * (o && o.sx != null ? o.sx : 1), p.sy * s * (o && o.sy != null ? o.sy : 1), o && o.a != null ? o.a : 1, o && o.color, (o && o.add) || 0, Math.max(p.flash, (o && o.flash) || 0), o && o.ax, o && o.ay);
+    return this;
+  }
+}
+PZ.juice = (o) => new Juice(o);
+PZ.Juice = Juice;
+
+/* ---------- PZ.chain：繩子、披風、尾巴（verlet） ---------- */
+/**
+ * o = { n（節數，預設 8）, len（每節長度，預設 8）, gravity（預設 600）, damping（0～1，預設 0.94）, iterations（預設 4）,
+ *       stiff（0～1 不容易彎，預設 0.1）, dir（不受力時往哪個方向垂，弧度，預設 π/2 往下）, wind（受天氣的風影響多少，預設 1）,
+ *       ground（地面 y，或 (x) => y）, x, y（一開始的位置） }
+ */
+class Chain {
+  constructor(o = {}) {
+    this.o = Object.assign({ n: 8, len: 8, gravity: 600, damping: 0.94, iterations: 4, stiff: 0.1, dir: Math.PI / 2, wind: 1, ground: null, x: 0, y: 0 }, o);
+    const { n, len, dir, x, y } = this.o;
+    this.pts = []; for (let i = 0; i < n; i++) { const px = x + Math.cos(dir) * len * i, py = y + Math.sin(dir) * len * i; this.pts.push({ x: px, y: py, px, py }); }
+    this.acc = 0; this.ax = x; this.ay = y; this.aa = null; this.fx = 0; this.fy = 0;
+  }
+  /** 把第一節釘在 (x, y)；angle：第一節要往哪個方向延伸（尾巴、圍巾用；不給就自由垂） */
+  pin(x, y, angle) { this.ax = x; this.ay = y; this.aa = angle == null ? null : angle; return this; }
+  /** 額外的力（爆炸、衝刺），一格有效 */
+  push(fx, fy) { this.fx += fx; this.fy += fy; return this; }
+  /** 一下子全部移到某處（傳送、換場景時避免甩一大圈） */
+  reset(x, y) { const { len, dir } = this.o; this.pts.forEach((p, i) => { p.x = p.px = x + Math.cos(dir) * len * i; p.y = p.py = y + Math.sin(dir) * len * i; }); this.ax = this._lx = x; this.ay = this._ly = y; return this; }
+  update(dt) {
+    if (!(dt > 0)) return this;
+    const H = 1 / 120; this.acc = Math.min(this.acc + dt, 0.1);
+    // 釘住的點在這幾小步之間平順移過去（不然一格跳一大段，鏈子會被甩出去）
+    const n = Math.floor(this.acc / H), tx = this.ax, ty = this.ay, sx = this._lx == null ? tx : this._lx, sy = this._ly == null ? ty : this._ly;
+    for (let i = 1; i <= n; i++) { this.ax = sx + (tx - sx) * (i / n); this.ay = sy + (ty - sy) * (i / n); this._step(H); }
+    this.acc -= n * H; this.ax = tx; this.ay = ty; if (n > 0) { this._lx = tx; this._ly = ty; }
+    this.fx = this.fy = 0;
+    return this;
+  }
+  _step(h) {
+    const o = this.o, P = this.pts, n = P.length, wind = (typeof Weather !== 'undefined' ? Weather.wind : 0) * o.wind * 260;
+    const gx = this.fx + wind, gy = o.gravity + this.fy, damp = Math.pow(o.damping, h * 60);
+    P[0].px = P[0].x; P[0].py = P[0].y; P[0].x = this.ax; P[0].y = this.ay;
+    for (let i = 1; i < n; i++) {
+      const p = P[i], vx = (p.x - p.px) * damp, vy = (p.y - p.py) * damp;
+      p.px = p.x; p.py = p.y;
+      p.x += vx + gx * h * h * (0.7 + 0.3 * i / n); p.y += vy + gy * h * h;
+    }
+    const L = o.len, ground = o.ground;
+    for (let it = 0; it < o.iterations; it++) {
+      P[0].x = this.ax; P[0].y = this.ay;
+      for (let i = 1; i < n; i++) {
+        const a = P[i - 1], b = P[i];
+        let dx = b.x - a.x, dy = b.y - a.y; const d = Math.hypot(dx, dy) || 1e-6, diff = (d - L) / d;
+        if (i === 1) { b.x -= dx * diff; b.y -= dy * diff; } else { a.x += dx * diff * 0.5; a.y += dy * diff * 0.5; b.x -= dx * diff * 0.5; b.y -= dy * diff * 0.5; }
+        // 不容易彎：往「上一節的方向」（第一節：釘住的方向）拉一點
+        if (o.stiff > 0) {
+          let ux, uy;
+          if (i === 1) { if (this.aa == null) continue; ux = Math.cos(this.aa); uy = Math.sin(this.aa); }
+          else { const z = P[i - 2]; ux = a.x - z.x; uy = a.y - z.y; const l = Math.hypot(ux, uy) || 1; ux /= l; uy /= l; }
+          const tx = a.x + ux * L, ty = a.y + uy * L, k = o.stiff * (i === 1 ? 1 : 0.6);
+          b.x += (tx - b.x) * k; b.y += (ty - b.y) * k;
+        }
+      }
+      if (ground != null) for (let i = 1; i < n; i++) { const p = P[i], gy0 = typeof ground === 'function' ? ground(p.x) : ground; if (gy0 != null && p.y > gy0) { p.y = gy0; p.px += (p.x - p.px) * 0.4; } }
+    }
+  }
+  get tip() { return this.pts[this.pts.length - 1]; }
+}
+PZ.chain = (o) => new Chain(o);
+PZ.Chain = Chain;
+/** 把鏈子畫成一條帶子：o = { w0（根部寬）, w1（尾端寬）, color, color2, a, add } */
+Graphics.prototype.chain = function (c, o = {}) {
+  const color = o.color || '#fff';
+  return this.trail(c.pts, o.w0 != null ? o.w0 : 6, o.w1 != null ? o.w1 : 2, color, o.color2 != null ? o.color2 : color, { a: o.a, add: o.add || 0 });
+};
+
+/* ---------- PZ.animator：逐格動畫狀態機 ---------- */
+/**
+ * defs = { idle: { frames: ['hero:0', …] 或 'hero'（自動找 hero:0、hero:1…）, fps: 8, loop: true },
+ *          attack: { frames: 'atk', fps: 16, loop: false, next: 'idle', events: { 3: 'hit' } } }
+ * const an = PZ.animator(defs, 'idle');  an.play('attack');  an.on('hit', () => …);  每格 an.update(dt)；畫 g.sprite(an.frame, x, y)
+ */
+class Animator {
+  constructor(defs, start) {
+    makeEmitter(this);
+    this.defs = {}; for (const k in defs) this.defs[k] = this._norm(defs[k]);
+    this.name = ''; this.cur = null; this.t = 0; this.i = 0; this.speed = 1; this.done = false;
+    if (start || Object.keys(this.defs)[0]) this.play(start || Object.keys(this.defs)[0]);
+  }
+  _norm(d) {
+    let fr = d.frames;
+    if (typeof fr === 'string') { const base = fr; fr = []; for (let i = 0; Art.has(`${base}:${i}`); i++) fr.push(`${base}:${i}`); if (!fr.length) fr = [base]; }
+    return { frames: fr.map((f) => Art.get(f)), fps: d.fps || 10, loop: d.loop !== false, next: d.next || null, events: d.events || null, speed: d.speed || 1 };
+  }
+  /** 換動畫（同一個在播就不重來，除非 restart） */
+  play(name, o = {}) {
+    const d = this.defs[name]; if (!d) { warnOnce('anim:' + name, '沒有這個動畫：' + name); return this; }
+    if (name === this.name && !o.restart && !this.done) return this;
+    this.name = name; this.cur = d; this.t = 0; this.i = 0; this.done = false; if (o.speed != null) this.speed = o.speed;
+    this._fire(0);
+    return this;
+  }
+  _fire(i) { const ev = this.cur.events && this.cur.events[i]; if (ev) this.emit(ev, this.name, i); this.emit('frame', this.name, i); }
+  update(dt) {
+    const d = this.cur; if (!d || this.done) return this;
+    this.t += dt * this.speed * d.speed;
+    const n = d.frames.length, idx = Math.floor(this.t * d.fps);
+    while (this.i < idx) {
+      this.i++;
+      if (this.i >= n) {
+        if (d.loop) { this.i = 0; this.t -= n / d.fps; this.emit('loop', this.name); this._fire(0); break; }
+        this.i = n - 1; this.done = true; this.emit('end', this.name);
+        if (d.next) this.play(d.next);
+        return this;
+      }
+      this._fire(this.i);
+    }
+    return this;
+  }
+  get frame() { const d = this.cur; return d ? d.frames[Math.min(this.i, d.frames.length - 1)] : MISSING; }
+  /** 0～1：播到哪裡了（不循環的動畫判斷「出招到哪」） */
+  get progress() { const d = this.cur; return d ? clamp01(this.t * d.fps / d.frames.length) : 0; }
+}
+PZ.animator = (defs, start) => new Animator(defs, start);
+
+/* ---- 29_rig.js ---- */
+/* ==========================================================================
+   29 角色動畫（二）：骨架角色 PZ.rig
+     只要畫好身體各部位（頭、身體、骨盆、上臂、前臂、手、大腿、小腿、腳、武器），引擎就讓它
+     站著呼吸、走、跑、跳、落地、蹲、出招（揮砍、橫掃、突刺、上挑、重擊、出拳、施法）、受傷、倒下、爬起來；
+     腳會踩在高低不平的地上（兩段 IK），動作之間自動平滑接起來，披風、羽飾、頭髮自己飄（PZ.chain）。
+       const hero = PZ.rig.humanoid({ parts: { head, torso, pelvis, upper, fore, hand, thigh, shin, foot }, weapon, cape, plume })
+       每格：hero.drive({ vx, vy, grounded, crouch }); hero.update(dt);   畫：g.rig(hero, x, y)   影子：g.rigShadow(hero, x, y)
+       hero.attack('slash').then(…)   hero.on('hit', (招式) => 判定傷害)   hero.hurt()   hero.die()   hero.revive()
+       hero.ground = (x) => 地面 y      腳踩地形；hero.joint('handF') 手的位置（放特效）；hero.tip() 武器尖端
+   部位圖的畫法（重要）：手腳畫成「往下垂」的直條，關節（上端）在 anchor；身體、頭、骨盆畫成直立的，跟下一段相接的點在 anchor；
+   腳畫成橫的（腳尖朝右），腳踝在 anchor；武器畫成橫的（尖端朝右），握把在 anchor。角色面向右邊畫。
+   ========================================================================== */
+const RIG_DIMS = { thigh: 24, shin: 24, torso: 30, upper: 17, fore: 16, depth: 3, spread: 10, shoulder: 0.86, neck: 1 };
+const P_KEYS = ['hx', 'hy', 'r', 'lean', 'head', 'fFx', 'fFy', 'fBx', 'fBy', 'aFu', 'aFf', 'aBu', 'aBf', 'footF', 'footB', 'wr'];
+const newPose = () => { const p = {}; for (const k of P_KEYS) p[k] = 0; return p; };
+const HALF_PI = Math.PI / 2;
+/** 兩段 IK：從 (hx, hy) 伸到 (tx, ty)，兩節長 a、b；bend +1 關節朝前（膝蓋）、-1 朝後（手肘） → [第一節角度, 第二節角度, 關節 x, 關節 y] */
+function ik2(hx, hy, tx, ty, a, b, bend, out) {
+  let dx = tx - hx, dy = ty - hy, d = Math.hypot(dx, dy) || 1e-4;
+  const dmax = a + b - 0.05, dmin = Math.abs(a - b) + 0.05;
+  if (d > dmax) { dx *= dmax / d; dy *= dmax / d; d = dmax; } else if (d < dmin) { dx *= dmin / d; dy *= dmin / d; d = dmin; }
+  const th = Math.atan2(dy, dx), A = Math.acos(clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1)), a1 = th - bend * A;
+  const kx = hx + Math.cos(a1) * a, ky = hy + Math.sin(a1) * a;
+  out[0] = a1; out[1] = Math.atan2(hy + dy - ky, hx + dx - kx); out[2] = kx; out[3] = ky;
+  return out;
+}
+/* 招式：每個關鍵格 [時間, { u 前上臂, f 前前臂, bu, bf 後手, lean, hx, hy, head, w 手腕（武器相對前臂多轉幾度） }, 緩動]；沒寫的欄位＝跟著原本的動作 */
+const RIG_MOVES = {
+  slash: { dur: 0.46, hit: 0.15, keys: [[0.11, { u: -2.3, f: -2.9, bu: 1.0, bf: 0.6, lean: -0.08, hx: -1 }, 'outQuad'], [0.17, { u: 0.32, f: 0.14, bu: 2.3, bf: 2.0, lean: 0.26, hx: 7 }, 'outQuint'], [0.3, { u: 0.95, f: 0.8, bu: 2.0, bf: 1.7, lean: 0.2, hx: 6 }, 'outCubic']] },
+  swing: { dur: 0.42, hit: 0.15, keys: [[0.12, { u: 2.5, f: 2.95, bu: 0.6, bf: 0.2, lean: -0.05, hx: -2 }, 'outQuad'], [0.18, { u: -0.05, f: -0.35, bu: 2.2, bf: 2.0, lean: 0.2, hx: 6 }, 'outQuint'], [0.3, { u: -0.85, f: -1.35, bu: 2.4, bf: 2.3, lean: 0.12, hx: 6 }, 'outCubic']] },
+  thrust: { dur: 0.4, hit: 0.13, keys: [[0.1, { u: 2.0, f: 2.7, bu: 1.2, bf: 0.8, lean: -0.05, hx: -3, w: 1.6 }, 'outQuad'], [0.15, { u: 0.05, f: 0.0, bu: 2.5, bf: 2.4, lean: 0.3, hx: 14, w: 1.2 }, 'outQuint'], [0.28, { u: 0.1, f: 0.05, lean: 0.26, hx: 13, w: 1.2 }, 'outCubic']] },
+  upper: { dur: 0.45, hit: 0.15, keys: [[0.1, { u: 1.4, f: 1.0, bu: 2.0, bf: 1.6, lean: 0.15, hx: 0, hy: 4 }, 'outQuad'], [0.16, { u: -1.2, f: -1.6, bu: 0.8, bf: 0.4, lean: -0.12, hx: 5, hy: -2 }, 'outQuint'], [0.3, { u: -1.6, f: -2.0, lean: -0.15, hx: 4 }, 'outCubic']] },
+  smash: { dur: 0.72, hit: 0.33, keys: [[0.22, { u: -2.4, f: -2.9, bu: -2.0, bf: -2.6, lean: -0.15, hx: -3, hy: 5, head: 0.1, w: -0.3 }, 'inOutQuad'], [0.32, { u: 0.6, f: 0.45, bu: 0.9, bf: 0.6, lean: 0.42, hx: 9, hy: 11, head: -0.1, w: 0.5 }, 'outQuint'], [0.5, { u: 0.9, f: 0.7, bu: 1.1, bf: 0.8, lean: 0.36, hx: 9, hy: 9 }, 'outCubic']] },
+  punch: { dur: 0.27, hit: 0.08, keys: [[0.05, { u: 1.9, f: -0.6, bu: 1.2, bf: -0.4, lean: -0.02 }, 'outQuad'], [0.09, { u: 0.0, f: 0.0, bu: 1.6, bf: -0.9, lean: 0.16, hx: 4 }, 'outQuint'], [0.18, { u: 0.12, f: -0.2, lean: 0.12, hx: 3 }, 'outCubic']] },
+  cast: { dur: 0.6, hit: 0.28, keys: [[0.2, { u: -1.6, f: -1.9, bu: -1.4, bf: -1.8, lean: -0.1, hy: 2, head: 0.12 }, 'inOutQuad'], [0.3, { u: -0.1, f: -0.05, bu: 0.05, bf: 0.0, lean: 0.12, hx: 3 }, 'outQuint'], [0.46, { u: -0.05, f: 0.0, bu: 0.1, bf: 0.05, lean: 0.1, hx: 3 }, 'linear']] },
+};
+class Humanoid {
+  constructor(o = {}) {
+    makeEmitter(this);
+    this.o = o; this.d = Object.assign({}, RIG_DIMS, o.dims); this.s = o.scale || 1;
+    this.parts = Object.assign({}, o.parts);
+    this.walkSpeed = o.walkSpeed || 80; this.runSpeed = o.runSpeed || 230;
+    this.face = 1; this.faceK = 1; this.turnT = 0; this.ground = o.ground || null;
+    this.vx = 0; this.vy = 0; this.grounded = true; this.crouching = false;
+    this.t = Rand.range(0, 10); this.phase = 0; this.move = 0; this.runK = 0; this.airK = 0; this.landK = 0; this.crouchK = 0;
+    this.atk = null; this.queue = null; this.hurtT = 0; this.hurtK = 0; this.deadK = 0; this.dead = false; this.flash = 0;
+    this.cur = newPose(); this.pp = newPose(); this.tmp = newPose(); this.tmp2 = newPose(); this._ik = [0, 0, 0, 0]; this._fa = [0, 0, 0]; this._fb = [0, 0, 0];
+    this.J = {}; this.x = 0; this.y = 0; this.trail = []; this._first = true;
+    this.chains = [];
+    // 披風、圍巾：根部順著背往下垂（不會被甩到頭上）；羽飾：往後上方翹；頭髮：往後垂
+    const CH_DEF = { cape: { n: 8, len: 7, gravity: 700, damping: 0.9, stiff: 0.12, angle: 1.95 }, scarf: { n: 6, len: 6, gravity: 600, damping: 0.9, stiff: 0.08, angle: 2.4 }, plume: { n: 6, len: 5.5, gravity: 260, damping: 0.93, stiff: 0.35, angle: 3.6 }, hair: { n: 6, len: 6, gravity: 500, damping: 0.9, stiff: 0.15, angle: 2.2 } };
+    for (const k of ['cape', 'plume', 'hair', 'scarf']) if (o[k]) { const c = Object.assign({}, CH_DEF[k], o[k]); this.chains.push({ key: k, c: new Chain(c), at: c.at || k, o: c }); }
+    this._poseIdle(this.cur, 0);
+  }
+  /** 每格先餵狀態：{ vx, vy, grounded, crouch, face } */
+  drive(s) {
+    if (s.vx != null) this.vx = s.vx; if (s.vy != null) this.vy = s.vy; if (s.grounded != null) this.grounded = !!s.grounded;
+    if (s.crouch != null) this.crouching = !!s.crouch;
+    const f = s.face != null ? Math.sign(s.face) : (Math.abs(this.vx) > 6 && !this.atk ? Math.sign(this.vx) : 0);
+    if (f && f !== this.face && !this.dead) { this.face = f; this.turnT = 0.1; }
+    return this;
+  }
+  /** 出招：'slash' 'swing' 'thrust' 'upper' 'smash' 'punch' 'cast'，或自訂 { dur, hit, keys }。出招中再按會接下一招（連段） */
+  attack(kind = 'slash') {
+    if (this.dead) return Promise.resolve(false);
+    const mv = typeof kind === 'object' ? kind : RIG_MOVES[kind];
+    if (!mv) { warnOnce('move:' + kind, '沒有這個招式：' + kind); return Promise.resolve(false); }
+    if (this.atk && this.atk.t < this.atk.mv.hit + 0.06) { if (this.queue && this.queue.res) this.queue.res(false); return new Promise((res) => { this.queue = { kind, mv, res }; }); }
+    if (this.atk && this.atk.res) this.atk.res(false);
+    return new Promise((res) => { this.atk = { kind: typeof kind === 'string' ? kind : 'custom', mv, t: 0, hitDone: false, res, from: this.atk ? this._snapshotArms() : null }; this.trail.length = 0; });
+  }
+  _snapshotArms() { const c = this.pp && this.atk ? this.pp : this.cur; return { u: c.aFu, f: c.aFf, bu: c.aBu, bf: c.aBf, lean: c.lean, hx: c.hx, hy: 0, head: c.head, w: c.wr || 0 }; }
+  get attacking() { return !!this.atk; }
+  hurt(dir, power = 0.7) {
+    if (this.dead) return this;
+    this.hurtT = 0.38; this.hurtK = clamp(power, 0.2, 1.2); this.flash = 1;
+    if (this.atk && this.atk.t < this.atk.mv.hit) { if (this.atk.res) this.atk.res(false); this.atk = null; this.queue = null; }
+    for (const ch of this.chains) ch.c.push(-this.face * 3000 * power, -1200 * power);
+    return this;
+  }
+  die() { if (this.dead) return this; this.dead = true; this.atk = null; this.queue = null; this.flash = 1; this.emit('die'); return this; }
+  revive() { this.dead = false; this.emit('revive'); return this; }
+  /** 起跳的瞬間（蹲一下再彈起來的感覺；遊戲照常給速度） */
+  jump() { this.landK = 0; this.airK = Math.max(this.airK, 0.4); return this; }
+  update(dt) {
+    if (!(dt > 0)) return this;
+    const d = this.d, sp = Math.abs(this.vx);
+    this.t += dt; this.turnT = Math.max(0, this.turnT - dt); this.flash = Math.max(0, this.flash - dt * 5);
+    const legScale = (d.thigh + d.shin) / 48, stride = lerp(26, 56, this.runK) * legScale;
+    // 走路／跑步：相位依速度前進；runK 依速度在走與跑之間混
+    const tgtRun = clamp01((sp - this.walkSpeed * 0.9) / Math.max(1, this.runSpeed - this.walkSpeed * 0.9));
+    this.runK = damp(this.runK, tgtRun, 6, dt);
+    const moving = this.grounded && sp > 4 && !this.dead;
+    this.move = damp(this.move, moving ? 1 : 0, moving ? 10 : 7, dt);
+    if (moving) this.phase = (this.phase + sp / (stride * 2) * dt) % 1;
+    else if (this.move < 0.05) this.phase = 0;
+    // 空中、落地、蹲
+    const wasAir = this.airK > 0.5;
+    this.airK = damp(this.airK, this.grounded ? 0 : 1, this.grounded ? 22 : 12, dt);
+    if (this.grounded && wasAir && this.airK < 0.5) { this.landK = Math.min(1, 0.45 + Math.abs(this._vyAir || 0) / 900); this.emit('land', this.landK); for (const ch of this.chains) ch.c.push(0, 2500); }
+    if (!this.grounded) this._vyAir = this.vy;
+    this.landK = Math.max(0, this.landK - dt * 4.2);
+    this.crouchK = damp(this.crouchK, this.crouching && this.grounded ? 1 : 0, 14, dt);
+    this.hurtT = Math.max(0, this.hurtT - dt);
+    this.deadK = approach(this.deadK, this.dead ? 1 : 0, dt * (this.dead ? 1.6 : 2.6));
+    // 招式
+    const A = this.atk;
+    if (A) {
+      A.t += dt;
+      if (!A.hitDone && A.t >= A.mv.hit) { A.hitDone = true; this.emit('hit', A.kind); }
+      if (A.t >= A.mv.dur || (this.queue && A.t >= A.mv.hit + 0.06)) {
+        if (A.res) A.res(true);
+        const q = this.queue; this.queue = null; this.atk = null;
+        if (q) { this.atk = { kind: typeof q.kind === 'string' ? q.kind : 'custom', mv: q.mv, t: 0, hitDone: false, res: q.res, from: this._snapshotArms() }; this.trail.length = 0; }
+      }
+    }
+    // 姿勢：各種狀態的權重本身已經是平滑變化的，直接混（不能再整體平滑，腳會在地上滑）
+    this._poseTarget(this.cur);
+    return this;
+  }
+  _poseIdle(P, t) {
+    const d = this.d, L = d.thigh + d.shin, b = Math.sin(t * Math.PI * 2 / 3.4);
+    P.hx = 0; P.hy = -L * 0.975 + b * 0.5; P.r = 0; P.lean = 0.035 + b * 0.012; P.head = -0.03 - b * 0.012;
+    P.fFx = d.spread * 0.45; P.fFy = 0; P.fBx = -d.spread * 0.55; P.fBy = 0;
+    P.aFu = HALF_PI + 0.1 + b * 0.025; P.aFf = P.aFu - 0.3; P.aBu = HALF_PI + 0.15 - b * 0.02; P.aBf = P.aBu - 0.32; P.footF = 0; P.footB = 0; P.wr = 0;
+  }
+  _foot(ph, S, lift, stance, k, out) {
+    if (ph < stance) { const u = ph / stance; out[0] = S / 2 - S * u; out[1] = 0; out[2] = 0; return out; }
+    const u = (ph - stance) / (1 - stance);
+    out[0] = -S / 2 + S * smoothstep(0, 1, Math.pow(u, 1 + k * 0.4)); out[1] = -lift * Math.sin(Math.PI * u) - k * 9 * Math.sin(Math.PI * Math.min(1, u * 1.7)) * (1 - u); out[2] = 0.3 * Math.sin(Math.PI * u) * (1 - k * 0.3);
+    return out;
+  }
+  _poseLoco(P, ph, k) {
+    const d = this.d, L = d.thigh + d.shin, ls = L / 48;
+    const S = lerp(26, 56, k) * ls, lift = lerp(7, 17, k) * ls, stance = lerp(0.62, 0.4, k), bob = lerp(2.2, 4.5, k) * ls, sw = lerp(0.38, 0.72, k), elbow = lerp(0.32, 1.55, k);
+    const F = this._foot(ph, S, lift, stance, k, this._fa), B = this._foot((ph + 0.5) % 1, S, lift, stance, k, this._fb);
+    P.hx = 0; P.hy = -L * lerp(0.95, 0.9, k) + bob * 0.5 * (1 + Math.cos(Math.PI * 4 * (ph - 0.2 * k))); P.r = 0;
+    P.lean = lerp(0.07, 0.27, k) + 0.025 * Math.sin(Math.PI * 4 * ph); P.head = -P.lean * 0.55;
+    P.fFx = F[0]; P.fFy = F[1]; P.footF = F[2]; P.fBx = B[0]; P.fBy = B[1]; P.footB = B[2];
+    const sF = F[0] / (S / 2), sB = B[0] / (S / 2);
+    P.aFu = HALF_PI + sw * sF - k * 0.25; P.aFf = P.aFu - elbow - 0.25 * Math.max(0, -sF);
+    P.aBu = HALF_PI + sw * sB - k * 0.25; P.aBf = P.aBu - elbow - 0.25 * Math.max(0, -sB); P.wr = 0;
+  }
+  _poseAir(P) {
+    const d = this.d, L = d.thigh + d.shin, ls = L / 48, w = clamp01(this.vy / 380 + 0.45), T = this._airT || (this._airT = newPose());
+    // 上升：前腳膝蓋抬起、後腳往後伸、雙手往上；下墜：腳往下找地、手張開
+    P.hx = 0; P.hy = -L * 0.93; P.r = 0; P.lean = 0.12; P.head = -0.1;
+    P.fFx = 9 * ls; P.fFy = -15 * ls; P.fBx = -7 * ls; P.fBy = -3 * ls; P.footF = 0.35; P.footB = 0.5;
+    P.aFu = -0.9; P.aFf = -1.5; P.aBu = -0.5; P.aBf = -0.8; P.wr = 0; T.wr = 0;
+    T.hx = 0; T.hy = -L * 0.95; T.r = 0; T.lean = 0; T.head = 0.06;
+    T.fFx = 5 * ls; T.fFy = -3 * ls; T.fBx = -6 * ls; T.fBy = -7 * ls; T.footF = 0.2; T.footB = 0.4;
+    T.aFu = 0.2; T.aFf = -0.3; T.aBu = 2.6; T.aBf = 2.2;
+    for (const k of P_KEYS) P[k] = lerp(P[k], T[k], w);
+  }
+  _poseTarget(P) {
+    const d = this.d, L = d.thigh + d.shin, ls = L / 48, T = this.tmp;
+    this._poseIdle(P, this.t);
+    if (this.move > 0.001) { this._poseLoco(T, this.phase, this.runK); for (const k of P_KEYS) P[k] = lerp(P[k], T[k], this.move); }
+    if (this.airK > 0.001) { const A2 = this.tmp2; this._poseAir(A2); for (const k of P_KEYS) P[k] = lerp(P[k], A2[k], this.airK); }
+    if (this.crouchK > 0.001) {
+      const c = this.crouchK; P.hy = lerp(P.hy, -L * 0.64, c); P.lean += 0.3 * c; P.head -= 0.2 * c;
+      P.fFx = lerp(P.fFx, 10 * ls, c); P.fBx = lerp(P.fBx, -9 * ls, c); P.fFy *= 1 - c; P.fBy *= 1 - c;
+      P.aFu = lerp(P.aFu, 1.0, c); P.aFf = lerp(P.aFf, 0.3, c); P.aBu = lerp(P.aBu, 1.2, c); P.aBf = lerp(P.aBf, 0.6, c);
+    }
+    if (this.landK > 0) { const c = Ease.outQuad(this.landK); P.hy += c * L * 0.22; P.lean += c * 0.16; P.aFu += c * 0.35; P.aBu += c * 0.35; }
+    if (this.hurtT > 0) { const c = Math.sin(Math.min(1, this.hurtT / 0.38) * Math.PI * 0.5) * this.hurtK; P.lean -= 0.5 * c; P.head -= 0.45 * c; P.hx -= 4 * c * ls; P.aFu = lerp(P.aFu, -0.6, c * 0.8); P.aBu = lerp(P.aBu, 2.5, c * 0.8); P.hy += 2 * c; }
+    if (this.deadK > 0) {
+      const c = this.dead ? Ease.outBounce(this.deadK) : Ease.inOutQuad(this.deadK);
+      P.r = -1.5 * c; P.hy = lerp(P.hy, -L * 0.98, c); P.lean = lerp(P.lean, -0.05, c); P.head = lerp(P.head, 0.25, c);
+      P.fFx = lerp(P.fFx, 3 * ls, c); P.fFy = lerp(P.fFy, 0, c); P.fBx = lerp(P.fBx, -2 * ls, c); P.fBy = lerp(P.fBy, 0, c);
+      P.aFu = lerp(P.aFu, -1.9, c); P.aFf = lerp(P.aFf, -1.6, c); P.aBu = lerp(P.aBu, -2.3, c); P.aBf = lerp(P.aBf, -2.0, c);
+    }
+  }
+  /** 招式疊在身體動作上（上半身照關鍵格，下半身照走路／站著） */
+  _applyMove(P) {
+    const A = this.atk; if (!A) return;
+    const keys = A.mv.keys, t = A.t, from = A.from, base = { u: P.aFu, f: P.aFf, bu: P.aBu, bf: P.aBf, lean: P.lean, hx: P.hx, hy: 0, head: P.head, w: 0 };
+    const val = (key, ch) => (key && key[ch] != null ? key[ch] : base[ch]);
+    let k0 = { t: 0, v: from || base }, k1 = null, ease = 'outQuad';
+    for (let i = 0; i < keys.length; i++) { if (t < keys[i][0]) { k1 = { t: keys[i][0], v: keys[i][1] }; ease = keys[i][2] || 'outQuad'; break; } k0 = { t: keys[i][0], v: keys[i][1] }; }
+    if (!k1) { k1 = { t: A.mv.dur, v: null }; ease = 'inOutQuad'; }
+    const e = easeOf(ease)(clamp01((t - k0.t) / Math.max(1e-4, k1.t - k0.t)));
+    const mix = (ch) => lerp(val(k0.v, ch), val(k1.v, ch), e);
+    P.aFu = mix('u'); P.aFf = mix('f'); P.aBu = mix('bu'); P.aBf = mix('bf'); P.lean = mix('lean'); P.hx = mix('hx') * ((this.d.thigh + this.d.shin) / 48); P.head = mix('head');
+    P.hy += mix('hy'); P.wr = mix('w');
+  }
+  /** 算出每個關節的位置（本地座標：面向右、腳底中間是 (0,0)、單位＝世界單位 ÷ scale）；x, y 是畫的位置（世界） */
+  _place(x, y) {
+    const d = this.d, s = this.s, J = this.J, p = this.pp, C = this.cur;
+    for (const k of P_KEYS) p[k] = C[k];
+    this._applyMove(p);
+    this.x = x; this.y = y;
+    // 地形：腳踩在地上（在地上、沒倒下時）
+    if (this.ground && this.airK < 0.5 && this.deadK < 0.5) {
+      const g0 = this.ground(x), f = this.faceK;
+      const dF = (this.ground(x + f * p.fFx * s) - g0) / s, dB = (this.ground(x + f * p.fBx * s) - g0) / s;
+      if (p.fFy > -3) p.fFy += dF; if (p.fBy > -3) p.fBy += dB;
+      p.hy += clamp(Math.max(dF, dB, 0) * 0.85 + Math.min(dF, dB, 0) * 0.15, -12, 14);
+      const sl = (gx) => Math.atan2(this.ground(gx + 4) - this.ground(gx - 4), 8);
+      p.footF += sl(x + f * p.fFx * s) * f; p.footB += sl(x + f * p.fBx * s) * f;
+    }
+    const L = this._ik, ta = -HALF_PI + p.lean, tc = Math.cos(ta), ts = Math.sin(ta);
+    J.hip = [p.hx, p.hy]; J.ta = ta;
+    J.sh = [p.hx + tc * d.torso * d.shoulder, p.hy + ts * d.torso * d.shoulder];
+    J.neck = [p.hx + tc * (d.torso + d.neck), p.hy + ts * (d.torso + d.neck)]; J.ha = ta + p.head;
+    const hF = [p.hx + d.depth * 0.5, p.hy], hB = [p.hx - d.depth * 0.5, p.hy];
+    ik2(hF[0], hF[1], p.fFx, p.fFy, d.thigh, d.shin, 1, L); J.hipF = hF; J.thF = L[0]; J.shF = L[1]; J.kneeF = [L[2], L[3]]; J.ankF = [L[2] + Math.cos(L[1]) * d.shin, L[3] + Math.sin(L[1]) * d.shin]; J.ftF = p.footF;
+    ik2(hB[0], hB[1], p.fBx, p.fBy, d.thigh, d.shin, 1, L); J.hipB = hB; J.thB = L[0]; J.shB = L[1]; J.kneeB = [L[2], L[3]]; J.ankB = [L[2] + Math.cos(L[1]) * d.shin, L[3] + Math.sin(L[1]) * d.shin]; J.ftB = p.footB;
+    const sF = [J.sh[0] + d.depth * 0.3, J.sh[1]], sB = [J.sh[0] - d.depth * 0.6, J.sh[1] + 0.5];
+    J.shoF = sF; J.auF = p.aFu; J.elF = [sF[0] + Math.cos(p.aFu) * d.upper, sF[1] + Math.sin(p.aFu) * d.upper]; J.afF = p.aFf; J.hdF = [J.elF[0] + Math.cos(p.aFf) * d.fore, J.elF[1] + Math.sin(p.aFf) * d.fore];
+    J.wr = p.wr || 0;
+    J.shoB = sB; J.auB = p.aBu; J.elB = [sB[0] + Math.cos(p.aBu) * d.upper, sB[1] + Math.sin(p.aBu) * d.upper]; J.afB = p.aBf; J.hdB = [J.elB[0] + Math.cos(p.aBf) * d.fore, J.elB[1] + Math.sin(p.aBf) * d.fore];
+    // 整個身體繞腳底旋轉（倒下）
+    J.r = p.r;
+    if (p.r) { const c = Math.cos(p.r), sn = Math.sin(p.r); for (const k in J) { const v = J[k]; if (Array.isArray(v)) { const X = v[0], Y = v[1]; v[0] = X * c - Y * sn; v[1] = X * sn + Y * c; } } }
+    // 面向：轉身時快速壓扁再翻過去
+    const tk = this.turnT > 0 ? Math.max(0.15, Math.abs(Math.cos((1 - this.turnT / 0.1) * Math.PI))) : 1;
+    this.faceK = this.face * tk;
+    return J;
+  }
+  /** 關節的世界座標（上一次畫的時候）：'hip' 'neck' 'hdF'（前手）'hdB' 'ankF' 'kneeF' 'elF'… */
+  joint(name) { const v = this.J[name]; if (!v) return null; return { x: this.x + v[0] * this.s * this.faceK, y: this.y + v[1] * this.s }; }
+  /** 武器尖端的世界座標 */
+  tip() {
+    const w = this.o.weapon; if (!w || !this.J.hdF) return null;
+    const a = this.J.afF + (this.J.r || 0) + (this.J.wr || 0) + (w.grip != null ? w.grip : -1.25), len = w.len || 40, h = this.J.hdF;
+    return { x: this.x + (h[0] + Math.cos(a) * len) * this.s * this.faceK, y: this.y + (h[1] + Math.sin(a) * len) * this.s };
+  }
+  /** 鏈子（披風、羽飾）跟著身體 */
+  _chains(dt) {
+    for (const ch of this.chains) {
+      const j = this.J, at = ch.o.at || ch.key, base = at === 'plume' || at === 'hair' ? j.neck : at === 'scarf' ? j.sh : j.sh;
+      if (!base) continue;
+      const off = ch.o.off || (ch.key === 'cape' ? [-4, 1] : ch.key === 'plume' ? [-2, -22] : ch.key === 'hair' ? [-6, -16] : [-3, 2]);
+      const ang = ((ch.key === 'cape' || ch.key === 'scarf') ? j.ta : j.ha) + (j.r || 0), c = Math.cos(ang + HALF_PI), s = Math.sin(ang + HALF_PI);
+      // 偏移是在身體／頭的方向上（往上是 -y）
+      const lx = base[0] + off[0] * c - off[1] * s, ly = base[1] + off[0] * s + off[1] * c;
+      const wx = this.x + lx * this.s * this.faceK, wy = this.y + ly * this.s;
+      if (this._first) ch.c.reset(wx, wy);
+      const a0 = ch.o.angle != null ? (this.faceK > 0 ? ch.o.angle : Math.PI - ch.o.angle) + (j.r || 0) * Math.sign(this.faceK || 1) : null;
+      if (this.ground && !ch.o.ground) ch.c.o.ground = this.ground;   // 披風、頭髮不會穿到地底下
+      ch.c.pin(wx, wy, a0); ch.c.update(dt);
+    }
+    this._first = false;
+  }
+}
+PZ.rig = { moves: RIG_MOVES, humanoid: (o) => new Humanoid(o), Humanoid, ik: ik2 };
+
+/* ---------- 畫 ---------- */
+const RIG_ORDER_BACK = [['upper', 'shoB', 'auB', 'down'], ['fore', 'elB', 'afB', 'down'], ['hand', 'hdB', 'afB', 'down'], ['thigh', 'hipB', 'thB', 'down'], ['shin', 'kneeB', 'shB', 'down'], ['foot', 'ankB', 'ftB', 'flat']];
+const RIG_ORDER_FRONT_LEG = [['thigh', 'hipF', 'thF', 'down'], ['shin', 'kneeF', 'shF', 'down'], ['foot', 'ankF', 'ftF', 'flat']];
+const RIG_ORDER_FRONT_ARM = [['upper', 'shoF', 'auF', 'down'], ['fore', 'elF', 'afF', 'down'], ['hand', 'hdF', 'afF', 'down']];
+function rigPart(g, R, name, jk, ak, mode, back, o) {
+  const P = R.parts, fr = (back && P[name + 'B']) || P[name]; if (!fr) return;
+  const J = R.J, p = J[jk]; if (!p) return;
+  let a = J[ak]; if (typeof a !== 'number') return; a += J.r || 0;
+  const r = mode === 'down' ? a - HALF_PI : mode === 'up' ? a + HALF_PI : a;
+  if (o.silhouette) { g.sprite(fr, p[0], p[1], { r, silhouette: true, color: o.shadowColor || '#000', a: o.sa }); return; }
+  const col = back ? (R.o.backTint || '#b6b6c6') : o.color;
+  g.spr(fr, p[0], p[1], r, 1, 1, o.a == null ? 1 : o.a, col, o.add || 0, Math.max(R.flash, o.flash || 0));
+}
+function rigBody(g, R, o) {
+  const J = R.J, P = R.parts, r = J.r || 0, al = o.a == null ? 1 : o.a, fl = Math.max(R.flash, o.flash || 0);
+  const draw = (fr, p, ang) => { if (!fr || !p) return; if (o.silhouette) g.sprite(fr, p[0], p[1], { r: ang, silhouette: true, color: o.shadowColor || '#000', a: o.sa }); else g.spr(fr, p[0], p[1], ang, 1, 1, al, o.color, o.add || 0, fl); };
+  draw(P.pelvis, J.hip, J.ta + HALF_PI + r);
+  draw(P.torso, J.hip, J.ta + HALF_PI + r);
+  draw(P.head, J.neck, J.ha + HALF_PI + r);
+}
+function rigWeapon(g, R, o) {
+  const w = R.o.weapon; if (!w || !w.frame || !R.J.hdF) return;
+  const a = R.J.afF + (R.J.r || 0) + (R.J.wr || 0) + (w.grip != null ? w.grip : -1.25), h = R.J.hdF;
+  if (o.silhouette) { g.sprite(w.frame, h[0], h[1], { r: a, silhouette: true, color: o.shadowColor || '#000', a: o.sa }); return; }
+  g.spr(w.frame, h[0], h[1], a, 1, 1, o.a == null ? 1 : o.a, o.color, (o.add || 0) + (w.add || 0), Math.max(R.flash, o.flash || 0));
+}
+/** 畫骨架角色：o = { s（再縮放）, color, a, add, flash, bones（畫骨架線，除錯用）, trail（揮武器的刀光，預設 true）, trailColor } */
+Graphics.prototype.rig = function (R, x, y, o = {}) {
+  // 鏈子用「上次畫到現在過了多少遊戲時間」來算：掉幀時一格畫面可能跑了好幾次更新，只用最後一次的 dt 會讓披風被甩飛
+  R._place(x, y);
+  if (R._chainFrame !== Time.frame) { R._chainFrame = Time.frame; const dt = R._lastT == null ? 0 : clamp(Time.t - R._lastT, 0, 0.1); R._lastT = Time.t; R._chains(dt); }
+  const s = R.s * (o.s || 1), fx = R.faceK;
+  // 刀光：出招中記下武器尖端
+  if (o.trail !== false && R.o.weapon) {
+    const A = R.atk, tp = R.tip(), hp = R.joint('hdF');
+    if (A && A.t > A.mv.hit - 0.09 && A.t < A.mv.hit + 0.11 && tp && hp) { const w = (R.o.weapon.len || 40) * 0.35, k = w / Math.max(1, Math.hypot(tp.x - hp.x, tp.y - hp.y)); R.trail.unshift({ x: tp.x, y: tp.y, bx: tp.x + (hp.x - tp.x) * k * 1.6, by: tp.y + (hp.y - tp.y) * k * 1.6, t: Time.t }); }
+    while (R.trail.length && (Time.t - R.trail[R.trail.length - 1].t > 0.13 || R.trail.length > 16)) R.trail.pop();
+  }
+  const local = (fn) => { this.save(); this.translate(x, y); this.scale(fx * s, s); try { fn(); } finally { this.restore(); } };
+  const capes = R.chains.filter((c) => c.key === 'cape' || c.key === 'scarf'), heads = R.chains.filter((c) => c.key === 'plume' || c.key === 'hair');
+  local(() => { for (const [n, j, a, m] of RIG_ORDER_BACK) rigPart(this, R, n, j, a, m, true, o); });
+  for (const c of capes) this.chain(c.c, Object.assign({ w0: 10, w1: 18, color: '#6a1a2a' }, c.o.draw, { a: o.a }));
+  for (const c of heads) this.chain(c.c, Object.assign({ w0: 6, w1: 2, color: '#c33' }, c.o.draw, { a: o.a }));
+  local(() => {
+    rigBody(this, R, o);
+    for (const [n, j, a, m] of RIG_ORDER_FRONT_LEG) rigPart(this, R, n, j, a, m, false, o);
+    rigWeapon(this, R, o);
+    for (const [n, j, a, m] of RIG_ORDER_FRONT_ARM) rigPart(this, R, n, j, a, m, false, o);
+  });
+  if (R.trail.length >= 2 && o.trail !== false) this.swoosh(R.trail, o.trailColor || (R.o.weapon && R.o.weapon.trail) || '#cfe8ff', { a: 0.9 });
+  if (o.bones) local(() => {
+    const J = R.J, L = (a, b, c) => { if (J[a] && J[b]) this.line(J[a][0], J[a][1], J[b][0], J[b][1], 1.2 / s, c, { a: 0.9 }); };
+    for (const [a, b] of [['hip', 'neck'], ['hipF', 'kneeF'], ['kneeF', 'ankF'], ['hipB', 'kneeB'], ['kneeB', 'ankB'], ['shoF', 'elF'], ['elF', 'hdF'], ['shoB', 'elB'], ['elB', 'hdB']]) L(a, b, a.endsWith('B') || b.endsWith('B') ? '#46d4ff' : '#ffb547');
+    for (const k of ['hip', 'neck', 'kneeF', 'kneeB', 'ankF', 'ankB', 'elF', 'elB', 'hdF', 'hdB']) if (J[k]) this.circle(J[k][0], J[k][1], 2 / s, '#fff');
+  });
+  return this;
+};
+/** 骨架角色的影子：o = { flat（側視：貼地扁影，預設 true）, angle, len（預設 0.3）, a（濃度，預設 0.35）, color } */
+Graphics.prototype.rigShadow = function (R, x, y, o = {}) {
+  if (!R.J.hip) R._place(x, y);
+  const flat = o.flat !== false, s = R.s * (o.s || 1), fx = R.faceK;
+  let ang = o.angle; if (ang == null) ang = Light.shadowDir(x, y).angle;
+  const len = o.len != null ? o.len : flat ? 0.9 : 0.6, dx = Math.cos(ang), dy = Math.sin(ang), fy = o.flatY != null ? o.flatY : 0.07;
+  this.save(); this.translate(x, y);
+  if (flat) this.transform(fx * s, 0, -dx * len * s, -fy * s, 0, 0); else this.transform(-dy * s * fx, dx * s * fx, -dx * len * s, -dy * len * s, 0, 0);
+  const so = { silhouette: true, shadowColor: o.color || '#000', sa: o.a != null ? o.a : 0.35 };
+  for (const [n, j, a, m] of RIG_ORDER_BACK) rigPart(this, R, n, j, a, m, true, so);
+  rigBody(this, R, so);
+  for (const [n, j, a, m] of RIG_ORDER_FRONT_LEG) rigPart(this, R, n, j, a, m, false, so);
+  this.restore();
+  return this;
+};
+
+/* ---------- 刀光 ---------- */
+function catmull(p0, p1, p2, p3, t) { const t2 = t * t, t3 = t2 * t; return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3); }
+/**
+ * 刀光／揮擊的殘影：list 是最新在前的 [{ x, y（刀尖）, bx, by（靠手那一側）}…]，畫成一片從刀尖亮到內側透明、越舊越淡的弧。
+ * o = { a, sub（每段再細分幾份，預設 4：掉幀時也是圓弧）, add（預設 1） }
+ */
+Graphics.prototype.swoosh = function (list, color, o = {}) {
+  const n = list.length; if (n < 2) return this;
+  const sub = o.sub || 4, pts = [], m = this.m, c = toColor(color), al = o.a != null ? o.a : 1, add = o.add != null ? o.add : 1;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = list[Math.max(0, i - 1)], p1 = list[i], p2 = list[i + 1], p3 = list[Math.min(n - 1, i + 2)];
+    for (let k = 0; k < sub; k++) { const t = k / sub; pts.push([catmull(p0.x, p1.x, p2.x, p3.x, t), catmull(p0.y, p1.y, p2.y, p3.y, t), catmull(p0.bx, p1.bx, p2.bx, p3.bx, t), catmull(p0.by, p1.by, p2.by, p3.by, t)]); }
+  }
+  const L = list[n - 1]; pts.push([L.x, L.y, L.bx, L.by]);
+  const X = (x, y) => m[0] * x + m[2] * y + m[4], Y = (x, y) => m[1] * x + m[3] * y + m[5], N = pts.length;
+  for (let i = 0; i < N - 1; i++) {
+    const a = pts[i], b = pts[i + 1], f0 = 1 - i / (N - 1), f1 = 1 - (i + 1) / (N - 1);
+    const ct = pack(cR(c), cG(c), cB(c), al * (f0 + f1) * 0.5 * this.al);
+    // 外緣（刀尖）亮、內緣透明；越舊越淡（細分得夠細，一段一段的階梯看不出來）
+    this.r.quadv(null, X(a[2], a[3]), Y(a[2], a[3]), 0, 0, X(a[0], a[1]), Y(a[0], a[1]), 0, 0, X(b[0], b[1]), Y(b[0], b[1]), 0, 0, X(b[2], b[3]), Y(b[2], b[3]), 0, 0, 0, ct, MODE.solid, add, 0);
+  }
+  return this;
+};
+
+/* ---- 30_world.js ---- */
+/* ==========================================================================
+   30 世界與地圖：格子地圖、碰撞、射線、視野、尋路、流場、程序生成
+     const map = PZ.tilemap({ w: 64, h: 48, size: 32 })        格子地圖（size＝一格幾個世界單位）
+       map.set(x, y, 1)  map.get(x, y)  map.layer('deco')     多層（每層一個整數陣列）
+       map.fromText(`#####\n#..@#\n#####`, { '#': 1, '.': 0, '@': 0 })   用文字畫地圖；回傳每個符號出現的位置
+       map.isSolid(cx, cy)  map.solidAt(wx, wy)  map.cellX(wx)  map.cx(cx)（格子中心的世界座標）
+       map.move(body, dx, dy)  方塊角色撞牆滑動（body = { x, y, w, h } 中心點；可設單向平台）
+       map.raycast(x0, y0, x1, y1)  map.los(…)  map.fov(cx, cy, 半徑)（視野：哪些格子看得到）
+       map.rects()  合併成大方塊；map.lightBoxes({ lift }) 一行讓牆擋光（配 PZ.light；2.5D 牆 lift＝牆高）
+       map.nearestOpen(cx, cy)  最近的空地    map.behindWall(x, y, 離地高, 牆高)  2.5D：這一點有沒有被前面的牆擋住
+       map.draw(g, style, { actors, drawActor })   畫地圖：2.5D 牆面依前後跟角色交錯（見 31_tiles.js 的風格）
+     PZ.path.find(map, sx, sy, tx, ty)   A* 最短路（格子）    PZ.path.smooth(map, cells) 拉直成世界座標的折線
+     PZ.path.flow(map, { max })          流場：幾百隻怪同時繞牆追主角，每格只算一次
+     PZ.gen.dungeon / caves / island / scatter / noise / distance   程序生成：地牢、洞窟、島嶼、均勻散布（樹、草、寶箱）、離牆多遠
+   ========================================================================== */
+class Tilemap {
+  constructor(o = {}) {
+    this.w = o.w || 32; this.h = o.h || 32; this.size = o.size || 32; this.ox = o.x || 0; this.oy = o.y || 0;
+    this.layers = { main: new Int32Array(this.w * this.h) }; if (o.fill) this.layers.main.fill(o.fill);
+    this.outside = o.outside != null ? o.outside : 1;       // 地圖外面當成什麼（預設牆）
+    this.oneway = o.oneway || null;                        // (v) => true：單向平台（只擋往下掉，從下面跳得上來）
+    this.solidFn = o.solid || (this.oneway ? (v) => v > 0 && !this.oneway(v) : (v) => v > 0);
+    this.ver = 0; this.field = null;
+  }
+  idx(cx, cy) { return cx < 0 || cy < 0 || cx >= this.w || cy >= this.h ? -1 : cy * this.w + cx; }
+  layer(name, init = 0) { let L = this.layers[name]; if (!L) { L = this.layers[name] = new Int32Array(this.w * this.h); if (init) L.fill(init); } return L; }
+  get(cx, cy, layer = 'main') { const i = this.idx(cx, cy); if (i < 0) return layer === 'main' ? this.outside : 0; return this.layers[layer] ? this.layers[layer][i] : 0; }
+  set(cx, cy, v, layer = 'main') { const i = this.idx(cx, cy); if (i < 0) return this; this.layer(layer)[i] = v; this.ver++; return this; }
+  fill(v, layer = 'main') { this.layer(layer).fill(v); this.ver++; return this; }
+  rect(cx, cy, w, h, v, layer = 'main') { for (let y = cy; y < cy + h; y++) for (let x = cx; x < cx + w; x++) this.set(x, y, v, layer); return this; }
+  forEach(fn, layer = 'main') { const L = this.layer(layer); for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) fn(x, y, L[y * this.w + x]); return this; }
+  isSolid(cx, cy) { return this.solidFn(this.get(cx, cy)); }
+  cellX(wx) { return Math.floor((wx - this.ox) / this.size); }
+  cellY(wy) { return Math.floor((wy - this.oy) / this.size); }
+  /** 格子中心的世界座標 */
+  cx(cx) { return this.ox + (cx + 0.5) * this.size; }
+  cy(cy) { return this.oy + (cy + 0.5) * this.size; }
+  get width() { return this.w * this.size; }
+  get height() { return this.h * this.size; }
+  solidAt(wx, wy) { return this.isSolid(this.cellX(wx), this.cellY(wy)); }
+  /** 文字地圖：每行一列、每個字一格；legend: { '#': 1, '.': 0, '~': { v: 2, layer: 'water' } }；回傳 { 字: [[cx, cy]…] } */
+  fromText(text, legend = { '#': 1 }) {
+    const rows = text.replace(/^\n+|\n+\s*$/g, '').split('\n'), found = {};
+    const w = Math.max(...rows.map((r) => r.length)), h = rows.length;
+    if (w !== this.w || h !== this.h) { this.w = w; this.h = h; for (const k in this.layers) this.layers[k] = new Int32Array(w * h); }
+    rows.forEach((row, y) => { for (let x = 0; x < w; x++) {
+      const ch = row[x] || ' ', L = legend[ch];
+      if (L != null) { if (typeof L === 'object') this.set(x, y, L.v || 0, L.layer || 'main'); else this.set(x, y, L); }
+      (found[ch] || (found[ch] = [])).push([x, y]);
+    } });
+    this.ver++; return found;
+  }
+  /** 從 0/1 陣列（例如 PZ.gen 產生的 grid）載入 */
+  fromGrid(grid, w = this.w, h = this.h, layer = 'main') { if (w !== this.w || h !== this.h) { this.w = w; this.h = h; for (const k in this.layers) this.layers[k] = new Int32Array(w * h); } this.layer(layer).set(grid); this.ver++; return this; }
+  /** 四方向相同（自動接邊）：上 1、右 2、下 4、左 8 */
+  mask4(cx, cy, test = (x, y) => this.isSolid(x, y)) { return (test(cx, cy - 1) ? 1 : 0) | (test(cx + 1, cy) ? 2 : 0) | (test(cx, cy + 1) ? 4 : 0) | (test(cx - 1, cy) ? 8 : 0); }
+  /** 八方向（47 種接邊）：角落只有兩邊都相連才算 → 回傳 0～255 的遮罩 */
+  mask8(cx, cy, test = (x, y) => this.isSolid(x, y)) {
+    const n = test(cx, cy - 1), e = test(cx + 1, cy), s = test(cx, cy + 1), w = test(cx - 1, cy);
+    let m = (n ? 1 : 0) | (e ? 4 : 0) | (s ? 16 : 0) | (w ? 64 : 0);
+    if (n && e && test(cx + 1, cy - 1)) m |= 2; if (s && e && test(cx + 1, cy + 1)) m |= 8; if (s && w && test(cx - 1, cy + 1)) m |= 32; if (n && w && test(cx - 1, cy - 1)) m |= 128;
+    return m;
+  }
+  /** 射線（格子 DDA）：回傳 { hit, x, y, t（0～1）, cx, cy, nx, ny（撞到的面朝哪） } */
+  raycast(x0, y0, x1, y1, test) {
+    const s = this.size, solid = test || ((x, y) => this.isSolid(x, y));
+    let x = (x0 - this.ox) / s, y = (y0 - this.oy) / s; const dx = (x1 - this.ox) / s - x, dy = (y1 - this.oy) / s - y;
+    let cx = Math.floor(x), cy = Math.floor(y); const sx = Math.sign(dx), sy = Math.sign(dy);
+    const tdx = dx ? Math.abs(1 / dx) : Infinity, tdy = dy ? Math.abs(1 / dy) : Infinity;
+    let tx = dx > 0 ? (cx + 1 - x) / dx : dx < 0 ? (x - cx) / -dx : Infinity, ty = dy > 0 ? (cy + 1 - y) / dy : dy < 0 ? (y - cy) / -dy : Infinity;
+    const r = this._ray || (this._ray = {});
+    if (solid(cx, cy)) { Object.assign(r, { hit: true, t: 0, x: x0, y: y0, cx, cy, nx: 0, ny: 0 }); return r; }
+    let nx = 0, ny = 0, t = 0;
+    for (let i = 0; i < 4096; i++) {
+      if (tx < ty) { t = tx; tx += tdx; cx += sx; nx = -sx; ny = 0; } else { t = ty; ty += tdy; cy += sy; ny = -sy; nx = 0; }
+      if (t > 1) break;
+      if (solid(cx, cy)) { Object.assign(r, { hit: true, t, x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, cx, cy, nx, ny }); return r; }
+    }
+    Object.assign(r, { hit: false, t: 1, x: x1, y: y1, cx, cy, nx: 0, ny: 0 }); return r;
+  }
+  los(x0, y0, x1, y1) { return !this.raycast(x0, y0, x1, y1).hit; }
+  /** 視野（遞迴陰影投射）：從 (cx, cy) 看得到哪些格子（含牆面）；out 是 Uint8Array（看得到的設 1），回傳 out */
+  fov(ox, oy, r, out, opaque = (x, y) => this.isSolid(x, y)) {
+    out = out || new Uint8Array(this.w * this.h);
+    const W = this.w, H = this.h, set = (x, y) => { if (x >= 0 && y >= 0 && x < W && y < H) out[y * W + x] = 1; };
+    set(ox, oy);
+    const M = [[1, 0, 0, -1, -1, 0, 0, 1], [0, 1, -1, 0, 0, -1, 1, 0], [0, 1, 1, 0, 0, -1, -1, 0], [1, 0, 0, 1, -1, 0, 0, -1]];
+    const cast = (row, start, end, xx, xy, yx, yy) => {
+      if (start < end) return;
+      let newStart = 0;
+      for (let j = row; j <= r; j++) {
+        let dx = -j - 1; const dy = -j; let blocked = false;
+        while (dx <= 0) {
+          dx++;
+          const X = ox + dx * xx + dy * xy, Y = oy + dx * yx + dy * yy, ls = (dx - 0.5) / (dy + 0.5), rs = (dx + 0.5) / (dy - 0.5);
+          if (start < rs) continue; else if (end > ls) break;
+          if (dx * dx + dy * dy <= r * r) set(X, Y);
+          if (blocked) { if (opaque(X, Y)) { newStart = rs; continue; } blocked = false; start = newStart; }
+          else if (opaque(X, Y) && j < r) { blocked = true; cast(j + 1, start, ls, xx, xy, yx, yy); newStart = rs; }
+        }
+        if (blocked) break;
+      }
+    };
+    for (let o = 0; o < 8; o++) cast(1, 1, 0, M[0][o], M[1][o], M[2][o], M[3][o]);
+    return out;
+  }
+  /**
+   * 方塊撞牆：body = { x, y（中心）, w, h }，移動 (dx, dy)，撞到就貼著牆滑；回傳 { left, right, up, down }（down＝站在地上／平台上）
+   * 單向平台：map.oneway = (v) => v === 2，只有從上面掉下來時會擋。移動太快時自動分段（不會穿牆）
+   */
+  move(b, dx, dy) {
+    const res = this._mv || (this._mv = {}); res.left = res.right = res.up = res.down = false;
+    const s = this.size, steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / (s * 0.45)));
+    for (let k = 0; k < steps; k++) { this._moveX(b, dx / steps, res); this._moveY(b, dy / steps, res); }
+    return res;
+  }
+  _moveX(b, dx, res) {
+    if (!dx) return;
+    const hw = b.w / 2, hh = b.h / 2, s = this.size; b.x += dx;
+    const y0 = this.cellY(b.y - hh + 0.01), y1 = this.cellY(b.y + hh - 0.01);
+    if (dx > 0) { const cx = this.cellX(b.x + hw); for (let cy = y0; cy <= y1; cy++) if (this.isSolid(cx, cy)) { b.x = this.ox + cx * s - hw - 0.001; res.right = true; return; } }
+    else { const cx = this.cellX(b.x - hw); for (let cy = y0; cy <= y1; cy++) if (this.isSolid(cx, cy)) { b.x = this.ox + (cx + 1) * s + hw + 0.001; res.left = true; return; } }
+  }
+  _moveY(b, dy, res) {
+    if (!dy) return;
+    const hw = b.w / 2, hh = b.h / 2, s = this.size, prevBottom = b.y + hh; b.y += dy;
+    const x0 = this.cellX(b.x - hw + 0.01), x1 = this.cellX(b.x + hw - 0.01);
+    if (dy > 0) {
+      const cy = this.cellY(b.y + hh), top = this.oy + cy * s;
+      for (let cx = x0; cx <= x1; cx++) {
+        const v = this.get(cx, cy);
+        if (this.solidFn(v) || (this.oneway && this.oneway(v) && prevBottom <= top + 0.5 && !b.dropping)) { b.y = top - hh - 0.001; res.down = true; return; }
+      }
+    } else { const cy = this.cellY(b.y - hh); for (let cx = x0; cx <= x1; cx++) if (this.isSolid(cx, cy)) { b.y = this.oy + (cy + 1) * s + hh + 0.001; res.up = true; return; } }
+  }
+  /** 把相鄰的格子合併成大方塊（貪婪）：[{ cx, cy, w, h }]（格子單位） */
+  rects(test = (x, y) => this.isSolid(x, y)) {
+    const W = this.w, H = this.h, used = new Uint8Array(W * H), out = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      if (used[y * W + x] || !test(x, y)) continue;
+      let rw = 1; while (x + rw < W && !used[y * W + x + rw] && test(x + rw, y)) rw++;
+      let rh = 1;
+      outer: while (y + rh < H) { for (let k = 0; k < rw; k++) if (used[(y + rh) * W + x + k] || !test(x + k, y + rh)) break outer; rh++; }
+      for (let yy = y; yy < y + rh; yy++) for (let xx = x; xx < x + rw; xx++) used[yy * W + xx] = 1;
+      out.push({ cx: x, cy: y, w: rw, h: rh });
+    }
+    return out;
+  }
+  /**
+   * 牆擋光：合併後的方塊各加一個 PZ.light.box；回傳那些形狀（地圖變了先 .forEach(s => s.remove()) 再重加）
+   * o = { test(cx, cy), lift（2.5D 牆往上抬幾單位：擋光的是畫出來的牆頂，牆面留在外面才照得到火把） }
+   */
+  lightBoxes(o = {}) {
+    if (typeof o === 'function') o = { test: o };
+    const s = this.size, lift = o.lift || 0;
+    return this.rects(o.test).map((r) => Light.box(this.ox + r.cx * s, this.oy + r.cy * s - lift, r.w * s, r.h * s));
+  }
+  /** 離 (cx, cy) 最近、走得到的格子（點到牆上時用）：回傳 [cx, cy] 或 null */
+  nearestOpen(cx, cy, maxR = 6, pass = (x, y) => !this.isSolid(x, y)) {
+    if (pass(cx, cy)) return [cx, cy];
+    let best = null, bd = Infinity;
+    for (let r = 1; r <= maxR && !best; r++) for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+      if (Math.max(Math.abs(x - cx), Math.abs(y - cy)) !== r || x < 0 || y < 0 || x >= this.w || y >= this.h || !pass(x, y)) continue;
+      const d = (x - cx) * (x - cx) + (y - cy) * (y - cy); if (d < bd) { bd = d; best = [x, y]; }
+    }
+    return best;
+  }
+  /** 2.5D：站在 (wx, wy)、離地 z 高的那一點，會不會被前面（南邊）的牆頂擋住（發光的眼睛、頭上的字要不要畫）；wallH＝牆高（世界單位） */
+  behindWall(wx, wy, z, wallH) {
+    const s = this.size, row = this.cellY(wy), r = Math.floor((wy - z + wallH - this.oy) / s);
+    return r > row && this.isSolid(this.cellX(wx), r);
+  }
+  /** 畫面上看得到的格子範圍（多留 margin 格） */
+  view(margin = 1) {
+    const v = Cam.view, s = this.size;
+    return [Math.max(0, Math.floor((v.x - this.ox) / s) - margin), Math.max(0, Math.floor((v.y - this.oy) / s) - margin), Math.min(this.w - 1, Math.floor((v.x + v.w - this.ox) / s) + margin), Math.min(this.h - 1, Math.floor((v.y + v.h - this.oy) / s) + margin)];
+  }
+  /**
+   * 畫地圖。style（見 PZ.tiles）：{ under(g, map, view), floor(g, map, cx, cy, x, y, s), ground(g, map, view),
+   *   row(g, map, cy, view)（一整列的牆，2.5D 用）, wall(g, map, cx, cy, x, y, s)（一格牆）, over(g, map, view) }
+   * o = { actors: [...]（有 y＝腳底的物件）, drawActor(g, a) }：牆跟角色一列一列交錯畫——
+   *   同一列先畫牆再畫角色（站在牆旁邊不會被切掉），南邊的牆後畫（走到牆後面會被牆頂擋住）
+   */
+  draw(g, style, o = {}) {
+    const view = this.view(style.margin != null ? style.margin : 2), [x0, y0, x1, y1] = view, s = this.size, L = this.layers.main, W = this.w;
+    if (style.under) style.under(g, this, view);
+    if (style.floor) for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) { if (!this.solidFn(L[cy * W + cx])) style.floor(g, this, cx, cy, this.ox + cx * s, this.oy + cy * s, s); }
+    if (style.ground) style.ground(g, this, view);
+    const actors = o.actors || [], draw = o.drawActor; let ai = 0;
+    if (actors.length > 1) PZ.sortBy(actors, (a) => a.y);
+    while (ai < actors.length && actors[ai].y < this.oy + y0 * s) draw(g, actors[ai++]);
+    for (let cy = y0; cy <= y1; cy++) {
+      if (style.row) style.row(g, this, cy, view);
+      if (style.wall) for (let cx = x0; cx <= x1; cx++) if (this.solidFn(L[cy * W + cx])) style.wall(g, this, cx, cy, this.ox + cx * s, this.oy + cy * s, s);
+      const rowBottom = this.oy + (cy + 1) * s;
+      while (ai < actors.length && actors[ai].y < rowBottom) draw(g, actors[ai++]);
+    }
+    while (ai < actors.length) draw(g, actors[ai++]);
+    if (style.over) style.over(g, this, view);
+    return this;
+  }
+}
+PZ.tilemap = (o) => new Tilemap(o);
+PZ.Tilemap = Tilemap;
+
+/* ---------- 尋路 ---------- */
+class Heap {
+  constructor() { this.k = []; this.v = []; }
+  get size() { return this.k.length; }
+  push(v, k) { const K = this.k, V = this.v; let i = K.length; K.push(k); V.push(v); while (i > 0) { const p = (i - 1) >> 1; if (K[p] <= k) break; K[i] = K[p]; V[i] = V[p]; i = p; } K[i] = k; V[i] = v; }
+  pop() {
+    const K = this.k, V = this.v, top = V[0], lk = K.pop(), lv = V.pop(), n = K.length;
+    if (n) { let i = 0; for (;;) { let c = 2 * i + 1; if (c >= n) break; if (c + 1 < n && K[c + 1] < K[c]) c++; if (K[c] >= lk) break; K[i] = K[c]; V[i] = V[c]; i = c; } K[i] = lk; V[i] = lv; }
+    return top;
+  }
+}
+PZ.Heap = Heap;
+const DIRS8 = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, 1, Math.SQRT2], [-1, -1, Math.SQRT2]];
+const Path = PZ.path = {
+  /** A*：回傳 [[cx, cy]…]（含起點、終點），走不到回傳 null。o = { diag（預設 true）, passable(cx, cy), cost(cx, cy)（額外成本）, max（最多展開幾格） } */
+  find(map, sx, sy, tx, ty, o = {}) {
+    const W = map.w, H = map.h, pass = o.passable || ((x, y) => !map.isSolid(x, y)), diag = o.diag !== false, cost = o.cost;
+    if (!pass(tx, ty) || !pass(sx, sy)) return null;
+    const N = W * H, g = new Float32Array(N).fill(Infinity), from = new Int32Array(N).fill(-1), closed = new Uint8Array(N), heap = new Heap();
+    const s = sy * W + sx, t = ty * W + tx, hfn = (x, y) => { const dx = Math.abs(x - tx), dy = Math.abs(y - ty); return diag ? Math.max(dx, dy) + (Math.SQRT2 - 1) * Math.min(dx, dy) : dx + dy; };
+    g[s] = 0; heap.push(s, hfn(sx, sy)); let n = 0; const max = o.max || N;
+    while (heap.size) {
+      const c = heap.pop(); if (closed[c]) continue; closed[c] = 1;
+      if (c === t) break; if (++n > max) return null;
+      const cx = c % W, cy = (c / W) | 0;
+      for (let d = 0; d < (diag ? 8 : 4); d++) {
+        const [ddx, ddy, dc] = DIRS8[d], nx = cx + ddx, ny = cy + ddy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H || !pass(nx, ny)) continue;
+        if (ddx && ddy && (!pass(cx + ddx, cy) || !pass(cx, cy + ddy))) continue;   // 不切牆角
+        const ni = ny * W + nx; if (closed[ni]) continue;
+        const ng = g[c] + dc + (cost ? cost(nx, ny) : 0);
+        if (ng < g[ni]) { g[ni] = ng; from[ni] = c; heap.push(ni, ng + hfn(nx, ny)); }
+      }
+    }
+    if (from[t] < 0 && s !== t) return null;
+    const out = []; for (let c = t; c >= 0; c = from[c]) { out.push([c % W, (c / W) | 0]); if (c === s) break; }
+    return out.reverse();
+  },
+  /** 把格子路徑拉直（看得到的就直接走過去）：回傳 [{ x, y }…]（世界座標） */
+  smooth(map, cells) {
+    if (!cells || !cells.length) return [];
+    const pts = cells.map(([x, y]) => ({ x: map.cx(x), y: map.cy(y) })), out = [pts[0]];
+    let i = 0;
+    while (i < pts.length - 1) { let j = pts.length - 1; while (j > i + 1 && !Path._clear(map, pts[i], pts[j])) j--; out.push(pts[j]); i = j; }
+    return out;
+  },
+  _clear(map, a, b) { const r = map.size * 0.3, nx = -(b.y - a.y), ny = b.x - a.x, l = Math.hypot(nx, ny) || 1; for (const k of [-1, 0, 1]) if (!map.los(a.x + (nx / l) * r * k, a.y + (ny / l) * r * k, b.x + (nx / l) * r * k, b.y + (ny / l) * r * k)) return false; return true; },
+  /** 流場：PZ.path.flow(map, { max: 60（最遠算幾步）, passable }) → f.update(目標世界座標) 每格；f.dirAt(x, y) 往目標的方向 */
+  flow(map, o = {}) { return new FlowField(map, o); },
+};
+class FlowField {
+  constructor(map, o) {
+    this.map = map; this.max = o.max || 1e9; this.pass = o.passable || ((x, y) => !map.isSolid(x, y));
+    const N = map.w * map.h; this.dist = new Float32Array(N); this.vx = new Float32Array(N); this.vy = new Float32Array(N); this.tx = 0; this.ty = 0; this.tcx = -1; this.tcy = -1; this.heap = new Heap(); this._v = { x: 0, y: 0 };
+  }
+  /** 目標換格子才重算（同一格內移動不用算） */
+  update(wx, wy, force) {
+    const m = this.map, cx = clamp(m.cellX(wx), 0, m.w - 1), cy = clamp(m.cellY(wy), 0, m.h - 1); this.tx = wx; this.ty = wy;
+    if (!force && cx === this.tcx && cy === this.tcy) return this;
+    this.tcx = cx; this.tcy = cy;
+    const W = m.w, H = m.h, D = this.dist, heap = this.heap; D.fill(Infinity);
+    const s = cy * W + cx; D[s] = 0; heap.push(s, 0);
+    while (heap.size) {
+      const c = heap.pop(), dc0 = D[c]; if (dc0 > this.max) continue;
+      const x = c % W, y = (c / W) | 0;
+      for (const [dx, dy, dc] of DIRS8) {
+        const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H || !this.pass(nx, ny)) continue;
+        if (dx && dy && (!this.pass(x + dx, y) || !this.pass(x, y + dy))) continue;
+        const ni = ny * W + nx, nd = dc0 + dc; if (nd < D[ni]) { D[ni] = nd; heap.push(ni, nd); }
+      }
+    }
+    // 每格的方向：往距離最小的鄰居
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x; let best = D[i], bx = 0, by = 0;
+      if (best === Infinity) { this.vx[i] = this.vy[i] = 0; continue; }
+      for (const [dx, dy] of DIRS8) {
+        const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+        if (dx && dy && (!this.pass(x + dx, y) || !this.pass(x, y + dy))) continue;
+        const d = D[ny * W + nx]; if (d < best) { best = d; bx = dx; by = dy; }
+      }
+      const l = Math.hypot(bx, by) || 1; this.vx[i] = bx / l; this.vy[i] = by / l;
+    }
+    return this;
+  }
+  distAt(wx, wy) { const m = this.map, i = m.idx(m.cellX(wx), m.cellY(wy)); return i < 0 ? Infinity : this.dist[i]; }
+  /** 往目標的方向（平滑內插；在目標那一格就直接朝目標點） */
+  dirAt(wx, wy) {
+    const m = this.map, s = m.size, out = this._v, fx = (wx - m.ox) / s - 0.5, fy = (wy - m.oy) / s - 0.5, x0 = Math.floor(fx), y0 = Math.floor(fy), tx = fx - x0, ty = fy - y0;
+    if (m.cellX(wx) === this.tcx && m.cellY(wy) === this.tcy) { const dx = this.tx - wx, dy = this.ty - wy, l = Math.hypot(dx, dy) || 1; out.x = dx / l; out.y = dy / l; return out; }
+    let vx = 0, vy = 0, wsum = 0;
+    const W = m.w, Hh = m.h, D = this.dist, VX = this.vx, VY = this.vy;
+    for (let k = 0; k < 4; k++) {   // 四個角（不建陣列：這裡每隻怪每格都會叫）
+      const ox = k & 1, oy = k >> 1, x = x0 + ox, y = y0 + oy; if (x < 0 || y < 0 || x >= W || y >= Hh) continue;
+      const i = y * W + x; if (D[i] === Infinity || (!VX[i] && !VY[i])) continue;
+      const w = (ox ? tx : 1 - tx) * (oy ? ty : 1 - ty); vx += VX[i] * w; vy += VY[i] * w; wsum += w;
+    }
+    if (!wsum) { const i = m.idx(m.cellX(wx), m.cellY(wy)); vx = i >= 0 ? this.vx[i] : 0; vy = i >= 0 ? this.vy[i] : 0; }
+    const l = Math.hypot(vx, vy); out.x = l ? vx / l : 0; out.y = l ? vy / l : 0; return out;
+  }
+}
+PZ.FlowField = FlowField;
+
+/* ---------- 程序生成 ---------- */
+const Gen = PZ.gen = {
+  /** 地牢：房間＋走廊。o = { rooms: 14, min: 5, max: 11, seed, loops: 0.15（多連幾條形成環） } → { grid（1 牆 0 地）, w, h, rooms, start, end } */
+  dungeon(w, h, o = {}) {
+    const R = makeRng(o.seed != null ? o.seed : (Math.random() * 1e9) | 0), grid = new Int32Array(w * h).fill(1), rooms = [];
+    const minS = o.min || 5, maxS = o.max || 11, want = o.rooms || 14;
+    for (let t = 0; t < want * 30 && rooms.length < want; t++) {
+      const rw = R.int(minS, maxS), rh = R.int(minS, Math.max(minS, maxS - 2)), rx = R.int(1, w - rw - 2), ry = R.int(1, h - rh - 2);
+      if (rooms.some((r) => rx < r.x + r.w + 2 && rx + rw + 2 > r.x && ry < r.y + r.h + 2 && ry + rh + 2 > r.y)) continue;
+      rooms.push({ x: rx, y: ry, w: rw, h: rh, cx: rx + (rw >> 1), cy: ry + (rh >> 1) });
+    }
+    for (const r of rooms) for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) grid[y * w + x] = 0;
+    // 最小生成樹把房間接起來，再多接幾條形成環路
+    const dig = (a, b) => {
+      const horizFirst = R.chance(0.5), wid = R.chance(0.35) ? 2 : 1;
+      const line = (x0, y0, x1, y1) => { const dx = Math.sign(x1 - x0), dy = Math.sign(y1 - y0); let x = x0, y = y0; for (;;) { for (let k = 0; k < wid; k++) { const xx = dy ? x + k : x, yy = dx ? y + k : y; if (xx > 0 && yy > 0 && xx < w - 1 && yy < h - 1) grid[yy * w + xx] = 0; } if (x === x1 && y === y1) break; x += dx; y += dy; } };
+      if (horizFirst) { line(a.cx, a.cy, b.cx, a.cy); line(b.cx, a.cy, b.cx, b.cy); } else { line(a.cx, a.cy, a.cx, b.cy); line(a.cx, b.cy, b.cx, b.cy); }
+    };
+    const inTree = new Set([0]), edges = [];
+    while (inTree.size < rooms.length) {
+      let best = null, bd = Infinity;
+      for (const i of inTree) for (let j = 0; j < rooms.length; j++) { if (inTree.has(j)) continue; const d = dist2(rooms[i].cx, rooms[i].cy, rooms[j].cx, rooms[j].cy); if (d < bd) { bd = d; best = [i, j]; } }
+      if (!best) break; inTree.add(best[1]); edges.push(best);
+    }
+    for (const [i, j] of edges) dig(rooms[i], rooms[j]);
+    const loops = Math.round(rooms.length * (o.loops != null ? o.loops : 0.15));
+    for (let k = 0; k < loops; k++) { const a = R.pick(rooms), b = R.pick(rooms); if (a !== b) dig(a, b); }
+    // 起點：第一間；終點：離起點最遠的一間
+    const start = rooms[0]; let end = start, far = -1; for (const r of rooms) { const d = dist2(r.cx, r.cy, start.cx, start.cy); if (d > far) { far = d; end = r; } }
+    return { grid, w, h, rooms, start, end };
+  },
+  /** 洞窟（細胞自動機）：o = { fill: 0.47, steps: 5, seed } → { grid, w, h, regions }；只留最大的一塊連通區 */
+  caves(w, h, o = {}) {
+    const R = makeRng(o.seed != null ? o.seed : (Math.random() * 1e9) | 0);
+    let g = new Int32Array(w * h); for (let i = 0; i < g.length; i++) g[i] = R.chance(o.fill || 0.47) ? 1 : 0;
+    const at = (a, x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 1 : a[y * w + x]);
+    for (let s = 0; s < (o.steps || 5); s++) {
+      const n = new Int32Array(w * h);
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let c = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) c += at(g, x + dx, y + dy); n[y * w + x] = c > 4 || (c === 4 && g[y * w + x]) ? 1 : 0; }
+      g = n;
+    }
+    for (let x = 0; x < w; x++) { g[x] = 1; g[(h - 1) * w + x] = 1; } for (let y = 0; y < h; y++) { g[y * w] = 1; g[y * w + w - 1] = 1; }
+    const regions = Gen.regions(g, w, h, 0); regions.sort((a, b) => b.length - a.length);
+    for (let i = 1; i < regions.length; i++) for (const c of regions[i]) g[c] = 1;
+    return { grid: g, w, h, regions: regions.slice(0, 1) };
+  },
+  /** 連通區（四方向）：回傳 [[index…]…] */
+  regions(grid, w, h, value = 0) {
+    const seen = new Uint8Array(w * h), out = [];
+    for (let i = 0; i < grid.length; i++) {
+      if (seen[i] || grid[i] !== value) continue;
+      const reg = [], st = [i]; seen[i] = 1;
+      while (st.length) { const c = st.pop(); reg.push(c); const x = c % w, y = (c / w) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy, ni = ny * w + nx; if (nx >= 0 && ny >= 0 && nx < w && ny < h && !seen[ni] && grid[ni] === value) { seen[ni] = 1; st.push(ni); } } }
+      out.push(reg);
+    }
+    return out;
+  },
+  /** 離牆多遠（格子數，八方向）：grid 裡不是 value 的格子＝牆。找「最空曠的地方」放出生點、王房、營火用 */
+  distance(grid, w, h, value = 0) {
+    const D = new Float32Array(w * h), BIG = 1e6, d1 = 1, d2 = Math.SQRT2;
+    for (let i = 0; i < w * h; i++) D[i] = grid[i] === value ? BIG : 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (!D[i]) continue; let v = D[i]; if (x > 0) v = Math.min(v, D[i - 1] + d1); else v = Math.min(v, d1); if (y > 0) { v = Math.min(v, D[i - w] + d1); if (x > 0) v = Math.min(v, D[i - w - 1] + d2); if (x < w - 1) v = Math.min(v, D[i - w + 1] + d2); } else v = Math.min(v, d1); D[i] = v; }
+    for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) { const i = y * w + x; if (!D[i]) continue; let v = D[i]; if (x < w - 1) v = Math.min(v, D[i + 1] + d1); else v = Math.min(v, d1); if (y < h - 1) { v = Math.min(v, D[i + w] + d1); if (x < w - 1) v = Math.min(v, D[i + w + 1] + d2); if (x > 0) v = Math.min(v, D[i + w - 1] + d2); } else v = Math.min(v, d1); D[i] = v; }
+    return D;
+  },
+  /** 雜訊高度圖（0～1）：o = { scale: 0.08, octaves: 4, seed } */
+  noise(w, h, o = {}) {
+    const out = new Float32Array(w * h), sc = o.scale || 0.08, oc = o.octaves || 4, seed = o.seed != null ? o.seed : (Math.random() * 1e5) | 0;
+    const dx = (seed % 997) * 13.7, dy = (seed % 541) * 7.3;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) out[y * w + x] = fbm2(x * sc + dx, y * sc + dy, oc) * 0.5 + 0.5;
+    return out;
+  },
+  /** 島嶼高度圖：雜訊＋中間高、外圈低（海）。o = { scale, seed, falloff: 1.6 } → Float32Array（0～1） */
+  island(w, h, o = {}) {
+    const n = Gen.noise(w, h, { scale: o.scale || 0.07, octaves: 5, seed: o.seed }), f = o.falloff || 1.6;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const nx = (x / (w - 1)) * 2 - 1, ny = (y / (h - 1)) * 2 - 1, d = Math.min(1, Math.hypot(nx, ny)); n[y * w + x] = clamp01(n[y * w + x] * 1.15 - Math.pow(d, f) * 0.75 + 0.18); }
+    return n;
+  },
+  /** 均勻散布（Poisson disc，Bridson）：在 (x, y, w, h) 範圍、彼此至少相距 r；o = { seed, test(px, py)（要不要這點）, max } → [{ x, y }…] */
+  scatter(x, y, w, h, r, o = {}) {
+    const R = makeRng(o.seed != null ? o.seed : (Math.random() * 1e9) | 0), cs = r / Math.SQRT2, gw = Math.ceil(w / cs), gh = Math.ceil(h / cs), grid = new Int32Array(gw * gh).fill(-1), pts = [], active = [];
+    const ok = (px, py) => {
+      if (px < x || py < y || px >= x + w || py >= y + h) return false;
+      const gx = Math.floor((px - x) / cs), gy = Math.floor((py - y) / cs);
+      for (let yy = Math.max(0, gy - 2); yy <= Math.min(gh - 1, gy + 2); yy++) for (let xx = Math.max(0, gx - 2); xx <= Math.min(gw - 1, gx + 2); xx++) { const i = grid[yy * gw + xx]; if (i >= 0 && dist2(px, py, pts[i].x, pts[i].y) < r * r) return false; }
+      return true;
+    };
+    const add = (px, py) => { pts.push({ x: px, y: py }); active.push(pts.length - 1); grid[Math.floor((py - y) / cs) * gw + Math.floor((px - x) / cs)] = pts.length - 1; };
+    add(x + R.next() * w, y + R.next() * h);
+    const max = o.max || 1e5;
+    while (active.length && pts.length < max) {
+      const ai = R.int(0, active.length - 1), p = pts[active[ai]]; let found = false;
+      for (let k = 0; k < 24; k++) { const a = R.angle(), d = r * (1 + R.next()), px = p.x + Math.cos(a) * d, py = p.y + Math.sin(a) * d; if (ok(px, py)) { add(px, py); found = true; break; } }
+      if (!found) active.splice(ai, 1);
+    }
+    return o.test ? pts.filter((p) => o.test(p.x, p.y)) : pts;
+  },
+};
+
+/* ---------- 等角（斜 45°）投影小工具 ---------- */
+PZ.iso = {
+  /** 格子 (cx, cy, 高度 z) → 畫面座標（世界單位）；tw、th＝菱形的寬、高 */
+  toScreen(cx, cy, z = 0, tw = 64, th = 32) { return { x: (cx - cy) * tw / 2, y: (cx + cy) * th / 2 - z }; },
+  /** 畫面座標 → 格子（小數） */
+  toCell(x, y, tw = 64, th = 32) { return { x: (x / (tw / 2) + y / (th / 2)) / 2, y: (y / (th / 2) - x / (tw / 2)) / 2 }; },
+};
+
+/* ---- 31_tiles.js ---- */
+/* ==========================================================================
+   31 地圖的畫法（風格）：給 map.draw(g, style) 用
+     PZ.tiles.dungeon({ floor, brick, top, height })          2.5D 地牢：石板地（每格隨機花色、雜物）、牆頂＋磚牆正面、牆腳陰影、亮邊
+     PZ.tiles.cave(map, { ground, rock, face, rim, height })   洞窟：圓滑的岩壁（marching squares）、兩段懸崖面、接地陰影、亮邊、地上的碎石菇類
+     PZ.tiles.island(map, 高度圖, { levels })                  島嶼：深海 → 淺灘（浪花一進一退）→ 沙灘 → 草地 → 岩石，一層一層的等高線
+       style.height：牆高（格子的幾倍）；配光影：dungeon 用 map.lightBoxes({ lift: style.lift(map) })，cave 用 PZ.light.occluders(style.occlude)
+     PZ.tiles.marching(g, map, 數值圖, 門檻, { color, dy, rim, rows })   把數值圖畫成圓滑的區塊（做自己的風格用）
+     PZ.tiles.soften(map)   0/1 格子 → 柔化的數值圖（岩壁、海岸線變圓）
+   顏色都可以換；材質是程式畫的（第一次用到才畫，放進圖集）。
+   ========================================================================== */
+const tileHash = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return (h ^ (h >>> 16)) >>> 0; };
+const Tiles = PZ.tiles = { hash: tileHash };
+
+/* ---------- marching squares ---------- */
+// 角落：A 左上（8）、B 右上（4）、C 右下（2）、D 左下（1）；邊上的點 AB、BC、CD、DA 依數值內插
+const MS_POLY = [null, [['DA', 'CD', 'D']], [['BC', 'C', 'CD']], [['DA', 'BC', 'C', 'D']], [['AB', 'B', 'BC']], [['AB', 'B', 'BC'], ['DA', 'CD', 'D']], [['AB', 'B', 'C', 'CD']], [['DA', 'AB', 'B', 'C', 'D']],
+  [['A', 'AB', 'DA']], [['A', 'AB', 'CD', 'D']], [['A', 'AB', 'DA'], ['BC', 'C', 'CD']], [['A', 'AB', 'BC', 'C', 'D']], [['A', 'B', 'BC', 'DA']], [['A', 'B', 'BC', 'CD', 'D']], [['A', 'B', 'C', 'CD', 'DA']], null];
+const MS_EDGE = [null, [['DA', 'CD']], [['BC', 'CD']], [['DA', 'BC']], [['AB', 'BC']], [['AB', 'BC'], ['DA', 'CD']], [['AB', 'CD']], [['DA', 'AB']], [['AB', 'DA']], [['AB', 'CD']], [['AB', 'DA'], ['BC', 'CD']], [['AB', 'BC']], [['BC', 'DA']], [['BC', 'CD']], [['CD', 'DA']], null];
+const MSP = { A: [0, 0], B: [0, 0], C: [0, 0], D: [0, 0], AB: [0, 0], BC: [0, 0], CD: [0, 0], DA: [0, 0] }, MS_A = [], MS_B = [], MS_R = [0, 0, 0, 0, 0, 0, 0, 0];
+/** 凸多邊形（扁平陣列）在水平線 yc 切一刀，留下 y ≥ yc（ge）或 y ≤ yc 的那半 */
+function msClip(src, yc, ge, dst) {
+  dst.length = 0; const n = src.length / 2;
+  for (let i = 0; i < n; i++) {
+    const ax = src[i * 2], ay = src[i * 2 + 1], j = (i + 1) % n, bx = src[j * 2], by = src[j * 2 + 1];
+    const ain = ge ? ay >= yc : ay <= yc, bin = ge ? by >= yc : by <= yc;
+    if (ain) dst.push(ax, ay);
+    if (ain !== bin) dst.push(ax + (bx - ax) * ((yc - ay) / (by - ay)), yc);
+  }
+  return dst;
+}
+/**
+ * 把數值圖 field（長寬＝map 的格子，數值取在格子中心）在 thr 以上的地方畫成圓滑的色塊。
+ * o = { color, a, dy（整片往下移；負的往上，畫 2.5D 的頂面）, fill（false＝只畫輪廓）, view（格子範圍）, tex（PZ.art.pattern 材質，乘上 color）, texS（材質縮放）,
+ *       rows: [y0, y1]（只畫世界座標這段 y 之間的部分，2.5D 一列一列跟角色交錯畫用）,
+ *       rim: { color, w, a, back（不朝南的邊亮幾成，預設 0.35）, mode: 'south'（只畫朝南的邊：懸崖底的接地陰影） }, outside（地圖外當成多少） }
+ */
+Tiles.marching = (g, map, field, thr, o = {}) => {
+  const view = o.view || map.view(2), W = map.w, H = map.h, s = map.size, ox = map.ox + s / 2, oy = map.oy + s / 2, dy = o.dy || 0;
+  const col = toColor(o.color || '#fff'), al = o.a != null ? o.a : 1, rim = o.rim, fill = o.fill !== false, out = o.outside != null ? o.outside : 0;
+  const rc = rim ? toColor(rim.color || '#fff') : 0, rw = rim ? rim.w || 2 : 0, ra = rim ? (rim.a != null ? rim.a : 0.5) : 0, back = rim && rim.back != null ? rim.back : 0.35, southOnly = rim && rim.mode === 'south';
+  let ylo = -Infinity, yhi = Infinity, cy0 = view[1] - 1, cy1 = view[3];
+  if (o.rows) { ylo = o.rows[0]; yhi = o.rows[1]; cy0 = Math.max(cy0, Math.floor((ylo - oy) / s)); cy1 = Math.min(cy1, Math.ceil((yhi - oy) / s) - 1); }
+  const val = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? out : field[y * W + x]);
+  const lt = (va, vb) => (vb === va ? 0.5 : clamp01((thr - va) / (vb - va)));
+  const P = MSP, fo = { a: al }, lo = { a: 0 }, tex = o.tex ? Art.get(o.tex) : null, to = tex ? { color: col, a: al, s: o.texS || 1 } : null;
+  const runOut = (cx0, cx1, y0, y1) => {   // 一排整格：材質的話切成幾段（材質座標不要太大）
+    const xa0 = ox + cx0 * s, xb0 = ox + cx1 * s;
+    if (!tex) { g.rect(xa0, y0, xb0 - xa0, y1 - y0, col, fo); return; }
+    const step = tex.w * to.s * 2;
+    for (let xa = xa0; xa < xb0 - 0.01; xa += step) { const xb = Math.min(xb0, xa + step); MS_R[0] = xa; MS_R[1] = y0; MS_R[2] = xb; MS_R[3] = y0; MS_R[4] = xb; MS_R[5] = y1; MS_R[6] = xa; MS_R[7] = y1; g.polyTex(MS_R, tex, to); }
+  };
+  for (let cy = cy0; cy <= cy1; cy++) {
+    const Y = oy + cy * s, ry0 = Math.max(Y, ylo), ry1 = Math.min(Y + s, yhi), clip = Y < ylo || Y + s > yhi;
+    if (ry1 <= ry0) continue;
+    let run = -1;   // 整格都在裡面（case 15）的連續一排合成一個長方形
+    for (let cx = view[0] - 1; cx <= view[2] + 1; cx++) {
+      const a = val(cx, cy), b = val(cx + 1, cy), c = val(cx + 1, cy + 1), d = val(cx, cy + 1);
+      const k = (a >= thr ? 8 : 0) | (b >= thr ? 4 : 0) | (c >= thr ? 2 : 0) | (d >= thr ? 1 : 0);
+      if (k === 15 && cx <= view[2]) { if (run < 0) run = cx; continue; }
+      if (run >= 0) { if (fill) runOut(run, cx, ry0 + dy, ry1 + dy); run = -1; }
+      if (!k || k === 15) continue;
+      const X = ox + cx * s;
+      P.A[0] = X; P.A[1] = Y; P.B[0] = X + s; P.B[1] = Y; P.C[0] = X + s; P.C[1] = Y + s; P.D[0] = X; P.D[1] = Y + s;
+      P.AB[0] = X + s * lt(a, b); P.AB[1] = Y; P.BC[0] = X + s; P.BC[1] = Y + s * lt(b, c); P.CD[0] = X + s * (1 - lt(c, d)); P.CD[1] = Y + s; P.DA[0] = X; P.DA[1] = Y + s * (1 - lt(d, a));
+      if (fill) for (const poly of MS_POLY[k]) {
+        let pts = MS_A; pts.length = 0; for (const n of poly) pts.push(P[n][0], P[n][1]);
+        if (clip) { if (Y < ylo) pts = msClip(pts, ylo, true, MS_B); if (Y + s > yhi) pts = msClip(pts, yhi, false, pts === MS_A ? MS_B : MS_A); if (pts.length < 6) continue; }
+        if (dy) for (let i = 1; i < pts.length; i += 2) pts[i] += dy;
+        if (tex) g.polyTex(pts, tex, to); else g.poly(pts, col, fo);
+      }
+      if (rim) {
+        // 朝哪邊：數值往低的方向＝外面；朝南（往下）的邊最亮（懸崖邊緣迎光）
+        const gx = b + c - a - d, gy = d + c - a - b, gl = Math.hypot(gx, gy) || 1, south = clamp01(-gy / gl);
+        const k2 = southOnly ? south : back + (1 - back) * south; if (k2 <= 0.02) continue;
+        lo.a = ra * k2;
+        for (const [e0, e1] of MS_EDGE[k]) {
+          let x0 = P[e0][0], y0 = P[e0][1], x1 = P[e1][0], y1 = P[e1][1];
+          if (clip) {
+            if ((y0 < ylo && y1 < ylo) || (y0 > yhi && y1 > yhi)) continue;
+            const cl = (yc) => { const t = (yc - y0) / (y1 - y0); return [x0 + (x1 - x0) * t, yc]; };
+            if (y0 < ylo) [x0, y0] = cl(ylo); else if (y0 > yhi) [x0, y0] = cl(yhi);
+            if (y1 < ylo) [x1, y1] = cl(ylo); else if (y1 > yhi) [x1, y1] = cl(yhi);
+          }
+          g.line(x0, y0 + dy, x1, y1 + dy, rw, rc, lo);
+        }
+      }
+    }
+    if (run >= 0 && fill) runOut(run, view[2] + 1, ry0 + dy, ry1 + dy);
+  }
+};
+/**
+ * 等高線快取：地圖不會變，輪廓算一次存起來（按列），之後每格只剩「畫」——比每格重算 Tiles.marching 快很多
+ *   const c = PZ.tiles.contour(map, field, 0.5)      c.draw(g, map.view(2), { color, tex, dy, rim })      c.drawRow(g, 列, x0, x1, 層)
+ * 層（layer）= { color, a, dy, tex, texS, rim: { color, w, a, back, mode } }（同 Tiles.marching 的選項；第一次用會記住換算好的值，之後別改）
+ */
+class Contour {
+  constructor(map, field, thr, outside = 0) { this.map = map; this.field = field; this.thr = thr; this.out = outside; this.rows = []; }
+  /** 第 r 列（世界 y 在 r×格～(r+1)×格）的幾何：runs [xa, xb, ya, yb…]（整格一長條）、polys [{ x, pts }]、rims [x, x0, y0, x1, y1, 朝南…] */
+  row(r) {
+    let R = this.rows[r + 1]; if (R) return R;
+    R = this.rows[r + 1] = { runs: [], polys: [], rims: [] };
+    const m = this.map, s = m.size, ox = m.ox + s / 2, oy = m.oy + s / 2, W = m.w, H = m.h, F = this.field, thr = this.thr, out = this.out, P = MSP;
+    const val = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? out : F[y * W + x]);
+    const lt = (va, vb) => (vb === va ? 0.5 : clamp01((thr - va) / (vb - va)));
+    const ylo = m.oy + r * s, yhi = ylo + s;
+    for (let cy = r - 1; cy <= r; cy++) {
+      const Y = oy + cy * s, ry0 = Math.max(Y, ylo), ry1 = Math.min(Y + s, yhi); if (ry1 <= ry0) continue;
+      let run = -9;
+      for (let cx = -1; cx <= W; cx++) {
+        const a = val(cx, cy), b = val(cx + 1, cy), c = val(cx + 1, cy + 1), d = val(cx, cy + 1);
+        const k = (a >= thr ? 8 : 0) | (b >= thr ? 4 : 0) | (c >= thr ? 2 : 0) | (d >= thr ? 1 : 0);
+        if (k === 15) { if (run === -9) run = cx; continue; }
+        if (run !== -9) { R.runs.push(ox + run * s, ox + cx * s, ry0, ry1); run = -9; }
+        if (!k) continue;
+        const X = ox + cx * s;
+        P.A[0] = X; P.A[1] = Y; P.B[0] = X + s; P.B[1] = Y; P.C[0] = X + s; P.C[1] = Y + s; P.D[0] = X; P.D[1] = Y + s;
+        P.AB[0] = X + s * lt(a, b); P.AB[1] = Y; P.BC[0] = X + s; P.BC[1] = Y + s * lt(b, c); P.CD[0] = X + s * (1 - lt(c, d)); P.CD[1] = Y + s; P.DA[0] = X; P.DA[1] = Y + s * (1 - lt(d, a));
+        for (const poly of MS_POLY[k]) {
+          let pts = MS_A; pts.length = 0; for (const n of poly) pts.push(P[n][0], P[n][1]);
+          if (Y < ylo) pts = msClip(pts, ylo, true, MS_B); if (Y + s > yhi) pts = msClip(pts, yhi, false, pts === MS_A ? MS_B : MS_A);
+          if (pts.length >= 6) R.polys.push({ x: X, pts: Float32Array.from(pts) });
+        }
+        const gx = b + c - a - d, gy = d + c - a - b, south = clamp01(-gy / (Math.hypot(gx, gy) || 1));
+        for (const [e0, e1] of MS_EDGE[k]) {
+          let x0 = P[e0][0], y0 = P[e0][1], x1 = P[e1][0], y1 = P[e1][1];
+          if ((y0 < ylo && y1 < ylo) || (y0 > yhi && y1 > yhi)) continue;
+          if (y0 < ylo || y0 > yhi) { const yc = y0 < ylo ? ylo : yhi; x0 += ((x1 - x0) * (yc - y0)) / (y1 - y0); y0 = yc; }
+          if (y1 < ylo || y1 > yhi) { const yc = y1 < ylo ? ylo : yhi; x1 = x0 + ((x1 - x0) * (yc - y0)) / (y1 - y0); y1 = yc; }
+          if (Math.abs(x1 - x0) + Math.abs(y1 - y0) > 0.01) R.rims.push(X, x0, y0, x1, y1, south);
+        }
+      }
+      if (run !== -9) R.runs.push(ox + run * s, ox + (W + 1) * s, ry0, ry1);
+    }
+    return R;
+  }
+  /** 第一次用某一層：把顏色、材質換算好記在層上 */
+  _prep(L) {
+    if (L._p) return L;
+    L._p = true; L._col = toColor(L.color || '#fff'); L._fo = { a: L.a != null ? L.a : 1 }; L._tex = L.tex ? Art.get(L.tex) : null;
+    L._to = L._tex ? { color: L._col, a: L._fo.a, s: L.texS || 1 } : null;
+    if (L.rim) { const q = L.rim; L._rc = toColor(q.color || '#fff'); L._rw = q.w || 2; L._ra = q.a != null ? q.a : 0.5; L._rb = q.back != null ? q.back : 0.35; L._rs = q.mode === 'south'; L._lo = { a: 0 }; }
+    return L;
+  }
+  drawRow(g, r, x0w, x1w, L) {
+    if (r < -1 || r > this.map.h) return;
+    const R = this.row(r), s = this.map.size, dy = L.dy || 0; this._prep(L);
+    if (L.fill !== false) {
+      const runs = R.runs, tex = L._tex;
+      for (let i = 0; i < runs.length; i += 4) {
+        const xa0 = Math.max(runs[i], x0w), xb0 = Math.min(runs[i + 1], x1w); if (xb0 <= xa0) continue;
+        const y0 = runs[i + 2] + dy, y1 = runs[i + 3] + dy;
+        if (!tex) { g.rect(xa0, y0, xb0 - xa0, y1 - y0, L._col, L._fo); continue; }
+        const step = tex.w * L._to.s * 2;
+        for (let xa = xa0; xa < xb0 - 0.01; xa += step) { const xb = Math.min(xb0, xa + step); MS_R[0] = xa; MS_R[1] = y0; MS_R[2] = xb; MS_R[3] = y0; MS_R[4] = xb; MS_R[5] = y1; MS_R[6] = xa; MS_R[7] = y1; g.polyTex(MS_R, tex, L._to); }
+      }
+      for (const Pg of R.polys) {
+        if (Pg.x + s < x0w || Pg.x > x1w) continue;
+        const src = Pg.pts, pts = MS_A; pts.length = src.length;
+        for (let i = 0; i < src.length; i += 2) { pts[i] = src[i]; pts[i + 1] = src[i + 1] + dy; }
+        if (tex) g.polyTex(pts, tex, L._to); else g.poly(pts, L._col, L._fo);
+      }
+    }
+    if (L.rim) {
+      const rm = R.rims, lo = L._lo;
+      for (let i = 0; i < rm.length; i += 6) {
+        if (rm[i] + s < x0w || rm[i] > x1w) continue;
+        const k = L._rs ? rm[i + 5] : L._rb + (1 - L._rb) * rm[i + 5]; if (k <= 0.02) continue;
+        lo.a = L._ra * k; g.line(rm[i + 1], rm[i + 2] + dy, rm[i + 3], rm[i + 4] + dy, L._rw, L._rc, lo);
+      }
+    }
+  }
+  /** 畫整個畫面看得到的範圍（view＝map.view() 的格子範圍） */
+  draw(g, view, L) {
+    const m = this.map, s = m.size, x0w = m.ox + (view[0] - 1) * s, x1w = m.ox + (view[2] + 2) * s, dy = L.dy || 0;
+    const r0 = Math.max(-1, view[1] - 1 - Math.ceil(Math.max(0, dy) / s)), r1 = Math.min(m.h, view[3] + 1 + Math.ceil(Math.max(0, -dy) / s));
+    for (let r = r0; r <= r1; r++) this.drawRow(g, r, x0w, x1w, L);
+  }
+}
+Tiles.contour = (map, field, thr, outside) => new Contour(map, field, thr, outside);
+Tiles.Contour = Contour;
+/** 0/1 格子 → 柔化過的數值圖（洞窟岩壁、海岸線用）：blur 次數越多越圓 */
+Tiles.soften = (map, test = (x, y) => map.isSolid(x, y), blur = 1) => {
+  const W = map.w, H = map.h; let f = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) f[y * W + x] = test(x, y) ? 1 : 0;
+  for (let k = 0; k < blur; k++) {
+    const n = new Float32Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let s = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; s += xx < 0 || yy < 0 || xx >= W || yy >= H ? 1 : f[yy * W + xx]; } n[y * W + x] = (s / 9) * 0.6 + f[y * W + x] * 0.4; }
+    f = n;
+  }
+  return f;
+};
+const MUSH = [[8, 14, 4.2], [14, 11.9, 5.7], [18, 15.2, 3.4]];   // 螢光菇（洞窟雜物第 1 種）三朵菇傘的位置與大小
+const tileKey = (...cs) => cs.join('').replace(/[^a-z0-9]/gi, '').slice(0, 40);
+/** 一格裡隨機放一個小東西：回傳 0～1 的位置（避開邊緣） */
+const tileJit = (h, k) => 0.22 + (((h >>> k) & 255) / 255) * 0.56;
+
+/* ---------- 共用材質（淡色，乘上地形的顏色）：岩石、草、沙 ---------- */
+/** 左右上下接得起來地畫：fn 在九個位置各畫一次（超出邊界的部分會從另一邊冒出來） */
+const wrapDraw = (c, w, h, fn) => { for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) { c.save(); c.translate(ox, oy); fn(); c.restore(); } };
+Tiles.patterns = () => {
+  if (Art.has('tl.pat.rock')) return;
+  Art.pattern('tl.pat.rock', 64, 64, (c, w, h) => {
+    const R = makeRng(12); c.fillStyle = '#e4e4e4'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 14; i++) { const x = R.range(0, w), y = R.range(0, h), r = R.range(6, 16), a = R.range(0.05, 0.13), dark = R.chance(0.6); wrapDraw(c, w, h, () => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${dark ? '0,0,0' : '255,255,255'},${a})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); }); }
+    for (let i = 0; i < 7; i++) { const pts = [[R.range(0, w), R.range(0, h)]]; for (let k = 0; k < 4; k++) { const [px, py] = pts[pts.length - 1]; pts.push([px + R.spread(9), py + R.spread(9)]); } wrapDraw(c, w, h, () => { c.strokeStyle = 'rgba(0,0,0,.32)'; c.lineWidth = 0.9; c.beginPath(); pts.forEach(([x, y], k) => (k ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.22)'; c.lineWidth = 0.6; c.beginPath(); pts.forEach(([x, y], k) => (k ? c.lineTo(x + 0.8, y + 0.8) : c.moveTo(x + 0.8, y + 0.8))); c.stroke(); }); }
+    for (let i = 0; i < 90; i++) { const x = R.range(0, w), y = R.range(0, h), r = R.range(0.4, 1.4); c.fillStyle = `rgba(${R.chance(0.5) ? '0,0,0' : '255,255,255'},${R.range(0.08, 0.2)})`; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+  });
+  Art.pattern('tl.pat.grass', 64, 64, (c, w, h) => {
+    const R = makeRng(21); c.fillStyle = '#ececec'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 12; i++) { const x = R.range(0, w), y = R.range(0, h), r = R.range(8, 18), a = R.range(0.04, 0.1), dark = R.chance(0.5); wrapDraw(c, w, h, () => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(${dark ? '0,0,0' : '255,255,255'},${a})`); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); }); }
+    for (let i = 0; i < 220; i++) { const x = R.range(0, w), y = R.range(0, h), l = R.range(1.6, 3.6), b = R.spread(1.2), dark = R.chance(0.55); wrapDraw(c, w, h, () => { c.strokeStyle = `rgba(${dark ? '0,40,0' : '255,255,230'},${R.range(0.1, 0.22)})`; c.lineWidth = 0.7; c.beginPath(); c.moveTo(x, y); c.lineTo(x + b, y - l); c.stroke(); }); }
+  });
+  Art.pattern('tl.pat.sand', 64, 64, (c, w, h) => {
+    const R = makeRng(33); c.fillStyle = '#f2f2f2'; c.fillRect(0, 0, w, h);
+    for (let k = 0; k < 6; k++) { const y0 = R.range(0, h), amp = R.range(1, 2.4), ph = R.angle(); wrapDraw(c, w, h, () => { c.strokeStyle = 'rgba(120,90,40,.12)'; c.lineWidth = 1.1; c.beginPath(); for (let x = 0; x <= w; x += 2) { const y = y0 + Math.sin((x / w) * TAU * 2 + ph) * amp; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }); }
+    for (let i = 0; i < 320; i++) { c.fillStyle = `rgba(${R.chance(0.6) ? '90,70,40' : '255,255,255'},${R.range(0.08, 0.24)})`; c.fillRect(R.range(0, w), R.range(0, h), R.range(0.4, 1), R.range(0.4, 1)); }
+  });
+};
+
+/* ---------- 2.5D 地牢 ---------- */
+// 靠近地板的牆畫「牆頂」（石材＋亮邊），更裡面的實心岩不畫（深色背景＝看不見的黑暗）；朝南、底下是地板的牆畫磚牆正面
+Tiles.dungeon = (o = {}) => {
+  const C = Object.assign({ floor: '#3f434e', cap: '#4a4e5a', brick: '#6a5248', height: 0.8, rim: 'rgba(255,238,215,.4)', deco: 0.07 }, o);
+  const key = 'tl.dg' + tileKey(C.floor, C.cap, C.brick);
+  if (!Art.has(key + '.floor')) {
+    // 地板：128×128 一整片不規則石板（四格一循環，跟世界座標對齊，看不出格子）
+    Art.make(key + '.floor', 128, 128, (c, w, h) => {
+      const R = makeRng(31), base = toColor(C.floor);
+      c.fillStyle = Color.css(Color.darken(base, 0.62)); c.fillRect(0, 0, w, h);
+      const stone = (x, y, sw, sh) => {
+        const l = R.range(-12, 10), col = Color.mix(base, l > 0 ? '#ffffff' : '#000000', Math.abs(l) / 100), warm = R.range(-6, 6);
+        const gr = c.createLinearGradient(x, y, x + sw, y + sh); gr.addColorStop(0, Color.css(Color.lighten(col, 0.06))); gr.addColorStop(1, Color.css(Color.darken(col, 0.1 + warm / 200)));
+        for (const ox of [0, -w]) {
+          c.fillStyle = gr; c.save(); c.translate(ox, 0); c.beginPath(); c.roundRect(x + 1.1, y + 1.1, sw - 2.2, sh - 2.2, 2.2); c.fill();
+          c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(x + 2, y + 1.3, sw - 4, 1); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x + 2, y + sh - 2.4, sw - 4, 1.1);
+          c.restore();
+        }
+      };
+      let y = 0;
+      for (const rh of [30, 22, 40, 36]) { let x = -R.range(0, 20); const x0 = x; while (x < x0 + w) { const sw = Math.min(R.range(22, 44), x0 + w - x); if (sw > 6) stone(x < 0 ? x + w : x, y, sw, rh); x += sw; } y += rh; }
+      for (let n = 0; n < 260; n++) { c.fillStyle = `rgba(${R.chance(0.5) ? '255,255,255' : '0,0,0'},${R.range(0.03, 0.08)})`; c.fillRect(R.range(0, w), R.range(0, h), R.range(0.5, 2), R.range(0.5, 2)); }
+      c.strokeStyle = 'rgba(0,0,0,.42)'; c.lineWidth = 0.9;
+      for (let k = 0; k < 5; k++) { let px = R.range(8, w - 8), py = R.range(8, h - 8); c.beginPath(); c.moveTo(px, py); for (let j = 0; j < 4; j++) { px += R.spread(8); py += R.range(3, 8); c.lineTo(px, py); } c.stroke(); }
+      for (let k = 0; k < 4; k++) { const x = R.range(10, w - 10), y2 = R.range(10, h - 10), gr = c.createRadialGradient(x, y2, 0, x, y2, R.range(10, 18)); gr.addColorStop(0, 'rgba(84,124,62,.26)'); gr.addColorStop(1, 'rgba(84,124,62,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }
+    }, { anchor: [0, 0], wrap: true });
+    Art.make(key + '.cap', 32, 32, (c, w, h) => {
+      const R = makeRng(5); c.fillStyle = C.cap; c.fillRect(0, 0, w, h);
+      for (let n = 0; n < 7; n++) { const x = R.range(0, w), y = R.range(0, h), gr = c.createRadialGradient(x, y, 0, x, y, R.range(6, 12)); gr.addColorStop(0, `rgba(${R.chance(0.5) ? '255,255,255' : '0,0,0'},${R.range(0.03, 0.06)})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }
+      for (let n = 0; n < 60; n++) { c.fillStyle = `rgba(${R.chance(0.5) ? '255,255,255' : '0,0,0'},${R.range(0.03, 0.08)})`; c.fillRect(R.range(0, w), R.range(0, h), R.range(0.6, 2.4), R.range(0.6, 1.6)); }
+    }, { anchor: [0, 0], wrap: true });
+    Art.make(key + '.face', 32, 16, (c, w, h) => {
+      const base = toColor(C.brick), R = makeRng(9); c.fillStyle = Color.css(Color.darken(base, 0.6)); c.fillRect(0, 0, w, h);
+      for (let row = 0; row < 2; row++) for (let i = -1; i < 3; i++) { const x = i * 16 + (row ? 8 : 0), y = row * 8; c.fillStyle = Color.css(Color.mix(base, '#000', R.range(0, 0.32))); c.fillRect(x + 0.6, y + 0.6, 14.8, 6.8); c.fillStyle = 'rgba(255,255,255,.1)'; c.fillRect(x + 0.6, y + 0.6, 14.8, 0.8); c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(x + 0.6, y + 6.6, 14.8, 0.8); }
+    }, { anchor: [0, 0], wrap: true });
+    Art.make(key + '.ao', 8, 16, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(0,0,0,.62)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }, { anchor: [0, 0], scale: 1 });
+    // 地上的雜物：骨頭、頭骨、碎石、排水孔、水窪、苔蘚
+    Art.sheet(key + '.deco', 6, 24, 24, (c, w, h, i) => {
+      const R = makeRng(70 + i);
+      if (i === 0) { c.strokeStyle = '#d8cdb4'; c.lineCap = 'round'; c.lineWidth = 2.4; for (const [a, b, d, e] of [[4, 17, 19, 8], [6, 7, 18, 18]]) { c.beginPath(); c.moveTo(a, b); c.lineTo(d, e); c.stroke(); } c.fillStyle = '#e9e0c8'; for (const [x, y] of [[4, 17], [19, 8], [6, 7], [18, 18]]) { c.beginPath(); c.arc(x, y, 1.9, 0, TAU); c.fill(); } }
+      if (i === 1) { c.fillStyle = '#e2d8be'; c.beginPath(); c.arc(12, 10, 6.5, 0, TAU); c.fill(); c.fillRect(8.5, 13, 7, 5); c.fillStyle = '#1b1612'; c.beginPath(); c.arc(9.6, 10.5, 1.7, 0, TAU); c.arc(14.4, 10.5, 1.7, 0, TAU); c.fill(); c.fillRect(10, 16, 1, 2); c.fillRect(12.5, 16, 1, 2); }
+      if (i === 2) for (let k = 0; k < 6; k++) { const x = R.range(4, 20), y = R.range(6, 20), r = R.range(1.5, 3.5); c.fillStyle = `hsl(220,6%,${R.range(28, 44)}%)`; c.beginPath(); c.moveTo(x - r, y); c.lineTo(x - r * 0.3, y - r); c.lineTo(x + r, y - r * 0.4); c.lineTo(x + r * 0.6, y + r * 0.7); c.closePath(); c.fill(); }
+      if (i === 3) { c.fillStyle = '#121418'; c.fillRect(3, 3, 18, 18); c.fillStyle = '#4b5059'; for (let x = 4; x < 21; x += 4) c.fillRect(x, 3, 2, 18); c.strokeStyle = '#5e646e'; c.lineWidth = 1.4; c.strokeRect(3, 3, 18, 18); }
+      if (i === 4) { c.fillStyle = 'rgba(30,48,70,.75)'; c.beginPath(); c.ellipse(12, 13, 10, 6, 0.2, 0, TAU); c.fill(); c.fillStyle = 'rgba(170,210,255,.28)'; c.beginPath(); c.ellipse(9, 11, 4, 1.5, 0.2, 0, TAU); c.fill(); }
+      if (i === 5) for (let k = 0; k < 5; k++) { const x = R.range(4, 20), y = R.range(4, 20), gr = c.createRadialGradient(x, y, 0, x, y, R.range(4, 8)); gr.addColorStop(0, 'rgba(96,140,64,.55)'); gr.addColorStop(1, 'rgba(96,140,64,0)'); c.fillStyle = gr; c.fillRect(0, 0, w, h); }
+    }, { anchor: [0.5, 0.5] });
+    // 牆面上的東西：滴下來的苔蘚、裂縫、鐵環
+    Art.sheet(key + '.fdeco', 3, 32, 20, (c, w, h, i) => {
+      if (i === 0) { const R = makeRng(4); for (let k = 0; k < 4; k++) { const x = R.range(4, 28), l = R.range(5, 15); c.fillStyle = 'rgba(80,130,60,.55)'; c.fillRect(x, 0, R.range(2, 4), l); c.beginPath(); c.arc(x + 1.5, l, 1.8, 0, TAU); c.fill(); } c.fillStyle = 'rgba(80,130,60,.6)'; c.fillRect(0, 0, w, 2.5); }
+      if (i === 1) { c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(18, 0); c.lineTo(15, 5); c.lineTo(19, 9); c.lineTo(14, 15); c.moveTo(19, 9); c.lineTo(24, 12); c.stroke(); }
+      if (i === 2) { c.strokeStyle = '#2b2b2f'; c.lineWidth = 2; c.beginPath(); c.arc(16, 9, 4.5, 0, TAU); c.stroke(); c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = 0.8; c.beginPath(); c.arc(16, 9, 4.5, Math.PI * 1.1, Math.PI * 1.6); c.stroke(); c.fillStyle = '#2b2b2f'; c.fillRect(14.5, 2.5, 3, 3); }
+    }, { anchor: [0, 0] });
+  }
+  const floor = Art.get(key + '.floor'), cap = Art.get(key + '.cap'), face = Art.get(key + '.face'), ao = Art.get(key + '.ao');
+  const deco = [0, 1, 2, 3, 4, 5].map((i) => Art.get(key + '.deco:' + i)), fdeco = [0, 1, 2].map((i) => Art.get(key + '.fdeco:' + i));
+  const fo = { s: 1 }, flo = { s: 1, ox: 0, oy: 0 }, decoK = Math.round(C.deco * 1000), rimC = toColor(C.rim), lipC = Color.alpha(C.rim, Color.a(C.rim) * 0.7);
+  return {
+    margin: 2, height: C.height,
+    lift: (m) => m.size * C.height,
+    floor(g, m, cx, cy, x, y, s) {
+      flo.s = s / 32; flo.ox = x; flo.oy = y; g.tile(floor, x, y, s, s, flo);
+      const h = tileHash(cx, cy);
+      if (((h >>> 9) % 1000) < decoK) { const d = deco[(h >>> 19) % 6]; g.spr(d, x + s * tileJit(h, 2), y + s * tileJit(h, 12), ((h >>> 22) % 628) / 100, s / 34, s / 34); }
+      if (m.isSolid(cx, cy - 1)) g.spr(ao, x, y, 0, s / ao.w, (s * 0.62) / ao.h);           // 牆腳的陰影
+      if (m.isSolid(cx - 1, cy)) g.spr(ao, x, y + s, -Math.PI / 2, s / ao.w, (s * 0.3) / ao.h);
+      if (m.isSolid(cx + 1, cy)) g.spr(ao, x + s, y, Math.PI / 2, s / ao.w, (s * 0.3) / ao.h);
+    },
+    wall(g, m, cx, cy, x, y, s) {
+      const n = !m.isSolid(cx, cy - 1), e = !m.isSolid(cx + 1, cy), so = !m.isSolid(cx, cy + 1), w = !m.isSolid(cx - 1, cy);
+      // 八方向都是牆＝實心岩裡面：不畫（黑暗）
+      if (!(n || e || so || w || !m.isSolid(cx - 1, cy - 1) || !m.isSolid(cx + 1, cy - 1) || !m.isSolid(cx - 1, cy + 1) || !m.isSolid(cx + 1, cy + 1))) return;
+      const H = s * C.height;
+      if (so) {
+        fo.s = s / face.w; g.tile(face, x, y + s - H, s, H, fo);
+        const h = tileHash(cx, cy); if ((h >>> 5) % 100 < 16) { const d = fdeco[(h >>> 13) % 3]; g.spr(d, x, y + s - H, 0, s / d.w, (H * 0.8) / d.h); }
+        g.rect(x, y + s - H * 0.32, s, H * 0.32, 'rgba(0,0,0,.3)'); g.rect(x, y + s - H, s, 1.6, 'rgba(0,0,0,.55)');
+        if (w) g.rect(x, y + s - H, 1.4, H, 'rgba(255,240,220,.1)');
+        if (e) g.rect(x + s - 1.4, y + s - H, 1.4, H, 'rgba(0,0,0,.32)');
+      }
+      g.spr(cap, x, y - H, 0, s / cap.w, s / cap.h);
+      // 牆頂的邊：朝地板的那幾邊有亮邊（看得出牆的厚度）；朝南、下面是牆面的那條是「牆緣」
+      if (n) g.rect(x, y - H, s, 1.8, rimC);
+      if (w) g.rect(x, y - H, 1.8, s, rimC);
+      if (e) g.rect(x + s - 1.8, y - H, 1.8, s, rimC);
+      if (so) { g.rect(x, y + s - H - 2.2, s, 2.2, lipC); g.rect(x, y + s - H - 0.2, s, 0.8, 'rgba(0,0,0,.6)'); }
+    },
+  };
+};
+
+/* ---------- 洞窟：圓滑岩壁 ---------- */
+Tiles.cave = (map, o = {}) => {
+  const C = Object.assign({ ground: '#4a4037', rock: '#544d46', rock2: '#615950', face: '#14110e', face2: '#231d19', rim: '#d2b796', height: 0.6, deco: 0.1, glow: '#5ff2dc' }, o);
+  const field = C.field || Tiles.soften(map, undefined, 2), lift = map.size * C.height;
+  const key = 'tl.cv' + tileKey(C.ground, C.rock);
+  if (!Art.has(key + '.g')) {
+    Art.make(key + '.g', 64, 64, (c, w, h) => {
+      const R = makeRng(17); c.fillStyle = C.ground; c.fillRect(0, 0, w, h);
+      for (let n = 0; n < 6; n++) { const x = R.range(0, w), y = R.range(0, h), gr = c.createRadialGradient(x, y, 0, x, y, R.range(10, 22)); gr.addColorStop(0, `rgba(0,0,0,${R.range(0.08, 0.16)})`); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) { c.save(); c.translate(ox, oy); c.fillRect(-ox, -oy, w, h); c.restore(); } }
+      for (let n = 0; n < 140; n++) { c.fillStyle = `rgba(${R.chance(0.5) ? '255,240,220' : '0,0,0'},${R.range(0.03, 0.09)})`; c.beginPath(); c.arc(R.range(0, w), R.range(0, h), R.range(0.4, 2.2), 0, TAU); c.fill(); }
+    }, { anchor: [0, 0], wrap: true });
+    // 地上：碎石、會發光的小菇、骨頭、水窪
+    Art.sheet(key + '.deco', 4, 24, 24, (c, w, h, i) => {
+      const R = makeRng(90 + i);
+      if (i === 0) for (let k = 0; k < 5; k++) { const x = R.range(4, 20), y = R.range(8, 20), r = R.range(1.6, 3.6); c.fillStyle = `hsl(28,12%,${R.range(26, 40)}%)`; c.beginPath(); c.ellipse(x, y, r * 1.2, r * 0.8, 0, 0, TAU); c.fill(); c.fillStyle = 'rgba(255,240,220,.18)'; c.beginPath(); c.ellipse(x - r * 0.3, y - r * 0.3, r * 0.5, r * 0.3, 0, 0, TAU); c.fill(); }
+      if (i === 1) for (const [x, s] of [[8, 1], [14, 1.35], [18, 0.8]]) { c.fillStyle = '#d9d1c0'; c.fillRect(x - 1, 20 - 6 * s, 2, 6 * s); const gr = c.createRadialGradient(x, 20 - 6 * s, 0, x, 20 - 6 * s, 4.5 * s); gr.addColorStop(0, '#b6fff1'); gr.addColorStop(1, '#2bb6a8'); c.fillStyle = gr; c.beginPath(); c.ellipse(x, 20 - 6 * s, 4.2 * s, 2.6 * s, 0, Math.PI, 0); c.fill(); }
+      if (i === 2) { c.strokeStyle = '#cfc4aa'; c.lineCap = 'round'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(5, 16); c.lineTo(19, 10); c.stroke(); c.fillStyle = '#ddd2b8'; for (const [x, y] of [[5, 16], [19, 10]]) { c.beginPath(); c.arc(x, y, 1.8, 0, TAU); c.fill(); } }
+      if (i === 3) { c.fillStyle = 'rgba(22,30,40,.7)'; c.beginPath(); c.ellipse(12, 13, 10, 5.5, -0.15, 0, TAU); c.fill(); c.fillStyle = 'rgba(160,200,255,.22)'; c.beginPath(); c.ellipse(9, 11.5, 4, 1.4, -0.15, 0, TAU); c.fill(); }
+    }, { anchor: [0.5, 0.5] });
+  }
+  Tiles.patterns();
+  const gtex = Art.get(key + '.g'), deco = [0, 1, 2, 3].map((i) => Art.get(key + '.deco:' + i)), decoK = Math.round(C.deco * 1000);
+  const C5 = new Contour(map, field, 0.5, 1), C7 = new Contour(map, field, 0.74, 1);
+  const LY = [
+    [C5, { color: '#000', a: 0.3, dy: 7 }],                                                                  // 接地陰影
+    [C5, { color: C.face, rim: { color: '#000', a: 0.5, w: 3, mode: 'south' } }],                           // 懸崖面（下半，最暗）＋懸崖底的陰影線
+    [C5, { color: C.face2, dy: -lift * 0.55 }],                                                             // 懸崖面（上半）
+    [C5, { color: C.rock, tex: 'tl.pat.rock', texS: 1.1, dy: -lift, rim: { color: C.rim, a: 0.9, w: 2.4, back: 0.38 } }],   // 岩頂
+    [C7, { color: C.rock2, tex: 'tl.pat.rock', texS: 1.1, dy: -lift, rim: { color: C.rim, a: 0.16, w: 1.4, back: 0.5 } }],  // 岩頂內圈（厚度）
+  ];
+  const OCC = { color: '#fff', dy: -lift };
+  const st = {
+    field, margin: 3, height: C.height, lift: () => lift, contour: C5,
+    under(g, m, view) { const s = m.size, x = m.ox + view[0] * s, y = m.oy + view[1] * s; g.tile(gtex, x, y, (view[2] - view[0] + 1) * s, (view[3] - view[1] + 1) * s, { s: 1.25, ox: -x, oy: -y }); },
+    floor(g, m, cx, cy, x, y, s) {
+      const h = tileHash(cx, cy); if (((h >>> 9) % 1000) >= decoK) return;
+      const i = (h >>> 19) % 4; g.spr(deco[i], x + s * tileJit(h, 2), y + s * tileJit(h, 12), i === 1 ? 0 : ((h >>> 22) % 628) / 100, s / 30, s / 30);
+    },
+    /** 一列一列畫（跟角色交錯）：接地陰影 → 懸崖面（兩段深淺）→ 岩頂（材質＋亮邊）→ 岩頂的內圈（看起來有厚度） */
+    row(g, m, cy, view) {
+      const s = m.size, x0w = m.ox + (view[0] - 1) * s, x1w = m.ox + (view[2] + 2) * s;
+      for (const [c, L] of LY) c.drawRow(g, cy, x0w, x1w, L);
+    },
+    /** 擋光用：PZ.light.occluders(style.occlude)（擋光的是畫出來的岩頂，懸崖面照得到） */
+    occlude: (g) => C5.draw(g, map.view(2), OCC),
+    /** 會自己發光的東西（螢光菇）：在 g.lighting() 之後呼叫 */
+    emissive(g, m) {
+      const [x0, y0, x1, y1] = m.view(1), s = m.size, k = s / 30, t = Time.t;
+      for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
+        if (m.isSolid(cx, cy)) continue;
+        const h = tileHash(cx, cy); if (((h >>> 9) % 1000) >= decoK || (h >>> 19) % 4 !== 1) continue;
+        const px = m.ox + cx * s + s * tileJit(h, 2), py = m.oy + cy * s + s * tileJit(h, 12);
+        if (m.behindWall(px, py, 6, lift)) continue;
+        const pulse = 0.75 + 0.25 * Math.sin(t * 1.7 + (h & 63));
+        for (const [ax, ay, r] of MUSH) g.glow(px + (ax - 12) * k, py + (ay - 12) * k, r * k * 2.2, C.glow, { a: 0.55 * pulse, core: 0.7 });
+      }
+    },
+  };
+  return st;
+};
+
+/* ---------- 島嶼：一層一層的等高線 ---------- */
+Tiles.island = (map, height, o = {}) => {
+  // [門檻, 顏色, 亮邊, 材質]
+  const L = o.levels || [[0.42, '#f0dca6', 0.5, 'sand'], [0.47, '#8fc463', 0.32, 'grass'], [0.57, '#74b253', 0.22, 'grass'], [0.68, '#5d9a45', 0.22, 'grass'], [0.78, '#a59a87', 0.42, 'rock'], [0.88, '#d3cbbb', 0.45, 'rock']];
+  Tiles.patterns();
+  const key = 'tl.is';
+  if (!Art.has(key + '.tuft:0')) {
+    Art.sheet(key + '.tuft', 3, 20, 16, (c, w, h, i) => {
+      const R = makeRng(40 + i);
+      for (let k = 0; k < 7; k++) { const x = R.range(4, 16), l = R.range(6, 13), b = R.spread(4); c.strokeStyle = `hsl(${R.range(88, 110)},${R.range(40, 55)}%,${R.range(30, 46)}%)`; c.lineWidth = 1.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, h - 1); c.quadraticCurveTo(x + b * 0.3, h - l * 0.6, x + b, h - l); c.stroke(); }
+    }, { anchor: [0.5, 0.9] });
+    Art.sheet(key + '.flower', 3, 14, 14, (c, w, h, i) => {
+      const col = ['#ffe27a', '#ff8fb8', '#ffffff'][i];
+      c.strokeStyle = '#3f7a34'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(7, 13); c.lineTo(7, 7); c.stroke();
+      c.fillStyle = col; for (let k = 0; k < 5; k++) { const a = (k / 5) * TAU; c.beginPath(); c.arc(7 + Math.cos(a) * 2.4, 5 + Math.sin(a) * 2.4, 1.8, 0, TAU); c.fill(); }
+      c.fillStyle = '#f2a33a'; c.beginPath(); c.arc(7, 5, 1.3, 0, TAU); c.fill();
+    }, { anchor: [0.5, 0.92] });
+    Art.make(key + '.shell', 10, 8, (c) => { c.fillStyle = '#f6e7d6'; c.beginPath(); c.moveTo(1, 7); c.quadraticCurveTo(5, -3, 9, 7); c.closePath(); c.fill(); c.strokeStyle = 'rgba(160,120,100,.6)'; c.lineWidth = 0.7; for (const x of [3.5, 5, 6.5]) { c.beginPath(); c.moveTo(5, 7); c.lineTo(x, 2); c.stroke(); } }, { anchor: [0.5, 0.8] });
+  }
+  const tufts = [0, 1, 2].map((i) => Art.get(key + '.tuft:' + i)), flowers = [0, 1, 2].map((i) => Art.get(key + '.flower:' + i)), shell = Art.get(key + '.shell');
+  const crest = { a: 0 }, s0 = map.size;
+  const SEA = [[0.27, '#1b6888'], [0.35, '#2585a6'], [0.395, '#3ea3bd']].map(([t, c]) => [new Contour(map, height, t), { color: c }]);
+  const LV = L.map(([thr, col, ra, pat]) => [new Contour(map, height, thr), { color: Color.darken(col, 0.32), dy: s0 * 0.16 }, { color: col, tex: pat ? 'tl.pat.' + pat : null, texS: 1.2, rim: { color: '#ffffff', w: 1.6, a: ra * 0.55, back: 0.5 } }]);
+  return {
+    margin: 2, field: height, height: 0,
+    under(g, m, view) {
+      const s = m.size, x = m.ox + view[0] * s, y = m.oy + view[1] * s, w = (view[2] - view[0] + 1) * s, h = (view[3] - view[1] + 1) * s, t = Time.t;
+      g.rect(x, y, w, h, o.sea || '#155a7c');
+      for (const [c, Ly] of SEA) c.draw(g, view, Ly);
+      // 浪：海面上一閃一閃的浪頭；岸邊的白浪一進一退
+      for (let cy = view[1]; cy <= view[3]; cy++) for (let cx = view[0]; cx <= view[2]; cx++) {
+        const i = cy * m.w + cx, hh = height[i]; if (hh > 0.36) continue;
+        const k = tileHash(cx, cy); if (k % 4) continue;
+        const ph = ((k >>> 8) % 1000) / 1000, v = Math.sin((t * 0.35 + ph) * TAU); if (v < 0.35) continue;
+        crest.a = (v - 0.35) * 0.6; const px = m.ox + (cx + tileJit(k, 3)) * s, py = m.oy + (cy + tileJit(k, 13)) * s;
+        g.line(px - 5, py, px + 5, py - 0.8, 1.6, '#d8f6ff', crest);
+      }
+      const wv = Math.sin(t * 1.25);
+      Tiles.marching(g, m, height, 0.402 - wv * 0.012, { fill: false, view, rim: { color: '#ffffff', a: 0.55 + wv * 0.15, w: 2.6, back: 1 } });
+      Tiles.marching(g, m, height, 0.37 - wv * 0.012, { fill: false, view, rim: { color: '#e6fbff', a: 0.22, w: 1.6, back: 1 } });
+    },
+    ground(g, m, view) {
+      for (const [c, under, top] of LV) { c.draw(g, view, under); c.draw(g, view, top); }
+      const s = m.size;
+      for (let cy = view[1]; cy <= view[3]; cy++) for (let cx = view[0]; cx <= view[2]; cx++) {
+        const i = cy * m.w + cx, hh = height[i], k = tileHash(cx, cy), px = m.ox + (cx + tileJit(k, 3)) * s, py = m.oy + (cy + tileJit(k, 13)) * s;
+        if (hh > 0.5 && hh < 0.77) { if (k % 3 === 0) g.spr(tufts[(k >>> 5) % 3], px, py, 0, (k & 32) ? -1 : 1, 1); else if (k % 11 === 1) g.spr(flowers[(k >>> 7) % 3], px, py); }
+        else if (hh > 0.43 && hh < 0.47 && k % 9 === 0) g.spr(shell, px, py, ((k >>> 9) % 100) / 30);
+      }
+    },
+  };
+};
+
+/* ---- 32_hud.js ---- */
+/* ==========================================================================
+   32 HUD 元件（畫在畫布上；通常在 g.hud() 之後畫，不受震動、後製影響）
+     const hp = PZ.meter({ max: 100, value: 100 })     hp.hit(18)  hp.heal(25)  hp.set(v)   （引擎每格自動更新）
+     g.meter(hp, x, y, w, h, { color: '#ff4d5e', color2, shape: 'skew'|'round'|'flat', segments: 10, low: 0.3, label: 'HP', text: true })
+       受傷：主條馬上掉、白色殘影停一下再慢慢退、整條閃白抖一下；補血：綠色預覽先長出來、主條再追上；快沒血時一閃一閃
+     const score = PZ.count(0)    score.add(120)        數字一路往上滾、每跳一下有聲音、變大一下
+     g.count(score, x, y, { size: 30, color, align: 'right', prefix: '', suffix: '' })
+     g.arc(x, y, r, 粗細, 起角, 終角, color, { cap: 'round', a })   圓弧（經驗值環、充能）
+     g.pie(x, y, r, 起角, 終角, color, { a })                       扇形
+     g.cooldown(x, y, r, 剩下 0～1, { color, flash })               技能冷卻：暗色扇形一圈掃開、外圈亮邊；好了的瞬間閃一下（flash 0～1）
+     g.rrect(x, y, w, h, 圓角, color, { a, border, borderColor })   圓角框
+     g.quad([x0,y0, x1,y1, x2,y2, x3,y3], 左色, 右色, { a, add })   任意四邊形、左右漸層（順時針：左上、右上、右下、左下）
+   ========================================================================== */
+const HudList = new Set();
+class Meter {
+  constructor(o = {}) {
+    this.max = o.max != null ? o.max : 100; this.value = clamp(o.value != null ? o.value : this.max, 0, this.max);
+    this.shown = this.value; this.trail = this.value; this.ghost = this.value;
+    this.hold = 0; this.flash = 0; this.shake = 0; this.t = 0; this.drain = o.drain || 0.55; this.fill = o.fill || 5;
+    this.dead = false; this.keep = !!o.keep; this.scene = Scenes.name; HudList.add(this);
+  }
+  get frac() { return this.max > 0 ? this.value / this.max : 0; }
+  /** 直接設定（instant：沒有動畫） */
+  set(v, instant) {
+    v = clamp(v, 0, this.max);
+    if (v < this.value) { this.hold = Math.max(this.hold, 0.45); this.shown = v; } else this.ghost = v;
+    this.value = v; if (instant) this.shown = this.trail = this.ghost = v; return this;
+  }
+  hit(n) { const before = this.value; this.set(this.value - n); const k = (before - this.value) / Math.max(1, this.max); this.flash = 1; this.shake = Math.min(1, this.shake + k * 5 + 0.15); return this; }
+  heal(n) { this.set(this.value + n); return this; }
+  setMax(m, keepFrac) { const f = this.frac; this.max = Math.max(1, m); this.set(keepFrac ? f * this.max : Math.min(this.value, this.max), true); return this; }
+  update(dt) {
+    this.t += dt;
+    if (this.shown < this.value) this.shown = Math.min(this.value, damp(this.shown, this.value, this.fill, dt) + this.max * 0.04 * dt);
+    else this.shown = this.value;
+    if (this.trail > this.shown) { if (this.hold > 0) this.hold -= dt; else this.trail = Math.max(this.shown, this.trail - this.max * this.drain * dt * (0.4 + (this.trail - this.shown) / this.max * 2)); } else this.trail = this.shown;
+    if (this.ghost < this.shown || Math.abs(this.ghost - this.value) > 1e-6 && this.ghost < this.value) this.ghost = Math.max(this.ghost, this.shown);
+    if (this.ghost > this.value) this.ghost = this.value;
+    this.flash = Math.max(0, this.flash - dt * 4); this.shake = Math.max(0, this.shake - dt * 3);
+  }
+  remove() { this.dead = true; HudList.delete(this); }
+}
+PZ.meter = (o) => new Meter(o);
+PZ.Meter = Meter;
+
+const fmtThousands = (n) => { const s = String(Math.abs(Math.round(n))); let out = ''; for (let i = 0; i < s.length; i++) { if (i && (s.length - i) % 3 === 0) out += ','; out += s[i]; } return (n < 0 ? '-' : '') + out; };
+class Count {
+  constructor(v = 0, o = {}) { this.value = v; this.shown = v; this.speed = o.speed || 7; this.pop = 0; this.sound = o.sound === undefined ? 'tick' : o.sound; this.fmt = o.format || fmtThousands; this._tick = 0; this.dead = false; this.keep = !!o.keep; this.scene = Scenes.name; HudList.add(this); }
+  set(v, instant) { if (v > this.value) this.pop = Math.min(1, this.pop + 0.5); this.value = v; if (instant) this.shown = v; return this; }
+  add(n) { return this.set(this.value + n); }
+  get rolling() { return Math.round(this.shown) !== Math.round(this.value); }
+  update(dt) {
+    const d = this.value - this.shown;
+    if (Math.abs(d) < 0.5) this.shown = this.value;
+    else {
+      const before = Math.round(this.shown);
+      this.shown += d * Math.min(1, dt * this.speed) + Math.sign(d) * Math.min(Math.abs(d), dt * 6);
+      this._tick -= dt;
+      if (this.sound && Math.round(this.shown) !== before && this._tick <= 0) { this._tick = 0.045; Sfx.play(this.sound, { bus: 'ui', pitch: 1 + Math.min(0.5, Math.abs(d) / Math.max(50, Math.abs(this.value)) * 0.8), vol: 0.8 }); }
+    }
+    this.pop = Math.max(0, this.pop - dt * 3.2);
+  }
+  get text() { return this.fmt(this.shown); }
+  remove() { this.dead = true; HudList.delete(this); }
+}
+PZ.count = (v, o) => new Count(v, o);
+PZ.Count = Count;
+PZ.fmt = fmtThousands;
+addSystem({ name: 'hud', order: 66, frame(rdt) { for (const h of HudList) h.update(rdt); } });
+// 換場景：上一個場景建的血條、數字不再更新（keep: true 的留著）
+PZ.on('scene', (name) => { for (const h of HudList) if (!h.keep && h.scene !== name) HudList.delete(h); });
+
+/* ---------- 繪圖 ---------- */
+const HUD_SCR = new Float64Array(16);
+Object.assign(Graphics.prototype, {
+  /** 任意四邊形（順時針：0 左上、1 右上、2 右下、3 左下），左邊 c0、右邊 c1 漸層 */
+  quad(p, c0, c1, o) {
+    const m = this.m, a = o && o.a != null ? o.a : 1, add = (o && o.add) || 0, A = this._col(c0, a), B = c1 == null ? A : this._col(c1, a), S = HUD_SCR;
+    for (let i = 0; i < 4; i++) { const x = p[i * 2], y = p[i * 2 + 1]; S[i * 2] = m[0] * x + m[2] * y + m[4]; S[i * 2 + 1] = m[1] * x + m[3] * y + m[5]; }
+    this.r.quadv(null, S[0], S[1], 0, 0, S[2], S[3], 0, 0, S[4], S[5], 0, 0, S[6], S[7], 0, 0, A, B, MODE.solid, add, 0);
+    return this;
+  },
+  /** 扇形（角度：0 朝右、順時針為正） */
+  pie(x, y, r, a0, a1, color, o) {
+    if (a1 < a0) [a0, a1] = [a1, a0]; const n = Math.max(1, Math.ceil((a1 - a0) / 0.14)), m = this.m, col = this._col(color, o && o.a != null ? o.a : 1), add = (o && o.add) || 0;
+    const X = (px, py) => m[0] * px + m[2] * py + m[4], Y = (px, py) => m[1] * px + m[3] * py + m[5], cx = X(x, y), cy = Y(x, y);
+    let px = x + Math.cos(a0) * r, py = y + Math.sin(a0) * r;
+    for (let i = 1; i <= n; i++) { const a = a0 + ((a1 - a0) * i) / n, qx = x + Math.cos(a) * r, qy = y + Math.sin(a) * r; this.r.tri(cx, cy, X(px, py), Y(px, py), X(qx, qy), Y(qx, qy), col, add); px = qx; py = qy; }
+    return this;
+  },
+  /** 粗圓弧 */
+  arc(x, y, r, thick, a0, a1, color, o) {
+    if (Math.abs(a1 - a0) < 1e-4) return this;
+    const n = Math.max(1, Math.ceil(Math.abs(a1 - a0) / 0.12)), r0 = r - thick / 2, r1 = r + thick / 2, a = o && o.a != null ? o.a : 1, p = HUD_A;
+    for (let i = 0; i < n; i++) {
+      const b0 = a0 + ((a1 - a0) * i) / n, b1 = a0 + ((a1 - a0) * (i + 1)) / n, c0 = Math.cos(b0), s0 = Math.sin(b0), c1 = Math.cos(b1), s1 = Math.sin(b1);
+      p[0] = x + c0 * r1; p[1] = y + s0 * r1; p[2] = x + c1 * r1; p[3] = y + s1 * r1; p[4] = x + c1 * r0; p[5] = y + s1 * r0; p[6] = x + c0 * r0; p[7] = y + s0 * r0;
+      this.quad(p, color, color, o);
+    }
+    if (o && o.cap === 'round') { this.circle(x + Math.cos(a0) * r, y + Math.sin(a0) * r, thick / 2, color, { a }); this.circle(x + Math.cos(a1) * r, y + Math.sin(a1) * r, thick / 2, color, { a }); }
+    return this;
+  },
+  /** 圓角框（凸多邊形）＋可選的框線 */
+  rrect(x, y, w, h, r, color, o) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2)); const pts = HUD_RR; pts.length = 0;
+    const seg = r > 6 ? 6 : r > 2 ? 4 : 1;
+    const corner = (cx, cy, a0) => { for (let i = 0; i <= seg; i++) { const a = a0 + (Math.PI / 2) * (i / seg); pts.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } };
+    if (r <= 0.01) pts.push(x, y, x + w, y, x + w, y + h, x, y + h);
+    else { corner(x + w - r, y + r, -Math.PI / 2); corner(x + w - r, y + h - r, 0); corner(x + r, y + h - r, Math.PI / 2); corner(x + r, y + r, Math.PI); }
+    if (color != null) this.poly(pts, color, o);
+    if (o && o.border) this.strokePoly(pts, o.border, o.borderColor || 'rgba(255,255,255,.25)', o.borderA != null ? { a: o.borderA } : null);
+    return this;
+  },
+  /** 凸多邊形的框線（往內畫 w 粗） */
+  strokePoly(pts, w, color, o) {
+    const n = pts.length / 2; if (n < 3) return this;
+    let cx = 0, cy = 0; for (let i = 0; i < n; i++) { cx += pts[i * 2]; cy += pts[i * 2 + 1]; } cx /= n; cy /= n;
+    const inner = HUD_IN; inner.length = 0;
+    for (let i = 0; i < n; i++) { const px = pts[i * 2], py = pts[i * 2 + 1], dx = cx - px, dy = cy - py, l = Math.hypot(dx, dy) || 1, k = Math.min(w, l * 0.5); inner.push(px + (dx / l) * k, py + (dy / l) * k); }
+    const q = HUD_Q;
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; q[0] = pts[i * 2]; q[1] = pts[i * 2 + 1]; q[2] = pts[j * 2]; q[3] = pts[j * 2 + 1]; q[4] = inner[j * 2]; q[5] = inner[j * 2 + 1]; q[6] = inner[i * 2]; q[7] = inner[i * 2 + 1]; this.quad(q, color, color, o); }
+    return this;
+  },
+  /** 血條／能量條 */
+  meter(M, x, y, w, h, o = {}) {
+    const shape = o.shape || 'skew', sk = shape === 'skew' ? Math.min(h * 0.6, w * 0.1) : 0, max = Math.max(1e-6, M.max);
+    const sx = M.shake > 0 ? Math.sin(M.t * 70) * M.shake * 3 : 0, sy = M.shake > 0 ? Math.cos(M.t * 57) * M.shake * 1.2 : 0;
+    x += sx; y += sy;
+    const col = o.color || '#ff4d5e', col2 = o.color2 || Color.lighten(col, 0.25), low = o.low != null ? o.low : 0.3, f = M.shown / max;
+    // 從比例 a 到 b 的那一段（斜的：上緣往右偏 sk）
+    const span = (a, b, c0, c1, op) => {
+      if (b - a <= 1e-4) return;
+      const L = x + (w - sk) * a, R = x + (w - sk) * b;
+      if (shape === 'round') { const rr = h / 2, x0 = x + (w) * a, x1 = x + w * b; this.rrect(x0, y, Math.max(x1 - x0, Math.min(h, x1 - x0)), h, Math.min(rr, (x1 - x0) / 2), c0, op); return; }
+      HUD_Q[0] = L + sk; HUD_Q[1] = y; HUD_Q[2] = R + sk; HUD_Q[3] = y; HUD_Q[4] = R; HUD_Q[5] = y + h; HUD_Q[6] = L; HUD_Q[7] = y + h;
+      this.quad(HUD_Q, c0, c1, op);
+    };
+    // 底
+    if (o.frame !== false) { const pad = o.pad != null ? o.pad : 2; HUD_Q2[0] = x + sk - pad + pad * 0.5; HUD_Q2[1] = y - pad; HUD_Q2[2] = x + w + pad; HUD_Q2[3] = y - pad; HUD_Q2[4] = x + w - sk + pad - pad * 0.5; HUD_Q2[5] = y + h + pad; HUD_Q2[6] = x - pad; HUD_Q2[7] = y + h + pad; if (shape === 'round') this.rrect(x - pad, y - pad, w + pad * 2, h + pad * 2, h / 2 + pad, o.frameColor || 'rgba(0,0,0,.55)'); else this.quad(HUD_Q2, o.frameColor || 'rgba(0,0,0,.55)', null); }
+    span(0, 1, o.bg || 'rgba(255,255,255,.08)', o.bg || 'rgba(255,255,255,.04)');
+    // 受傷殘影、補血預覽
+    if (M.trail > M.shown) span(f, M.trail / max, o.trailColor || '#fff4e0', o.trailColor || '#ffd9b0', { a: 0.9 });
+    if (M.ghost > M.shown) span(f, M.ghost / max, o.ghostColor || '#7dffa8', o.ghostColor || '#b6ffd0', { a: 0.45 + 0.25 * Math.sin(M.t * 10) });
+    // 主條
+    const lowOn = f <= low && f > 0, pulse = lowOn ? 0.5 + 0.5 * Math.sin(M.t * 9) : 0;
+    span(0, f, Color.mix(Color.darken(col, 0.15), '#ffffff', pulse * 0.25), Color.mix(col2, '#ffffff', pulse * 0.35));
+    // 上半部光澤
+    if (shape !== 'round' && f > 0) { const gh = h * 0.42, L = x + sk, R = x + (w - sk) * f + sk; HUD_Q[0] = L; HUD_Q[1] = y + 1; HUD_Q[2] = R; HUD_Q[3] = y + 1; HUD_Q[4] = R - sk * (gh / h); HUD_Q[5] = y + gh; HUD_Q[6] = L - sk * (gh / h); HUD_Q[7] = y + gh; this.quad(HUD_Q, 'rgba(255,255,255,.28)', 'rgba(255,255,255,.12)'); }
+    // 刻度
+    if (o.segments) { const per = o.segments, n = Math.floor(max / per); for (let i = 1; i < n + (max % per ? 1 : 0); i++) { const k = (i * per) / max; if (k >= 1) break; const X = x + (w - sk) * k; this.line(X + sk, y + 1, X, y + h - 1, i % 5 === 0 ? 2 : 1.2, 'rgba(0,0,0,.45)'); } }
+    if (M.flash > 0) span(0, 1, '#ffffff', '#ffffff', { a: M.flash * 0.55 });
+    if (lowOn && o.lowGlow !== false) span(0, 1, col, col, { a: pulse * 0.18, add: 1 });
+    // 字
+    const fs = o.size || Math.max(10, h * 0.78);
+    if (o.label) this.text(o.label, x - (o.labelGap != null ? o.labelGap : 6), y + h / 2, { size: fs, weight: 900, color: o.labelColor || '#fff', align: 'right', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.6)' });
+    if (o.text) this.text(o.text === true ? `${Math.ceil(M.value)} / ${Math.round(max)}` : o.text, x + w - sk - 6, y + h / 2 + 0.5, { size: fs * 0.85, weight: 800, color: '#fff', align: 'right', baseline: 'middle', outline: 3, outlineColor: 'rgba(0,0,0,.55)' });
+    return this;
+  },
+  /** 會滾的數字 */
+  count(C, x, y, st = {}) {
+    const p = C.pop, s = 1 + Ease.outBack(Math.min(1, p)) * (st.pop != null ? st.pop : 0.28) * p;
+    this.save(); this.translate(x, y); this.scale(s, s);
+    this.text((st.prefix || '') + C.text + (st.suffix || ''), 0, 0, Object.assign({ size: 28, weight: 900, color: '#fff', align: 'left', baseline: 'middle', outline: 4, outlineColor: 'rgba(0,0,0,.55)' }, st, { color: p > 0.05 ? Color.css(Color.mix(st.color || '#ffffff', st.popColor || '#fff4b0', Math.min(1, p * 1.5))) : st.color || '#fff' }));
+    this.restore(); return this;
+  },
+  /** 技能冷卻：rest＝剩下的比例（1 剛用完、0 好了） */
+  cooldown(x, y, r, rest, o = {}) {
+    const top = -Math.PI / 2, done = 1 - clamp01(rest);
+    if (rest > 0.001) {
+      this.pie(x, y, r, top + done * TAU, top + TAU, o.shade || 'rgba(4,6,12,.72)');
+      const a = top + done * TAU; this.line(x, y, x + Math.cos(a) * r, y + Math.sin(a) * r, 2, o.color || '#fff', { a: 0.85 });
+      this.arc(x, y, r + 2.5, 3, top, a, o.color || '#ffd36b', { a: 0.95 });
+    }
+    if (o.flash > 0) { const k = 1 - o.flash; this.ring(x, y, r + 2 + k * 10, 3 * o.flash + 0.5, o.flashColor || '#ffffff', { a: o.flash }); this.circle(x, y, r, '#ffffff', { a: o.flash * 0.45, add: 1 }); }
+    return this;
+  },
+});
+const HUD_RR = [], HUD_IN = [], HUD_Q = [0, 0, 0, 0, 0, 0, 0, 0], HUD_Q2 = [0, 0, 0, 0, 0, 0, 0, 0], HUD_A = [0, 0, 0, 0, 0, 0, 0, 0];
+
+/* ---- 33_amb.js ---- */
+/* ==========================================================================
+   33 環境音（音景）：雨、雷雨、風、森林、夜晚、洞窟、海邊、城市、營火、船艙、溪流
+     PZ.amb.play('rain', { fade: 2 })        換成這個音景（其他的淡出）
+     PZ.amb.mix({ fire: 1, night: 0.6 })    同時好幾種、各自音量
+     PZ.amb.set('wind', 0.4)                只調一種，其他不動        PZ.amb.stop({ fade: 2 })
+     PZ.amb.follow(true)                    跟著 PZ.weather：下雨就有雨聲、雷雨有遠雷、下雪／起霧有風
+     PZ.amb.define('lab', { beds: [...], events: [...] })   自己做（欄位見下面的預設）
+   全部即時合成、不用音檔：
+     底（beds）：一直循環的雜訊，經過濾波；可以慢慢起伏（swell：陣風）、像浪一樣湧上來又退下去（wave）、濾波掃動（sweep：風的呼嘯）
+     事件（events）：隨機冒出來的聲音（鳥叫、水滴、木柴爆裂、遠處喇叭、船板嘎吱），每次左右位置、大小、音高都不一樣
+   走 amb 匯流排（跟著設定裡的音效音量）；切到背景時跟其他聲音一起停。
+   ========================================================================== */
+const AMB_PRESETS = {
+  rain: { beds: [{ noise: 'pink', hp: 380, lp: 6800, vol: 0.42, swell: [3, 7, 0.25] }, { noise: 'white', bp: [2400, 0.55], vol: 0.12 }, { noise: 'brown', lp: 260, vol: 0.2 }],
+    events: [{ sfx: 'amb.drip', rate: 3.5, vol: [0.08, 0.22], pitch: [0.8, 1.6], pan: 0.9 }, { sfx: 'amb.patter', rate: 0.6, vol: [0.15, 0.3], pan: 0.8 }] },
+  storm: { beds: [{ noise: 'pink', hp: 260, lp: 8000, vol: 0.6, swell: [2, 5, 0.35] }, { noise: 'brown', bp: [380, 0.7], vol: 0.35, swell: [2, 6, 0.6], sweep: [0.13, 160] }, { noise: 'white', bp: [3000, 0.5], vol: 0.12 }],
+    events: [{ sfx: 'amb.rumble', rate: 0.06, vol: [0.4, 0.8], pitch: [0.7, 1.1], pan: 0.6, rev: 0.5 }, { sfx: 'amb.drip', rate: 5, vol: [0.06, 0.18], pitch: [0.8, 1.6], pan: 0.9 }] },
+  wind: { beds: [{ noise: 'brown', bp: [420, 0.6], vol: 0.55, swell: [2.5, 6, 0.7], sweep: [0.09, 180] }, { noise: 'pink', bp: [1300, 5], vol: 0.07, swell: [3, 7, 0.9], sweep: [0.17, 420] }],
+    events: [{ sfx: 'amb.rustle', rate: 0.25, vol: [0.15, 0.35], pan: 0.9 }] },
+  forest: { beds: [{ noise: 'pink', hp: 900, lp: 4200, vol: 0.13, swell: [3, 8, 0.6] }, { noise: 'brown', lp: 300, vol: 0.1 }],
+    events: [{ sfx: 'amb.bird1', rate: 0.32, vol: [0.16, 0.38], pitch: [0.85, 1.2], pan: 0.9, rev: 0.25 }, { sfx: 'amb.bird2', rate: 0.18, vol: [0.1, 0.24], pitch: [0.9, 1.15], pan: 0.9, rev: 0.3 },
+      { sfx: 'amb.bird3', rate: 0.12, vol: [0.08, 0.2], pitch: [0.9, 1.1], pan: 0.9, rev: 0.3 }, { sfx: 'amb.wood', rate: 0.03, vol: [0.1, 0.2], pan: 0.8, rev: 0.4 }, { sfx: 'amb.rustle', rate: 0.12, vol: [0.08, 0.18], pan: 0.9 }] },
+  night: { beds: [{ noise: 'brown', lp: 220, vol: 0.18 }, { noise: 'pink', hp: 2500, lp: 5000, vol: 0.03 }],
+    events: [{ sfx: 'amb.cricket', rate: 2.4, vol: [0.07, 0.18], pitch: [0.92, 1.1], pan: 1 }, { sfx: 'amb.owl', rate: 0.035, vol: [0.12, 0.22], pitch: [0.92, 1.05], pan: 0.8, rev: 0.5 }, { sfx: 'amb.frog', rate: 0.25, vol: [0.05, 0.12], pitch: [0.85, 1.2], pan: 0.9 }] },
+  cave: { beds: [{ noise: 'brown', lp: 170, vol: 0.4, swell: [6, 12, 0.3] }, { noise: 'pink', bp: [700, 2.5], vol: 0.04, swell: [4, 9, 0.8] }],
+    events: [{ sfx: 'amb.drip', rate: 0.55, vol: [0.15, 0.4], pitch: [0.55, 1.1], pan: 0.9, rev: 0.75 }, { sfx: 'amb.rumble', rate: 0.03, vol: [0.15, 0.3], pitch: [0.5, 0.7], pan: 0.5, rev: 0.6 }] },
+  ocean: { beds: [{ noise: 'pink', lp: 1500, vol: 0.55, wave: [6, 10, 0.15, 1] }, { noise: 'white', hp: 2800, lp: 9000, vol: 0.12, wave: [6, 10, 0.05, 1] }, { noise: 'brown', lp: 200, vol: 0.18 }],
+    events: [{ sfx: 'amb.gull', rate: 0.07, vol: [0.06, 0.16], pitch: [0.85, 1.15], pan: 0.9, rev: 0.4 }] },
+  city: { beds: [{ noise: 'brown', lp: 240, vol: 0.45, swell: [4, 9, 0.25] }, { noise: 'pink', bp: [850, 0.5], vol: 0.1 }],
+    events: [{ sfx: 'amb.car', rate: 0.16, vol: [0.15, 0.4], pitch: [0.8, 1.2], pan: 0.9 }, { sfx: 'amb.horn', rate: 0.04, vol: [0.06, 0.14], pitch: [0.9, 1.15], pan: 0.9, rev: 0.4 }, { sfx: 'amb.siren', rate: 0.008, vol: [0.05, 0.1], pan: 0.7, rev: 0.6 }] },
+  fire: { beds: [{ noise: 'brown', lp: 520, vol: 0.32, swell: [0.4, 1.4, 0.45] }, { noise: 'pink', hp: 1800, lp: 6000, vol: 0.05, swell: [0.3, 1, 0.6] }],
+    events: [{ sfx: 'amb.crackle', rate: 9, vol: [0.06, 0.3], pitch: [0.7, 1.6], pan: 0.35 }, { sfx: 'amb.pop', rate: 0.5, vol: [0.15, 0.35], pitch: [0.8, 1.3], pan: 0.3 }] },
+  ship: { beds: [{ noise: 'brown', lp: 280, vol: 0.32, wave: [5, 8, 0.4, 1] }, { noise: 'pink', lp: 1100, hp: 200, vol: 0.14, wave: [5, 8, 0.2, 1] }],
+    events: [{ sfx: 'amb.creak', rate: 0.2, vol: [0.1, 0.25], pitch: [0.8, 1.25], pan: 0.9 }, { sfx: 'amb.slap', rate: 0.35, vol: [0.1, 0.25], pan: 0.8 }, { sfx: 'bell', rate: 0.02, vol: [0.04, 0.08], pitch: [0.5, 0.55], pan: 0.6, rev: 0.6 }] },
+  stream: { beds: [{ noise: 'pink', bp: [1500, 0.45], vol: 0.3, swell: [1.5, 4, 0.25] }, { noise: 'white', hp: 4200, vol: 0.05 }],
+    events: [{ sfx: 'amb.bubble', rate: 5, vol: [0.04, 0.12], pitch: [0.7, 1.6], pan: 0.7 }] },
+};
+// 事件的聲音（一般的合成音效，走 amb 匯流排）
+(() => {
+  const D = (n, sp) => Sfx.define(n, Object.assign({ bus: 'amb', pitchVar: 0, max: 6, gap: 0.01 }, sp));
+  D('amb.drip', { vol: 0.5, layers: [{ w: 'sine', f: 1900, f1: 950, t: 0.08, a: 0.001, p: 3, v: 0.8 }, { w: 'sine', f: 3100, f1: 2200, t: 0.03, a: 0.0005, p: 2.5, v: 0.25 }] });
+  D('amb.patter', { vol: 0.5, layers: [0, 0.03, 0.07, 0.1, 0.16].map((d, i) => ({ w: 'noise', d, t: 0.012, a: 0.0005, p: 2, v: 0.6 - i * 0.06, bp: [2600 + i * 300, 2600, 1.4] })) });
+  D('amb.rumble', { vol: 0.8, max: 2, layers: [{ w: 'brown', t: 3.2, a: 0.7, p: 1.4, v: 1, lp: [420, 90, 0.7] }, { w: 'noise', t: 1.6, d: 0.3, a: 0.4, p: 2, v: 0.15, bp: [500, 200, 0.8] }] });
+  D('amb.rustle', { vol: 0.5, layers: [{ w: 'pink', t: 0.9, a: 0.3, p: 1.3, v: 1, hp: [1600, 2400, 0.7] }, { w: 'noise', t: 0.6, d: 0.15, a: 0.1, p: 2, v: 0.2, bp: [5200, 4000, 1] }] });
+  D('amb.bird1', { vol: 0.5, layers: [0, 0.075, 0.15, 0.225].map((d, i) => ({ w: 'sine', d, f: 3000 + i * 120, f1: 4300 + i * 60, t: 0.055, a: 0.004, p: 2, v: 0.7 })).concat([{ w: 'sine', d: 0.31, f: 3900, f1: 2700, t: 0.12, a: 0.005, p: 1.6, v: 0.6 }]) });
+  D('amb.bird2', { vol: 0.5, layers: [{ w: 'sine', f: 2650, f1: 2750, t: 0.2, a: 0.02, p: 1.4, v: 0.7, vib: [9, 0.4] }, { w: 'sine', d: 0.24, f: 2150, f1: 2050, t: 0.28, a: 0.02, p: 1.5, v: 0.65, vib: [8, 0.35] }] });
+  D('amb.bird3', { vol: 0.45, layers: [{ w: 'sine', f: 2300, f1: 3100, t: 0.42, a: 0.03, p: 1.2, v: 0.7, vib: [21, 2.2], fm: [1.5, 0.6, 0] }] });
+  D('amb.wood', { vol: 0.5, layers: Array.from({ length: 9 }, (_, i) => ({ w: 'noise', d: i * 0.055, t: 0.018, a: 0.0005, p: 2, v: 0.8 - i * 0.05, bp: [1500, 1500, 3] })) });
+  D('amb.cricket', { vol: 0.4, layers: [0, 1, 2].flatMap((c) => [0, 1, 2, 3].map((k) => ({ w: 'sine', d: c * 0.17 + k * 0.026, f: 4400, t: 0.016, a: 0.002, p: 1.4, v: 0.6, fm: [1.01, 0.3, 0] }))) });
+  D('amb.owl', { vol: 0.5, max: 1, layers: [{ w: 'sine', f: 390, f1: 350, t: 0.42, a: 0.06, p: 1.2, v: 0.8, vib: [5, 0.25] }, { w: 'sine', d: 0.6, f: 370, f1: 330, t: 0.6, a: 0.08, p: 1.1, v: 0.7, vib: [5, 0.3] }, { w: 'sine', d: 0.62, f: 740, f1: 660, t: 0.5, a: 0.08, p: 1.4, v: 0.08 }] });
+  D('amb.frog', { vol: 0.4, layers: [{ w: 'saw', f: 150, f1: 135, t: 0.22, a: 0.01, p: 1.6, v: 0.6, lp: [1100, 700, 2], vib: [32, 2.5] }, { w: 'saw', d: 0.28, f: 145, f1: 130, t: 0.18, a: 0.01, p: 1.6, v: 0.45, lp: [1000, 600, 2], vib: [30, 2.5] }] });
+  D('amb.gull', { vol: 0.45, layers: [0, 0.32, 0.6].map((d, i) => ({ w: 'saw', d, f: 1900 - i * 80, f1: 1250, t: 0.26, a: 0.02, p: 1.5, v: 0.5, bp: [1700, 1300, 4], vib: [11, 0.6] })) });
+  D('amb.car', { vol: 0.6, max: 3, layers: [{ w: 'brown', t: 3.4, a: 1.4, h: 0.2, p: 1.5, v: 1, bp: [260, 150, 0.8] }, { w: 'noise', t: 3.2, a: 1.4, h: 0.1, p: 1.7, v: 0.35, bp: [1100, 480, 0.9] }] });
+  D('amb.horn', { vol: 0.5, max: 2, layers: [{ w: 'square', f: 415, t: 0.32, a: 0.01, h: 0.25, p: 1, v: 0.4, lp: [1600, 1600, 0.8] }, { w: 'square', f: 523, t: 0.32, a: 0.01, h: 0.25, p: 1, v: 0.3, lp: [1600, 1600, 0.8] }, { w: 'square', d: 0.42, f: 415, t: 0.5, a: 0.01, h: 0.4, p: 1, v: 0.4, lp: [1600, 1600, 0.8] }] });
+  D('amb.siren', { vol: 0.4, max: 1, layers: [{ w: 'sine', f: 820, t: 3.2, a: 0.6, h: 2, p: 1.3, v: 0.6, vib: [0.75, 3.6] }, { w: 'tri', f: 1640, t: 3.2, a: 0.6, h: 2, p: 1.3, v: 0.12, vib: [0.75, 3.6] }] });
+  D('amb.crackle', { vol: 0.6, max: 8, layers: [{ w: 'noise', t: 0.012, a: 0.0003, p: 3, v: 1, hp: [1300, 1300, 0.7] }] });
+  D('amb.pop', { vol: 0.6, max: 3, layers: [{ w: 'noise', t: 0.05, a: 0.0005, p: 2.5, v: 1, bp: [1700, 900, 1.2] }, { w: 'sine', f: 900, f1: 250, t: 0.04, a: 0.0005, p: 2, v: 0.5 }, { w: 'noise', d: 0.05, t: 0.25, a: 0.01, p: 2, v: 0.2, hp: [3000, 5000, 0.7] }] });
+  D('amb.creak', { vol: 0.5, max: 2, layers: [{ w: 'saw', f: 95, f1: 72, t: 0.7, a: 0.18, p: 1.4, v: 0.7, bp: [620, 460, 6], vib: [15, 0.9] }, { w: 'saw', d: 0.05, f: 140, f1: 120, t: 0.5, a: 0.15, p: 1.6, v: 0.3, bp: [900, 700, 7], vib: [19, 0.7] }] });
+  D('amb.slap', { vol: 0.5, max: 3, layers: [{ w: 'pink', t: 0.42, a: 0.025, p: 2, v: 1, lp: [1500, 380, 0.8] }, { w: 'noise', t: 0.15, d: 0.02, a: 0.01, p: 2, v: 0.25, hp: [3000, 3000, 0.7] }] });
+  D('amb.bubble', { vol: 0.45, max: 6, layers: [{ w: 'sine', f: 420, f1: 1150, t: 0.05, a: 0.002, p: 2, v: 0.8 }] });
+})();
+
+let AmbNoise = null;
+/** 5 秒可以循環的雜訊（首尾交叉淡化，循環時不會喀一聲） */
+function ambNoise(kind) {
+  if (!AmbNoise) AmbNoise = {};
+  if (AmbNoise[kind]) return AmbNoise[kind];
+  const c = Aud.ctx, sr = c.sampleRate, len = Math.floor(sr * 5), x = Math.floor(sr * 0.25), raw = new Float32Array(len + x), R = makeRng(hashStr(kind));
+  let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, br = 0;
+  for (let i = 0; i < raw.length; i++) {
+    const w = R.next() * 2 - 1;
+    if (kind === 'white') raw[i] = w * 0.5;
+    else if (kind === 'brown') { br = (br + 0.02 * w) / 1.02; raw[i] = br * 3.2; }
+    else { b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759; b2 = 0.969 * b2 + w * 0.153852; b3 = 0.8665 * b3 + w * 0.3104856; b4 = 0.55 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.016898; raw[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926; }
+  }
+  const buf = c.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = raw[i];
+  for (let i = 0; i < x; i++) { const k = i / x; d[i] = raw[i] * k + raw[len + i] * (1 - k); }   // 結尾接回開頭
+  let pk = 0; for (let i = 0; i < len; i++) pk = Math.max(pk, Math.abs(d[i])); const g = pk > 0 ? 0.9 / pk : 1; for (let i = 0; i < len; i++) d[i] *= g;
+  return (AmbNoise[kind] = buf);
+}
+
+const Amb = PZ.amb = { presets: AMB_PRESETS, live: {}, want: {}, vol: 1, _follow: false };
+Amb.define = (name, def) => { AMB_PRESETS[name] = def; return def; };
+function makeBed(c, B, out) {
+  const src = c.createBufferSource(); src.buffer = ambNoise(B.noise || 'pink'); src.loop = true;
+  let node = src; const chain = (n) => { node.connect(n); node = n; }, nodes = [src], oscs = [];
+  const filt = (type, f, q) => { const n = c.createBiquadFilter(); n.type = type; n.frequency.value = f; n.Q.value = q; chain(n); nodes.push(n); return n; };
+  if (B.hp) filt('highpass', B.hp, 0.5);
+  if (B.lp) filt('lowpass', B.lp, 0.5);
+  let bp = null; if (B.bp) bp = filt('bandpass', B.bp[0], B.bp[1] || 1);
+  if (B.sweep && bp) { const o = c.createOscillator(), og = c.createGain(); o.frequency.value = B.sweep[0]; og.gain.value = B.sweep[1]; o.connect(og); og.connect(bp.frequency); o.start(); oscs.push(o); nodes.push(og); }
+  const g = c.createGain(); g.gain.value = B.vol || 0.3; chain(g); nodes.push(g);
+  if (c.createStereoPanner && B.pan) { const p = c.createStereoPanner(); p.pan.value = B.pan; chain(p); nodes.push(p); }
+  node.connect(out);
+  src.start(0, Rand.range(0, src.buffer.duration * 0.9));
+  return { B, g, t: Rand.range(0, 1), nodes, oscs, src };
+}
+function ambStart(name) {
+  const def = AMB_PRESETS[name], c = Aud.ctx; if (!def || !c) return null;
+  const gain = c.createGain(); gain.gain.value = 0.0001; gain.connect(Aud.bus.amb);
+  const L = { name, gain, level: 0, beds: (def.beds || []).map((B) => makeBed(c, B, gain)), events: (def.events || []).map((E) => ({ E, t: Rand.range(0.2, 1.5) / Math.max(0.05, E.rate) })), dying: 0 };
+  Amb.live[name] = L; return L;
+}
+function ambKill(L) {
+  for (const b of L.beds) { try { b.src.stop(); } catch (e) { /* ignore */ } for (const o of b.oscs) { try { o.stop(); } catch (e) { /* ignore */ } } for (const n of b.nodes) { try { n.disconnect(); } catch (e) { /* ignore */ } } }
+  try { L.gain.disconnect(); } catch (e) { /* ignore */ }
+  delete Amb.live[L.name];
+}
+/** 把目標音量套上去（淡入淡出 fade 秒） */
+function ambApply(fade = 2) {
+  const c = Aud.ctx; if (!c) return;
+  const names = new Set([...Object.keys(Amb.want), ...Object.keys(Amb.live)]);
+  for (const n of names) {
+    const v = (Amb.want[n] || 0) * Amb.vol;
+    let L = Amb.live[n];
+    if (!L) { if (v <= 0.001) continue; L = ambStart(n); if (!L) continue; }
+    L.level = v; L.dying = v <= 0.001 ? fade + 0.6 : 0;
+    const t = c.currentTime; L.gain.gain.cancelScheduledValues(t); L.gain.gain.setTargetAtTime(Math.max(0.0001, v), t, Math.max(0.05, fade / 3));
+  }
+}
+Amb.play = (name, o = {}) => { Amb.want = {}; if (name) Amb.want[name] = o.vol != null ? o.vol : 1; ambApply(o.fade); return Amb; };
+Amb.mix = (levels, o = {}) => { Amb.want = Object.assign({}, levels); ambApply(o.fade); return Amb; };
+Amb.set = (name, v, o = {}) => { Amb.want[name] = v; ambApply(o.fade); return Amb; };
+Amb.stop = (o = {}) => { Amb.want = {}; ambApply(o.fade != null ? o.fade : 1.5); return Amb; };
+Amb.level = (name) => (Amb.live[name] ? Amb.live[name].level : 0);
+/* 跟著天氣：只管雨、雷雨、風三種，其他（營火、森林…）照遊戲自己設的 */
+const AMB_WEATHER = { clear: {}, rain: { rain: 1 }, drizzle: { rain: 0.45 }, storm: { storm: 1 }, snow: { wind: 0.3 }, blizzard: { wind: 1 }, fog: { wind: 0.16 }, mist: { wind: 0.1 } };
+Amb.follow = (on = true) => { Amb._follow = !!on; if (on) ambWeather(Weather.name); return Amb; };
+function ambWeather(name) { const m = AMB_WEATHER[name] || {}; for (const k of ['rain', 'storm', 'wind']) Amb.want[k] = m[k] || 0; ambApply(3); }
+PZ.on('weather', (name) => { if (Amb._follow) ambWeather(name); });
+PZ.on('audio', () => ambApply(1.5));
+addSystem({
+  name: 'amb', order: 33,
+  frame(rdt) {
+    const c = Aud.ctx; if (!c || c.state !== 'running') return;
+    const now = c.currentTime;
+    for (const n in Amb.live) {
+      const L = Amb.live[n];
+      if (L.dying > 0) { L.dying -= rdt; if (L.dying <= 0) { ambKill(L); continue; } }
+      // 底：陣風起伏、浪湧上來又退
+      for (const b of L.beds) {
+        const B = b.B; b.t -= rdt; if (b.t > 0) continue;
+        if (B.wave) { const [p0, p1, lo, hi] = B.wave, per = Rand.range(p0, p1), rise = per * Rand.range(0.3, 0.42), v = B.vol;
+          b.g.gain.cancelScheduledValues(now); b.g.gain.setValueAtTime(Math.max(0.0001, b.g.gain.value), now); b.g.gain.linearRampToValueAtTime(v * Rand.range(hi * 0.8, hi), now + rise); b.g.gain.setTargetAtTime(v * lo, now + rise, (per - rise) / 2.6); b.t = per; }
+        else if (B.swell) { const [p0, p1, depth] = B.swell, per = Rand.range(p0, p1); b.g.gain.setTargetAtTime(B.vol * (1 - depth + depth * Rand.next() * 1.15), now, per / 3); b.t = per; }
+        else b.t = 1e9;
+      }
+      // 事件
+      if (L.level < 0.01 || L.dying > 0) continue;
+      for (const ev of L.events) {
+        ev.t -= rdt; if (ev.t > 0) continue;
+        const E = ev.E; ev.t = -Math.log(1 - Rand.next() * 0.999) / Math.max(0.01, E.rate);
+        const v = E.vol || [0.2, 0.4], p = E.pitch || [1, 1];
+        Sfx.play(E.sfx, { bus: 'amb', vol: Rand.range(v[0], v[1]) * L.level, pitch: Rand.range(p[0], p[1]), pan: Rand.spread(E.pan || 0), rev: E.rev || 0, force: true });
+      }
+    }
+  },
+});
+
+global.PZ = PZ;
+})(typeof window !== 'undefined' ? window : globalThis);

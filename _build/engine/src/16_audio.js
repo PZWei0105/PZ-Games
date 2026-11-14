@@ -29,6 +29,9 @@ Aud.unlock = () => {
   master.connect(comp); comp.connect(c.destination);
   Aud.master = master; Aud.comp = comp;
   for (const k of ['sfx', 'music', 'ui', 'amb']) { const g = c.createGain(); g.connect(master); Aud.bus[k] = g; }
+  // 配樂多過一個低通（暫停選單、水底、被打暈時「悶住」：PZ.music.muffle）
+  Aud.musicLP = c.createBiquadFilter(); Aud.musicLP.type = 'lowpass'; Aud.musicLP.frequency.value = 20000; Aud.musicLP.Q.value = 0.6;
+  Aud.bus.music.disconnect(); Aud.bus.music.connect(Aud.musicLP); Aud.musicLP.connect(master);
   // 殘響（短的房間感，給需要的音效加一點空間）
   Aud.rev = c.createConvolver(); Aud.rev.buffer = makeIR(c, 1.6, 2.6); Aud.revIn = c.createGain(); Aud.revIn.gain.value = 1;
   Aud.revIn.connect(Aud.rev); Aud.rev.connect(Aud.bus.sfx);
@@ -225,7 +228,7 @@ Sfx.play = (name, o = {}) => {
   // 同一音效的聲部上限：停掉最舊的
   const max = sp.max || 6, mine = Sfx.voices.filter((v) => v.name === name);
   if (mine.length >= max) mine[0].stop(0.02);
-  if (Sfx.voices.length >= Sfx.maxVoices) Sfx.voices[0].stop(0.02);
+  if (Sfx.voices.length >= Sfx.maxVoices) { const ai = Sfx.voices.findIndex((v) => v.bus === 'amb'); Sfx.voices[ai >= 0 ? ai : 0].stop(0.02); }   // 聲部滿了先讓環境音讓位
   const src = c.createBufferSource(); src.buffer = buf;
   const pv = sp.pitchVar != null ? sp.pitchVar : 0.05;
   src.playbackRate.value = Math.max(0.1, (o.pitch || 1) * (1 + Rand.spread(pv)));
@@ -239,7 +242,7 @@ Sfx.play = (name, o = {}) => {
   if (rv > 0) { const rg = c.createGain(); rg.gain.value = rv; node.connect(rg); rg.connect(Aud.revIn); }
   const at = now + (o.delay || 0);
   src.start(at);
-  const v = { name, src, g, end: at + buf.duration / src.playbackRate.value, stop(fade = 0.03) { try { const t = c.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + fade); src.stop(t + fade + 0.01); } catch (e) { /* 已經停了 */ } rm(); } };
+  const v = { name, bus: o.bus || sp.bus || 'sfx', src, g, end: at + buf.duration / src.playbackRate.value, stop(fade = 0.03) { try { const t = c.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + fade); src.stop(t + fade + 0.01); } catch (e) { /* 已經停了 */ } rm(); } };
   const rm = () => { const i = Sfx.voices.indexOf(v); if (i >= 0) Sfx.voices.splice(i, 1); };
   src.onended = rm;
   Sfx.voices.push(v);
@@ -372,3 +375,22 @@ S('notify', { vol: 0.35, bus: 'ui', max: 1, rev: 0.2, layers: [{ w: 'sine', f: 8
 S('card', { vol: 0.35, pitchVar: 0.1, max: 4, gap: 0.03, layers: [{ w: 'noise', t: 0.07, a: 0.01, p: 2, v: 1, bp: [2600, 4200, 1.2] }] });
 S('alarm', { vol: 0.35, max: 1, layers: [{ w: 'square', f: 880, t: 0.7, a: 0.002, h: 0.65, p: 1, v: 0.35, jump: [[0.175, 0.75], [0.35, 1.333], [0.525, 0.75]], lp: [2500, 2500, 0.7] }] });
 S('bell', { vol: 0.5, max: 2, rev: 0.4, layers: [{ w: 'sine', f: 660, t: 1.6, a: 0.001, p: 2.6, v: 0.7, fm: [3.5, 2.2, 2.2] }, { w: 'sine', f: 1320, t: 1.1, a: 0.001, p: 3, v: 0.25, fm: [2.4, 1, 3] }] });
+// 腳步（不同地面）
+S('stepGrass', { vol: 0.24, pitchVar: 0.14, max: 3, gap: 0.07, layers: [{ w: 'pink', t: 0.08, a: 0.012, p: 1.8, v: 1, hp: [1400, 2200, 0.7], lp: [7000, 5000, 0.7] }] });
+S('stepStone', { vol: 0.26, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.03, a: 0.0008, p: 2.4, v: 0.8, bp: [2300, 1800, 1.2] }, { w: 'sine', f: 190, f1: 120, t: 0.035, a: 0.001, p: 2, v: 0.6 }] });
+S('stepWood', { vol: 0.3, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'sine', f: 240, f1: 175, t: 0.07, a: 0.001, p: 2.2, v: 0.9 }, { w: 'noise', t: 0.025, a: 0.0008, p: 2, v: 0.35, bp: [950, 950, 1.5] }] });
+S('stepWater', { vol: 0.3, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.14, a: 0.006, p: 2, v: 1, bp: [1500, 520, 1] }, { w: 'sine', f: 620, f1: 1250, t: 0.045, d: 0.03, a: 0.002, p: 2, v: 0.2 }] });
+S('stepSnow', { vol: 0.26, pitchVar: 0.12, max: 3, gap: 0.07, layers: [{ w: 'noise', t: 0.1, a: 0.012, p: 1.6, v: 1, lp: [3200, 1500, 0.7], crush: 6, hold: 3 }] });
+S('stepMetal', { vol: 0.24, pitchVar: 0.1, max: 3, gap: 0.07, layers: [{ w: 'sine', f: 880, t: 0.1, a: 0.0008, p: 2.6, v: 0.5, fm: [2.31, 2.2, 14] }, { w: 'noise', t: 0.02, a: 0.0005, p: 2, v: 0.4, hp: [3200, 3200, 0.7] }] });
+// 介面（第二組）
+S('select', { vol: 0.24, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'sine', f: 880, f1: 1320, t: 0.05, a: 0.002, p: 1.8, v: 0.8 }, { w: 'sine', f: 1760, t: 0.03, d: 0.03, a: 0.001, p: 2, v: 0.25 }] });
+S('back', { vol: 0.22, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'sine', f: 1100, f1: 700, t: 0.07, a: 0.002, p: 1.8, v: 0.8 }] });
+S('toggleOn', { vol: 0.24, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'tri', f: 740, t: 0.04, a: 0.001, p: 2, v: 0.7 }, { w: 'tri', f: 1110, t: 0.07, d: 0.035, a: 0.001, p: 2, v: 0.7 }] });
+S('toggleOff', { vol: 0.22, bus: 'ui', max: 2, gap: 0.03, layers: [{ w: 'tri', f: 1110, t: 0.04, a: 0.001, p: 2, v: 0.6 }, { w: 'tri', f: 740, t: 0.07, d: 0.035, a: 0.001, p: 2, v: 0.6 }] });
+S('slider', { vol: 0.12, bus: 'ui', pitchVar: 0, max: 2, gap: 0.03, layers: [{ w: 'sine', f: 2400, t: 0.012, a: 0.0005, p: 1.5, v: 1 }] });
+S('unlock', { vol: 0.4, bus: 'ui', max: 1, rev: 0.35, layers: [523, 659, 784, 1046, 1318].map((f, i) => ({ w: 'sine', f, t: 0.5, d: i * 0.06, a: 0.002, p: 2.4, v: 0.45, fm: [2, 0.8, 6] })).concat([{ w: 'noise', t: 0.6, d: 0.1, a: 0.15, p: 2, v: 0.1, hp: [7000, 9000, 0.7] }]) });
+S('purchase', { vol: 0.42, bus: 'ui', max: 1, rev: 0.2, layers: [{ w: 'square', f: 1318, t: 0.08, a: 0.001, p: 2, v: 0.35, lp: [6000, 6000, 0.7] }, { w: 'square', f: 1760, t: 0.25, d: 0.07, a: 0.001, p: 2.2, v: 0.35, lp: [6000, 4000, 0.7] }, { w: 'sine', f: 2637, t: 0.5, d: 0.07, a: 0.001, p: 3, v: 0.2, fm: [3.5, 1.5, 6] }] });
+S('equip', { vol: 0.4, max: 2, layers: [{ w: 'noise', t: 0.14, a: 0.02, p: 2, v: 0.6, bp: [700, 2600, 1.1] }, { w: 'sine', f: 1250, t: 0.25, d: 0.1, a: 0.001, p: 2.8, v: 0.4, fm: [1.41, 3, 9] }, { w: 'noise', t: 0.02, d: 0.1, a: 0.0005, p: 2, v: 0.5, hp: [3500, 3500, 0.7] }] });
+S('page', { vol: 0.3, bus: 'ui', pitchVar: 0.1, max: 2, gap: 0.05, layers: [{ w: 'pink', t: 0.16, a: 0.03, p: 1.6, v: 1, bp: [2400, 5200, 0.9] }, { w: 'noise', t: 0.02, d: 0.13, a: 0.001, p: 2, v: 0.35, hp: [4000, 4000, 0.7] }] });
+S('rare', { vol: 0.42, max: 1, rev: 0.45, layers: [{ w: 'sine', f: 1568, f1: 3136, t: 0.7, a: 0.08, p: 2, v: 0.3, vib: [12, 0.3] }, { w: 'sine', f: 2093, t: 0.9, d: 0.1, a: 0.001, p: 2.6, v: 0.35, fm: [3.5, 2, 3] }, { w: 'noise', t: 0.9, a: 0.2, p: 1.6, v: 0.12, hp: [8000, 10000, 0.7] }] });
+S('combo', { vol: 0.32, pitchVar: 0, max: 3, gap: 0.04, layers: [{ w: 'square', f: 660, f1: 990, t: 0.09, a: 0.001, p: 1.8, v: 0.35, duty: 0.25, lp: [5000, 5000, 0.7] }, { w: 'sine', f: 1320, t: 0.12, d: 0.04, a: 0.001, p: 2, v: 0.35 }] });

@@ -297,6 +297,49 @@ window.__selftest = async () => {
   drawHook = (g) => { wm.draw(g, dgs, { actors: acts.slice(), drawActor: () => {} }); wm.draw(g, cvs); wm.draw(g, iss); g.lighting(); cvs.emissive(g, wm); }; PZ.loop.step(1);
   ok('地圖風格：地牢、洞窟、島嶼都畫得出來', PZ.debug.errors.length === 0, PZ.debug.errors.map((e) => e.msg).join(' / '));
 
+  // ---- 介面與聲音：血條、數字滾動、扇形／圓弧／冷卻／圓角框、新轉場、提示框、閃卡、背包、標題畫面、音景 ----
+  const hm = PZ.meter({ max: 100, value: 100 }); hm.hit(40);
+  ok('血條：受傷時主條馬上掉、殘影留著', hm.shown === 60 && hm.trail === 100, hm.shown + ' / ' + hm.trail);
+  for (let i = 0; i < 90; i++) hm.update(1 / 60);
+  ok('血條：殘影停一下就退完', Math.abs(hm.trail - 60) < 0.5, hm.trail.toFixed(1));
+  hm.heal(30); ok('血條：補血先出現預覽', hm.ghost === 90 && hm.shown < 90, hm.ghost + ' / ' + hm.shown.toFixed(1));
+  for (let i = 0; i < 150; i++) hm.update(1 / 60); ok('血條：主條追上', Math.abs(hm.shown - 90) < 0.5, hm.shown.toFixed(1));
+  hm.hit(50); hm.flash = 0; hm.shake = 0;
+  drawHook = (g) => { g.hud(); g.rect(0, 0, S.w, S.h, '#000'); g.meter(hm, 40, 300, 200, 20, { color: '#ff0000', color2: '#ff0000', shape: 'flat', frame: false, bg: '#000000', trailColor: '#ffffff' }); };
+  PZ.loop.step(1);
+  ok('血條畫出來：主條紅、殘影白', readPx(60, 312)[0] > 150 && readPx(60, 312)[1] < 90 && readPx(170, 312)[1] > 170, readPx(60, 312) + ' / ' + readPx(170, 312));
+  const cn = PZ.count(0, { sound: null }); cn.add(12345); for (let i = 0; i < 240; i++) cn.update(1 / 60);
+  ok('數字滾動：滾到目標、千分位', cn.text === '12,345' && cn.pop < 0.01, cn.text);
+  drawHook = (g) => { g.hud(); g.rect(0, 0, S.w, S.h, '#000'); g.pie(100, 500, 40, -Math.PI / 2, 0, '#00ff00'); g.arc(250, 500, 40, 8, 0, Math.PI, '#0000ff'); g.rrect(300, 380, 80, 50, 16, '#ff0000'); g.circle(200, 650, 40, '#ffffff'); g.cooldown(200, 650, 40, 0.5, { shade: '#000000' }); };
+  PZ.loop.step(1);
+  ok('扇形、圓弧、圓角框', near(readPx(115, 480), [0, 255, 0]) && near(readPx(85, 520), [0, 0, 0]) && near(readPx(250, 540), [0, 0, 255]) && near(readPx(250, 460), [0, 0, 0]) && near(readPx(340, 405), [255, 0, 0]) && near(readPx(301, 381), [0, 0, 0]), [readPx(115, 480), readPx(250, 540), readPx(301, 381)].join(' / '));
+  ok('技能冷卻：剩一半＝左半邊蓋暗', readPx(180, 650)[0] < 40 && readPx(220, 650)[0] > 200, readPx(180, 650) + ' / ' + readPx(220, 650));
+  PZ.loop.start(); for (const tp of ['diamond', 'blinds', 'shutter', 'slide', 'pixel']) await PZ.go('t', null, { type: tp, time: 0.06 }); PZ.loop.stop();
+  ok('新轉場：菱形、百葉窗、快門、推門、方塊', PZ.scenes.name === 't' && PZ.debug.errors.length === 0, PZ.debug.errors.map((e) => e.msg).join(' / '));
+  const tbt = document.createElement('button'); tbt.className = 'pz-btn'; tbt.textContent = '試'; tbt.style.cssText = 'position:absolute;left:100px;top:400px'; PZ.screen.ui.appendChild(tbt);
+  const tipH = PZ.ui.tip(tbt, '<b>說明</b>'); tbt.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+  const tipEl = document.querySelector('.pz-tip');
+  ok('提示框：滑鼠移上去出現在按鈕上方', !!tipEl && tipEl.getBoundingClientRect().bottom <= tbt.getBoundingClientRect().top + 1, tipEl && tipEl.getBoundingClientRect().bottom + ' ' + tbt.getBoundingClientRect().top);
+  tbt.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' })); await sleep(240);
+  ok('提示框：移開就收', !document.querySelector('.pz-tip')); tipH.remove(); tbt.remove();
+  const card = document.createElement('div'); card.style.cssText = 'position:absolute;left:50px;top:100px;width:100px;height:140px;background:#345'; PZ.screen.ui.appendChild(card);
+  const holo = PZ.ui.holo(card), crd = card.getBoundingClientRect();
+  card.dispatchEvent(new PointerEvent('pointermove', { clientX: crd.left + 90, clientY: crd.top + 10, bubbles: true })); await sleep(450);
+  ok('閃卡：跟著手指傾斜', parseFloat(card.style.getPropertyValue('--ry')) > 4 && parseFloat(card.style.getPropertyValue('--rx')) > 4, card.style.getPropertyValue('--rx') + ' ' + card.style.getPropertyValue('--ry'));
+  holo.remove(); card.remove();
+  let picked = null; const slt = PZ.ui.slots({ items: [{ icon: 'red', name: '紅', rarity: 'epic', count: 3, new: true }, { icon: '★', name: '星' }], min: 6, onPick: (it) => { picked = it; } });
+  PZ.screen.ui.appendChild(slt); const sbt = slt.querySelectorAll('.pz-slot');
+  ok('背包：格子數、稀有度、數量、新東西', sbt.length === 6 && sbt[0].classList.contains('r-epic') && sbt[0].querySelector('.pz-slot-n').textContent === '×3' && !!sbt[0].querySelector('.pz-slot-new') && sbt[2].disabled);
+  sbt[0].click(); ok('背包：點了選起來、新標記消失', !!picked && picked.name === '紅' && sbt[0].classList.contains('sel') && !sbt[0].querySelector('.pz-slot-new'));
+  slt.remove();
+  const ttl = PZ.ui.title({ title: '測試', items: [{ label: '開始', value: 'go' }] }); await sleep(60);
+  const tbn = document.querySelector('.pz-title .pz-btn');
+  ok('標題畫面：字一個一個、有選單', document.querySelectorAll('.pz-title-main span').length === 2 && !!tbn);
+  tbn.click(); const tval = await ttl; ok('標題畫面：按下去回傳選項、畫面收掉', tval === 'go' && !document.querySelector('.pz-title'), tval);
+  PZ.amb.mix({ rain: 1, fire: 0.5 }); ok('音景：還沒解鎖音訊時先記著', PZ.amb.want.rain === 1 && PZ.amb.want.fire === 0.5);
+  PZ.amb.follow(true); PZ.weather.set('storm', { time: 0 }); ok('音景：跟著天氣（雷雨）', PZ.amb.want.storm === 1 && PZ.amb.want.rain === 0 && PZ.amb.want.fire === 0.5, JSON.stringify(PZ.amb.want));
+  PZ.amb.follow(false); PZ.amb.stop(); PZ.weather.set('clear', { time: 0 }); PZ.music.muffle(0.5); PZ.music.muffle(0);
+
   // ---- WebGL 遺失與恢復 ----
   const ext = PZ.gfx.r.gl.getExtension('WEBGL_lose_context');
   if (ext) {
@@ -326,7 +369,7 @@ window.__selftest = async () => {
   PZ.light.reset(); PZ.loop.step(1); ok('Canvas2D 水面倒影', readPx(S.w / 2, S.h / 2 + 15)[0] > 120, readPx(S.w / 2, S.h / 2 + 15));
   drawHook = (g) => { g.hud(); g.rect(0, 0, S.w, S.h, '#000'); g.polyTex([100, 100, 260, 100, 260, 180, 100, 180], 't-pat', { s: 4 }); }; PZ.loop.step(1);
   ok('Canvas2D 材質多邊形：畫成平均色', near(readPx(140, 140), [128, 0, 128], 40), readPx(140, 140));
-  drawHook = (g) => { wm.draw(g, dgs); wm.draw(g, cvs); wm.draw(g, iss); }; PZ.loop.step(1);
+  drawHook = (g) => { wm.draw(g, dgs); wm.draw(g, cvs); wm.draw(g, iss); g.hud(); g.meter(hm, 40, 300, 200, 20, { text: true, segments: 10 }); g.cooldown(200, 650, 40, 0.3, { flash: 0.5 }); g.arc(250, 500, 40, 8, 0, 4, '#00f', { cap: 'round' }); g.rrect(300, 380, 80, 50, 16, '#f00', { border: 2 }); g.count(cn, 100, 100); }; PZ.loop.step(1);
   ok('沒有引擎錯誤', PZ.debug.errors.length === 0, PZ.debug.errors.map((e) => e.msg).join(' / '));
   return results;
 };
