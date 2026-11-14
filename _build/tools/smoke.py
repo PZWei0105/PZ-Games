@@ -438,6 +438,110 @@ def check_launch(br, base, cat, R):
             R['bad'].append(name + '：程式錯誤 ' + m)
 
 
+
+def check_arrange(br, base, cat, out, R, shots):
+    """3.0 cartridges: hold a cartridge to pull it out and move it on the rack, drop one into the console,
+    leave arrange mode, the order survives a reload, a tap still opens the App, the home console mirrors
+    the dock, favourite covers reorder by holding; and the one-time 3.0 screen for someone who had 2.0."""
+    from playwright.sync_api import TimeoutError as Slow
+    ids = [g['id'] for g in cat['games']]
+    apps = cat.get('apps') or []
+    if len(apps) < 6:
+        return
+    def ctx(ls):
+        js = 'try{' + ''.join('localStorage.setItem(%s, %s);' % (json.dumps('pzgc.v1.' + k), json.dumps(json.dumps(v))) for k, v in ls.items()) + "sessionStorage.setItem('pzgc.booted','1');}catch(e){}"
+        c = br.new_context(**PHONE)
+        c.add_init_script(js)
+        pg = c.new_page()
+        errs = []
+        pg.on('pageerror', lambda e: errs.append(short(getattr(e, 'message', None) or e)))
+        return c, pg, errs
+    def mid(pg, sel):
+        b = pg.locator(sel).first.bounding_box()
+        return b['x'] + b['width'] / 2, b['y'] + b['height'] / 2
+    def carry(pg, a, b, hold=600, steps=16):
+        pg.mouse.move(*a); pg.mouse.down(); pg.wait_for_timeout(hold)
+        for i in range(1, steps + 1):
+            pg.mouse.move(a[0] + (b[0] - a[0]) * i / steps, a[1] + (b[1] - a[1]) * i / steps); pg.wait_for_timeout(30)
+        pg.wait_for_timeout(200); pg.mouse.up(); pg.wait_for_timeout(900)
+    store = lambda pg, k: pg.evaluate("(k) => JSON.parse(localStorage.getItem('pzgc.v1.' + k) || 'null')", k)
+    order = "[...document.querySelectorAll('%s [data-cart]')].map((e) => e.dataset.cart)"
+    bad = lambda m: R['bad'].append('卡匣與主機：' + m)
+    seen = ids
+    note = ((cat.get('changelog') or [{}])[0]).get('id', '')
+    c, pg, errs = ctx({'seen': seen, 'trophies': {}, 'v3': True, 'favs': ids[:3], 'noteSeen': note})
+    try:
+        pg.goto(base + '#apps', wait_until='domcontentloaded')
+        pg.wait_for_function("document.querySelectorAll('#console .slot').length === 4 && document.querySelectorAll('#rack [data-cart]').length > 0", timeout=8000)
+        n = pg.evaluate("document.querySelectorAll('#view-apps [data-cart]').length")
+        if n != len(apps):
+            bad('主機加卡匣架一共 %d 片，目錄裡有 %d 個 App' % (n, len(apps)))
+        rack0 = pg.evaluate(order % '#rack')
+        carry(pg, mid(pg, '#rack [data-cart="%s"]' % rack0[2]), mid(pg, '#rack [data-cart="%s"]' % rack0[0]))
+        shot(pg, os.path.join(out, 'shell', 'arrange_390.png'), shots)
+        if not pg.evaluate("document.querySelector('#view-apps').classList.contains('editing')"):
+            bad('按住卡匣沒有進入整理模式')
+        o = store(pg, 'appOrder')
+        if not o or o[0] != rack0[2]:
+            bad('按住拖到卡匣架最前面，順序沒有存起來（%s）' % (o[:3] if o else o))
+        r1 = pg.evaluate(order % '#rack')
+        carry(pg, mid(pg, '#rack [data-cart="%s"]' % r1[1]), mid(pg, '#console .slot[data-slot="1"]'), hold=0)
+        d = store(pg, 'dock')
+        if not d or d[1] != r1[1]:
+            bad('整理模式裡把卡匣拖進主機第 2 格，沒有插上去（%s）' % d)
+        pg.click('#editbar [data-act="ed-done"]'); pg.wait_for_timeout(500)
+        if pg.evaluate("document.querySelector('#view-apps').classList.contains('editing')"):
+            bad('按「完成」沒有離開整理模式')
+        want = pg.evaluate(order % '#view-apps')
+        pg.reload(wait_until='domcontentloaded')
+        pg.wait_for_function("document.querySelectorAll('#view-apps [data-cart]').length > 0", timeout=8000)
+        if pg.evaluate(order % '#view-apps') != want:
+            bad('重新打開後，主機和卡匣架的順序跑掉了')
+        web = [a['id'] for a in apps if (a.get('type') or a.get('kind')) == 'web']
+        if web:
+            pg.click('#view-apps [data-cart="%s"]' % web[0])
+            try:
+                pg.wait_for_function("document.querySelector('#launcher.on')", timeout=5000)
+            except Slow:
+                bad('平常點卡匣，App 沒有打開')
+            pg.evaluate('history.back()'); pg.wait_for_timeout(900)
+        pg.evaluate("location.hash = ''")
+        pg.wait_for_function("!!document.querySelector('#minicon')", timeout=6000)
+        hd = pg.evaluate("[...document.querySelectorAll('#minicon .slot')].map((s) => s.querySelector('[data-cart]') ? s.querySelector('[data-cart]').dataset.cart : null)")
+        if hd != store(pg, 'dock'):
+            bad('首頁的小主機跟 App 頁的主機不一樣')
+        pg.evaluate("document.querySelector('.sortable').scrollIntoView({block: 'center'})"); pg.wait_for_timeout(500)
+        f0 = pg.evaluate("[...document.querySelectorAll('.sortable .row .card')].map((e) => e.dataset.id)")
+        carry(pg, mid(pg, '.sortable .card[data-id="%s"]' % f0[2]), mid(pg, '.sortable .card[data-id="%s"]' % f0[0]))
+        f1 = store(pg, 'favs')
+        if not f1 or f1[0] != f0[2]:
+            bad('首頁「我的最愛」按住拖曳沒有換順序（%s → %s）' % (f0, f1))
+    except Slow:
+        bad('App 頁的主機或卡匣架沒有出現')
+    except Exception as e:
+        bad('檢查到一半出錯（%s）' % short(e, 120))
+    finally:
+        c.close()
+    for m in errs:
+        bad('程式錯誤 ' + m)
+    # someone who had 2.0 opens 3.0 for the first time
+    c, pg, errs = ctx({'seen': seen, 'trophies': {'boot': 1}, 'noteSeen': note})
+    try:
+        pg.goto(base, wait_until='domcontentloaded')
+        pg.wait_for_function("document.querySelector('#upgrade.on.done .up-in.v3') && document.querySelector('#upgrade .console.preview')", timeout=8000)
+        shot(pg, os.path.join(out, 'shell', 'upgrade3_390.png'), shots)
+        pg.click('#upgrade [data-act=up-close]')
+        pg.wait_for_function("!document.querySelector('#upgrade.on')", timeout=4000)
+    except Slow:
+        bad('3.0 升級畫面沒出現，或按「開始」關不掉')
+    except Exception as e:
+        bad('3.0 升級畫面檢查到一半出錯（%s）' % short(e, 120))
+    finally:
+        c.close()
+    for m in errs:
+        bad('3.0 升級畫面：程式錯誤 ' + m)
+
+
 def check_offline(br, site, out, R, shots):
     """Open the collection once, take the server away, open it again: the service worker must carry it."""
     srv, base = serve(site)
@@ -611,6 +715,7 @@ def main():
             check_shell(br, base, '1440', DESK, out, cat, R, shots)
             check_player(br, base, cat, out, R, shots)
             check_launch(br, base, cat, R)
+            check_arrange(br, base, cat, out, R, shots)
             check_offline(br, site, out, R, shots)
             br.close()
     if not a.shell:
