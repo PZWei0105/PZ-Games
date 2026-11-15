@@ -48,6 +48,7 @@ HIST_RV = 240
 UA = 'Mozilla/5.0 (UNPACKED data pipeline; +https://pzwei0105.github.io/PZ-Games/apps/unpacked/)'
 
 OFFLINE = None
+ERRS = []   # 這一輪出錯的地方（寫進 live.json 的 errs，維護時看）
 
 
 def now():
@@ -71,7 +72,7 @@ def get_json(url, timeout=40, tries=3):
         try:
             req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
             with urllib.request.urlopen(req, timeout=timeout) as r:
-                return json.loads(r.read().decode('utf-8', 'replace'))
+                return json.loads(r.read().decode('utf-8-sig', 'replace'))   # Steam 的評論 API 會帶 BOM
         except Exception as e:  # noqa: BLE001
             last = e
             time.sleep(1.5 * (i + 1))
@@ -180,6 +181,7 @@ def get_items(appids, media=True):
             d = get_json(url, timeout=50)
         except Exception as e:  # noqa: BLE001
             print('GetItems fail', part[:3], e, file=sys.stderr)
+            ERRS.append(f'GetItems {part[:3]}: {str(e)[:120]}')
             continue
         for it in (d.get('response') or {}).get('store_items') or []:
             if it.get('success') == 1 and (it.get('appid') or it.get('id')):
@@ -261,6 +263,7 @@ def players(appid):
             return int(r.get('player_count') or 0)
     except Exception as e:  # noqa: BLE001
         print('players fail', appid, e, file=sys.stderr)
+        ERRS.append(f'players {appid}: {str(e)[:120]}')
     return None
 
 
@@ -273,6 +276,7 @@ def reviews(appid, lang):
         return {'n': tot, 'pos': pos, 'pct': round(pos * 100 / tot) if tot else None, 'label': q.get('review_score_desc')}
     except Exception as e:  # noqa: BLE001
         print('reviews fail', appid, lang, e, file=sys.stderr)
+        ERRS.append(f'reviews {appid} {lang}: {str(e)[:120]}')
         return None
 
 
@@ -462,7 +466,7 @@ def main():
     # 已經不在追蹤清單裡的拿掉
     keep = {str(int(x['appid'])) for x in track.get('apps') or [] if str(x.get('appid', '')).isdigit()}
     out_apps = {k: v for k, v in out_apps.items() if k in keep}
-    live = {'at': iso(t0), 'ok': ok, 'asked': len(apps), 'apps': out_apps}
+    live = {'at': iso(t0), 'ok': ok, 'asked': len(apps), 'errs': ERRS[:20], 'apps': out_apps}
     wrote = save_if_changed(live_path, live)
     print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}')
 
