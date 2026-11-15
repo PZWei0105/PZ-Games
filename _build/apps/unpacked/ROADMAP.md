@@ -13,7 +13,7 @@
 - Steam 以外的遊戲（主機獨佔、Netflix）沒有自動即時資料，圖片只能靠 YouTube 縮圖或專題裡寫的 `media.images`。
 - 圖卡的遊戲圖靠 Steam／YouTube 的 CORS 或 images.weserv.nl 代理；兩個都失敗時圖卡只畫塗鴉底（不會壞，但沒有遊戲圖）。
 - 語音導讀用裝置內建的中文語音，iPhone 和電腦的聲音不一樣。
-- Steam 評論 API（appreviews）在 GitHub Actions 上回傳的不是 JSON；繁中評價改用商店資料裡的語言別評價，live.json 的 `errs` 會記下每輪抓不到的地方。
+- Steam 舊的評論網址（store.steampowered.com/appreviews）2026-10-22 起停用、只回整頁 HTML；繁中評價已改用官方 WebAPI `IUserReviewsService/GetAppReviews`（不用金鑰、速率較低，抓不到時 App 會寫「這一輪沒抓到」）。live.json 的 `errs` 會記下每輪抓不到的地方。
 - 測試推送時留下一個沒用的分支 `zz-scope-test`（雲端環境刪不掉），痞子葳可以在 GitHub 的 Branches 頁直接刪，留著也不影響。
 
 ## 已完成
