@@ -1,0 +1,191 @@
+{
+  "id": "unhinged",
+  "date": "2026-11-16",
+  "rank": 3,
+  "kind": "exclusive",
+  "kind_label": "Netflix 獨佔",
+  "game": {
+    "zh": "Unhinged",
+    "en": "Unhinged",
+    "zh_note": "暫無官方中文名",
+    "steam": null,
+    "dev": "Night School Studio",
+    "pub": "Netflix Games",
+    "platforms": ["Netflix（電視）", "Netflix（電腦瀏覽器）"],
+    "genres": ["互動驚悚", "第一人稱恐怖", "短篇"],
+    "release": "2026-06-30",
+    "release_text": "2026/06/30 在 Netflix 推出",
+    "price_text": "Netflix 會員內含（無廣告、無內購）",
+    "site": "https://www.netflix.com/tudum/articles/unhinged-game-news"
+  },
+  "headline": "手機就是手電筒和控制器：Night School 的 30 分鐘居家驚悚",
+  "hook": "颶風把整棟公寓的電吹斷了，你被一通電話吵醒——住對面的好友說，你家那棟樓裡不只你一個人。你摸黑抓起手機當手電筒，而那支手機，就是你此刻真的握在手上的這支。",
+  "verdict": {
+    "stamp": "觀望",
+    "label": "等台灣開放",
+    "summary": "用手機當手電筒、電話和控制器的沉浸感是真的新，長度剛好一集影集；但台灣不在 Netflix 電視／電腦遊戲的開放地區，評價也兩極（嫌短、嫌選擇太線性）。等開放再玩，這晚就當成一部互動短片。",
+    "for": [
+      "喜歡《直到黎明》這類電影感的互動驚悚",
+      "想要一個晚上就玩完、不用學任何系統的遊戲",
+      "對「手機變成遊戲道具」這種新玩法有興趣"
+    ],
+    "against": [
+      "想要長篇、有深度的恐怖遊戲（全長約 30 多分鐘）",
+      "期待選擇能大幅改變結局",
+      "人在台灣、不想折騰（目前不在開放地區）"
+    ]
+  },
+  "facts": [
+    {"k": "開發／發行", "v": "Night School Studio（《Oxenfree》團隊）／Netflix Games", "s": [0, 1]},
+    {"k": "推出日", "v": "2026/06/30，Netflix 獨佔", "s": [1, 2]},
+    {"k": "平台", "v": "Netflix 電視 App 與電腦瀏覽器（Chrome 或 Edge），不是下載到手機的手遊", "s": [3, 4]},
+    {"k": "操作", "v": "掃畫面上的 QR Code 讓手機變控制器；iPhone 需 iOS 17 以上並裝 Netflix Game Controller；不支援實體手把", "s": [5]},
+    {"k": "價格", "v": "包含在 Netflix 會員內，無廣告、無內購", "s": [2, 6]},
+    {"k": "長度", "v": "約 30 多分鐘，像一集影集，一次玩完", "s": [7, 8]},
+    {"k": "模式", "v": "標準模式有倒數，失敗回到上一個檢查點；故事模式拿掉計時，劇情與分歧相同，可中途切換", "s": [6, 9]},
+    {"k": "配音", "v": "Zoë Kravitz（Ava）、Sadie Sink（好友 Claire）、Troy Baker（大樓管理員 Ben）", "s": [6]},
+    {"k": "聲音", "v": "配樂 Jason Hill、音效設計 Ren Klyce（都是 David Fincher 的長期班底）", "s": [0, 10]},
+    {"k": "幕後", "v": "David Fincher 與《Weapons》導演 Zach Cregger 在片尾掛名特別感謝，Variety 報導兩人參與創作", "s": [11, 12]},
+    {"k": "分級", "v": "Netflix 標示 18+（暴力內容）", "s": [13]},
+    {"k": "台灣能玩嗎", "v": "不行：Netflix 電視／電腦遊戲只開放部分國家，名單沒有台灣", "s": [14, 4]},
+    {"k": "媒體評價", "v": "OpenCritic 只收錄 2 篇（78／100、3.5／5）；Destructoid、PC Gamer 偏負評", "s": [15, 16, 17]},
+    {"k": "工作室現況", "v": "上線約六週後，Netflix 關閉 Night School Studio；遊戲仍可遊玩", "s": [18, 19]}
+  ],
+  "money": {
+    "level": 0,
+    "model": "包含在 Netflix 會員",
+    "notes": [
+      "沒有廣告、沒有內購，有 Netflix 會員就能玩。",
+      "前提是你所在的國家有開放 Netflix 電視／電腦遊戲。"
+    ],
+    "flags": ["要 Netflix 會員", "雲端串流（要穩定網路）"]
+  },
+  "zh": {"ui": null, "sub": null, "voice": false, "note": "官方沒有公布語言清單；台灣還沒開放，無法確認有沒有繁中。"},
+  "tw": {"ok": false, "note": "台灣不在 Netflix 電視／電腦遊戲的開放地區，帳號裡看不到這款。"},
+  "rig": {"verdict": "不吃硬體", "note": "遊戲在 Netflix 的雲端執行，電腦只要用 Chrome 或 Edge 開 Netflix，跟顯卡無關。要顧的是網路（Netflix 建議有線、10 Mbps 以上）和你的手機。"},
+  "time": {"text": "約 30～40 分鐘", "note": "故事模式最快，標準模式會因為失敗重來多花一點時間。"},
+  "media": {
+    "yt": [
+      {"id": "1lsV9I2NDO8", "title": "官方預告（Netflix）"}
+    ],
+    "images": []
+  },
+  "watch": [
+    "台灣何時加入 Netflix 電視遊戲開放地區",
+    "Netflix 會不會找外部團隊做續作"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": ["接起來電", "用手機照路", "找能用的東西", "倒數內逃開", "找到出路"],
+      "body": [
+        "你扮演 Ava。颶風把電吹斷，整棟公寓一片黑；手機是你唯一的光源，也是你和外界唯一的連線——可以和住對面的好友 Claire 通話、傳訊息，也能聯絡大樓管理員 Ben。",
+        "真正的設計重點是「兩個螢幕」：電視或電腦負責畫面，手上的手機同時是控制器、手電筒和電話。傾斜、移動手機就是在照路，遊戲裡的來電會真的讓你的手機響起來。",
+        "節奏像一集影集。標準模式有倒數，時間內沒找到需要的東西就會死，回到上一個檢查點重來；故事模式拿掉所有計時，適合只想看劇情的人，兩種模式的故事和分歧完全一樣。",
+        "根據 Variety 的報導，整段流程裡大約有十個會死的地方——它不是一部讓你放鬆看的互動電影。"
+      ]
+    },
+    "hour": [
+      "這款的「第一個小時」就是整款遊戲。照官方與媒體的說明，流程是這樣：在有開放的國家打開 Netflix 電視 App，或用電腦的 Chrome／Edge 進 Netflix，切到遊戲分頁。",
+      "按下開始後畫面會出現 QR Code，用手機相機掃——接上的那一刻，就是接起 Claire 打來的電話。",
+      "選模式：想要壓力選標準，想專心看劇情選故事；玩到一半卡關也能切換。",
+      "要離開時記得從手機上的 Netflix 圖示退出才會存檔；在電腦上直接按 Esc 關掉，沒存到的進度會不見。"
+    ],
+    "compare": [
+      {"name": "直到黎明", "same": "電影感的互動驚悚、限時操作、選擇", "diff": "《直到黎明》是好幾個小時的多主角群戲；Unhinged 只有一個晚上、一個主角，三十多分鐘結束"},
+      {"name": "Oxenfree", "same": "同一個工作室、靠對話和配音塑造角色", "diff": "Oxenfree 是超自然冒險、以對話選擇為主；Unhinged 改成寫實的居家入侵，恐怖和壓力都更直接"},
+      {"name": "黑鏡：潘達斯奈基", "same": "Netflix 的互動敘事實驗", "diff": "潘達斯奈基是真人影片選擇題；Unhinged 是即時的第一人稱遊戲，而且真的會死"}
+    ],
+    "story": {
+      "safe": [
+        "故事從一場颶風停電開始。Ava 以為整棟樓只剩自己，直到住對面的 Claire 打來，才發現有個不請自來的人在屋裡。",
+        "這次的威脅是寫實的居家入侵，而不是 Night School 過去擅長的超自然鬼故事。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "Night School Studio 靠《Oxenfree》系列成名，2021 年 9 月被 Netflix 收購，是 Netflix 第一間自家遊戲工作室，之後也做過《黑鏡》改編的 Thronglets。",
+      "片尾特別感謝名單裡有 David Fincher 和《Weapons》《Barbarian》的導演 Zach Cregger，Variety 報導兩人祕密參與了創作；配樂 Jason Hill、音效設計 Ren Klyce 都是 Fincher 電影的老班底。據 JoBlo 的評測，Bloober Team 等工作室也有協助開發。",
+      "諷刺的是，遊戲上線大約六週後，Netflix 宣布關閉 Night School（連同赫爾辛基的 Moonloot），持續從「自己養工作室」撤退。Unhinged 仍然可以玩，但如果有續作，得看 Netflix 的中央遊戲團隊找外部開發商。"
+    ],
+    "voices": {
+      "pros": [
+        "把手機變成手電筒加電話，是多家媒體一致提到的最大亮點",
+        "Zoë Kravitz、Sadie Sink 的演出讓角色很真，大部分時間只聽得到聲音也有說服力",
+        "長度剛好一集，不用學系統，有媒體形容它是一部很棒的恐怖短片"
+      ],
+      "cons": [
+        "太短，角色還沒建立感情就結束，重玩價值有限",
+        "看似有選擇，其實很線性",
+        "結尾收得不夠漂亮"
+      ],
+      "debate": [
+        "Netflix 剛證明自家工作室做得出好東西，就把它關了——串流平台到底想不想認真做遊戲？",
+        "只能用手機操作、不支援手把，是降低門檻的創新，還是操作精度的限制？"
+      ]
+    },
+    "timeline": [
+      {"d": "2021-09-28", "t": "Netflix 收購 Night School Studio，第一間自家遊戲工作室"},
+      {"d": "2026-06-23", "t": "Netflix 公布 Unhinged、演員陣容與預告"},
+      {"d": "2026-06-30", "t": "Unhinged 在 Netflix 推出；同日 Variety 揭露 Fincher 與 Cregger 參與"},
+      {"d": "2026-08", "t": "上線約六週後，Netflix 關閉 Night School 與 Moonloot"},
+      {"d": "2026-11", "t": "台灣仍不在 Netflix 電視／電腦遊戲開放地區"}
+    ],
+    "discuss": [
+      {"q": "手機當控制器，是電視遊戲的未來，還是 Netflix 的權宜之計？", "why": "每個人都有手機、門檻最低；但手機沒有實體按鍵，操作精度和長時間遊玩都受限。"},
+      {"q": "30 分鐘的遊戲，值得做成「一集」嗎？", "why": "它把遊戲做成可以在影集之間順手看完的長度。對不玩遊戲的人很友善，對玩家可能太輕。"},
+      {"q": "如果 Night School 沒被關，Unhinged 會不會是一個系列的開始？", "why": "評價兩極，但概念新、卡司強。工作室關掉之後，這個點子會不會就停在這一集？"},
+      {"q": "你會為了一款 30 分鐘的遊戲去開 Netflix 會員嗎？", "why": "遊戲包含在會員裡，本身不另外收費；問題是它值不值得成為你開會員的理由。"}
+    ]
+  },
+  "fanpage": {
+    "post": "颶風吹斷了整棟公寓的電，你被一通電話吵醒。打來的是住對面的好友，她說你家那棟樓裡不只你一個人。你抓起手機照亮走廊——而這支手機，就是你此刻握在手上的那支。\n\n《Unhinged》是 Netflix 和《Oxenfree》團隊 Night School Studio 做的第一人稱驚悚遊戲。用手機掃電視上的 QR Code，手機就變成控制器、手電筒和電話：照哪裡、接不接，全在你手上。Zoë Kravitz 配主角 Ava、Sadie Sink 配好友 Claire、Troy Baker 配大樓管理員 Ben，片尾特別感謝還有 David Fincher 與《Weapons》導演 Zach Cregger。\n\n全長大約 30 多分鐘，像看一集影集。標準模式有倒數，找不到東西就得回檢查點；不想緊張可以切故事模式。無廣告、無內購，Netflix 會員就能玩——但目前只開放部分國家的電視和電腦，台灣還不在名單上。\n\n如果是你，黑暗中手機一響，你敢接嗎？",
+    "titles": [
+      "Netflix 把你的手機變成手電筒：30 分鐘居家驚悚《Unhinged》",
+      "Fincher、Cregger 祕密參與的 Netflix 恐怖遊戲，台灣還玩不到",
+      "用手機照路、接電話——《Oxenfree》團隊被關前交出的恐怖新作"
+    ],
+    "card": {
+      "kicker": "Netflix 獨佔｜手機就是控制器",
+      "title": "停電的公寓裡\n你的手機會響",
+      "sub": "Night School Studio《Unhinged》",
+      "tags": ["會員內含", "約 30 分鐘", "台灣未開放"],
+      "points": [
+        {"h": "手機就是道具", "t": "掃 QR Code，手機變手電筒、控制器和電話。"},
+        {"h": "兩種模式", "t": "標準有倒數；故事模式拿掉計時，劇情一樣。"},
+        {"h": "星光配音", "t": "Zoë Kravitz、Sadie Sink、Troy Baker 演出。"}
+      ]
+    },
+    "tags": ["#Unhinged", "#Netflix遊戲", "#互動驚悚", "#第一人稱恐怖", "#遊戲狂想曲"],
+    "script": "半夜停電，你的手機突然響了——而且是真的響，你手上這支。\n這是 Netflix 的恐怖遊戲《Unhinged》，做《Oxenfree》的 Night School Studio 操刀。玩法很特別：電視或電腦上出現 QR Code，用手機一掃，手機就變成控制器、手電筒，還有遊戲裡的電話。你傾斜手機照亮走廊，好友打來的時候，是你手上的手機在響。\n配音陣容很強：Zoë Kravitz、Sadie Sink、Troy Baker，片尾特別感謝還有 David Fincher 跟拍《Weapons》的 Zach Cregger。\n全長大概三十多分鐘，像看一集影集，有倒數的標準模式，也有不會死的故事模式。\n壞消息是：它只開放部分國家的 Netflix 電視跟電腦，台灣目前玩不到。如果是你，黑暗中手機一響，你敢接嗎？",
+    "credit": "影片來源：Netflix 官方預告"
+  },
+  "sources": [
+    {"t": "What's on Netflix：Unhinged 公布，Night School 開發", "u": "https://www.whats-on-netflix.com/news/netflix-games/unhinged-netflix-unveils-horror-game-starring-zoe-kravitz-sadie-sink-and-troy-baker/", "d": "2026-06-23"},
+    {"t": "PocketGamer.biz：Netflix 與 Night School 推出 Unhinged", "u": "https://www.pocketgamer.biz/netflix-and-night-school-studio-to-launch-immersive-horror-game-unhinged/", "d": "2026-06"},
+    {"t": "KitGuru：Oxenfree 團隊公布 Netflix 新恐怖遊戲", "u": "https://www.kitguru.net/?p=740205", "d": "2026-06"},
+    {"t": "Netflix 說明中心：Unhinged 遊戲支援", "u": "https://help.netflix.com/en/node/643169079753316", "d": ""},
+    {"t": "Netflix 說明中心：在電視和電腦上玩遊戲", "u": "https://help.netflix.com/en/node/215739831980644", "d": ""},
+    {"t": "Netflix 說明中心：用手機或平板當控制器", "u": "https://help.netflix.com/en/node/602905750076006", "d": ""},
+    {"t": "Netflix Tudum：Unhinged 必知重點", "u": "https://www.netflix.com/tudum/articles/unhinged-game-news", "d": "2026-06-30"},
+    {"t": "Player.One：Unhinged 用手機當控制器", "u": "https://www.player.one/netflixs-unhinged-new-horror-game-tv-turns-your-smartphone-controller-163429", "d": "2026-06"},
+    {"t": "ComicBook：Unhinged 遊玩心得", "u": "https://comicbook.com/gaming/feature/unhinged-netflix-horror-game/?nb=1", "d": "2026-07"},
+    {"t": "Prism News：Unhinged 的故事模式與標準模式", "u": "https://www.prismnews.com/hobbies/video-games/night-school-studios-unhinged-blends-brutal-horror-with", "d": "2026-07"},
+    {"t": "AceShowbiz：Fincher 班底參與 Unhinged 聲音設計", "u": "https://www.aceshowbiz.com/news/view/00259789.html", "d": "2026-07"},
+    {"t": "ComingSoon：Fincher 與 Cregger 祕密參與 Unhinged", "u": "https://www.comingsoon.net/?p=2157895", "d": "2026-07"},
+    {"t": "The Fincher Analyst（整理 Variety 報導）", "u": "https://thefincheranalyst.com/tag/video-game/", "d": "2026-07"},
+    {"t": "Players：Night School 推出 Unhinged（18+ 分級）", "u": "https://players.com.ua/en/news/night-school-studio-releases-interactive-horror-game-unhinged-on-netflix/?amp=1", "d": "2026-07-01"},
+    {"t": "Thurrott：Netflix 電視遊戲開放國家", "u": "https://www.thurrott.com/?p=329581", "d": "2025-12"},
+    {"t": "OpenCritic：Unhinged", "u": "https://opencritic.com/game/20934/unhinged", "d": ""},
+    {"t": "Destructoid 評測", "u": "https://www.destructoid.com/reviews/unhinged-review-trapped-in-linear-under-the-guise-of-choice/", "d": "2026-07"},
+    {"t": "PC Gamer 評測", "u": "https://pcgamer.com/games/horror/netflix-has-finally-figured-out-how-to-get-viewers-off-their-phones-with-its-newest-horror-game-but-it-doesnt-quite-stick-the-landing/", "d": "2026-07"},
+    {"t": "TBreak：Netflix 關閉 Unhinged 的工作室", "u": "https://tbreak.com/netflix-closes-night-school-studio/", "d": "2026-08"},
+    {"t": "Film Stories：Netflix 關閉 Oxenfree 團隊", "u": "https://filmstories.co.uk/news/netflix-shuts-down-the-studio-behind-oxenfree-weeks-after-its-collab-with-director-zach-cregger/", "d": "2026-08"},
+    {"t": "Destructoid：怎麼在 Netflix 上玩 Unhinged（存檔方式）", "u": "https://www.destructoid.com/how-to-play-unhinged-on-netflix/", "d": "2026-07"},
+    {"t": "JoBlo 評測（提到 Bloober Team 協助開發）", "u": "https://www.joblo.com/unhinged-game-review/", "d": "2026-07"}
+  ],
+  "pending": [
+    "支援哪些語言、有沒有繁中：官方未公布",
+    "台灣何時加入開放地區：未公布"
+  ],
+  "updated": "2026-11-16T05:00:00+08:00"
+}

@@ -1,0 +1,30 @@
+{
+ "name": "解包 UNPACKED",
+ "short_name": "解包",
+ "description": "痞子葳的遊戲解包台：每天 2～3 款深度專題、Steam 台灣區即時數據，加上遊戲狂想曲粉專出稿台。",
+ "lang": "zh-Hant-TW",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#111111",
+ "theme_color": "#111111",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

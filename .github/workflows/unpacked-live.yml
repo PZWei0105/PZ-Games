@@ -1,0 +1,53 @@
+# 《解包 UNPACKED》資料管線：Steam 台灣區價格、同上人數、評價、預告與截圖，加上每日寫稿用的選題候選。
+# 只動 apps/unpacked/data/ 底下的 live.json、hist/、candidates.json（專題本身由每日寫稿排程推上來）。
+name: unpacked-live
+
+on:
+  schedule:
+    - cron: '17 */3 * * *'      # 每 3 小時（UTC 第 17 分，避開整點塞車）
+  push:
+    branches: [main]
+    paths:
+      - 'apps/unpacked/data/track.json'
+      - '_build/apps/unpacked/tools/live.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: unpacked-live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 抓 Steam 資料
+        run: python3 _build/apps/unpacked/tools/live.py --data apps/unpacked/data
+      - name: 有變動才 commit
+        run: |
+          git config user.name 'unpacked-bot'
+          git config user.email 'unpacked-bot@users.noreply.github.com'
+          git add apps/unpacked/data/live.json apps/unpacked/data/hist apps/unpacked/data/candidates.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi
+          git commit -q -m '解包：更新 Steam 即時資料'
+          for i in 1 2 3 4 5; do
+            git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0
+            echo "push 失敗，重試 $i"; sleep $((i * 7))
+          done
+          exit 1
+      - name: 請 Pages 重新發布（保險）
+        continue-on-error: true
+        run: |
+          curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+            -H "Authorization: Bearer ${{ github.token }}" -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds"

@@ -20,5 +20,6 @@
 | 做 2D 遊戲、用引擎、改引擎 | `_build/engine/HANDBOOK.md`（會動的範例：樣品館 `_build/engine/lab/`） |
 | 某款有原始碼的遊戲 | `_build/sources/<id>/README.md` |
 | 專屬 App | `_build/apps/<App>/README.md` |
+| 《解包》每天的遊戲專題（寫稿、查核、上架） | `_build/apps/unpacked/WRITER_GUIDE.md` |
 | 寫小說、上架新的一回、分享單行本 | 私人倉庫 PZWei0105/pz-novels 的 `CLAUDE.md`（沒有就 add_repo 加進來，要 push 權限） |
 | 待辦、已知問題 | `_build/ROADMAP.md` |
