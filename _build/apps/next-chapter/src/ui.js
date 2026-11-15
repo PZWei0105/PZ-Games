@@ -1,7 +1,7 @@
 /* ───────── 畫面：書房、書頁、抽屜、說書現場 ───────── */
 const UI = (() => {
   const lib = $('#lib'), bookv = $('#bookv'), sheet = $('#sheet'), sheetBody = $('#sheetBody'), mini = $('#mini'), pop = $('#pop'), gbar = $('#gbar'), menu = $('#menu');
-  let state = { v: 'lib' }, sheetKind = '', popT = 0, lastNarr = { active: false };
+  let state = ED ? { v: 'book', id: ED.ed } : { v: 'lib' }, sheetKind = '', popT = 0, lastNarr = { active: false };
   let gsel = Store.get('gsel', '');                         // 書房最下面選的分類（'' 是全部）
   let bvTab = 'toc', navTab = 'toc', navBook = '';          // 書頁、閱讀器抽屜各自停在哪個分頁
   const qs = { id: '', q: '', res: null, run: 0 };          // 書內搜尋：記住上一次找的
@@ -14,6 +14,10 @@ const UI = (() => {
   const Q_HINT = '輸入人名、地名或一句話，從第一回找到最後一回。';
   const SAMPLE = '夜裡的燈芯又短了一截。他把書翻到上回停下的那一頁，指尖還沒碰到紙，窗外的雨就下大了。';
   const pressed = (on) => ' aria-pressed="' + (on ? 'true' : 'false') + '"';
+  /* 單行本只有一本書：它的書頁就是首頁 */
+  const home = () => (ED ? { v: 'book', id: ED.ed } : { v: 'lib' });
+  const standalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+  let installEvt = null, qrP = null;
 
   /* ── 封面 ── */
   function coverHTML(b, extra) {
@@ -58,6 +62,7 @@ const UI = (() => {
 
   /* ── 書房 ── */
   function renderLib() {
+    if (ED) return;                                          // 單行本沒有書房
     const all = Lib.all(), gl = Genre.list(all);
     if (gsel && !gl.some((x) => x.g === gsel)) gsel = '';
     const books = gsel ? all.filter((b) => Genre.of(b) === gsel) : all;
@@ -165,19 +170,25 @@ const UI = (() => {
   }
   function renderBook(id) {
     const b = Lib.find(id);
-    if (!b) { go({ v: 'lib' }, true); return; }
+    if (!b) { if (!ED) go({ v: 'lib' }, true); return; }
     if (bookv.dataset.id !== id) bvTab = 'toc';
     if (bvTab === 'recap' && !(b.remote && b.recaps)) bvTab = 'toc';
     const i = Prog.index(b), tot = Lib.total(b), mins = Math.max(1, Math.round(tot / 450)), tracks = b.chapters.filter((c, j) => Narrator.hasTrack(b, j)).length;
     const canHear = b.chapters.length && (Narrator.hasTrack(b, Math.max(0, i)) || Narrator.canSpeak());
-    bookv.innerHTML = '<div class="wrap"><div class="bv-top"><button type="button" class="ib" data-act="back" aria-label="回書房">' + ICON.back + '</button>'
-      + (b.remote ? '' : '<button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button>') + '</div>'
+    const top = ED ? '<span></span><button type="button" class="ib" data-act="settings" aria-label="設定">' + ICON.gear + '</button>'
+      : '<button type="button" class="ib" data-act="back" aria-label="回書房">' + ICON.back + '</button>'
+        + (b.remote ? (b.ed ? '<button type="button" class="ib" data-act="share-book" data-id="' + esc(b.id) + '" aria-label="分享這本書">' + ICON.share + '</button>' : '')
+          : '<button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button>');
+    bookv.innerHTML = '<div class="wrap' + (ED ? ' ed' : '') + '"><div class="bv-top">' + top + '</div>'
       + '<div class="bv-head"><div class="bv-cover">' + coverHTML(b, 'b') + '</div><div><h1>' + esc(b.title) + '</h1>' + (b.author ? '<p class="bv-by">' + esc(b.author) + '</p>' : '')
       + '<div class="bv-tags">' + (b.remote && b.status ? '<span class="state">' + esc(b.status) + '</span>' : '')
-      + '<button type="button" class="gchip" data-act="genre-pick" data-id="' + esc(b.id) + '" aria-label="分類：' + esc(Genre.of(b)) + '，點一下可以改">' + ICON.tag + esc(Genre.of(b)) + '</button></div>'
+      + (ED ? (b.genre ? '<span class="gchip still">' + ICON.tag + esc(b.genre) + '</span>' : '')
+        : '<button type="button" class="gchip" data-act="genre-pick" data-id="' + esc(b.id) + '" aria-label="分類：' + esc(Genre.of(b)) + '，點一下可以改">' + ICON.tag + esc(Genre.of(b)) + '</button>') + '</div>'
       + '<ul class="bv-stats"><li><b>' + b.chapters.length + '</b>' + unitOf(b) + '</li><li><b>' + (tot >= 10000 ? (tot / 10000).toFixed(1).replace(/\.0$/, '') + ' 萬' : tot) + '</b>字</li><li><b>' + (mins >= 60 ? (mins / 60).toFixed(1).replace(/\.0$/, '') : mins) + '</b>' + (mins >= 60 ? '小時讀完' : '分鐘讀完') + '</li>'
       + (tracks ? '<li><b>' + tracks + '</b>回有說書</li>' : '') + '</ul></div></div>'
-      + '<div class="bv-btns"><button type="button" class="btn gilt" data-act="continue" data-id="' + esc(b.id) + '">' + (i >= 0 ? '接著讀' : '開始讀') + '</button>' + (canHear ? '<button type="button" class="btn" data-act="listen" data-id="' + esc(b.id) + '">' + ICON.ear + '聽說書</button>' : '') + '</div>'
+      + '<div class="bv-btns"><button type="button" class="btn gilt" data-act="continue" data-id="' + esc(b.id) + '">' + (i >= 0 ? '接著讀' : '開始讀') + '</button>' + (canHear ? '<button type="button" class="btn" data-act="listen" data-id="' + esc(b.id) + '">' + ICON.ear + '聽說書</button>' : '')
+      + (!ED && b.remote && b.ed ? '<button type="button" class="btn" data-act="share-book" data-id="' + esc(b.id) + '">' + ICON.share + '分享</button>' : '') + '</div>'
+      + helloHTML(b)
       + '<section class="recap-card" id="bvRecap" hidden></section>'
       + (b.blurb ? '<p class="bv-blurb">' + esc(b.blurb) + '</p>' : '')
       + convRow(b)
@@ -185,6 +196,67 @@ const UI = (() => {
     bookv.dataset.id = id; hydrateCovers(bookv);
     afterPanel(b, bvTab, 'bv', $('.tabp', bookv));
     fillRecapCard(b);
+  }
+
+  /* ── 單行本：第一次打開的說明（怎麼放到主畫面） ── */
+  function helloHTML(b) {
+    if (!ED || Store.get('hello', 0)) return '';
+    const ua = navigator.userAgent;
+    let how = '';
+    if (!standalone()) {
+      if (/\bLine\//i.test(ua)) how = '你現在是在 LINE 裡面看：點右上角的選單，選「用瀏覽器開啟」，就能把這本書放到手機主畫面。';
+      else if (installEvt) how = '<button type="button" class="btn gilt" data-act="install">' + ICON.addHome + '放到主畫面</button>';
+      else if (IS_IOS) how = '放到主畫面：點 Safari 的分享鈕（方框加一個往上的箭頭），選「加入主畫面」。之後點一下就打開，跟 App 一樣。';
+      else if (/Android/i.test(ua)) how = '放到主畫面：點瀏覽器右上角的選單（⋮），選「加到主畫面」或「安裝應用程式」。';
+    }
+    return '<section class="hello"><p class="hello-k">單行本</p><p>這一本是分享給你的。新的一回上架、改稿、完結，打開就會自動更新；讀到哪裡、書籤，都記在這台裝置上。</p>'
+      + (how ? '<p class="hello-how">' + how + '</p>' : '') + '<button type="button" class="btn quiet hello-ok" data-act="hello-ok">知道了</button></section>';
+  }
+
+  /* ── 分享這本書：單行本連結（只看得到這一本） ── */
+  function bookLink(b, forLine) {
+    const site = (Lib.site() || '').replace(/\/+$/, '');
+    if (!site || !b.ed || !b.key) return '';
+    return site + '/' + b.ed + '/' + (forLine ? '?openExternalBrowser=1' : '') + '#k=' + b.key;
+  }
+  function shareBookHTML(b) {
+    const link = bookLink(b);
+    if (!link) return '<h2>分享《' + esc(b.title) + '》</h2><p class="note">單行本網站還沒接好；接好以後，這裡就會有這本書的連結和 QR code。</p>';
+    const done = b.status && b.status !== '連載中';
+    return '<h2>分享《' + esc(b.title) + '》</h2>'
+      + '<div class="sb-card"><div class="sb-qr" id="sbQr" role="img" aria-label="這本書的 QR code"><i></i></div>'
+      + '<div class="sb-meta"><span class="sb-cv">' + Cover.svg(b, { k: 'sb' }) + '</span><b>' + esc(b.title) + '</b><small>' + esc(b.status || '連載中') + '・' + b.chapters.length + ' 回</small><span class="sb-tag">單行本</span></div></div>'
+      + '<p class="sb-link" data-act="sb-copy">' + esc(link) + '</p>'
+      + '<div class="sb-btns"><button type="button" class="btn gilt" data-act="sb-copy">' + ICON.link + '複製連結</button><button type="button" class="btn" data-act="sb-line">' + ICON.chat + '傳到 LINE</button>'
+      + (navigator.share ? '<button type="button" class="btn" data-act="sb-send">' + ICON.share + '其他 App</button>' : '') + '</div>'
+      + '<ul class="sb-notes"><li>拿到連結的人<b>只看得到這一本</b>：看不到你的書房，也看不到其他書。</li>'
+      + '<li>' + (done ? '改稿的話，他們那邊打開就會更新。' : '新的一回上架、改稿、完結，他們那邊打開就會自動更新。') + '</li>'
+      + '<li>對方可以把它放到手機主畫面，變成一個獨立的 App，圖示就是這本書的封面。</li>'
+      + '<li>想收回這個連結：跟 Claude 說「換掉《' + esc(b.title) + '》的分享連結」，舊的連結就打不開了。</li></ul>';
+  }
+  function loadQR() {
+    if (window.qrcode) return Promise.resolve();
+    return qrP || (qrP = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'lib/qrcode.js'; sc.onload = res; sc.onerror = () => { qrP = null; rej(new Error('qr')); }; document.head.appendChild(sc); }));
+  }
+  /* QR code：宣紙底、墨色格子，正中間蓋這本書的朱印（容錯 H，蓋掉一點點沒關係） */
+  function qrSVG(text, seal) {
+    const q = qrcode(0, 'H'); q.addData(text); q.make();
+    const n = q.getModuleCount(), m = 3, W = n + m * 2;
+    let d = '';
+    for (let r = 0; r < n; r++) { let c = 0; while (c < n) { if (!q.isDark(r, c)) { c++; continue; } let e = c; while (e < n && q.isDark(r, e)) e++; d += 'M' + (c + m) + ' ' + (r + m) + 'h' + (e - c) + 'v1h-' + (e - c) + 'z'; c = e; } }
+    const s = Math.max(5, Math.round(n * 0.17)), x = (W - s) / 2;
+    return '<svg viewBox="0 0 ' + W + ' ' + W + '" shape-rendering="crispEdges" aria-hidden="true"><rect width="' + W + '" height="' + W + '" fill="#f4ecda"/><path d="' + d + '" fill="#1d150d"/>'
+      + '<rect x="' + (x - .8) + '" y="' + (x - .8) + '" width="' + (s + 1.6) + '" height="' + (s + 1.6) + '" rx="1.2" fill="#f4ecda" shape-rendering="geometricPrecision"/>'
+      + '<rect x="' + x + '" y="' + x + '" width="' + s + '" height="' + s + '" rx="1" fill="#b3382c" shape-rendering="geometricPrecision"/>'
+      + '<text x="' + (W / 2) + '" y="' + (W / 2 + s * .34) + '" font-size="' + (s * .78).toFixed(2) + '" text-anchor="middle" fill="#fff" font-family="LXGW WenKai TC, Noto Serif TC, serif" font-weight="700">' + esc(seal) + '</text></svg>';
+  }
+  function openShareBook(b) {
+    share = { book: b };
+    openSheet('share-book', shareBookHTML(b));
+    const link = bookLink(b), box = $('#sbQr', sheetBody);
+    if (!link || !box) return;
+    loadQR().then(() => { if (sheetKind === 'share-book' && box.isConnected) box.innerHTML = qrSVG(link, (b.cover && b.cover.seal) || Array.from(b.title)[0]); })
+      .catch(() => { if (box.isConnected) box.innerHTML = '<span class="sb-qr-no">QR code 載入失敗<br>連結一樣能用</span>'; });
   }
 
   /* ── 前情提要 ── */
@@ -354,7 +426,7 @@ const UI = (() => {
     state = s;
     closeMenu();
     if (s.v !== 'read' && Reader.isOpen()) Reader.close();
-    lib.hidden = s.v !== 'lib' && s.v !== 'read';
+    lib.hidden = ED || (s.v !== 'lib' && s.v !== 'read');
     bookv.hidden = s.v !== 'book';
     if (s.v === 'lib') renderLib();
     if (s.v === 'book') { const same = bookv.dataset.id === s.id, y = bookv.scrollTop; renderBook(s.id); bookv.scrollTop = same ? y : 0; }
@@ -364,16 +436,16 @@ const UI = (() => {
   function go(s, replace) { try { history[replace ? 'replaceState' : 'pushState'](s, ''); } catch (e) {} show(s); }
   window.addEventListener('popstate', (e) => {
     if (!sheet.hidden) { closeSheet(); try { history.pushState(state, ''); } catch (x) {} return; }
-    show(e.state && e.state.v ? e.state : { v: 'lib' });
+    show(e.state && e.state.v ? e.state : home());
   });
-  const back = () => { if (history.state && history.state.v && history.state.v !== 'lib') history.back(); else go({ v: 'lib' }, true); };
+  const back = () => { const h = home(); if (history.state && history.state.v && history.state.v !== h.v) history.back(); else go(h, true); };
 
   /* ── 翻開一本書 ── */
   async function openBook(b, i, anchor, fromEl) {
     if (!b || !b.chapters.length) return false;
     Sound.unlock(); closeMenu();
     if (navBook !== b.id) { navBook = b.id; navTab = 'toc'; }
-    go({ v: 'read', id: b.id, from: state.v === 'book' ? 'book' : 'lib' });
+    go({ v: 'read', id: b.id, from: ED || state.v === 'book' ? 'book' : 'lib' });
     const anim = fromEl && !REDUCED && fromEl.getBoundingClientRect().width > 20 ? opening(b, fromEl) : null;
     const ok = await Reader.open(b, i, anchor);
     if (anim) await anim;
@@ -433,6 +505,16 @@ const UI = (() => {
   }
   const swHTML = (k, t, s) => '<button type="button" class="sw" role="switch" data-act="sw" data-k="' + k + '" aria-checked="' + !!Settings[k] + '"><span>' + t + (s ? '<small>' + s + '</small>' : '') + '</span><i></i></button>';
   function settingsHTML() {
+    if (ED) {
+      return '<h2>設定</h2>'
+        + '<button type="button" class="rowl" data-act="look-open"><span>閱讀外觀<small>主題、字體、字級、直排、夜讀的亮度與暖光</small></span>' + ICON.back + '</button>'
+        + swHTML('sfx', '音效', '翻頁的紙聲、開書、驚堂木')
+        + swHTML('recap', '久沒讀，翻開先看前情提要', '隔了一天半以上再打開，會先給你上一回的提要；書頁上隨時也看得到')
+        + swHTML('keepAwake', '朗讀時螢幕保持開著', '用這台裝置的語音朗讀，手機鎖屏就會停')
+        + '<div class="rowb" style="display:flex;gap:10px;margin-top:18px"><button type="button" class="btn" data-act="sync" style="flex:1">看看有沒有新的一回</button></div>'
+        + '<button type="button" class="btn quiet st-coach" data-act="coach-again">重看一次閱讀時的操作說明</button>'
+        + '<p class="note">這本書會自動更新：新的一回上架、改稿、完結，打開就看得到；讀過的回會存一份，沒網路也能讀。<br>讀到哪裡、書籤和設定只存在這台裝置的瀏覽器裡，不會上傳。<br>版本 ' + VERSION + '</p>';
+    }
     const mine = Lib.all().filter((b) => !b.remote).length;
     return '<h2>設定</h2>'
       + '<button type="button" class="rowl" data-act="look-open"><span>閱讀外觀<small>主題、字體、字級、直排、夜讀的亮度與暖光</small></span>' + ICON.back + '</button>'
@@ -441,7 +523,8 @@ const UI = (() => {
       + swHTML('keepAwake', '用裝置語音朗讀時，螢幕保持開著', '手機鎖屏會讓裝置語音停下來；有預錄音軌的章節不受影響')
       + '<div class="rowb" style="display:flex;gap:10px;margin-top:18px"><button type="button" class="btn" data-act="sync" style="flex:1">看看有沒有新的一回</button></div>'
       + '<button type="button" class="btn quiet st-coach" data-act="coach-again">重看一次閱讀時的操作說明</button>'
-      + '<p class="note">連載小說放在你的書架上，寫好一回就會出現在這裡，文字會自動存一份，離線也能讀。<br>匯入的書（現在 ' + mine + ' 本）、閱讀進度、書籤、分類和設定只存在這台裝置的瀏覽器裡，不會上傳；換手機或清除瀏覽器資料就要重新匯入。<br>版本 ' + VERSION + '</p>';
+      + '<button type="button" class="rowl lockrow" data-act="lock-ask"><span>在這台裝置上鎖<small>下次打開要重新輸入密語；閱讀進度和書籤會留著</small></span>' + ICON.lock + '</button>'
+      + '<p class="note">連載小說放在你的書架上，寫好一回就會出現在這裡，文字會自動存一份，離線也能讀；書架是加密的，沒有密語的人打不開。<br>匯入的書（現在 ' + mine + ' 本）、閱讀進度、書籤、分類和設定只存在這台裝置的瀏覽器裡，不會上傳；換手機或清除瀏覽器資料就要重新匯入。<br>版本 ' + VERSION + '</p>';
   }
   function genreHTML(b) {
     const cur = Genre.of(b), list = Genre.ORDER.slice();
@@ -576,9 +659,27 @@ const UI = (() => {
         break;
       }
       case 'listen': { b = bookFrom(t); if (!b) break; Sound.unlock(); const p = Prog.get(b.id), i = Math.max(0, Prog.index(b)); Narrator.start(b, i, p && Prog.index(b) >= 0 ? { b: p.b, s: p.s } : null).then((ok) => ok && openPlayer()); break; }
+      case 'share-book': b = Lib.find(t.dataset.id); if (b) { Sound.tap(); openShareBook(b); } break;
+      case 'sb-copy': if (share && share.book) copyOut(bookLink(share.book), '連結複製好了：貼到 LINE 或訊息，傳給想看的朋友'); break;
+      case 'sb-line': {
+        if (!share || !share.book) break;
+        const sb = share.book, u = 'https://line.me/R/share?text=' + encodeURIComponent('《' + sb.title + '》\n' + bookLink(sb, true));
+        const w = window.open(u, '_blank', 'noopener'); if (!w) location.href = u;
+        break;
+      }
+      case 'sb-send': {
+        if (!share || !share.book || !navigator.share) break;
+        const sb = share.book;
+        navigator.share({ title: '《' + sb.title + '》', text: '《' + sb.title + '》', url: bookLink(sb) }).catch((e) => { if (!e || e.name !== 'AbortError') copyOut(bookLink(sb), '這台裝置不能直接分享，已經改成複製連結'); });
+        break;
+      }
+      case 'lock-ask': openSheet('confirm', '<h2>在這台裝置上鎖？</h2><p class="note" style="margin:0 0 18px">書架會從這台裝置收起來，下次打開要重新輸入密語（或備用碼）。閱讀進度、書籤和匯入的書都會留著。</p><div style="display:flex;gap:10px"><button type="button" class="btn" data-act="sheet-close" style="flex:1">先不要</button><button type="button" class="btn gilt" data-act="lock-yes" style="flex:1">' + ICON.lock + '上鎖</button></div>'); break;
+      case 'lock-yes': closeSheet(); Narrator.stop(); Vault.clear(); Lib.forget(); try { history.replaceState({ v: 'lib' }, ''); } catch (e) {} location.reload(); break;
+      case 'hello-ok': Store.set('hello', 1); { const h = $('.hello', bookv); if (h) h.remove(); } break;
+      case 'install': if (installEvt) { const ev2 = installEvt; installEvt = null; ev2.prompt(); (ev2.userChoice || Promise.resolve()).then((c) => { if (c && c.outcome === 'accepted') Store.set('hello', 1); if (state.v === 'book') renderBook(state.id); }); } break;
       case 'del-book': b = Lib.find(t.dataset.id); if (b) openSheet('confirm', '<h2>把《' + esc(b.title) + '》移出藏書？</h2><p class="note" style="margin:0 0 18px">這本書和它的閱讀進度、書籤會從這台裝置刪掉。原本的檔案不受影響，之後可以再匯入。</p><div style="display:flex;gap:10px"><button type="button" class="btn" data-act="sheet-close" style="flex:1">留著</button><button type="button" class="btn danger" data-act="del-yes" data-id="' + esc(b.id) + '" style="flex:1">移出藏書</button></div>'); break;
       case 'del-yes': { const id = t.dataset.id; closeSheet(); if (lastNarr.active && lastNarr.book.id === id) Narrator.stop(); Lib.removeLocal(id).then(() => { toast('已經移出藏書'); go({ v: 'lib' }, true); }).catch(() => toast('刪不掉，再試一次', { kind: 'bad' })); break; }
-      case 'sync': closeSheet(); toast('正在看書架……', { ms: 1500 }); Boot.sync(true); break;
+      case 'sync': closeSheet(); toast(ED ? '正在看有沒有新的一回……' : '正在看書架……', { ms: 1500 }); Boot.sync(true); break;
       case 'sheet-close': closeSheet(); break;
       case 'coach-again': Store.del('coach'); closeSheet(); toast('好，下次翻開書會再出現一次'); break;
       // 書房：分類、排序
@@ -692,6 +793,9 @@ const UI = (() => {
   function init() {
     $('[data-act="rd-back"]').innerHTML = ICON.back; $('[data-act="rd-toc"]').innerHTML = ICON.toc; $('[data-act="rd-look"]').innerHTML = ICON.aa;
     $('[data-act="rd-mark"]').innerHTML = ICON.ribbon; $('[data-act="rd-share"]').innerHTML = ICON.share;
+    if (ED) $('[data-act="rd-share"]').hidden = true;          // 單行本不給整回複製（長按一句還是可以複製那一句）
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; if (ED && state.v === 'book' && !Store.get('hello', 0)) renderBook(state.id); });
+    window.addEventListener('appinstalled', () => { installEvt = null; Store.set('hello', 1); });
     document.addEventListener('click', (e) => { const t = e.target.closest && e.target.closest('[data-act]'); if (!t || t.closest('#rdScroll')) return; Sound.unlock(); onAct(t, e); });
     document.addEventListener('pointerdown', (e) => {
       const tg = e.target, inside = (s) => tg.closest && tg.closest(s);
@@ -731,10 +835,10 @@ const UI = (() => {
     // 拖檔案進來（電腦）
     let dragN = 0; const drop = $('#drop');
     const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') >= 0;
-    window.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragN++; drop.hidden = false; });
+    window.addEventListener('dragenter', (e) => { if (ED || !hasFiles(e)) return; e.preventDefault(); dragN++; drop.hidden = false; });
     window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
     window.addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN) drop.hidden = true; });
-    window.addEventListener('drop', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragN = 0; drop.hidden = true; if (Reader.isOpen()) back(); importFiles(e.dataTransfer.files); });
+    window.addEventListener('drop', (e) => { if (!hasFiles(e)) return; if (ED) { e.preventDefault(); return; } e.preventDefault(); dragN = 0; drop.hidden = true; if (Reader.isOpen()) back(); importFiles(e.dataTransfer.files); });
     window.addEventListener('resize', closeMenu);
 
     Bus.on('reader:show', paintChrome);

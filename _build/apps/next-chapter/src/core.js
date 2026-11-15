@@ -1,6 +1,8 @@
-/* ───────── 下回分解：基礎工具、設定、儲存 ───────── */
+/* ───────── 基礎工具、設定、儲存 ───────── */
 const VERSION = '1.0.0';
-const PFX = 'pznc.v1.';
+/* 單行本：組建時寫進 window.__PZ_ED（這一本的公開資料），只讀這一本；書房沒有這個 */
+const ED = window.__PZ_ED || null;
+const PFX = ED ? 'pzsb.' + ED.ed + '.' : 'pznc.v1.';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -34,8 +36,11 @@ const Store = {
 };
 
 const DEFAULTS = { theme: 'night', mode: 'page', font: 'song', size: 19, lh: 1.9, margin: 1, vert: false, bright: 1, warm: 0, sfx: true, rate: 1, voice: '', follow: true, keepAwake: true, recap: true };
-const Settings = Object.assign({}, DEFAULTS, Store.get('settings', {}));
-function saveSettings() { Store.set('settings', Settings); }
+/* 單行本各自記設定；第一次打開沿用這台裝置上一本單行本的外觀（字級、主題……） */
+const LOOK_SHARED = 'pzsb.look';
+function sharedLook() { try { return JSON.parse(localStorage.getItem(LOOK_SHARED) || '{}') || {}; } catch (e) { return {}; } }
+const Settings = Object.assign({}, DEFAULTS, ED ? sharedLook() : {}, Store.get('settings', {}));
+function saveSettings() { Store.set('settings', Settings); if (ED) { try { localStorage.setItem(LOOK_SHARED, JSON.stringify(Settings)); } catch (e) {} } }
 
 /* ── 大東西存 IndexedDB（匯入的書、章節、圖片） ── */
 const DB = (() => {
@@ -106,4 +111,10 @@ const ICON = {
   sort: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 20l-3-3M7 20l3-3M14 6h6M14 11h4.5M14 16h3"/></svg>',
   scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6M6 4a2 2 0 0 0-2 2v1h4V6a2 2 0 0 0-2-2zM9 9h7M9 13h7M9 17h4"/></svg>',
   tag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9z"/><circle cx="8" cy="8" r="1.4" class="fill"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2.5"/></svg>',
+  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7.3l3-3a4 4 0 0 0-5.7-5.6l-1.2 1.1"/><path d="M14 10a4 4 0 0 0-5.7-.3l-3 3a4 4 0 0 0 5.7 5.6l1.2-1.1"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5c4.700 0 8.500 3 8.500 6.800s-3.800 6.800-8.500 6.800c-.8 0-1.600-.1-2.300-.3L5.500 19.500l.9-3.300C4.700 15 3.500 13.300 3.500 11.300 3.500 7.500 7.300 4.500 12 4.500z"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 20L20 4"/></svg>',
+  addHome: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>',
 };

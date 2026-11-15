@@ -1,13 +1,6 @@
-/* ───────── 書架資料：連載（從 GitHub 上的書架抓）＋匯入的書（存在這台裝置） ───────── */
-const KEY = [112, 122, 45, 110, 101, 120, 116, 45, 99, 104, 97, 112, 116, 101, 114, 33]; // "pz-next-chapter!"
-
-function unpackPZC(buf) {
-  const u = new Uint8Array(buf);
-  if (u[0] !== 80 || u[1] !== 90 || u[2] !== 67 || u[3] !== 49) throw new Error('章節檔格式不對');
-  const raw = new Uint8Array(u.length - 4);
-  for (let i = 0; i < raw.length; i++) raw[i] = u[i + 4] ^ KEY[i % 16];
-  return new TextDecoder('utf-8').decode(fflate.inflateSync(raw));
-}
+/* ───────── 書架資料：連載（加密的書架，解開才看得到）＋匯入的書（存在這台裝置） ─────────
+   書房：books/library.pzx（總鑰匙）→ 每本書的資料夾 books/<pub>/、鑰匙 key、單行本代號 ed。
+   單行本：同一個資料夾裡的 book.pzx（這一本的鑰匙），章節檔名跟書房一樣。 */
 
 /* 跟 tools/shelf.py 的 blocks() 同一套規則：每個非空行是一塊 */
 function parseBlocks(body) {
@@ -58,6 +51,7 @@ function chapterHTML(ch, blocks, imgURL) {
 
 const Lib = (() => {
   let remote = Store.get('lib', null) || { books: [] };
+  if (remote.v !== 2) remote = { books: [] };                 // 上鎖以前的舊目錄：不用
   let local = [];
   const mem = new Map();           // 章節內容的小快取
   const urls = new Map();          // 匯入書的圖片 blob URL
@@ -71,17 +65,32 @@ const Lib = (() => {
   const total = (b) => b.chapters.reduce((s, c) => s + (c.chars || 0), 0);
 
   async function init() {
+    if (ED) return;                                            // 單行本沒有匯入的書
     try { local = (await DB.all('books')) || []; local.sort((a, b) => (b.added || '').localeCompare(a.added || '')); } catch (e) { local = []; Bus.emit('idb-fail', e); }
   }
 
-  /* 向書架要最新的目錄；回傳這次新到的章節 */
+  /* 向書架要最新的目錄（解開）；回傳這次新到的章節。
+     locked：還沒輸入密語；badKey：鑰匙換了（書房換鎖、單行本連結被收回）；gone：單行本已經下架 */
   async function sync() {
     let fresh;
+    const t = '?t=' + Math.floor(Date.now() / 60000);
     try {
-      const r = await fetch('books/library.json?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' });
-      if (!r.ok) throw new Error(r.status);
-      fresh = await r.json();
-    } catch (e) { return { ok: false, news: [] }; }
+      if (ED) {
+        if (!ED.k) return { ok: false, badKey: true, news: [] };
+        const r = await fetch('book.pzx' + t, { cache: 'no-store' });
+        if (r.status === 404 || r.status === 410) return { ok: false, gone: true, news: [] };
+        if (!r.ok) throw new Error(r.status);
+        const j = await Crypt.json(ED.k, await r.arrayBuffer());
+        fresh = { v: 2, updated: j.updated, books: [Object.assign(j.book, { id: ED.ed, key: ED.k, base: '' })] };
+      } else {
+        const km = Vault.km();
+        if (!km) return { ok: false, locked: true, news: [] };
+        const r = await fetch('books/library.pzx' + t, { cache: 'no-store' });
+        if (!r.ok) throw new Error(r.status);
+        fresh = await Crypt.json(km, await r.arrayBuffer());
+        (fresh.books || []).forEach((b) => { b.base = 'books/' + b.pub + '/'; });
+      }
+    } catch (e) { return { ok: false, badKey: e && e.code === 'key', news: [] }; }
     const known = Store.get('known', null), news = [], next = known || {};
     (fresh.books || []).forEach((b) => {
       const have = next[b.id];
@@ -103,9 +112,9 @@ const Lib = (() => {
     if (mem.has(key)) return mem.get(key);
     let blocks;
     if (book.remote) {
-      const r = await fetch('books/' + book.id + '/' + ch.f + '?v=' + ch.v);
-      if (!r.ok) throw new Error('這一章還沒下載，連上網路再試一次');
-      blocks = parseBlocks(unpackPZC(await r.arrayBuffer()));
+      const r = await fetch(book.base + ch.f + '?v=' + ch.v);
+      if (!r.ok) throw new Error('這一回還沒下載，連上網路再試一次');
+      blocks = parseBlocks(await Crypt.text(book.key, await r.arrayBuffer()));
     } else {
       const rec = await DB.get('chaps', book.id + ':' + String(i).padStart(5, '0'));
       if (!rec) throw new Error('找不到這一章的內容');
@@ -122,25 +131,25 @@ const Lib = (() => {
   async function timeline(book, i) {
     const ch = book.chapters[i];
     if (!book.remote || !ch.au) return null;
-    try { const r = await fetch('books/' + book.id + '/' + ch.au.tl + '?v=' + ch.au.v); if (!r.ok) return null; return await r.json(); } catch (e) { return null; }
+    try { const r = await fetch(book.base + ch.au.tl + '?v=' + ch.au.v); if (!r.ok) return null; return await r.json(); } catch (e) { return null; }
   }
-  const audioURL = (book, i) => { const ch = book.chapters[i]; return book.remote && ch.au ? 'books/' + book.id + '/' + ch.au.f + '?v=' + ch.au.v : null; };
+  const audioURL = (book, i) => { const ch = book.chapters[i]; return book.remote && ch.au ? book.base + ch.au.f + '?v=' + ch.au.v : null; };
 
   /* 把連載的文字全部先抓下來，離線也能讀（一章只有幾 KB） */
   async function prefetch() {
     const got = Store.get('cached', {});
     let n = 0;
     for (const b of (remote.books || [])) for (const c of b.chapters) {
-      const k = b.id + '/' + c.f;
+      const k = b.base + c.f;
       if (got[k] === c.v) continue;
-      try { const r = await fetch('books/' + b.id + '/' + c.f + '?v=' + c.v); if (r.ok) { await r.arrayBuffer(); got[k] = c.v; n++; } } catch (e) { Store.set('cached', got); return n; }
+      try { const r = await fetch(b.base + c.f + '?v=' + c.v); if (r.ok) { await r.arrayBuffer(); got[k] = c.v; n++; } } catch (e) { Store.set('cached', got); return n; }
     }
     // 前情提要也存一份，離線一樣看得到
     for (const b of (remote.books || [])) {
       if (!b.recaps) continue;
-      const k = b.id + '/' + b.recaps.f;
+      const k = b.base + b.recaps.f;
       if (got[k] === b.recaps.v) continue;
-      try { const r = await fetch('books/' + b.id + '/' + b.recaps.f + '?v=' + b.recaps.v); if (r.ok) { await r.arrayBuffer(); got[k] = b.recaps.v; } } catch (e) { break; }
+      try { const r = await fetch(b.base + b.recaps.f + '?v=' + b.recaps.v); if (r.ok) { await r.arrayBuffer(); got[k] = b.recaps.v; } } catch (e) { break; }
     }
     Store.set('cached', got);
     return n;
@@ -176,13 +185,13 @@ const Lib = (() => {
   function created(b) { if (!b.remote) return toMs(b.added); let t = Infinity; b.chapters.forEach((c) => { t = Math.min(t, chAt(c)); }); return isFinite(t) ? t : 0; }
   function readAt(b) { const p = Prog.get(b.id); return p ? p.t || 0 : 0; }
 
-  /* ── 前情提要（連載才有；打包在 books/<書>/recaps.pzc） ── */
+  /* ── 前情提要（連載才有；加密在書的資料夾 recaps.pzx） ── */
   const recapMem = {};
   async function recaps(b) {
     if (!b.remote || !b.recaps) return null;
     const k = b.id + ':' + b.recaps.v;
     if (recapMem[k]) return recapMem[k];
-    try { const r = await fetch('books/' + b.id + '/' + b.recaps.f + '?v=' + b.recaps.v); if (!r.ok) return null; const j = JSON.parse(unpackPZC(await r.arrayBuffer())); recapMem[k] = j.recaps || {}; return recapMem[k]; } catch (e) { return null; }
+    try { const r = await fetch(b.base + b.recaps.f + '?v=' + b.recaps.v); if (!r.ok) return null; const j = await Crypt.json(b.key, await r.arrayBuffer()); recapMem[k] = j.recaps || {}; return recapMem[k]; } catch (e) { return null; }
   }
 
   /* ── 整回的純文字（複製、分享用） ── */
@@ -221,7 +230,10 @@ const Lib = (() => {
     try { const blob = await DB.get('assets', book.cover.img); if (blob) { const u = URL.createObjectURL(blob); urls.set(book.cover.img, u); return u; } } catch (e) {}
     return null;
   }
-  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, hasRemote: () => (remote.books || []).length > 0 };
+  /* 書房上鎖、單行本失效：把解開的目錄從這台裝置拿掉 */
+  function forget() { remote = { books: [] }; mem.clear(); Object.keys(recapMem).forEach((k) => delete recapMem[k]); Store.del('lib'); }
+  const site = () => remote.site || '';
+  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, forget, site, hasRemote: () => (remote.books || []).length > 0 };
 })();
 
 /* ── 閱讀進度：每本書記到哪一章、哪一句 ── */

@@ -11,6 +11,7 @@ check.py 用 Chromium，測不出 Safari 自己的排版差異（直排、多欄
 有 BAD 時 exit code 1；截圖要打開來親眼看。
 """
 import functools
+import shutil
 import json
 import os
 import subprocess
@@ -55,7 +56,18 @@ window.__info = () => { const lf = __top(), vp = lf.querySelector('.vp'), f = lf
 def main():
     os.makedirs(OUT, exist_ok=True)
     for f in os.listdir(OUT):
-        os.remove(os.path.join(OUT, f))
+        fp = os.path.join(OUT, f)
+        shutil.rmtree(fp) if os.path.isdir(fp) else os.remove(fp)
+    # 書架是測試用的假書（加密的）：用一般的 python3 組好（這支跑在 apt 的 Python，沒有 Pillow）
+    fxdir = os.path.join(OUT, 'fx')
+    site = check.Server(('127.0.0.1', 0), functools.partial(check.Handler, directory=os.path.join(fxdir, 'fx-site')))      # 單行本網站：另一個網域
+    threading.Thread(target=site.serve_forever, daemon=True).start()
+    subprocess.run(['python3', os.path.join(HERE, 'check.py'), '--fixture', fxdir, '--site', 'http://127.0.0.1:%d' % site.server_address[1]], check=True)
+    fx = json.load(open(os.path.join(fxdir, 'fixture.json'), encoding='utf-8'))
+    ed_link = list(fx['links'].values())[0]
+    check.Handler.books = fx['books_dir']
+    preset = PRESET.replace("localStorage.setItem('pznc.v1.coach', '1');", "localStorage.setItem('pznc.v1.coach', '1'); localStorage.setItem('pznc.v1.km', JSON.stringify(%s));" % json.dumps(fx['km']))
+    assert preset != PRESET
     xvfb = None
     if not os.environ.get('DISPLAY'):
         xvfb = subprocess.Popen(['Xvfb', ':96', '-screen', '0', '%dx%dx24' % (W * SCALE + 64, H * SCALE + 64)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -74,7 +86,7 @@ def main():
     win.set_default_size(W, H)
     ctx = WebKit2.WebContext.new_ephemeral()
     ucm = WebKit2.UserContentManager()
-    ucm.add_script(WebKit2.UserScript(PRESET, WebKit2.UserContentInjectedFrames.TOP_FRAME, WebKit2.UserScriptInjectionTime.START, None, None))
+    ucm.add_script(WebKit2.UserScript(preset, WebKit2.UserContentInjectedFrames.TOP_FRAME, WebKit2.UserScriptInjectionTime.START, None, None))
     wv = WebKit2.WebView(web_context=ctx, user_content_manager=ucm)
     s = wv.get_settings()
     s.set_user_agent(IPHONE_UA)
@@ -131,13 +143,13 @@ def main():
         {'label': '書籤緞帶', 'wait': 900, 'js': "document.querySelector('[data-act=\"rd-mark\"]').click(); 'ok'",
          'probe': "JSON.stringify({ on: document.querySelector('#rdRibbon').classList.contains('on'), btn: document.querySelector('[data-act=\"rd-mark\"]').getAttribute('aria-pressed') })",
          'check': lambda r: info_ok(r['on'] and r['btn'] == 'true', '夾了書籤，頁角沒有緞帶：%s' % r), 'shot': 'vert-ribbon'},
-        {'label': '搜尋「九皇子」', 'wait': 3500,
-         'js': "document.querySelector('[data-act=\"rd-toc\"]').click(); setTimeout(() => { document.querySelector('#sheet .tab[data-tab=\"search\"]').click(); const q = document.querySelector('#sheet .q'); q.value = '九皇子'; q.dispatchEvent(new Event('input', { bubbles: true })); }, 400); 'ok'",
+        {'label': '搜尋「魏子葳」', 'wait': 3500,
+         'js': "document.querySelector('[data-act=\"rd-toc\"]').click(); setTimeout(() => { document.querySelector('#sheet .tab[data-tab=\"search\"]').click(); const q = document.querySelector('#sheet .q'); q.value = '魏子葳'; q.dispatchEvent(new Event('input', { bubbles: true })); }, 400); 'ok'",
          'probe': "JSON.stringify({ hits: document.querySelectorAll('#sheet .qhit').length, stat: (document.querySelector('#sheet .qstat') || {}).textContent })",
          'check': lambda r: info_ok(r['hits'] > 0, '搜尋沒有結果：%s' % r), 'shot': 'search'},
         {'label': '跳到第一個結果', 'wait': 2500, 'js': "document.querySelector('#sheet .qhit').click(); 'ok'",
          'probe': "JSON.stringify(Object.assign(__info(), { mark: (() => { const m = __top().querySelector('mark.hitm'); if (!m) return ''; const r = m.getBoundingClientRect(), v = __top().querySelector('.vp').getBoundingClientRect(); return m.textContent + (r.left >= v.left - 2 && r.right <= v.right + 2 && r.top >= v.top - 2 && r.bottom <= v.bottom + 2 ? '|在這一頁' : '|不在這一頁'); })() }))",
-         'check': lambda r: info_ok(r['mark'] == '九皇子|在這一頁', '跳到搜尋結果以後，找到的字沒有亮在這一頁：%s' % {k: r[k] for k in r if k != 'text'}), 'shot': 'search-hit'},
+         'check': lambda r: info_ok(r['mark'] == '魏子葳|在這一頁', '跳到搜尋結果以後，找到的字沒有亮在這一頁：%s' % {k: r[k] for k in r if k != 'text'}), 'shot': 'search-hit'},
         {'label': '夜讀：亮度 55%、暖光 70%', 'wait': 900,
          'js': "document.querySelector('[data-act=\"rd-look\"]').click(); setTimeout(() => { for (const [k, v] of [['bright', 55], ['warm', 70]]) { const r = document.querySelector('.lk-sl[data-k=\"' + k + '\"]'); r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); } }, 300); 'ok'",
          'probe': "JSON.stringify({ veil: document.querySelector('#reader').classList.contains('veil'), d: +getComputedStyle(document.querySelector('.rd-veil')).opacity, bg: getComputedStyle(__top().querySelector('.leaf-in')).backgroundColor, pv: getComputedStyle(document.querySelector('.lk-pv')).backgroundColor })",
@@ -146,9 +158,23 @@ def main():
         {'label': '換回橫排、夜讀關掉', 'wait': 2000,
          'js': "document.querySelector('[data-act=\"rd-look\"]').click(); setTimeout(() => { document.querySelector('[data-act=\"set\"][data-k=\"vert\"][data-v=\"0\"]').click(); for (const [k, v] of [['bright', 100], ['warm', 0]]) { const r = document.querySelector('.lk-sl[data-k=\"' + k + '\"]'); r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); } setTimeout(() => document.querySelector('.sheet-bg').click(), 400); }, 300); 'ok'",
          'probe': "JSON.stringify(Object.assign(__info(), { veil: document.querySelector('#reader').classList.contains('veil') }))",
-         'check': lambda r: info_ok(not r['rtl'] and not r['v'] and not r['veil'] and '九皇子' in r['text'], '換回橫排以後版面不對，或沒有停在同一句：%s' % {k: r[k] for k in r if k != 'text'}), 'shot': 'horizontal'},
+         'check': lambda r: info_ok(not r['rtl'] and not r['v'] and not r['veil'] and '魏子葳' in r['text'], '換回橫排以後版面不對，或沒有停在同一句：%s' % {k: r[k] for k in r if k != 'text'}), 'shot': 'horizontal'},
         {'label': '橫排：點右邊＝下一頁', 'wait': 1200, 'js': '__tap(.9); "ok"', 'probe': 'JSON.stringify(__info())',
          'check': lambda r: info_ok(r['pi'] >= 2 or r['text'], '橫排翻頁不動：%s' % {k: r[k] for k in r if k != 'text'})},
+        # ── 書房上鎖：PBKDF2、AES-GCM 在 WebKit（iPhone Safari）上要能開 ──
+        {'label': '在這台裝置上鎖、重開', 'wait': 3500, 'js': "localStorage.removeItem('pznc.v1.km'); localStorage.removeItem('pznc.v1.lib'); location.reload(); 'ok'",
+         'probe': "JSON.stringify({ gate: !document.querySelector('#gate').hidden && !!document.querySelector('#gtIn'), cards: document.querySelectorAll('.shelf .bk:not(.add)').length })",
+         'check': lambda r: info_ok(r['gate'] and r['cards'] == 0, '沒有鑰匙，書房應該關著：%s' % r), 'shot': 'gate'},
+        {'label': '輸入密語開門', 'wait': 9000, 'js': "document.querySelector('#gtIn').value = %s; document.querySelector('.gt-go').click(); 'ok'" % json.dumps(fx['pass']),
+         'probe': "JSON.stringify({ gate: !document.querySelector('#gate').hidden, msg: (document.querySelector('.gt-msg') || {}).textContent || '', cards: document.querySelectorAll('.shelf .bk:not(.add)').length })",
+         'check': lambda r: info_ok(not r['gate'] and r['cards'] >= 3, '用密語開不了門：%s' % r), 'shot': 'gate-open'},
+        # ── 單行本 ──
+        {'label': '單行本：用連結打開', 'goto': ed_link, 'wait': 5000,
+         'probe': "JSON.stringify({ title: document.title, rows: document.querySelectorAll('#bookv .toc .row').length, back: !!document.querySelector('#bookv [data-act=\"back\"]'), lib: document.querySelector('#lib').hidden, hash: location.hash.length })",
+         'check': lambda r: info_ok(r['rows'] >= 2 and not r['back'] and r['lib'] and r['hash'] > 20, '單行本沒有打開：%s' % r), 'shot': 'edition'},
+        {'label': '單行本：翻開第一回', 'wait': 3500, 'js': "document.querySelector('#bookv .bv-btns [data-act=\"continue\"]').click(); 'ok'",
+         'probe': "JSON.stringify({ len: (document.querySelector('.leaf .flow') || {}).textContent.length || 0, share: document.querySelector('[data-act=\"rd-share\"]').hidden })",
+         'check': lambda r: info_ok(r['len'] > 500 and r['share'], '單行本讀不到第一回：%s' % r), 'shot': 'edition-read'},
     ]
 
     def step():
@@ -184,7 +210,11 @@ def main():
 
         def ran(_):
             GLib.timeout_add(st.get('wait', 500), waited)
-        js(st['js'], ran) if st.get('js') else ran(None)
+        if st.get('goto'):
+            wv.load_uri(st['goto'])
+            ran(None)
+        else:
+            js(st['js'], ran) if st.get('js') else ran(None)
         return False
 
     def loaded(view, ev):
@@ -192,9 +222,9 @@ def main():
             GLib.timeout_add(200, step)
     wv.connect('load-changed', loaded)
     wv.load_uri(url)
-    GLib.timeout_add(120000, lambda: (print('逾時'), bad.append('逾時'), Gtk.main_quit()))
+    GLib.timeout_add(200000, lambda: (print('逾時'), bad.append('逾時'), Gtk.main_quit()))
     Gtk.main()
-    srv.shutdown()
+    srv.shutdown(); site.shutdown()
     if xvfb:
         xvfb.terminate()
     sys.exit(state.get('code', 1))

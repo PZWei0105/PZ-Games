@@ -16,6 +16,10 @@
   離線      伺服器關掉後還打得開、讀得到存過的章
   新功能    書房最下面的分類分頁、書架排序、第一次開書的操作說明、書籤（緞帶、清單、長按夾）、書內搜尋（亮字）、
             分享／複製這一回、前情提要（久沒讀的提要卡、書頁的提要）、夜讀（亮度、暖光）、直排、簡體書自動轉繁體、改分類
+  上鎖      書房的門（密語、備用碼、打錯）、在這台裝置上鎖
+  分享      書頁「分享這本書」：QR code 掃得出連結、複製連結、傳到 LINE
+  單行本    用連結打開、只看得到那一本、網址少了鑰匙／鑰匙錯了／被收回、離線、新的一回
+書都是測試用的假書（fixture()：亂數拼的句子、測試用的鑰匙），不碰真的小說，也不需要私人倉庫。
 Safari 的排版另外用 check_webkit.py 在 WebKit 裡走一遍（直排、搜尋亮字、夜讀）。
 需要 Playwright（雲端沙盒已裝好 Chromium，不要執行 playwright install）。
 字型：在 _build/tools/fonts 執行 npm i @fontsource/noto-serif-tc @fontsource/lxgw-wenkai-tc @fontsource/noto-sans-tc，截圖才是真正的字。
@@ -36,6 +40,7 @@ BAD, WARN = [], []
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     extra = {}       # 測試用的臨時檔（網址 → bytes）
+    books = None     # 書架換成測試用的假書（資料夾）
 
     def log_message(self, *a):
         pass
@@ -44,6 +49,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         p = urllib.parse.unquote(urllib.parse.urlparse(path).path)
         if p.startswith('/__fs/'):
             return os.path.join(FONTS, p[len('/__fs/'):])
+        if Handler.books and p.startswith(APP + 'books/'):
+            return os.path.join(Handler.books, p[len(APP + 'books/'):])
         return super().translate_path(path)
 
     def do_GET(self):
@@ -94,6 +101,130 @@ def ok(cond, msg):
     if not cond:
         bad(msg)
     return cond
+
+
+# ── 測試用的假書：亂數拼的句子（不是真的小說），加密成書房和單行本 ──
+FX_PASS = '測試的密語'
+FX_CODE = 'TEST-CODE-2026-K7Q9'
+NAMES = ['魏子葳', '沈遙', '老周', '阿九', '許娘子', '韓先生']
+PLACES = ['渡口', '城門', '茶棚', '堤上', '舊倉', '巷尾', '鹽場', '驛站']
+THINGS = ['油燈', '銅錢', '竹簍', '雨傘', '木匣', '麻繩', '信封', '短刀']
+ENDERS, CLOSERS = '。！？!?…⋯', '」』”’）》〉】〕)"\''
+
+
+def js_sentences(text):
+    """跟 books.js 的 sentences() 同一套斷句（時間軸要對得上）"""
+    out, st, i, n = [], 0, 0, len(text)
+    while i < n:
+        if text[i] in ENDERS:
+            j = i + 1
+            while j < n and (text[j] in ENDERS or text[j] == '—'):
+                j += 1
+            while j < n and text[j] in CLOSERS:
+                j += 1
+            if j < n and j - st < 4:
+                i = j
+                continue
+            out.append([st, j]); st = j; i = j
+        else:
+            i += 1
+    if st < n:
+        if out and n - st < 3:
+            out[-1][1] = n
+        else:
+            out.append([st, n])
+    return out
+
+
+def fx_body(rnd, n_par):
+    ps = []
+    for k in range(n_par):
+        if k and k % 9 == 0:
+            ps.append('---')
+            continue
+        a, b = rnd.sample(NAMES, 2)
+        pl, th = rnd.choice(PLACES), rnd.choice(THINGS)
+        bits = [
+            '%s在%s站了很久，手裡那盞%s一直沒有放下。' % (a, pl, th),
+            '「你早就知道了？」%s問。' % b,
+            '%s沒有回答，只把%s往桌上一推，%s的燈火晃了一下。' % (a, th, pl),
+            '雨從%s那頭斜斜地打過來，%s數了數腳步聲，一共七個人。' % (pl, b),
+            '「明天天亮以前，」%s說，「把%s送到%s。」' % (a, th, rnd.choice(PLACES)),
+            '這件事後來被人說了很多年，可那天晚上，%s只覺得冷。' % rnd.choice(NAMES),
+        ]
+        rnd.shuffle(bits)
+        ps.append(''.join(bits[:rnd.randint(3, 6)]))
+    return '\n\n'.join(ps) + '\n'
+
+
+def fixture(out):
+    """組一套假書房：回傳 dict（books 原稿、keys、lib 解開的目錄、各資料夾、單行本連結）"""
+    import random, subprocess
+    import publish, pzcrypt
+    rnd = random.Random(20261115)
+    specs = [('fx-shuang', '霜橋', '架空歷史', '連載中', '#1d2f4a', '霜', 'pass', 4, '2026-10-0%d'),
+             ('fx-deng', '燈塔守', '懸疑', '連載中', '#1e3a34', '燈', 'waves', 2, '2026-10-2%d'),
+             ('fx-kong', '空城記', '恐怖', '已完結', '#3b2238', '空', 'moon', 1, '2026-11-0%d')]
+    cn = '一二三四五六七八九十'
+    books = []
+    for bid, title, genre, status, cloth, seal, motif, nch, day in specs:
+        chs, rc = [], {}
+        for i in range(1, nch + 1):
+            body = fx_body(rnd, 46 if bid == 'fx-shuang' else 30)
+            chs.append({'n': i, 'label': '第%s章' % cn[i - 1], 'name': rnd.choice(PLACES) + rnd.choice(['夜', '雨', '火', '霜']), 'body': body,
+                        'chars': len(re.sub(r'\s', '', body)), 'added': day % i, 'at': (day % i) + 'T1%d:00:00+08:00' % i})
+            rc[str(i)] = '上回說到，%s在%s撿到一只%s，%s追了三條街才發現，那只是一個開始。這一回的事，後來全城都知道了。' % (rnd.choice(NAMES), rnd.choice(PLACES), rnd.choice(THINGS), rnd.choice(NAMES))
+        books.append({'id': bid, 'title': title, 'author': '測試作者', 'status': status, 'genre': genre,
+                      'blurb': '測試用的假書：%s。這裡的句子都是亂數拼出來的，只用來檢查書房和單行本。' % title,
+                      'cover': {'cloth': cloth, 'seal': seal, 'motif': motif}, 'chapters': chs, 'recaps': rc})
+    site_dir, books_dir = os.path.join(out, 'fx-site'), os.path.join(out, 'fx-books')
+    keys = {'master': pzcrypt.new_master(), 'site': '', 'books': {b['id']: {'key': pzcrypt.new_book_key(), 'pub': pzcrypt.rand_id(12), 'ed': pzcrypt.rand_id(10)} for b in books}}
+    ring = pzcrypt.make_keyring(keys['master'], FX_PASS, FX_CODE)
+    fx = {'books': books, 'keys': keys, 'ring': ring, 'km': keys['master'], 'books_dir': books_dir, 'site_dir': site_dir}
+    publish.sync(site_dir, publish.site_files(books, keys, None, render=False))
+    files = publish.library_files(books, keys, ring)
+    # 說書音軌（假的，只有靜音）：第一本的第二章
+    b0, k0 = books[0], keys['books'][books[0]['id']]
+    c2 = b0['chapters'][1]
+    units, t = [], 3.2
+    for bi, ln in enumerate([x.strip() for x in c2['body'].split('\n') if x.strip()]):
+        if ln == '---':
+            t += .8
+            continue
+        for s0, e0 in js_sentences(ln):
+            d = .45 + (e0 - s0) * .045
+            units.append([bi, s0, e0, round(t, 2), round(t + d, 2)]); t += d + .12
+    dur = round(t + 1.5, 2)
+    adir = os.path.join(books_dir, k0['pub'], 'audio')
+    os.makedirs(adir, exist_ok=True)
+    mp3 = os.path.join(adir, '002.mp3')
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', str(dur), '-b:a', '40k', mp3], check=True)
+    lib = pzcrypt.unseal_json(keys['master'], files['library.pzx'])
+    v2 = lib['books'][0]['chapters'][1]['v']
+    files[k0['pub'] + '/audio/002.json'] = json.dumps({'v': 1, 'dur': dur, 'head': 3.2, 'text': v2, 'units': units}).encode('utf-8')
+    files[k0['pub'] + '/audio/002.mp3'] = open(mp3, 'rb').read()
+    lib['books'][0]['chapters'][1]['au'] = {'f': 'audio/002.mp3', 'tl': 'audio/002.json', 'v': 'fx1', 'dur': dur, 'bytes': os.path.getsize(mp3), 'voice': 100, 'text': v2}
+    fx['set_site'] = lambda url: _fx_site(fx, url)
+    fx['lib'] = lib
+    files['library.pzx'] = pzcrypt.seal_json(keys['master'], lib)
+    publish.sync(books_dir, files)
+    return fx
+
+
+def _fx_site(fx, url):
+    """單行本網站的網址（測試伺服器開好以後才知道）：寫進書房的目錄、單行本的頁面"""
+    import publish, pzcrypt
+    fx['keys']['site'] = url
+    fx['lib']['site'] = url
+    open(os.path.join(fx['books_dir'], 'library.pzx'), 'wb').write(pzcrypt.seal_json(fx['km'], fx['lib']))
+    publish.sync(fx['site_dir'], publish.site_files(fx['books'], fx['keys'], fx['site_dir'], render=False))
+    fx['links'] = {b['id']: url + '/' + fx['keys']['books'][b['id']]['ed'] + '/#k=' + fx['keys']['books'][b['id']]['key'] for b in fx['books']}
+
+
+def put_lib(fx, lib):
+    """換掉書房的目錄（測試「新的一回」）"""
+    import pzcrypt
+    Handler.extra[APP + 'books/library.pzx'] = pzcrypt.seal_json(fx['km'], lib)
 
 
 def sample_files(tmp):
@@ -153,8 +284,7 @@ def font_router(base):
     return route if os.path.isdir(FONTS) else None
 
 
-def run(p, name, opts, base, out, tmp, srv):
-    import shelf
+def run(p, name, opts, base, out, tmp, srv, fx):
     print('\n== %s ==' % name, flush=True)
     br = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required', '--disable-gpu-compositing'])
     ctx = br.new_context(locale='zh-TW', timezone_id='Asia/Taipei', **opts)
@@ -166,6 +296,7 @@ def run(p, name, opts, base, out, tmp, srv):
         warn('沒有本機字型，截圖裡的字不是真正的字（見檔案開頭說明）')
     ctx.route(re.compile(r'^https://fonts\.gstatic\.com/.*'), lambda r: r.abort())
     page = ctx.new_page()
+    page.add_init_script("localStorage.setItem('pznc.v1.km', JSON.stringify(%s));" % json.dumps(fx['km']))
     errs = []
     page.on('pageerror', lambda e: errs.append('pageerror: ' + str(e)))
     page.on('console', lambda m: errs.append('console: ' + m.text) if m.type == 'error' and 'Failed to load resource' not in m.text and 'fonts.g' not in m.text else None)
@@ -220,7 +351,7 @@ def run(p, name, opts, base, out, tmp, srv):
     page.wait_for_function("document.querySelectorAll('.shelf .bk:not(.add)').length > 0", timeout=15000)
     page.wait_for_timeout(900)
     shot('lib-first')
-    lib = shelf.load()
+    lib = fx['lib']
     bk = lib['books'][0]
     ok(js("document.querySelector('.hero h2').textContent") == bk['title'], '第一次打開，書房應該推第一本連載')
     ok(js("document.querySelectorAll('.cover-svg').length") >= 2, '封面沒有畫出來')
@@ -461,7 +592,7 @@ def run(p, name, opts, base, out, tmp, srv):
     src = lib2['books'][0]['chapters'][-1]
     lib2['books'][0]['chapters'].append(dict(src, n=src['n'] + 1, label='第九百章', name='測試新回', au=None))
     lib2['books'][0]['chapters'][-1].pop('au', None)
-    Handler.extra[APP + 'books/library.json'] = json.dumps(lib2, ensure_ascii=False).encode('utf-8')
+    put_lib(fx, lib2)
     act('settings'); page.wait_for_selector('#sheet:not([hidden]) [data-act="sync"]'); shot('settings')
     act('sync')
     try:
@@ -498,11 +629,10 @@ SIMP_PARAS = ['这是一个简体中文的测试文件，我们用它来看看�
               '他们走过长长的马路，听见远处的鸟在叫，风吹过来的时候很凉快。', '「你还记得吗？」她问。「当然记得，那时候我们都还很年轻。」']
 
 
-def run_features(p, name, opts, base, out, tmp):
-    import shelf
+def run_features(p, name, opts, base, out, tmp, fx):
     print('\n== %s：新功能 ==' % name, flush=True)
-    lib = shelf.load()
-    zb = next((b for b in lib['books'] if b['id'] == 'zhen-zi-bianguan'), lib['books'][0])
+    lib = fx['lib']
+    zb = lib['books'][0]
     br = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required', '--disable-gpu-compositing'])
     ctx = br.new_context(locale='zh-TW', timezone_id='Asia/Taipei', **opts)
     clip_ok = True
@@ -515,7 +645,7 @@ def run_features(p, name, opts, base, out, tmp):
     ctx.route(re.compile(r'^https://fonts\.googleapis\.com/.*'), fr if fr else (lambda r: r.abort()))
     ctx.route(re.compile(r'^https://fonts\.gstatic\.com/.*'), lambda r: r.abort())
     page = ctx.new_page()
-    page.add_init_script("if (!sessionStorage.getItem('pznc.t')) { sessionStorage.setItem('pznc.t', '1'); localStorage.setItem('pznc.v1.coach', '1'); }")
+    page.add_init_script("if (!sessionStorage.getItem('pznc.t')) { sessionStorage.setItem('pznc.t', '1'); localStorage.setItem('pznc.v1.coach', '1'); localStorage.setItem('pznc.v1.km', JSON.stringify(%s)); }" % json.dumps(fx['km']))
     errs = []
     page.on('pageerror', lambda e: errs.append('pageerror: ' + str(e)))
     page.on('console', lambda m: errs.append('console: ' + m.text) if m.type == 'error' and 'Failed to load resource' not in m.text and 'fonts.g' not in m.text else None)
@@ -760,7 +890,7 @@ def run_features(p, name, opts, base, out, tmp):
 
     # ── 前情提要（久沒讀才跳出來） ──
     if zb.get('recaps') and len(zb['chapters']) >= 3:
-        rc = json.loads(shelf.unpack(open(os.path.join(shelf.BOOKS, zb['id'], zb['recaps']['f']), 'rb').read()))['recaps']
+        rc = next(b for b in fx['books'] if b['id'] == zb['id'])['recaps']
         c2, c3 = zb['chapters'][1], zb['chapters'][2]
         chrome(True); page.locator('[data-act="rd-back"]').click(); page.wait_for_timeout(500)
         js("(() => { const p = JSON.parse(localStorage.getItem('pznc.v1.prog') || '{}'); p['%s'] = { t: Date.now() - 3 * 864e5, ck: 'n%d', b: 0, s: 0, x: '', f: .2 }; localStorage.setItem('pznc.v1.prog', JSON.stringify(p)); const d = JSON.parse(localStorage.getItem('pznc.v1.done') || '{}'); delete d['%s']; localStorage.setItem('pznc.v1.done', JSON.stringify(d)); localStorage.removeItem('pznc.v1.gsel'); })()" % (zb['id'], c3['n'], zb['id']))
@@ -836,33 +966,359 @@ def run_features(p, name, opts, base, out, tmp):
         bad('程式錯誤：' + e[:300])
     br.close()
 
+def _ctx(p, opts, base, clip=False):
+    br = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required', '--disable-gpu-compositing'])
+    ctx = br.new_context(locale='zh-TW', timezone_id='Asia/Taipei', **opts)
+    if clip:
+        try:
+            ctx.grant_permissions(['clipboard-read', 'clipboard-write'], origin=base)
+        except Exception:
+            pass
+    fr = font_router(base)
+    ctx.route(re.compile(r'^https://fonts\.googleapis\.com/.*'), fr if fr else (lambda r: r.abort()))
+    ctx.route(re.compile(r'^https://fonts\.gstatic\.com/.*'), lambda r: r.abort())
+    return br, ctx
+
+
+def _watch(page, errs, tag=''):
+    page.on('pageerror', lambda e: errs.append(tag + 'pageerror: ' + str(e)))
+    page.on('console', lambda m: errs.append(tag + 'console: ' + m.text) if m.type == 'error' and 'Failed to load resource' not in m.text and 'fonts.g' not in m.text else None)
+
+
+def qr_text(png_bytes):
+    """把 QR code 截圖解回文字（OpenCV；沒裝就回 None）"""
+    try:
+        import cv2, numpy as np
+    except Exception:
+        return None
+    img = cv2.imdecode(np.frombuffer(png_bytes, np.uint8), cv2.IMREAD_COLOR)
+    img = cv2.copyMakeBorder(img, 40, 40, 40, 40, cv2.BORDER_CONSTANT, value=(244, 236, 218))
+    for scale in (1, 2, 3):
+        im = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST) if scale > 1 else img
+        t, _, _ = cv2.QRCodeDetector().detectAndDecode(im)
+        if t:
+            return t
+    return ''
+
+
+def run_secure(p, name, opts, base, out, fx):
+    """書房的門（密語、備用碼）、在這台裝置上鎖、書房換鎖、分享這本書（QR、複製、LINE）"""
+    import pzcrypt
+    print('\n== %s：上鎖、分享 ==' % name, flush=True)
+    br, ctx = _ctx(p, opts, base, clip=True)
+    page = ctx.new_page()
+    page.add_init_script("if (!sessionStorage.getItem('pznc.s')) { sessionStorage.setItem('pznc.s', '1'); localStorage.setItem('pznc.v1.coach', '1'); }")
+    errs = []
+    _watch(page, errs)
+    W = opts['viewport']['width']
+    n = [0]
+
+    def shot(tag):
+        n[0] += 1
+        page.screenshot(path=os.path.join(out, '%s-s%02d-%s.png' % (name, n[0], tag)))
+
+    def js(code):
+        return page.evaluate(code)
+
+    def close_sheet():
+        page.locator('.sheet-bg').click(position={'x': W / 2, 'y': 10}); page.wait_for_timeout(300)
+
+    def unlock(text):
+        page.fill('#gtIn', text); page.locator('.gt-go').click()
+
+    # ── 第一次打開：門 ──
+    page.goto(base + APP, wait_until='load')
+    page.wait_for_selector('#gate:not([hidden]) #gtIn', timeout=15000); page.wait_for_timeout(700)
+    ok(js("document.querySelectorAll('.shelf .bk').length") == 0, '還沒開門，書架就排出來了')
+    ok(js("!localStorage.getItem('pznc.v1.lib')"), '還沒開門，這台裝置就存了書架目錄')
+    shot('lock')
+    unlock('這不是密語')
+    try:
+        page.wait_for_function("document.querySelector('.gt-msg').classList.contains('bad')", timeout=20000)
+        ok('不對' in js("document.querySelector('.gt-msg').textContent"), '打錯密語，應該說「密語不對」')
+    except Exception:
+        bad('打錯密語沒有任何反應')
+    page.wait_for_timeout(450); shot('lock-wrong')
+    unlock(FX_CODE.lower().replace('-', ' '))                       # 備用碼：小寫、空白也要認得
+    try:
+        page.wait_for_selector('#gate', state='hidden', timeout=25000)
+    except Exception:
+        bad('用備用碼開不了書房')
+    page.wait_for_function("document.querySelectorAll('.shelf .bk:not(.add)').length >= %d" % len(fx['books']), timeout=15000); page.wait_for_timeout(500)
+    ok(js("JSON.parse(localStorage.getItem('pznc.v1.km'))") == fx['km'], '開了門，這台裝置沒有記住鑰匙')
+    shot('unlocked')
+
+    # ── 分享這本書 ──
+    b0 = fx['books'][0]
+    page.locator('.shelf [data-act="book"][data-id="%s"]' % b0['id']).click(); page.wait_for_selector('#bookv:not([hidden]) .toc'); page.wait_for_timeout(300)
+    ok(js("!!document.querySelector('#bookv .bv-btns [data-act=\"share-book\"]')"), '連載的書頁上沒有「分享」')
+    page.locator('#bookv .bv-btns [data-act="share-book"]').click()
+    try:
+        page.wait_for_selector('#sbQr svg', timeout=10000)
+    except Exception:
+        bad('分享抽屜的 QR code 沒有畫出來')
+    page.wait_for_timeout(500); shot('share')
+    link = js("document.querySelector('.sb-link').textContent")
+    ok(link == fx['links'][b0['id']], '分享連結不對：%s' % link)
+    q = qr_text(page.locator('#sbQr').screenshot())
+    if q is None:
+        warn('沒有 OpenCV，QR code 沒有試掃')
+    else:
+        ok(q == link, 'QR code 掃出來的不是這本書的連結：%r' % q)
+    page.locator('#sheet [data-act="sb-copy"]').first.click(); page.wait_for_timeout(400)
+    try:
+        ok(js('navigator.clipboard.readText()') == link, '「複製連結」複製到的不是這本書的連結')
+    except Exception:
+        warn('讀不到剪貼簿，「複製連結」沒有檢查')
+    js("window.__opened = []; window.open = (u) => { window.__opened.push(u); return {}; }; 1")
+    page.locator('#sheet [data-act="sb-line"]').click(); page.wait_for_timeout(200)
+    u = (js('window.__opened') or [''])[-1] or ''
+    txt = urllib.parse.unquote(u.split('text=', 1)[1]) if 'text=' in u else ''
+    ok(u.startswith('https://line.me/R/share?text=') and '《%s》' % b0['title'] in txt and link.replace('/#k=', '/?openExternalBrowser=1#k=') in txt, '「傳到 LINE」的網址不對：%s' % u[:160])
+    close_sheet()
+    ok(js("!document.querySelector('#bookv .bv-top [data-act=\"del-book\"]')"), '連載不應該有「移出藏書」')
+
+    # ── 在這台裝置上鎖 ──
+    page.locator('#bookv [data-act="back"]').click(); page.wait_for_timeout(400)
+    page.locator('.lib-top [data-act="settings"]').click(); page.wait_for_selector('#sheet:not([hidden]) [data-act="lock-ask"]')
+    shot('settings')
+    page.locator('#sheet [data-act="lock-ask"]').click(); page.wait_for_selector('#sheet:not([hidden]) [data-act="lock-yes"]')
+    shot('lock-ask')
+    page.locator('#sheet [data-act="lock-yes"]').click()
+    page.wait_for_selector('#gate:not([hidden]) #gtIn', timeout=15000); page.wait_for_timeout(500)
+    ok(js("!localStorage.getItem('pznc.v1.km') && !localStorage.getItem('pznc.v1.lib')"), '上鎖以後，鑰匙或書架目錄還留在這台裝置')
+    ok(js("document.querySelectorAll('.shelf .bk').length") == 0, '上鎖以後書架還看得到')
+    shot('locked-again')
+    unlock(FX_PASS)
+    try:
+        page.wait_for_selector('#gate', state='hidden', timeout=25000)
+        page.wait_for_function("document.querySelectorAll('.shelf .bk:not(.add)').length >= %d" % len(fx['books']), timeout=15000)
+    except Exception:
+        bad('上鎖以後用密語開不回來')
+
+    # ── 書房換了鎖（總鑰匙換了）：舊的鑰匙解不開，要重新輸入 ──
+    other = pzcrypt.new_master()
+    Handler.extra[APP + 'books/library.pzx'] = pzcrypt.seal_json(other, fx['lib'])
+    page.locator('.lib-top [data-act="settings"]').click(); page.wait_for_selector('#sheet:not([hidden]) [data-act="sync"]')
+    page.locator('#sheet [data-act="sync"]').click()
+    try:
+        page.wait_for_selector('#gate:not([hidden]) #gtIn', timeout=15000)
+        ok('換了新的鎖' in js("document.querySelector('.gt-sub').textContent"), '書房換鎖時，門上沒有說「換了新的鎖」')
+        ok(js("!localStorage.getItem('pznc.v1.km')"), '書房換鎖以後，舊鑰匙還留著')
+        page.wait_for_timeout(500)
+        ok(js("getComputedStyle(document.querySelector('#gate')).opacity") == '1', '書房換鎖時，門擋著卻是透明的（看不見）')
+        shot('rekeyed')
+    except Exception:
+        bad('書房換了鎖，沒有請他重新輸入密語')
+    Handler.extra.clear()
+    if js("!document.querySelector('#gate').hidden"):
+        unlock(FX_PASS)
+        try:
+            page.wait_for_selector('#gate', state='hidden', timeout=25000)
+        except Exception:
+            bad('換鎖以後用密語開不回來')
+    for e in errs:
+        bad('程式錯誤：' + e[:300])
+    br.close()
+
+
+def run_edition(p, name, opts, base, out, fx):
+    """單行本：用連結打開、只有這一本、讀、設定、網址少了／錯了鑰匙、新的一回、離線、被收回、全新裝置貼連結"""
+    import pzcrypt
+    print('\n== %s：單行本 ==' % name, flush=True)
+    b0 = fx['books'][0]
+    k0 = fx['keys']['books'][b0['id']]
+    link = fx['links'][b0['id']]
+    bare = link.split('#')[0]
+    site_base = bare.rsplit('/' + k0['ed'] + '/', 1)[0]
+    br, ctx = _ctx(p, opts, site_base)
+    page = ctx.new_page()
+    page.add_init_script("try { if (!sessionStorage.getItem('pzsb.t')) { sessionStorage.setItem('pzsb.t', '1'); localStorage.setItem('pzsb.%s.coach', '1'); } } catch (e) {}" % k0['ed'])
+    errs = []
+    _watch(page, errs, 'ED ')
+    W = opts['viewport']['width']
+    n = [0]
+
+    def shot(tag, pg=None):
+        n[0] += 1
+        (pg or page).screenshot(path=os.path.join(out, '%s-e%02d-%s.png' % (name, n[0], tag)))
+
+    def js(code, pg=None):
+        return (pg or page).evaluate(code)
+
+    def wait_book(pg=None):
+        (pg or page).wait_for_selector('#bookv:not([hidden]) .toc .row', timeout=20000); (pg or page).wait_for_timeout(500)
+
+    def wait_reader():
+        page.wait_for_function("(() => { const r = document.querySelector('#reader'); return !r.hidden && !r.classList.contains('loading') && document.querySelector('#opening').hidden; })()", timeout=15000)
+        page.wait_for_timeout(400)
+
+    def close_sheet():
+        page.locator('.sheet-bg').click(position={'x': W / 2, 'y': 10}); page.wait_for_timeout(300)
+
+    html = open(os.path.join(fx['site_dir'], k0['ed'], 'index.html'), encoding='utf-8').read().lower()
+    for w in ('github', 'pz-games', 'pzwei0105', 'apps/next-chapter', '收藏庫'):
+        ok(w not in html, '單行本的頁面裡有「%s」（朋友看原始碼就找得到書房）' % w)
+    page.goto(link, wait_until='load'); wait_book()
+    shot('book')
+    ok(page.title() == '《%s》' % b0['title'], '單行本的頁面標題不對：%s' % page.title())
+    ok(js("document.querySelectorAll('#bookv .toc .row').length") == len(b0['chapters']), '單行本的目錄回數不對')
+    ok(js("!document.querySelector('#bookv [data-act=\"back\"]') && !!document.querySelector('#bookv [data-act=\"settings\"]')"), '單行本的書頁不應該有「回書房」，要有設定')
+    ok(js("document.querySelector('#lib').hidden && document.querySelector('#gbar').hidden"), '單行本不應該看得到書房或分類分頁')
+    ok(js("!document.querySelector('[data-act=\"share-book\"]') && !document.querySelector('[data-act=\"import\"]')"), '單行本不應該有分享、匯入')
+    ok(js("!!document.querySelector('#bookv .hello')"), '第一次打開單行本，沒有說明卡')
+    others = [b['title'] for b in fx['books'][1:]]
+    ok(not any(t in js("JSON.stringify(localStorage) + document.body.innerHTML") for t in others), '單行本裡看得到別本書的書名')
+    ok(('k=' + k0['key']) in js('location.hash'), '網址上的鑰匙不見了')
+
+    page.locator('#bookv .bv-btns [data-act="continue"]').click(); wait_reader()
+    ok(len(js("document.querySelector('.leaf .flow').textContent")) > 500, '單行本打不開第一回')
+    ok(js("document.querySelector('[data-act=\"rd-share\"]').hidden"), '單行本不應該有「複製整回」')
+    shot('read')
+    if not js("document.querySelector('#reader').classList.contains('chrome-on')"):
+        bb = page.locator('#rdStage').bounding_box()
+        page.locator('#rdStage').click(position={'x': bb['width'] / 2, 'y': bb['height'] * .45}); page.wait_for_timeout(400)
+    page.locator('[data-act="rd-back"]').click(); page.wait_for_timeout(500)
+    ok(js("!document.querySelector('#bookv').hidden && document.querySelector('#reader').hidden"), '從閱讀器返回，沒有回到書頁')
+
+    page.locator('#bookv [data-act="settings"]').click(); page.wait_for_selector('#sheet:not([hidden]) [data-act="look-open"]')
+    ok(js("!document.querySelector('#sheet [data-act=\"lock-ask\"]') && document.querySelector('#sheetBody').textContent.includes('自動更新')"), '單行本的設定不對')
+    shot('settings')
+    close_sheet()
+    page.locator('#bookv [data-act="hello-ok"]').click(); page.wait_for_timeout(200)
+    page.reload(wait_until='load'); wait_book()
+    ok(js("!document.querySelector('#bookv .hello')"), '按了「知道了」，重開說明卡又出現')
+
+    # 網址少了鑰匙：這台裝置記得，而且補回網址上（加到主畫面才帶得走）
+    page.goto(bare, wait_until='load'); wait_book()
+    ok(('k=' + k0['key']) in js('location.hash'), '網址少了鑰匙，沒有用這台裝置記得的補回去')
+    # 網址上的鑰匙被剪壞：用這台裝置記得的那把
+    page.goto('about:blank'); page.goto(bare + '#k=' + 'B' * 22, wait_until='load'); wait_book()
+    ok(('k=' + k0['key']) in js('location.hash'), '網址上的鑰匙壞了，沒有換回這台裝置記得的那把')
+
+    # 新的一回上架：打開或回到前景就會看到
+    bk = pzcrypt.unseal_json(k0['key'], open(os.path.join(fx['site_dir'], k0['ed'], 'book.pzx'), 'rb').read())
+    src = bk['book']['chapters'][-1]
+    bk['book']['chapters'].append(dict(src, n=src['n'] + 1, label='第九百章', name='測試新回'))
+    Handler.extra['/' + k0['ed'] + '/book.pzx'] = pzcrypt.seal_json(k0['key'], bk)
+    page.locator('#bookv [data-act="settings"]').click(); page.wait_for_selector('#sheet:not([hidden]) [data-act="sync"]')
+    page.locator('#sheet [data-act="sync"]').click()
+    try:
+        page.wait_for_function("[...document.querySelectorAll('.toast')].some((t) => /測試新回/.test(t.textContent))", timeout=8000)
+        page.wait_for_timeout(400)
+        ok(js("document.querySelectorAll('#bookv .toc .row').length") == len(b0['chapters']) + 1, '新的一回沒有出現在目錄')
+        shot('new-chapter')
+    except Exception:
+        bad('單行本有新的一回，沒有跳出提示')
+    Handler.extra.clear()
+    page.reload(wait_until='load'); wait_book()
+
+    # 離線
+    sw = js("(async () => { if (!navigator.serviceWorker) return 'none'; const r = await navigator.serviceWorker.ready; return r.active ? 'ok' : 'no'; })()")
+    ok(sw == 'ok', '單行本的離線快取沒有啟動：%s' % sw)
+    page.reload(wait_until='load'); wait_book(); page.wait_for_timeout(1200)
+    ctx.set_offline(True)
+    try:
+        page.reload(wait_until='load'); wait_book()
+        page.locator('#bookv .bv-btns [data-act="continue"]').click(); wait_reader()
+        ok(len(js("document.querySelector('.leaf .flow').textContent")) > 500, '單行本離線時讀不到存過的章')
+        shot('offline')
+    except Exception as ex:
+        bad('單行本離線時打不開：%s' % str(ex)[:120])
+    ctx.set_offline(False)
+
+    # 被收回（換了連結、舊的下架）：清掉存下來的書，跟讀者說要新的連結
+    ctx.route(re.compile(r'.*/book\.pzx(\?.*)?$'), lambda r: r.fulfill(status=404, body='gone'))
+    page.goto('about:blank'); page.goto(link, wait_until='load')
+    try:
+        page.wait_for_selector('#gate.edg.gone:not([hidden])', timeout=10000); page.wait_for_timeout(600)
+        ok(js("!localStorage.getItem('pzsb.%s.k') && !localStorage.getItem('pzsb.%s.lib')" % (k0['ed'], k0['ed'])), '連結被收回以後，鑰匙或目錄還留在這台裝置')
+        shot('gone')
+    except Exception:
+        bad('單行本被收回，沒有跟讀者說')
+    ctx.unroute(re.compile(r'.*/book\.pzx(\?.*)?$'))
+
+    # 全新的裝置：連結少了鑰匙 → 貼上完整連結
+    ctx2 = br.new_context(locale='zh-TW', timezone_id='Asia/Taipei', **opts)
+    fr = font_router(site_base)
+    ctx2.route(re.compile(r'^https://fonts\.googleapis\.com/.*'), fr if fr else (lambda r: r.abort()))
+    q = ctx2.new_page()
+    _watch(q, errs, 'ED2 ')
+    q.goto(bare, wait_until='load')
+    try:
+        q.wait_for_selector('#gate.edg.missing:not([hidden]) #gtIn', timeout=10000); q.wait_for_timeout(500)
+        shot('missing', q)
+        q.fill('#gtIn', '給你看這本：' + link + '　很好看'); q.locator('.gt-go').click()
+        wait_book(q)
+        ok(q.title() == '《%s》' % b0['title'], '貼上完整連結以後沒有打開這本書')
+    except Exception as ex:
+        bad('連結少了鑰匙，沒有讓讀者貼上完整連結：%s' % str(ex)[:120])
+    # 鑰匙是錯的、這台裝置什麼都沒記
+    ctx3 = br.new_context(locale='zh-TW', timezone_id='Asia/Taipei', **opts)
+    ctx3.route(re.compile(r'^https://fonts\.googleapis\.com/.*'), fr if fr else (lambda r: r.abort()))
+    r3 = ctx3.new_page()
+    _watch(r3, errs, 'ED3 ')
+    r3.goto(bare + '#k=' + 'C' * 22, wait_until='load')
+    try:
+        r3.wait_for_selector('#gate.edg.bad:not([hidden])', timeout=10000); r3.wait_for_timeout(400)
+        shot('badkey', r3)
+    except Exception:
+        bad('鑰匙錯了，沒有跟讀者說連結打不開')
+    for e in errs:
+        bad('程式錯誤：' + e[:300])
+    br.close()
+
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default='/tmp/pznc-check')
     ap.add_argument('--only')
-    ap.add_argument('--features', action='store_true', help='只跑新功能那一段')
+    ap.add_argument('--features', action='store_true', help='只跑新功能那一段（＋上鎖、分享、單行本）')
+    ap.add_argument('--secure', action='store_true', help='只跑上鎖、分享、單行本')
+    ap.add_argument('--fixture', help='只組假書房到這個資料夾（check_webkit.py 用）')
+    ap.add_argument('--site', help='配 --fixture：單行本網站的網址')
     a = ap.parse_args()
+    if a.fixture:
+        fx = fixture(a.fixture)
+        if a.site:
+            fx['set_site'](a.site)
+        json.dump({'km': fx['km'], 'books_dir': fx['books_dir'], 'site_dir': fx['site_dir'], 'lib': fx['lib'], 'links': fx.get('links', {}), 'pass': FX_PASS},
+                  open(os.path.join(a.fixture, 'fixture.json'), 'w'), ensure_ascii=False)
+        return
     from playwright.sync_api import sync_playwright
     shutil.rmtree(a.out, ignore_errors=True); os.makedirs(a.out)
     tmp = sample_files(os.path.join(a.out, 'files'))
+    fx = fixture(os.path.join(a.out, 'fx'))
+    Handler.books = fx['books_dir']
     srv = Server(('127.0.0.1', 0), functools.partial(Handler, directory=REPO))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     base = 'http://127.0.0.1:%d' % srv.server_address[1]
+    site = Server(('127.0.0.1', 0), functools.partial(Handler, directory=fx['site_dir']))      # 單行本網站：另一個網域（port）
+    threading.Thread(target=site.serve_forever, daemon=True).start()
+    fx['set_site']('http://127.0.0.1:%d' % site.server_address[1])
     with sync_playwright() as p:
         for name, opts in (('phone', PHONE), ('desk', DESK)):
             if a.only and a.only != name:
                 continue
-            if not a.features:
+            if not a.features and not a.secure:
                 try:
-                    run(p, name, opts, base, a.out, tmp, srv)
+                    run(p, name, opts, base, a.out, tmp, srv, fx)
                 except Exception as ex:
                     bad('%s：檢查中斷：%s' % (name, str(ex)[:400]))
+            if not a.secure:
+                try:
+                    run_features(p, name, opts, base, a.out, tmp, fx)
+                except Exception as ex:
+                    bad('%s：新功能檢查中斷：%s' % (name, str(ex)[:400]))
             try:
-                run_features(p, name, opts, base, a.out, tmp)
+                run_secure(p, name, opts, base, a.out, fx)
             except Exception as ex:
-                bad('%s：新功能檢查中斷：%s' % (name, str(ex)[:400]))
-    srv.shutdown()
+                bad('%s：上鎖／分享檢查中斷：%s' % (name, str(ex)[:400]))
+            try:
+                run_edition(p, name, opts, base, a.out, fx)
+            except Exception as ex:
+                bad('%s：單行本檢查中斷：%s' % (name, str(ex)[:400]))
+    srv.shutdown(); site.shutdown()
     print('\n%d BAD, %d WARN；截圖在 %s' % (len(BAD), len(WARN), a.out))
     sys.exit(1 if BAD else 0)
 

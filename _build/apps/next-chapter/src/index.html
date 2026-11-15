@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--HEAD-->
 <title>下回分解</title>
 <meta name="description" content="痞子葳的書房：連載小說寫完就上架，也能匯入自己的電子書；翻頁、聽說書都在這裡。">
 <meta name="robots" content="noindex, nofollow, noarchive">
@@ -15,6 +16,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d2f4a'/%3E%3Crect x='14' y='12' width='22' height='40' rx='1.500' fill='%23ece4d2'/%3E%3Crect x='19' y='37' width='12' height='11' rx='1.500' fill='%23b3382c'/%3E%3Cpath d='M48 8v48' stroke='%23e4dcc8' stroke-width='2'/%3E%3Cpath d='M48 18h10M48 32h10M48 46h10' stroke='%23e4dcc8' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<!--/HEAD-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;500;700;900&display=swap">
@@ -25,6 +27,7 @@
 <body>
 <noscript><p style="color:#dfe6ee;padding:24px;font-family:serif">下回分解需要開啟 JavaScript 才能使用。</p></noscript>
 <div id="app">
+  <div id="gate" class="gate" hidden></div>
   <main id="lib" class="view" tabindex="-1"></main>
   <section id="bookv" class="view" hidden tabindex="-1"></section>
 
@@ -74,6 +77,7 @@
   <div id="toasts" aria-live="polite"></div>
   <input type="file" id="file" hidden multiple accept=".epub,.txt,.md,.markdown,application/epub+zip,text/plain,text/markdown">
 </div>
+<!--EDITION-->
 <script>
 /*VENDOR*/
 </script>

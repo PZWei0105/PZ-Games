@@ -477,11 +477,97 @@ body.gbar-on #lib .wrap { padding-bottom: calc(var(--sb) + 156px); }
 .co-foot .co-k { color: #8fa0b5; font-size: 12.500px; }
 .co-foot .btn { min-width: 160px; }
 
+/* ── 門：書房的鎖、單行本的連結 ── */
+.gate { position: absolute; inset: 0; z-index: 65; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; padding: calc(var(--st) + 22px) 22px calc(var(--sb) + 26px);
+  background:
+    radial-gradient(60% 42% at 50% 26%, rgba(255, 186, 110, .15), transparent 70%),
+    radial-gradient(90% 60% at 50% 112%, rgba(46, 82, 128, .5), transparent 72%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 3px), var(--night); }
+.gate.edg::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(75% 48% at 50% 24%, var(--cloth, #1d2f4a), transparent 72%); opacity: .6; }
+.gt-in { position: relative; width: min(400px, 100%); margin: auto; text-align: center; }
+.gt-book { position: relative; width: 148px; height: 222px; margin: 4px auto 30px; perspective: 1000px; }
+.gt-glow { position: absolute; inset: -34% -46%; background: radial-gradient(closest-side, rgba(255, 201, 119, .26), transparent); animation: gtGlow 4.5s ease-in-out infinite; pointer-events: none; }
+@keyframes gtGlow { 50% { opacity: .55; transform: scale(.94); } }
+.gt-cover { position: absolute; inset: 0; transform-origin: 100% 50%; border-radius: 3px; overflow: hidden; box-shadow: 0 26px 50px rgba(0,0,0,.62), 0 0 0 1px rgba(255,255,255,.05); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.gt-cover svg, .gt-cv svg { width: 100%; height: 100%; }
+.gt-clasp { position: absolute; top: 0; right: -34px; width: 88px; height: 222px; overflow: visible; filter: drop-shadow(0 6px 9px rgba(0,0,0,.55)); }
+.gt-lock, .gt-strap { transform-box: fill-box; transform-origin: 50% 50%; }
+.gate.busy .gt-lock { animation: gtJig .5s ease-in-out infinite; }
+@keyframes gtJig { 25% { transform: rotate(-6deg); } 75% { transform: rotate(5deg); } }
+.gt-kick { margin: 0; color: var(--gilt); font: 400 14px/1.4 var(--kai); letter-spacing: .32em; }
+.gate h1 { margin: 6px 0 0; font: 700 30px/1.3 var(--kai); letter-spacing: .18em; color: var(--moon); text-shadow: 0 2px 18px rgba(0,0,0,.5); }
+.gt-sub { margin: 10px auto 0; max-width: 310px; color: #aab7c6; font-size: 14px; line-height: 1.8; }
+.gt-sub b { color: var(--moon); }
+.gt-form { display: flex; flex-direction: column; gap: 12px; margin: 24px auto 0; max-width: 320px; }
+.gt-field { position: relative; display: block; }
+.gt-field input { width: 100%; height: 54px; padding: 0 48px; border-radius: 12px; border: 1px solid rgba(201,164,92,.5); background: rgba(236,228,210,.07); color: var(--moon); font: 500 18px/1 var(--song); letter-spacing: .1em; text-align: center; outline: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); -webkit-appearance: none; appearance: none; transition: border-color .2s, background .2s, box-shadow .2s; }
+.gate.edg .gt-field input { padding: 0 14px; font-size: 16px; letter-spacing: 0; }
+.gt-field input::placeholder { color: rgba(143,160,181,.6); letter-spacing: .2em; }
+.gt-field input:focus { border-color: var(--gilt-2); background: rgba(236,228,210,.11); box-shadow: 0 0 0 3px rgba(227,200,138,.16); }
+.gt-field input.masked { -webkit-text-security: disc; }
+.gt-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; display: grid; place-items: center; color: var(--mist); border-radius: 50%; }
+.gt-eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.gt-go { height: 52px; font-size: 16px; letter-spacing: .32em; }
+.gt-go:disabled { opacity: .65; }
+.gt-msg { min-height: 22px; margin: 12px 0 0; color: var(--mist); font-size: 13.500px; line-height: 1.6; }
+.gt-msg.bad { color: #f2a99e; }
+.gt-note { margin: 16px auto 0; max-width: 300px; color: rgba(143,160,181,.78); font-size: 12px; line-height: 1.75; }
+.gate.opened .gt-form, .gate.opened .gt-note { opacity: .3; pointer-events: none; transition: opacity .35s; }
+.gate.edg .gt-cv { width: 132px; height: 198px; margin: 6px auto 22px; border-radius: 3px; overflow: hidden; box-shadow: 0 24px 50px rgba(0,0,0,.62), 0 0 0 1px rgba(255,255,255,.05); }
+.gt-cv.breathe { animation: gtBreathe 2.6s ease-in-out infinite; }
+@keyframes gtBreathe { 50% { transform: translateY(-4px); box-shadow: 0 30px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.07); } }
+.gate.edg h1 { font-size: 28px; letter-spacing: .1em; }
+.gt-by { margin: 4px 0 0; color: var(--gilt); font: 400 14px/1.5 var(--kai); letter-spacing: .12em; }
+.gt-paste { margin: 6px auto 0; display: flex; }
+.gt-paste svg { width: 17px; height: 17px; }
+.gt-retry { margin: 22px auto 0; min-width: 160px; }
+
+/* ── 分享這本書 ── */
+.sb-card { display: flex; align-items: center; gap: 16px; padding: 16px; margin: 4px 0 0; border-radius: 16px; background: linear-gradient(160deg, rgba(236,228,210,.08), rgba(236,228,210,.02)); border: 1px solid rgba(201,164,92,.3); }
+.sb-qr { flex: none; width: 150px; height: 150px; border-radius: 10px; overflow: hidden; background: #f4ecda; display: grid; place-items: center; box-shadow: 0 12px 28px -12px rgba(0,0,0,.8); }
+.sb-qr svg { width: 100%; height: 100%; }
+.sb-qr > i { width: 26px; height: 26px; border-radius: 50%; border: 2.500px solid rgba(29,21,13,.18); border-top-color: #1d150d; animation: spin .8s linear infinite; }
+.sb-qr-no { color: #5b4a33; font-size: 12px; line-height: 1.6; text-align: center; }
+.sb-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.sb-cv { display: block; width: 52px; height: 78px; border-radius: 2px; overflow: hidden; box-shadow: 0 8px 18px rgba(0,0,0,.5); margin-bottom: 2px; }
+.sb-cv svg { width: 100%; height: 100%; }
+.sb-meta b { font: 700 19px/1.3 var(--kai); letter-spacing: .04em; overflow-wrap: anywhere; }
+.sb-meta small { color: var(--mist); font-size: 12.500px; }
+.sb-tag { font: 700 11px/1 var(--song); letter-spacing: .24em; color: #1b1408; background: linear-gradient(180deg, #e9d29b, #c9a45c); padding: 5px 7px 5px 10px; border-radius: 4px; }
+.sb-link { margin: 14px 0 0; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.28); border: 1px solid rgba(190,210,235,.08); color: #b9c5d3; font: 12px/1.55 ui-monospace, "SF Mono", Menlo, monospace; word-break: break-all; cursor: pointer; -webkit-user-select: all; user-select: all; }
+.sb-btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.sb-btns .btn { flex: 1 1 0; padding: 0 12px; }
+.sb-notes { margin: 16px 0 4px; padding: 0; list-style: none; color: var(--mist); font-size: 12.500px; line-height: 1.7; }
+.sb-notes li { position: relative; padding-left: 14px; margin-top: 6px; }
+.sb-notes li::before { content: ""; position: absolute; left: 2px; top: .72em; width: 4px; height: 4px; border-radius: 50%; background: var(--gilt); }
+.sb-notes b { color: var(--moon); font-weight: 700; }
+@media (max-width: 360px) { .sb-card { flex-direction: column; align-items: center; } .sb-meta { align-items: center; text-align: center; } }
+
+/* ── 單行本 ── */
+.gchip.still { pointer-events: none; }
+.hello { margin: 18px 0 0; padding: 14px 16px 8px; border-radius: 14px; border: 1px solid rgba(201,164,92,.36); background: linear-gradient(180deg, rgba(201,164,92,.11), rgba(201,164,92,.03)); }
+.hello p { margin: 0; color: #d3dbe5; font-size: 14px; line-height: 1.8; }
+.hello .hello-k { color: var(--gilt-2); font: 700 13px/1 var(--kai); letter-spacing: .34em; margin-bottom: 8px; }
+.hello .hello-how { margin-top: 10px; color: #aab7c6; font-size: 13px; }
+.hello .hello-how .btn { margin-top: 2px; }
+.hello-ok { display: flex; margin: 4px 0 0 auto; min-height: 38px; }
+.lockrow { margin-top: 10px; }
+.lockrow svg { transform: none; }
+/* 單行本：書頁的底色帶一點這本書的布面顏色 */
+body.ed .view { background:
+    radial-gradient(110% 52% at 30% -8%, var(--cloth, #1d2f4a), transparent 72%),
+    radial-gradient(90% 46% at 78% -6%, rgba(255, 186, 110, .13), transparent 62%),
+    radial-gradient(70% 40% at -10% 104%, rgba(46, 82, 128, .3), transparent 70%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 3px), var(--night); }
+
 </style>
 </head>
 <body>
 <noscript><p style="color:#dfe6ee;padding:24px;font-family:serif">下回分解需要開啟 JavaScript 才能使用。</p></noscript>
 <div id="app">
+  <div id="gate" class="gate" hidden></div>
   <main id="lib" class="view" tabindex="-1"></main>
   <section id="bookv" class="view" hidden tabindex="-1"></section>
 
@@ -537,9 +623,11 @@ body.gbar-on #lib .wrap { padding-bottom: calc(var(--sb) + 156px); }
 <script>
 (function () {
 'use strict';
-/* ───────── 下回分解：基礎工具、設定、儲存 ───────── */
-const VERSION = '2026.11.14-1553';
-const PFX = 'pznc.v1.';
+/* ───────── 基礎工具、設定、儲存 ───────── */
+const VERSION = '2026.11.15-0822';
+/* 單行本：組建時寫進 window.__PZ_ED（這一本的公開資料），只讀這一本；書房沒有這個 */
+const ED = window.__PZ_ED || null;
+const PFX = ED ? 'pzsb.' + ED.ed + '.' : 'pznc.v1.';
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -573,8 +661,11 @@ const Store = {
 };
 
 const DEFAULTS = { theme: 'night', mode: 'page', font: 'song', size: 19, lh: 1.9, margin: 1, vert: false, bright: 1, warm: 0, sfx: true, rate: 1, voice: '', follow: true, keepAwake: true, recap: true };
-const Settings = Object.assign({}, DEFAULTS, Store.get('settings', {}));
-function saveSettings() { Store.set('settings', Settings); }
+/* 單行本各自記設定；第一次打開沿用這台裝置上一本單行本的外觀（字級、主題……） */
+const LOOK_SHARED = 'pzsb.look';
+function sharedLook() { try { return JSON.parse(localStorage.getItem(LOOK_SHARED) || '{}') || {}; } catch (e) { return {}; } }
+const Settings = Object.assign({}, DEFAULTS, ED ? sharedLook() : {}, Store.get('settings', {}));
+function saveSettings() { Store.set('settings', Settings); if (ED) { try { localStorage.setItem(LOOK_SHARED, JSON.stringify(Settings)); } catch (e) {} } }
 
 /* ── 大東西存 IndexedDB（匯入的書、章節、圖片） ── */
 const DB = (() => {
@@ -645,6 +736,12 @@ const ICON = {
   sort: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 20l-3-3M7 20l3-3M14 6h6M14 11h4.5M14 16h3"/></svg>',
   scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6M6 4a2 2 0 0 0-2 2v1h4V6a2 2 0 0 0-2-2zM9 9h7M9 13h7M9 17h4"/></svg>',
   tag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9z"/><circle cx="8" cy="8" r="1.4" class="fill"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2.5"/></svg>',
+  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7.3l3-3a4 4 0 0 0-5.7-5.6l-1.2 1.1"/><path d="M14 10a4 4 0 0 0-5.7-.3l-3 3a4 4 0 0 0 5.7 5.6l1.2-1.1"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5c4.700 0 8.500 3 8.500 6.800s-3.800 6.800-8.500 6.800c-.8 0-1.600-.1-2.300-.3L5.500 19.500l.9-3.300C4.700 15 3.500 13.300 3.500 11.300 3.500 7.500 7.300 4.500 12 4.500z"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 20L20 4"/></svg>',
+  addHome: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>',
 };
 
 /* ───────── 封面：每本書都是一冊線裝書（布面、右側四眼線裝、左上題簽、朱印） ───────── */
@@ -877,16 +974,67 @@ const Conv = (() => {
   return { looksSimplified, converter, load };
 })();
 
-/* ───────── 書架資料：連載（從 GitHub 上的書架抓）＋匯入的書（存在這台裝置） ───────── */
-const KEY = [112, 122, 45, 110, 101, 120, 116, 45, 99, 104, 97, 112, 116, 101, 114, 33]; // "pz-next-chapter!"
+/* ───────── 加密：書房上鎖、單行本（跟 tools/pzcrypt.py 同一套格式，改一邊要改另一邊） ─────────
+   .pzx = 'PZX1' | flags（bit0：內容先 raw-deflate）| nonce 12 byte | AES-GCM 密文；AAD = 前 5 byte。
+   書房：keyring.json 用密語（或備用碼）包著總鑰匙 → 總鑰匙解 library.pzx → 裡面有每本書的鑰匙。
+   單行本：網址 #k= 就是那一本書的鑰匙，只解得開那一本。 */
+const Crypt = (() => {
+  const te = new TextEncoder(), td = new TextDecoder('utf-8');
+  const ok = () => !!(window.crypto && crypto.subtle && window.isSecureContext !== false);
+  function b64u(u8) { let s = ''; for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function unb64u(s) {
+    s = String(s || '').replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '=';
+    const bin = atob(s), u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u;
+  }
+  const keys = new Map();
+  function key(raw) {
+    if (!keys.has(raw)) keys.set(raw, crypto.subtle.importKey('raw', unb64u(raw), 'AES-GCM', false, ['decrypt']));
+    return keys.get(raw);
+  }
+  async function open(raw, buf) {
+    const u = new Uint8Array(buf);
+    if (u.length < 33 || u[0] !== 80 || u[1] !== 90 || u[2] !== 88 || u[3] !== 49) { const e = new Error('檔案格式不對'); e.code = 'format'; throw e; }
+    let pt;
+    try { pt = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.subarray(5, 17), additionalData: u.subarray(0, 5) }, await key(raw), u.subarray(17))); }
+    catch (x) { const e = new Error('鑰匙不對，解不開'); e.code = 'key'; throw e; }
+    return u[4] & 1 ? fflate.inflateSync(pt) : pt;
+  }
+  const text = async (raw, buf) => td.decode(await open(raw, buf));
+  const json = async (raw, buf) => JSON.parse(await text(raw, buf));
 
-function unpackPZC(buf) {
-  const u = new Uint8Array(buf);
-  if (u[0] !== 80 || u[1] !== 90 || u[2] !== 67 || u[3] !== 49) throw new Error('章節檔格式不對');
-  const raw = new Uint8Array(u.length - 4);
-  for (let i = 0; i < raw.length; i++) raw[i] = u[i + 4] ^ KEY[i % 16];
-  return new TextDecoder('utf-8').decode(fflate.inflateSync(raw));
-}
+  /* 密語：NFC、拿掉空白；備用碼：大寫、I/L→1、O→0、只留英數 */
+  const normPass = (s) => String(s || '').normalize('NFC').replace(/\s+/g, '');
+  const normCode = (s) => String(s || '').toUpperCase().replace(/[IL]/g, '1').replace(/O/g, '0').replace(/[^0-9A-Z]/g, '');
+  const looksCode = (s) => /^[\s0-9A-Za-z-]+$/.test(s) && normCode(s).length === 16;
+  async function unwrap(ring, id, secret) {
+    const w = (ring.wraps || []).find((x) => x.id === id);
+    if (!w || !secret) return null;
+    const base = await crypto.subtle.importKey('raw', te.encode(secret), 'PBKDF2', false, ['deriveKey']);
+    const kek = await crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: unb64u(ring.kdf.salt), iterations: ring.kdf.iter }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    try { return b64u(new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64u(w.n), additionalData: te.encode('pz-keyring:' + id) }, kek, unb64u(w.c)))); }
+    catch (e) { return null; }
+  }
+  /* 拿密語或備用碼試開，開得了回傳總鑰匙 */
+  async function unlock(ring, input) {
+    if (looksCode(input)) { const k = await unwrap(ring, 'code', normCode(input)); if (k) return k; }
+    return unwrap(ring, 'pass', normPass(input));
+  }
+  const validKey = (s) => /^[A-Za-z0-9_-]{22}$/.test(s || '') && unb64u(s).length === 16;
+  return { ok, open, text, json, unlock, normPass, b64u, unb64u, validKey };
+})();
+
+/* 書房的總鑰匙：輸入一次密語，這台裝置就記住 */
+const Vault = {
+  km: () => Store.get('km', null),
+  set: (k) => Store.set('km', k),
+  clear() { Store.del('km'); Store.del('lib'); },
+};
+
+/* ───────── 書架資料：連載（加密的書架，解開才看得到）＋匯入的書（存在這台裝置） ─────────
+   書房：books/library.pzx（總鑰匙）→ 每本書的資料夾 books/<pub>/、鑰匙 key、單行本代號 ed。
+   單行本：同一個資料夾裡的 book.pzx（這一本的鑰匙），章節檔名跟書房一樣。 */
 
 /* 跟 tools/shelf.py 的 blocks() 同一套規則：每個非空行是一塊 */
 function parseBlocks(body) {
@@ -937,6 +1085,7 @@ function chapterHTML(ch, blocks, imgURL) {
 
 const Lib = (() => {
   let remote = Store.get('lib', null) || { books: [] };
+  if (remote.v !== 2) remote = { books: [] };                 // 上鎖以前的舊目錄：不用
   let local = [];
   const mem = new Map();           // 章節內容的小快取
   const urls = new Map();          // 匯入書的圖片 blob URL
@@ -950,17 +1099,32 @@ const Lib = (() => {
   const total = (b) => b.chapters.reduce((s, c) => s + (c.chars || 0), 0);
 
   async function init() {
+    if (ED) return;                                            // 單行本沒有匯入的書
     try { local = (await DB.all('books')) || []; local.sort((a, b) => (b.added || '').localeCompare(a.added || '')); } catch (e) { local = []; Bus.emit('idb-fail', e); }
   }
 
-  /* 向書架要最新的目錄；回傳這次新到的章節 */
+  /* 向書架要最新的目錄（解開）；回傳這次新到的章節。
+     locked：還沒輸入密語；badKey：鑰匙換了（書房換鎖、單行本連結被收回）；gone：單行本已經下架 */
   async function sync() {
     let fresh;
+    const t = '?t=' + Math.floor(Date.now() / 60000);
     try {
-      const r = await fetch('books/library.json?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' });
-      if (!r.ok) throw new Error(r.status);
-      fresh = await r.json();
-    } catch (e) { return { ok: false, news: [] }; }
+      if (ED) {
+        if (!ED.k) return { ok: false, badKey: true, news: [] };
+        const r = await fetch('book.pzx' + t, { cache: 'no-store' });
+        if (r.status === 404 || r.status === 410) return { ok: false, gone: true, news: [] };
+        if (!r.ok) throw new Error(r.status);
+        const j = await Crypt.json(ED.k, await r.arrayBuffer());
+        fresh = { v: 2, updated: j.updated, books: [Object.assign(j.book, { id: ED.ed, key: ED.k, base: '' })] };
+      } else {
+        const km = Vault.km();
+        if (!km) return { ok: false, locked: true, news: [] };
+        const r = await fetch('books/library.pzx' + t, { cache: 'no-store' });
+        if (!r.ok) throw new Error(r.status);
+        fresh = await Crypt.json(km, await r.arrayBuffer());
+        (fresh.books || []).forEach((b) => { b.base = 'books/' + b.pub + '/'; });
+      }
+    } catch (e) { return { ok: false, badKey: e && e.code === 'key', news: [] }; }
     const known = Store.get('known', null), news = [], next = known || {};
     (fresh.books || []).forEach((b) => {
       const have = next[b.id];
@@ -982,9 +1146,9 @@ const Lib = (() => {
     if (mem.has(key)) return mem.get(key);
     let blocks;
     if (book.remote) {
-      const r = await fetch('books/' + book.id + '/' + ch.f + '?v=' + ch.v);
-      if (!r.ok) throw new Error('這一章還沒下載，連上網路再試一次');
-      blocks = parseBlocks(unpackPZC(await r.arrayBuffer()));
+      const r = await fetch(book.base + ch.f + '?v=' + ch.v);
+      if (!r.ok) throw new Error('這一回還沒下載，連上網路再試一次');
+      blocks = parseBlocks(await Crypt.text(book.key, await r.arrayBuffer()));
     } else {
       const rec = await DB.get('chaps', book.id + ':' + String(i).padStart(5, '0'));
       if (!rec) throw new Error('找不到這一章的內容');
@@ -1001,25 +1165,25 @@ const Lib = (() => {
   async function timeline(book, i) {
     const ch = book.chapters[i];
     if (!book.remote || !ch.au) return null;
-    try { const r = await fetch('books/' + book.id + '/' + ch.au.tl + '?v=' + ch.au.v); if (!r.ok) return null; return await r.json(); } catch (e) { return null; }
+    try { const r = await fetch(book.base + ch.au.tl + '?v=' + ch.au.v); if (!r.ok) return null; return await r.json(); } catch (e) { return null; }
   }
-  const audioURL = (book, i) => { const ch = book.chapters[i]; return book.remote && ch.au ? 'books/' + book.id + '/' + ch.au.f + '?v=' + ch.au.v : null; };
+  const audioURL = (book, i) => { const ch = book.chapters[i]; return book.remote && ch.au ? book.base + ch.au.f + '?v=' + ch.au.v : null; };
 
   /* 把連載的文字全部先抓下來，離線也能讀（一章只有幾 KB） */
   async function prefetch() {
     const got = Store.get('cached', {});
     let n = 0;
     for (const b of (remote.books || [])) for (const c of b.chapters) {
-      const k = b.id + '/' + c.f;
+      const k = b.base + c.f;
       if (got[k] === c.v) continue;
-      try { const r = await fetch('books/' + b.id + '/' + c.f + '?v=' + c.v); if (r.ok) { await r.arrayBuffer(); got[k] = c.v; n++; } } catch (e) { Store.set('cached', got); return n; }
+      try { const r = await fetch(b.base + c.f + '?v=' + c.v); if (r.ok) { await r.arrayBuffer(); got[k] = c.v; n++; } } catch (e) { Store.set('cached', got); return n; }
     }
     // 前情提要也存一份，離線一樣看得到
     for (const b of (remote.books || [])) {
       if (!b.recaps) continue;
-      const k = b.id + '/' + b.recaps.f;
+      const k = b.base + b.recaps.f;
       if (got[k] === b.recaps.v) continue;
-      try { const r = await fetch('books/' + b.id + '/' + b.recaps.f + '?v=' + b.recaps.v); if (r.ok) { await r.arrayBuffer(); got[k] = b.recaps.v; } } catch (e) { break; }
+      try { const r = await fetch(b.base + b.recaps.f + '?v=' + b.recaps.v); if (r.ok) { await r.arrayBuffer(); got[k] = b.recaps.v; } } catch (e) { break; }
     }
     Store.set('cached', got);
     return n;
@@ -1055,13 +1219,13 @@ const Lib = (() => {
   function created(b) { if (!b.remote) return toMs(b.added); let t = Infinity; b.chapters.forEach((c) => { t = Math.min(t, chAt(c)); }); return isFinite(t) ? t : 0; }
   function readAt(b) { const p = Prog.get(b.id); return p ? p.t || 0 : 0; }
 
-  /* ── 前情提要（連載才有；打包在 books/<書>/recaps.pzc） ── */
+  /* ── 前情提要（連載才有；加密在書的資料夾 recaps.pzx） ── */
   const recapMem = {};
   async function recaps(b) {
     if (!b.remote || !b.recaps) return null;
     const k = b.id + ':' + b.recaps.v;
     if (recapMem[k]) return recapMem[k];
-    try { const r = await fetch('books/' + b.id + '/' + b.recaps.f + '?v=' + b.recaps.v); if (!r.ok) return null; const j = JSON.parse(unpackPZC(await r.arrayBuffer())); recapMem[k] = j.recaps || {}; return recapMem[k]; } catch (e) { return null; }
+    try { const r = await fetch(b.base + b.recaps.f + '?v=' + b.recaps.v); if (!r.ok) return null; const j = await Crypt.json(b.key, await r.arrayBuffer()); recapMem[k] = j.recaps || {}; return recapMem[k]; } catch (e) { return null; }
   }
 
   /* ── 整回的純文字（複製、分享用） ── */
@@ -1100,7 +1264,10 @@ const Lib = (() => {
     try { const blob = await DB.get('assets', book.cover.img); if (blob) { const u = URL.createObjectURL(blob); urls.set(book.cover.img, u); return u; } } catch (e) {}
     return null;
   }
-  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, hasRemote: () => (remote.books || []).length > 0 };
+  /* 書房上鎖、單行本失效：把解開的目錄從這台裝置拿掉 */
+  function forget() { remote = { books: [] }; mem.clear(); Object.keys(recapMem).forEach((k) => delete recapMem[k]); Store.del('lib'); }
+  const site = () => remote.site || '';
+  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, forget, site, hasRemote: () => (remote.books || []).length > 0 };
 })();
 
 /* ── 閱讀進度：每本書記到哪一章、哪一句 ── */
@@ -2084,7 +2251,7 @@ const Narrator = (() => {
     const art = [{ src: new URL('icons/icon-512.png', location.href).href, sizes: '512x512', type: 'image/png' }];
     if (!IS_IOS) { if (!artCache[b.id]) artCache[b.id] = await Cover.png(b, 512); if (!st || sess !== my) return; if (artCache[b.id]) art.unshift({ src: artCache[b.id], sizes: '512x512', type: 'image/png' }); }
     try {
-      ms.metadata = new MediaMetadata({ title: (ch.label ? ch.label + '　' : '') + (ch.name || ''), artist: b.title, album: '下回分解', artwork: art });
+      ms.metadata = new MediaMetadata({ title: (ch.label ? ch.label + '　' : '') + (ch.name || ''), artist: b.title, album: ED ? (b.author || b.title) : '下回分解', artwork: art });
       const h = { play: resume, pause, seekbackward: () => skip(-15), seekforward: () => skip(30), previoustrack: () => chapter(-1), nexttrack: () => chapter(1), seekto: (e) => { if (st && st.mode === 'track' && e.seekTime != null) { audio.currentTime = e.seekTime; syncTrack(); } }, stop };
       Object.keys(h).forEach((k) => { try { ms.setActionHandler(k, h[k]); } catch (e) {} });
     } catch (e) {}
@@ -2104,10 +2271,148 @@ const Narrator = (() => {
   return { start, stop, pause, resume, toggle, skip, seekUnit, seekFrac, chapter, setRate, setVoice, setSleep, state, hasTrack, canSpeak, get active() { return !!st; }, get voices() { return voices.length ? voices : loadVoices(); } };
 })();
 
+/* ───────── 門：書房的鎖、單行本的連結 ─────────
+   書房：第一次打開要輸入密語（或備用碼），這台裝置之後就記得。
+   單行本：網址 #k= 帶著這一本的鑰匙；少了、錯了、被收回，都在這裡跟讀者說清楚。 */
+const Gate = (() => {
+  const box = $('#gate');
+  let done = null, busy = false, masked = false;
+  const STUDY = { id: 'pz-study', title: '下回分解', cover: { cloth: '#1d2f4a', seal: '回', motif: 'moon' } };
+  const LOCK_SVG = '<svg class="gt-clasp" viewBox="0 0 120 300" aria-hidden="true">'
+    + '<defs><linearGradient id="gtBrass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d9a0"/><stop offset=".45" stop-color="#c9a45c"/><stop offset="1" stop-color="#7a5a26"/></linearGradient>'
+    + '<linearGradient id="gtStrap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a1f17"/><stop offset=".5" stop-color="#5a3122"/><stop offset="1" stop-color="#2a150f"/></linearGradient></defs>'
+    + '<g class="gt-strap"><rect x="0" y="128" width="120" height="44" rx="3" fill="url(#gtStrap)"/><path d="M4 134h112M4 166h112" stroke="#c9a45c" stroke-width="1" stroke-dasharray="4 4" opacity=".55"/></g>'
+    + '<g class="gt-lock"><path class="gt-shackle" d="M44 128v-16a16 16 0 0 1 32 0v16" fill="none" stroke="url(#gtBrass)" stroke-width="7" stroke-linecap="round"/>'
+    + '<rect x="30" y="122" width="60" height="58" rx="9" fill="url(#gtBrass)"/><rect x="30" y="122" width="60" height="58" rx="9" fill="none" stroke="#5c4319" stroke-width="1.5"/>'
+    + '<circle cx="60" cy="146" r="6.5" fill="#3b2a10"/><path d="M57.5 149h5l1.5 14h-8z" fill="#3b2a10"/></g></svg>';
+
+  function show(html, cls) {
+    // 上一次開門／淡出的動畫（fill: forwards）會一直留著透明度 0：先取消，不然門擋著卻看不見
+    if (box.getAnimations) box.getAnimations().forEach((a) => a.cancel());
+    box.className = 'gate ' + cls; box.innerHTML = html; box.hidden = false; document.body.classList.add('gated');
+  }
+  function hide() { box.hidden = true; box.innerHTML = ''; box.className = 'gate'; document.body.classList.remove('gated'); }
+  const msg = (t, bad) => { const m = $('.gt-msg', box); if (m) { m.textContent = t || ''; m.classList.toggle('bad', !!bad); } };
+  function shake() { const b = $('.gt-book, .gt-cv', box); if (b && b.animate && !REDUCED) b.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-9px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(3px)' }, { transform: 'none' }], { duration: 420, easing: 'ease-out' }); if (navigator.vibrate) { try { navigator.vibrate([18, 40, 18]); } catch (e) {} } }
+  function field(ph, label) {
+    return '<form class="gt-form" autocomplete="off" novalidate><label class="gt-field"><input id="gtIn" type="text" placeholder="' + ph + '" aria-label="' + label + '" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">'
+      + '<button type="button" class="gt-eye" data-gt="eye" aria-label="遮住或顯示">' + ICON.eye + '</button></label><button type="submit" class="btn gilt gt-go">' + (ED ? '打開' : '開門') + '</button></form>';
+  }
+
+  /* ── 書房的鎖 ── */
+  async function ring() {
+    for (const opt of [{ cache: 'no-store' }, {}]) {
+      try { const r = await fetch('books/keyring.json' + (opt.cache ? '?t=' + Date.now() : ''), opt); if (r.ok) return await r.json(); } catch (e) {}
+    }
+    return null;
+  }
+  function lock(note) {
+    masked = false;
+    show('<div class="gt-in">'
+      + '<div class="gt-book" aria-hidden="true"><div class="gt-glow"></div><div class="gt-cover">' + Cover.svg(STUDY, { k: 'gate' }) + '</div>' + LOCK_SVG + '</div>'
+      + '<p class="gt-kick">痞子葳的書房</p><h1>上了鎖</h1>'
+      + '<p class="gt-sub">' + esc(note || '輸入密語開門，這台裝置之後就記得你。') + '</p>'
+      + field('密語', '密語') + '<p class="gt-msg" role="alert" aria-live="assertive"></p>'
+      + '<p class="gt-note">忘了密語，用備用碼（16 碼英文數字）也能開；兩個都忘了，跟 Claude 說「重設書房的密語」。</p></div>', 'lockg');
+    setTimeout(() => { const i = $('#gtIn'); if (i && !IS_IOS) i.focus(); }, 380);
+    return new Promise((res) => { done = res; });
+  }
+  async function tryOpen() {
+    const inp = $('#gtIn'), v = inp ? inp.value : '';
+    if (busy) return;
+    if (!Crypt.normPass(v)) { msg('先輸入密語', true); if (inp) inp.focus(); return; }
+    busy = true; box.classList.add('busy'); msg('開鎖中……'); const go = $('.gt-go', box); if (go) go.disabled = true;
+    await sleep(30);
+    let km = null, why = '';
+    const rg = await ring();
+    if (!rg) why = navigator.onLine === false ? '現在沒有網路，連上之後再試一次' : '找不到書房的鎖，等一下再試';
+    else { try { km = await Crypt.unlock(rg, v); } catch (e) { why = '這個瀏覽器開不了鎖：' + (e && e.message ? e.message : e); } }
+    busy = false; box.classList.remove('busy'); if (go) go.disabled = false;
+    if (!km) { msg(why || '密語不對，再想想', true); shake(); if (inp) { inp.select(); } return; }
+    Vault.set(km); msg('開了，正在把書搬出來……');
+    if (inp) inp.blur();
+    box.classList.add('opened');
+    Sound.unlock();
+    const r = done; done = null; if (r) r();
+  }
+  /* 鎖打開：扣環鬆開、封面翻開，再把門拿掉（書房在底下已經排好了） */
+  async function open() {
+    if (box.hidden) return;
+    box.classList.add('opening');
+    const cv = $('.gt-cover', box), lk = $('.gt-lock', box), st = $('.gt-strap', box);
+    try {
+      if (!REDUCED && cv && cv.animate && lk && st) {
+        Sound.open();
+        lk.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(10px, 40px) rotate(24deg)', opacity: 0 }], { duration: 420, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards' });
+        await st.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateX(60px)', opacity: 0 }], { duration: 380, delay: 140, easing: 'ease-in', fill: 'forwards' }).finished;
+        await cv.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(116deg)' }], { duration: 560, easing: 'cubic-bezier(.5,0,.25,1)', fill: 'forwards' }).finished;
+        await box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished;
+      }
+    } catch (e) {}
+    hide();
+  }
+  async function fade() {
+    if (box.hidden) return;
+    try { if (!REDUCED && box.animate) await box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' }).finished; } catch (e) {}
+    hide();
+  }
+
+  /* ── 單行本的連結 ── */
+  const LINK_MSG = {
+    missing: '這個連結少了最後一段，所以打不開。請把對方傳給你的<b>完整連結</b>貼在下面。',
+    bad: '這個連結打不開了：可能是作者換了新的連結。請向分享給你的人要一個新的，貼在下面。',
+    gone: '這本書換了新的連結，舊的已經收起來了。請向分享給你的人要新的連結，貼在下面。',
+    offline: '第一次打開要連上網路，把書下載下來；之後沒網路也能讀。',
+    load: '正在翻開這本書……',
+  };
+  function edition(kind) {
+    const b = { id: ED.ed, title: ED.title, cover: ED.cover };
+    const input = kind !== 'load' && kind !== 'offline';
+    show('<div class="gt-in">'
+      + '<div class="gt-cv' + (kind === 'load' ? ' breathe' : '') + '" aria-hidden="true">' + Cover.svg(b, { k: 'gate' }) + '</div>'
+      + '<h1 class="gt-t">' + esc(ED.title) + '</h1>' + (ED.author ? '<p class="gt-by">' + esc(ED.author) + '</p>' : '')
+      + '<p class="gt-sub">' + LINK_MSG[kind] + '</p>'
+      + (input ? field('貼上完整的連結', '完整的連結') + (navigator.clipboard && navigator.clipboard.readText ? '<button type="button" class="btn quiet gt-paste" data-gt="paste">' + ICON.copy + '從剪貼簿貼上</button>' : '') : '')
+      + (kind === 'offline' ? '<button type="button" class="btn gilt gt-retry" data-gt="retry">再試一次</button>' : '')
+      + '<p class="gt-msg" role="alert" aria-live="assertive"></p></div>', 'edg ' + kind);
+    box.style.setProperty('--cloth', (ED.cover && ED.cover.cloth) || '#1d2f4a');
+    if (input) { const eye = $('.gt-eye', box); if (eye) eye.remove(); }
+  }
+  /* 從貼上的文字找出 #k=（也接受只貼鑰匙） */
+  function useLink(text) {
+    text = String(text || '').trim();
+    const m = text.match(/#k=([A-Za-z0-9_-]{22})/) || text.match(/^([A-Za-z0-9_-]{22})$/);
+    if (!m || !Crypt.validKey(m[1])) { msg('這不是這本書的連結。連結最後面要有「#k=」和一串英文數字。', true); shake(); return; }
+    const u = text.match(/https?:\/\/[^\s#]+/);
+    if (u) {
+      let to; try { to = new URL(u[0]); } catch (e) { to = null; }
+      if (to && (to.origin !== location.origin || to.pathname.replace(/index\.html$/, '') !== location.pathname.replace(/index\.html$/, ''))) {
+        msg('這是另一本書的連結，幫你打開……'); location.href = to.origin + to.pathname + '#k=' + m[1]; return;
+      }
+    }
+    Store.set('k', m[1]);
+    location.replace(location.pathname + location.search + '#k=' + m[1]);
+    location.reload();
+  }
+
+  function init() {
+    box.addEventListener('submit', (e) => { e.preventDefault(); const v = ($('#gtIn') || {}).value || ''; if (ED) useLink(v); else tryOpen(); });
+    box.addEventListener('click', (e) => {
+      const t = e.target.closest && e.target.closest('[data-gt]'); if (!t) return;
+      const a = t.dataset.gt;
+      if (a === 'eye') { masked = !masked; const i = $('#gtIn'); if (i) i.classList.toggle('masked', masked); t.innerHTML = masked ? ICON.eyeOff : ICON.eye; if (i) i.focus(); }
+      else if (a === 'paste') navigator.clipboard.readText().then((tx) => { const i = $('#gtIn'); if (i) i.value = tx; useLink(tx); }, () => msg('沒辦法讀剪貼簿，請在上面的格子裡長按、貼上', true));
+      else if (a === 'retry') location.reload();
+    });
+    box.addEventListener('input', () => { const m = $('.gt-msg', box); if (m && m.classList.contains('bad')) msg(''); });
+  }
+  return { init, lock, open, fade, edition, hide, get shown() { return !box.hidden; } };
+})();
+
 /* ───────── 畫面：書房、書頁、抽屜、說書現場 ───────── */
 const UI = (() => {
   const lib = $('#lib'), bookv = $('#bookv'), sheet = $('#sheet'), sheetBody = $('#sheetBody'), mini = $('#mini'), pop = $('#pop'), gbar = $('#gbar'), menu = $('#menu');
-  let state = { v: 'lib' }, sheetKind = '', popT = 0, lastNarr = { active: false };
+  let state = ED ? { v: 'book', id: ED.ed } : { v: 'lib' }, sheetKind = '', popT = 0, lastNarr = { active: false };
   let gsel = Store.get('gsel', '');                         // 書房最下面選的分類（'' 是全部）
   let bvTab = 'toc', navTab = 'toc', navBook = '';          // 書頁、閱讀器抽屜各自停在哪個分頁
   const qs = { id: '', q: '', res: null, run: 0 };          // 書內搜尋：記住上一次找的
@@ -2120,6 +2425,10 @@ const UI = (() => {
   const Q_HINT = '輸入人名、地名或一句話，從第一回找到最後一回。';
   const SAMPLE = '夜裡的燈芯又短了一截。他把書翻到上回停下的那一頁，指尖還沒碰到紙，窗外的雨就下大了。';
   const pressed = (on) => ' aria-pressed="' + (on ? 'true' : 'false') + '"';
+  /* 單行本只有一本書：它的書頁就是首頁 */
+  const home = () => (ED ? { v: 'book', id: ED.ed } : { v: 'lib' });
+  const standalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+  let installEvt = null, qrP = null;
 
   /* ── 封面 ── */
   function coverHTML(b, extra) {
@@ -2164,6 +2473,7 @@ const UI = (() => {
 
   /* ── 書房 ── */
   function renderLib() {
+    if (ED) return;                                          // 單行本沒有書房
     const all = Lib.all(), gl = Genre.list(all);
     if (gsel && !gl.some((x) => x.g === gsel)) gsel = '';
     const books = gsel ? all.filter((b) => Genre.of(b) === gsel) : all;
@@ -2271,19 +2581,25 @@ const UI = (() => {
   }
   function renderBook(id) {
     const b = Lib.find(id);
-    if (!b) { go({ v: 'lib' }, true); return; }
+    if (!b) { if (!ED) go({ v: 'lib' }, true); return; }
     if (bookv.dataset.id !== id) bvTab = 'toc';
     if (bvTab === 'recap' && !(b.remote && b.recaps)) bvTab = 'toc';
     const i = Prog.index(b), tot = Lib.total(b), mins = Math.max(1, Math.round(tot / 450)), tracks = b.chapters.filter((c, j) => Narrator.hasTrack(b, j)).length;
     const canHear = b.chapters.length && (Narrator.hasTrack(b, Math.max(0, i)) || Narrator.canSpeak());
-    bookv.innerHTML = '<div class="wrap"><div class="bv-top"><button type="button" class="ib" data-act="back" aria-label="回書房">' + ICON.back + '</button>'
-      + (b.remote ? '' : '<button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button>') + '</div>'
+    const top = ED ? '<span></span><button type="button" class="ib" data-act="settings" aria-label="設定">' + ICON.gear + '</button>'
+      : '<button type="button" class="ib" data-act="back" aria-label="回書房">' + ICON.back + '</button>'
+        + (b.remote ? (b.ed ? '<button type="button" class="ib" data-act="share-book" data-id="' + esc(b.id) + '" aria-label="分享這本書">' + ICON.share + '</button>' : '')
+          : '<button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button>');
+    bookv.innerHTML = '<div class="wrap' + (ED ? ' ed' : '') + '"><div class="bv-top">' + top + '</div>'
       + '<div class="bv-head"><div class="bv-cover">' + coverHTML(b, 'b') + '</div><div><h1>' + esc(b.title) + '</h1>' + (b.author ? '<p class="bv-by">' + esc(b.author) + '</p>' : '')
       + '<div class="bv-tags">' + (b.remote && b.status ? '<span class="state">' + esc(b.status) + '</span>' : '')
-      + '<button type="button" class="gchip" data-act="genre-pick" data-id="' + esc(b.id) + '" aria-label="分類：' + esc(Genre.of(b)) + '，點一下可以改">' + ICON.tag + esc(Genre.of(b)) + '</button></div>'
+      + (ED ? (b.genre ? '<span class="gchip still">' + ICON.tag + esc(b.genre) + '</span>' : '')
+        : '<button type="button" class="gchip" data-act="genre-pick" data-id="' + esc(b.id) + '" aria-label="分類：' + esc(Genre.of(b)) + '，點一下可以改">' + ICON.tag + esc(Genre.of(b)) + '</button>') + '</div>'
       + '<ul class="bv-stats"><li><b>' + b.chapters.length + '</b>' + unitOf(b) + '</li><li><b>' + (tot >= 10000 ? (tot / 10000).toFixed(1).replace(/\.0$/, '') + ' 萬' : tot) + '</b>字</li><li><b>' + (mins >= 60 ? (mins / 60).toFixed(1).replace(/\.0$/, '') : mins) + '</b>' + (mins >= 60 ? '小時讀完' : '分鐘讀完') + '</li>'
       + (tracks ? '<li><b>' + tracks + '</b>回有說書</li>' : '') + '</ul></div></div>'
-      + '<div class="bv-btns"><button type="button" class="btn gilt" data-act="continue" data-id="' + esc(b.id) + '">' + (i >= 0 ? '接著讀' : '開始讀') + '</button>' + (canHear ? '<button type="button" class="btn" data-act="listen" data-id="' + esc(b.id) + '">' + ICON.ear + '聽說書</button>' : '') + '</div>'
+      + '<div class="bv-btns"><button type="button" class="btn gilt" data-act="continue" data-id="' + esc(b.id) + '">' + (i >= 0 ? '接著讀' : '開始讀') + '</button>' + (canHear ? '<button type="button" class="btn" data-act="listen" data-id="' + esc(b.id) + '">' + ICON.ear + '聽說書</button>' : '')
+      + (!ED && b.remote && b.ed ? '<button type="button" class="btn" data-act="share-book" data-id="' + esc(b.id) + '">' + ICON.share + '分享</button>' : '') + '</div>'
+      + helloHTML(b)
       + '<section class="recap-card" id="bvRecap" hidden></section>'
       + (b.blurb ? '<p class="bv-blurb">' + esc(b.blurb) + '</p>' : '')
       + convRow(b)
@@ -2291,6 +2607,67 @@ const UI = (() => {
     bookv.dataset.id = id; hydrateCovers(bookv);
     afterPanel(b, bvTab, 'bv', $('.tabp', bookv));
     fillRecapCard(b);
+  }
+
+  /* ── 單行本：第一次打開的說明（怎麼放到主畫面） ── */
+  function helloHTML(b) {
+    if (!ED || Store.get('hello', 0)) return '';
+    const ua = navigator.userAgent;
+    let how = '';
+    if (!standalone()) {
+      if (/\bLine\//i.test(ua)) how = '你現在是在 LINE 裡面看：點右上角的選單，選「用瀏覽器開啟」，就能把這本書放到手機主畫面。';
+      else if (installEvt) how = '<button type="button" class="btn gilt" data-act="install">' + ICON.addHome + '放到主畫面</button>';
+      else if (IS_IOS) how = '放到主畫面：點 Safari 的分享鈕（方框加一個往上的箭頭），選「加入主畫面」。之後點一下就打開，跟 App 一樣。';
+      else if (/Android/i.test(ua)) how = '放到主畫面：點瀏覽器右上角的選單（⋮），選「加到主畫面」或「安裝應用程式」。';
+    }
+    return '<section class="hello"><p class="hello-k">單行本</p><p>這一本是分享給你的。新的一回上架、改稿、完結，打開就會自動更新；讀到哪裡、書籤，都記在這台裝置上。</p>'
+      + (how ? '<p class="hello-how">' + how + '</p>' : '') + '<button type="button" class="btn quiet hello-ok" data-act="hello-ok">知道了</button></section>';
+  }
+
+  /* ── 分享這本書：單行本連結（只看得到這一本） ── */
+  function bookLink(b, forLine) {
+    const site = (Lib.site() || '').replace(/\/+$/, '');
+    if (!site || !b.ed || !b.key) return '';
+    return site + '/' + b.ed + '/' + (forLine ? '?openExternalBrowser=1' : '') + '#k=' + b.key;
+  }
+  function shareBookHTML(b) {
+    const link = bookLink(b);
+    if (!link) return '<h2>分享《' + esc(b.title) + '》</h2><p class="note">單行本網站還沒接好；接好以後，這裡就會有這本書的連結和 QR code。</p>';
+    const done = b.status && b.status !== '連載中';
+    return '<h2>分享《' + esc(b.title) + '》</h2>'
+      + '<div class="sb-card"><div class="sb-qr" id="sbQr" role="img" aria-label="這本書的 QR code"><i></i></div>'
+      + '<div class="sb-meta"><span class="sb-cv">' + Cover.svg(b, { k: 'sb' }) + '</span><b>' + esc(b.title) + '</b><small>' + esc(b.status || '連載中') + '・' + b.chapters.length + ' 回</small><span class="sb-tag">單行本</span></div></div>'
+      + '<p class="sb-link" data-act="sb-copy">' + esc(link) + '</p>'
+      + '<div class="sb-btns"><button type="button" class="btn gilt" data-act="sb-copy">' + ICON.link + '複製連結</button><button type="button" class="btn" data-act="sb-line">' + ICON.chat + '傳到 LINE</button>'
+      + (navigator.share ? '<button type="button" class="btn" data-act="sb-send">' + ICON.share + '其他 App</button>' : '') + '</div>'
+      + '<ul class="sb-notes"><li>拿到連結的人<b>只看得到這一本</b>：看不到你的書房，也看不到其他書。</li>'
+      + '<li>' + (done ? '改稿的話，他們那邊打開就會更新。' : '新的一回上架、改稿、完結，他們那邊打開就會自動更新。') + '</li>'
+      + '<li>對方可以把它放到手機主畫面，變成一個獨立的 App，圖示就是這本書的封面。</li>'
+      + '<li>想收回這個連結：跟 Claude 說「換掉《' + esc(b.title) + '》的分享連結」，舊的連結就打不開了。</li></ul>';
+  }
+  function loadQR() {
+    if (window.qrcode) return Promise.resolve();
+    return qrP || (qrP = new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'lib/qrcode.js'; sc.onload = res; sc.onerror = () => { qrP = null; rej(new Error('qr')); }; document.head.appendChild(sc); }));
+  }
+  /* QR code：宣紙底、墨色格子，正中間蓋這本書的朱印（容錯 H，蓋掉一點點沒關係） */
+  function qrSVG(text, seal) {
+    const q = qrcode(0, 'H'); q.addData(text); q.make();
+    const n = q.getModuleCount(), m = 3, W = n + m * 2;
+    let d = '';
+    for (let r = 0; r < n; r++) { let c = 0; while (c < n) { if (!q.isDark(r, c)) { c++; continue; } let e = c; while (e < n && q.isDark(r, e)) e++; d += 'M' + (c + m) + ' ' + (r + m) + 'h' + (e - c) + 'v1h-' + (e - c) + 'z'; c = e; } }
+    const s = Math.max(5, Math.round(n * 0.17)), x = (W - s) / 2;
+    return '<svg viewBox="0 0 ' + W + ' ' + W + '" shape-rendering="crispEdges" aria-hidden="true"><rect width="' + W + '" height="' + W + '" fill="#f4ecda"/><path d="' + d + '" fill="#1d150d"/>'
+      + '<rect x="' + (x - .8) + '" y="' + (x - .8) + '" width="' + (s + 1.6) + '" height="' + (s + 1.6) + '" rx="1.2" fill="#f4ecda" shape-rendering="geometricPrecision"/>'
+      + '<rect x="' + x + '" y="' + x + '" width="' + s + '" height="' + s + '" rx="1" fill="#b3382c" shape-rendering="geometricPrecision"/>'
+      + '<text x="' + (W / 2) + '" y="' + (W / 2 + s * .34) + '" font-size="' + (s * .78).toFixed(2) + '" text-anchor="middle" fill="#fff" font-family="LXGW WenKai TC, Noto Serif TC, serif" font-weight="700">' + esc(seal) + '</text></svg>';
+  }
+  function openShareBook(b) {
+    share = { book: b };
+    openSheet('share-book', shareBookHTML(b));
+    const link = bookLink(b), box = $('#sbQr', sheetBody);
+    if (!link || !box) return;
+    loadQR().then(() => { if (sheetKind === 'share-book' && box.isConnected) box.innerHTML = qrSVG(link, (b.cover && b.cover.seal) || Array.from(b.title)[0]); })
+      .catch(() => { if (box.isConnected) box.innerHTML = '<span class="sb-qr-no">QR code 載入失敗<br>連結一樣能用</span>'; });
   }
 
   /* ── 前情提要 ── */
@@ -2460,7 +2837,7 @@ const UI = (() => {
     state = s;
     closeMenu();
     if (s.v !== 'read' && Reader.isOpen()) Reader.close();
-    lib.hidden = s.v !== 'lib' && s.v !== 'read';
+    lib.hidden = ED || (s.v !== 'lib' && s.v !== 'read');
     bookv.hidden = s.v !== 'book';
     if (s.v === 'lib') renderLib();
     if (s.v === 'book') { const same = bookv.dataset.id === s.id, y = bookv.scrollTop; renderBook(s.id); bookv.scrollTop = same ? y : 0; }
@@ -2470,16 +2847,16 @@ const UI = (() => {
   function go(s, replace) { try { history[replace ? 'replaceState' : 'pushState'](s, ''); } catch (e) {} show(s); }
   window.addEventListener('popstate', (e) => {
     if (!sheet.hidden) { closeSheet(); try { history.pushState(state, ''); } catch (x) {} return; }
-    show(e.state && e.state.v ? e.state : { v: 'lib' });
+    show(e.state && e.state.v ? e.state : home());
   });
-  const back = () => { if (history.state && history.state.v && history.state.v !== 'lib') history.back(); else go({ v: 'lib' }, true); };
+  const back = () => { const h = home(); if (history.state && history.state.v && history.state.v !== h.v) history.back(); else go(h, true); };
 
   /* ── 翻開一本書 ── */
   async function openBook(b, i, anchor, fromEl) {
     if (!b || !b.chapters.length) return false;
     Sound.unlock(); closeMenu();
     if (navBook !== b.id) { navBook = b.id; navTab = 'toc'; }
-    go({ v: 'read', id: b.id, from: state.v === 'book' ? 'book' : 'lib' });
+    go({ v: 'read', id: b.id, from: ED || state.v === 'book' ? 'book' : 'lib' });
     const anim = fromEl && !REDUCED && fromEl.getBoundingClientRect().width > 20 ? opening(b, fromEl) : null;
     const ok = await Reader.open(b, i, anchor);
     if (anim) await anim;
@@ -2539,6 +2916,16 @@ const UI = (() => {
   }
   const swHTML = (k, t, s) => '<button type="button" class="sw" role="switch" data-act="sw" data-k="' + k + '" aria-checked="' + !!Settings[k] + '"><span>' + t + (s ? '<small>' + s + '</small>' : '') + '</span><i></i></button>';
   function settingsHTML() {
+    if (ED) {
+      return '<h2>設定</h2>'
+        + '<button type="button" class="rowl" data-act="look-open"><span>閱讀外觀<small>主題、字體、字級、直排、夜讀的亮度與暖光</small></span>' + ICON.back + '</button>'
+        + swHTML('sfx', '音效', '翻頁的紙聲、開書、驚堂木')
+        + swHTML('recap', '久沒讀，翻開先看前情提要', '隔了一天半以上再打開，會先給你上一回的提要；書頁上隨時也看得到')
+        + swHTML('keepAwake', '朗讀時螢幕保持開著', '用這台裝置的語音朗讀，手機鎖屏就會停')
+        + '<div class="rowb" style="display:flex;gap:10px;margin-top:18px"><button type="button" class="btn" data-act="sync" style="flex:1">看看有沒有新的一回</button></div>'
+        + '<button type="button" class="btn quiet st-coach" data-act="coach-again">重看一次閱讀時的操作說明</button>'
+        + '<p class="note">這本書會自動更新：新的一回上架、改稿、完結，打開就看得到；讀過的回會存一份，沒網路也能讀。<br>讀到哪裡、書籤和設定只存在這台裝置的瀏覽器裡，不會上傳。<br>版本 ' + VERSION + '</p>';
+    }
     const mine = Lib.all().filter((b) => !b.remote).length;
     return '<h2>設定</h2>'
       + '<button type="button" class="rowl" data-act="look-open"><span>閱讀外觀<small>主題、字體、字級、直排、夜讀的亮度與暖光</small></span>' + ICON.back + '</button>'
@@ -2547,7 +2934,8 @@ const UI = (() => {
       + swHTML('keepAwake', '用裝置語音朗讀時，螢幕保持開著', '手機鎖屏會讓裝置語音停下來；有預錄音軌的章節不受影響')
       + '<div class="rowb" style="display:flex;gap:10px;margin-top:18px"><button type="button" class="btn" data-act="sync" style="flex:1">看看有沒有新的一回</button></div>'
       + '<button type="button" class="btn quiet st-coach" data-act="coach-again">重看一次閱讀時的操作說明</button>'
-      + '<p class="note">連載小說放在你的書架上，寫好一回就會出現在這裡，文字會自動存一份，離線也能讀。<br>匯入的書（現在 ' + mine + ' 本）、閱讀進度、書籤、分類和設定只存在這台裝置的瀏覽器裡，不會上傳；換手機或清除瀏覽器資料就要重新匯入。<br>版本 ' + VERSION + '</p>';
+      + '<button type="button" class="rowl lockrow" data-act="lock-ask"><span>在這台裝置上鎖<small>下次打開要重新輸入密語；閱讀進度和書籤會留著</small></span>' + ICON.lock + '</button>'
+      + '<p class="note">連載小說放在你的書架上，寫好一回就會出現在這裡，文字會自動存一份，離線也能讀；書架是加密的，沒有密語的人打不開。<br>匯入的書（現在 ' + mine + ' 本）、閱讀進度、書籤、分類和設定只存在這台裝置的瀏覽器裡，不會上傳；換手機或清除瀏覽器資料就要重新匯入。<br>版本 ' + VERSION + '</p>';
   }
   function genreHTML(b) {
     const cur = Genre.of(b), list = Genre.ORDER.slice();
@@ -2682,9 +3070,27 @@ const UI = (() => {
         break;
       }
       case 'listen': { b = bookFrom(t); if (!b) break; Sound.unlock(); const p = Prog.get(b.id), i = Math.max(0, Prog.index(b)); Narrator.start(b, i, p && Prog.index(b) >= 0 ? { b: p.b, s: p.s } : null).then((ok) => ok && openPlayer()); break; }
+      case 'share-book': b = Lib.find(t.dataset.id); if (b) { Sound.tap(); openShareBook(b); } break;
+      case 'sb-copy': if (share && share.book) copyOut(bookLink(share.book), '連結複製好了：貼到 LINE 或訊息，傳給想看的朋友'); break;
+      case 'sb-line': {
+        if (!share || !share.book) break;
+        const sb = share.book, u = 'https://line.me/R/share?text=' + encodeURIComponent('《' + sb.title + '》\n' + bookLink(sb, true));
+        const w = window.open(u, '_blank', 'noopener'); if (!w) location.href = u;
+        break;
+      }
+      case 'sb-send': {
+        if (!share || !share.book || !navigator.share) break;
+        const sb = share.book;
+        navigator.share({ title: '《' + sb.title + '》', text: '《' + sb.title + '》', url: bookLink(sb) }).catch((e) => { if (!e || e.name !== 'AbortError') copyOut(bookLink(sb), '這台裝置不能直接分享，已經改成複製連結'); });
+        break;
+      }
+      case 'lock-ask': openSheet('confirm', '<h2>在這台裝置上鎖？</h2><p class="note" style="margin:0 0 18px">書架會從這台裝置收起來，下次打開要重新輸入密語（或備用碼）。閱讀進度、書籤和匯入的書都會留著。</p><div style="display:flex;gap:10px"><button type="button" class="btn" data-act="sheet-close" style="flex:1">先不要</button><button type="button" class="btn gilt" data-act="lock-yes" style="flex:1">' + ICON.lock + '上鎖</button></div>'); break;
+      case 'lock-yes': closeSheet(); Narrator.stop(); Vault.clear(); Lib.forget(); try { history.replaceState({ v: 'lib' }, ''); } catch (e) {} location.reload(); break;
+      case 'hello-ok': Store.set('hello', 1); { const h = $('.hello', bookv); if (h) h.remove(); } break;
+      case 'install': if (installEvt) { const ev2 = installEvt; installEvt = null; ev2.prompt(); (ev2.userChoice || Promise.resolve()).then((c) => { if (c && c.outcome === 'accepted') Store.set('hello', 1); if (state.v === 'book') renderBook(state.id); }); } break;
       case 'del-book': b = Lib.find(t.dataset.id); if (b) openSheet('confirm', '<h2>把《' + esc(b.title) + '》移出藏書？</h2><p class="note" style="margin:0 0 18px">這本書和它的閱讀進度、書籤會從這台裝置刪掉。原本的檔案不受影響，之後可以再匯入。</p><div style="display:flex;gap:10px"><button type="button" class="btn" data-act="sheet-close" style="flex:1">留著</button><button type="button" class="btn danger" data-act="del-yes" data-id="' + esc(b.id) + '" style="flex:1">移出藏書</button></div>'); break;
       case 'del-yes': { const id = t.dataset.id; closeSheet(); if (lastNarr.active && lastNarr.book.id === id) Narrator.stop(); Lib.removeLocal(id).then(() => { toast('已經移出藏書'); go({ v: 'lib' }, true); }).catch(() => toast('刪不掉，再試一次', { kind: 'bad' })); break; }
-      case 'sync': closeSheet(); toast('正在看書架……', { ms: 1500 }); Boot.sync(true); break;
+      case 'sync': closeSheet(); toast(ED ? '正在看有沒有新的一回……' : '正在看書架……', { ms: 1500 }); Boot.sync(true); break;
       case 'sheet-close': closeSheet(); break;
       case 'coach-again': Store.del('coach'); closeSheet(); toast('好，下次翻開書會再出現一次'); break;
       // 書房：分類、排序
@@ -2798,6 +3204,9 @@ const UI = (() => {
   function init() {
     $('[data-act="rd-back"]').innerHTML = ICON.back; $('[data-act="rd-toc"]').innerHTML = ICON.toc; $('[data-act="rd-look"]').innerHTML = ICON.aa;
     $('[data-act="rd-mark"]').innerHTML = ICON.ribbon; $('[data-act="rd-share"]').innerHTML = ICON.share;
+    if (ED) $('[data-act="rd-share"]').hidden = true;          // 單行本不給整回複製（長按一句還是可以複製那一句）
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; if (ED && state.v === 'book' && !Store.get('hello', 0)) renderBook(state.id); });
+    window.addEventListener('appinstalled', () => { installEvt = null; Store.set('hello', 1); });
     document.addEventListener('click', (e) => { const t = e.target.closest && e.target.closest('[data-act]'); if (!t || t.closest('#rdScroll')) return; Sound.unlock(); onAct(t, e); });
     document.addEventListener('pointerdown', (e) => {
       const tg = e.target, inside = (s) => tg.closest && tg.closest(s);
@@ -2837,10 +3246,10 @@ const UI = (() => {
     // 拖檔案進來（電腦）
     let dragN = 0; const drop = $('#drop');
     const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') >= 0;
-    window.addEventListener('dragenter', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragN++; drop.hidden = false; });
+    window.addEventListener('dragenter', (e) => { if (ED || !hasFiles(e)) return; e.preventDefault(); dragN++; drop.hidden = false; });
     window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
     window.addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN) drop.hidden = true; });
-    window.addEventListener('drop', (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragN = 0; drop.hidden = true; if (Reader.isOpen()) back(); importFiles(e.dataTransfer.files); });
+    window.addEventListener('drop', (e) => { if (!hasFiles(e)) return; if (ED) { e.preventDefault(); return; } e.preventDefault(); dragN = 0; drop.hidden = true; if (Reader.isOpen()) back(); importFiles(e.dataTransfer.files); });
     window.addEventListener('resize', closeMenu);
 
     Bus.on('reader:show', paintChrome);
@@ -2886,14 +3295,25 @@ const Boot = (() => {
     });
     Sound.chime();
   }
-  async function sync(manual) {
+  async function sync(manual, first) {
     lastSync = Date.now();
     const r = await Lib.sync();
-    if (!r.ok) { if (manual || !Lib.hasRemote()) toast(navigator.onLine === false ? '現在沒有網路，先讀已經存下來的' : '連不上書架，等一下再試', { kind: manual ? 'bad' : '' }); return; }
+    if (!r.ok) {
+      if (r.locked) return r;
+      if (ED && (r.badKey || r.gone)) { if (!first) await Edition.dead(r.gone ? 'gone' : 'bad'); return r; }
+      if (r.badKey) {                                          // 書房換了鎖（總鑰匙換了）：收起舊書架，請他輸入新的密語
+        Vault.clear(); Lib.forget(); Narrator.stop(); UI.show({ v: 'lib' });
+        await Gate.lock('書房換了新的鎖，請輸入新的密語。');
+        const r2 = await sync(true); Gate.open(); return r2;
+      }
+      if (manual || !Lib.hasRemote()) toast(navigator.onLine === false ? '現在沒有網路，先讀已經存下來的' : '連不上書架，等一下再試', { kind: manual ? 'bad' : '' });
+      return r;
+    }
     if (r.changed || r.news.length) UI.refresh();
     announce(r.news);
-    if (manual && !r.news.filter((x) => !x.first).length) toast('書架沒有新的一回');
+    if (manual && !r.news.filter((x) => !x.first).length) toast(ED ? '還沒有新的一回' : '書架沒有新的一回');
     Lib.prefetch();
+    return r;
   }
   /* 這次更新之前就匯入的書：看看是不是簡體，是的話一樣轉成繁體 */
   async function legacySimp() {
@@ -2933,16 +3353,78 @@ const Boot = (() => {
     return { init, heal };
   })();
 
+  const later = () => document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - lastSync > 10 * 60000) sync(false); });
+  const sw = () => { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {}); };
+
   async function start() {
-    Reader.init(); UI.init(); Heal.init();
+    Reader.init(); UI.init(); Gate.init(); Heal.init();
+    if (ED) return Edition.start();
     try { history.replaceState({ v: 'lib' }, ''); } catch (e) {}
+    sw();
+    if (!Crypt.ok()) { toast('這個瀏覽器不支援加密，打不開書架；請用 Safari 或 Chrome 開', { kind: 'bad', ms: 12000 }); }
+    else if (!Vault.km()) {                                  // 還沒輸入過密語：先關在門外，連舊的書架目錄也不留
+      Lib.forget();
+      await Gate.lock();
+      await Lib.init(); UI.show({ v: 'lib' });
+      await sync(false);
+      UI.show({ v: 'lib' }); await Gate.open();
+      later(); setTimeout(() => legacySimp().catch(() => {}), 1500);
+      return;
+    }
     await Lib.init();
     UI.show({ v: 'lib' });
     sync(false);
     setTimeout(() => legacySimp().catch(() => {}), 1500);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - lastSync > 10 * 60000) sync(false); });
-    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+    later();
   }
+
+  /* ── 單行本：鑰匙在網址 #k= 後面；記在這台裝置，網址少了也補回去（加到主畫面才帶得走） ── */
+  const Edition = {
+    /* 網址的鑰匙優先；網址沒有就用這台裝置記得的（也寫回網址，加到主畫面才帶得走） */
+    key() {
+      const m = location.hash.match(/k=([A-Za-z0-9_-]{22})/), had = Store.get('k', null);
+      const k = m && Crypt.validKey(m[1]) ? m[1] : had && Crypt.validKey(had) ? had : null;
+      if (k) Edition.keep(k);
+      return k;
+    },
+    keep(k) {
+      if (!/k=[A-Za-z0-9_-]{22}/.test(location.hash) || location.hash.indexOf('k=' + k) < 0) { try { history.replaceState(history.state, '', location.pathname + location.search + '#k=' + k); } catch (e) {} }
+      try { document.cookie = 'pzsb_' + ED.ed + '=' + k + '; path=' + location.pathname.replace(/[^/]*$/, '') + '; max-age=315360000; samesite=lax' + (location.protocol === 'https:' ? '; secure' : ''); } catch (e) {}
+    },
+    cookie() { const m = document.cookie.match(new RegExp('(?:^|; )pzsb_' + ED.ed + '=([A-Za-z0-9_-]{22})')); return m ? m[1] : null; },
+    async start() {
+      try { history.replaceState({ v: 'book', id: ED.ed }, ''); } catch (e) {}
+      document.body.classList.add('ed');
+      if (ED.cover && /^#[0-9a-f]{6}$/i.test(ED.cover.cloth || '')) document.body.style.setProperty('--cloth', ED.cover.cloth);
+      if (!Crypt.ok()) { Gate.edition('offline'); toast('這個瀏覽器不支援加密，請用 Safari 或 Chrome 打開', { kind: 'bad', ms: 12000 }); return; }
+      const k = Edition.key() || Edition.cookie();
+      if (!k) { Gate.edition('missing'); return; }
+      ED.k = k; Edition.keep(k);
+      sw();
+      if (Store.get('k', null) !== k) Lib.forget();           // 換了一把鑰匙：舊的目錄不能用
+      const had = Lib.hasRemote();
+      if (had) UI.show({ v: 'book', id: ED.ed }); else Gate.edition('load');
+      let r = await sync(false, true);
+      // 網址上的鑰匙開不了、但這台裝置記得另一把開得了的：用記得的那把（網址可能被剪壞了）
+      const alt = [Store.get('k', null), Edition.cookie()].find((x) => x && x !== ED.k && Crypt.validKey(x));
+      if (r && r.badKey && alt) { ED.k = alt; Edition.keep(alt); r = await sync(false, true); }
+      if (r && r.ok) Store.set('k', ED.k);
+      else if (r && (r.badKey || r.gone)) { await Edition.dead(r.gone ? 'gone' : 'bad'); return; }
+      if (r && r.ok) { if (!had) { UI.show({ v: 'book', id: ED.ed }); Gate.fade(); } }
+      else if (r && !r.badKey && !r.gone && !had) Gate.edition('offline');
+      later();
+    },
+    /* 連結被收回、換了鑰匙：把存下來的書和鑰匙都清掉，跟讀者說要新的連結 */
+    async dead(kind) {
+      Narrator.stop(); Lib.forget(); Store.del('k'); Store.del('cached');
+      try { document.cookie = 'pzsb_' + ED.ed + '=; path=' + location.pathname.replace(/[^/]*$/, '') + '; max-age=0'; } catch (e) {}
+      if (Reader.isOpen()) Reader.close();
+      Gate.edition(kind);
+      if (kind !== 'gone') return;
+      try { const ks = await caches.keys(); await Promise.all(ks.filter((x) => x.indexOf('pzsb-' + ED.ed + '-') === 0).map((x) => caches.delete(x))); } catch (e) {}
+      try { const rs = await navigator.serviceWorker.getRegistrations(); rs.forEach((r) => { if (new URL(r.scope).pathname === location.pathname.replace(/[^/]*$/, '')) r.unregister(); }); } catch (e) {}
+    },
+  };
   return { start, sync };
 })();
 Boot.start();

@@ -1,5 +1,5 @@
 /* 下回分解 service worker — version __VERSION__ */
-const V = 'pznc-__VERSION__', BOOKS = 'pznc-books-v1', FONTS = 'pznc-fonts-v1', LIBS = 'pznc-lib-v1';
+const V = 'pznc-__VERSION__', BOOKS = 'pznc-books-v2', FONTS = 'pznc-fonts-v1', LIBS = 'pznc-lib-v1';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(V).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -25,12 +25,12 @@ self.addEventListener('fetch', (e) => {
   const rel = url.pathname.slice(scope.length);
   // 說書音軌很大、要能拖進度條：交給瀏覽器自己處理，不經過這裡
   if (/\.(mp3|m4a|ogg|opus|wav)$/i.test(rel)) return;
-  // 書架目錄：先拿最新的，斷網時用上次的
-  if (rel === 'books/library.json') {
-    e.respondWith(fetch(req).then((r) => { if (r && r.ok) { const c = r.clone(); caches.open(BOOKS).then((x) => x.put('books/library.json', c)); } return r; }).catch(() => caches.open(BOOKS).then((x) => x.match('books/library.json')).then((hit) => hit || Response.error())));
+  // 書架目錄（加密）、書房的鎖：先拿最新的，斷網時用上次的
+  if (rel === 'books/library.pzx' || rel === 'books/keyring.json') {
+    e.respondWith(fetch(req).then((r) => { if (r && r.ok) { const c = r.clone(); caches.open(BOOKS).then((x) => x.put(rel, c)); } return r; }).catch(() => caches.open(BOOKS).then((x) => x.match(rel)).then((hit) => hit || Response.error())));
     return;
   }
-  // 章節與時間軸：網址帶版本碼，內容不會變，存下來就一直用
+  // 章節、提要（加密）與時間軸：網址帶版本碼，內容不會變，存下來就一直用
   if (rel.startsWith('books/')) {
     e.respondWith(caches.open(BOOKS).then((c) => c.match(req).then((hit) => hit || fetch(req).then((r) => { if (r && r.ok) c.put(req, r.clone()); return r; }))));
     return;

@@ -2,19 +2,20 @@
 """下回分解 NEXT CHAPTER — 組建腳本
 
 把 src/ 的 HTML、CSS、JS 內嵌成單一檔案，輸出到 <repo>/apps/next-chapter/（含 manifest、service worker、圖示）。
-書（apps/next-chapter/books/）不歸這支腳本管：章節用 tools/shelf.py 上架、音軌用 tools/narrate.py 錄。
+書（apps/next-chapter/books/，加密的）不歸這支腳本管：原稿在私人倉庫 pz-novels，用那邊的 tools/shelf.py 上架。
+單行本用的引擎（edition_shell）也從這裡組：pz-novels 的 shelf.py publish 會呼叫它。
 
 用法：
   python3 build.py            # 組建
   python3 build.py --icons    # 重新產生圖示（需要 playwright、pillow）
 """
-import argparse, datetime, json, os, shutil
+import argparse, datetime, json, os, re, shutil
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'next-chapter')
-JS_ORDER = ['core.js', 'covers.js', 'sound.js', 'conv.js', 'books.js', 'importer.js', 'reader.js', 'narrator.js', 'ui.js', 'main.js']
+JS_ORDER = ['core.js', 'covers.js', 'sound.js', 'conv.js', 'crypt.js', 'books.js', 'importer.js', 'reader.js', 'narrator.js', 'gate.js', 'ui.js', 'main.js']
 
 
 def read(name):
@@ -22,7 +23,7 @@ def read(name):
         return f.read()
 
 
-def compose(version):
+def compose(version, strip=False):
     html = read('index.html')
     js = '\n'.join(read(n) for n in JS_ORDER)
     css = read('style.css')
@@ -31,7 +32,58 @@ def compose(version):
         assert '</script' not in v.lower(), k + ' contains </script>'
     assert "const VERSION = '1.0.0';" in js
     js = js.replace("const VERSION = '1.0.0';", "const VERSION = '%s';" % version)
+    if strip:
+        js, css = strip_js(js), strip_css(css)
+    else:
+        html = html.replace('<!--EDITION-->\n', '', 1).replace('<!--HEAD-->\n', '', 1).replace('<!--/HEAD-->\n', '', 1)
     return html.replace('/*CSS*/', css, 1).replace('/*VENDOR*/', vendor, 1).replace('/*JS*/', js, 1)
+
+
+# ── 單行本的引擎：同一份程式，拿掉註解（註解裡有檔案路徑、書房的事，給朋友的版本不需要） ──
+def strip_js(js):
+    """保守地拿掉註解：整行的 // 與 /* */、跨行的 /* */、行尾「兩個空白以上 + // 」的註解。
+    程式碼裡的字串、正規表示式不會碰到（這份程式的字串裡沒有 /* 也沒有「空白空白//」）。"""
+    out, inblock = [], False
+    for ln in js.split('\n'):
+        s = ln.strip()
+        if inblock:
+            if '*/' in s:
+                inblock = False
+                rest = s.split('*/', 1)[1].strip()
+                if rest:
+                    out.append(rest)
+            continue
+        if s.startswith('/*'):
+            if '*/' in s:
+                rest = s.split('*/', 1)[1].strip()
+                if rest:
+                    out.append(rest)
+            else:
+                inblock = True
+            continue
+        if s.startswith('//') or not s:
+            continue
+        ln = re.sub(r'(\S)\s{2,}//\s.*$', r'\1', ln)
+        ln = re.sub(r'\s+/\*[^*]*\*/\s*$', '', ln)
+        out.append(ln.rstrip())
+    return '\n'.join(out)
+
+
+def strip_css(css):
+    css = re.sub(r'/\*.*?\*/', '', css, flags=re.S)
+    return '\n'.join(ln.rstrip() for ln in css.split('\n') if ln.strip())
+
+
+def edition_shell(version):
+    """單行本的頁面骨架：<!--HEAD-->…<!--/HEAD--> 換成那一本的標題、預覽圖、圖示；<!--EDITION--> 換成 window.__PZ_ED。"""
+    html = compose(version, strip=True)
+    html = html.replace('下回分解需要開啟 JavaScript 才能使用。', '這本書需要開啟 JavaScript 才能閱讀。')
+    assert html.count('<!--HEAD-->') == 1 and html.count('<!--/HEAD-->') == 1 and html.count('<!--EDITION-->') == 1
+    return html
+
+
+def edition_sw(version, ed):
+    return read('sw-edition.js').replace('__VERSION__', version).replace('__ED__', ed)
 
 
 MANIFEST = {

@@ -10,6 +10,7 @@
 3. 每款遊戲、工具 App 都要有 **Claude 版（artifact）＋獨立網頁版**，做好就**自動加進收藏庫、推上 GitHub**（不用等 PZ 說）。commit 訊息結尾附上當次對話規定的署名行。
 4. 品質至少要有《潮界》的水準：不能廉價、角色不能太小；手機直拿、橫拿、電腦三種畫面都要截圖親眼看過。
 5. 有 `_build/sources/<id>/` 的遊戲改原始碼再組建，**不要直接改 `games/<id>/index.html`**。
+6. **小說原稿只放在私人倉庫 PZWei0105/pz-novels**：這個 repo 是公開的，章節、前情提要、寫作筆記的純文字一律不准 commit 進來（`apps/next-chapter/books/` 只有加密檔，由 pz-novels 的 `tools/shelf.py push` 產生）。
 
 ## 從哪裡開始
 
@@ -19,4 +20,5 @@
 | 做 2D 遊戲、用引擎、改引擎 | `_build/engine/HANDBOOK.md`（會動的範例：樣品館 `_build/engine/lab/`） |
 | 某款有原始碼的遊戲 | `_build/sources/<id>/README.md` |
 | 專屬 App | `_build/apps/<App>/README.md` |
+| 寫小說、上架新的一回、分享單行本 | 私人倉庫 PZWei0105/pz-novels 的 `CLAUDE.md`（沒有就 add_repo 加進來，要 push 權限） |
 | 待辦、已知問題 | `_build/ROADMAP.md` |

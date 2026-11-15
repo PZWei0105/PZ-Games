@@ -212,7 +212,7 @@ const Narrator = (() => {
     const art = [{ src: new URL('icons/icon-512.png', location.href).href, sizes: '512x512', type: 'image/png' }];
     if (!IS_IOS) { if (!artCache[b.id]) artCache[b.id] = await Cover.png(b, 512); if (!st || sess !== my) return; if (artCache[b.id]) art.unshift({ src: artCache[b.id], sizes: '512x512', type: 'image/png' }); }
     try {
-      ms.metadata = new MediaMetadata({ title: (ch.label ? ch.label + '　' : '') + (ch.name || ''), artist: b.title, album: '下回分解', artwork: art });
+      ms.metadata = new MediaMetadata({ title: (ch.label ? ch.label + '　' : '') + (ch.name || ''), artist: b.title, album: ED ? (b.author || b.title) : '下回分解', artwork: art });
       const h = { play: resume, pause, seekbackward: () => skip(-15), seekforward: () => skip(30), previoustrack: () => chapter(-1), nexttrack: () => chapter(1), seekto: (e) => { if (st && st.mode === 'track' && e.seekTime != null) { audio.currentTime = e.seekTime; syncTrack(); } }, stop };
       Object.keys(h).forEach((k) => { try { ms.setActionHandler(k, h[k]); } catch (e) {} });
     } catch (e) {}

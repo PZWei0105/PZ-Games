@@ -1,0 +1,20 @@
+{
+ "v": 1,
+ "kdf": {
+  "alg": "PBKDF2-SHA256",
+  "iter": 600000,
+  "salt": "KN6A6kSOKxLAPzO0GiUQSw"
+ },
+ "wraps": [
+  {
+   "id": "pass",
+   "n": "jcpz43kdW7CNOUAE",
+   "c": "j_19qO5BGgetDWfV_9dIJezHPt1pzGPUoR9ClMkL0nF_FHarSdh2r5FP8gdx2VCO"
+  },
+  {
+   "id": "code",
+   "n": "pvWHhVpbimPzKB6n",
+   "c": "efEElW9FxlAbhohojk6vFCe59lyFjHr-8G8Iwwr0WocMAsCkfysetLX6Boj6BDBl"
+  }
+ ]
+}
