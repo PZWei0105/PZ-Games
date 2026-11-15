@@ -109,6 +109,7 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 | 墜庭 FALLEN COURT（斜俯視日式回合制撿寶 RPG，第一卷） | `_build/sources/fallen-court/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`，發布後要宣告能力 `{db, user}` 才有雲端存檔）與獨立網頁版（`dist/web/`，複製到 `raw/fallen-court/`）；`node tests/sim.js all` 自動打每一場看平衡、`python3 tests/full.py all` 在瀏覽器裡把整條主線玩過五條分支、`python3 tests/cloud.py` 檢查雲端存檔、`node tests/maps.js` 檢查地圖；收藏庫截圖步驟 `tests/shots_steps.py`；完整企劃在 `DESIGN.md` |
 | 最後一單 LAST ORDER（像素殭屍求生，2.0 PZ 引擎版：第一款搬到引擎的舊遊戲） | `_build/sources/last-order/`：`python3 _build/engine/tools/pzbuild.py _build/sources/last-order` 產生 Claude 版（`dist/artifact/`，發布後要宣告能力 `{db, user}` 才有雲端存檔，目前在 https://claude.ai/artifact/FKfdaq7SNNk1Gurv9Hdc11 ）與獨立網頁版（`dist/web/`，複製到 `raw/last-order/`）；`python3 tests/flow.py phone|land|desk` 把整條流程（舊存檔搬家、選單、劇情、觸控搖桿、升級、Boss、暫停、死亡）在三種畫面各玩一次；搬家做法與規矩見它的 README |
 | 留一口 LEAVE ONE（冰河末回合制狩獵，試作：第一場狩獵） | `_build/sources/leave-one/`：`python3 build.py` 產生 Claude 版（`dist/artifact/`）與獨立網頁版（`dist/web/`，複製到 `raw/leave-one/`）；`node tests/sim.js 60` 用六種打法各打 60 場看規則與收穫、`python3 tests/run.py flow ice|bleed` 在瀏覽器裡自動玩一整場、`python3 tests/icon.py` 用遊戲畫面重做圖示；收藏庫截圖步驟 `tests/shots_steps.py`；企劃在 `DESIGN.md` |
+| 火樹銀花 SKYBLOOM（3D 夜間遊樂園＋煙火：放煙火、坐設施、大會煙火秀） | `_build/sources/skybloom/`：`npm install && node tools/build.mjs` 產生 Claude 版（`dist/artifact/`，發布在 https://claude.ai/artifact/CUwrkQK1FNvDRDZfBanPnk ）與獨立網頁版（`dist/web/`，複製到 `raw/skybloom/`）；`python3 tools/icon.py dist/web` 做圖示；無頭測試用 `__sky.advance()` 快轉，見它的 README |
 
 ## 放在這個網站裡的專屬 App（`apps/`）
 
