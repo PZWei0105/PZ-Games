@@ -9,7 +9,7 @@
 
 | 部分 | 誰做 | 在哪 |
 |---|---|---|
-| 專題（深度介紹＋粉專稿） | 每日寫稿排程（Claude 的排程任務，每天清晨一次） | `apps/unpacked/data/features/<id>.json`，規範在 `WRITER_GUIDE.md` |
+| 專題（深度介紹＋粉專稿） | 每日寫稿排程（Claude 的排程任務「解包：每日寫稿」，每天台灣時間 05:23，寫完推播到痞子葳手機） | `apps/unpacked/data/features/<id>.json`，規範在 `WRITER_GUIDE.md` |
 | Steam 即時資料與選題候選 | GitHub Actions `.github/workflows/unpacked-live.yml`，每 3 小時＋track.json 一變就跑 | `tools/live.py` → `data/live.json`、`data/hist/<appid>.json`、`data/candidates.json` |
 | App 本體 | 這個資料夾的 `src/`，`build.py` 組成單一 index.html | `apps/unpacked/`（`build.py` 不碰 `data/`） |
 
