@@ -535,7 +535,7 @@ body.calm #tape .in{animation-duration:60s}
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611151835';
+const VERSION = '1.0.2611151845';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1129,7 +1129,7 @@ function liveHtml(f, lv, h) {
     <div class="lc"><div class="ll">台灣售價</div><div class="lv">${esc(priceV)}${pr.disc > 0 ? `<span class="disc">-${pr.disc}%</span>` : ''}</div>${pr.disc > 0 && pr.orig ? `<div class="ld">原價 ${fmtNT(pr.orig)}</div>` : ''}${low}</div>
     <div class="lc"><div class="ll">Steam 評價</div><div class="lv">${rv.pct != null ? rv.pct + '<small>%</small>' : '—'}</div><div class="ld">${esc(rv.label || '評論還不夠')} · ${fmtN(rv.n)} 則${rv.recent ? `<br>近 ${rv.recent.days} 天 ${rv.recent.pct}%（${fmtN(rv.recent.n)} 則）` : ''}</div></div>
     <div class="lc wide"><div class="ll">目前同上人數</div><div class="lv">${p.n != null ? esc(fmtN(p.n)) : '—'}<small>${p.peak ? `追蹤以來最高 ${esc(fmtN(p.peak.n))}` : ''}</small></div><div class="ld">${d24}</div>${h ? sparkSvg(h.pl, 7) : ''}</div>
-    <div class="lc"><div class="ll">繁中玩家評價</div><div class="lv">${tc && tc.pct != null ? tc.pct + '<small>%</small>' : '—'}</div><div class="ld">${tc ? `${fmtN(tc.n)} 則繁中評論` : '還沒有繁中評論'}</div></div>
+    <div class="lc"><div class="ll">繁中玩家評價</div><div class="lv">${tc && tc.pct != null ? tc.pct + '<small>%</small>' : '—'}</div><div class="ld">${!tc ? '這一輪沒抓到，下次更新再補' : tc.n ? `${fmtN(tc.n)} 則繁中評論` : '還沒有繁中評論'}</div></div>
     <div class="lc"><div class="ll">語言（Steam）</div><div class="lv" style="font-size:24px">${lv.langs && lv.langs.tc ? '有繁中' : lv.langs && lv.langs.sc ? '只有簡中' : '無中文'}</div><div class="ld">${lv.langs && lv.langs.tc ? (lv.langs.tc.audio ? '含中文語音' : '介面／字幕') : ''}</div></div>
   </div></div>`;
 }

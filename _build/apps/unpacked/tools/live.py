@@ -72,7 +72,11 @@ def get_json(url, timeout=40, tries=3):
         try:
             req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': 'application/json'})
             with urllib.request.urlopen(req, timeout=timeout) as r:
-                return json.loads(r.read().decode('utf-8-sig', 'replace'))   # Steam 的評論 API 會帶 BOM
+                raw = r.read().decode('utf-8-sig', 'replace')   # Steam 的評論 API 會帶 BOM
+            try:
+                return json.loads(raw)
+            except ValueError as e:
+                raise ValueError(f'不是 JSON（{len(raw)} bytes）：{raw[:70]!r}') from e
         except Exception as e:  # noqa: BLE001
             last = e
             time.sleep(1.5 * (i + 1))
@@ -267,6 +271,17 @@ def players(appid):
     return None
 
 
+def rv_lang(it):
+    """GetItems 用繁中語境時會附「這個語言的評價」：先用它，省一次評論 API。"""
+    rv = it.get('reviews') or {}
+    if 'summary_language_specific' not in rv:
+        return None
+    s = rv.get('summary_language_specific') or {}
+    n = int(s.get('review_count') or 0)
+    pct = s.get('percent_positive') if n else None
+    return {'n': n, 'pos': round((pct or 0) * n / 100), 'pct': pct, 'label': s.get('review_score_label') if n else None}
+
+
 def reviews(appid, lang):
     try:
         d = get_json(REVIEWS.format(appid, lang), timeout=25, tries=2)
@@ -431,8 +446,10 @@ def main():
         x = norm(it, tagn)
         n = players(appid)
         time.sleep(0.25)
-        rtc = reviews(appid, 'tchinese')
-        time.sleep(0.4)
+        rtc = rv_lang(it)
+        if rtc is None:
+            rtc = reviews(appid, 'tchinese')
+            time.sleep(0.4)
         hp = os.path.join(D, 'hist', f'{appid}.json')
         h = load(hp, {'pl': [], 'pr': [], 'rv': [], 'rt': []})
         tm = tmin(t0)
