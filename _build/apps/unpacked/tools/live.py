@@ -32,7 +32,8 @@ TAGLIST = 'https://api.steampowered.com/IStoreService/GetTagList/v1/?language=tc
 PLAYERS = 'https://api.steampowered.com/ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid={}'
 MOSTPLAYED = 'https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/'
 FEATURED = 'https://store.steampowered.com/api/featuredcategories/?cc=TW&l=tchinese'
-# 舊的 store.steampowered.com/appreviews 在 2026-10-22 停用（會回整頁 HTML），改用官方 WebAPI
+# 舊的 store.steampowered.com/appreviews 在 2026-10-22 停用（會回整頁 HTML），改用官方 WebAPI。
+# purchase_type 1＝全部（預設 0 只算 Steam 購買，免費遊戲會變 0 則）
 REVIEWS = 'https://api.steampowered.com/IUserReviewsService/GetAppReviews/v1/?input_json='
 SEARCH = 'https://store.steampowered.com/search/results/?filter={}&json=1&cc=TW&l=tchinese'
 ASSET = 'https://shared.akamai.steamstatic.com/store_item_assets/'
@@ -274,7 +275,7 @@ def players(appid):
 
 def reviews(appid, lang):
     try:
-        d = get_json(api(REVIEWS, {'appid': appid, 'languages': [lang], 'num_per_page': 1, 'display_language': 'tchinese'}), timeout=25, tries=2)
+        d = get_json(api(REVIEWS, {'appid': appid, 'languages': [lang], 'purchase_type': 1, 'num_per_page': 1, 'display_language': 'tchinese'}), timeout=25, tries=2)
         d = d.get('response', d)
         q = d.get('query_summary') or {}
         tot = int(q.get('total_reviews') or 0)
