@@ -10,6 +10,7 @@ function setTabs(name) {
   const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
   const pnew = pi.filter((x) => x.date === pl && !S.seen['p:' + x.id]).length;
   const pd = $('.tab[data-go="picks"] .dot'); if (pd) { pd.textContent = pnew; pd.classList.toggle('hide', !pnew); }
+  const sn = shNewCount(); const sd = $('.tab[data-go="shorts"] .dot'); if (sd) { sd.textContent = sn; sd.classList.toggle('hide', !sn); }
 }
 function tapeText() {
   const it = S.index ? S.index.items : []; const last = it[0] && it[0].date;
@@ -26,7 +27,8 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(); stopSpeak(); motionStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop();
+  if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
     if (name === 'f' && arg) {
@@ -43,7 +45,7 @@ async function route() {
       S.seen['p:' + arg] = 1; save('seen'); setTabs('picks');
       afterFeature();
       scrollTo(0, 0);
-    } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
+    } else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
     else if (name === 'fan' && arg) { setTabs('fan'); v.innerHTML = await renderFanDetail(arg); scrollTo(0, 0); cardRender(await loadFeature(arg)); }
     else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); }
     else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); homeFx(); }
@@ -254,11 +256,11 @@ function afterFeature() {
 
 /* ---- 影片 ---- */
 let HLS = null;
-function stopVideo() {
+function stopVideo(keepDuck = false) {
   const tv = $('#tvbox iframe, #tvbox video');
   if (tv) { try { if (tv.tagName === 'VIDEO') tv.pause(); } catch (e) { /* */ } tv.remove(); }
   if (HLS) { try { HLS.destroy(); } catch (e) { /* */ } HLS = null; }
-  bgmDuck(false);
+  if (!keepDuck) bgmDuck(false);
 }
 async function playVideo(i) {
   const v = S.curMedia && S.curMedia.vids[i]; if (!v) return;
@@ -274,7 +276,7 @@ async function playVideo(i) {
   const isHls = /\.m3u8(\?|$)/.test(v.src);
   if (!isHls || vid.canPlayType('application/vnd.apple.mpegurl')) { vid.src = v.src; vid.play().catch(() => {}); return; }
   try {
-    const { default: Hls } = await import('./vendor/hls.light.min.mjs');
+    const Hls = await hlsLib();
     if (!Hls.isSupported()) throw new Error('這台裝置不支援串流');
     HLS = new Hls({ capLevelToPlayerSize: true, maxBufferLength: 20 });
     HLS.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) toast('預告播不了，可以到 Steam 商店頁看', 'warn'); });
@@ -369,6 +371,8 @@ document.addEventListener('click', async (ev) => {
     if (a === 'set') {
       let v = act.dataset.v; if (v === 'true') v = true; else if (v === 'false') v = false;
       S.settings[act.dataset.k] = v; save('settings');
+      if (act.dataset.k === 'shSound') SH.snd = null;
+      if (act.dataset.k === 'shAuto' && SV) SV.loop = !v;
       if (act.dataset.k === 'sfx' || act.dataset.k === 'bgm') { audioInit(); audioApply(); }
       document.body.classList.toggle('calm', S.settings.fx !== 'full');
       $('.sbox').innerHTML = `<button class="ib sclose" data-act="close" aria-label="關閉">${ICON.x}</button>` + settingsHtml(); sfx.click(); topIcons(); return;
@@ -417,6 +421,7 @@ document.addEventListener('click', async (ev) => {
   if (go) {
     ev.preventDefault(); const to = go.dataset.go;
     if (to === location.hash.replace('#', '')) return;
+    if (to === 'shorts' && ROUTE.startsWith('shorts')) { shGo(0); sfx.whoosh(); return; }   // 已經在短影音：回到最上面
     sfx.slap(); haptic();
     NAVN++; location.hash = to;
   }
@@ -430,7 +435,7 @@ document.addEventListener('input', (ev) => {
   if (a === 'postedit') { const fid = ROUTE.split('/')[1]; S.edits[fid] = t.value; save('edits'); const c = $('#postcnt'); if (c) c.textContent = t.value.length + ' 字'; return; }
   if (a === 'vol') { S.settings[t.dataset.k] = +t.value; save('settings'); audioApply(); if (t.dataset.k === 'vol') sfx.blip(1200); }
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); if ($('#sheet.on .lb')) { if (e.key === 'ArrowRight') openLightbox(LBI + 1); if (e.key === 'ArrowLeft') openLightbox(LBI - 1); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); if (shKeys(e)) return; if ($('#sheet.on .lb')) { if (e.key === 'ArrowRight') openLightbox(LBI + 1); if (e.key === 'ArrowLeft') openLightbox(LBI - 1); } });
 
 function topIcons() {
   const a = $('[data-act="sfx"]'), b = $('[data-act="bgm"]');
@@ -444,7 +449,7 @@ async function boot() {
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
     <button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
-  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
+  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
   try { await loadIndex(); } catch (e) { ok = false; console.error(e); }

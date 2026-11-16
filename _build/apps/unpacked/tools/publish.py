@@ -334,6 +334,11 @@ def check_pick(f, r):
     text_quality(f, fid, r)
 
 
+def yt_list(f):
+    """短影音要用的 YouTube 預告清單（id＋標題），最多 4 支。"""
+    return [{'id': y['id'], 't': (y.get('title') or '')[:40]} for y in ((f.get('media') or {}).get('yt') or []) if y.get('id')][:4]
+
+
 def build_picks(picks):
     items = []
     for f in picks:
@@ -346,7 +351,7 @@ def build_picks(picks):
             'genres': g.get('genres'), 'platforms': g.get('platforms'), 'stamp': f['stamp'], 'label': f['label'],
             'pitch': f['pitch'], 'zhs': zhs, 'hours': (f.get('time') or {}).get('text'), 'price_text': g.get('price_text'),
             'money': (f.get('money') or {}).get('level'),
-            'yt': ((f.get('media') or {}).get('yt') or [{}])[0].get('id'), 'img': imgs[0] if imgs else None, 'gal': imgs[1:6],
+            'yt': ((f.get('media') or {}).get('yt') or [{}])[0].get('id'), 'yts': yt_list(f), 'img': imgs[0] if imgs else None, 'gal': imgs[1:6],
             'updated': f.get('updated'),
         })
     items.sort(key=lambda x: (x['date'], -x['rank']), reverse=True)
@@ -382,7 +387,7 @@ def build_index(feats):
             'price_text': g.get('price_text'), 'headline': f['headline'],
             'stamp': f['verdict']['stamp'], 'label': f['verdict']['label'],
             'money': (f.get('money') or {}).get('level'), 'zhs': zhs, 'tw': (f.get('tw') or {}).get('ok'),
-            'yt': yt, 'img': ((f.get('media') or {}).get('images') or [None])[0],
+            'yt': yt, 'yts': yt_list(f), 'img': ((f.get('media') or {}).get('images') or [None])[0],
             'gal': ((f.get('media') or {}).get('images') or [])[1:6],
             'updated': f.get('updated'),
         })

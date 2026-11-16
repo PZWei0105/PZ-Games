@@ -65,7 +65,7 @@
 | `zh`、`tw` | 中文與台灣能不能玩（`tw.ok`：true／false／"partial"） |
 | `rig` | 「你的 SCAR 18」：拿他的筆電對照官方需求（見下） |
 | `time` | 遊玩時間或一輪多久 |
-| `media.yt` | 官方預告 YouTube id（11 碼），先找官方或發行商頻道，找不到才用 IGN／GameSpot 轉載；用 WebSearch 限定 youtube.com 確認 id。可以放 2～3 支（上市預告、玩法預告…），App 會從每支預告各抓 3 張畫面進相簿 |
+| `media.yt` | 官方預告 YouTube id（11 碼），先找官方或發行商頻道，找不到才用 IGN／GameSpot 轉載；用 WebSearch 限定 youtube.com 確認 id。可以放 2～3 支（上市預告、玩法預告…），App 會從每支預告各抓 3 張畫面進相簿。`title` 寫中文、說清楚是哪一支（例：「上市預告」「實機玩法 12 分鐘」），短影音牆會直接顯示；非 Steam 遊戲短影音只能播這些，至少放 2 支 |
 | `media.images` | **非 Steam 遊戲必放** 4～8 張官方截圖或主視覺（PlayStation／Xbox／Nintendo 商店頁、官方網站、Netflix Tudum、發行商新聞稿裡能直接連結的 https 圖片；用 WebFetch 打開官方頁、請它列出圖片網址）。第一張當主視覺，最好是橫的主視覺圖。Steam 遊戲可以不放（會自動用 Steam 截圖和動態預告） |
 | `watch` | 接下來要盯的 2～3 件事（追蹤牆會用） |
 | `sections.gameplay` | `loop` 4～6 步核心循環；`body` 3～4 段，講「你在遊戲裡實際會做什麼」 |

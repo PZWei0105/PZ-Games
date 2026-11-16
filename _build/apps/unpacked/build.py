@@ -2,7 +2,7 @@
 """解包 UNPACKED — 組建腳本
 
 把 src/ 的 HTML、CSS、JS、英文字型內嵌成單一 index.html，輸出到 <repo>/apps/unpacked/
-（含 manifest、service worker、圖示、vendor/hls）。**不會碰 apps/unpacked/data/**：
+（含 manifest、service worker、圖示、vendor/hls.min.mjs）。**不會碰 apps/unpacked/data/**：
 專題由每日寫稿排程寫進 data/features/、Steam 即時資料由 GitHub Actions 寫進 data/live.json。
 
 用法：
@@ -19,7 +19,7 @@ SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'unpacked')
 
-JS_ORDER = ['core.js', 'audio.js', 'fx.js', 'data.js', 'views.js', 'card.js', 'main.js']
+JS_ORDER = ['core.js', 'audio.js', 'fx.js', 'data.js', 'views.js', 'card.js', 'shorts.js', 'main.js']
 FONTS = [
     ('bebas-neue-latin-400-normal.woff2', 'Bebas Neue'),
     ('permanent-marker-latin-400-normal.woff2', 'Permanent Marker'),
@@ -56,7 +56,7 @@ def compose(version):
 MANIFEST = {
     'name': '解包 UNPACKED',
     'short_name': '解包',
-    'description': '痞子葳的遊戲解包台：每天 2～3 款深度專題、Steam 台灣區即時數據，加上遊戲狂想曲粉專出稿台。',
+    'description': '痞子葳的遊戲解包台：每天 2～3 款深度專題、私房推坑、直式短影音預告牆、Steam 台灣區即時數據，加上遊戲狂想曲粉專出稿台。',
     'lang': 'zh-Hant-TW',
     'start_url': './',
     'scope': './',
@@ -127,7 +127,12 @@ def main():
     with open(os.path.join(out, 'sw.js'), 'w', encoding='utf-8') as f:
         f.write(read('sw.js').replace('__VERSION__', version))
     os.makedirs(os.path.join(out, 'vendor'), exist_ok=True)
-    shutil.copy(os.path.join(SRC, 'vendor', 'hls.light.min.mjs'), os.path.join(out, 'vendor', 'hls.light.min.mjs'))
+    # 完整版 hls.js（不是 hls.light）：Steam 預告的聲音是獨立音軌，輕量版播出來會沒有聲音
+    shutil.copy(os.path.join(SRC, 'vendor', 'hls.min.mjs'), os.path.join(out, 'vendor', 'hls.min.mjs'))
+    shutil.copy(os.path.join(SRC, 'vendor', 'hls.LICENSE.txt'), os.path.join(out, 'vendor', 'hls.LICENSE.txt'))
+    old_light = os.path.join(out, 'vendor', 'hls.light.min.mjs')
+    if os.path.exists(old_light):
+        os.remove(old_light)
     icons = os.path.join(out, 'icons')
     if a.icons or not os.path.exists(os.path.join(icons, 'icon-512.png')):
         if out != OUT and os.path.exists(os.path.join(OUT, 'icons', 'icon-512.png')) and not a.icons:

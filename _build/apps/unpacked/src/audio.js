@@ -77,11 +77,11 @@ function schedStep(i, t) {
   if (i === 0) nz(t, S16 * 16, { type: 'bandpass', f: 4500, q: 0.4, g: 0.012, bus: B, a: 0.2 });  // 黑膠沙沙聲
 }
 function bgmStart() {
-  if (!AU.ac || !S.settings.bgm || S.muted || AU.timer) return;
+  if (!AU.ac || !S.settings.bgm || S.muted || AU.timer || AU.duck) return;   // 看預告、聽導讀的時候不開
   AU.next = AU.ac.currentTime + 0.1; AU.step = 0; AU.bar = 0;
   AU.bgm.gain.cancelScheduledValues(AU.ac.currentTime);
   AU.bgm.gain.setValueAtTime(0.0001, AU.ac.currentTime);
-  AU.bgm.gain.exponentialRampToValueAtTime(Math.max(0.001, S.settings.bgmVol * (AU.duck ? 0.25 : 1)), AU.ac.currentTime + 1.2);
+  AU.bgm.gain.exponentialRampToValueAtTime(Math.max(0.001, S.settings.bgmVol), AU.ac.currentTime + 1.2);
   AU.timer = setInterval(() => {
     if (!AU.ac) return;
     while (AU.next < AU.ac.currentTime + 0.15) {
@@ -92,11 +92,15 @@ function bgmStart() {
   }, 30);
 }
 function bgmStop() { if (AU.timer) { clearInterval(AU.timer); AU.timer = null; } }
+/* 看預告、短影音、語音導讀時把鼓組收掉：先淡出再整個停（不在背景空轉吃電），結束再淡入 */
 function bgmDuck(on) {
   AU.duck = on; if (!AU.ac) return;
-  const v = Math.max(0.0001, S.settings.bgmVol * (on ? 0.0 : 1));
+  clearTimeout(AU.duckT);
   AU.bgm.gain.cancelScheduledValues(AU.ac.currentTime);
-  AU.bgm.gain.setTargetAtTime(v, AU.ac.currentTime, 0.15);
+  if (on) { AU.bgm.gain.setTargetAtTime(0.0001, AU.ac.currentTime, 0.15); AU.duckT = setTimeout(() => { if (AU.duck) bgmStop(); }, 800); return; }
+  if (!S.settings.bgm || S.muted) return;
+  if (AU.timer) AU.bgm.gain.setTargetAtTime(Math.max(0.0001, S.settings.bgmVol), AU.ac.currentTime, 0.15);
+  else bgmStart();
 }
 function audioApply() {
   if (!AU.ac) return;

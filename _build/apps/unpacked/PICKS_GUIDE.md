@@ -78,7 +78,7 @@
 | `sections.voices` | `pros` 3～4 條、`cons` 2～4 條（媒體與玩家的共識，不捏造引言）、`debate` 0～2 條吵最兇的點 |
 | `editions` | 版本怎麼選 1～3 項 `{name, what, tip, best}`，建議買的那個 `best: true` |
 | `multi` | 跟朋友玩 `{ok, text}`：`ok` 是 true／false／"partial"，`text` 講清楚幾人、線上或本機、要不要每人都買、功能有沒有被關掉 |
-| `media` | `yt` 官方預告 1～3 支；**非 Steam 遊戲必放** `images` 4～8 張官方圖（第一張當主視覺） |
+| `media` | `yt` 官方預告 1～3 支（`title` 寫中文、說清楚是哪一支，短影音牆會直接顯示）；**非 Steam 遊戲必放** `images` 4～8 張官方圖（第一張當主視覺） |
 | `sources` | 至少 8 個 `{t, u, d}` |
 | `pending` | 還沒查證、先不當真的事（不能出現在推坑信、理由、怎麼玩、怎麼買） |
 
