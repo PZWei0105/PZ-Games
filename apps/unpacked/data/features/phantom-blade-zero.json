@@ -1,0 +1,572 @@
+{
+  "id": "phantom-blade-zero",
+  "date": "2026-11-16",
+  "rank": 4,
+  "kind": "new",
+  "kind_label": "新作熱賣",
+  "game": {
+    "zh": "影之刃零",
+    "en": "Phantom Blade Zero",
+    "steam": 4115450,
+    "dev": "S-GAME（北京靈遊坊）",
+    "pub": "S-GAME",
+    "platforms": [
+      "PC（Steam、Epic）",
+      "PS5"
+    ],
+    "genres": [
+      "動作角色扮演",
+      "武俠",
+      "砍殺"
+    ],
+    "release": "2026-10-29",
+    "release_text": "2026/10/29 PC、PS5 同步上市（Steam 頁標美西 10/28）；PS5 實體版 2027 年推出",
+    "price_text": "Steam／PS5 標準版 NT$1,380／數位豪華版 NT$1,680",
+    "site": "https://pbz.s-game.com/"
+  },
+  "headline": "72 小時賣破 400 萬套的中國武俠動作大作，上市兩週半，到底值不值得買",
+  "hook": "刀刃擦過對手的劍，畫面一頓，火花在雨裡炸開。你的殺氣條快見底了，順手一換，抽出打倒上一個王拿到的那把武器，殺氣瞬間補滿，大招直接砸下去——你只剩 66 天可活，沒時間慢慢磨。",
+  "verdict": {
+    "stamp": "推薦",
+    "label": "現在就玩",
+    "summary": "戰鬥是今年動作遊戲裡最被媒體稱讚的那一批，OpenCritic 88、Steam 好評率回升到九成以上，有繁中字幕、沒有微交易。劇情和關卡設計被嫌普通、首發效能有過波折，但喜歡砍殺手感的人現在入手剛好：大修正檔已經出了。",
+    "for": [
+      "喜歡《隻狼》《惡魔獵人》那種靠反應和招式打出節奏的人",
+      "想玩高規格武俠，又不想被魂系「死了跑回去撿」折磨的人",
+      "有 RTX 顯卡、想親眼看看路徑追蹤和 DLSS 多重補幀的 PC 玩家"
+    ],
+    "against": [
+      "在意劇情要講得清楚、角色要立體的人（倒敘結構被多家媒體點名）",
+      "想要大型開放世界自由亂逛的人：關卡是半開放、空氣牆不少",
+      "硬碟吃緊的人：要 145GB，而且一定要裝在 SSD"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "S-GAME（北京靈遊坊）自己研發、自己發行，創意總監是梁其偉",
+      "s": [
+        0,
+        28,
+        19
+      ]
+    },
+    {
+      "k": "上市／平台",
+      "v": "2026/10/29 PC（Steam、Epic）與 PS5 全球同步；PS5 實體版延到 2027 年",
+      "s": [
+        1,
+        4,
+        5
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Steam 與 PS Store 台灣區標準版都是 NT$1,380，數位豪華版 NT$1,680",
+      "s": [
+        29,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "k": "豪華版多什麼",
+      "v": "兩套角色外觀、遊戲內美術設定集、原聲帶；不影響強度",
+      "s": [
+        2
+      ]
+    },
+    {
+      "k": "中文",
+      "v": "繁中有介面與字幕；完整語音只有英文和中文普通話（Steam 列在簡中底下）",
+      "s": [
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "k": "DRM",
+      "v": "Steam 版使用 Denuvo，需同意第三方使用者授權",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "硬碟",
+      "v": "145GB，最低與建議配備都要求 SSD",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "建議配備",
+      "v": "i5-10600K／Ryzen 5 5600X、RTX 3060 Ti／RX 6700 XT、16GB RAM（官方標 1440p／60 幀、開升頻）",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "畫面技術",
+      "v": "支援 DLSS（含多重補幀）、FSR、XeSS；光追分「光線追蹤」與「路徑追蹤」兩段",
+      "s": [
+        6,
+        7
+      ]
+    },
+    {
+      "k": "遊玩時數",
+      "v": "總監估計熟手、不太卡王約 25～30 小時；4Gamers 作者最高難度、探索約九成玩了約 60 小時",
+      "s": [
+        8,
+        10
+      ]
+    },
+    {
+      "k": "媒體評分",
+      "v": "OpenCritic 88、94% 推薦；Metacritic PC 版 88",
+      "s": [
+        11,
+        12
+      ]
+    },
+    {
+      "k": "銷量",
+      "v": "官方 11/2 宣布上市 72 小時全平台賣破 400 萬套",
+      "s": [
+        14
+      ]
+    },
+    {
+      "k": "Steam 同上",
+      "v": "上市當天 723,876 人；11/1 衝到 833,921 人新高（SteamDB）。11/16 仍在 Steam 最多人玩第 7 名",
+      "s": [
+        15,
+        14,
+        33,
+        29
+      ]
+    },
+    {
+      "k": "Steam 評價",
+      "v": "首發初期好評率約 77～79%，11/16 已回升到約 11.4 萬則、94% 好評（極度好評）",
+      "s": [
+        17,
+        27,
+        29,
+        31
+      ]
+    },
+    {
+      "k": "難度",
+      "v": "4 段難度；最高的「66 Days」只能重來 66 次，要通關一次才解鎖；另有新遊戲+",
+      "s": [
+        8,
+        28,
+        32
+      ]
+    }
+  ],
+  "money": {
+    "level": 1,
+    "model": "買斷制＋可選的外觀豪華升級",
+    "notes": [
+      "付費內容目前只有豪華版（外觀、設定集、原聲帶），沒有季票，也沒公布劇情 DLC。",
+      "開發團隊 2023 年就公開說這款不會有微交易。",
+      "S-GAME 的手遊《影之刃》系列以前靠數值付費賺錢；梁其偉 2019 年受訪時自己承認，《影之刃2》把付費數值放進對戰是一次方向錯誤的嘗試。這款單機則反過來，完全不做微交易。"
+    ],
+    "flags": [
+      "買斷 NT$1,380 起",
+      "Denuvo",
+      "無微交易"
+    ]
+  },
+  "zh": {
+    "ui": true,
+    "sub": true,
+    "voice": true,
+    "note": "介面、字幕有繁體中文；有完整中文（普通話）配音，Steam 標在簡中底下，也可以切英文配音。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區、PlayStation Store 台灣區都有上架，同步上市、有繁中。"
+  },
+  "rig": {
+    "verdict": "綽綽有餘（容量要留）",
+    "note": "建議配備是 RTX 3060 Ti 跑 1440p／60 幀，你的 RTX 5090 Laptop 遠超過；遊戲支援 DLSS 多重補幀，也有路徑追蹤可以試，接 4K 電視很適合。要注意兩件事：145GB 一定要裝在 SSD（你剩約 800GB 夠用）；第一次開遊戲的著色器編譯，媒體實測要 8～15 分鐘，不是當機。"
+  },
+  "time": {
+    "text": "主線約 25～30 小時",
+    "note": "這是總監的估計；卡王、愛探索會更久，4Gamers 作者用一周目最高難度、探索約九成花了約 60 小時。有 4 種結局與新遊戲+。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "hXyPbvj7A7w",
+        "title": "預購預告（2026/8）"
+      },
+      {
+        "id": "EZr1HXkEahs",
+        "title": "發表預告（PlayStation 官方，2023）"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "S-GAME 會不會公布劇情 DLC 或其他平台版本",
+    "Steam 繁中評價能不能跟著整體回升",
+    "後續修正檔能不能再壓低著色器編譯時間與跑圖頓卡"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "進入新區域探索",
+        "用招式和彈反打殺氣",
+        "換武器補殺氣、放大招",
+        "打王拿新武器",
+        "用新武器開新路",
+        "升技能再往前推"
+      ],
+      "body": [
+        "核心是「殺氣」：格擋會消耗你的殺氣，耗光就會被打出硬直；反過來，完美彈反、閃避和打中對手，會削掉對方的殺氣。所以這款不是龜在盾後面等破綻，而是逼你主動搶節奏。",
+        "你身上帶兩把主武器和兩把「影之武裝」。換武器有冷卻，但每換一次殺氣就補滿，集滿殺氣精華還能放大招——高手打法就是在連段中不停換刀。大部分武器是打王掉的，拿到就能立刻改變打法。",
+        "影之武裝不只拿來打：有的能轟開石牆，有的能拉索飛過去，所以打完王常會回頭發現新路。地圖是半開放、彼此相連的區域，藍色的「記憶花」解鎖區域故事，收集起來還會加血量上限。",
+        "成長靠打怪與探索拿到的各種材料升技能，帶兩種藥、六件飾品調整流派。不少玩家特別稱讚它沒有魂系那種「死了要跑回去撿」的麻煩，挫折感小很多。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和媒體整理。第一次開遊戲先讓著色器編譯跑完（實測 8～15 分鐘），中途別強制關掉。",
+      "最高的「66 Days」難度（只能重來 66 次）要通關一次才會開放；第一輪想享受戰鬥，選中間兩段就好。注意有報導指出降到最簡單的難度後，存檔可能就被鎖在那一段，調低前想清楚。",
+      "前幾場戰鬥先練「彈反」和「換武器補殺氣」：一直按格擋只會把自己的殺氣耗光。",
+      "看到藍色記憶花就去撿，除了補故事，還會加血量上限；能破牆、拉索的影之武裝到手後，記得回頭找之前過不去的地方。",
+      "11/4 的更新後，打擊音效強度可以調，PC 版也能改「互動」鍵；覺得聲音太炸或按鍵不順手，先去設定裡改。"
+    ],
+    "compare": [
+      {
+        "name": "隻狼：暗影雙死",
+        "same": "以彈反和削減架勢為核心、刀刀相碰的快節奏戰鬥",
+        "diff": "影之刃零死了不跑屍、武器多、換刀是核心技巧；隻狼更硬核，幾乎只有一把刀"
+      },
+      {
+        "name": "黑神話：悟空",
+        "same": "中國團隊做的高規格動作大作、首發話題與銷量都爆",
+        "diff": "悟空是西遊神話、偏魂系節奏；影之刃零是蒸氣龐克武俠，招式和連段更像格鬥遊戲"
+      },
+      {
+        "name": "惡魔獵人 5",
+        "same": "追求華麗連段、隨時切換武器打出花樣",
+        "diff": "影之刃零多了殺氣攻防和探索解鎖，敵人更講究防守時機"
+      }
+    ],
+    "story": {
+      "safe": [
+        "主角 Soul 是刺客組織「The Order」的頂尖殺手，被陷害成殺死組織首領的兇手，還受了致命重傷。",
+        "他靠一顆受污染的心臟續命，只剩 66 天可活，必須到一座名叫 Pangzhen 的城鎮，找到能救他一命的另一顆心臟。遊戲有 4 種結局。",
+        "甄子丹擔任戰鬥設計創意顧問，也親自用臉部和動作捕捉演出主角父親這個角色。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "創意總監梁其偉在國外讀建築時，用 RPG Maker 做出了《雨血：死鎮》，回國後成立 S-GAME，影之刃系列就是從這裡長出來的。",
+      "公司後來轉做手遊，《影之刃》系列成了養活團隊的「現金牛」；但他 2019 年受訪時也坦承，《影之刃2》讓付費玩家強到別人無法還手，是方向錯了。",
+      "《影之刃零》2016 年以代號公布，2018 年一度停擺，2021 年恢復並和騰訊合作，2023 年在 PlayStation 發表會正式亮相。中國媒體報導開發成本 3～4 億人民幣、核心團隊約 150 人，日本武術指導谷垣健治（甄子丹團隊）也參與了動作設計。",
+      "原訂 2026/9/9 上市，梁其偉發公開信說要把角色模型、場景的畫面升級做完，延了 50 天到 10/29。上市後首日修正檔約 5GB，11/4 又推出大更新，縮短著色器編譯、修卡關，還把一個早期支線王的抓技在兩個簡單難度調少。"
+    ],
+    "voices": {
+      "pros": [
+        "戰鬥是共識亮點：IGN 給 9 分、PC Gamer 給 90 分，評測普遍誇動作流暢、王戰精彩",
+        "武器多、換刀連段有深度，打王拿新武器的回饋感很強",
+        "中文配音和配樂到位，美術、場景氣勢足"
+      ],
+      "cons": [
+        "劇情是最大扣分：倒敘讓人混亂、角色單薄，GameSpot、VGC 都點名",
+        "關卡偏線性、空氣牆多，探索自由度不如預期",
+        "首發效能：著色器編譯久、閃退、跑圖頓卡；也有玩家嫌小怪太硬、成就容易錯過"
+      ],
+      "debate": [
+        "首發好評率只有七成多，中國玩家的負評集中在效能和「手感飄、看不出格擋時機」；一週後回升到九成以上。到底是戰鬥設計問題，還是首發技術問題被放大？",
+        "配樂被部分中國玩家嫌太前衛、不夠「中國風」，音樂總監回應創新才是保護文化最好的方式。"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2016-11-22",
+        "t": "以代號公布系列重製計畫"
+      },
+      {
+        "d": "2023-05-24",
+        "t": "PlayStation 發表會正式亮相"
+      },
+      {
+        "d": "2025-12",
+        "t": "TGA 公布 2026/9/9 上市"
+      },
+      {
+        "d": "2026-06",
+        "t": "宣布延期 50 天到 10/29，要做完畫面升級"
+      },
+      {
+        "d": "2026-08-11",
+        "t": "開放預購，公開甄子丹參與"
+      },
+      {
+        "d": "2026-10-29",
+        "t": "PC、PS5 同步上市，首日同上 72 萬人"
+      },
+      {
+        "d": "2026-11-01",
+        "t": "Steam 同上衝到 83 萬人新高"
+      },
+      {
+        "d": "2026-11-02",
+        "t": "官方宣布 72 小時賣破 400 萬套"
+      },
+      {
+        "d": "2026-11-04",
+        "t": "大型修正：縮短著色器編譯、可調打擊音效、PC 可改互動鍵"
+      },
+      {
+        "d": "2027",
+        "t": "PS5 實體版推出"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "「中國 3A」這個標籤，是幫助還是包袱？",
+        "why": "從《黑神話：悟空》到《影之刃零》，中國單機大作一出就被放大檢視：國外媒體看戰鬥，中國玩家看文化、看配樂。評價兩極，常常不是遊戲本身的問題。"
+      },
+      {
+        "q": "一家靠手遊數值付費起家的公司，能洗白嗎？",
+        "why": "梁其偉自己承認手遊收費設計錯了，再把手遊賺的錢砸進沒有微交易的單機。玩家該用作品重新評價它，還是記住過去？"
+      },
+      {
+        "q": "首發效能差，該不該直接反映在評價上？",
+        "why": "初期好評率七成多、一週後九成以上。Steam 評價是給「遊戲」還是給「首發狀態」打分，值得一聊。"
+      },
+      {
+        "q": "沒有跑屍的動作遊戲，算不算「魂系」？",
+        "why": "它有難度、有王戰，卻刻意拿掉懲罰。這是讓更多人能玩的好設計，還是把魂系的靈魂拿掉了？"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "雨夜裡兩把刀撞在一起，你的殺氣條見底，下一刀擋不住了。這時候換武器——殺氣瞬間補滿，反手一記大招把王打退。\n\n《影之刃零》是中國團隊 S-GAME 做的武俠動作遊戲，10/29 在 PC 和 PS5 同步上市。你扮演被陷害、只剩 66 天可活的刺客，靠彈反、閃避和不停換刀打出連段；大部分武器打王才拿得到，有的還能破牆、拉索開新路。死了不用跑回去撿東西，這點跟魂系很不一樣。\n\n成績很漂亮：官方說上市 72 小時賣破 400 萬套，Steam 同上最高 83 萬人，OpenCritic 88 分。Steam 和 PS Store 台灣區標準版都是 NT$1,380，有繁中字幕和中文配音，沒有微交易。要注意的是 PC 版要 145GB、必須裝在 SSD；劇情和關卡設計也被不少媒體嫌普通。\n\n你玩動作遊戲，是為了戰鬥爽度，還是為了好故事？",
+    "titles": [
+      "影之刃零上市半個月：400 萬套、繁中、NT$1,380",
+      "只剩 66 天可活的刺客，為什麼讓 83 萬人同時上線？",
+      "戰鬥滿分、劇情被嫌：中國武俠大作值不值得買？"
+    ],
+    "card": {
+      "kicker": "72 小時破 400 萬套",
+      "title": "換刀就能回滿殺氣\n武俠動作新標竿？",
+      "sub": "S-GAME《影之刃零》PC／PS5",
+      "tags": [
+        "繁中字幕",
+        "無微交易",
+        "145GB"
+      ],
+      "points": [
+        {
+          "h": "殺氣攻防",
+          "t": "格擋耗自己的，彈反削對手的。"
+        },
+        {
+          "h": "打王換武器",
+          "t": "新武器還能破牆、拉索開新路。"
+        },
+        {
+          "h": "NT$1,380",
+          "t": "Steam、PS5 同價，有中文配音。"
+        }
+      ]
+    },
+    "tags": [
+      "#影之刃零",
+      "#PhantomBladeZero",
+      "#武俠動作",
+      "#Steam遊戲",
+      "#PS5",
+      "#遊戲狂想曲"
+    ],
+    "script": "只剩六十六天可活的刺客，讓八十三萬人同時在 Steam 上砍。這款是《影之刃零》，中國團隊 S-GAME 做的武俠動作遊戲，十月底在 PC 跟 PS5 同步上市，官方說三天就賣破四百萬套。\n它好玩在「殺氣」：你格擋會耗自己的殺氣，彈反跟閃避會削對手的。快撐不住的時候換一把武器，殺氣直接補滿，再接一記大招。大部分武器要打王才拿得到，有的還能轟牆、拉索開新路。\n缺點也講清楚：劇情被不少媒體嫌講得亂，關卡偏線性；PC 版要一百四十五 GB，還一定要 SSD。\nSteam 跟 PS5 台灣都賣一千三百八，有繁中字幕和中文配音，沒有微交易。\n你玩動作遊戲，是看戰鬥爽不爽，還是看故事好不好？留言告訴我。",
+    "credit": "圖片／影片來源：S-GAME 官方 Steam 商店頁與 PlayStation 官方預告"
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：Phantom Blade Zero（語言、DRM、系統需求）",
+      "u": "https://store.steampowered.com/app/4115450",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "PlayStation Store 台灣：影之刃零 標準版",
+      "u": "https://store.playstation.com/zh-hant-tw/product/UB2134-PPSA34579_00-0622032276386943",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "PlayStation Store 台灣：影之刃零 數位豪華版",
+      "u": "https://store.playstation.com/zh-hant-tw/product/UB2134-PPSA34579_00-0679049422108833",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Yahoo 奇摩：《影之刃零》值得買嗎？Steam 評價、台灣價格、PC 配備整理",
+      "u": "https://tw.news.yahoo.com/%E3%80%8A%E5%BD%B1%E4%B9%8B%E5%88%83%E9%9B%B6%E3%80%8B%E5%80%BC%E5%BE%97%E8%B2%B7%E5%97%8E%EF%BC%9Fsteam%E7%8E%A9%E5%AE%B6%E8%A9%95%E5%83%B9%E3%80%81%E5%8F%B0%E7%81%A3%E5%83%B9%E6%A0%BC%E3%80%81pc%E9%85%8D%E5%82%99%E6%95%B4%E7%90%86-200939465.html",
+      "d": "2026-10-31"
+    },
+    {
+      "t": "Gematsu：上市預告與 PS5 實體版 2027 年推出",
+      "u": "https://www.gematsu.com/2026/10/phantom-blade-zero-launch-trailer-ps5-physical-editions-launch-in-2027",
+      "d": "2026-10-21"
+    },
+    {
+      "t": "PC Gamer：Phantom Blade Zero 上市時間",
+      "u": "https://www.pcgamer.com/games/action/phantom-blade-zero-release-date-launch-times/",
+      "d": "2026-10-28"
+    },
+    {
+      "t": "Wccftech：PC 效能分析與設定建議",
+      "u": "https://wccftech.com/how-to/phantom-blade-zero-pc-performance-analysis-tuning-guide-how-to-get-the-best-experience-on-pc/",
+      "d": "2026-10-28"
+    },
+    {
+      "t": "4Gamers：《影之刃零》路徑追蹤效能實測",
+      "u": "https://www.4gamers.com.tw/news/detail/82901/phantom-blade-zero-performance-benchmark-with-path-tracing",
+      "d": "2026-10-28"
+    },
+    {
+      "t": "GamerFuzion：遊玩時數、新遊戲+ 與 66 Days 模式",
+      "u": "https://www.gamerfuzion.com/phantom-blade-zero-length-new-game-plus-platinum-66-days-mode/",
+      "d": "2026-10-09"
+    },
+    {
+      "t": "TechRadar：Phantom Blade Zero 評測",
+      "u": "https://www.techradar.com/gaming/phantom-blade-zero-review",
+      "d": "2026-10-27"
+    },
+    {
+      "t": "4Gamers：《影之刃零》最高難度通關心得",
+      "u": "https://www.4gamers.com.tw/saged/detail/rw7rw53668mnjv",
+      "d": ""
+    },
+    {
+      "t": "OpenCritic：Phantom Blade Zero",
+      "u": "https://opencritic.com/game/19914/phantom-blade-zero",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Metacritic：Phantom Blade Zero（PC）媒體評分",
+      "u": "https://www.metacritic.com/game/phantom-blade-zero/critic-reviews/?platform=pc",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "VGC：Phantom Blade Zero 評測",
+      "u": "https://www.videogameschronicle.com/review/phantom-blade-zero-review/",
+      "d": "2026-10-26"
+    },
+    {
+      "t": "GamingBolt：72 小時賣破 400 萬套、同上 83 萬新高",
+      "u": "https://gamingbolt.com/phantom-blade-zero-crosses-4-million-sales-in-72-hours",
+      "d": "2026-11-02"
+    },
+    {
+      "t": "KeenGamer：上市首日同上 723,876 人",
+      "u": "https://keengamer.com/articles/news/phantom-blade-zero-hits-723876-peak-players-on-steam-on-launch-day",
+      "d": "2026-10-29"
+    },
+    {
+      "t": "GameRes：梁其偉談《影之刃2》的反思",
+      "u": "https://www.gameres.com/835282.html",
+      "d": "2019-01-18"
+    },
+    {
+      "t": "虎嗅：《影之刃零》峰值、好評率與開發幕後",
+      "u": "https://www.huxiu.com/article/4902145.html",
+      "d": "2026-11-02"
+    },
+    {
+      "t": "PlayStation Blog：王的武器如何改變戰鬥與探索",
+      "u": "https://blog.playstation.com/2026/10/28/phantom-blade-zero-how-boss-weapons-transform-combat-and-exploration/",
+      "d": "2026-10-28"
+    },
+    {
+      "t": "PlayStation Blog：梁其偉〈A New Beginning〉（附發表預告）",
+      "u": "https://blog.playstation.com/2023/05/24/phantom-blade-zero-a-new-beginning-in-a-long-journey/",
+      "d": "2023-05-24"
+    },
+    {
+      "t": "PlayStation Blog：開放預購、State of Play 專場、甄子丹參與",
+      "u": "https://blog.playstation.com/2026/08/11/watch-the-phantom-blade-zero-gameplay-deep-dive-state-of-play-on-august-17-pre-orders-live-today/",
+      "d": "2026-08-11"
+    },
+    {
+      "t": "S-GAME 官網：創意總監公開信（延期說明）",
+      "u": "https://pbz.s-game.com/en-US/news/creative-director-letter/",
+      "d": "2026-06"
+    },
+    {
+      "t": "SteamDB：1.0302256 更新說明",
+      "u": "https://steamdb.info/patchnotes/26367565/",
+      "d": "2026-11-04"
+    },
+    {
+      "t": "Push Square：PS5 首次更新調低早期支線王難度",
+      "u": "https://www.pushsquare.com/news/2026/11/first-phantom-blade-zero-ps5-update-makes-an-early-deadly-boss-easier",
+      "d": "2026-11-04"
+    },
+    {
+      "t": "Push Square：開發團隊表示不會有微交易",
+      "u": "https://www.pushsquare.com/news/2023/06/the-ps5s-unfathomably-ambitious-phantom-blade-zero-wont-have-microtransactions",
+      "d": "2023-06-06"
+    },
+    {
+      "t": "4Gamers：配樂爭議與音樂總監回應",
+      "u": "https://www.4gamers.com.tw/news/detail/83087/phantom-blade-zero-composer-caisheng-bo-music-innovation-chinese-culture",
+      "d": "2026-11-04"
+    },
+    {
+      "t": "GamerFuzion：同上破 70 萬、首日修正檔與英文配音換角",
+      "u": "https://www.gamerfuzion.com/phantom-blade-zero-steam-700000-concurrent-players-reviews-very-positive-roger-craig-smith/",
+      "d": "2026-10-29"
+    },
+    {
+      "t": "什麼值得買：玩家為何首發先給差評",
+      "u": "https://post.smzdm.com/p/az87w5q5/",
+      "d": "2026-10-31"
+    },
+    {
+      "t": "Wikipedia：Phantom Blade Zero",
+      "u": "https://en.wikipedia.org/wiki/Phantom_Blade_Zero",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Steam 官方排行與商店資料：最多人玩第 7 名、台灣區價格與評價（解包資料管線 11/16 08:59 讀取）",
+      "u": "https://store.steampowered.com/charts/mostplayed",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Steam 社群：Phantom Blade Zero 最有幫助的評論",
+      "u": "https://steamcommunity.com/app/4115450/reviews/?browsefilter=toprated",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "什麼值得買：《影之刃零》好評率從 77% 回升到 94%",
+      "u": "https://post.smzdm.com/p/az87k0oo/",
+      "d": "2026-11-08"
+    },
+    {
+      "t": "GamerFuzion：四段難度說明（66 Days 通關後解鎖）",
+      "u": "https://www.gamerfuzion.com/phantom-blade-zero-difficulty-modes-explained-wayfarer-pathbreaker-hellwalker-66-days/",
+      "d": "2026-10"
+    },
+    {
+      "t": "Tech4Gamers：Phantom Blade Zero 11/1 同上創新高",
+      "u": "https://tech4gamers.com/?p=367817",
+      "d": "2026-11-02"
+    }
+  ],
+  "pending": [
+    "劇情 DLC、季票或 Xbox／Switch 2 版：官方都還沒公布",
+    "Steam 繁中評論目前的好評率：只看到 10/31 時是褒貶不一"
+  ],
+  "updated": "2026-11-16T17:00:00+08:00"
+}

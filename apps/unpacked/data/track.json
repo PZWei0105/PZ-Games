@@ -1,6 +1,18 @@
 {
  "apps": [
   {
+   "appid": 4115450,
+   "id": "phantom-blade-zero",
+   "date": "2026-11-16",
+   "watch": true
+  },
+  {
+   "appid": 4348910,
+   "id": "probably-stolen",
+   "date": "2026-11-16",
+   "watch": true
+  },
+  {
    "appid": 4262460,
    "id": "rob-run",
    "date": "2026-11-16",

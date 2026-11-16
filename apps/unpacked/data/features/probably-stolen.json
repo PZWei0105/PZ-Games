@@ -1,0 +1,518 @@
+{
+  "id": "probably-stolen",
+  "date": "2026-11-16",
+  "rank": 5,
+  "kind": "indie",
+  "kind_label": "獨立黑馬",
+  "game": {
+    "zh": "深空當鋪：可能是偷的",
+    "zh_note": "Steam 台灣區的官方在地化名稱；英文全名 Probably Stolen: Cyberpunk Shopkeeper Sim",
+    "en": "Probably Stolen",
+    "steam": 4348910,
+    "dev": "Questing Goose Studio",
+    "pub": "tinyBuild",
+    "platforms": [
+      "PC（Steam）"
+    ],
+    "genres": [
+      "商店經營",
+      "賽博龐克",
+      "類 Rogue"
+    ],
+    "release": "2026-10-28",
+    "release_text": "2026/10/28 正式上市（不是搶先體驗），目前只有 Steam",
+    "price_text": "Steam NT$279（無內購）",
+    "site": "https://store.steampowered.com/app/4348910"
+  },
+  "headline": "試玩版同上最多只有 28 人的小遊戲，改頭換面後 10 天賣破 100 萬套",
+  "hook": "櫃台上放著一支來路不明的雷射手槍，客人說是他祖傳的。你拿起放大鏡，發現序號被磨掉了。門口保安的巡邏燈閃過——收下來可以多賺三倍，被查到這間店就沒了。房租，明天就要繳。",
+  "verdict": {
+    "stamp": "推薦",
+    "label": "現在就玩（看得懂簡中或英文）",
+    "summary": "NT$279、只要 1GB、配備需求極低，「要不要收這件贓物」的每一筆交易都很有張力，一局一局重來也耐玩。缺點是沒有繁中、中後期重複感重，劇情偏薄；看得懂簡中或英文，現在買很划算。",
+    "for": [
+      "喜歡《Papers, Please》那種在櫃台前做道德選擇、步步驚心的人",
+      "想找便宜、不吃配備、一次玩 30 分鐘也能停的小品",
+      "愛玩模組的人：上市就支援 Steam 工作坊"
+    ],
+    "against": [
+      "一定要繁中才玩的人：目前只有簡中，繁中官方只說會在未來更新加入",
+      "討厭重複作業的人：多家媒體說玩久了變化不夠",
+      "想看一個完整大故事的人：部分玩家嫌派系和劇情單薄"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Questing Goose Studio（加拿大蒙特婁的小型獨立團隊，約 8 人）開發，tinyBuild 發行",
+      "s": [
+        2,
+        5,
+        8,
+        10
+      ]
+    },
+    {
+      "k": "上市／平台",
+      "v": "2026/10/28 正式版上市；目前只有 PC（Steam），主機版沒公布",
+      "s": [
+        0,
+        8,
+        11
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Steam 台灣區 NT$279；首發 9 折到 11/12 已結束。另有付費原聲帶 DLC",
+      "s": [
+        20,
+        0,
+        10,
+        13
+      ]
+    },
+    {
+      "k": "中文",
+      "v": "簡中有介面與字幕；繁中不支援，商店頁寫「官方繁體中文支援預計於未來更新中推出」，沒有時程。所有語言都沒有語音",
+      "s": [
+        1,
+        0
+      ]
+    },
+    {
+      "k": "模式",
+      "v": "純單人；支援 Steam 雲端、成就、Steam 工作坊模組",
+      "s": [
+        0,
+        9
+      ]
+    },
+    {
+      "k": "最低配備",
+      "v": "Windows 10 64 位元、i3、8GB RAM、GTX 650 Ti、1GB 空間",
+      "s": [
+        0,
+        9
+      ]
+    },
+    {
+      "k": "前身",
+      "v": "原本叫《Deepspace Emporium》，試玩版同上最多只有 28 人；tinyBuild 簽下後重做美術與設計",
+      "s": [
+        11,
+        12
+      ]
+    },
+    {
+      "k": "上市前熱度",
+      "v": "Steam 新品節期間試玩版同上近 4 萬人；上市前願望清單超過 50 萬",
+      "s": [
+        7,
+        11,
+        8
+      ]
+    },
+    {
+      "k": "銷量",
+      "v": "上市幾小時賣 20 萬套；tinyBuild 11/7 宣布約 10 天破 100 萬套",
+      "s": [
+        19,
+        10,
+        13
+      ]
+    },
+    {
+      "k": "Steam 同上",
+      "v": "上市 90 分鐘破 8.6 萬人，11/8 衝到約 18.6 萬的最高峰（SteamDB）；11/16 仍在 Steam 最多人玩第 19 名",
+      "s": [
+        10,
+        23,
+        15,
+        20
+      ]
+    },
+    {
+      "k": "Steam 評價",
+      "v": "11/16 約 2.5 萬則、80% 好評（極度好評）；11/8～9 曾因簡中翻譯爭議湧入大量負評",
+      "s": [
+        20,
+        15,
+        23
+      ]
+    },
+    {
+      "k": "媒體評分",
+      "v": "Metacritic 74（8 篇）、OpenCritic 78",
+      "s": [
+        17,
+        18
+      ]
+    },
+    {
+      "k": "結局",
+      "v": "多結局；Destructoid 整理到 17 種（買下店面、被捕、革命、退休等）",
+      "s": [
+        16
+      ]
+    },
+    {
+      "k": "免費更新",
+      "v": "12 月加新開局職業「廢料客」，2027 年 1 月、4 月各一次大型更新；官方說路線圖上的更新全部免費",
+      "s": [
+        14
+      ]
+    }
+  ],
+  "money": {
+    "level": 1,
+    "model": "買斷制，另售原聲帶",
+    "notes": [
+      "遊戲本體 NT$279 就是全部內容，沒有遊戲內購；唯一的付費 DLC 是原聲帶。",
+      "官方承諾路線圖上的更新都免費，包括 12 月的新開局職業與 2027 年的兩次大更新。",
+      "發行商 tinyBuild 旗下有《Graveyard Keeper》《Potion Craft》等作品；它今年 4 月曾免費送出原版《Graveyard Keeper》，靠帶動 DLC 銷售賺了約 25 萬美元。"
+    ],
+    "flags": [
+      "買斷 NT$279",
+      "無內購",
+      "免費更新"
+    ]
+  },
+  "zh": {
+    "ui": false,
+    "sub": false,
+    "voice": false,
+    "note": "沒有繁中；有簡中介面與字幕。商店頁寫繁中會在未來更新推出，但沒給時間。遊戲本身沒有語音。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區直接買、純單機，沒有區域或伺服器問題；唯一門檻是語言。"
+  },
+  "rig": {
+    "verdict": "不吃硬體",
+    "note": "最低只要 GTX 650 Ti、8GB RAM、1GB 空間，你的 SCAR 18 拿來跑它太浪費。真正要注意的是字小：有玩家和媒體提過小螢幕上字不好讀，接 4K 電視記得把介面縮放調大（11/7 的更新後對話框可以放大到 150%）。"
+  },
+  "time": {
+    "text": "沒有公布總時數，可一局一局重玩",
+    "note": "類 Rogue 結構，被抓或一批貨出事這局就可能結束；有多種開局職業、多種結局可以反覆玩。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "QmDXczrcCIc",
+        "title": "發表預告（2026/8）"
+      },
+      {
+        "id": "8Ef6Pkrsu04",
+        "title": "上市日預告（2026/9）"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "繁體中文什麼時候上",
+    "12 月「廢料客」更新能不能解決中後期重複感",
+    "負評轟炸後評價能不能回穩"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "開店接客",
+        "鑑定真偽、估價",
+        "殺價或拒收",
+        "藏好違禁品躲查緝",
+        "生產、改裝再轉賣",
+        "湊錢繳越來越貴的房租"
+      ],
+      "body": [
+        "舞台是一座反烏托邦太空站的「下層區」，你是背著貸款開店的前拾荒者。房東幾乎每週漲房租，終極目標是把整間店面買下來。",
+        "每個走進來的客人都是一道選擇題：用放大鏡看真假、估價、殺價，決定成交、拒絕、舉報還是放過。可以把假貨賣給有錢人，也可以偷偷降低商品品質多賺一筆，但做得太過火會引來保安，甚至私刑。",
+        "保安會上門查槍、抄違禁品，所以你得替見不得人的貨找好藏匿處。還有冒充人類的 AI 改造人混在客人裡：各派系都同意抓到就處決，但誤判的代價由你承擔。舉報革命分子能拿賞金，同時也會得罪別的派系。",
+        "店面之外還能搞副業：養老鼠賣肉、淨水、從垃圾堆撿廢料做成能賣的商品，市場價格會隨事件波動。開局可以選槍匠、化學師、銷贓者等不同職業，玩法差很多；一次判斷失誤就可能讓整局結束，這正是它停不下來的原因。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和玩家整理。看不懂簡中又不想等的話，介面是純文字、不用聽語音，英文版也可以；繁中官方只說會在未來加入。",
+      "第一局選比較單純的開局職業，先熟悉「鑑定→殺價→成交」的節奏，別一開始就碰違禁品。",
+      "收貨前先想好要藏在哪：保安查緝時，違禁品沒藏好就會出事。",
+      "每天結算時盯著房租，留一筆現金緩衝；被房租逼急才去收高風險的貨，最容易翻車。",
+      "字太小就去設定裡調對話框縮放（11/7 的更新後可調 50～150%）；不想看到兩位致敬流行文化角色的客人，也能在設定裡關掉。"
+    ],
+    "compare": [
+      {
+        "name": "Papers, Please",
+        "same": "在櫃台前一個一個盤查客人、每個決定都有道德代價",
+        "diff": "Papers, Please 是查證件放不放行；深空當鋪是買賣贓物、要自己賺錢繳房租，經營成分重得多"
+      },
+      {
+        "name": "Cyberpunk 2077",
+        "same": "骯髒、腐敗、貧富極端的賽博龐克街頭氣氛",
+        "diff": "2077 是開放世界動作角色扮演；這款只在一間小店的櫃台後面，用交易看見整座城市"
+      },
+      {
+        "name": "Potion Craft",
+        "same": "同為 tinyBuild 發行的店鋪經營，客人上門、跟你討價還價",
+        "diff": "Potion Craft 是溫和的煉金小店；深空當鋪多了查緝、私刑、派系和「一局可能就此結束」的壓力"
+      }
+    ],
+    "story": {
+      "safe": [
+        "你在太空站下層區經營一間二手店，貨架上的東西「可能是偷的」。上層區的有錢人、上門查緝的保安、革命分子，甚至冒充人類的 AI 改造人，都可能走進你的店，各有各的盤算。",
+        "整體劇情走向由你的選擇決定：老實做生意、靠贓物發財、出賣派系、還是乾脆加入革命，結局差很多。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "Questing Goose Studio 是加拿大蒙特婁的小團隊，最早由一位開發者獨自製作，後來加入美術和音效，合計大約 8 個人。開發者說靈感來自《Space Station 13》和《Papers, Please》。",
+      "它的前身叫《Deepspace Emporium》，試玩版同上最多只有 28 人，幾乎沒人知道。tinyBuild 簽下之後，和開發者一起把美術與設計整個重做、改名，再透過 Playtest 和 Steam 新品節一路累積熱度。",
+      "上市後幾個小時賣出 20 萬套，tinyBuild 執行長形容這數字「太誇張」；約 10 天破 100 萬套，成了 tinyBuild 的一匹黑馬。",
+      "11 月初的風波：簡中在地化團隊沒有先和開發、發行確認，就刪改了道具說明、角色對話等文字，中國玩家 11/8～9 起大量給負評，11/9 單日約 3,000 則。官方 11/9 推出更新改回原文，承認是在地化團隊沒有先確認就改了文本。全部免費的更新路線圖，則是 11/7 宣布百萬銷量時一起公布的。"
+    ],
+    "voices": {
+      "pros": [
+        "「收不收這件貨」的循環很上癮，生產鏈和開局職業讓每一局都不太一樣",
+        "像素美術和音樂很對味，賽博龐克的街頭感做得到位",
+        "便宜、不吃配備，還有工作坊模組與免費更新撐壽命"
+      ],
+      "cons": [
+        "玩久了重複感重，中後期變化不夠（DualShockers 等媒體都點名）",
+        "部分玩家嫌派系與劇情太薄、結局之間差異不夠大",
+        "雜事多、存檔限制多，小螢幕上字太小"
+      ],
+      "debate": [
+        "簡中在地化擅自刪改文字引爆負評轟炸：在地化團隊該不該替遊戲「自我審查」？玩家用負評表達不滿，又公不公平？",
+        "有玩家在評論裡指控用了 AI 素材、灌好評，但沒有提出證據，Steam 商店頁也沒有 AI 內容揭露；目前只能當傳言看。"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2025",
+        "t": "前身《Deepspace Emporium》試玩版推出，同上最多 28 人"
+      },
+      {
+        "d": "2026-08-04",
+        "t": "tinyBuild 正式發表，同步開放第一次 Playtest（台灣時間）"
+      },
+      {
+        "d": "2026-09-15",
+        "t": "公布 10/28 上市"
+      },
+      {
+        "d": "2026-10",
+        "t": "Steam 新品節試玩版同上近 4 萬人"
+      },
+      {
+        "d": "2026-10-28",
+        "t": "正式上市，幾小時賣出 20 萬套"
+      },
+      {
+        "d": "2026-11-07",
+        "t": "tinyBuild 宣布銷量破 100 萬套，同時公布全部免費的更新路線圖"
+      },
+      {
+        "d": "2026-11-08",
+        "t": "同上衝到約 18.6 萬人最高峰；簡中文本爭議開始發酵"
+      },
+      {
+        "d": "2026-11-09",
+        "t": "負評轟炸單日約 3,000 則；官方推出 1.0.0.13 更新，把簡中文本改回原文"
+      },
+      {
+        "d": "2026-12",
+        "t": "新開局職業「廢料客」更新"
+      },
+      {
+        "d": "2027-01",
+        "t": "第一次大型免費更新（之後 4 月還有一次）"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "一款試玩版同上只有 28 人的遊戲，換了包裝就賣 100 萬套，發行商到底多重要？",
+        "why": "玩法核心沒變，變的是美術、名字和行銷節奏。這是獨立開發者最想知道、也最不想承認的事。"
+      },
+      {
+        "q": "你會為了多賺三倍收下贓物嗎？",
+        "why": "這款的樂趣全在灰色地帶。拿來做「觀眾投票決定收不收」的直播或短影音，很有互動感。"
+      },
+      {
+        "q": "沒有繁中，台灣玩家該不該先買？",
+        "why": "NT$279 很便宜、文字量也不算大，但官方繁中沒有時程。等在地化，還是現在用簡中先玩？"
+      },
+      {
+        "q": "負評轟炸是玩家的武器，還是誤傷？",
+        "why": "這次是在地化團隊的錯，卻讓小團隊的評價一夜掉一截。用負評逼官方改正，有效但代價由誰來扛？"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "客人把一支磨掉序號的手槍放上櫃台，說是傳家寶。收下來能多賺好幾倍，但保安下午才來查過一次店。你收不收？\n\n《深空當鋪：可能是偷的》（Probably Stolen）是加拿大小團隊 Questing Goose Studio 做、tinyBuild 發行的賽博龐克經營遊戲，10/28 在 Steam 上市。你在太空站的貧民區開二手店，鑑定真假、殺價、決定要不要收來路不明的貨，還得把違禁品藏好躲查緝，湊錢繳每週都在漲的房租。一步判斷錯，這局就結束。\n\n它的前身試玩版最多只有 28 個人同時在玩，重新包裝後約 10 天賣破 100 萬套。Steam 台灣區 NT$279、只要 1GB，純單機。可惜目前沒有繁中，中文只有簡中，官方說繁中會在之後的更新加入。\n\n如果是你站在櫃台後面，會老實做生意，還是專收贓物拚一把？",
+    "titles": [
+      "NT$279 的賽博龐克當鋪：10 天賣破 100 萬套",
+      "試玩版同上只有 28 人，它怎麼翻身成百萬黑馬？",
+      "收不收這把來路不明的槍？每一筆交易都在天人交戰"
+    ],
+    "card": {
+      "kicker": "10 天破 100 萬套",
+      "title": "這把槍可能是偷的\n你收不收？",
+      "sub": "tinyBuild 發行《深空當鋪》",
+      "tags": [
+        "NT$279",
+        "單人經營",
+        "暫無繁中"
+      ],
+      "points": [
+        {
+          "h": "鑑定殺價",
+          "t": "放大鏡看真假，每筆交易都在賭。"
+        },
+        {
+          "h": "躲保安查緝",
+          "t": "違禁品沒藏好，整間店直接完蛋。"
+        },
+        {
+          "h": "28 人到百萬",
+          "t": "試玩冷清的小品，重做後翻身。"
+        }
+      ]
+    },
+    "tags": [
+      "#深空當鋪",
+      "#ProbablyStolen",
+      "#賽博龐克",
+      "#獨立遊戲",
+      "#Steam遊戲",
+      "#遊戲狂想曲"
+    ],
+    "script": "一款試玩版最多只有二十八個人在玩的遊戲，換了包裝，十天賣破一百萬套。它叫《深空當鋪：可能是偷的》，英文叫 Probably Stolen，十月底在 Steam 上市。\n你在太空站的貧民區開一間二手店。客人拿東西來賣，你要用放大鏡看真假、估價、殺價，再決定收不收。問題是很多東西來路不明，收了能大賺，被保安查到就完蛋，所以違禁品得先藏起來。房租每週都在漲，一次判斷錯，這局就結束。\n台灣 Steam 賣兩百七十九塊，只要 1GB，什麼電腦都跑得動。缺點是目前沒有繁中，中文只有簡中，玩久了也會有點重複。\n如果有人拿一把磨掉序號的槍來賣，你收不收？留言告訴我。",
+    "credit": "圖片／影片來源：tinyBuild 官方 Steam 商店頁與預告"
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：Probably Stolen（語言、功能、系統需求、DLC）",
+      "u": "https://store.steampowered.com/app/4348910",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Steam 商店頁（繁中）：深空當鋪：可能是偷的 Probably Stolen",
+      "u": "https://store.steampowered.com/app/4348910/%E6%B7%B1%E7%A9%BA%E7%95%B6%E9%8B%AA%E5%8F%AF%E8%83%BD%E6%98%AF%E5%81%B7%E7%9A%84_Probably_Stolen/?l=tchinese",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Game Developer：tinyBuild 發表 Probably Stolen 新聞稿",
+      "u": "https://www.gamedeveloper.com/press-release/tinybuild-announces-probably-stolen-a-cyberpunk-pixel-art-shop-simulator-where-the-goods-aren-t-purely-legal",
+      "d": "2026-08-04"
+    },
+    {
+      "t": "Gematsu：賽博龐克商店模擬 Probably Stolen 發表",
+      "u": "https://www.gematsu.com/2026/08/cyberpunk-shopkeeping-simulator-probably-stolen-announced-for-pc",
+      "d": "2026-08-03"
+    },
+    {
+      "t": "4Gamers：Probably Stolen 開放 Playtest",
+      "u": "https://www.4gamers.com.tw/news/detail/81142/probably-stolen-steam-playtest-announced-cyberpunk-pawn-shop-simulator",
+      "d": "2026-08-05"
+    },
+    {
+      "t": "AUTOMATON：Probably Stolen 公布上市日",
+      "u": "https://automaton-media.com/articles/newsjp/20260915-467608/",
+      "d": "2026-09-15"
+    },
+    {
+      "t": "PC Gamer：試玩印象",
+      "u": "https://www.pcgamer.com/games/sim/i-feel-like-im-running-a-corner-store-in-dredd-or-cyberpunk-2077/",
+      "d": "2026-09-25"
+    },
+    {
+      "t": "PC Gamer：新品節試玩版擠進 Steam 最多人玩前 100",
+      "u": "https://www.pcgamer.com/games/sim/it-gives-me-great-nerdly-joy-that-the-next-fest-demo-on-steams-100-most-played-games-list-is-a-shopkeeping-sim/",
+      "d": "2026-10-21"
+    },
+    {
+      "t": "80.lv：像 Cyberpunk 2077 遇上 Papers, Please 的商店模擬",
+      "u": "https://80.lv/articles/this-new-shopkeeping-sim-is-like-cyberpunk-2077-meets-papers-please",
+      "d": "2026-10-28"
+    },
+    {
+      "t": "Windows Mode：Probably Stolen PC 指南與系統需求",
+      "u": "https://www.windowsmode.com/?p=48940",
+      "d": "2026-10-28"
+    },
+    {
+      "t": "4Gamers：上市賣出 20 萬套、同上 8.6 萬、支援工作坊模組",
+      "u": "https://www.4gamers.com.tw/news/detail/82950/probably-stolen-cyberpunk-shopkeeper-sim-200k-sales-86k-peak-steam-workshop-mods",
+      "d": "2026-10-29"
+    },
+    {
+      "t": "PC Games Hardware：從 28 人到爆紅",
+      "u": "https://www.pcgameshardware.de/Indie-Games-Thema-239276/News/Probably-Stolen-Cyberpunk-Ladensimulation-Steam-Next-Fest-1558415/",
+      "d": "2026-10-30"
+    },
+    {
+      "t": "AUTOMATON：原本只有 28 人同上的冷門作，靠發行商改頭換面爆紅",
+      "u": "https://automaton-media.com/en/news/probably-stolen-cyberpunk-shopkeeper-sim-started-out-as-an-obscure-game-with-max-28-concurrent-players-but-became-a-breakout-hit-thanks-to-makeover-by-publisher/",
+      "d": "2026-11-04"
+    },
+    {
+      "t": "AUTOMATON：Probably Stolen 銷量突破 100 萬套",
+      "u": "https://automaton-media.com/articles/newsjp/20261107-477965/",
+      "d": "2026-11-07"
+    },
+    {
+      "t": "MIXED：免費更新路線圖",
+      "u": "https://mixed-news.com/en/probably-stolen-free-updates-roadmap-million-players/",
+      "d": "2026-11-08"
+    },
+    {
+      "t": "4Gamers：百萬銷量與中文翻譯爭議、開發者回應",
+      "u": "https://www.4gamers.com.tw/news/detail/83192/probably-stolen-sales-1-million-chinese-translation-controversy-developer-response",
+      "d": "2026-11-10"
+    },
+    {
+      "t": "Destructoid：Probably Stolen 全結局整理",
+      "u": "https://www.destructoid.com/all-endings-in-probably-stolen-and-how-to-unlock-them/",
+      "d": "2026-10-31"
+    },
+    {
+      "t": "Metacritic：Probably Stolen 媒體評分",
+      "u": "https://www.metacritic.com/game/probably-stolen-cyberpunk-pawnshop-simulator/critic-reviews/?platform=pc",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "OpenCritic：Probably Stolen",
+      "u": "https://opencritic.com/game/21562/probably-stolen-cyberpunk-shopkeeper-sim/reviews",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "80.lv：上市幾小時賣出 20 萬套",
+      "u": "https://80.lv/articles/this-indie-cyberpunk-shopkeeper-sim-sells-200-000-copies-in-hours",
+      "d": "2026-10-29"
+    },
+    {
+      "t": "Steam 官方排行與商店資料：最多人玩第 19 名、台灣區價格與評價（解包資料管線 11/16 08:59 讀取）",
+      "u": "https://store.steampowered.com/charts/mostplayed",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Metacritic：Probably Stolen 玩家評論",
+      "u": "https://www.metacritic.com/game/probably-stolen-cyberpunk-pawnshop-simulator/user-reviews/",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "PC Gamer：免費送出 Graveyard Keeper 為發行商賺進近 25 萬美元",
+      "u": "https://www.pcgamer.com/games/sim/giving-graveyard-keeper-away-for-free-apparently-earned-its-publisher-almost-250k/",
+      "d": "2026-04-15"
+    },
+    {
+      "t": "udn 遊戲角落（PTT 轉貼）：簡中文本刪改引發負評、同上峰值 18.6 萬",
+      "u": "https://disp.cc/b/ACG/iktf",
+      "d": "2026-11-09"
+    }
+  ],
+  "pending": [
+    "繁體中文推出時間：商店頁只說「未來更新」，沒有時程",
+    "Steam Deck 官方評級：只有非官方來源說可遊玩",
+    "有沒有主機版計畫：官方沒提",
+    "AI 素材、灌好評的指控：只出現在玩家評論，沒有證據"
+  ],
+  "updated": "2026-11-16T17:00:00+08:00"
+}
