@@ -44,8 +44,9 @@ CTX = {'language': 'tchinese', 'country_code': 'TW', 'steam_realm': 1}
 LANG_TC, LANG_SC = 7, 6
 ADULT = {3, 4}
 
-MAX_PER_RUN = 160          # 一輪最多追幾款
-FRESH_DAYS = 120           # 這幾天內寫過的每輪都更新；更舊的一天更新一次
+HOT_MAX = 120              # 每輪都更新：最近寫的、盯上市的、還沒抓過的（最多這麼多款，新的優先）
+FRESH_DAYS = 120           # 「最近寫的」＝這幾天內
+ROTATE = 40                # 其餘的每輪輪流更新這麼多款（最久沒更新的先）：再多款也至少一天輪到一次
 HIST_PL = 720              # 同上紀錄（每小時一筆 ≈ 30 天）
 HIST_PR = 240
 HIST_RV = 240
@@ -410,6 +411,36 @@ def candidates(covered, tagn, picked=frozenset()):
 
 
 # ------------------------------------------------------------------ main
+def plan(track, live_old, t0):
+    """這一輪要更新哪些。最近寫的、盯上市的、還沒抓過的每輪都更新；其餘照「最久沒更新」輪流，
+    每輪 ROTATE 款——追蹤清單再長，每款也會定期更新到（推坑會一直累積，舊的特價資訊不能停在過去）。"""
+    old = live_old.get('apps') or {}
+    must, hot, cold = [], [], []
+    for x in track.get('apps') or []:
+        try:
+            appid = int(x['appid'])
+        except Exception:  # noqa: BLE001
+            continue
+        if str(appid) not in old:
+            must.append(appid)
+            continue
+        fresh = True
+        if x.get('date'):
+            try:
+                fresh = (t0.date() - dt.date.fromisoformat(x['date'])).days <= FRESH_DAYS
+            except ValueError:
+                pass
+        (hot if fresh or x.get('watch') else cold).append((x.get('date') or '', appid))
+    hot.sort(key=lambda r: r[0], reverse=True)            # 新的優先
+    cold += hot[HOT_MAX:]
+    cold.sort(key=lambda r: (old.get(str(r[1])) or {}).get('at') or '')   # 最久沒更新的先
+    out = []
+    for a in must + [a for _, a in hot[:HOT_MAX]] + [a for _, a in cold[:ROTATE]]:
+        if a not in out:
+            out.append(a)
+    return out
+
+
 def main():
     global OFFLINE
     ap = argparse.ArgumentParser()
@@ -428,24 +459,7 @@ def main():
     pk = load(os.path.join(D, 'picks.json'), {'items': []})
     picked = {int(x['steam']) for x in pk.get('items') or [] if x.get('steam')}
 
-    # 這一輪要更新哪些：最近寫的每輪；舊的每天第一輪（UTC 0–3 點）
-    apps = []
-    daily = t0.hour < 3
-    for x in track.get('apps') or []:
-        try:
-            appid = int(x['appid'])
-        except Exception:  # noqa: BLE001
-            continue
-        fresh = True
-        if x.get('date'):
-            try:
-                age = (t0.date() - dt.date.fromisoformat(x['date'])).days
-                fresh = age <= FRESH_DAYS or bool(x.get('watch'))
-            except ValueError:
-                pass
-        if fresh or daily or str(appid) not in (live_old.get('apps') or {}):
-            apps.append(appid)
-    apps = apps[:MAX_PER_RUN]
+    apps = plan(track, live_old, t0)
 
     tagn = tagnames()
     items = get_items(apps, media=True) if apps else {}
