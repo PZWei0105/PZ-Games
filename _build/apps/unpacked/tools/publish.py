@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """《解包》上架工具：檢查每一篇專題的格式與品質，重建目錄（index.json）和追蹤清單（track.json）。
 
-每日寫稿排程寫完專題後一定要跑：
+每日寫稿排程（專題）和每日推坑排程寫完都一定要跑（兩種一起檢查、一起重建）：
   python3 _build/apps/unpacked/tools/publish.py            # 檢查全部＋重建 index.json、track.json
   python3 _build/apps/unpacked/tools/publish.py --check    # 只檢查，不寫檔
   python3 _build/apps/unpacked/tools/publish.py --only rob-run   # 只檢查這一篇（目錄仍會整份重建）
 
 有 BAD 就不准推。WARN 要看過、能改就改。
+推坑（data/picks/<id>.json）另外產生 data/picks.json；推坑的 Steam appid 也會進 track.json。
 """
 import argparse
 import datetime as dt
@@ -19,10 +20,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..', '..'))
 DATA = os.path.join(REPO, 'apps', 'unpacked', 'data')
 FEAT = os.path.join(DATA, 'features')
+PICKS = os.path.join(DATA, 'picks')      # 推坑：已上市、不分新舊的私房推薦（PICKS_GUIDE.md）
 
 KINDS = {'new': '新作', 'ea': '搶先體驗', 'upcoming': '即將推出', 'update': '大型更新', 'exclusive': '平台獨佔',
          'hot': '熱門話題', 'classic': '經典回顧', 'free': '限時免費', 'indie': '獨立黑馬'}
 STAMPS = {'推薦', '觀望', '不推薦'}
+PICK_STAMPS = {'必玩', '閉眼入', '特價入', '冷門神作'}
 # 常見簡體字（台灣不用）：出現就要改
 SIMPLIFIED = set('这们为说时发会对应关现实体数经过还让头车门开问题页网软视频游戏级买卖钱单双东乐语论设议读谁码线红绿蓝该边远进选连运达战纬结给统络绝继续总务动劳势区团围国图圆场坏块坚坛声处备复够夺奋奖妈娱宁宝审宽导将尔尘尝层岁岛币帅师带帮库废异弃张弹强归当录彻径态恶悬惊惧惨惯户执扩扫扬换据择报担拥挡挤挥损捡掷携摄摆摇撑斗断无旧显晒晓晕书术机杀杂权条来杨构枪极标树样检楼欢欧毁气汇决况泪洁浅济浏测浓涌涛润涨渐渔渊温湾湿满滚灭灯灵灾炉点炼烂热烦烧烫焕爱牵犹狮独猎猫献环玛珑琐电画畅疗疮痒瘫盐监盖盘睁矿砖确礼祸离种秘称积稳穷窃窜竞笔笼筑签简粮紧纠纤约纪纯纱纲纳纵纷纸纹纺练组细织终绍绕绘绩绪维绵综缓编缘缩缴罗罚罢羡翘耸聪肃胜胁脏脑脚腊舆舰艰艺节芦苍苏苹范荣药莱获萝营萧蔼虏虑虽蚁蛮蜡补装亵览觉观规订计认讨训记讲许访证评识诉词译试诗诚话诞询详误请诸课调谈谊谋谜谢谣谦谨贝负贡财责败货质贩贪贫购贯贴贵贸费贺资赋赌赏赔赖赚赛赞赠赢赶趋跃践踪轨轮轻载较辅辆辈辉输辖辩违迟适逊递逻遗遥邓邮邻郁郑酱释钉钓钟钢钥钩钮钻铁铃铜铝铭铺链销锁锅锋错锦键锻镇镜长闪闭闯闲间闷闹闻阀阅队阳阴阵阶际陆陈陕险随隐难雾霁静顶项顺须顾顿颁预领颗额颜风飘飞饥饭饮饰饱饼馆馈驱驶驻驾验骑骗骤鱼鲜鸟鸡鸣鸭麦黄齐齿龙龟')
 SIMP_SAFE = set('游')  # 「游」在繁中也用（游泳），另外檢查「游戏」
@@ -173,7 +176,15 @@ def check(f, r):
         r.W(fid, '60 秒口播稿太短')
     if not fp.get('credit'):
         r.W(fid, '圖卡／貼文沒有寫素材來源（credit）')
-    # 文字品質
+    text_quality(f, fid, r)
+    # 貼文不能出現「待確認」的事
+    for p in f.get('pending') or []:
+        key = re.sub(r'[：:].*$', '', p)[:8]
+        if key and key in post and '未' not in post:
+            r.W(fid, f'粉專貼文可能提到待確認的事：{key}')
+
+
+def text_quality(f, fid, r):
     blob = '\n'.join(txt_all({k: v for k, v in f.items() if k not in ('sources',)}))
     simp = sorted({ch for ch in blob if ch in SIMPLIFIED and ch not in SIMP_SAFE})
     if simp:
@@ -183,11 +194,129 @@ def check(f, r):
     for h in HYPE:
         if h in blob:
             r.W(fid, f'出現農場用語「{h}」')
-    # 貼文不能出現「待確認」的事
-    for p in f.get('pending') or []:
-        key = re.sub(r'[：:].*$', '', p)[:8]
-        if key and key in post and '未' not in post:
-            r.W(fid, f'粉專貼文可能提到待確認的事：{key}')
+
+
+def check_sources_facts(f, fid, r, min_facts):
+    src = f.get('sources') or []
+    if not isinstance(src, list) or len(src) < 5:
+        r.B(fid, '來源至少 5 個')
+    for i, x in enumerate(src):
+        if not x.get('t') or not re.match(r'https?://', x.get('u') or ''):
+            r.B(fid, f'sources[{i}] 要有標題與網址')
+    facts = f.get('facts') or []
+    if len(facts) < min_facts:
+        r.B(fid, f'資訊卡只有 {len(facts)} 項（至少 {min_facts} 項）')
+    for i, x in enumerate(facts + [dict(sc, k='評分 ' + sc.get('k', '')) for sc in (f.get('scores') or [])]):
+        if not x.get('k') or not x.get('v'):
+            r.B(fid, f'facts／scores 第 {i} 項要有 k 與 v')
+        ss = x.get('s')
+        if not isinstance(ss, list) or not ss:
+            r.B(fid, f'「{x.get("k")}」沒有標來源')
+        else:
+            for j in ss:
+                if not isinstance(j, int) or j < 0 or j >= len(src):
+                    r.B(fid, f'「{x.get("k")}」來源編號 {j} 不存在')
+
+
+def check_pick(f, r):
+    """推坑稿：已經上市、不分新舊，Claude 查過評價、挑過才推的遊戲。格式見 PICKS_GUIDE.md。"""
+    fid = f.get('id', '?')
+    need = ['id', 'date', 'game', 'stamp', 'label', 'pitch', 'why', 'reasons', 'fit', 'facts', 'zh', 'tw', 'money', 'rig', 'time', 'howto', 'deals', 'media', 'sources']
+    miss = [k for k in need if k not in f]
+    if miss:
+        r.B(fid, f'少了欄位 {"、".join(miss)}')
+        return
+    if not re.fullmatch(r'[a-z0-9][a-z0-9-]{1,48}', fid):
+        r.B(fid, 'id 只能用小寫英文、數字、連字號')
+    try:
+        dt.date.fromisoformat(f['date'])
+    except Exception:  # noqa: BLE001
+        r.B(fid, 'date 要是 YYYY-MM-DD')
+    g = f['game']
+    for k in ('zh', 'en', 'dev', 'pub', 'platforms', 'genres', 'release', 'year', 'price_text'):
+        if not g.get(k):
+            r.B(fid, f'game.{k} 不能空')
+    try:
+        if dt.date.fromisoformat(g.get('release') or '') > dt.date.fromisoformat(f['date']):
+            r.B(fid, '推坑只收已經上市的遊戲（release 在 date 之後）')
+    except ValueError:
+        r.B(fid, 'game.release 要是 YYYY-MM-DD')
+    if g.get('steam') not in (None, '') and not str(g['steam']).isdigit():
+        r.B(fid, 'game.steam 要是數字 appid 或 null')
+    if f['stamp'] not in PICK_STAMPS:
+        r.B(fid, f'stamp 要是 {PICK_STAMPS}')
+    if not (12 <= len(f['pitch']) <= 60):
+        r.W(fid, f'pitch 長度 {len(f["pitch"])}（建議 15～50 字）')
+    if not (120 <= len(f['why']) <= 380):
+        r.W(fid, f'推坑信 why 長度 {len(f["why"])}（建議 150～320 字）')
+    rs = f['reasons']
+    if len(rs) != 3 or any(not (x.get('h') and x.get('t')) for x in rs):
+        r.B(fid, 'reasons 要剛好 3 條，每條有 h、t')
+    for x in rs:
+        if len(x.get('h') or '') > 12:
+            r.W(fid, f'推坑理由標題太長（≤ 12 字）：{x.get("h")}')
+    fit = f['fit']
+    if len(fit.get('for') or []) < 2 or len(fit.get('against') or []) < 2:
+        r.B(fid, 'fit.for、fit.against 各至少 2 條')
+    if len(f['howto']) < 3:
+        r.B(fid, 'howto（怎麼玩最好玩）至少 3 條')
+    check_sources_facts(f, fid, r, 6)
+    m = f['money']
+    if m.get('level') not in (None, 0, 1, 2, 3, 4):
+        r.B(fid, 'money.level 要是 0～4 或 null')
+    if m.get('level') in (3, 4):
+        r.B(fid, '付費加速、抽卡變強的遊戲不推坑（痞子葳不喜歡課金才能解鎖的遊戲）')
+    if f['tw'].get('ok') not in (True, False, 'partial'):
+        r.B(fid, 'tw.ok 要是 true／false／"partial"')
+    if not f['rig'].get('verdict') or not f['rig'].get('note'):
+        r.B(fid, 'rig 要有 verdict 與 note')
+    yt = (f['media'] or {}).get('yt') or []
+    for y in yt:
+        if not re.fullmatch(r'[A-Za-z0-9_-]{11}', y.get('id') or ''):
+            r.B(fid, f'YouTube id 格式不對：{y.get("id")}')
+    imgs = (f['media'] or {}).get('images') or []
+    if not g.get('steam') and len(imgs) < 3:
+        r.W(fid, '非 Steam 遊戲建議在 media.images 放 3～8 張官方截圖或主視覺')
+    for u in imgs:
+        if not str(u).startswith('https://'):
+            r.B(fid, f'media.images 要是 https 網址：{str(u)[:60]}')
+    for i, q in enumerate(f.get('talk') or []):
+        if not (q.get('q') and q.get('why')):
+            r.B(fid, f'talk[{i}] 要有 q、why')
+    text_quality(f, fid, r)
+
+
+def build_picks(picks):
+    items = []
+    for f in picks:
+        g = f['game']; zh = f.get('zh') or {}
+        zhs = 'tc' if zh.get('sub') or zh.get('ui') else ('none' if zh.get('ui') is False and zh.get('sub') is False else '?')
+        imgs = (f.get('media') or {}).get('images') or []
+        items.append({
+            'id': f['id'], 'date': f['date'], 'rank': f.get('rank', 9), 'zh': g['zh'], 'en': g['en'],
+            'steam': int(g['steam']) if g.get('steam') else None, 'year': g.get('year'), 'release': g.get('release'),
+            'genres': g.get('genres'), 'platforms': g.get('platforms'), 'stamp': f['stamp'], 'label': f['label'],
+            'pitch': f['pitch'], 'zhs': zhs, 'hours': (f.get('time') or {}).get('text'), 'price_text': g.get('price_text'),
+            'money': (f.get('money') or {}).get('level'),
+            'yt': ((f.get('media') or {}).get('yt') or [{}])[0].get('id'), 'img': imgs[0] if imgs else None, 'gal': imgs[1:6],
+            'updated': f.get('updated'),
+        })
+    items.sort(key=lambda x: (x['date'], -x['rank']), reverse=True)
+    return {'at': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'n': len(items), 'items': items}
+
+
+def write_if_changed(path, obj):
+    """內容沒變（只差產生時間 at）就不寫，免得每次跑都弄髒 git、擋到 pull --rebase。"""
+    try:
+        old = json.load(open(path, encoding='utf-8'))
+    except Exception:  # noqa: BLE001
+        old = None
+    strip = lambda o: {k: v for k, v in (o or {}).items() if k != 'at'}
+    if old is not None and json.dumps(strip(old), ensure_ascii=False, sort_keys=True) == json.dumps(strip(obj), ensure_ascii=False, sort_keys=True):
+        return False
+    with open(path, 'w', encoding='utf-8') as fo:
+        json.dump(obj, fo, ensure_ascii=False, separators=(',', ':'))
+    return True
 
 
 def build_index(feats):
@@ -213,7 +342,7 @@ def build_index(feats):
     return {'at': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'n': len(items), 'items': items}
 
 
-def build_track(feats, old):
+def build_track(feats, old, picks=()):
     today = dt.date.today()
     keep = {int(x['appid']): x for x in (old.get('apps') or []) if str(x.get('appid', '')).isdigit()}
     out = {}
@@ -233,6 +362,17 @@ def build_track(feats, old):
         row = {'appid': s, 'id': f['id'], 'date': f['date'], 'watch': watch}
         if not prev or row['date'] > prev['date']:
             out[s] = row
+    for f in picks:
+        s = f['game'].get('steam')
+        if not s:
+            continue
+        s = int(s)
+        row = {'appid': s, 'id': f['id'], 'date': f['date'], 'watch': False, 'pick': True}
+        prev = out.get(s)
+        if not prev:
+            out[s] = row
+        elif prev.get('pick') is None:
+            prev['pick'] = True      # 同一款既是專題也是推坑
     for s, x in keep.items():
         if s not in out and x.get('extra'):
             out[s] = x
@@ -264,28 +404,48 @@ def main():
         if not a.only or f.get('id') == a.only:
             check(f, r)
         feats.append(f)
+    picks = []
+    pids = set()
+    if os.path.isdir(PICKS):
+        for fn in sorted(os.listdir(PICKS)):
+            if not fn.endswith('.json'):
+                continue
+            try:
+                f = json.load(open(os.path.join(PICKS, fn), encoding='utf-8'))
+            except Exception as e:  # noqa: BLE001
+                r.B('picks/' + fn, f'JSON 壞掉：{e}')
+                continue
+            if f.get('id') != fn[:-5]:
+                r.B('picks/' + fn, f'檔名要和 id 一樣（{f.get("id")}）')
+            if f.get('id') in pids:
+                r.B('picks/' + fn, '重複的 id')
+            pids.add(f.get('id'))
+            if not a.only or f.get('id') == a.only:
+                check_pick(f, r)
+            picks.append(f)
     for w in r.warn:
         print('WARN', w)
     for b in r.bad:
         print('BAD ', b)
-    print(f'{len(feats)} 篇專題，BAD {len(r.bad)}，WARN {len(r.warn)}')
+    print(f'{len(feats)} 篇專題、{len(picks)} 款推坑，BAD {len(r.bad)}，WARN {len(r.warn)}')
     if r.bad:
         sys.exit(1)
     if a.check:
         return
     idx = build_index(feats)
-    with open(os.path.join(DATA, 'index.json'), 'w', encoding='utf-8') as fo:
-        json.dump(idx, fo, ensure_ascii=False, separators=(',', ':'))
+    write_if_changed(os.path.join(DATA, 'index.json'), idx)
     tp = os.path.join(DATA, 'track.json')
     old = json.load(open(tp, encoding='utf-8')) if os.path.exists(tp) else {}
-    tr = build_track(feats, old)
+    tr = build_track(feats, old, picks)
+    pk = build_picks(picks)
+    write_if_changed(os.path.join(DATA, 'picks.json'), pk)
     old_s = json.dumps(old, ensure_ascii=False, sort_keys=True)
     new_s = json.dumps(tr, ensure_ascii=False, sort_keys=True)
     if old_s != new_s:
         with open(tp, 'w', encoding='utf-8') as fo:
             json.dump(tr, fo, ensure_ascii=False, indent=1)
         print('track.json 更新（推上去後 Actions 會自動抓 Steam 資料）')
-    print('index.json：', idx['n'], '篇')
+    print('index.json：', idx['n'], '篇；picks.json：', pk['n'], '款')
 
 
 if __name__ == '__main__':

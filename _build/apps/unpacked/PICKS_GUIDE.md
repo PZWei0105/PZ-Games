@@ -1,0 +1,102 @@
+# 解包 UNPACKED — 每日推坑指南
+
+每天的推坑排程（Claude 排程任務「解包：每日推坑」，台灣時間 11:43）照這份做：**選 2～3 款已經上市的好遊戲 → 研究 → 寫推坑稿 → 獨立查核 → 上架**。
+
+「推坑」是 Claude 的私房推薦，不是新聞：**不分新舊、已經上市**，查過評價，也照痞子葳的口味想過，真心覺得他會喜歡才推。讀者只有痞子葳（台灣、PC 玩家、經營遊戲頻道「遊戲狂想曲」）。
+所有內容一律**繁體中文、台灣用語**；稱呼他「痞子葳」。新遊戲、即將推出的遊戲是每日專題（`WRITER_GUIDE.md`）的事，不在這裡。
+
+---
+
+## 0. 準備
+
+1. 用 add_repo 加 `PZWei0105/PZ-Games`（要 push 權限），照工具說明 clone 到 `/home/claude/pz-games`，再用 register_repo_root 登記。
+2. 讀這幾個檔（全部在 `apps/unpacked/data/`）：
+   - `picks.json`：推過哪些（**不重複**）。`index.json`：每日專題寫過哪些。
+   - `candidates.json`：GitHub Actions 每小時從 Steam 抓的候選。推坑主要看 `gems`（Steam 使用者評價最高的遊戲）和 `gems_sale`（評價最高、**現在正在特價**的），`picked: true` 是推過的、`disc` 是折扣。其他清單（同上排行、熱銷）也能參考。
+   - 範例推坑：`picks/balatro.json`、`picks/octopath-traveler-2.json`、`picks/xcom-2.json`。**照這三篇的深度寫，不能比它們薄。**
+3. 只能新增或修改 `apps/unpacked/data/picks/`、`picks.json`、`track.json`。不要動 `live.json`、`hist/`、`candidates.json`（Actions 的）和每日專題的檔案（`features/`、`index.json`）。
+
+## 1. 選題
+
+- 每天 **2～3 款**。素材不夠、查不到足夠來源，寧可只推 2 款。
+- **一定要已經上市**（任何年份都行），而且現在買得到、玩得到（沒下架、伺服器還開著）。
+- **評價門檻**：Steam「極度好評」以上，或 Metacritic／OpenCritic 80 分以上。評分普通但玩家死忠、真的好玩的冷門作可以推，`stamp` 用「冷門神作」，推坑信裡要講清楚為什麼值得。
+- **一律排除**：只在手機上架或以手機為主的遊戲；抽卡、付費變強、付費加速（`money.level` 3、4 不准推，publish.py 會擋）。
+- **痞子葳的口味**（推坑信和理由要扣回這些，但不要寫「你說過」這種話）：
+  - 喜歡燒腦的策略感；不喜歡拼手速，也不喜歡只靠堆數值的玩法。
+  - 「好玩」比「能玩」重要：遊戲性要讓人停不下來。
+  - 喜歡結果由自己的決策長出來、玩起來很「活」的遊戲；不喜歡有標準答案、只能試錯的推理解謎或文字冒險。
+  - 劇情重要，但節奏要好：開場一直演、遲遲進不了遊戲會扣分。
+  - 喜歡：HD-2D 像素風王道 JRPG（八方旅人、風之痕跡這類）、撿寶和看角色成長（小時候玩《暗黑破壞神 2》）、帶角色扮演的牌組構築（河洛《天外武林》這類）、吸血鬼倖存者類、模擬經營（操作要順手）。
+  - 戰棋要有演出和打擊感、鏡頭要能縮放旋轉；只跳數字的戰棋會覺得枯燥。
+  - 時間不多：能分段玩、能短時間來一局的加分；長篇要說清楚多長。
+  - 常跟 2～3 個朋友連線玩：合作遊戲可以推，要寫支援幾人、是不是每人都要買。
+  - 電腦是 ASUS ROG Strix SCAR 18（RTX 5090 Laptop 24GB、64GB），也會接 4K 大電視。
+- **組合**：三款不要同類型、不要同年代，輪流照顧上面不同的口味；可以搭一款 `gems_sale` 裡正在特價的。
+- **不重複**：`picks.json` 裡有的不再推。每日專題寫過的遊戲可以推，但推坑稿要用推坑的角度寫。
+
+## 2. 研究（每款至少 6 個來源）
+
+一定要查到、而且每一條都附來源的：
+- 上市日、平台、開發／發行；之後的移植或新版本（例如 Switch 2 版、完整版）。
+- **中文**：介面、字幕、語音分開講；繁中還是只有簡中。
+- **評分**：Metacritic、OpenCritic（`scores` 欄位）；Steam 評價 App 會自動顯示即時數字，不用寫。
+- **遊玩時間**：HowLongToBeat（主線／含支線／全收集）。
+- **該買哪個版本**：本體、資料片、完整版、合輯、組合包；哪些 DLC 值得。歷史低價或常見特價幅度。
+- 內購、系統需求、官方預告的 YouTube id、玩法上的關鍵機制（寫進怎麼玩之前要確定是對的）。
+
+來源優先順序、Steam 頁怎麼查、查不到怎麼辦，照 `WRITER_GUIDE.md` 第 2 節。
+
+## 3. 寫推坑稿（`apps/unpacked/data/picks/<id>.json`）
+
+`id` 用遊戲英文名的小寫連字號（`balatro`、`xcom-2`），檔名＝id。
+
+| 欄位 | 要求 |
+|---|---|
+| `date`、`rank` | 今天（台灣時間）；`rank` 是今天的排序，今天已有推坑就接著往下編 |
+| `game` | `zh`（台灣官方中文名，沒有就用原名並在 `zh_note` 說明）、`en`、`steam`（appid 或 null）、`dev`、`pub`、`platforms`、`genres`、`release`（YYYY-MM-DD，一定要早於今天）、`year`、`price_text`（Steam 遊戲寫「Steam 台灣區價格看即時數據」，非 Steam 寫台灣商店價格並附來源） |
+| `stamp`、`label` | `stamp` 只能是「必玩／閉眼入／特價入／冷門神作」；`label` 是具體的一句（例：燒腦卡牌控閉眼入） |
+| `pitch` | 一句話推坑，15～50 字 |
+| `why` | **推坑信**：Claude 第一人稱對痞子葳說，150～320 字。為什麼推他、扣回他的口味、誠實講會卡他的地方 |
+| `reasons` | 剛好 3 條 `{h, t}`，`h` ≤ 12 字、`t` ≤ 60 字 |
+| `fit` | `for`、`against` 各 2～3 條，具體到「什麼樣的人」 |
+| `scores` | `{k, v, s}`：Metacritic、OpenCritic 等，每個都要有來源編號 |
+| `facts` | 6～12 條，每條 `s` 是來源編號陣列 |
+| `zh`、`tw`、`money`、`rig`、`time` | 同每日專題（`money.level` 只能 0～2 或 null） |
+| `howto` | 「怎麼玩最好玩」3～5 條：先選什麼、要開什麼設定、新手最常卡在哪 |
+| `deals` | 「怎麼買最划算」1～3 句：買哪個版本、等不等特價、組合包 |
+| `talk` | 選填，「玩完可以聊」1～3 題 `{q, why}` |
+| `media` | `yt` 官方預告 1～3 支；**非 Steam 遊戲必放** `images` 4～8 張官方圖（第一張當主視覺） |
+| `sources` | 至少 6 個 `{t, u, d}` |
+| `pending` | 還沒查證、先不當真的事（不能出現在推坑信、理由、怎麼玩、怎麼買） |
+
+寫作規範照 `WRITER_GUIDE.md` 第 3 節最後的「寫作規範」：像懂遊戲的朋友在講、不准農場用語、台灣用語、不准簡體字、不抄來源原文。`rig`（你的 SCAR 18）怎麼判斷、`media.images` 怎麼找，也照第 3 節。
+
+`why` 是整篇的靈魂：要讓痞子葳讀完就想打開來玩。講這款最有魅力的那一下（例：「第一次湊出同花順、倍率連鎖炸開的那一手」），再講為什麼對他的胃口，最後老實講一個可能會卡他的地方。不要寫成評測摘要，也不要每篇都同一個開頭。
+
+## 4. 獨立查核（一定要做）
+
+寫完以後，用 Agent 工具開一個**沒看過寫作過程**的子代理，只給它推坑稿的路徑，請它：
+1. 逐條打開 `facts`、`scores` 的來源，確認都被來源支持。
+2. 檢查 `why`、`reasons`、`howto`、`deals`、`fit` 裡的硬資訊和**玩法描述**（例如「鏡頭能旋轉」「存檔可以帶進正式版」）對不對。
+3. 回報寫錯、查不到、過時的地方。
+
+照回報修：錯的改掉；查不到的拿掉或移到 `pending`。
+
+## 5. 上架
+
+```bash
+cd /home/claude/pz-games
+python3 _build/apps/unpacked/tools/publish.py      # 專題和推坑一起檢查，重建 index.json、picks.json、track.json；BAD 一定要修
+git status                                          # 只該有 picks/、picks.json、track.json 的變動；別的用 git checkout -- <檔案> 還原
+git add apps/unpacked/data/picks apps/unpacked/data/picks.json apps/unpacked/data/track.json
+git commit -m "解包：MM/DD 推坑（遊戲 A、遊戲 B、遊戲 C）"   # 結尾附上當次規定的署名行
+git pull --rebase origin main && git -c push.negotiate=true push origin HEAD:main
+```
+
+- 推上去後 track.json 有變就會觸發 Actions，幾分鐘內補上 Steam 的台灣價格、特價、評價、繁中評價、截圖、動態預告。
+- push 失敗（有人同時推）：`git pull --rebase origin main` 再推，最多重試 3 次。
+
+## 6. 回報
+
+最後用 PushNotification 推播給痞子葳（一行、200 字以內、繁體中文）：開頭「今天推坑：A、B、C」，後面各用很短的話說為什麼推他；正在特價的一句帶過。不寫技術細節。沒推上去就照實說原因。

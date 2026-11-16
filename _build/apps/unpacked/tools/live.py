@@ -36,6 +36,8 @@ FEATURED = 'https://store.steampowered.com/api/featuredcategories/?cc=TW&l=tchin
 # purchase_type 1＝全部（預設 0 只算 Steam 購買，免費遊戲會變 0 則）；filter 1＝最新（預設的「最有幫助」會只算近 30 天）
 REVIEWS = 'https://api.steampowered.com/IUserReviewsService/GetAppReviews/v1/?input_json='
 SEARCH = 'https://store.steampowered.com/search/results/?filter={}&json=1&cc=TW&l=tchinese'
+# 推坑候選：照使用者評價排序的遊戲（category1=998 只要遊戲本體），另一份只看特價中的
+GEMS = 'https://store.steampowered.com/search/results/?sort_by=Reviews_DESC&category1=998&start=0&count=50&json=1&cc=TW&l=tchinese{}'
 ASSET = 'https://shared.akamai.steamstatic.com/store_item_assets/'
 VIDEO = 'https://video.akamai.steamstatic.com/store_trailers/'
 CTX = {'language': 'tchinese', 'country_code': 'TW', 'steam_realm': 1}
@@ -337,7 +339,7 @@ def summarize(h, t_now):
 
 
 # ------------------------------------------------------------------ candidates
-def candidates(covered, tagn):
+def candidates(covered, tagn, picked=frozenset()):
     out = {'at': iso(now())}
     try:
         d = get_json(MOSTPLAYED)
@@ -366,17 +368,31 @@ def candidates(covered, tagn):
             out['wish' if f == 'popularwishlist' else 'trending_new'] = lst
         except Exception as e:  # noqa: BLE001
             out[f + '_err'] = str(e)[:200]
+    for key, extra in (('gems', ''), ('gems_sale', '&specials=1')):
+        try:
+            d = get_json(GEMS.format(extra))
+            lst = []
+            for x in (d.get('items') or [])[:50]:
+                m = re.search(r'/apps/(\d+)/', x.get('logo') or '')
+                if m:
+                    lst.append({'appid': int(m.group(1)), 'name': x.get('name')})
+            out[key] = lst
+        except Exception as e:  # noqa: BLE001
+            out[key + '_err'] = str(e)[:200]
+            ERRS.append(f'{key}: {str(e)[:120]}')
     # 補名字、標籤、評價、價格（同上排行沒有名字）
     need = []
-    for k in ('most_played', 'top_sellers', 'new_releases', 'coming_soon', 'wish', 'trending_new'):
+    for k in ('most_played', 'top_sellers', 'new_releases', 'coming_soon', 'specials', 'wish', 'trending_new', 'gems', 'gems_sale'):
         for x in out.get(k) or []:
             if x['appid'] not in need:
                 need.append(x['appid'])
-    info = get_items(need[:220], media=False) if need else {}
-    for k in ('most_played', 'top_sellers', 'new_releases', 'coming_soon', 'specials', 'wish', 'trending_new'):
+    info = get_items(need[:400], media=False) if need else {}
+    for k in ('most_played', 'top_sellers', 'new_releases', 'coming_soon', 'specials', 'wish', 'trending_new', 'gems', 'gems_sale'):
         for x in out.get(k) or []:
             it = info.get(x['appid'])
             x['covered'] = x['appid'] in covered
+            if x['appid'] in picked:
+                x['picked'] = True
             if it:
                 n = norm(it, tagn)
                 x['name'] = n['name'] or x.get('name')
@@ -384,6 +400,8 @@ def candidates(covered, tagn):
                 x['rv'] = n['rv']
                 x['free'] = n['free']
                 x['price'] = n['price'].get('fmt')
+                if n['price'].get('disc'):
+                    x['disc'] = n['price']['disc']
                 x['rel'] = n['rel']
                 x['zh'] = 'tc' if 'tc' in n['langs'] else 'sc' if 'sc' in n['langs'] else None
                 if n['adult']:
@@ -407,6 +425,8 @@ def main():
     live_old = load(live_path, {'apps': {}})
     idx = load(os.path.join(D, 'index.json'), {'items': []})
     covered = {int(x['steam']) for x in idx.get('items') or [] if x.get('steam')}
+    pk = load(os.path.join(D, 'picks.json'), {'items': []})
+    picked = {int(x['steam']) for x in pk.get('items') or [] if x.get('steam')}
 
     # 這一輪要更新哪些：最近寫的每輪；舊的每天第一輪（UTC 0–3 點）
     apps = []
@@ -478,7 +498,7 @@ def main():
     print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}')
 
     if not a.no_candidates:
-        c = candidates(covered, tagn)
+        c = candidates(covered, tagn, picked)
         wrote_c = save_if_changed(os.path.join(D, 'candidates.json'), c)
         print('candidates:', {k: len(v) for k, v in c.items() if isinstance(v, list)}, 'wrote=', wrote_c)
 

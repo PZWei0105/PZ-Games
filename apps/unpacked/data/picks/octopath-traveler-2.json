@@ -1,0 +1,338 @@
+{
+ "id": "octopath-traveler-2",
+ "date": "2026-11-16",
+ "rank": 2,
+ "game": {
+  "zh": "歧路旅人 II",
+  "en": "OCTOPATH TRAVELER II",
+  "steam": 1971650,
+  "dev": "Square Enix、ACQUIRE",
+  "pub": "Square Enix",
+  "platforms": [
+   "PC（Steam）",
+   "PS5",
+   "PS4",
+   "Switch",
+   "Switch 2",
+   "Xbox Series X|S",
+   "Xbox One"
+  ],
+  "genres": [
+   "JRPG",
+   "回合制",
+   "HD-2D"
+  ],
+  "release": "2023-02-24",
+  "year": 2023,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "必玩",
+ "label": "HD-2D 王道 RPG 必玩",
+ "pitch": "八位旅人、八段故事的 HD-2D 王道 RPG：像素人物走進 3D 光影，回合制打的是破防與爆發的時機",
+ "why": "你喜歡 HD-2D 像素風的王道 JRPG，那這款就是這個風格目前的代表作。八位旅人各有自己的故事，你挑一個起點，再一路把其他人收進隊伍；這代多了能隨時切換的白天和晚上，同一個城鎮日夜能做的事、遇到的人都不一樣。戰鬥是回合制，核心是「先找弱點破防、再存點數一口氣爆發」，每一場都在算順序，不是比手速。它很長，但切成八個角色的章節，一次玩一章剛剛好。",
+ "reasons": [
+  {
+   "h": "HD-2D 的代表作",
+   "t": "像素角色放進有光影、景深的 3D 場景，城鎮、港口和夜景都比一代更講究。"
+  },
+  {
+   "h": "八段故事自己排順序",
+   "t": "八位主角各有出身和動機，從誰開始、帶誰同行都由你決定，這代還加了兩人交會的插曲。"
+  },
+  {
+   "h": "回合制也能很燒腦",
+   "t": "打弱點破防、存增幅點一次加到四倍，再配上每個人的潛力技，順序排對就能翻盤。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡王道 JRPG、像素風和回合制的人",
+   "想要一段完整長篇旅程、可以分章節慢慢玩的人",
+   "喜歡研究副職業搭配和出手順序的人"
+  ],
+  "against": [
+   "想看八個主角大量互動的人：故事大多各走各的",
+   "沒時間的人：主線就要 60～70 小時",
+   "討厭練等的人：區域有建議等級，後期內容有點拖"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic",
+   "v": "85（Switch）／83（PC）",
+   "s": [
+    14,
+    13,
+    3
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "85",
+   "s": [
+    1,
+    3
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "Square Enix、ACQUIRE／Square Enix",
+   "s": [
+    0,
+    1
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2023/2/24 登上 PC、PS5、PS4、Switch；Xbox 版 2024/6/6 推出",
+   "s": [
+    4,
+    6
+   ]
+  },
+  {
+   "k": "Switch 2 版",
+   "v": "一代＋二代 Switch 2 版 2026/10/1 上市，解析度和幀數提升",
+   "s": [
+    7,
+    4,
+    16
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "介面與字幕有繁體中文；語音可選英文或日文",
+   "s": [
+    2
+   ]
+  },
+  {
+   "k": "試玩",
+   "v": "Steam 有 3 小時序章試玩，可選任一主角，存檔能帶進正式版",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "新系統",
+   "v": "白天晚上可以隨時切換，每位主角對路人能做的特殊行動日夜各不相同；新增角色專屬的潛力技",
+   "s": [
+    8,
+    9
+   ]
+  },
+  {
+   "k": "戰鬥",
+   "v": "打弱點破防；每回合累積增幅點，可把攻擊加到四倍",
+   "s": [
+    9
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 85（Switch）、83（PC）；OpenCritic 85；Steam 約 93% 好評",
+   "s": [
+    14,
+    13,
+    1,
+    0
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat 主線約 60 小時、含支線約 82 小時、全收集約 95 小時；製作人說平均約 70 小時",
+   "s": [
+    3,
+    5
+   ]
+  },
+  {
+   "k": "Game Pass",
+   "v": "Xbox 版推出時同步加入 Xbox Game Pass，2025/11/30 已離開",
+   "s": [
+    6,
+    17
+   ]
+  },
+  {
+   "k": "價格紀錄",
+   "v": "Steam 史低曾到 -60%",
+   "s": [
+    11
+   ]
+  },
+  {
+   "k": "舞台",
+   "v": "東西兩塊大陸組成的索里斯帝亞，蒸汽技術興起、大船往來的時代",
+   "s": [
+    12,
+    15
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文；語音可選英文或日文。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；PS、Switch、Xbox 版以各平台的台灣商店為準。"
+ },
+ "money": {
+  "level": 0,
+  "model": "買斷制",
+  "notes": [
+   "買斷制，沒有遊戲內購。",
+   "有一代＋二代的組合包，想從頭補完的話等組合包特價最划算。"
+  ],
+  "flags": [
+   "買斷",
+   "有試玩版"
+  ]
+ },
+ "rig": {
+  "verdict": "開滿沒問題",
+  "note": "Unreal Engine 做的 HD-2D，畫面規格對你的 RTX 5090 筆電沒有壓力，直接開最高畫質接 4K 電視玩。"
+ },
+ "time": {
+  "text": "主線 60～70 小時",
+  "note": "HowLongToBeat 主線約 60 小時、全收集約 95 小時；製作人受訪說平均約 70 小時。切成八個角色的章節，一次玩一章剛好。"
+ },
+ "howto": [
+  "先下載 3 小時序章試玩，喜歡再買，存檔直接沿用。",
+  "第一個主角挑你最有興趣的職業就好，其他七人要走到他們所在的城鎮才能邀請入隊。",
+  "戰鬥先打弱點把盾牌數字歸零（破防），敵人倒地那回合再用增幅點全力輸出。",
+  "區域旁邊會標建議等級，打不過就先去走別人的章節或做支線。"
+ ],
+ "deals": "Steam 常有特價（史低 -60%）；如果一代也想玩，等一代＋二代組合包特價最划算。",
+ "talk": [
+  {
+   "q": "八個主角各演各的，是缺點還是特色？",
+   "why": "有人覺得八段故事少了交集，有人覺得這樣更像一本短篇合集。你喜歡哪一種敘事？"
+  },
+  {
+   "q": "HD-2D 是懷舊，還是一種新風格？",
+   "why": "像素角色配上 3D 光影，讓老派 JRPG 變得好看。這種做法還能用在哪些類型？"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "52QAFdezH3s",
+    "title": "歧路旅人 II 上市預告"
+   },
+   {
+    "id": "XMpWElRyoxg",
+    "title": "公布預告"
+   },
+   {
+    "id": "gSWayTaM8wo",
+    "title": "Switch 2 版預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：歧路旅人 II（含 3 小時序章試玩）",
+   "u": "https://store.steampowered.com/app/1971650/",
+   "d": ""
+  },
+  {
+   "t": "OpenCritic：歧路旅人 II（開發團隊、評分 85、93% 推薦）",
+   "u": "https://opencritic.com/game/13900/view",
+   "d": ""
+  },
+  {
+   "t": "sysrqmts：歧路旅人 II 支援語言（繁中；英日語音）",
+   "u": "https://sysrqmts.com/prices/octopath-traveler-ii",
+   "d": ""
+  },
+  {
+   "t": "Deku Deals：Metacritic、OpenCritic、HowLongToBeat",
+   "u": "https://www.dekudeals.com/items/octopath-traveler-ii-switch",
+   "d": ""
+  },
+  {
+   "t": "Deku Deals：各平台發售日（含 Xbox、Switch 2）",
+   "u": "https://www.dekudeals.com/items/octopath-traveler-ii-switch?store=vgp_ca",
+   "d": ""
+  },
+  {
+   "t": "GameRevolution：製作人說平均約 70 小時、全收集 100 小時以上",
+   "u": "https://www.gamerevolution.com/guides/935638-octopath-traveler-2-game-length-how-long-is-it-beat",
+   "d": "2023-02"
+  },
+  {
+   "t": "Windows Central：歧路旅人 II 登上 Xbox 與 Game Pass",
+   "u": "https://www.windowscentral.com/gaming/this-square-enix-jrpg-just-surprise-launched-on-xbox-consoles-and-xbox-game-pass",
+   "d": "2024-06"
+  },
+  {
+   "t": "YouTube 官方：歧路旅人一代＋二代 Switch 2 版 2026/10/1 上市",
+   "u": "https://www.youtube.com/watch?v=gSWayTaM8wo",
+   "d": "2026-07"
+  },
+  {
+   "t": "GameSpot 影音評測：日夜可隨時切換、潛力技",
+   "u": "https://www.gamespot.com/videos/octopath-traveler-2-video-review/2300-6460724/",
+   "d": "2023-02"
+  },
+  {
+   "t": "Wccftech 評測：破防與增幅（BP 可把攻擊加到四倍）",
+   "u": "https://wccftech.com/review/octopath-traveler-ii-same-systems-superior-stories/",
+   "d": "2023-02-17"
+  },
+  {
+   "t": "Yahoo 轉載評測：八段故事、彼此連結不夠",
+   "u": "https://ca.news.yahoo.com/octopath-traveler-2-review-eight-different-stories-but-not-enough-connection-090045893.html",
+   "d": "2023-02"
+  },
+  {
+   "t": "SteamDB：歧路旅人 II 價格紀錄（史低 -60%）",
+   "u": "https://steamdb.info/app/1971650",
+   "d": ""
+  },
+  {
+   "t": "MobyGames：官方簡介（兩塊大陸、八位旅人、HD-2D）",
+   "u": "https://mobygames.com/game/199652/octopath-traveler-ii",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：歧路旅人 II（PC）83 分",
+   "u": "https://legacy.prod.metacritic.com/game/pc/octopath-traveler-ii",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：歧路旅人 II（Switch）85 分",
+   "u": "https://legacy.prod.metacritic.com/game/switch/octopath-traveler-ii/critic-reviews",
+   "d": ""
+  },
+  {
+   "t": "PlayStation 官方（港澳）：歧路旅人 II 中文簡介",
+   "u": "https://www.playstation.com/zh-hant-hk/games/octopath-traveler-ii/",
+   "d": ""
+  },
+  {
+   "t": "Square Enix 亞洲官網：歧路旅人一代＋二代 Switch 2 版",
+   "u": "https://www.square-enix.com/asia/newsportal/zh-CHT/topics/octopathii/post22.html",
+   "d": "2026"
+  },
+  {
+   "t": "Pure Xbox：歧路旅人一、二代 2025/11/30 離開 Game Pass",
+   "u": "https://www.purexbox.com/news/2025/11/five-games-are-leaving-xbox-game-pass-in-late-november-2025",
+   "d": "2025-11"
+  },
+  {
+   "t": "Square Enix 新聞稿：歧路旅人 II 上市（附官方上市預告）",
+   "u": "https://www.gamedeveloper.com/press-release/venture-forth-in-an-exciting-new-era-with-the-launch-of-octopath-traveler-ii",
+   "d": "2023-02-24"
+  }
+ ],
+ "pending": [],
+ "updated": "2026-11-16"
+}

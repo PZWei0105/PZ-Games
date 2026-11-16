@@ -7,12 +7,17 @@ function setTabs(name) {
   $$('.tab').forEach((t) => t.classList.toggle('on', t.dataset.go === name));
   const wait = S.index ? S.index.items.filter((x) => !S.posted[x.id]).length : 0;
   const dot = $('.tab[data-go="fan"] .dot'); if (dot) { dot.textContent = wait; dot.classList.toggle('hide', !wait); }
+  const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
+  const pnew = pi.filter((x) => x.date === pl && !S.seen['p:' + x.id]).length;
+  const pd = $('.tab[data-go="picks"] .dot'); if (pd) { pd.textContent = pnew; pd.classList.toggle('hide', !pnew); }
 }
 function tapeText() {
   const it = S.index ? S.index.items : []; const last = it[0] && it[0].date;
   const today = it.filter((x) => x.date === last);
   const names = today.map((x) => `<b>${esc(x.zh)}</b>`).join(' ★ ');
-  const one = `痞子葳，${last === todayTW() ? '今天' : mdDay(last || todayTW())}解包 ${today.length} 款 ★ ${names} ★ 好遊戲不錯過，雷遊戲不踩過 ★ GAME RHAPSODY ★ `;
+  const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
+  const pk = pi.filter((x) => x.date === pl).map((x) => `<b>${esc(x.zh)}</b>`).join('、');
+  const one = `痞子葳，${last === todayTW() ? '今天' : mdDay(last || todayTW())}解包 ${today.length} 款 ★ ${names} ★ ${pk ? `${pl === todayTW() ? '今日' : '最新'}推坑：${pk} ★ ` : ''}好遊戲不錯過，雷遊戲不踩過 ★ GAME RHAPSODY ★ `;
   $('#tape').innerHTML = `<span class="in">${one}${one}</span>`;
 }
 
@@ -27,11 +32,18 @@ async function route() {
     if (name === 'f' && arg) {
       setTabs('');
       if (prev !== h) await unpackAnim(arg);
-      v.innerHTML = await renderFeature(arg);
+      v.innerHTML = await renderFeature(arg); S.curKind = 'feature';
       S.seen[arg] = 1; save('seen');
       afterFeature();
       scrollTo(0, 0);
-    } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
+    } else if (name === 'p' && arg) {
+      setTabs('picks');
+      if (prev !== h) await unpackAnim(arg, 'pick');
+      v.innerHTML = await renderPick(arg);
+      S.seen['p:' + arg] = 1; save('seen'); setTabs('picks');
+      afterFeature();
+      scrollTo(0, 0);
+    } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
     else if (name === 'fan' && arg) { setTabs('fan'); v.innerHTML = await renderFanDetail(arg); scrollTo(0, 0); cardRender(await loadFeature(arg)); }
     else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); }
     else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); homeFx(); }
@@ -113,9 +125,9 @@ function heroFx() {
   HVIO.observe(box);
 }
 /* 首頁：海報拍上牆；捲到哪張，哪張就動起來（Steam 動態預告，沒有就輪播精彩畫面） */
-function homeFx() {
-  const ps = $$('.posters .poster'); if (!ps.length || !fxOn()) return;
-  if (!S.introPending) homeDrop();
+function homeFx(sel = '.posters .poster', key = 'home') {
+  const ps = $$(sel); if (!ps.length || !fxOn()) return;
+  if (key === 'home') { if (!S.introPending) homeDrop(); } else dropIn(ps, key);
   const ratio = new Map();
   PIO = new IntersectionObserver((es) => {
     es.forEach((e) => ratio.set(e.target, e.intersectionRatio));
@@ -124,12 +136,14 @@ function homeFx() {
   }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
   ps.forEach((p) => PIO.observe(p));
 }
-function homeDrop() {
-  if (S.dropped || !fxOn()) return; S.dropped = 1;
-  $$('.posters .poster').forEach((p, i) => {
+function homeDrop() { dropIn($$('.posters .poster'), 'home'); }
+function dropIn(ps, key) {
+  S.dropped = S.dropped || {};
+  if (S.dropped[key] || !fxOn()) return; S.dropped[key] = 1;
+  ps.forEach((p, i) => {
     p.style.setProperty('--i', i); p.classList.add('drop');
     p.addEventListener('animationend', () => p.classList.remove('drop'), { once: true });
-    setTimeout(() => { sfx.slap(); haptic(8); if (i === 0) burstAt(p, [PINK, YEL, BLK], 18, 10); }, 120 + i * 140);
+    setTimeout(() => { (key === 'pk' ? sfx.stamp : sfx.slap)(); haptic(8); if (i === 0) burstAt(p, key === 'pk' ? [YEL, PINK, BLK] : [PINK, YEL, BLK], 18, 10); }, 120 + i * 140);
   });
 }
 function posterActive(p) {
@@ -147,7 +161,7 @@ function posterActive(p) {
     const ls = v.querySelector('source:last-child'); if (ls) ls.addEventListener('error', () => { v.remove(); b.classList.remove('vidon'); if (PV === v) PV = null; }, { once: true });
     v.play().catch(() => {}); PV = v;
   }
-  const it = S.index.items.find((x) => x.id === p.dataset.id);
+  const it = findItem(p.dataset.id);
   const first = $('.kbi.on', b);
   if (it && first) kbStart(b, posterList(it, liveOf(it.steam), first.getAttribute('src')), 4600);
 }
@@ -191,12 +205,13 @@ function shotFail(img) {
 }
 
 /* ---- 「解包中」轉場 ---- */
-async function unpackAnim(id) {
-  const it = (S.index.items.find((x) => x.id === id) || {});
+async function unpackAnim(id, kind = 'feature') {
+  const it = findItem(id) || {};
   if (!fxOn()) return;
-  const el = document.createElement('div'); el.id = 'unpack';
-  const lines = ['/資訊', '/影像', '/玩法', '/幕後', '/風向', '/討論'];
-  el.innerHTML = `<div class="box"><div class="nm">${esc(it.zh || id)}</div><div class="ln">&gt; UNPACKING ${esc(id)}.pak</div>${lines.map((l) => `<div class="ln" style="opacity:0">  ${l.padEnd(8, ' ')}.......... <span class="ok">OK</span></div>`).join('')}<div class="bar"><i></i></div></div>`;
+  const el = document.createElement('div'); el.id = 'unpack'; if (kind === 'pick') el.className = 'dig';
+  const lines = kind === 'pick' ? ['/推坑理由', '/評價', '/怎麼玩', '/影像', '/哪裡買'] : ['/資訊', '/影像', '/玩法', '/幕後', '/風向', '/討論'];
+  const head = kind === 'pick' ? `&gt; DIGGING ${esc(id)} … 挖到寶了` : `&gt; UNPACKING ${esc(id)}.pak`;
+  el.innerHTML = `<div class="box"><div class="nm">${esc(it.zh || id)}</div><div class="ln">${head}</div>${lines.map((l) => `<div class="ln" style="opacity:0">  ${l.padEnd(8, ' ')}.......... <span class="ok">${kind === 'pick' ? 'GEM' : 'OK'}</span></div>`).join('')}<div class="bar"><i></i></div></div>`;
   document.body.appendChild(el); sfx.rattle();
   const lns = $$('.ln', el).slice(1); const bar = $('.bar i', el);
   for (let i = 0; i < lns.length; i++) { await sleep(70); lns[i].style.opacity = 1; sfx.type(); bar.style.transform = `scaleX(${(i + 1) / lns.length})`; }
@@ -220,7 +235,7 @@ function afterFeature() {
     const live = $('.live');
     if (live) { const io4 = new IntersectionObserver(([e]) => { if (!e.isIntersecting) return; io4.disconnect(); countUp(live); }, { threshold: 0.35 }); io4.observe(live); FIO.push(io4); }
   }
-  const seal = $('.verdict .seal');
+  const seal = $('.verdict .seal') || $('.letter .seal');
   const io = new IntersectionObserver((es) => {
     es.forEach((e) => {
       if (!e.isIntersecting) return; io.disconnect();
@@ -273,8 +288,14 @@ function stopSpeak() { if (SPEAK && window.speechSynthesis) { speechSynthesis.ca
 async function speakFeature() {
   if (!window.speechSynthesis) { toast('這台裝置不支援語音', 'warn'); return; }
   if (SPEAK) { stopSpeak(); bgmDuck(false); return; }
-  const f = await loadFeature(S.curId);
-  const parts = [f.game.zh, f.headline, f.hook, '結論：' + f.verdict.stamp + '，' + f.verdict.summary, ...f.sections.gameplay.body, '玩家怎麼說：誇的是，' + f.sections.voices.pros.join('；') + '。罵的是，' + f.sections.voices.cons.join('；')];
+  let parts;
+  if (S.curKind === 'pick') {
+    const f = await loadPick(S.curId);
+    parts = [f.game.zh, f.pitch, f.why, ...f.reasons.map((r, i) => `理由${i + 1}，${r.h}：${r.t}`), '怎麼玩最好玩：' + f.howto.join('；'), '怎麼買：' + f.deals];
+  } else {
+    const f = await loadFeature(S.curId);
+    parts = [f.game.zh, f.headline, f.hook, '結論：' + f.verdict.stamp + '，' + f.verdict.summary, ...f.sections.gameplay.body, '玩家怎麼說：誇的是，' + f.sections.voices.pros.join('；') + '。罵的是，' + f.sections.voices.cons.join('；')];
+  }
   const voices = speechSynthesis.getVoices(); const zh = voices.find((x) => /zh[-_]TW/i.test(x.lang)) || voices.find((x) => /^zh/i.test(x.lang));
   speechSynthesis.cancel(); SPEAK = true; bgmDuck(true);
   const b = $('[data-act="speak"] span'); if (b) b.textContent = '停止導讀';
@@ -316,7 +337,8 @@ document.addEventListener('click', async (ev) => {
     const a = act.dataset.act;
     if (a === 'close') { if (ev.target.closest('.lb button')) return; closeSheet(); return; }
     ev.preventDefault();
-    if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = 'home'; return; }
+    if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = ROUTE.startsWith('p/') ? 'picks' : 'home'; return; }
+    if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); return; }
     if (a === 'jump') { const el = document.getElementById(act.dataset.to); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); sfx.click(); return; }
     if (a === 'fact') { act.classList.toggle('open'); sfx.click(); return; }
     if (a === 'play') { playVideo(+act.dataset.i); return; }
@@ -419,7 +441,7 @@ async function boot() {
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
     <button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
-  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
+  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
   try { await loadIndex(); } catch (e) { ok = false; console.error(e); }

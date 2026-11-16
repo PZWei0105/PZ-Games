@@ -11,10 +11,19 @@ async function getJSON(path, fresh = true) {
   return r.json();
 }
 async function loadIndex() {
-  const [idx, live] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} }))]);
-  S.index = idx; S.live = live || { apps: {} };
+  const [idx, live, picks] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] }))]);
+  S.index = idx; S.live = live || { apps: {} }; S.picks = picks || { items: [] };
   return idx;
 }
+async function loadPick(id) {
+  if (S.pickF[id]) return S.pickF[id];
+  const f = await getJSON('picks/' + id + '.json');
+  S.pickF[id] = f; return f;
+}
+/* 目錄裡找一款（專題或推坑） */
+const findItem = (id) => (S.index && S.index.items.find((x) => x.id === id)) || (S.picks && S.picks.items.find((x) => x.id === id)) || null;
+/* 「首通約 7 小時」「主線 60～70 小時」→ 取第一個數字 */
+const hoursOf = (t) => { const m = /(\d+(?:\.\d+)?)/.exec(t || ''); return m ? +m[1] : null; };
 async function loadFeature(id) {
   if (S.feats[id]) return S.feats[id];
   const f = await getJSON('features/' + id + '.json');

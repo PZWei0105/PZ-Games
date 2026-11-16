@@ -75,11 +75,19 @@ function renderHome() {
       <span class="date-stk">${esc(lastDate.slice(5).replace('-', '.'))} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</span></div>
     ${lastDate !== today ? `<p class="sub-note">今天的專題還在寫，先看 ${mdDay(lastDate)} 這批。</p>` : ''}
     <div class="posters">${todays.map(posterHtml).join('')}</div>
+    ${picksTeaser()}
     <h3 class="tape-h">追蹤牆</h3>
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="f/${esc(n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
     <div class="endcta"><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+}
+
+function picksTeaser() {
+  const items = (S.picks && S.picks.items) || []; if (!items.length) return '';
+  const last = items[0].date; const nw = items.filter((x) => x.date === last);
+  return `<div class="pk-tease"><h3 class="tape-h y">${last === todayTW() ? '今日推坑' : '最新推坑'} <small>${esc(mdDay(last))}・Claude 私房推薦</small></h3>
+    <div class="hscroll">${nw.map(pickMini).join('')}<div class="mini pkm more" data-go="picks"><div class="mm">${ICON.gem}<b>整面推坑牆</b><span>${items.length} 款</span></div></div></div></div>`;
 }
 
 /* ---------- 庫存 ---------- */
@@ -158,6 +166,28 @@ function zhText(f, lv) {
   if (lz) return lz.tc ? '有繁中' : lz.sc ? '只有簡中' : '沒有中文';
   return z.sub || z.ui ? '有繁中' : z.ui === false ? '沒有中文' : '未知';
 }
+/* 一眼看懂的平台：三個以內照寫，太多就收成「PC／PS／Xbox／Switch／手機」 */
+function platsShort(list) {
+  /* 回傳 [格子大字, 小字]：平台多的時候主機收成「主機」，細項放小字，免得格子裡斷成「手／機」 */
+  const short = [...new Set((list || []).map((p) => PLAT_SHORT(p).replace(/（.*$/, '').trim()))];
+  if (short.length <= 3) return [short.join('／') || '—', ''];
+  const fam = []; const add = (x) => { if (!fam.includes(x)) fam.push(x); };
+  for (const p of short) {
+    if (/^PC|Steam|Windows/i.test(p)) add('PC'); else if (/^PS/i.test(p)) add('PS'); else if (/Xbox/i.test(p)) add('Xbox');
+    else if (/Switch/i.test(p)) add('Switch'); else if (/手機|iOS|Android/i.test(p)) add('手機'); else add(p);
+  }
+  if (fam.length <= 3) return [fam.join('／'), ''];
+  const cons = fam.filter((x) => ['PS', 'Xbox', 'Switch'].includes(x));
+  const main = [fam.includes('PC') ? 'PC' : '', cons.length ? '主機' : '', fam.includes('手機') ? '手機' : '', ...fam.filter((x) => !['PC', '手機', 'PS', 'Xbox', 'Switch'].includes(x))].filter(Boolean);
+  return [main.join('／'), cons.join('・')];
+}
+/* 一眼看懂的格子：字多就縮小，能一行放完就一行；數字和單位不拆開 */
+function glanceTiles(T, key) {
+  const units = (v) => { let u = 0; for (const ch of String(v).replace(/<[^>]+>/g, '')) u += /[⺀-￿]/.test(ch) ? 1 : 0.55; return u; };
+  const fs = (v) => { const u = units(v); for (const z of [19, 17, 16, 15]) if (u * z <= 90) return z; return 16; };
+  const nw = (v) => String(v).replace(/(\d[\d.,～~\-]*\s*(?:小時|天|年|萬|%|分鐘))/g, '<span class="nw">$1</span>');
+  return `<div class="glance">${T.map(([k, v, sm, c], i) => `<div class="gl-t c-${c}" style="--i:${i};--rot:${rot(key + k, i, 1.6)}deg"><span class="gk">${k}</span><b class="gv" style="font-size:${fs(v)}px">${nw(v)}</b>${sm ? `<span class="gs">${esc(sm)}</span>` : ''}</div>`).join('')}</div>`;
+}
 /* 一眼看懂：上市、售價、平台、中文、課金、你的筆電 */
 function glanceHtml(f, it, lv) {
   const g = f.game; const today = todayTW();
@@ -170,19 +200,17 @@ function glanceHtml(f, it, lv) {
     else { rv = esc(mdDay(rel)); rs = `${rel.slice(0, 4)}${it.kind === 'ea' || f.kind === 'ea' ? '・搶先體驗' : ' 年'}`; }
   }
   const price = priceLabel(it, lv) || '—';
-  const plats = [...new Set((g.platforms || []).map((p) => PLAT_SHORT(p).replace(/（.*$/, '')))].join('／') || '—';
+  const plats = platsShort(g.platforms);
   const zt = zhText(f, lv); const m = (f.money || {}).level;
   const T = [
     ['上市', rv, rs, rc],
     ['台灣售價', esc(price), lv && lv.price && lv.price.disc > 0 ? `特價 -${lv.price.disc}%` : (lv && !lv.free ? 'Steam 台灣區' : ''), 'y'],
-    ['平台', esc(plats), '', 'w'],
+    ['平台', esc(plats[0]), plats[1], 'w'],
     ['中文', esc(zt), '', zt === '有繁中' ? 'g' : zt === '未知' ? 'w' : 'p'],
     ['課金', m == null ? '未確認' : esc(moneyLabel(m)), m == null ? '內購內容還沒公開' : '', m == null ? 'w' : m <= 1 ? 'g' : m === 2 ? 'y' : 'p'],
     ['你的 SCAR 18', esc(f.rig.verdict), '', 'k'],
   ];
-  // 字多就縮小一點：中文算 1 格、英數算半格多
-  const fs = (v) => { const t = String(v).replace(/<[^>]+>/g, ''); let u = 0; for (const ch of t) u += /[\u2e80-\uffff]/.test(ch) ? 1 : 0.55; return u > 9 ? 15 : u > 4.2 ? 16 : 19; };
-  return `<div class="glance">${T.map(([k, v, sm, c], i) => `<div class="gl-t c-${c}" style="--i:${i};--rot:${rot(f.id + k, i, 1.6)}deg"><span class="gk">${k}</span><b class="gv" style="font-size:${fs(v)}px">${v}</b>${sm ? `<span class="gs">${esc(sm)}</span>` : ''}</div>`).join('')}</div>`;
+  return glanceTiles(T, f.id);
 }
 function infoCards(f, lv) {
   const z = f.zh || {}; const tw = f.tw || {};
@@ -262,6 +290,130 @@ async function renderFeature(id) {
       ${(f.pending || []).length ? `<div class="pend"><h4>還沒查證、先不當真</h4><ul>${f.pending.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
       <p class="sub-note" style="margin-top:12px">專題寫於 ${esc(f.date)}${f.updated ? ' · 最後更新 ' + esc(f.updated.slice(0, 16).replace('T', ' ')) : ''}。硬資訊都附來源；Steam 即時數據每小時自動更新。</p>`)}
     <div class="endcta"><button class="btn p" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button><button class="btn k" data-act="back">回牆上</button></div>`;
+}
+
+/* ---------- 推坑：已上市、不分新舊，查過評價才推的私房遊戲 ---------- */
+const PICK_CLS = { '必玩': 'pk-must', '閉眼入': 'pk-blind', '特價入': 'pk-sale', '冷門神作': 'pk-gem' };
+const PICKF = { f: 'all' };
+function pickChips(it, lv) {
+  const out = [];
+  const pr = lv && lv.price;
+  if (lv && lv.free) out.push('<span class="chip y">免費</span>');
+  else if (pr && pr.final != null) out.push(`<span class="chip y">${esc(fmtNT(pr.final))}${pr.disc > 0 ? ` <b class="dsc">-${pr.disc}%</b>` : ''}</span>`);
+  const z = liveZh(lv, it.zhs);
+  out.push(`<span class="chip ${z === 'tc' ? '' : 'n'}">${z === 'tc' ? '繁中' : z === 'sc' ? '只有簡中' : z === 'none' ? '無中文' : '中文未知'}</span>`);
+  if (it.hours) out.push(`<span class="chip n">${esc(it.hours)}</span>`);
+  if (lv && lv.rv && lv.rv.pct != null) out.push(`<span class="chip">Steam ${lv.rv.pct}%</span>`);
+  return out.join('');
+}
+function pickCard(it, i) {
+  const lv = liveOf(it.steam); const img = heroOf(it, lv);
+  const mc = (lv && lv.micro) || {}; const disc = lv && lv.price && lv.price.disc > 0 ? lv.price.disc : 0;
+  return `<article class="pk ${PICK_CLS[it.stamp] || ''}" data-go="p/${esc(it.id)}" data-id="${esc(it.id)}"${mc.mp4 || mc.webm ? ` data-mp4="${esc(mc.mp4 || '')}" data-webm="${esc(mc.webm || '')}"` : ''} style="--rot:${rot(it.id, i, 1.2)}deg">
+    <div class="pimg"><div class="kb">${img ? `<img class="kbi on" src="${esc(img)}" alt="" loading="${i > 1 ? 'lazy' : 'eager'}" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)"><img class="kbi" alt="" decoding="async">` : ''}</div><div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div><div class="ht"></div>
+      <span class="pk-year">${esc(it.year || (it.release || '').slice(0, 4))}</span>${disc ? `<span class="pk-off">特價 -${disc}%</span>` : ''}${mc.mp4 || mc.webm ? '<span class="pv-tag">▶ 動態</span>' : ''}</div>
+    <div class="pk-b"><div class="pk-lbl">${esc(it.label)}</div><h3 class="ptitle">${esc(it.zh)}</h3>${it.en && it.en !== it.zh ? `<div class="pen">${esc(it.en)}</div>` : ''}
+      <p class="phead">${esc(it.pitch)}</p><div class="chips">${pickChips(it, lv)}</div></div>
+    <div class="pk-stamp">${esc(it.stamp)}</div><i class="tp tp1"></i></article>`;
+}
+function pickMini(it, i) {
+  const lv = liveOf(it.steam); const img = headerOf(it, lv) || heroOf(it, lv);
+  return `<div class="mini pkm ${PICK_CLS[it.stamp] || ''}" data-go="p/${esc(it.id)}" style="--rot:${rot(it.id, i, 1.2)}deg">
+    <div class="pimg">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div></div>
+    <span class="mstamp pks">${esc(it.stamp)}</span>
+    <div class="mb"><h4>${esc(it.zh)}</h4><div class="md">${esc(it.year || '')} · ${esc((it.genres || []).slice(0, 2).join('／'))}</div></div></div>`;
+}
+function picksItems() {
+  const items = (S.picks && S.picks.items) || [];
+  return items.filter((it) => {
+    const lv = liveOf(it.steam); const h = hoursOf(it.hours);
+    if (PICKF.f === 'tc') return liveZh(lv, it.zhs) === 'tc';
+    if (PICKF.f === 'sale') return !!(lv && lv.price && lv.price.disc > 0);
+    if (PICKF.f === 'short') return h != null && h <= 15;
+    if (PICKF.f === 'long') return h != null && h >= 40;
+    if (PICKF.f === 'want') return S.marks[it.id] === 'want';
+    return true;
+  });
+}
+function renderPicks() {
+  const items = (S.picks && S.picks.items) || [];
+  if (!items.length) return `<div class="sec-h"><h2 class="spray-h y">推坑</h2></div><div class="empty">還沒有推坑。每天會加 2～3 款已經上市、評價好又合你口味的遊戲。</div>`;
+  const last = items[0].date; const nNew = items.filter((x) => x.date === last).length;
+  const fl = (v, label) => `<button class="fl ${PICKF.f === v ? 'on' : ''}" data-act="pf" data-v="${v}">${label}</button>`;
+  const sale = items.filter((it) => { const lv = liveOf(it.steam); return lv && lv.price && lv.price.disc > 0; }).length;
+  const list = picksItems();
+  return `<div class="sec-h"><h2 class="spray-h y">推坑</h2><span class="date-stk">${esc(last.slice(5).replace('-', '.'))} 新增 ${nNew} 款</span></div>
+    <p class="pk-intro"><b>Claude 私房推薦</b>：不分新舊、已經上市，查過評價、挑過才推你的遊戲。每天加 2～3 款，${items.length} 款在坑裡等你${sale ? `，<span class="hl">${sale} 款正在特價</span>` : ''}。</p>
+    <div class="filters pkf">${fl('all', '全部')}${fl('tc', '有繁中')}${fl('sale', '特價中')}${fl('short', '15 小時內')}${fl('long', '40 小時以上')}${fl('want', '我想玩')}</div>
+    <div class="pks">${list.map(pickCard).join('') || '<div class="empty">沒有符合的推坑，換個篩選試試。</div>'}</div>`;
+}
+function pickGlance(f, it, lv) {
+  const g = f.game; const today = todayTW();
+  const yrs = g.release ? Math.floor(dayDiff(g.release, today) / 365.25) : null;
+  const zt = zhText(f, lv);
+  const plats = platsShort(g.platforms);
+  const pr = lv && lv.price; const price = priceLabel(it, lv) || '—';
+  const T = [
+    ['上市', esc(String(g.year || (g.release || '').slice(0, 4))), yrs != null ? (yrs >= 1 ? `已上市 ${yrs} 年` : '上市不到一年') : '', 'w'],
+    ['台灣售價', esc(price), pr && pr.disc > 0 ? `特價 -${pr.disc}%` : lv && !lv.free ? 'Steam 台灣區' : '', pr && pr.disc > 0 ? 'p' : 'y'],
+    ['平台', esc(plats[0]), plats[1], 'w'],
+    ['中文', esc(zt), '', zt === '有繁中' ? 'g' : zt === '未知' ? 'w' : 'p'],
+    ['遊玩時間', esc((f.time || {}).text || '—'), '', 'y'],
+    ['你的 SCAR 18', esc(f.rig.verdict), '', 'k'],
+  ];
+  return glanceTiles(T, f.id);
+}
+function factsHtml(f) {
+  return f.facts.map((x, i) => {
+    const srcs = (x.s || []).map((j) => f.sources[j]).filter(Boolean);
+    return `<div class="fact ${x.p ? 'pd' : ''}" data-act="fact" data-i="${i}"><span class="fk">${esc(x.k)}</span><span class="fv">${esc(x.v)}</span><span class="fs">${x.p ? '?' : '✓'}</span>
+      <div class="fsrc">來源：${srcs.map((s) => `<a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>`).join('、')}</div></div>`;
+  }).join('');
+}
+async function renderPick(id) {
+  const f = await loadPick(id);
+  const it = (S.picks && S.picks.items.find((x) => x.id === id)) || { id, stamp: f.stamp, label: f.label, zhs: '?', price_text: f.game.price_text };
+  const lv = liveOf(f.game.steam);
+  const h = lv ? await loadHist(f.game.steam) : null;
+  const M = mediaList(f, lv); S.curMedia = M; S.curId = id; S.curKind = 'pick';
+  const hero = heroOf(Object.assign({}, it, { media: f.media }), lv);
+  const HL = heroList(f, lv, hero); S.curHero = HL;
+  const mc = (lv && lv.micro) || {}; const micro = mc.mp4 || mc.webm;
+  const mk = S.marks[id] || '';
+  const tc = lv && lv.rv_tc; const rv = lv && lv.rv;
+  const scores = [...(f.scores || []).map((x) => [x.k, x.v, (x.s || []).map((j) => f.sources[j]).filter(Boolean)[0]]),
+    ...(rv && rv.pct != null ? [['Steam 評價', `${rv.pct}%`, null, `${rv.label || ''} · ${fmtN(rv.n)} 則`]] : []),
+    ...(tc && tc.pct != null && tc.n ? [['繁中玩家', `${tc.pct}%`, null, `${tc.label || ''} · ${fmtN(tc.n)} 則`]] : [])];
+  const tabs = [['s-rate', '評價'], ['s-how', '怎麼玩'], ['s-media', '影像'], ['s-info', '資訊'], ['s-talk', '討論'], ['s-src', '來源']];
+  return `<div class="f-top"><div class="f-hero" id="fhero"><div class="kb">${hero ? `<img class="kbi on" src="${esc(hero)}" alt="" onerror="heroFail(this)" onload="if(this.naturalWidth<=120)heroFail(this)"><img class="kbi" alt="" decoding="async">` : ''}</div>
+      ${micro ? `<video class="hv" muted loop playsinline preload="none" disablepictureinpicture aria-hidden="true" data-mp4="${esc(mc.mp4 || '')}" data-webm="${esc(mc.webm || '')}"></video>` : ''}
+      <div class="ph" style="${hero ? 'display:none' : ''}">UNPACKED</div><div class="ht"></div>
+      ${micro ? '<span class="hv-tag">● 動態預告</span>' : HL.length > 1 ? `<span class="hv-tag k">◎ ${HL.length} 張精彩畫面</span>` : ''}</div>
+      <button class="back" data-act="back">← 推坑牆</button></div>
+    <div class="f-head"><span class="kind-stk pk-kind">Claude 推坑 · ${esc(String(f.game.year || ''))}</span>
+      <h1 class="f-title">${esc(f.game.zh)}</h1>
+      <div class="f-en">${esc(f.game.en)}${f.game.zh_note ? `<span class="f-zhnote">（${esc(f.game.zh_note)}）</span>` : ''}</div>
+      <p class="f-headline">${esc(f.pitch)}</p></div>
+    ${pickGlance(f, it, lv)}
+    <div class="letter"><i class="tp tp1"></i><div class="lt-h">為什麼推你</div><p>${esc(f.why)}</p><div class="lt-sign">— Claude</div>
+      <div class="seal wait pk-seal ${PICK_CLS[f.stamp] || ''}">${esc(f.stamp)}</div></div>
+    <div class="rsns">${f.reasons.map((r, i) => `<div class="rsn" style="--i:${i};--rot:${rot(id + r.h, i, 1.4)}deg"><b class="rn">${i + 1}</b><h4>${esc(r.h)}</h4><p>${esc(r.t)}</p></div>`).join('')}</div>
+    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
+    ${sec('s-rate', 'RATE', '評價怎麼說', `${scores.length ? `<div class="scores">${scores.map(([k, v, s2, sub], i) => `<div class="sc" style="--rot:${rot(id + k, i, 1.4)}deg"><span class="sk">${esc(k)}</span><b class="sv ${String(v).length > 6 ? 'long' : ''}">${esc(v)}</b>${sub ? `<span class="ss">${esc(sub)}</span>` : s2 ? `<a class="ss" href="${esc(s2.u)}" target="_blank" rel="noopener noreferrer">來源</a>` : ''}</div>`).join('')}</div>` : ''}
+      <div class="fa"><div class="st"><h4>適合你，如果…</h4><ul>${f.fit.for.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="st p"><h4>先別買，如果…</h4><ul>${f.fit.against.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>`)}
+    ${sec('s-how', 'HOW', '怎麼玩最好玩', `<div class="steps">${f.howto.map((p) => `<div class="stp">${esc(p)}</div>`).join('')}</div>
+      <div class="deal"><b>怎麼買最划算</b><p>${esc(f.deals)}</p></div>`)}
+    ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>
+      ${M.shots.length ? `<h3 class="tape-h">相簿 <small class="shot-n">${M.shots.length} 張・點開可以左右滑</small></h3><div class="shots">${M.shots.map((s2, i) => `<div class="shot" data-act="lb" data-i="${i}" style="--rot:${rot(id + s2, i, 1)}deg"><img src="${esc(s2)}" alt="" loading="lazy" decoding="async" onerror="shotFail(this)" onload="if(this.naturalWidth<=120)shotFail(this)"></div>`).join('')}</div>` : ''}`)}
+    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源。</p><div class="facts">${factsHtml(f)}</div>${liveHtml(f, lv, h)}${infoCards(f, lv)}`)}
+    ${sec('s-talk', 'TALK', '玩完可以聊', `${(f.talk || []).length ? `<div class="qs">${f.talk.map((q, i) => `<div class="q" style="--rot:${rot(id + q.q, i, 0.9)}deg"><h4>${esc(q.q)}</h4><p>${esc(q.why)}</p><textarea data-act="thought" data-k="${esc(id)}#${i}" placeholder="我的想法（只存在這台裝置）">${esc(S.thoughts[id + '#' + i] || '')}</textarea></div>`).join('')}</div>` : ''}
+      <h3 class="tape-h">我的標記</h3><div class="marks">${[['want', '想玩'], ['playing', '在玩'], ['done', '玩過'], ['no', '沒興趣']].map(([k, l], i) => `<button class="mkb ${mk === k ? 'on' : ''}" data-act="mark" data-k="${k}" style="--rot:${rot(id + k, i, 2)}deg">${l}</button>`).join('')}</div>
+      <textarea class="mynote" data-act="note" placeholder="筆記：例如玩到哪、要不要等特價、適不適合拍影片…">${esc(S.notes[id] || '')}</textarea>`)}
+    ${sec('s-src', 'SOURCE', '來源', `<ol class="srcs">${f.sources.map((s2, i) => `<li><b>${i + 1}</b><a href="${esc(s2.u)}" target="_blank" rel="noopener noreferrer">${esc(s2.t)}</a>${s2.d ? `（${esc(s2.d)}）` : ''}</li>`).join('')}</ol>
+      ${(f.pending || []).length ? `<div class="pend"><h4>還沒查證、先不當真</h4><ul>${f.pending.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
+      <p class="sub-note" style="margin-top:12px">推坑寫於 ${esc(f.date)}${f.updated ? ' · 最後更新 ' + esc(f.updated.slice(0, 16).replace('T', ' ')) : ''}。硬資訊都附來源；Steam 價格與評價每小時自動更新。</p>`)}
+    <div class="endcta"><button class="btn y" data-go="picks">${ICON.gem}<span>回推坑牆</span></button><button class="btn k" data-go="home">回今日</button></div>`;
 }
 
 /* ---------- 粉專出稿台 ---------- */

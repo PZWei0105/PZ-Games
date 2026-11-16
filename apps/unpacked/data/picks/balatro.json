@@ -1,0 +1,316 @@
+{
+ "id": "balatro",
+ "date": "2026-11-16",
+ "rank": 1,
+ "game": {
+  "zh": "Balatro",
+  "zh_note": "沒有官方中文名，台灣媒體暫譯《小丑牌》",
+  "en": "Balatro",
+  "steam": 2379780,
+  "dev": "LocalThunk（一人開發）",
+  "pub": "Playstack",
+  "platforms": [
+   "PC（Steam）",
+   "PS5",
+   "PS4",
+   "Switch",
+   "Switch 2",
+   "Xbox Series X|S",
+   "Xbox One",
+   "手機"
+  ],
+  "genres": [
+   "Roguelike",
+   "牌組構築",
+   "策略"
+  ],
+  "release": "2024-02-20",
+  "year": 2024,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "閉眼入",
+ "label": "燒腦卡牌控閉眼入",
+ "pitch": "撲克牌型配上會改寫規則的小丑牌：一局接一局停不下來的計分 Roguelike",
+ "why": "痞子葳，這款是我第一個想推給你的。你喜歡燒腦、不喜歡拼手速，也不愛只靠堆數值硬撐的玩法——《Balatro》剛好全中：沒有要你反應的動作，只有一手牌、幾張小丑和一個要達到的分數，每一步都是自己的判斷。規則一句話就懂（打出撲克牌型拿分），但小丑之間的連鎖會讓你一直想「再一局就好」。分數由遊戲幫你算，你要想的是怎麼組。手機、電腦、主機都有，等車、睡前都能來一局。",
+ "reasons": [
+  {
+   "h": "規則簡單、變化很深",
+   "t": "出牌就是湊撲克牌型拿分；真正的學問在 150 張小丑怎麼互相加成，每一局能組出的流派都不一樣。"
+  },
+  {
+   "h": "想停就停、想鑽就鑽",
+   "t": "打完 8 個底注就算通關，第一次通關大約 8 小時；想全收集，就是兩百多小時的坑。"
+  },
+  {
+   "h": "評價和獎項都掃過一輪",
+   "t": "Metacritic 90、OpenCritic 92，2024 年 TGA 入圍年度遊戲，最後抱走三座獎。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡《殺戮尖塔》這類牌組構築，或喜歡研究組合的人",
+   "想要能隨時開一局、隨時停的燒腦遊戲",
+   "手機和電腦都想玩同一款的人（各平台都有）"
+  ],
+  "against": [
+   "受不了運氣：抽牌和商店都有隨機性，強運弱運差很多",
+   "想要劇情的人：它幾乎沒有故事",
+   "不喜歡看數字一路膨脹的人：後期分數會大到很誇張"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic",
+   "v": "90",
+   "s": [
+    3,
+    10
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "92",
+   "s": [
+    4
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "LocalThunk（一人開發）／Playstack",
+   "s": [
+    3,
+    0
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2024/2/20 登上 PC、PS5、PS4、Switch、Xbox（數位版）",
+   "s": [
+    0,
+    1,
+    9
+   ]
+  },
+  {
+   "k": "手機版",
+   "v": "2024/9/26 上架 App Store、Google Play，另有 Apple Arcade 版",
+   "s": [
+    12
+   ]
+  },
+  {
+   "k": "Switch 2 版",
+   "v": "2026/2/25 推出 Switch 2 版",
+   "s": [
+    8
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "介面與字幕有繁體中文（也有簡中）；遊戲沒有語音",
+   "s": [
+    1,
+    2
+   ]
+  },
+  {
+   "k": "玩法",
+   "v": "抽 8 張牌、選最多 5 張打出撲克牌型換籌碼；小丑、塔羅、行星牌會改變計分",
+   "s": [
+    0,
+    9
+   ]
+  },
+  {
+   "k": "內容量",
+   "v": "150 張小丑牌；8 種難度，另有 20 個挑戰，也能輸入種子重玩同一局",
+   "s": [
+    11,
+    2,
+    14,
+    15
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 90（32 篇評論全數正評）、OpenCritic 平均 92",
+   "s": [
+    10,
+    3,
+    4
+   ]
+  },
+  {
+   "k": "獎項",
+   "v": "2024 TGA 入圍年度遊戲並拿下三個獎項；2024 金搖桿獎「評審突破獎」",
+   "s": [
+    7,
+    5,
+    6
+   ]
+  },
+  {
+   "k": "銷量",
+   "v": "首月就突破百萬套（前 10 天已有 50 萬套）",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：第一次通關約 8 小時、含額外內容約 46 小時、全收集約 250 小時",
+   "s": [
+    8
+   ]
+  },
+  {
+   "k": "開發者立場",
+   "v": "LocalThunk 討厭博弈業，預立遺囑不准把作品賣給賭場或博弈公司",
+   "s": [
+    0
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文（也有簡中），遊戲本身沒有語音。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；主機和手機版以各平台的台灣商店為準。"
+ },
+ "money": {
+  "level": 0,
+  "model": "買斷制",
+  "notes": [
+   "一次買斷，PC 版沒有遊戲內購。",
+   "開發者公開反對博弈，連遺囑都寫明不准作品流入博弈業。"
+  ],
+  "flags": [
+   "買斷",
+   "PC 無內購"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "像素風 2D 卡牌，官方最低需求連內建顯示卡都能跑；你的 SCAR 18 邊錄影邊玩都不會有感。"
+ },
+ "time": {
+  "text": "首通約 8 小時",
+  "note": "HowLongToBeat：第一次通關約 8 小時、玩到大部分內容約 46 小時；全收集的人平均兩百五十小時左右。"
+ },
+ "howto": [
+  "先用紅色牌組（每回合多一次棄牌）打第一局，熟悉每種牌型的分數。",
+  "前期先找一張穩定加倍率的小丑、一張會賺錢的小丑，錢多了商店才有得挑。",
+  "後期要靠「×倍率」的小丑才炸得開，單純加倍率的小丑撐不到第 8 注。",
+  "每一注開始前先看 Boss 盲注的限制，再決定要不要跳過小盲注換標籤。"
+ ],
+ "deals": "原價就不貴，常有 8 折左右的特價；Steam 上還有和《殺戮尖塔》《吸血鬼倖存者》的組合包，兩款一起收更划算。",
+ "talk": [
+  {
+   "q": "用撲克牌、有籌碼，它算不算賭博遊戲？",
+   "why": "沒有真錢、沒有抽卡，開發者甚至立遺囑不讓作品流入博弈業。玩法像賭，本質卻是組牌策略，這條線你怎麼劃？"
+  },
+  {
+   "q": "一款像素撲克憑什麼入圍年度遊戲？",
+   "why": "規模和同年入圍的 3A 大作差很多，卻一路打進 TGA 年度遊戲。「好玩」的核心到底是畫面、規模，還是那一下「再一局」？"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "0ZqeZfZhZ9Y",
+    "title": "上市預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "4Gamers：《Balatro》（暫譯，小丑牌）開發者立遺囑不准作品流入博弈業",
+   "u": "https://www.4gamers.com.tw/news/detail/66398/roguelike-hit-balatro-cant-be-sold-to-gambling-or-casinos-even-creator-dies",
+   "d": "2024"
+  },
+  {
+   "t": "Steam 商店頁：Balatro",
+   "u": "https://store.steampowered.com/app/2379780/Balatro/",
+   "d": ""
+  },
+  {
+   "t": "gamegeeker：Balatro 語言、模式與評價整理",
+   "u": "https://gamegeeker.com/zh-hant/games/balatro?market=HK",
+   "d": "2026-10"
+  },
+  {
+   "t": "Dexerto：Balatro Metacritic 90、OpenCritic 全數推薦，一人開發",
+   "u": "https://dexerto.com/gaming/balatro-wont-win-tgas-game-of-the-year-award-but-it-should-2983675",
+   "d": "2024-11"
+  },
+  {
+   "t": "GamesRadar：Balatro 在 OpenCritic 平均 92 分",
+   "u": "https://www.gamesradar.com/final-fantasy-7-rebirths-biggest-competition-as-the-best-reviewed-game-of-2024-is-the-roguelike-deck-builder-darling-of-steam-next-fest",
+   "d": "2024-02"
+  },
+  {
+   "t": "Epic Games 新聞：2024 TGA，Balatro 拿下三個獎項",
+   "u": "https://store.epicgames.com/news/astro-bot-takes-home-four-2024-game-awards-including-game-of-the-year",
+   "d": "2024-12-13"
+  },
+  {
+   "t": "GamesRadar：Balatro 獲 2024 金搖桿獎「評審突破獎」",
+   "u": "https://gamesradar.com/games/roguelike/poker-roguelike-balatro-wins-the-critics-choice-breakthrough-award-at-the-golden-joystick-awards-2024",
+   "d": "2024-11"
+  },
+  {
+   "t": "Inverse：2024 TGA 年度遊戲入圍名單",
+   "u": "https://www.inverse.com/gaming/game-awards-2024-winners-losers-nominees",
+   "d": "2024-12"
+  },
+  {
+   "t": "Deku Deals：Balatro 的 HowLongToBeat 時數",
+   "u": "https://dekudeals.com/items/balatro",
+   "d": ""
+  },
+  {
+   "t": "PlayStation 官方：Balatro（PS5／PS4）",
+   "u": "https://www.playstation.com/zh-hant-hk/games/balatro/",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：Balatro（PC）32 篇評論全數正評",
+   "u": "https://legacy.prod.metacritic.com/game/pc/balatro/user-reviews",
+   "d": ""
+  },
+  {
+   "t": "Steam 社群：金貼紙成就要收齊 150 張小丑",
+   "u": "https://steamcommunity.com/app/2379780/discussions/0/604143165271744486",
+   "d": ""
+  },
+  {
+   "t": "YouTube：Balatro 手機版上市預告（App Store、Google Play、Apple Arcade）",
+   "u": "https://www.youtube.com/watch?v=JbptEGMEXfQ",
+   "d": "2024-09-26"
+  },
+  {
+   "t": "GAMES.GG 攻略：紅色牌組與藍色牌組的差別",
+   "u": "https://games.gg/zh-Hant/balatro/guides/balatro-小丑攻略掌握微型籌碼的強大力量/",
+   "d": "2026-06"
+  },
+  {
+   "t": "Dot Esports：Balatro 15 副基本牌組＋20 個挑戰牌組",
+   "u": "https://dotesports.com/indies/news/balatro-deck-list-how-to-unlock",
+   "d": "2024"
+  },
+  {
+   "t": "Insider Gaming：Balatro 種子模式怎麼玩",
+   "u": "https://insider-gaming.com/best-balatro-seeds/",
+   "d": "2024"
+  }
+ ],
+ "pending": [],
+ "updated": "2026-11-16"
+}

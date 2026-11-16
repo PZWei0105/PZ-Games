@@ -4,6 +4,8 @@
 
 ## 待辦
 
+- 第一次 Actions 跑完後確認 `candidates.json` 的 `gems`、`gems_sale` 真的是照評價排序（Steam 搜尋的 json 端點可能不吃 sort_by）；不行就改用其他來源。
+- 推坑多了以後，考慮讓「庫存」也能搜尋推坑。
 - 等資料累積一兩週，看追蹤牆便利貼的規則（同上 ±%、特價、近 7 天好評率差 5 分以上）會不會太吵或太少，再調。
 - 專題多了以後（例如超過 300 篇），`index.json` 考慮分頁或只放最近 180 天、舊的放 `index-archive.json`。
 
@@ -16,6 +18,8 @@
 - 測試推送時留下一個沒用的分支 `zz-scope-test`（雲端環境刪不掉），痞子葳可以在 GitHub 的 Branches 頁直接刪，留著也不影響。
 
 ## 已完成
+
+- 2026-11-16：新增「推坑」分頁（痞子葳要求：不分新舊、已上市、查過評價又值得玩的私房推薦，每天 2～3 款）。推坑牆、推坑頁、首頁今日推坑、跑馬燈、分頁新數字；publish.py 檢查推坑並產生 picks.json、推坑的 Steam appid 進 track.json；Actions 候選加 `gems`／`gems_sale`；`PICKS_GUIDE.md` 與每日推坑排程（11:43）。首批：《Balatro》、《歧路旅人 II》、《XCOM 2》。publish.py 改成內容沒變就不重寫 index.json／picks.json（免得弄髒 git、擋到 pull --rebase）。
 
 - 2026-11-16：聲光與影像加強（痞子葳要求「深度介紹、影片圖片、聲光效果都要拉滿」）。專題頁主視覺改成動態（Steam 動態預告／官方圖 Ken Burns 輪播）、「一眼看懂」六格、段落標題噴漆噴出、即時數字跳動與曲線繪製、相簿最多 18 張（加上 YouTube 預告畫面）、播預告時噴漆＋音效；首頁海報拍上牆、捲到的那張播動態預告或輪播；粉專稿過期提醒。修掉膠帶跑馬燈讓頁面寬出 4px 的問題。資料管線改成每小時（GitHub 會跳過部分排程，排密一點資料才新）；繁中評價改用官方 IUserReviewsService（舊 appreviews 網址 10/22 停用）。首批三篇照獨立查核修正（GTA VI 預載 11/10、容量 212GB、GTA+ 是數位版都送、主線約 80 小時；Unhinged 沒有中文、故事開場照官方；ROB RUN 亞洲伺服器評估中等），GTA VI 與 Unhinged 補上官方截圖。
 

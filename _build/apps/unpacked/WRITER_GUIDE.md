@@ -13,7 +13,7 @@
    - `index.json`：已經寫過哪些（不要重複）。
    - `candidates.json`：GitHub Actions 每小時從 Steam 抓的選題候選——同上排行（`most_played`，`last_week` 是上週名次，名次暴衝的要特別看）、熱銷、新品、即將推出、願望清單熱門、特價。`covered: true` 是寫過的。
    - 範例專題：`features/rob-run.json`（Steam 搶先體驗）、`features/gta-vi.json`（主機即將上市）、`features/unhinged.json`（非 Steam 平台獨佔）。**照這三篇的深度寫，不能比它們薄。**
-3. 不要動 `live.json`、`hist/`、`candidates.json`（那是 Actions 的）。
+3. 不要動 `live.json`、`hist/`、`candidates.json`（那是 Actions 的），也不要動「推坑」的 `picks/`、`picks.json`（另一個排程照 `PICKS_GUIDE.md` 寫；推坑收已經上市的私房好遊戲，專題收新聞性的新遊戲）。
 
 ## 1. 選題
 
@@ -112,7 +112,8 @@
 
 ```bash
 cd /home/claude/pz-games
-python3 _build/apps/unpacked/tools/publish.py      # 檢查全部專題、重建 index.json 與 track.json；BAD 一定要修
+python3 _build/apps/unpacked/tools/publish.py      # 專題和推坑一起檢查，重建 index.json、picks.json、track.json；BAD 一定要修
+git status                                          # 只該有 features/、index.json、track.json 的變動；別的用 git checkout -- <檔案> 還原
 git add apps/unpacked/data/features apps/unpacked/data/index.json apps/unpacked/data/track.json
 git commit -m "解包：MM/DD 專題（遊戲 A、遊戲 B、遊戲 C）"   # 結尾附上當次規定的署名行
 git pull --rebase origin main && git -c push.negotiate=true push origin HEAD:main

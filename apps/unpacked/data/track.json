@@ -17,6 +17,27 @@
    "id": "rob-run",
    "date": "2026-11-16",
    "watch": true
+  },
+  {
+   "appid": 2379780,
+   "id": "balatro",
+   "date": "2026-11-16",
+   "watch": false,
+   "pick": true
+  },
+  {
+   "appid": 1971650,
+   "id": "octopath-traveler-2",
+   "date": "2026-11-16",
+   "watch": false,
+   "pick": true
+  },
+  {
+   "appid": 268500,
+   "id": "xcom-2",
+   "date": "2026-11-16",
+   "watch": false,
+   "pick": true
   }
  ]
 }

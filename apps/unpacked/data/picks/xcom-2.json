@@ -1,0 +1,326 @@
+{
+ "id": "xcom-2",
+ "date": "2026-11-16",
+ "rank": 3,
+ "game": {
+  "zh": "XCOM 2",
+  "zh_note": "沿用英文原名；資料片中文名《天選者之戰》",
+  "en": "XCOM 2",
+  "steam": 268500,
+  "dev": "Firaxis Games",
+  "pub": "2K",
+  "platforms": [
+   "PC（Steam）",
+   "PS4",
+   "Xbox One",
+   "Switch（XCOM 2 合輯）",
+   "iOS／Android（XCOM 2 合輯）"
+  ],
+  "genres": [
+   "回合制戰術",
+   "策略",
+   "基地經營"
+  ],
+  "release": "2016-02-05",
+  "year": 2016,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "特價入",
+ "label": "戰術迷特價必收",
+ "pitch": "人類已經輸了，你是地下反抗軍的指揮官：回合制戰術加基地經營，隊員會永久陣亡",
+ "why": "你喜歡燒腦的戰術，也最受不了戰棋只跳個數字、沒有演出——《XCOM 2》剛好相反：每一槍都有命中率，打中時鏡頭切過去演，關鍵一擊很有份量；鏡頭能旋轉、拉近看掩體。更重要的是它很「活」：隊員會受傷、陣亡，你親手帶大的老兵可能一個失誤就沒了，每一輪戰役都會長出不一樣的故事。買的時候記得挑含資料片《天選者之戰》的版本，那才是 XCOM 2 最完整的樣子。",
+ "reasons": [
+  {
+   "h": "每一步都在賭命取捨",
+   "t": "命中率、掩體、高低差、行動點都要算，一個衝動就可能整隊崩盤，打贏的每一場都是自己算出來的。"
+  },
+  {
+   "h": "戰場外也在打仗",
+   "t": "在空中基地「復仇者號」蓋設施、做研究、升級武器，戰略層的取捨跟戰術一樣重要。"
+  },
+  {
+   "h": "資料片讓它更完整",
+   "t": "《天選者之戰》加了三個反抗軍派系、會一路追殺你的「天選者」和大量新任務，媒體分數多在 9 分上下。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡回合制戰術、想要每一步都有後果的人",
+   "喜歡自己帶出一隊老兵、跟他們培養感情的人",
+   "喜歡研究流派，還會裝模組的人（Steam 工作坊很多）"
+  ],
+  "against": [
+   "受不了命中率擲骰的人：九成以上的命中率也會打空",
+   "不能接受隊員永久死亡的人",
+   "只想放鬆、不想動腦的時候"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic",
+   "v": "88（本體）／88（天選者之戰）",
+   "s": [
+    12,
+    4
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "87（本體）／88（天選者之戰）",
+   "s": [
+    13,
+    4
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "Firaxis Games／2K",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "本體 2016/2/5（PC）；資料片《天選者之戰》2017/8/29（PC），PS4、Xbox One 版 9/12",
+   "s": [
+    1,
+    2,
+    14
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "介面與字幕有繁體中文；沒有中文語音（有英、法、德、義、西等配音）",
+   "s": [
+    0,
+    1,
+    2
+   ]
+  },
+  {
+   "k": "版本",
+   "v": "XCOM 2 合輯（Collection）內含本體、天選者之戰和多個 DLC",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "本體 Metacritic 88、OpenCritic 87；天選者之戰 Metacritic 88、OpenCritic 88",
+   "s": [
+    12,
+    13,
+    4
+   ]
+  },
+  {
+   "k": "資料片評價",
+   "v": "天選者之戰：Game Informer 9.25、IGN 8.8、Polygon 9.5",
+   "s": [
+    14,
+    6,
+    5
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat（天選者之戰）：主線約 36 小時、含支線約 52 小時、全收集約 89 小時",
+   "s": [
+    4
+   ]
+  },
+  {
+   "k": "資料片內容",
+   "v": "新增死神、散兵、聖殿騎士三個派系與英雄兵種，以及會追殺指揮官的「天選者」",
+   "s": [
+    7,
+    6
+   ]
+  },
+  {
+   "k": "Switch 版",
+   "v": "XCOM 2 合輯 Switch 版受限於機能，Metacritic 77（PC 版 88）",
+   "s": [
+    10
+   ]
+  },
+  {
+   "k": "手機版",
+   "v": "XCOM 2 合輯 iOS 版 2020/11/5、Android 版 2021/7/13 上市，含天選者之戰與 4 個 DLC，沒有內購",
+   "s": [
+    16,
+    17
+   ]
+  },
+  {
+   "k": "模組",
+   "v": "支援 Steam 工作坊",
+   "s": [
+    11
+   ]
+  },
+  {
+   "k": "電腦需求",
+   "v": "最低 GTX 460 1GB 等級顯示卡、4GB 記憶體",
+   "s": [
+    0
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文；語音是英文（另有法、德、義、西等配音）。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；天選者之戰是另外購買的資料片，買合輯就一次到位。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷＋資料片／DLC",
+  "notes": [
+   "本體買斷，資料片《天選者之戰》和幾個 DLC 另售；直接買 XCOM 2 合輯最省事。",
+   "沒有遊戲內購。"
+  ],
+  "flags": [
+   "買斷",
+   "資料片另售"
+  ]
+ },
+ "rig": {
+  "verdict": "綽綽有餘",
+  "note": "2016 年的遊戲，官方最低需求是 GTX 460 等級；你的 RTX 5090 筆電全開都不會喘，裝滿模組也一樣。"
+ },
+ "time": {
+  "text": "約 36～52 小時",
+  "note": "HowLongToBeat（天選者之戰）：主線約 36 小時、含支線約 52 小時；難度越高、越常讀檔，時間會拉得越長。"
+ },
+ "howto": [
+  "直接買含《天選者之戰》的版本（或 XCOM 2 合輯），開新戰役時把資料片內容打開。",
+  "第一輪先選較低難度、不要開「鐵人模式」（只有一個存檔、不能讀檔），熟了再挑戰。",
+  "每一步先找完整掩體，讓隊員互相掩護（監視射擊），不要一回合把所有人都衝出去。",
+  "戰略層照著主線目標推進，同時盯著外星人的計畫進度條：滿了會開始倒數，倒數結束前沒把進度壓下來就輸。"
+ ],
+ "deals": "XCOM 2、天選者之戰和合輯常在 Steam 特價打得很低，等大特賣一起收最划算（現價看下方即時數據）。",
+ "talk": [
+  {
+   "q": "九成命中還打空，是設計失誤還是樂趣所在？",
+   "why": "擲骰製造了緊張感，也製造了冤死。策略遊戲該不該保留這種運氣？"
+  },
+  {
+   "q": "隊員永久陣亡，讓你更投入還是更想讀檔？",
+   "why": "XCOM 的故事是你的隊員「死」出來的。你會開鐵人模式硬吞後果，還是讀檔救人？"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "dujS8L7qWAU",
+    "title": "天選者之戰 上市預告"
+   },
+   {
+    "id": "7ZHR_RDl934",
+    "title": "天選者之戰 公布預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "2K 官方商店：XCOM 2（語言、版本內容、系統需求）",
+   "u": "https://store.2k.com/game/buy-xcom-2-pc",
+   "d": ""
+  },
+  {
+   "t": "SteamDB：XCOM 2 支援語言（繁中介面與字幕）",
+   "u": "https://steamdb.info/app/268500/dlc",
+   "d": ""
+  },
+  {
+   "t": "TechRaptor：XCOM 2 上市日定在 2016/2/5",
+   "u": "https://techraptor.net/content/xcom-2-delayed-february-5th-2016",
+   "d": "2015"
+  },
+  {
+   "t": "gamegeeker 評析：XCOM 2 Metacritic 88、OpenCritic 87，建議直接買含天選者之戰的版本",
+   "u": "https://gamegeeker.com/games/xcom-2/review?market=JP",
+   "d": ""
+  },
+  {
+   "t": "Deku Deals：天選者之戰 Metacritic、OpenCritic、HowLongToBeat、平台",
+   "u": "https://www.dekudeals.com/items/xcom-2-war-of-the-chosen",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：天選者之戰（PC）媒體評論",
+   "u": "https://legacy.prod.metacritic.com/game/pc/xcom-2-war-of-the-chosen/critic-reviews",
+   "d": ""
+  },
+  {
+   "t": "GOG：天選者之戰介紹與媒體分數（GI 9.3、IGN 8.8、Polygon 9.5）",
+   "u": "https://www.gog.com/game/xcom_2_war_of_the_chosen",
+   "d": ""
+  },
+  {
+   "t": "2K 官方：天選者之戰資料片介紹",
+   "u": "https://2k.com/en-US/game/xcom-2-war-of-the-chosen/",
+   "d": ""
+  },
+  {
+   "t": "YouTube：天選者之戰上市預告（PC 先上，PS4／Xbox One 9/12）",
+   "u": "https://www.youtube.com/watch?v=dujS8L7qWAU",
+   "d": "2017-08-29"
+  },
+  {
+   "t": "YouTube：天選者之戰公布預告（8/29 上市）",
+   "u": "https://www.youtube.com/watch?v=7ZHR_RDl934",
+   "d": "2017"
+  },
+  {
+   "t": "gamegeeker 評析：Switch 版 XCOM 2 合輯 Metacritic 77",
+   "u": "https://gamegeeker.com/ja/games/xcom-2/review",
+   "d": ""
+  },
+  {
+   "t": "steambase：XCOM 2 支援 Steam 工作坊",
+   "u": "https://steambase.io/games/xcom-2/info",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：XCOM 2（PC）88 分",
+   "u": "https://legacy.prod.metacritic.com/game/pc/xcom-2/critic-reviews",
+   "d": ""
+  },
+  {
+   "t": "OpenCritic：XCOM 2",
+   "u": "https://opencritic.com/game/1776/score",
+   "d": ""
+  },
+  {
+   "t": "XCOM 官方新聞：天選者之戰 PC 上市、PS4／Xbox One 9/12（Game Informer 9.25）",
+   "u": "https://xcom.com/news/xcom-2-war-of-the-chosen-now-available-for-pc/amp",
+   "d": "2017-08"
+  },
+  {
+   "t": "UFOpaedia：外星人計畫進度條與倒數規則",
+   "u": "https://new.ufopaedia.org/Avatar_Project_(XCOM2)",
+   "d": ""
+  },
+  {
+   "t": "Engadget：XCOM 2 合輯登上 iPhone、iPad",
+   "u": "https://www.engadget.com/xcom-2-collection-ios-iphone-ipad-150808990.html",
+   "d": "2020-11"
+  },
+  {
+   "t": "Feral Interactive：XCOM 2 合輯 Android 版 7/13 上市",
+   "u": "https://www.feralinteractive.com/en/news/retake-the-earth-in-the-xcom-2-collection-launches-on-android-13th-july/",
+   "d": "2021-07"
+  }
+ ],
+ "pending": [],
+ "updated": "2026-11-16"
+}

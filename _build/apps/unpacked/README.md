@@ -9,6 +9,7 @@
 
 | 部分 | 誰做 | 在哪 |
 |---|---|---|
+| 推坑（已上市、不分新舊的私房推薦） | 每日推坑排程（Claude 的排程任務「解包：每日推坑」，每天台灣時間 11:43，寫完推播） | `apps/unpacked/data/picks/<id>.json`，規範在 `PICKS_GUIDE.md`；publish.py 產生 `data/picks.json` |
 | 專題（深度介紹＋粉專稿） | 每日寫稿排程（Claude 的排程任務「解包：每日寫稿」，每天台灣時間 05:23，寫完推播到痞子葳手機） | `apps/unpacked/data/features/<id>.json`，規範在 `WRITER_GUIDE.md` |
 | Steam 即時資料與選題候選 | GitHub Actions `.github/workflows/unpacked-live.yml`，每小時＋track.json 一變就跑 | `tools/live.py` → `data/live.json`、`data/hist/<appid>.json`、`data/candidates.json` |
 | App 本體 | 這個資料夾的 `src/`，`build.py` 組成單一 index.html | `apps/unpacked/`（`build.py` 不碰 `data/`） |
@@ -24,6 +25,9 @@
   - `/影像`：YouTube 官方預告（點了才載入）＋ Steam 預告（HLS：iPhone／Android 直接播，電腦用 `vendor/hls.light.min.mjs`）、相簿燈箱（可滑）：Steam 截圖＋專題附的官方圖＋每支 YouTube 預告自動截的 3 張畫面（maxres1～3，沒有就退回 hq，再沒有就拿掉），最多 18 張。
   - `/玩法` 循環貼紙＋拆解、你的第一個小時、跟誰像；`/劇情`（有雷的要「撕開」才看）；`/幕後`＋時間軸；`/風向`；`/討論`（每題可寫自己的想法）＋我的標記（想玩／在玩／玩過／沒興趣）＋筆記；`/來源`＋待確認。
   - 語音導讀（speechSynthesis，zh-TW）。
+- **推坑**：Claude 的私房推薦牆，不分新舊、已經上市、查過評價又合痞子葳口味的遊戲，每天加 2～3 款。卡片有年份大字、推坑章（必玩／閉眼入／特價入／冷門神作）、即時價格與特價、繁中、時長、Steam 評價；篩選有繁中、特價中、15 小時內、40 小時以上、我想玩。第一次進來卡片一張張蓋章拍上牆，捲到的那張播動態預告或輪播。分頁上的數字是最新一批還沒打開的推坑。
+  - 推坑頁：「挖寶中」轉場、動態主視覺、一眼看懂（上市年份、售價、平台、中文、時長、SCAR 18）、**推坑信**（Claude 第一人稱，捲到時推坑章砸下）、三個推坑理由、評價（Metacritic／OpenCritic＋Steam 與繁中即時評價）、適合你／先別買、怎麼玩最好玩、怎麼買最划算、影像相簿、資訊卡、玩完可以聊、我的標記與筆記、來源。
+  - 首頁「今日推坑」一排小卡；跑馬燈也會念今日推坑。
 - **庫存**：搜尋、結論／平台／類型／中文／課金／我的標記篩選、排序，最多 3 款加入比較（比較表）。
 - **粉專**：每篇的出稿台（稿子如果是前幾天寫的、又有「倒數幾天」這類會過期的字，上方會提醒先改）。塗鴉圖卡產生器（版型 A 黃牆撕紙框、B 黑牆大圖；4:5／1:1；重噴換濺漆與截圖；下載 PNG、手機可直接分享）、可編輯的貼文（只存這台裝置）、三個標題、hashtag、口播稿、素材標註、標記已發佈（分頁上的數字是還沒發的篇數）。
 
@@ -45,6 +49,8 @@
 
 - `data/index.json`：`{at, n, items:[{id,date,rank,kind,kind_label,zh,en,steam,platforms,genres,release,price_text,headline,stamp,label,money,zhs,tw,yt,img,gal,updated}]}`（publish.py 產生；`img` 是 `media.images` 第一張，`gal` 是第 2～6 張，首頁海報輪播用）。
 - `data/features/<id>.json`：見 `WRITER_GUIDE.md` 第 3、4 節；範例 `rob-run`、`gta-vi`、`unhinged`。
+- `data/picks/<id>.json`：見 `PICKS_GUIDE.md` 第 3 節；範例 `balatro`、`octopath-traveler-2`、`xcom-2`。`data/picks.json`：`{at, n, items:[{id,date,rank,zh,en,steam,year,release,genres,platforms,stamp,label,pitch,zhs,hours,price_text,money,yt,img,gal,updated}]}`（publish.py 產生）。
+- `data/candidates.json` 另有 `gems`（Steam 評價最高的遊戲）、`gems_sale`（評價最高又正在特價），推坑選題用；`picked: true` 是推過的。
 - `data/live.json`：`{at, apps:{appid:{name,free,price{final,orig,disc,fmt,low},rv{n,pct,label,recent},rv_tc,players{n,at,peak,d24},rel,langs{tc,sc},tags,img{hero,header,wide,box},shots[],micro,trailers[{hls,mp4,poster,name}],…}}}`；價格單位是「分」（NT$ × 100）。
 - `data/hist/<appid>.json`：`pl` 同上 `[分鐘時間戳, 人數]`、`pr` 價格（有變才記）、`rv`／`rt` 全球與繁中評價 `[時間, 好評數, 總數]`（一天一筆）。
 - localStorage 前綴 `unpacked.v1.`：`settings`、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`、`introDay`。
