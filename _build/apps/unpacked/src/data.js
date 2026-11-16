@@ -11,8 +11,10 @@ async function getJSON(path, fresh = true) {
   return r.json();
 }
 async function loadIndex() {
-  const [idx, live, picks] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] }))]);
+  const [idx, live, picks, wish, weekly] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] })),
+    getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] }))]);
   S.index = idx; S.live = live || { apps: {} }; S.picks = picks || { items: [] };
+  S.wish = wish && wish.items ? wish : null; S.weekly = weekly && weekly.items ? weekly : { items: [] };
   return idx;
 }
 async function loadPick(id) {

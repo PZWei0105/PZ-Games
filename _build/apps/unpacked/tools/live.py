@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """《解包 UNPACKED》資料管線：GitHub Actions 每小時跑一次（也會在 track.json 變動時跑）。
 
-做三件事，全部只用 Steam 的公開端點（不用金鑰）：
+做四件事，全部只用 Steam 的公開端點（不用金鑰）：
 1. 追蹤清單（data/track.json，由 publish.py 從專題自動產生）裡每一款 Steam 遊戲：
    台灣區價格與折扣、全球評價、繁中玩家評價、目前同上人數、主視覺／截圖／預告、語言、標籤。
    → data/live.json（目前的樣子）＋ data/hist/<appid>.json（價格、同上、評價的歷史，App 畫曲線、算史低）
 2. 給每日寫稿用的選題候選 → data/candidates.json
    （同上排行、熱銷、新品、即將推出、願望清單熱門；已經寫過的標 covered）
-3. 只在資料真的有變時寫檔（時間戳以外），讓 git 不會每輪都多一個空 commit。
+3. 痞子葳的 Steam 願望單（獵價分頁）→ data/wish.json：每一款的台灣區價格、特價開始時間與結束時間、
+   追蹤以來最低價（價格歷史也記在 hist/<appid>.json 的 pr）。Steam 代號放在 GitHub Actions 的密碼 UNP_STEAM
+   （不公開）；沒有設就讀 data/wish-cfg.json 的 steam（會公開在 repo 裡）。代號絕對不寫進 log 和輸出檔。
+4. 只在資料真的有變時寫檔（時間戳以外），讓 git 不會每輪都多一個空 commit。
 
 用法：
   python3 live.py --data apps/unpacked/data            # 正式（Actions）
@@ -38,6 +41,10 @@ REVIEWS = 'https://api.steampowered.com/IUserReviewsService/GetAppReviews/v1/?in
 SEARCH = 'https://store.steampowered.com/search/results/?filter={}&json=1&cc=TW&l=tchinese'
 # 推坑候選：照使用者評價排序的遊戲（category1=998 只要遊戲本體），另一份只看特價中的
 GEMS = 'https://store.steampowered.com/search/results/?sort_by=Reviews_DESC&category1=998&start=0&count=50&json=1&cc=TW&l=tchinese{}'
+# 願望單：公開的願望單不用金鑰（Steam 個人檔案「隱私設定 → 遊戲詳細資料」要是公開）
+WISH = 'https://api.steampowered.com/IWishlistService/GetWishlist/v1/?steamid={}'
+VANITY = 'https://steamcommunity.com/id/{}/?xml=1'
+WISH_MEDIA = 40            # 特價中的願望單遊戲另外抓動態預告（最多這麼多款）
 ASSET = 'https://shared.akamai.steamstatic.com/store_item_assets/'
 VIDEO = 'https://video.akamai.steamstatic.com/store_trailers/'
 CTX = {'language': 'tchinese', 'country_code': 'TW', 'steam_realm': 1}
@@ -82,6 +89,26 @@ def get_json(url, timeout=40, tries=3):
                 return json.loads(raw)
             except ValueError as e:
                 raise ValueError(f'不是 JSON（{len(raw)} bytes）：{raw[:70]!r}') from e
+        except Exception as e:  # noqa: BLE001
+            last = e
+            time.sleep(1.5 * (i + 1))
+    raise RuntimeError(f'{type(last).__name__}: {last}')
+
+
+def get_text(url, timeout=30, tries=2):
+    if OFFLINE is not None:
+        key = re.sub(r'[^a-zA-Z0-9]+', '_', url)[:180]
+        p = os.path.join(OFFLINE, key + '.txt')
+        if os.path.exists(p):
+            with open(p, encoding='utf-8') as f:
+                return f.read()
+        raise RuntimeError('offline: no fixture ' + key)
+    last = None
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': UA})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read().decode('utf-8', 'replace')
         except Exception as e:  # noqa: BLE001
             last = e
             time.sleep(1.5 * (i + 1))
@@ -209,6 +236,13 @@ def norm(it, tagnames):
     bpo = it.get('best_purchase_option') or {}
     final = int(bpo['final_price_in_cents']) if bpo.get('final_price_in_cents') not in (None, '') else None
     orig = int(bpo['original_price_in_cents']) if bpo.get('original_price_in_cents') not in (None, '') else final
+    ends = []
+    for d in bpo.get('active_discounts') or []:
+        try:
+            ends.append(int(d.get('discount_end_date') or 0))
+        except (TypeError, ValueError):
+            pass
+    end = max(ends) if ends and max(ends) > 0 else None
     rv = (it.get('reviews') or {}).get('summary_filtered') or {}
     rel = it.get('release') or {}
     langs = {}
@@ -230,7 +264,8 @@ def norm(it, tagnames):
         'url': f'https://store.steampowered.com/app/{appid}/',
         'free': bool(it.get('is_free')) or (final == 0 and not bpo.get('discount_pct')),
         'price': {'final': final, 'orig': orig, 'disc': int(bpo.get('discount_pct') or 0),
-                  'fmt': (bpo.get('formatted_final_price') or '').replace('NT$ ', 'NT$').strip() or None},
+                  'fmt': (bpo.get('formatted_final_price') or '').replace('NT$ ', 'NT$').strip() or None,
+                  'end': iso(dt.datetime.fromtimestamp(end, UTC)) if end and int(bpo.get('discount_pct') or 0) > 0 else None},
         'rv': {'n': rv.get('review_count') or 0, 'pct': rv.get('percent_positive') if rv.get('review_count') else None,
                'label': rv.get('review_score_label') if rv.get('review_count') else None},
         'rel': {'date': dt.datetime.fromtimestamp(ts, UTC).strftime('%Y-%m-%d') if ts else None,
@@ -340,7 +375,7 @@ def summarize(h, t_now):
 
 
 # ------------------------------------------------------------------ candidates
-def candidates(covered, tagn, picked=frozenset()):
+def candidates(covered, tagn, picked=frozenset(), mine=frozenset()):
     out = {'at': iso(now())}
     try:
         d = get_json(MOSTPLAYED)
@@ -394,6 +429,8 @@ def candidates(covered, tagn, picked=frozenset()):
             x['covered'] = x['appid'] in covered
             if x['appid'] in picked:
                 x['picked'] = True
+            if x['appid'] in mine:
+                x['mine'] = True        # 在痞子葳的 Steam 願望單上
             if it:
                 n = norm(it, tagn)
                 x['name'] = n['name'] or x.get('name')
@@ -408,6 +445,121 @@ def candidates(covered, tagn, picked=frozenset()):
                 if n['adult']:
                     x['adult'] = True
     return out
+
+
+# ------------------------------------------------------------------ 願望單（獵價）
+def wish_cfg(D):
+    """Steam 代號：先看 Actions 的密碼 UNP_STEAM，沒有才看 data/wish-cfg.json。可以是個人檔案網址、自訂網址名稱或 17 位數代號。"""
+    raw = (os.environ.get('UNP_STEAM') or '').strip()
+    if not raw:
+        raw = str((load(os.path.join(D, 'wish-cfg.json'), {}) or {}).get('steam') or '').strip()
+    return raw
+
+
+def resolve_steamid(raw):
+    m = re.search(r'(7656119\d{10})', raw)
+    if m:
+        return m.group(1)
+    m = re.search(r'steamcommunity\.com/id/([A-Za-z0-9_-]{2,64})', raw)
+    v = m.group(1) if m else (raw if re.fullmatch(r'[A-Za-z0-9_-]{2,64}', raw) else None)
+    if not v:
+        return None
+    t = get_text(VANITY.format(urllib.parse.quote(v)))
+    m = re.search(r'<steamID64>\s*(\d{17})\s*</steamID64>', t)
+    return m.group(1) if m else None
+
+
+def wishlist(D, t0, tagn):
+    """痞子葳的 Steam 願望單 → data/wish.json。回傳願望單上的 appid（給選題候選標「在願望單上」）。
+    輸出檔是公開的：只放遊戲資料，不放 Steam 代號；錯誤訊息也不帶代號。"""
+    path = os.path.join(D, 'wish.json')
+    old = load(path, {}) or {}
+    raw = wish_cfg(D)
+    if not raw:
+        save_if_changed(path, {'at': iso(t0), 'ok': False, 'state': 'unset', 'n': 0, 'items': []})
+        print('wish: 還沒設定 Steam 代號')
+        return set()
+    try:
+        sid = resolve_steamid(raw)
+    except Exception as e:  # noqa: BLE001
+        sid = None
+        ERRS.append(f'wish vanity: {str(e)[:80]}')
+    if not sid:
+        save_if_changed(path, {'at': iso(t0), 'ok': False, 'state': 'badid', 'n': 0, 'items': old.get('items') or []})
+        print('wish: Steam 代號認不出來')
+        return {x['appid'] for x in old.get('items') or []}
+    if os.environ.get('GITHUB_ACTIONS'):
+        print('::add-mask::' + sid)          # 公開 repo 的 log 誰都看得到：遮掉
+    try:
+        d = get_json(WISH.format(sid), timeout=30)
+    except Exception as e:  # noqa: BLE001
+        msg = str(e).replace(sid, '…')[:120]
+        ERRS.append('wish: ' + msg)
+        keep = dict(old, at=iso(t0), ok=bool(old.get('items')), state='stale', err='這一輪讀不到願望單，先顯示上一次的資料')
+        save_if_changed(path, keep)
+        return {x['appid'] for x in old.get('items') or []}
+    rows = (d.get('response') or {}).get('items')
+    if not rows:
+        save_if_changed(path, {'at': iso(t0), 'ok': False, 'state': 'empty', 'n': 0, 'items': []})
+        print('wish: 讀到 0 款（願望單是空的，或「遊戲詳細資料」沒有公開）')
+        return set()
+    rows = sorted([x for x in rows if x.get('appid')], key=lambda x: (x.get('priority') or 9999, -(x.get('date_added') or 0)))
+    appids = [int(x['appid']) for x in rows]
+    info = get_items(appids, media=False)
+    sale_ids = [a for a in appids if info.get(a) and int(((info[a].get('best_purchase_option') or {}).get('discount_pct')) or 0) > 0][:WISH_MEDIA]
+    media = get_items(sale_ids, media=True) if sale_ids else {}
+    first = not old.get('ok')
+    prev = {x['appid']: x for x in old.get('items') or []}
+    items = []
+    tm = tmin(t0)
+    for x in rows:
+        a = int(x['appid'])
+        it = info.get(a)
+        if not it:
+            if a in prev:
+                items.append(prev[a])        # 這一輪 Steam 沒回：先留上一次的
+            continue
+        n = norm(it, tagn)
+        pr = n['price']
+        hp = os.path.join(D, 'hist', f'{a}.json')
+        h = load(hp, {'pl': [], 'pr': [], 'rv': [], 'rt': []})
+        if pr['final'] is not None:
+            h['pr'] = push_cap(h.get('pr') or [], [tm, pr['final']], HIST_PR, dedupe_last=True)
+            save_if_changed(hp, h)
+        low = summarize(h, t0).get('low')
+        row = {
+            'appid': a,
+            'added': dt.datetime.fromtimestamp(x['date_added'], UTC).strftime('%Y-%m-%d') if x.get('date_added') else None,
+            'pri': x.get('priority'),
+            'name': n['name'], 'img': n['img'].get('header'), 'cap': n['img'].get('wide'),
+            'free': n['free'], 'p': [pr['final'], pr['orig'], pr['disc']],
+            'rv': [n['rv']['pct'], n['rv']['n'], n['rv']['label']],
+            'rel': n['rel'], 'zh': 'tc' if 'tc' in n['langs'] else 'sc' if 'sc' in n['langs'] else None,
+            'tags': n['tags'][:4], 'dev': n['dev'], 'short': n['short'][:160], 'deck': 'deck' in n['plat'],
+        }
+        if n['adult']:
+            row['adult'] = True
+        if low:
+            row['low'] = [low['v'], low['at'][:10], low['since'][:10]]
+        if pr['disc'] > 0 and not n['free']:
+            p0 = prev.get(a)
+            if p0 and (p0.get('p') or [0, 0, 0])[2] > 0:
+                frm = (p0.get('sale') or {}).get('from')                 # 還在同一波特價
+            elif p0 and not first:
+                frm = iso(t0)                                            # 上一輪還沒特價 → 這一輪開始
+            else:
+                frm = None                                               # 第一次抓／剛加進願望單：不知道從什麼時候開始
+            row['sale'] = {'from': frm, 'end': pr.get('end')}
+        mi = media.get(a)
+        if mi:
+            mc, _ = trailers(mi)
+            if mc:
+                row['micro'] = mc
+        items.append(row)
+    out = {'at': iso(t0), 'ok': True, 'state': 'ok', 'n': len(items), 'items': items}
+    wrote = save_if_changed(path, out)
+    print(f'wish: {len(items)} 款，特價中 {sum(1 for i in items if i.get("sale"))} 款，wrote={wrote}')
+    return set(appids)
 
 
 # ------------------------------------------------------------------ main
@@ -507,12 +659,18 @@ def main():
     # 已經不在追蹤清單裡的拿掉
     keep = {str(int(x['appid'])) for x in track.get('apps') or [] if str(x.get('appid', '')).isdigit()}
     out_apps = {k: v for k, v in out_apps.items() if k in keep}
+    try:
+        mine = wishlist(D, t0, tagn)
+    except Exception as e:  # noqa: BLE001  願望單壞掉不能拖垮整輪
+        print('wish fail', e, file=sys.stderr)
+        ERRS.append(f'wish: {type(e).__name__}')
+        mine = set()
     live = {'at': iso(t0), 'ok': ok, 'asked': len(apps), 'errs': ERRS[:20], 'apps': out_apps}
     wrote = save_if_changed(live_path, live)
     print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}')
 
     if not a.no_candidates:
-        c = candidates(covered, tagn, picked)
+        c = candidates(covered, tagn, picked, mine)
         wrote_c = save_if_changed(os.path.join(D, 'candidates.json'), c)
         print('candidates:', {k: len(v) for k, v in c.items() if isinstance(v, list)}, 'wrote=', wrote_c)
 

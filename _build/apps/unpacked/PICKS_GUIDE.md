@@ -14,7 +14,8 @@
    - `picks.json`：推過哪些（**不重複**）。`index.json`：每日專題寫過哪些。
    - `candidates.json`：GitHub Actions 每小時從 Steam 抓的候選。推坑主要看 `gems`（Steam 使用者評價最高的遊戲）和 `gems_sale`（評價最高、**現在正在特價**的），`picked: true` 是推過的、`disc` 是折扣。其他清單（同上排行、熱銷）也能參考。
    - 範例推坑：`picks/balatro.json`、`picks/octopath-traveler-2.json`、`picks/xcom-2.json`。**照這三篇的深度寫，不能比它們薄。**
-3. 只能新增或修改 `apps/unpacked/data/picks/`、`picks.json`、`track.json`。不要動 `live.json`、`hist/`、`candidates.json`（Actions 的）和每日專題的檔案（`features/`、`index.json`）。
+   - `wish.json`：痞子葳的 Steam 願望單（`state` 是 `ok` 才算數）；`p` 是 [現價, 原價, 折扣]（單位「分」）、`low` 是 [追蹤以來最低, 那天, 開始追蹤日]。候選清單裡 `mine: true` 的也是在他願望單上的。
+3. 只能新增或修改 `apps/unpacked/data/picks/`、`picks.json`、`track.json`。不要動 `live.json`、`wish.json`、`wish-cfg.json`、`hist/`、`candidates.json`（Actions 的）和每日專題的檔案（`features/`、`index.json`）。
 
 ## 1. 選題
 
@@ -34,6 +35,7 @@
   - 電腦是 ASUS ROG Strix SCAR 18（RTX 5090 Laptop 24GB、64GB），也會接 4K 大電視。
 - **組合**：三款不要同類型、不要同年代，輪流照顧上面不同的口味；可以搭一款 `gems_sale` 裡正在特價的。
 - **不重複**：`picks.json` 裡有的不再推。每日專題寫過的遊戲可以推，但推坑稿要用推坑的角度寫。
+- **他願望單上的遊戲**：他已經知道了，推坑的價值是幫他挖到還不知道的好遊戲，所以平常**不推**願望單上的。例外：正在大特價（折扣 30% 以上，或到了追蹤滿 14 天的史低）時，一天最多推 1 款，`stamp` 用「特價入」，推坑信要直接回答「現在該不該下手」，`deals` 寫清楚特價到什麼時候。
 
 ## 2. 研究（每款至少 8 個來源）
 
@@ -111,4 +113,4 @@ git pull --rebase origin main && git -c push.negotiate=true push origin HEAD:mai
 
 ## 6. 回報
 
-最後用 PushNotification 推播給痞子葳（一行、200 字以內、繁體中文）：開頭「今天推坑：A、B、C」，後面各用很短的話說為什麼推他；正在特價的一句帶過。不寫技術細節。沒推上去就照實說原因。
+最後用 PushNotification 推播給痞子葳（一行、200 字以內、繁體中文）：開頭「今天推坑：A、B、C」，後面各用很短的話說為什麼推他；正在特價的一句帶過，是他願望單上的就說「你願望單上的」。不寫技術細節。沒推上去就照實說原因。

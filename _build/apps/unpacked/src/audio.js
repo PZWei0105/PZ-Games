@@ -55,6 +55,9 @@ const sfx = {
   riser() { if (!sndOK()) return; const t = T(); nz(t, 0.7, { f: 400, f2: 6000, q: 2, g: 0.22, a: 0.6 }); tone(t, 0.7, { type: 'sawtooth', f: 200, f2: 900, g: 0.035, a: 0.6 }); },
   rip() { if (!sndOK()) return; const t = T(); for (let i = 0; i < 9; i++) nz(t + i * 0.035 + Math.random() * 0.02, 0.05, { f: 1200 + Math.random() * 2400, q: 2, g: 0.3 + Math.random() * 0.25 }); },
   click() { if (!sndOK()) return; const t = T(); nz(t, 0.03, { type: 'highpass', f: 3000, g: 0.25 }); tone(t, 0.04, { f: 700, f2: 300, g: 0.12 }); },
+  ping(f = 1600) { if (!sndOK()) return; const t = T(); tone(t, 0.35, { f, f2: f * 0.97, g: 0.07 }); tone(t + 0.12, 0.3, { f, g: 0.025 }); },
+  siren() { if (!sndOK()) return; const t = T(); for (let i = 0; i < 3; i++) { tone(t + i * 0.32, 0.3, { type: 'sawtooth', f: 620, f2: 1240, g: 0.05 }); tone(t + i * 0.32, 0.3, { type: 'square', f: 310, f2: 620, g: 0.025 }); } },
+  lock() { if (!sndOK()) return; const t = T(); [0, 0.07, 0.14].forEach((d, i) => tone(t + d, 0.06, { type: 'square', f: 1400 + i * 260, g: 0.05 })); nz(t + 0.2, 0.08, { type: 'lowpass', f: 1500, g: 0.4 }); },
   pop() { if (!sndOK()) return; const t = T(); tone(t, 0.12, { f: 500, f2: 1200, g: 0.18 }); nz(t, 0.05, { f: 3000, q: 3, g: 0.12 }); },
 };
 

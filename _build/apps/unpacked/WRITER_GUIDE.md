@@ -13,7 +13,8 @@
    - `index.json`：已經寫過哪些（不要重複）。
    - `candidates.json`：GitHub Actions 每小時從 Steam 抓的選題候選——同上排行（`most_played`，`last_week` 是上週名次，名次暴衝的要特別看）、熱銷、新品、即將推出、願望清單熱門、特價。`covered: true` 是寫過的。
    - 範例專題：`features/rob-run.json`（Steam 搶先體驗）、`features/gta-vi.json`（主機即將上市）、`features/unhinged.json`（非 Steam 平台獨佔）。**照這三篇的深度寫，不能比它們薄。**
-3. 不要動 `live.json`、`hist/`、`candidates.json`（那是 Actions 的），也不要動「推坑」的 `picks/`、`picks.json`（另一個排程照 `PICKS_GUIDE.md` 寫；推坑收已經上市的私房好遊戲，專題收新聞性的新遊戲）。
+   - `wish.json`：痞子葳的 Steam 願望單（Actions 每小時同步，App 的「獵價」分頁用）。`state` 不是 `ok` 就是還沒連結或這一輪沒讀到，略過。`candidates.json` 裡 `mine: true` 的也是在他願望單上的。
+3. 不要動 `live.json`、`wish.json`、`wish-cfg.json`、`hist/`、`candidates.json`（那是 Actions 的），也不要動「推坑」的 `picks/`、`picks.json`（另一個排程照 `PICKS_GUIDE.md` 寫；推坑收已經上市的私房好遊戲，專題收新聞性的新遊戲）。
 
 ## 1. 選題
 
@@ -28,6 +29,7 @@
 - **熱度來源**：candidates.json 之外，用 WebSearch 查當天的遊戲新聞（發表會、評測解禁、主機獨佔、Switch 2、Netflix、Game Pass／PS Plus、限時免費、延期、爭議）。台灣媒體（4Gamers、巴哈新聞、遊戲角落）和國外媒體都要看。
 - **不重複**：寫過的不再寫。除非有重大變化（正式版、上市後評測、改版、爭議）→ 寫追蹤篇，id 加 `-2`（例：`rob-run-2`），開頭交代「上次解包之後發生了什麼」。
 - 不要只因為是台灣民俗、宮廟題材就選；照熱度和品質選。
+- **痞子葳願望單上的遊戲**（`wish.json`、候選裡的 `mine: true`）：他自己加進去的，代表有興趣。快上市、剛上市、評測解禁、有重大消息的時候優先寫，幫他判斷要不要買；選題標準一樣，不夠格就不寫。
 
 ## 2. 研究（每款至少 8 個來源）
 
@@ -125,3 +127,11 @@ git pull --rebase origin main && git -c push.negotiate=true push origin HEAD:mai
 ## 7. 回報
 
 最後用繁體中文、短短幾行回報給痞子葳（排程時用 PushNotification 推播到他手機）：第一句當標題「今天解包：A、B、C」，後面各一句為什麼值得看；有待確認的事、改了哪篇舊稿各一句帶過。不用列步驟、不寫技術細節。沒推上去就照實說原因。
+
+**願望單特價快報**（推播的最後一段；`wish.json` 的 `state` 是 `ok` 才做）：看願望單上正在特價的遊戲（`p[2]` > 0），挑出符合任一條的：
+- **新特價**：`sale.from` 在 24 小時內。
+- **史低**：現價 `p[0]` 小於等於追蹤以來最低 `low[0]`，而且追蹤滿 14 天（`low[2]` 是開始追蹤的日期）。追蹤不滿 14 天不准說「史低」。
+- **快結束**：`sale.end` 在 24 小時內。
+- **限時免費**：`p[2]` 是 100。
+
+有的話，在推播最後加一段「｜願望單特價：A -50%（史低）、B -30%（明天結束）」，最多點名 2 款，其他寫「等 N 款」；遊戲名用台灣官方中文名（沒有就用英文）。整則推播控制在 250 字以內。沒有就不寫這段。痞子葳在 App 裡標的「想玩」只存在他手機，推播看不到，不用管。

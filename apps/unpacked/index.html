@@ -157,7 +157,8 @@ input,textarea{font:inherit}
 .fl{font:900 13px/1 var(--cjk);padding:8px 10px;border:2px solid #444;color:#ddd;background:#1d1d1d;border-radius:20px}
 .fl.on{background:var(--y);color:var(--k);border-color:var(--k);box-shadow:2px 2px 0 var(--p)}
 .fgroup{font:900 12px/1 var(--cjk);color:var(--p);margin:10px 2px 6px;letter-spacing:1px}
-.sortrow{display:flex;gap:8px;align-items:center;margin:4px 2px 14px;color:var(--t2);font-size:13px}
+.sortrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 2px 14px;color:var(--t2);font-size:13px}
+.sortrow .fl{white-space:nowrap;flex:none}
 .tray{position:fixed;left:10px;right:10px;bottom:calc(var(--tabs) + var(--sab) + 10px);z-index:28;background:var(--k);border:3px solid var(--y);box-shadow:5px 5px 0 var(--p);padding:8px 8px 8px 12px;display:flex;align-items:center;gap:8px;max-width:860px;margin:0 auto;transform:translateY(30px);opacity:0;visibility:hidden;transition:transform .25s,opacity .25s,visibility .25s}
 .tray.on{transform:none;opacity:1;visibility:visible}
 .tray .tl{flex:1;font:900 13px/1.4 var(--cjk);color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -875,6 +876,312 @@ body.calm .sv-vid.zap::after,body.calm .sv.act .sv-seal,body.calm .sv.act .sv-ti
   .sv-vid:hover .sv-prog::before,.sv-vid:hover .sv-prog i{height:7px}
 }
 
+/* ================= 獵價（Steam 願望單＋想玩） ================= */
+.hsync{display:inline-block;margin-left:6px;color:var(--y);font-weight:900}
+.hwarn{color:var(--p);font-weight:900}
+.radarw{display:grid;gap:16px;margin:8px 0 6px}
+.radar{position:relative;width:min(330px,88vw);aspect-ratio:1;margin:6px auto 0;border-radius:50%;background:#0c0c0c;border:4px solid var(--y);box-shadow:6px 6px 0 var(--p),inset 0 0 0 3px #000;overflow:hidden}
+.rd-grid{position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle,transparent 0 23.6%,#ffe60033 23.6% 24.4%,transparent 24.4% 48.6%,#ffe60033 48.6% 49.4%,transparent 49.4% 73.6%,#ffe60026 73.6% 74.4%,transparent 74.4%),
+  linear-gradient(transparent calc(50% - 1px),#ffe6002e calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px)),
+  linear-gradient(90deg,transparent calc(50% - 1px),#ffe6002e calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px)),
+  radial-gradient(#ffffff10 1px,transparent 1.5px) 0 0/12px 12px}
+.rd-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 270deg,#ffe6000a 290deg,#ffe60052 357deg,#ffe600cc 359.4deg,transparent 360deg);transform:rotate(0deg);will-change:transform}
+.blip{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;display:grid;place-items:center;z-index:2;border-radius:50%}
+.blip i{display:block;width:7px;height:7px;border-radius:50%;background:#bdbdbd;opacity:.75}
+.blip.b-n i{width:5px;height:5px;background:#9a9a9a}
+.blip.b-soon i{width:0;height:0;border-radius:0;background:none;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #fff;opacity:.85}
+.blip.b-sale i{width:11px;height:11px;background:var(--p);opacity:1;box-shadow:0 0 0 2px #000}
+.blip.b-low i{width:14px;height:14px;background:var(--y);opacity:1;box-shadow:0 0 0 2px #000,0 0 0 4px var(--p)}
+.blip.b-sale::after,.blip.b-low::after{content:"";position:absolute;inset:4px;border-radius:50%;border:2px solid var(--p);animation:bpulse 1.8s ease-out infinite;opacity:0}
+.blip.b-low::after{border-color:var(--y)}
+.blip.hit i{animation:bhit .5s ease-out}
+@keyframes bpulse{0%{transform:scale(.4);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+@keyframes bhit{0%{transform:scale(2.2)}100%{transform:scale(1)}}
+.rd-tl,.rd-br{position:absolute;z-index:3;font:400 14px/1 var(--num);letter-spacing:2px;color:var(--y);pointer-events:none}
+.rd-tl{left:18%;top:15%}.rd-tl b{display:block;font-size:30px;color:#fff}
+.rd-br{right:18%;bottom:14%;color:var(--p)}
+.rd-br i{font-style:normal;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.hstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.hs{background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:4px 4px 0 var(--y);padding:8px 10px 6px;transform:rotate(-.8deg)}
+.hs:nth-child(2){transform:rotate(.9deg)}
+.hs>span{display:block;font:900 12px/1 var(--cjk);opacity:.7}
+.hs b{font:400 38px/1.05 var(--num);letter-spacing:1px}
+.hs small{font:900 13px var(--cjk);margin-left:3px}
+.hs.p{background:var(--p);color:#fff;box-shadow:4px 4px 0 var(--k)}
+.hs.y{background:var(--y)}
+.hs.w{grid-column:1/-1;background:var(--k);color:var(--y);border-color:var(--y);box-shadow:4px 4px 0 var(--p);display:flex;align-items:baseline;gap:10px;transform:rotate(-.4deg)}
+.hs.w>span{color:#fff;opacity:1;font-size:13px}
+.hs.w b{white-space:nowrap}
+.hs.w b{font-size:34px}
+.hlegend{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font:700 12px/1.4 var(--cjk);color:var(--t2)}
+.hlegend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:4px}
+.lg-low{background:var(--y);box-shadow:0 0 0 2px var(--p)}.lg-sale{background:var(--p)}.lg-n{background:#9a9a9a}
+.lg-soon{width:0!important;height:0!important;border-radius:0!important;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid #fff}
+.hconn{margin:18px 2px 8px;background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:6px 6px 0 var(--p);padding:14px 16px;transform:rotate(-.4deg)}
+.hc-h{display:flex;align-items:center;gap:8px;font:900 19px/1.2 var(--cjk)}
+.hc-h svg{width:26px;height:26px;color:var(--p)}
+.hconn p{font:700 14.5px/1.7 var(--cjk);margin-top:8px}
+.hconn ol{margin:10px 0 0 20px;font:700 14.5px/1.7 var(--cjk)}
+.hconn li{margin:6px 0}
+.hconn a{color:#c4005a;font-weight:900;margin-left:4px}
+.hf{margin-top:18px}
+.tape-h small{font:400 16px/1 var(--num);letter-spacing:1px;margin-left:6px;opacity:.8}
+.hquiet{display:grid;gap:4px;margin:18px 2px;padding:14px 16px;border:3px dashed #555;color:var(--t2);font:700 13.5px/1.5 var(--cjk)}
+.hquiet b{color:#fff;font-size:16px}
+
+/* 懸賞單（正在特價） */
+.bounties{display:grid;gap:30px;padding:8px 4px 6px}
+.bounty{position:relative;background:#f3ead2;color:var(--k);border:3px solid var(--k);box-shadow:8px 8px 0 var(--p);transform:rotate(var(--rot,0deg));cursor:pointer}
+.bounty::before{content:"";position:absolute;inset:6px;border:2px solid #0000002a;pointer-events:none}
+.bounty.gold{background:#fff6b8;box-shadow:8px 8px 0 var(--k),0 0 0 4px var(--y)}
+.bounty.drop{animation:slapIn .5s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--i,0) * 140ms + 60ms)}
+.bh{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:10px 14px 6px;border-bottom:3px solid var(--k)}
+.bw{font:400 38px/1 var(--drip);color:var(--k);letter-spacing:2px}
+.bn{font:900 22px/1 var(--cjk);color:#fff;background:var(--r);padding:6px 9px 5px;transform:rotate(3deg);border:2px solid var(--k);box-shadow:3px 3px 0 var(--k);white-space:nowrap}
+.bounty.gold .bn{background:var(--k);color:var(--y)}
+.bimg{position:relative;aspect-ratio:616/353;background:#222;overflow:hidden;border-bottom:3px solid var(--k)}
+.bimg img{width:100%;height:100%;object-fit:cover}
+.bimg .ph{position:absolute;inset:0;display:grid;place-items:center;font:400 34px var(--drip);color:var(--y);background:repeating-linear-gradient(-45deg,#1a1a1a 0 18px,#222 18px 36px)}
+.bnew,.blow,.bend{position:absolute;z-index:2;font:900 13px/1 var(--cjk);padding:6px 8px;border:2px solid var(--k)}
+.bnew{left:8px;top:8px;background:var(--y);color:var(--k);font:400 18px/1 var(--num);letter-spacing:2px;transform:rotate(-6deg);animation:bnew 1.1s ease-in-out infinite alternate}
+@keyframes bnew{to{transform:rotate(-6deg) scale(1.12)}}
+.blow{right:8px;bottom:8px;background:var(--k);color:var(--y);transform:rotate(-3deg)}
+.blow.low{background:var(--y);color:var(--k);font-size:16px;box-shadow:3px 3px 0 var(--p)}
+.blow.new{background:#fff;color:var(--k);font-size:12px}
+.bend{left:8px;bottom:8px;background:#fff;color:var(--k)}
+.bend.hot{background:var(--p);color:#fff;animation:bnew .7s ease-in-out infinite alternate}
+.bb{padding:12px 16px 16px}
+.bb h3{font:900 25px/1.15 var(--cjk);padding-right:70px}
+.ben{font:400 15px/1.2 var(--hand);color:#c4005a;margin-top:2px}
+.bprice{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin:10px 0 8px}
+.bprice s{font:400 22px/1 var(--num);color:#777;letter-spacing:1px}
+.bprice b{font:400 44px/1 var(--num);letter-spacing:1px;color:var(--r)}
+.bprice em{font:900 13px/1 var(--cjk);font-style:normal;background:var(--k);color:var(--y);padding:5px 7px}
+.bounty .chips{padding-right:0}
+.bstamp{position:absolute;right:12px;top:58px;z-index:3;width:78px;height:78px;border-radius:50%;border:5px solid var(--r);color:var(--r);display:grid;place-items:center;font:900 22px/1 var(--cjk);background:#ffffffd0;transform:rotate(-14deg);letter-spacing:2px}
+.bounty.gold .bstamp{border-color:var(--k);color:var(--k);background:var(--y)}
+/* 價格血條 */
+.hp{position:relative;height:9px;background:#00000026;border:2px solid var(--k);margin-top:6px}
+.hp .hpf{position:absolute;left:0;top:0;bottom:0;width:var(--cur);background:#e3001b}
+.hp.mid .hpf{background:var(--p)}
+.hp.low .hpf{background:#ff8a00}
+.hp.crit .hpf{background:var(--y);animation:crit .6s steps(2) infinite}
+@keyframes crit{50%{opacity:.45}}
+.hp .hpl{position:absolute;top:-6px;bottom:-6px;width:3px;margin-left:-1px;background:var(--y);box-shadow:0 0 0 1.5px var(--k)}
+.hp.big{height:16px;border-width:3px;margin-top:10px}
+.hp.big::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),#0000002e calc(10% - 2px) 10%);pointer-events:none}
+.hpk{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font:900 11.5px/1.3 var(--cjk);color:#555}
+.hpk .lw{color:#7a5a00}
+.hinfo .hpk{color:#aaa}.hinfo .hpk .lw{color:var(--y)}
+/* 目標清單（等降價、未上市） */
+.trows{display:grid;gap:10px;padding:2px}
+.trow{display:grid;grid-template-columns:118px 1fr auto;gap:12px;align-items:center;background:var(--g);border:2px solid #333;padding:8px 10px 8px 8px;cursor:pointer}
+.trow:active{transform:scale(.99)}
+.tri{position:relative;aspect-ratio:460/215;background:#222;overflow:hidden;border:2px solid #000}
+.tri img{width:100%;height:100%;object-fit:cover}
+.tri .ph{position:absolute;inset:0;display:grid;place-items:center;font:400 22px var(--num);color:#666}
+.trb{min-width:0}
+.trb h4{font:900 15px/1.3 var(--cjk);color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.trc{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.trc .chip{font-size:11px;padding:4px 6px}
+.trow .hp{height:7px;border-color:#000;background:#ffffff1c}
+.trr{display:grid;justify-items:end;gap:3px;text-align:right;font:700 11.5px/1.3 var(--cjk);color:var(--t2);white-space:nowrap}
+.tr-p{font:400 22px/1 var(--num);color:var(--y);letter-spacing:1px}
+.tr-cd{font:400 32px/1 var(--num);color:var(--p)}
+.tr-cd small{font:900 12px var(--cjk);margin-left:2px}
+/* 情報卡 */
+#sheet .sbox.hsheet{max-width:620px;margin:0 auto}
+.hinfo .hi-img{position:relative;aspect-ratio:616/353;background:#222;overflow:hidden;border:3px solid var(--y);margin:26px 0 12px;box-shadow:5px 5px 0 var(--p)}
+.hinfo .hi-img img,.hinfo .hi-v{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hinfo .hi-v{opacity:0;transition:opacity .4s}.hinfo .hi-v.on{opacity:1}
+.hinfo .hi-img .bn{position:absolute;right:10px;top:10px;z-index:2}
+.hinfo h3{margin:0!important}
+.hinfo .ben{color:var(--p)}
+.hi-price{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:14px 0 4px}
+.hi-price>div{background:#fff;color:var(--k);border:2px solid var(--k);padding:8px 10px;box-shadow:3px 3px 0 var(--y)}
+.hi-price span{display:block;font:900 11.5px/1 var(--cjk);opacity:.65}
+.hi-price b{font:400 30px/1.1 var(--num);letter-spacing:1px;color:var(--r)}
+.hi-price b.sm{font-size:24px;color:var(--k)}
+.hi-price s{display:block;font:400 17px/1 var(--num);color:#888}
+.hi-price em{display:block;font:900 12px/1.3 var(--cjk);font-style:normal;color:#c4005a}
+.hi-chart{margin:12px 0 4px}
+.pchart{width:100%;height:110px;display:block;background:#0c0c0c;border:2px solid #333}
+.pchart .pa{fill:#ff2e8826}.pchart .pl{fill:none;stroke:var(--p);stroke-width:1.4;vector-effect:non-scaling-stroke}
+.pchart circle{fill:var(--y);stroke:#000;stroke-width:.4}
+.pc-k{display:flex;justify-content:space-between;font:700 11.5px var(--cjk);color:var(--t3);margin-top:4px}
+.hi-p{font:700 14.5px/1.75 var(--cjk);color:#ddd;margin:12px 0 6px}
+/* 首頁：獵價膠帶 */
+.hstrip{display:flex;align-items:center;gap:10px;margin:2px 2px 22px;padding:10px 12px;background:repeating-linear-gradient(-45deg,var(--y) 0 14px,var(--k) 14px 28px);border:3px solid var(--k);box-shadow:5px 5px 0 var(--p);cursor:pointer;transform:rotate(-.6deg)}
+.hstrip .hs-k{display:flex;align-items:center;gap:4px;font:900 14px/1 var(--cjk);background:var(--p);color:#fff;padding:7px 8px;border:2px solid var(--k);white-space:nowrap}
+.hstrip .hs-k svg{width:18px;height:18px}
+.hstrip .hs-t{flex:1;min-width:0;font:900 13.5px/1.45 var(--cjk);background:#fff;color:var(--k);padding:6px 9px;border:2px solid var(--k)}
+.hstrip .hs-t b{color:var(--r);font:400 19px/1 var(--num)}
+.hstrip .hs-a{font:900 22px/1 var(--cjk);color:#fff;background:var(--k);padding:4px 8px;border:2px solid var(--y)}
+/* 獵物出現警報 */
+#halert{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px;opacity:0;transition:opacity .22s}
+#halert.on{opacity:1}
+#halert .ha-bg{position:absolute;inset:0;background:#000e}
+#halert .ha-st{position:absolute;left:-60px;right:-60px;height:40px;background:repeating-linear-gradient(-45deg,var(--y) 0 22px,var(--k) 22px 44px);border-top:3px solid var(--k);border-bottom:3px solid var(--k);animation:hazard 1s linear infinite}
+#halert .ha-st.t{top:calc(var(--sat) + 26px);transform:rotate(-3deg)}
+#halert .ha-st.b{bottom:calc(var(--sab) + 26px);transform:rotate(2deg);animation-direction:reverse}
+@keyframes hazard{from{background-position:0 0}to{background-position:62px 0}}
+#halert .ha-box{position:relative;width:min(440px,100%);background:#fff;color:var(--k);border:4px solid var(--k);box-shadow:10px 10px 0 var(--p);padding:18px 16px 8px;text-align:center;transform:scale(.6) rotate(-4deg);transition:transform .38s cubic-bezier(.3,1.6,.5,1)}
+#halert.on .ha-box{transform:rotate(-1.5deg)}
+.ha-k{font:400 22px/1 var(--num);letter-spacing:4px;color:var(--r);animation:blink .5s steps(2) 6}
+.ha-t{font:900 58px/1.05 var(--cjk);color:var(--y);-webkit-text-stroke:6px var(--k);paint-order:stroke fill;text-shadow:4px 4px 0 var(--p),8px 8px 0 var(--k);transform:rotate(-3deg);margin:8px 0 6px;letter-spacing:4px}
+.ha-s{font:900 16px/1.4 var(--cjk)}.ha-s b{font:400 26px/1 var(--num);color:var(--r)}
+.ha-list{display:grid;gap:8px;margin:12px 0 4px;text-align:left}
+.ha-it{display:grid;grid-template-columns:92px 1fr auto;gap:10px;align-items:center;background:var(--k);color:#fff;border:2px solid var(--k);padding:5px 10px 5px 5px;opacity:0;transform:translateX(-30px) rotate(-2deg)}
+.ha-it.in{opacity:1;transform:none;transition:transform .3s cubic-bezier(.3,1.5,.5,1),opacity .2s}
+.ha-im{aspect-ratio:460/215;background:#333;overflow:hidden}.ha-im img{width:100%;height:100%;object-fit:cover}
+.ha-it b{font:900 14px/1.3 var(--cjk);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ha-it span{font:400 26px/1 var(--num);color:var(--y);letter-spacing:1px}
+
+/* ================= 每週懶人包 ================= */
+.wk-no{display:inline-flex;align-items:baseline;gap:6px;font:400 22px/1 var(--num);letter-spacing:3px;color:var(--y)}
+.wk-no b{font-size:64px;color:#fff;-webkit-text-stroke:3px var(--k);paint-order:stroke fill;text-shadow:4px 4px 0 var(--p),8px 8px 0 var(--k);letter-spacing:1px}
+.wk-no.sm b{font-size:34px;-webkit-text-stroke:2px var(--k);text-shadow:2px 2px 0 var(--p),4px 4px 0 var(--k)}
+.wk-live{margin:6px 0 18px;padding:12px 14px 6px;background:var(--g);border:3px solid var(--y);box-shadow:6px 6px 0 var(--p)}
+.wkl-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
+.wkl-s{font:900 14px/1 var(--cjk);background:var(--p);color:#fff;padding:6px 9px;border:2px solid var(--k);animation:bnew 1s ease-in-out infinite alternate}
+.wkl-cd{margin-left:auto;font:900 12px/1.2 var(--cjk);color:var(--t2);display:grid;justify-items:end}
+.wkl-cd b{font:400 26px/1 var(--num);color:var(--y);letter-spacing:1px}
+.wkl-r{font:700 13px/1.6 var(--cjk);color:var(--t2);margin:8px 0 4px}
+.wk-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.wk-stats.sm{grid-template-columns:repeat(3,minmax(0,1fr));margin:8px 0 6px}
+.wk-stats>div{background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:3px 3px 0 var(--p);padding:6px 6px 4px;text-align:center}
+.wk-stats b{display:block;font:400 40px/1 var(--num)}
+.wk-stats.sm b{font-size:30px}
+.wk-stats span{font:900 12px/1 var(--cjk)}
+/* 結算畫面 */
+.wk-hero{position:relative;margin:4px 0 14px;padding:22px 16px 18px;background:repeating-conic-gradient(from 0deg at 50% 30%,#0000000d 0 9deg,transparent 9deg 18deg),var(--y);color:var(--k);border:4px solid var(--k);box-shadow:8px 8px 0 var(--p);overflow:hidden;text-align:center}
+.wk-rays{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wk-hero>*:not(.wk-rays){position:relative}
+.wk-hero .wk-no{display:flex;justify-content:center;align-items:baseline;gap:10px;color:var(--k)}
+.wk-hero .wk-no span{font:400 40px/1 var(--num);letter-spacing:6px}
+.wk-hero .wk-no b{font-size:128px;line-height:.9;color:#fff;-webkit-text-stroke:6px var(--k);text-shadow:6px 6px 0 var(--p),12px 12px 0 var(--k)}
+.wk-hero.go .wk-no b{animation:wkslam .55s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes wkslam{0%{transform:scale(3) rotate(-14deg);opacity:0}70%{transform:scale(.92) rotate(2deg);opacity:1}100%{transform:none}}
+.wk-range{display:inline-block;margin-top:8px;font:400 26px/1 var(--num);letter-spacing:3px;background:var(--k);color:var(--y);padding:6px 12px 4px;transform:rotate(-2deg)}
+.wk-title{font:900 26px/1.3 var(--cjk);margin:14px 4px 4px}
+.wk-bar{position:relative;height:30px;margin:14px auto 0;max-width:420px;background:#fff;border:3px solid var(--k);overflow:hidden}
+.wk-bar i{position:absolute;left:0;top:0;bottom:0;width:100%;background:repeating-linear-gradient(-45deg,var(--p) 0 12px,#e0006e 12px 24px);transform-origin:0 50%;transform:scaleX(0)}
+.wk-hero.go .wk-bar i{transition:transform 1s cubic-bezier(.6,0,.3,1) .45s;transform:scaleX(1)}
+.wk-bar span{position:absolute;inset:0;display:grid;place-items:center;font:400 18px/1 var(--num);letter-spacing:3px;color:var(--k);opacity:0}
+.wk-hero.go .wk-bar span{transition:opacity .2s 1.35s;opacity:1;color:#fff;text-shadow:2px 2px 0 var(--k)}
+.wk-intro{position:relative;margin:18px 2px 10px;background:#fffdf3;color:#151515;border:3px solid var(--k);box-shadow:5px 5px 0 var(--y);padding:14px 16px;font:700 15.5px/1.9 var(--cjk);transform:rotate(-.4deg)}
+.wk-intro .lt-sign{display:block;text-align:right;font:400 24px/1 var(--hand);color:var(--p);margin-top:6px}
+/* MVP */
+.mvp{position:relative;margin:26px 0 8px;background:var(--k);border:4px solid var(--y);box-shadow:8px 8px 0 var(--p);overflow:hidden;cursor:pointer}
+.mvp-rays{position:absolute;left:50%;top:38%;width:620px;height:620px;margin:-310px 0 0 -310px;border-radius:50%;background:repeating-conic-gradient(#ffe60024 0 7deg,transparent 7deg 20deg);animation:spin 18s linear infinite;pointer-events:none}
+.mvp-img{position:relative;aspect-ratio:16/8;margin:44px 16px 0;border:3px solid #fff;overflow:hidden;background:#222}
+.mvp-img img{width:100%;height:100%;object-fit:cover}
+.mvp-img .ph{position:absolute;inset:0;display:grid;place-items:center;font:400 54px var(--num);color:var(--y)}
+.mvp-crown{position:absolute;left:50%;top:6px;width:84px;margin-left:-42px;z-index:3;transform:rotate(-6deg)}
+.mvp-tag{position:absolute;left:12px;top:12px;z-index:3;font:900 15px/1 var(--cjk);background:var(--p);color:#fff;padding:7px 10px;border:2px solid #fff;transform:rotate(-5deg);letter-spacing:2px}
+.mvp-b{position:relative;padding:12px 18px 18px}
+.mvp-b h2{font:900 30px/1.15 var(--cjk);color:var(--y);-webkit-text-stroke:0}
+.mvp-b p{font:700 15px/1.8 var(--cjk);color:#eee;margin-top:6px}
+.mvp-seal{position:absolute;right:10px;top:54px;z-index:3;width:96px;height:96px;border-radius:50%;border:6px solid var(--y);background:var(--p);color:#fff;display:grid;place-items:center;font:400 38px/1 var(--num);letter-spacing:2px;transform:rotate(-14deg);box-shadow:4px 4px 0 #000}
+.mvp-seal.wait{opacity:0}
+.mvp-seal.go{animation:slam .42s cubic-bezier(.3,1.6,.5,1) both}
+/* Tier 表 */
+.tiers{display:grid;gap:8px;background:#0c0c0c;border:3px solid #fff;padding:8px;box-shadow:6px 6px 0 var(--p)}
+.tier{display:grid;grid-template-columns:62px 1fr;gap:8px;min-height:84px}
+.tier .tl{display:grid;place-items:center;font:400 48px/1 var(--num);color:var(--k);border:3px solid #000}
+.tt{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;padding:2px 0}
+.tile{position:relative;width:calc(50% - 4px);max-width:200px;background:#fff;border:2px solid #000;text-align:left}
+.tiers.go .tile{opacity:0;transform:translateY(-30px) rotate(-8deg) scale(1.2)}
+.tiers.go .tile.in{opacity:1;transform:none;transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .15s}
+.ti{position:relative;display:block;aspect-ratio:460/215;background:#222;overflow:hidden}
+.ti img{width:100%;height:100%;object-fit:cover}
+.ti .ph{position:absolute;inset:0;display:grid;place-items:center;font:400 24px var(--num);color:#666}
+.tn{display:block;font:900 12.5px/1.3 var(--cjk);color:var(--k);padding:4px 6px 5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tk{position:absolute;right:-4px;top:-6px;font:900 10px/1 var(--cjk);font-style:normal;background:var(--y);color:var(--k);border:2px solid var(--k);padding:3px 4px;transform:rotate(6deg)}
+.tlines{display:grid;gap:8px;margin:14px 0 4px}
+.tlr{display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:start;background:var(--g);border:2px solid #333;padding:8px 10px;cursor:pointer}
+.tlr b{display:grid;place-items:center;height:38px;font:400 28px/1 var(--num);color:var(--k);border:2px solid #000}
+.tlr h4{font:900 15px/1.3 var(--cjk);color:#fff}
+.tlr p{font:700 13.5px/1.65 var(--cjk);color:var(--t2);margin-top:2px}
+/* 本週大事、下週出擊 */
+.wnews{display:grid;gap:16px;padding:4px}
+.wn{position:relative;background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:5px 5px 0 var(--y);padding:12px 14px 12px 64px;transform:rotate(var(--rot,0deg))}
+.wn-i{position:absolute;left:10px;top:10px;font:400 40px/1 var(--num);color:var(--p);-webkit-text-stroke:1.5px var(--k)}
+.wn h4{font:900 17px/1.35 var(--cjk)}
+.wn p{font:700 14.5px/1.75 var(--cjk);margin-top:4px;color:#222}
+.wn-s{font:700 12px/1.6 var(--cjk);color:#666;margin-top:6px}
+.wn-s a{color:#c4005a}
+.wnext{display:grid;gap:10px}
+.wx{display:grid;grid-template-columns:78px 1fr;gap:12px;background:var(--g);border:2px solid #333;padding:8px;align-items:center}
+.wx[data-go]{cursor:pointer;border-color:var(--y)}
+.wx-d{display:grid;justify-items:center;background:var(--p);color:#fff;border:2px solid #000;padding:6px 2px;transform:rotate(-3deg);box-shadow:3px 3px 0 #000}
+.wx-d b{font:400 26px/1 var(--num);letter-spacing:1px}
+.wx-d span{font:900 12px/1.2 var(--cjk)}
+.wx-b h4{font:900 16px/1.3 var(--cjk);color:#fff}
+.wx-b h4 i{font:900 11px/1 var(--cjk);font-style:normal;background:var(--y);color:var(--k);padding:3px 5px;margin-left:4px;vertical-align:2px}
+.wx-b p{font:700 13.5px/1.6 var(--cjk);color:var(--t2);margin-top:2px}
+.wx .wn-s{color:var(--t3)}.wx .wn-s a{color:#ddd}
+/* 特價戰利品、數據王 */
+.mini.dl .dl-d{position:absolute;right:6px;top:6px;z-index:3;font:400 24px/1 var(--num);background:var(--r);color:#fff;padding:4px 7px 2px;border:2px solid var(--k);transform:rotate(5deg)}
+.kings{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;padding:4px}
+.king{position:relative;background:var(--k);border:3px solid var(--y);box-shadow:5px 5px 0 var(--p);padding:10px 12px;transform:rotate(var(--rot,0deg));cursor:pointer}
+.king .kk{font:900 12px/1 var(--cjk);color:var(--p);letter-spacing:1px}
+.king b{display:block;font:400 42px/1.05 var(--num);color:var(--y);letter-spacing:1px;margin-top:4px}
+.king .ks{font:700 11.5px/1 var(--cjk);color:var(--t2)}
+.king h4{font:900 15px/1.3 var(--cjk);color:#fff;margin-top:6px}
+.wk-arch{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.wka{display:grid;gap:3px;text-align:left;background:var(--g);border:2px solid #333;padding:8px 10px}
+.wka.on{border-color:var(--y)}
+.wka b{font:400 30px/1 var(--num);color:var(--y)}
+.wka span{font:400 15px/1 var(--num);color:var(--t2);letter-spacing:1px}
+.wka i{font:900 12.5px/1.4 var(--cjk);font-style:normal;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wsrc{margin-top:14px;color:var(--t2);font:700 13px var(--cjk)}
+.wsrc summary{cursor:pointer;color:#ddd}
+/* 首頁：週報出爐橫幅 */
+.wk-ban{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;margin:2px 2px 22px;padding:10px 12px 12px;background:var(--k);border:3px solid var(--y);box-shadow:6px 6px 0 var(--p);cursor:pointer;transform:rotate(-.5deg);overflow:hidden}
+.wb-l{display:grid;justify-items:center;gap:4px}
+.wb-k{font:900 12px/1 var(--cjk);background:var(--p);color:#fff;padding:4px 6px;border:2px solid #000;transform:rotate(-4deg)}
+.wb-b{display:grid;gap:3px;min-width:0}
+.wb-b b{font:900 16px/1.35 var(--cjk);color:#fff}
+.wb-b span{font:900 13px/1.3 var(--cjk);color:var(--y)}
+.wb-t{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.wb-t img{width:100%;aspect-ratio:460/215;object-fit:cover;border:2px solid #fff}
+.draft.wkd .di{display:grid;place-items:center;aspect-ratio:4/5;background:var(--y);border-color:var(--k);gap:0;align-content:center;color:var(--k)}
+.draft.wkd .di span{font:400 16px/1 var(--num);letter-spacing:2px}
+.draft.wkd .di b{font-size:40px}
+@media (min-width:720px){
+  .radarw{grid-template-columns:auto 1fr;align-items:center;gap:30px}
+  .radar{width:340px;margin:6px 0 0 8px}
+  .bounties{grid-template-columns:repeat(2,minmax(0,1fr));gap:36px 28px}
+  .trows{grid-template-columns:1fr 1fr}
+  .tile{width:180px}
+  .tier{grid-template-columns:84px 1fr}
+  .wk-hero .wk-no b{font-size:170px}
+  .wk-title{font-size:34px}
+  .mvp-img{aspect-ratio:21/8}
+  .wnext{grid-template-columns:1fr 1fr}
+  .wnews{grid-template-columns:1fr 1fr}
+}
+@media (max-width:400px){
+  .tab{letter-spacing:0;font-size:12px}
+  .tab svg{width:22px;height:22px}
+  .hs b{font-size:32px}
+  .trow{grid-template-columns:96px 1fr auto;gap:9px}
+  .wk-hero .wk-no b{font-size:104px}
+  .bw{font-size:32px}
+}
+@media (max-height:500px) and (orientation:landscape){
+  .radarw{grid-template-columns:auto 1fr;align-items:center;gap:22px}
+  .radar{width:280px}
+  .bounties{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .trows{grid-template-columns:1fr 1fr}
+}
+body.calm .rd-sweep{opacity:.5}
+body.calm .wk-rays,body.calm .mvp-rays{animation:none}
+
 </style>
 </head>
 <body>
@@ -902,7 +1209,7 @@ body.calm .sv-vid.zap::after,body.calm .sv.act .sv-seal,body.calm .sv.act .sv-ti
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611161205';
+const VERSION = '1.0.2611161528';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -918,7 +1225,7 @@ const LS = {
 };
 
 const S = {
-  settings: Object.assign({ sfx: true, bgm: true, vol: 0.8, bgmVol: 0.32, intro: 'daily', fx: 'full', shAuto: true, shSound: true }, LS.get('settings', {})),
+  settings: Object.assign({ sfx: true, bgm: true, vol: 0.8, bgmVol: 0.32, intro: 'daily', fx: 'full', shAuto: true, shSound: true, huntAlert: true }, LS.get('settings', {})),
   marks: LS.get('marks', {}),        // id → want/playing/done/no
   notes: LS.get('notes', {}),        // id → 我的筆記
   thoughts: LS.get('thoughts', {}),  // id#i → 我對討論題的想法
@@ -928,6 +1235,8 @@ const S = {
   seen: LS.get('seen', {}),          // id → 看過
   muted: false,                      // 這一次「靜音進入」
   index: null, live: null, feats: {}, hist: {},
+  wish: null, weekly: null, weekF: {},   // Steam 願望單（獵價）、每週懶人包
+  huntSeen: LS.get('huntSeen', {}),  // 看過的特價（appid:價格）
   picks: null, pickF: {},           // 推坑目錄、推坑稿
   scroll: {},
 };
@@ -1012,6 +1321,8 @@ const ICON = {
   film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M7.5 4.5v15M16.5 4.5v15M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/></svg>',
   page: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M6 2.5h9l4 4v15H6z"/><path d="M15 2.5v4h4M9 12h7M9 16h5"/></svg>',
   cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M2.5 4h2.6l2.3 11h11l2.3-8H6.2"/><circle cx="9.5" cy="19.5" r="1.6"/><circle cx="17" cy="19.5" r="1.6"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3.5h10v5a5 5 0 0 1-10 0z"/><path d="M7 5.5H3.5a3.5 3.5 0 0 0 4 4M17 5.5h3.5a3.5 3.5 0 0 1-4 4M12 13.5v3.5M8 21h8l-1-4H9z"/></svg>',
   full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
 };
 
@@ -1073,6 +1384,9 @@ const sfx = {
   riser() { if (!sndOK()) return; const t = T(); nz(t, 0.7, { f: 400, f2: 6000, q: 2, g: 0.22, a: 0.6 }); tone(t, 0.7, { type: 'sawtooth', f: 200, f2: 900, g: 0.035, a: 0.6 }); },
   rip() { if (!sndOK()) return; const t = T(); for (let i = 0; i < 9; i++) nz(t + i * 0.035 + Math.random() * 0.02, 0.05, { f: 1200 + Math.random() * 2400, q: 2, g: 0.3 + Math.random() * 0.25 }); },
   click() { if (!sndOK()) return; const t = T(); nz(t, 0.03, { type: 'highpass', f: 3000, g: 0.25 }); tone(t, 0.04, { f: 700, f2: 300, g: 0.12 }); },
+  ping(f = 1600) { if (!sndOK()) return; const t = T(); tone(t, 0.35, { f, f2: f * 0.97, g: 0.07 }); tone(t + 0.12, 0.3, { f, g: 0.025 }); },
+  siren() { if (!sndOK()) return; const t = T(); for (let i = 0; i < 3; i++) { tone(t + i * 0.32, 0.3, { type: 'sawtooth', f: 620, f2: 1240, g: 0.05 }); tone(t + i * 0.32, 0.3, { type: 'square', f: 310, f2: 620, g: 0.025 }); } },
+  lock() { if (!sndOK()) return; const t = T(); [0, 0.07, 0.14].forEach((d, i) => tone(t + d, 0.06, { type: 'square', f: 1400 + i * 260, g: 0.05 })); nz(t + 0.2, 0.08, { type: 'lowpass', f: 1500, g: 0.4 }); },
   pop() { if (!sndOK()) return; const t = T(); tone(t, 0.12, { f: 500, f2: 1200, g: 0.18 }); nz(t, 0.05, { f: 3000, q: 3, g: 0.12 }); },
 };
 
@@ -1313,8 +1627,10 @@ async function getJSON(path, fresh = true) {
   return r.json();
 }
 async function loadIndex() {
-  const [idx, live, picks] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] }))]);
+  const [idx, live, picks, wish, weekly] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] })),
+    getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] }))]);
   S.index = idx; S.live = live || { apps: {} }; S.picks = picks || { items: [] };
+  S.wish = wish && wish.items ? wish : null; S.weekly = weekly && weekly.items ? weekly : { items: [] };
   return idx;
 }
 async function loadPick(id) {
@@ -1481,13 +1797,21 @@ function renderHome() {
   return `<div class="sec-h"><h2 class="spray-h">${lastDate === today ? '今日解包' : '最新解包'}</h2>
       <span class="date-stk">${esc(lastDate.slice(5).replace('-', '.'))} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</span></div>
     ${lastDate !== today ? `<p class="sub-note">今天的專題還在寫，先看 ${mdDay(lastDate)} 這批。</p>` : ''}
+    ${weekBanner()}${huntStrip()}
     <div class="posters">${todays.map(posterHtml).join('')}</div>
     ${picksTeaser()}
     <h3 class="tape-h">追蹤牆</h3>
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="f/${esc(n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
-    <div class="endcta"><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+}
+/* 首頁：願望單有特價就貼一條警示膠帶 */
+function huntStrip() {
+  const sale = huntTargets().filter((t) => t.onSale || t.giveaway).sort((a, b) => b.score - a.score);
+  if (!sale.length) return '';
+  const lows = sale.filter((t) => t.lowState === 'low').length;
+  return `<div class="hstrip" data-go="hunt"><span class="hs-k">${ICON.target}獵價</span><span class="hs-t">你的獵物 <b>${sale.length}</b> 款正在特價${lows ? `，<b>${lows}</b> 款史低` : ''}：${sale.slice(0, 2).map((t) => `${esc(t.name)} ${t.giveaway ? '免費' : '-' + t.disc + '%'}`).join('、')}${sale.length > 2 ? '…' : ''}</span><span class="hs-a">→</span></div>`;
 }
 
 function picksTeaser() {
@@ -1552,7 +1876,7 @@ function liveHtml(f, lv, h) {
   const low = pr.low && !lv.free ? `<div class="ld">追蹤以來最低 ${fmtNT(pr.low.v)}（${mdDay(pr.low.at.slice(0, 10))}）${pr.final <= pr.low.v && pr.disc > 0 ? '<span class="lowtag">史低</span>' : ''}</div>` : '';
   const d24 = p.d24 != null ? `<span class="${p.d24 >= 0 ? 'up' : 'dn'}">${p.d24 >= 0 ? '▲' : '▼'}${Math.abs(p.d24)}%</span> 比 24 小時前` : '';
   return `<div class="live"><div class="lh"><span>STEAM 即時數據 · 台灣區</span><small>更新於 ${esc(ago(lv.at))}</small></div><div class="lgrid">
-    <div class="lc"><div class="ll">台灣售價</div><div class="lv">${esc(priceV)}${pr.disc > 0 ? `<span class="disc">-${pr.disc}%</span>` : ''}</div>${pr.disc > 0 && pr.orig ? `<div class="ld">原價 ${fmtNT(pr.orig)}</div>` : ''}${low}</div>
+    <div class="lc"><div class="ll">台灣售價</div><div class="lv">${esc(priceV)}${pr.disc > 0 ? `<span class="disc">-${pr.disc}%</span>` : ''}</div>${pr.disc > 0 && pr.orig ? `<div class="ld">原價 ${fmtNT(pr.orig)}${pr.end && Date.parse(pr.end) > Date.now() ? `・特價到 ${esc(endDate(pr.end))}（${esc(leftTxt(Date.parse(pr.end) - Date.now()))}）` : ''}</div>` : ''}${low}</div>
     <div class="lc"><div class="ll">Steam 評價</div><div class="lv">${rv.pct != null ? `<span class="cu" data-n="${rv.pct}" data-f="i">${rv.pct}</span><small>%</small>` : '—'}</div><div class="ld">${esc(rv.label || '評論還不夠')} · ${fmtN(rv.n)} 則${rv.recent ? `<br>近 ${rv.recent.days} 天 ${rv.recent.pct}%（${fmtN(rv.recent.n)} 則）` : ''}</div></div>
     <div class="lc wide"><div class="ll">目前同上人數</div><div class="lv">${p.n != null ? `<span class="cu" data-n="${p.n}">${esc(fmtN(p.n))}</span>` : '—'}<small>${p.peak ? `追蹤以來最高 ${esc(fmtN(p.peak.n))}` : ''}</small></div><div class="ld">${d24}</div>${h ? sparkSvg(h.pl, 7) : ''}</div>
     <div class="lc"><div class="ll">繁中玩家評價</div><div class="lv">${tc && tc.pct != null ? `<span class="cu" data-n="${tc.pct}" data-f="i">${tc.pct}</span><small>%</small>` : '—'}</div><div class="ld">${!tc ? '這一輪沒抓到，下次更新再補' : tc.n ? `${fmtN(tc.n)} 則繁中評論` : '還沒有繁中評論'}</div></div>
@@ -1842,7 +2166,8 @@ function renderFanList() {
   const items = S.index.items;
   const wait = items.filter((x) => !S.posted[x.id]).length;
   return `<div class="brandbar"><h2 class="spray-h">出稿台</h2><div class="brandstk"><b>遊戲狂想曲</b><i>GAME RHAPSODY</i></div></div>
-    <p class="sub-note">每篇專題都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。還有 ${wait} 篇沒發。</p>
+    <p class="sub-note">每篇專題和每週懶人包都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。還有 ${wait + weekUnposted()} 篇沒發。</p>
+    ${((S.weekly && S.weekly.items) || []).length ? `<h3 class="tape-h y" style="margin-top:6px">每週懶人包</h3><div class="drafts">${S.weekly.items.slice(0, 6).map((w) => `<div class="draft wkd" data-go="fan/w:${esc(w.id)}"><div class="di wk-no sm"><span>WEEK</span><b>${wkNo(w.id)}</b></div><div><h4>${esc(w.title)}</h4><p>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}・封面／Tier 表／下週出擊三張圖卡</p></div><span class="st-chip ${S.posted['w:' + w.id] ? 'done' : ''}">${S.posted['w:' + w.id] ? '已發 ' + esc(mdDay(S.posted['w:' + w.id])) : '待發'}</span></div>`).join('')}</div><h3 class="tape-h" style="margin-top:10px">每日專題</h3>` : ''}
     <div class="drafts">${items.map((x) => { const img = headerOf(x); return `<div class="draft" data-go="fan/${esc(x.id)}"><div class="di" style="background-image:url('${esc(img)}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.headline)}</p></div><span class="st-chip ${S.posted[x.id] ? 'done' : ''}">${S.posted[x.id] ? '已發 ' + esc(mdDay(S.posted[x.id])) : '待發'}</span></div>`; }).join('')}</div>`;
 }
 const CARD = { layout: 'A', ratio: '45', seed: 1 };
@@ -1900,6 +2225,7 @@ function settingsHtml() {
     <div class="setrow"><div class="st"><b>特效</b><small>收斂：不震動、不閃光、少噴濺</small></div>${seg('fx', [['full', '全開'], ['calm', '收斂']])}</div>
     <div class="setrow"><div class="st"><b>短影音連播</b><small>開：一支播完自動滑到下一款；關：同一支重複播</small></div>${seg('shAuto', [[true, '開'], [false, '關']])}</div>
     <div class="setrow"><div class="st"><b>短影音聲音</b><small>預告預設要不要出聲（「靜音進入」時一律先靜音）</small></div>${seg('shSound', [[true, '有聲'], [false, '靜音']])}</div>
+    <div class="setrow"><div class="st"><b>獵物出現警報</b><small>願望單或想玩的遊戲開始特價時，打開 App 跳出警報（一天最多一次）</small></div>${seg('huntAlert', [[true, '開'], [false, '關']])}</div>
     <div class="setrow"><div class="st"><b>我的標記與筆記</b><small>想玩／玩過、筆記、討論想法、已發佈紀錄，只存在這台裝置</small></div><button class="btn sm" data-act="wipe">清除</button></div>
     <p class="sub-note" style="margin-top:14px">解包 UNPACKED v${VERSION} · 專題 ${S.index ? S.index.n : 0} 篇 · 目錄更新 ${esc(ago(S.index && S.index.at))} · Steam 資料 ${esc(ago(S.live && S.live.at)) || '還沒有'}</p>`;
 }
@@ -2745,6 +3071,671 @@ document.addEventListener('visibilitychange', () => {
   else if (SH.resume) { SH.resume = false; if (svBox()) SV.play().catch(() => {}); }
 });
 
+/* ---- hunt.js ---- */
+/* 解包 — 獵價：Steam 願望單＋App 裡標「想玩」的遊戲，特價、史低、上市倒數一眼看完。
+   資料：data/wish.json（GitHub Actions 每小時同步願望單與 Steam 台灣區價格）＋ live.json（專題、推坑的即時資料）。
+   「史低」是我們自己追蹤以來的最低價：追蹤滿 14 天才敢叫史低，之前只說「追蹤以來最低」。 */
+const HUNT = { f: 'all', sort: 'smart', raf: 0, prevA: 0, t0: 0, lastPing: 0, blips: [] };
+const HUNT_LOW_DAYS = 14;
+
+/* appid → 已經寫過的專題／推坑（點了可以直接看） */
+function steamRefs() {
+  const m = {};
+  for (const it of (S.picks && S.picks.items) || []) if (it.steam) m[String(it.steam)] = { route: 'p/' + it.id, it };
+  for (const it of (S.index && S.index.items) || []) if (it.steam) m[String(it.steam)] = { route: 'f/' + it.id, it };
+  return m;
+}
+function routeOfId(id) { return (S.index && S.index.items.some((x) => x.id === id)) ? 'f/' + id : 'p/' + id; }
+
+function huntTargets() {
+  const map = new Map(); const refs = steamRefs();
+  for (const w of (S.wish && S.wish.items) || []) {
+    if (w.adult) continue;
+    const a = String(w.appid); const ref = refs[a]; const p = w.p || [];
+    map.set(a, {
+      key: a, appid: w.appid, name: ref ? ref.it.zh : w.name, en: w.name, img: w.img, cap: w.cap || w.img,
+      free: !!w.free, final: p[0], orig: p[1], disc: p[2] || 0, low: w.low ? w.low[0] : null, lowAt: w.low && w.low[1], since: w.low && w.low[2],
+      sale: w.sale || null, rv: w.rv ? w.rv[0] : null, rvn: w.rv ? w.rv[1] : 0, rvl: w.rv ? w.rv[2] : '', rel: w.rel || {}, zh: w.zh,
+      tags: w.tags || [], dev: w.dev, short: w.short, micro: w.micro, added: w.added, deck: w.deck,
+      wish: true, want: false, ref: ref && ref.route,
+    });
+  }
+  for (const [id, m] of Object.entries(S.marks)) {
+    if (m !== 'want') continue;
+    const it = findItem(id); if (!it) continue;
+    const route = routeOfId(id);
+    const k = it.steam ? String(it.steam) : 'id:' + id;
+    if (map.has(k)) { const t = map.get(k); t.want = true; t.wantId = id; t.ref = t.ref || route; t.name = it.zh; continue; }
+    const lv = liveOf(it.steam); const pr = (lv && lv.price) || {};
+    map.set(k, {
+      key: k, appid: it.steam || null, name: it.zh, en: it.en, img: headerOf(it, lv), cap: (lv && lv.img && (lv.img.wide || lv.img.header)) || headerOf(it, lv),
+      free: !!(lv && lv.free), final: pr.final ?? null, orig: pr.orig ?? null, disc: pr.disc || 0,
+      low: pr.low ? pr.low.v : null, lowAt: pr.low && pr.low.at.slice(0, 10), since: pr.low && pr.low.since && pr.low.since.slice(0, 10),
+      sale: pr.disc > 0 ? { from: null, end: pr.end || null } : null,
+      rv: lv && lv.rv ? lv.rv.pct : null, rvn: lv && lv.rv ? lv.rv.n : 0, rvl: lv && lv.rv ? lv.rv.label : '',
+      rel: lv && lv.rel ? lv.rel : { date: it.release, soon: !!(it.release && it.release > todayTW()) },
+      zh: liveZh(lv, it.zhs), tags: (lv && lv.tags) || it.genres || [], dev: lv && lv.dev, short: lv && lv.short, micro: lv && lv.micro,
+      wish: false, want: true, wantId: id, ref: route, priceText: it.price_text, noSteam: !it.steam,
+    });
+  }
+  return [...map.values()].map(huntStatus);
+}
+function huntStatus(t) {
+  const today = todayTW();
+  t.onSale = t.disc > 0 && !t.free;
+  t.giveaway = t.disc >= 100 || (t.final === 0 && t.orig > 0);
+  t.trackDays = t.since ? dayDiff(t.since, today) : 0;
+  t.lowState = null;
+  if (t.onSale && t.low != null && t.final <= t.low) t.lowState = t.trackDays >= HUNT_LOW_DAYS ? 'low' : 'new';
+  else if (t.onSale && t.low != null && t.trackDays >= HUNT_LOW_DAYS && t.final <= t.low * 1.08) t.lowState = 'near';
+  t.endMs = t.sale && t.sale.end ? Date.parse(t.sale.end) - Date.now() : null;
+  if (t.endMs != null && t.endMs <= 0) t.endMs = null;
+  t.soon = !!(t.rel && t.rel.soon);
+  t.relDays = t.soon && t.rel.date ? dayDiff(today, t.rel.date) : null;
+  t.saved = t.onSale && t.orig ? t.orig - t.final : 0;
+  t.newSale = t.onSale && !S.huntSeen[t.key + ':' + t.final];
+  t.score = t.giveaway ? 2000 : t.onSale ? 300 + t.disc + (t.lowState === 'low' ? 400 : t.lowState === 'near' ? 150 : 0) + (t.endMs != null && t.endMs < 48 * 36e5 ? 120 : 0) + (t.newSale ? 60 : 0)
+    : t.soon ? 100 - Math.min(99, t.relDays == null ? 99 : t.relDays) : (t.rv || 0) / 10;
+  return t;
+}
+function huntSaleCount() { try { return huntTargets().filter((t) => t.newSale).length; } catch (e) { return 0; } }
+
+/* ---- 文字 ---- */
+function leftTxt(ms) {
+  if (ms == null) return '';
+  const h = ms / 36e5;
+  if (h < 1) return `剩 ${Math.max(1, Math.round(ms / 6e4))} 分鐘`;
+  if (h < 48) return `剩 ${Math.floor(h)} 小時`;
+  return `剩 ${Math.floor(h / 24)} 天`;
+}
+function endDate(iso) { const d = new Date(Date.parse(iso) + 8 * 3600e3); return `${d.getUTCMonth() + 1}/${d.getUTCDate()} ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`; }
+function lowTxt(t) {
+  if (t.lowState === 'low') return '史低';
+  if (t.lowState === 'near') return '接近史低';
+  if (t.lowState === 'new') return `追蹤 ${Math.max(1, t.trackDays)} 天內最低`;
+  return '';
+}
+function priceTxt(t) {
+  if (t.noSteam) return esc((t.priceText || '非 Steam').split(/[／（(]/)[0]);
+  if (t.free && !t.giveaway) return '免費';
+  if (t.final == null) return t.soon ? '還沒開賣' : '—';
+  return fmtNT(t.final);
+}
+/* 價格血條：滿格＝原價，剩下的血＝現在的價格；黃線＝追蹤以來最低 */
+function hpBar(t, big) {
+  if (!t.orig || t.final == null) return '';
+  const cur = Math.max(2, Math.min(100, t.final / t.orig * 100));
+  const lo = t.low != null && t.trackDays >= 1 ? Math.max(0, Math.min(100, t.low / t.orig * 100)) : null;
+  const cls = t.lowState === 'low' ? 'crit' : cur <= 50 ? 'low' : cur < 100 ? 'mid' : '';
+  return `<div class="hp ${big ? 'big' : ''} ${cls}" style="--cur:${cur.toFixed(1)}%"><i class="hpf"></i>${lo != null && lo < 99.5 ? `<i class="hpl" style="left:${lo.toFixed(1)}%"></i>` : ''}</div>
+    ${big ? `<div class="hpk"><span>價格血條 ${Math.round(cur)}%</span>${lo != null && lo < 99.5 ? `<span class="lw">▲ ${t.trackDays >= HUNT_LOW_DAYS ? '史低線' : '追蹤最低'} ${fmtNT(t.low)}</span>` : `<span>${t.trackDays < 1 ? '剛開始追蹤' : '追蹤以來沒降過價'}</span>`}</div>` : ''}`;
+}
+function huntChips(t) {
+  const out = [];
+  if (t.zh === 'tc') out.push('<span class="chip">繁中</span>'); else if (t.zh === 'sc') out.push('<span class="chip n">只有簡中</span>'); else if (t.zh === 'none' || (t.wish && !t.zh)) out.push('<span class="chip n">無中文</span>');
+  if (t.rv != null) out.push(`<span class="chip">Steam ${t.rv}%</span>`);
+  if (t.deck) out.push('<span class="chip n">Deck 可玩</span>');
+  if (t.wish) out.push(`<span class="chip n">願望單${t.added ? '・' + esc(t.added.slice(0, 7).replace('-', '/')) : ''}</span>`);
+  if (t.want) out.push('<span class="chip p">我想玩</span>');
+  if (t.ref) out.push(`<span class="chip y">${t.ref[0] === 'f' ? '已解包' : '推坑過'}</span>`);
+  return out.join('');
+}
+
+/* ---- 畫面 ---- */
+function huntItems(all) {
+  return all.filter((t) => {
+    const f = HUNT.f;
+    if (f === 'sale') return t.onSale || t.giveaway;
+    if (f === 'low') return t.lowState === 'low' || t.lowState === 'near' || t.lowState === 'new';
+    if (f === 'soon') return t.soon;
+    if (f === 'tc') return t.zh === 'tc';
+    if (f === 'want') return t.want;
+    if (f === 'cheap') return t.final != null && t.final <= 30000;
+    return true;
+  }).sort((a, b) => {
+    if (HUNT.sort === 'disc') return (b.disc - a.disc) || (a.final - b.final);
+    if (HUNT.sort === 'price') return (a.final ?? 1e12) - (b.final ?? 1e12);
+    if (HUNT.sort === 'new') return String(b.added || '').localeCompare(String(a.added || ''));
+    if (HUNT.sort === 'rv') return (b.rv || 0) - (a.rv || 0);
+    return b.score - a.score;
+  });
+}
+function wishState() {
+  const w = S.wish;
+  if (!w || w.state === 'unset' || (!w.ok && !(w.items || []).length && w.state !== 'empty' && w.state !== 'badid')) return 'unset';
+  return w.state || (w.ok ? 'ok' : 'unset');
+}
+function connectHtml(st) {
+  const msg = st === 'empty' ? '讀到 0 款：願望單是空的，或 Steam「遊戲詳細資料」還沒設成公開。'
+    : st === 'badid' ? 'Steam 代號認不出來：請再確認一次個人檔案網址。'
+      : '還沒連結 Steam 願望單。連好之後，願望單上的遊戲每小時自動對一次台灣區價格，特價、史低、快結束都會出現在這裡，每天早上的推播也會提醒你。';
+  return `<div class="hconn"><div class="hc-h">${ICON.target}<b>${st === 'unset' ? '連結 Steam 願望單' : '願望單讀不到'}</b></div><p>${esc(msg)}</p>
+    <ol><li>Steam →「編輯個人檔案」→「隱私設定」，把<b>遊戲詳細資料</b>改成<b>公開</b>（願望單跟著這個設定）。<a href="https://steamcommunity.com/my/edit/settings" target="_blank" rel="noopener noreferrer">打開 Steam 隱私設定</a></li>
+    <li>把你的 Steam 個人檔案網址（像 steamcommunity.com/id/○○○）傳給 Claude，Claude 幫你接上。</li></ol>
+    <p class="sub-note" style="margin:6px 0 0">現在先顯示你在 App 裡標「想玩」的遊戲。</p></div>`;
+}
+function renderHunt() {
+  const all = huntTargets();
+  const st = wishState();
+  const sale = all.filter((t) => t.onSale || t.giveaway);
+  const lows = all.filter((t) => t.lowState === 'low');
+  const saved = sale.reduce((a, t) => a + (t.saved || 0), 0);
+  const list = huntItems(all);
+  const hot = list.filter((t) => t.onSale || t.giveaway);
+  const soon = list.filter((t) => !t.onSale && !t.giveaway && t.soon);
+  const rest = list.filter((t) => !t.onSale && !t.giveaway && !t.soon);
+  const fl = (v, label) => `<button class="fl ${HUNT.f === v ? 'on' : ''}" data-act="hf" data-v="${v}">${label}</button>`;
+  const so = (v, label) => `<button class="fl ${HUNT.sort === v ? 'on' : ''}" data-act="hs" data-v="${v}">${label}</button>`;
+  const w = S.wish || {};
+  const sync = w.ok ? `願望單 ${w.n || 0} 款・同步於 ${esc(ago(w.at))}` : '';
+  return `<div class="sec-h"><h2 class="spray-h y">獵價</h2><span class="date-stk">PRICE HUNT</span></div>
+    <p class="sub-note">Steam 願望單＋你在 App 裡標「想玩」的遊戲，每小時對一次台灣區價格。${sync ? `<b class="hsync">${sync}</b>` : ''}${w.state === 'stale' ? '<span class="hwarn">（這一輪沒讀到，先顯示上一次）</span>' : ''}</p>
+    <section class="radarw">
+      <div class="radar" id="radar"><div class="rd-grid"></div><div class="rd-sweep" id="rdsweep"></div>${radarBlips(all)}
+        <span class="rd-tl">TARGETS<b>${all.length}</b></span><span class="rd-br">${sale.length ? 'LOCK ON' : 'SCANNING'}<i>…</i></span></div>
+      <div class="hstats">
+        <div class="hs p"><span>特價中</span><b class="cu" data-n="${sale.length}" data-f="i">${sale.length}</b><small>款</small></div>
+        <div class="hs y"><span>史低</span><b class="cu" data-n="${lows.length}" data-f="i">${lows.length}</b><small>款</small></div>
+        <div class="hs"><span>獵物</span><b class="cu" data-n="${all.length}" data-f="i">${all.length}</b><small>款</small></div>
+        ${saved ? `<div class="hs w"><span>這波特價一共便宜</span><b>NT$<span class="cu" data-n="${Math.round(saved / 100)}">${fmtN(Math.round(saved / 100))}</span></b></div>` : '<div class="hs w"><span>目前沒有獵物在特價，雷達持續掃描中</span></div>'}
+        <div class="hlegend"><i class="lg-low"></i>史低<i class="lg-sale"></i>特價（越靠中心折越多）<i class="lg-soon"></i>未上市<i class="lg-n"></i>等降價</div>
+      </div>
+    </section>
+    ${st !== 'ok' && st !== 'stale' ? connectHtml(st) : ''}
+    <div class="filters hf">${fl('all', '全部')}${fl('sale', '特價中')}${fl('low', '史低')}${fl('soon', '未上市')}${fl('tc', '有繁中')}${fl('cheap', 'NT$300 內')}${fl('want', '我想玩')}</div>
+    <div class="sortrow">排序 ${so('smart', '先看該出手的')}${so('disc', '折扣')}${so('price', '便宜')}${so('rv', '好評')}${so('new', '新加入')}</div>
+    ${!all.length ? `<div class="empty">還沒有獵物。${st === 'ok' ? '' : '在任何專題、推坑或短影音按「想玩」（短影音點兩下），那款就會進來；連好 Steam 願望單後，願望單上的遊戲也會自動進來。'}</div>` : ''}
+    ${hot.length ? `<h3 class="tape-h p">鎖定！正在特價 <small>${hot.length} 款</small></h3><div class="bounties">${hot.map(bountyHtml).join('')}</div>` : (all.length && (HUNT.f === 'all' || HUNT.f === 'sale') ? '<div class="hquiet"><b>目前沒有獵物在特價</b><span>雷達持續掃描中，一開打折就會跳出來。</span></div>' : '')}
+    ${soon.length ? `<h3 class="tape-h">即將上市 <small>${soon.length} 款</small></h3><div class="trows">${soon.map(rowHtml).join('')}</div>` : ''}
+    ${rest.length ? `<h3 class="tape-h">等降價 <small>${rest.length} 款</small></h3><div class="trows">${rest.map(rowHtml).join('')}</div>` : ''}
+    ${all.length && !list.length ? '<div class="empty">沒有符合的獵物，換個篩選試試。</div>' : ''}
+    <p class="sub-note" style="margin-top:18px">「史低」是這個 App 開始追蹤以來的最低價（追蹤滿 ${HUNT_LOW_DAYS} 天才算），不是 Steam 有史以來的最低價。特價結束時間來自 Steam 商店。</p>`;
+}
+function radarBlips(all) {
+  HUNT.blips = [];
+  return all.slice(0, 160).map((t) => {
+    const ang = hashStr(t.key) % 360;
+    let r, cls;
+    if (t.giveaway) { r = 0.1; cls = 'b-low'; }
+    else if (t.onSale) { r = 0.16 + 0.66 * (1 - Math.min(95, t.disc) / 100); cls = t.lowState === 'low' ? 'b-low' : 'b-sale'; }
+    else if (t.soon) { r = 0.72 + (hashStr(t.key + 's') % 10) / 100; cls = 'b-soon'; }
+    else { r = 0.84 + (hashStr(t.key + 'r') % 12) / 100; cls = 'b-n'; }
+    const x = 50 + r * 47 * Math.sin(ang * Math.PI / 180), y = 50 - r * 47 * Math.cos(ang * Math.PI / 180);
+    if (t.onSale || t.giveaway) HUNT.blips.push({ ang, key: t.key, low: cls === 'b-low' });
+    return `<button class="blip ${cls}" data-act="hinfo" data-k="${esc(t.key)}" data-a="${ang}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%" aria-label="${esc(t.name)}"><i></i></button>`;
+  }).join('');
+}
+function bountyHtml(t, i) {
+  const lt = lowTxt(t); const img = t.cap || t.img;
+  return `<article class="bounty ${t.lowState === 'low' || t.giveaway ? 'gold' : ''}" data-act="hinfo" data-k="${esc(t.key)}" style="--rot:${rot(t.key, i, 1.4)}deg;--i:${i}">
+    <div class="bh"><span class="bw">WANTED</span><span class="bn">${t.giveaway ? '限時免費' : '懸賞 -' + t.disc + '%'}</span></div>
+    <div class="bimg">${img ? `<img src="${esc(img)}" alt="" loading="${i > 2 ? 'lazy' : 'eager'}" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">TARGET</div>
+      ${t.newSale ? '<span class="bnew">NEW</span>' : ''}${lt ? `<span class="blow ${t.lowState}">${esc(lt)}</span>` : ''}${t.endMs != null ? `<span class="bend ${t.endMs < 24 * 36e5 ? 'hot' : ''}">⏱ ${esc(leftTxt(t.endMs))}</span>` : ''}</div>
+    <div class="bb"><h3>${esc(t.name)}</h3>${t.en && t.en !== t.name ? `<div class="ben">${esc(t.en)}</div>` : ''}
+      <div class="bprice"><s>${fmtNT(t.orig)}</s><b>${t.giveaway ? '免費領' : fmtNT(t.final)}</b>${t.saved ? `<em>省 ${fmtNT(t.saved).replace('NT$', '')}</em>` : ''}</div>
+      ${hpBar(t, true)}<div class="chips">${huntChips(t)}</div></div>
+    <div class="bstamp">${t.giveaway ? '快領' : t.lowState === 'low' ? '出手' : t.endMs != null && t.endMs < 48 * 36e5 ? '快收' : '鎖定'}</div><i class="tp tp1"></i></article>`;
+}
+function rowHtml(t, i) {
+  const img = t.img || t.cap;
+  const right = t.soon ? (t.relDays != null ? `<b class="tr-cd">${t.relDays <= 0 ? '今天' : t.relDays}<small>${t.relDays <= 0 ? '' : '天'}</small></b><span>${t.rel.date ? esc(mdDay(t.rel.date)) + ' 上市' : esc(t.rel.text || '日期未定')}</span>` : `<span>${esc(t.rel.text || '日期未定')}</span>`)
+    : `<b class="tr-p">${priceTxt(t)}</b>${t.low != null && t.trackDays >= HUNT_LOW_DAYS && t.final > t.low ? `<span>史低 ${fmtNT(t.low)}</span>` : ''}`;
+  return `<div class="trow" data-act="hinfo" data-k="${esc(t.key)}"><div class="tri">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">?</div></div>
+    <div class="trb"><h4>${esc(t.name)}</h4><div class="trc">${huntChips(t)}</div>${t.soon ? '' : hpBar(t, false)}</div><div class="trr">${right}</div></div>`;
+}
+/* 情報卡：價格血條、價格紀錄、上市、評價、介紹；寫過專題或推坑的可以直接打開 */
+async function huntInfo(key) {
+  const t = huntTargets().find((x) => x.key === key); if (!t) return;
+  const mc = t.micro || {};
+  const steamUrl = t.appid ? `https://store.steampowered.com/app/${t.appid}/` : '';
+  openSheet(`<div class="hinfo"><div class="hi-img">${t.cap || t.img ? `<img src="${esc(t.cap || t.img)}" alt="" onerror="imgFail(this)">` : ''}${(mc.mp4 || mc.webm) && fxOn() ? `<video class="hi-v" muted loop playsinline autoplay preload="auto"${mc.mp4 ? ` src="${esc(mc.mp4)}"` : ''}></video>` : ''}
+      ${t.onSale ? `<span class="bn">-${t.disc}%</span>` : ''}</div>
+    <h3>${esc(t.name)}</h3>${t.en && t.en !== t.name ? `<div class="ben">${esc(t.en)}</div>` : ''}
+    <div class="chips" style="padding:0;margin-top:8px">${huntChips(t)}${(t.tags || []).slice(0, 4).map((g) => `<span class="chip n">${esc(g)}</span>`).join('')}</div>
+    <div class="hi-price"><div><span>現在</span><b>${t.giveaway ? '免費領' : priceTxt(t)}</b>${t.onSale ? `<s>${fmtNT(t.orig)}</s>` : ''}</div>
+      ${t.endMs != null ? `<div><span>特價到</span><b class="sm">${esc(endDate(t.sale.end))}</b><em>${esc(leftTxt(t.endMs))}</em></div>` : ''}
+      ${t.low != null ? `<div><span>${t.trackDays >= HUNT_LOW_DAYS ? '史低' : '追蹤以來最低'}</span><b class="sm">${fmtNT(t.low)}</b><em>${esc(mdDay(t.lowAt))}</em></div>` : ''}
+      ${t.soon ? `<div><span>上市</span><b class="sm">${t.rel.date ? esc(mdDay(t.rel.date)) : '未定'}</b><em>${t.relDays != null ? (t.relDays <= 0 ? '今天' : '倒數 ' + t.relDays + ' 天') : esc(t.rel.text || '')}</em></div>` : ''}</div>
+    ${hpBar(t, true)}<div class="hi-chart" id="hichart">${t.appid ? '<span class="sub-note">價格紀錄讀取中…</span>' : ''}</div>
+    ${t.short ? `<p class="hi-p">${esc(t.short)}</p>` : ''}${t.dev ? `<p class="sub-note">開發：${esc(t.dev)}${t.rv != null ? `・Steam 評價 ${t.rv}%（${esc(t.rvl || '')}，${fmtN(t.rvn)} 則）` : ''}</p>` : ''}
+    <div class="btnrow">${t.ref ? `<button class="btn y" data-go="${esc(t.ref)}">${t.ref[0] === 'f' ? ICON.page : ICON.gem}<span>${t.ref[0] === 'f' ? '看完整專題' : '看推坑全文'}</span></button>` : ''}${steamUrl ? `<a class="btn" href="${esc(steamUrl)}" target="_blank" rel="noopener noreferrer">${ICON.cart}<span>Steam 商店頁</span></a>` : ''}${t.want ? `<button class="btn sm" data-act="hunwant" data-id="${esc(t.wantId)}">不想玩了</button>` : ''}</div>
+    ${t.want && !t.wish && t.appid && wishState() === 'ok' ? '<p class="sub-note" style="margin-top:10px">這款只在 App 裡標了想玩：加進 Steam 願望單，特價時每天早上的推播才會提醒你。</p>' : ''}</div>`, 'hsheet');
+  sfx.lock();
+  const v = $('.hi-v'); if (v) { v.addEventListener('playing', () => v.classList.add('on'), { once: true }); v.play().catch(() => {}); }
+  if (!t.appid) return;
+  const h = await loadHist(t.appid);
+  const box = $('#hichart'); if (!box) return;
+  box.innerHTML = priceChart(h && h.pr, t) || '<span class="sub-note">價格紀錄還不夠畫線（每小時記一次，有變價才記）。</span>';
+}
+/* 價格紀錄：階梯線（價格一變就跳），紅點是追蹤以來最低 */
+function priceChart(pr, t) {
+  if (!pr || !pr.length || !t.orig) return '';
+  const now = Math.floor(Date.now() / 60000);
+  const pts = pr.concat([[now, pr[pr.length - 1][1]]]);
+  const t0 = pts[0][0], t1 = Math.max(t0 + 1, now);
+  if (t1 - t0 < 60 * 24) return '';
+  const hi = Math.max(t.orig, ...pts.map((p) => p[1])), lo = 0;
+  const X = (m) => ((m - t0) / (t1 - t0) * 100).toFixed(2), Y = (v) => (4 + (1 - (v - lo) / (hi - lo)) * 52).toFixed(2);
+  let d = `M${X(pts[0][0])},${Y(pts[0][1])}`;
+  for (let i = 1; i < pts.length; i++) d += `H${X(pts[i][0])}V${Y(pts[i][1])}`;
+  const mn = Math.min(...pr.map((p) => p[1])); const at = pr.find((p) => p[1] === mn);
+  return `<svg class="pchart" viewBox="0 0 100 60" preserveAspectRatio="none"><path class="pa" d="${d}V60H0Z"/><path class="pl" d="${d}" pathLength="100"/><circle cx="${X(at[0])}" cy="${Y(mn)}" r="1.6"/></svg>
+    <div class="pc-k"><span>${esc(mdDay(new Date(t0 * 60000 + 8 * 3600e3).toISOString().slice(0, 10)))} 開始追蹤</span><span>今天</span></div>`;
+}
+
+/* ---- 雷達：掃描線轉一圈 4 秒，掃到特價的光點會亮一下、嗶一聲 ---- */
+function huntFx() {
+  huntStop();
+  const sw = $('#rdsweep'); if (!sw) return;
+  countUp($('.hstats'));
+  // 第一次進來：懸賞單一張張拍上牆
+  const bs = $$('.bounty');
+  if (fxOn()) dropIn(bs, 'hunt');
+  if (!fxOn()) { sw.style.transform = 'rotate(300deg)'; return; }
+  HUNT.t0 = performance.now(); HUNT.prevA = 0;
+  const loop = (now) => {
+    if (!sw.isConnected) { HUNT.raf = 0; return; }
+    if (!document.hidden) {
+      const a = ((now - HUNT.t0) / 4000 * 360) % 360;
+      sw.style.transform = `rotate(${a.toFixed(1)}deg)`;
+      const p = HUNT.prevA;
+      for (const b of HUNT.blips) {
+        const hit = p <= a ? (b.ang > p && b.ang <= a) : (b.ang > p || b.ang <= a);
+        if (!hit) continue;
+        const el = $(`.blip[data-k="${CSS.escape(b.key)}"]`); if (el) { el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+        if (now - HUNT.lastPing > 260) { HUNT.lastPing = now; sfx.ping(b.low ? 2100 : 1500); }
+      }
+      HUNT.prevA = a;
+    }
+    HUNT.raf = requestAnimationFrame(loop);
+  };
+  HUNT.raf = requestAnimationFrame(loop);
+  // 看過這一波特價：分頁上的數字歸零（卡片上的 NEW 這次還留著）
+  setTimeout(() => {
+    if (!ROUTE.startsWith('hunt')) return;
+    for (const t of huntTargets()) if (t.onSale) S.huntSeen[t.key + ':' + t.final] = 1;
+    LS.set('huntSeen', S.huntSeen); setTabs('hunt');
+  }, 1500);
+}
+function huntStop() { if (HUNT.raf) cancelAnimationFrame(HUNT.raf); HUNT.raf = 0; }
+
+/* ---- 獵物出現：進 App 時，願望單有新的特價就跳出來（一天最多一次） ---- */
+function huntAlert() {
+  if (!S.settings.huntAlert || ROUTE.startsWith('hunt')) return;
+  const today = todayTW(); if (LS.get('huntAlertDay', '') === today) return;
+  const fresh = huntTargets().filter((t) => t.newSale && (t.wish || t.want)).sort((a, b) => b.score - a.score);
+  if (!fresh.length) return;
+  LS.set('huntAlertDay', today);
+  const el = document.createElement('div'); el.id = 'halert';
+  el.innerHTML = `<div class="ha-bg"></div><div class="ha-st t"></div><div class="ha-st b"></div><div class="ha-box"><div class="ha-k">⚠ WARNING ⚠</div><div class="ha-t">獵物出現</div>
+    <div class="ha-s">你的獵物有 <b>${fresh.length}</b> 款${fresh.some((t) => t.lowState === 'low') ? '正在特價，還有史低' : '正在特價'}</div>
+    <div class="ha-list">${fresh.slice(0, 3).map((t, i) => `<div class="ha-it" style="--i:${i}"><div class="ha-im">${t.img ? `<img src="${esc(t.img)}" alt="" onerror="imgFail(this)">` : ''}</div><b>${esc(t.name)}</b><span>${t.giveaway ? '免費' : '-' + t.disc + '%'}</span></div>`).join('')}</div>
+    <div class="btnrow" style="justify-content:center"><button class="btn y" data-act="ha-go">${ICON.target}<span>去獵價</span></button><button class="btn" data-act="ha-x">晚點</button></div></div>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('on'));
+  sfx.siren();
+  setTimeout(() => { if (!el.isConnected) return; sfx.drop(); haptic(30); const t = $('.ha-t', el); burstAt(t, [YEL, PINK, BLK], 30, 14); if (fxOn()) { shake(10, 300, $('.ha-box', el)); flash(BLK, 0.5); } }, 380);
+  $$('.ha-it', el).forEach((it, i) => setTimeout(() => { if (el.isConnected) { sfx.stamp(); it.classList.add('in'); } }, 700 + i * 180));
+}
+function huntAlertClose(go) {
+  const el = $('#halert'); if (!el) return;
+  el.classList.remove('on'); setTimeout(() => el.remove(), 260); sfx.whoosh();
+  if (go) { NAVN++; location.hash = 'hunt'; }
+}
+
+/* ---- weekly.js ---- */
+/* 解包 — 每週懶人包：每週日晚上由排程寫好（data/weekly/<YYYY-Www>.json；目錄 data/weekly.json），
+   App 做成遊戲的「本週結算」畫面（MVP、Tier 表、本週大事、下週出擊、特價戰利品、數據王）＋粉專出稿（貼文、標題、口播稿、三種圖卡）。
+   還沒結算的這一週：用目錄資料即時算出「進行中」面板與結算倒數。 */
+const WEEK = { cd: 0, card: { kind: 'cover', ratio: '45', seed: 1 } };
+const TIERS = ['S', 'A', 'B', 'C', 'D'];
+const TIER_COL = { S: '#FF2E88', A: '#FFE600', B: '#7dff9a', C: '#6cc6ff', D: '#9a9a9a' };
+
+/* ISO 週（週一到週日） */
+function isoWeekOf(ds) {
+  const d = new Date(ds + 'T00:00:00Z'); const day = (d.getUTCDay() + 6) % 7;
+  const mon = new Date(+d - day * 864e5); const thu = new Date(+mon + 3 * 864e5);
+  const y = thu.getUTCFullYear(); const jan4 = new Date(Date.UTC(y, 0, 4));
+  const w1 = new Date(+jan4 - ((jan4.getUTCDay() + 6) % 7) * 864e5);
+  const w = Math.round((mon - w1) / (7 * 864e5)) + 1;
+  const iso = (x) => x.toISOString().slice(0, 10);
+  return { id: `${y}-W${String(w).padStart(2, '0')}`, y, w, from: iso(mon), to: iso(new Date(+mon + 6 * 864e5)) };
+}
+const wkNo = (id) => +String(id).split('-W')[1];
+const dotDay = (d) => d.slice(5).replace('-', '.');
+async function loadWeek(id) {
+  S.weekF = S.weekF || {};
+  if (S.weekF[id]) return S.weekF[id];
+  S.weekF[id] = await getJSON('weekly/' + id + '.json');
+  return S.weekF[id];
+}
+function wkRef(ref) {
+  const [k, id] = String(ref || '').split(':');
+  const it = k === 'f' ? (S.index.items || []).find((x) => x.id === id) : k === 'p' ? ((S.picks && S.picks.items) || []).find((x) => x.id === id) : null;
+  return it ? { it, route: (k === 'f' ? 'f/' : 'p/') + id, kind: k } : null;
+}
+function weekItems(from, to) {
+  const f = (S.index.items || []).filter((x) => x.date >= from && x.date <= to).map((it) => ({ it, ref: 'f:' + it.id, route: 'f/' + it.id }));
+  const p = ((S.picks && S.picks.items) || []).filter((x) => x.date >= from && x.date <= to).map((it) => ({ it, ref: 'p:' + it.id, route: 'p/' + it.id }));
+  return [...f, ...p].sort((a, b) => (a.it.date < b.it.date ? 1 : -1));
+}
+function latestWeek() { return ((S.weekly && S.weekly.items) || [])[0] || null; }
+function weekFresh() { const w = latestWeek(); return w && dayDiff(w.to, todayTW()) <= 3 ? w : null; }
+function weekUnposted() { return ((S.weekly && S.weekly.items) || []).filter((w) => !S.posted['w:' + w.id]).length; }
+
+/* ---- 現在正在特價（獵物＋解包過、推坑過的） ---- */
+function dealsNow() {
+  const out = new Map(); const refs = steamRefs();
+  for (const t of huntTargets()) if ((t.onSale || t.giveaway) && t.appid) out.set(String(t.appid), { key: t.key, name: t.name, img: t.img, disc: t.disc, final: t.final, low: t.lowState, act: 'hinfo' });
+  for (const [a, lv] of Object.entries((S.live && S.live.apps) || {})) {
+    if (out.has(a) || !lv.price || !(lv.price.disc > 0)) continue;
+    const r = refs[a]; if (!r) continue;
+    out.set(a, { name: r.it.zh, img: headerOf(r.it, lv), disc: lv.price.disc, final: lv.price.final, route: r.route });
+  }
+  return [...out.values()].sort((a, b) => b.disc - a.disc).slice(0, 8);
+}
+/* ---- 數據王（目前的 Steam 即時數據，不是週末快照） ---- */
+function statKings(list) {
+  const rows = list.map((x) => ({ x, lv: liveOf(x.it.steam) })).filter((r) => r.lv);
+  const best = (fn) => rows.filter((r) => fn(r) != null).sort((a, b) => fn(b) - fn(a))[0];
+  const out = [];
+  const pl = best((r) => r.lv.players && r.lv.players.n); if (pl) out.push(['同上人數王', pl, fmtN(pl.lv.players.n), '人在玩']);
+  const rv = best((r) => (r.lv.rv && r.lv.rv.n >= 100 ? r.lv.rv.pct : null)); if (rv) out.push(['好評率王', rv, rv.lv.rv.pct + '%', `${fmtN(rv.lv.rv.n)} 則評價`]);
+  const up = best((r) => (r.lv.players && r.lv.players.d24 > 0 ? r.lv.players.d24 : null)); if (up) out.push(['24 小時暴漲', up, '▲' + up.lv.players.d24 + '%', '同上人數']);
+  return out;
+}
+
+/* ---- 畫面 ---- */
+function weekLiveHtml(cur) {
+  const list = weekItems(cur.from, cur.to);
+  const nf = list.filter((x) => x.ref[0] === 'f').length, np = list.length - nf;
+  const sale = huntTargets().filter((t) => t.onSale || t.giveaway).length;
+  return `<section class="wk-live"><div class="wkl-h"><span class="wk-no sm">WEEK<b>${cur.w}</b></span><span class="wkl-s">進行中</span>
+      <span class="wkl-cd">結算倒數<b id="wkcd">${esc(wkCountdown(cur))}</b></span></div>
+    <div class="wkl-r">${esc(dotDay(cur.from))} – ${esc(dotDay(cur.to))}・週日晚上結算：排 Tier 表、選 MVP、整理本週大事和下週上市，粉專貼文和圖卡一起寫好</div>
+    <div class="wk-stats sm"><div><b>${nf}</b><span>解包</span></div><div><b>${np}</b><span>推坑</span></div><div><b>${sale}</b><span>特價獵物</span></div></div>
+    ${list.length ? `<div class="hscroll">${list.map((x, i) => (x.ref[0] === 'f' ? miniHtml(x.it, i) : pickMini(x.it, i))).join('')}</div>` : '<div class="empty" style="padding:8px 2px">這週還沒有新的專題和推坑。</div>'}</section>`;
+}
+function wkCountdown(cur) {
+  const end = Date.parse(cur.to + 'T21:00:00+08:00') - Date.now();
+  if (end <= 0) return '結算中…';
+  const d = Math.floor(end / 864e5), h = Math.floor(end % 864e5 / 36e5), m = Math.floor(end % 36e5 / 6e4), s = Math.floor(end % 6e4 / 1e3);
+  return `${d ? d + ' 天 ' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+function weekArchive(curId) {
+  const items = (S.weekly && S.weekly.items) || []; if (items.length < 2 && (!items.length || items[0].id === curId)) return '';
+  return `<h3 class="tape-h">歷屆週報</h3><div class="wk-arch">${items.map((w) => `<button class="wka ${w.id === curId ? 'on' : ''}" data-go="week/${esc(w.id)}"><b>W${wkNo(w.id)}</b><span>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}</span><i>${esc(w.title)}</i></button>`).join('')}</div>`;
+}
+async function renderWeek(arg) {
+  const cur = isoWeekOf(todayTW());
+  const items = (S.weekly && S.weekly.items) || [];
+  const id = arg || (items[0] && items[0].id);
+  let html = `<div class="sec-h"><h2 class="spray-h">每週懶人包</h2><span class="date-stk">WEEKLY</span></div>`;
+  if (!arg && (!items[0] || items[0].id !== cur.id)) html += weekLiveHtml(cur);
+  if (!id) {
+    return html + `<div class="empty">第一份週報會在 ${esc(mdDay(cur.to))}（日）晚上結算出爐：這一週解包和推坑的遊戲排成 Tier 表、選出本週 MVP，加上本週大事、下週上市，粉專貼文和三張圖卡也會一起準備好。</div>`;
+  }
+  const wk = await loadWeek(id);
+  S.curWeek = wk;
+  return html + weekSettleHtml(wk) + weekArchive(id);
+}
+function weekSettleHtml(wk) {
+  const list = weekItems(wk.from, wk.to);
+  const nf = list.filter((x) => x.ref[0] === 'f').length, np = list.length - nf;
+  const mvp = wkRef(wk.mvp && wk.mvp.ref);
+  const mlv = mvp && liveOf(mvp.it.steam);
+  const mimg = mvp ? heroOf(mvp.it, mlv) : '';
+  const tiers = TIERS.map((t) => [t, (wk.tiers || []).filter((x) => x.tier === t)]).filter(([, a]) => a.length);
+  const deals = dealsNow(); const kings = statKings(list.length ? list : weekItems('0000', '9999'));
+  const srcs = wk.sources || [];
+  const sl = (ss) => (ss || []).map((j) => srcs[j]).filter(Boolean).map((s) => `<a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>`).join('、');
+  return `<section class="wk-hero" id="wkhero"><div class="wk-rays"></div>
+      <div class="wk-no"><span>WEEK</span><b>${wkNo(wk.id)}</b></div><div class="wk-range">${esc(dotDay(wk.from))} – ${esc(dotDay(wk.to))}</div>
+      <h1 class="wk-title">${esc(wk.title)}</h1>
+      <div class="wk-bar"><i></i><span>本週結算 COMPLETE</span></div>
+      <div class="wk-stats"><div><b class="cu" data-n="${nf}" data-f="i">${nf}</b><span>解包</span></div><div><b class="cu" data-n="${np}" data-f="i">${np}</b><span>推坑</span></div><div><b class="cu" data-n="${(wk.news || []).length}" data-f="i">${(wk.news || []).length}</b><span>大事</span></div><div><b class="cu" data-n="${(wk.next || []).length}" data-f="i">${(wk.next || []).length}</b><span>下週上市</span></div></div></section>
+    <p class="wk-intro">${esc(wk.intro)}<span class="lt-sign">— Claude</span></p>
+    ${mvp ? `<section class="mvp" data-go="${esc(mvp.route)}"><div class="mvp-rays"></div><div class="mvp-img">${mimg ? `<img src="${esc(mimg)}" alt="" onerror="imgFail(this)">` : ''}<div class="ph" style="${mimg ? 'display:none' : ''}">MVP</div><div class="ht"></div></div>
+      <svg class="mvp-crown" viewBox="0 0 120 70"><path d="M8 62 4 14l30 22L60 4l26 32 30-22-4 48z" fill="#FFE600" stroke="#111" stroke-width="5" stroke-linejoin="round"/><circle cx="60" cy="40" r="7" fill="#FF2E88" stroke="#111" stroke-width="3"/></svg>
+      <span class="mvp-tag">本週 MVP</span><div class="mvp-b"><h2>${esc(mvp.it.zh)}</h2><p>${esc(wk.mvp.why)}</p></div><div class="mvp-seal wait">MVP</div></section>` : ''}
+    ${tiers.length ? `<h3 class="tape-h p">本週 TIER 表</h3>
+    <div class="tiers" id="tiers">${tiers.map(([t, a]) => `<div class="tier"><b class="tl" style="background:${TIER_COL[t]}">${t}</b><div class="tt">${a.map((x, i) => { const r = wkRef(x.ref); if (!r) return ''; const img = headerOf(r.it, liveOf(r.it.steam)) || heroOf(r.it); return `<button class="tile" data-go="${esc(r.route)}" style="--i:${i}"><span class="ti">${img ? `<img src="${esc(img)}" alt="" loading="lazy" onerror="imgFail(this)">` : ''}<span class="ph" style="${img ? 'display:none' : ''}">?</span></span><span class="tn">${esc(r.it.zh)}</span>${r.kind === 'p' ? '<i class="tk">推坑</i>' : ''}</button>`; }).join('')}</div></div>`).join('')}</div>` : ''}
+    <div class="tlines">${(wk.tiers || []).map((x) => { const r = wkRef(x.ref); return r ? `<div class="tlr" data-go="${esc(r.route)}"><b style="background:${TIER_COL[x.tier] || '#999'}">${esc(x.tier)}</b><div><h4>${esc(r.it.zh)}</h4><p>${esc(x.line)}</p></div></div>` : ''; }).join('')}</div>
+    ${(wk.news || []).length ? `<h3 class="tape-h">本週大事</h3><div class="wnews">${wk.news.map((n, i) => `<div class="wn" style="--rot:${rot(wk.id + n.h, i, 1)}deg"><b class="wn-i">${String(i + 1).padStart(2, '0')}</b><h4>${esc(n.h)}</h4><p>${esc(n.t)}</p>${(n.s || []).length ? `<div class="wn-s">來源：${sl(n.s)}</div>` : ''}</div>`).join('')}</div>` : ''}
+    ${(wk.next || []).length ? `<h3 class="tape-h y">下週出擊</h3><div class="wnext">${wk.next.map((n) => { const r = n.ref && wkRef(n.ref); const d = new Date(n.d + 'T00:00:00Z'); return `<div class="wx" ${r ? `data-go="${esc(r.route)}"` : ''}><div class="wx-d"><b>${esc(n.d.length > 7 ? mdDay(n.d) : n.d.slice(0, 7).replace('-', '/'))}</b><span>${n.d.length > 7 ? '週' + WK[d.getUTCDay()] : '日期未定'}</span></div><div class="wx-b"><h4>${esc(n.name)}${r ? ' <i>已解包</i>' : ''}</h4><p>${esc(n.t)}</p>${(n.s || []).length ? `<div class="wn-s">來源：${sl(n.s)}</div>` : ''}</div></div>`; }).join('')}</div>` : ''}
+    ${deals.length ? `<h3 class="tape-h p">特價戰利品 <small>現在正在特價</small></h3><div class="hscroll">${deals.map((d, i) => `<div class="mini dl" ${d.route ? `data-go="${esc(d.route)}"` : `data-act="hinfo" data-k="${esc(d.key)}"`} style="--rot:${rot(d.name, i, 1.2)}deg"><div class="pimg">${d.img ? `<img src="${esc(d.img)}" alt="" loading="lazy" onerror="imgFail(this)">` : ''}<div class="ph" style="${d.img ? 'display:none' : ''}">SALE</div></div><span class="dl-d">-${d.disc}%</span><div class="mb"><h4>${esc(d.name)}</h4><div class="md">${d.final === 0 ? '免費領' : esc(fmtNT(d.final))}${d.low === 'low' && d.final ? ' · 史低' : ''}</div></div></div>`).join('')}<div class="mini pkm more" data-go="hunt"><div class="mm">${ICON.target}<b>去獵價</b><span>全部獵物</span></div></div></div>` : ''}
+    ${kings.length ? `<h3 class="tape-h">數據王 <small>Steam 即時</small></h3><div class="kings">${kings.map(([k, r, v, s], i) => `<div class="king" data-go="${esc(r.x.route)}" style="--rot:${rot(k, i, 1.6)}deg"><span class="kk">${esc(k)}</span><b>${esc(v)}</b><span class="ks">${esc(s)}</span><h4>${esc(r.x.it.zh)}</h4></div>`).join('')}</div>` : ''}
+    ${wk.deals ? `<div class="deal" style="margin-top:16px"><b>這週買遊戲的重點</b><p>${esc(wk.deals)}</p></div>` : ''}
+    <div class="endcta"><button class="btn p" data-go="fan/w:${esc(wk.id)}">${ICON.mega}<span>出成粉專貼文</span></button><button class="btn k" data-go="home">回今日</button></div>
+    ${srcs.length ? `<details class="wsrc"><summary>這份週報的 ${srcs.length} 個來源</summary><ol class="srcs">${srcs.map((s, i) => `<li><b>${i + 1}</b><a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>${s.d ? `（${esc(s.d)}）` : ''}</li>`).join('')}</ol></details>` : ''}
+    <p class="sub-note" style="margin-top:12px">週報寫於 ${esc(wk.date)}。Tier 表與 MVP 是 Claude 這週玩過資料、看過評價後的排法；特價和數據王是現在的 Steam 即時資料。</p>`;
+}
+/* 進場：WEEK 數字砸下、結算條跑完、數字跳上來、Tier 方塊一個個拍上去、MVP 印章蓋下 */
+function weekFx() {
+  clearInterval(WEEK.cd);
+  const cd = $('#wkcd');
+  if (cd) { const cur = isoWeekOf(todayTW()); WEEK.cd = setInterval(() => { if (!cd.isConnected) { clearInterval(WEEK.cd); return; } cd.textContent = wkCountdown(cur); }, 1000); }
+  const hero = $('#wkhero');
+  if (hero) {
+    hero.classList.add('go');
+    if (fxOn()) {
+      setTimeout(() => { sfx.drop(); haptic(25); burstAt($('.wk-no b', hero), [YEL, PINK, BLK], 30, 14); shake(8, 260); }, 260);
+      setTimeout(() => sfx.riser(), 420);
+      setTimeout(() => { sfx.ding(); countUp($('.wk-stats', hero)); }, 1150);
+    } else countUp($('.wk-stats', hero));
+  }
+  const tiers = $('#tiers');
+  if (tiers) {
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return; io.disconnect();
+      const tiles = $$('.tile', tiers);
+      tiers.classList.add('go');
+      tiles.forEach((t, i) => setTimeout(() => { t.classList.add('in'); sfx.slap(); if (i === 0) burstAt(t, [PINK, YEL], 14, 8); }, 120 + i * 120));
+    }, { threshold: 0.35 });
+    io.observe(tiers); FIO.push(io);
+  }
+  const seal = $('.mvp-seal');
+  if (seal) {
+    const io2 = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return; io2.disconnect();
+      seal.classList.remove('wait'); seal.classList.add('go');
+      setTimeout(() => { sfx.stamp(); impact(seal, [YEL, PINK, BLK], false); }, 240);
+    }, { threshold: 0.6 });
+    io2.observe(seal); FIO.push(io2);
+  }
+}
+function weekStop() { clearInterval(WEEK.cd); }
+
+/* 首頁：剛結算的週報橫幅 */
+function weekBanner() {
+  const w = weekFresh(); if (!w) return '';
+  const tops = (w.top || []).map(wkRef).filter(Boolean).slice(0, 4);
+  return `<div class="wk-ban" data-go="week/${esc(w.id)}"><div class="wb-l"><span class="wk-no sm">WEEK<b>${wkNo(w.id)}</b></span><span class="wb-k">結算出爐</span></div>
+    <div class="wb-b"><b>${esc(w.title)}</b>${w.mvp_name ? `<span>MVP：${esc(w.mvp_name)}</span>` : ''}</div>
+    ${tops.length ? `<div class="wb-t">${tops.map((r) => { const img = headerOf(r.it, liveOf(r.it.steam)); return img ? `<img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">` : ''; }).join('')}</div>` : ''}</div>`;
+}
+
+/* ---------- 粉專出稿：週報 ---------- */
+async function renderWeekFan(id) {
+  const wk = await loadWeek(id); const fp = wk.fanpage || {}; const key = 'w:' + id;
+  const post = S.edits[key] != null ? S.edits[key] : fp.post || '';
+  const C = WEEK.card;
+  return `<div class="fan-detail"><div class="btnrow" style="margin-top:14px"><button class="btn sm k" data-go="fan">← 出稿台</button><button class="btn sm" data-go="week/${esc(id)}">看週報</button></div>
+    <h2 class="spray-h" style="margin:16px 0 18px">WEEK ${wkNo(id)} 懶人包</h2><p class="sub-note">${esc(wk.title)}</p>
+    <div class="cardwrap"><canvas id="cardcv" width="1080" height="1350"></canvas><div class="cardbusy" id="cardbusy">噴漆中…</div></div>
+    <div class="btnrow" style="justify-content:center">${[['cover', '封面'], ['tier', 'Tier 表'], ['next', '下週出擊']].map(([k, l]) => `<button class="btn sm ${C.kind === k ? 'y' : ''}" data-act="wkk" data-v="${k}">${l}</button>`).join('')}<button class="btn sm ${C.ratio === '45' ? 'y' : ''}" data-act="cr" data-v="45">4:5 直式</button><button class="btn sm ${C.ratio === '11' ? 'y' : ''}" data-act="cr" data-v="11">1:1 方形</button></div>
+    <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="respray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="cdl">${ICON.dl}<span>下載這張</span></button>${navigator.share ? `<button class="btn" data-act="cshare">${ICON.share}<span>分享這張</span></button>` : ''}<button class="btn" data-act="wkall">${ICON.dl}<span>三張一起下載</span></button></div>
+    <p class="sub-note" style="text-align:center">三張依序是封面、Tier 表、下週出擊，適合發成一則多圖貼文。</p>
+    <div class="copybox"><h4>粉專貼文 <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
+      <div class="btnrow"><button class="btn y sm" data-act="copy" data-what="post">${ICON.copy}<span>複製貼文</span></button><button class="btn p sm" data-act="copy" data-what="full">${ICON.copy}<span>貼文＋hashtag</span></button>${S.edits[key] != null ? '<button class="btn sm" data-act="postreset">還原原稿</button>' : ''}</div></div>
+    <div class="copybox"><h4>三個標題（A/B 測試用）</h4>${(fp.titles || []).map((t, i) => `<div class="tline"><b>${'ABC'[i]}</b><span>${esc(t)}</span><button class="btn sm" data-act="copy" data-what="title" data-i="${i}">複製</button></div>`).join('')}</div>
+    <div class="copybox"><h4>Hashtag</h4><div class="htags">${(fp.tags || []).map((t) => `<span>${esc(t)}</span>`).join('')}</div><div class="btnrow"><button class="btn sm" data-act="copy" data-what="tags">${ICON.copy}<span>複製 hashtag</span></button></div></div>
+    <div class="copybox"><h4>60 秒口播稿（Shorts／Reels）</h4><div class="txt">${esc(fp.script || '')}</div><div class="btnrow"><button class="btn sm" data-act="copy" data-what="script">${ICON.copy}<span>複製口播稿</span></button></div></div>
+    <div class="copybox"><h4>素材標註</h4><div class="txt">${esc(fp.credit || '')}</div></div>
+    <div class="endcta"><button class="btn ${S.posted[key] ? '' : 'p'}" data-act="posted">${S.posted[key] ? '已發佈（點一下取消）' : '標記為已發佈'}</button></div></div>`;
+}
+async function weekCardRender() {
+  const cv = $('#cardcv'); if (!cv || !S.curWeek) return;
+  const busy = $('#cardbusy'); if (busy) busy.style.display = 'grid';
+  try { await drawWeekCard(cv, S.curWeek, WEEK.card); } catch (e) { console.warn(e); toast('圖卡畫不出來：' + e.message, 'warn'); }
+  if (busy) busy.style.display = 'none';
+}
+/* 粉專出稿台上的週報按鈕；處理了就回傳 true */
+async function weekFanAct(a, act, id) {
+  const key = 'w:' + id; const wk = await loadWeek(id); S.curWeek = wk; const fp = wk.fanpage || {}; const C = WEEK.card;
+  if (a === 'wkk' || a === 'cr' || a === 'respray') {
+    if (a === 'wkk') C.kind = act.dataset.v; if (a === 'cr') C.ratio = act.dataset.v;
+    if (a === 'respray') { C.seed++; sfx.rattle(); setTimeout(() => sfx.hiss(0.6), 200); } else sfx.click();
+    $$('[data-act="wkk"]').forEach((b) => b.classList.toggle('y', b.dataset.v === C.kind)); $$('[data-act="cr"]').forEach((b) => b.classList.toggle('y', b.dataset.v === C.ratio));
+    await weekCardRender(); if (a === 'respray') burstAt($('#cardcv'), [PINK, YEL, BLK], 26, 12); return true;
+  }
+  if (a === 'cdl' || a === 'cshare' || a === 'wkall') {
+    const kinds = a === 'wkall' ? ['cover', 'tier', 'next'] : [C.kind];
+    const files = [];
+    for (const k of kinds) {
+      let b;
+      if (a === 'wkall' && k !== C.kind) { const off = document.createElement('canvas'); await drawWeekCard(off, wk, Object.assign({}, C, { kind: k })); b = await new Promise((res) => { try { off.toBlob(res, 'image/png'); } catch (e) { res(null); } }); }
+      else b = await cardBlob();
+      if (!b) { toast('這張圖卡含有外部圖片，裝置不讓存。換「重噴一張」再試，或直接截圖。', 'warn'); return true; }
+      files.push(new File([b], `unpacked-${id}-${['cover', 'tier', 'next'].indexOf(k) + 1}-${k}.png`, { type: 'image/png' }));
+    }
+    if ((a === 'cshare' || a === 'wkall') && navigator.canShare && navigator.canShare({ files })) { try { await navigator.share({ files, title: '遊戲狂想曲' }); sfx.ding(); } catch (e) { /* 取消 */ } return true; }
+    for (const f of files) { const u = URL.createObjectURL(f); const l = document.createElement('a'); l.href = u; l.download = f.name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); await sleep(300); }
+    sfx.stamp(); impact($('#cardcv'), [PINK, YEL], false); toast(files.length > 1 ? '三張圖卡已下載' : '圖卡已下載'); return true;
+  }
+  if (a === 'copy') {
+    const post = $('#posttxt') ? $('#posttxt').value : fp.post; const w = act.dataset.what;
+    const text = w === 'post' ? post : w === 'full' ? post + '\n\n' + (fp.tags || []).join(' ') : w === 'title' ? fp.titles[+act.dataset.i] : w === 'tags' ? (fp.tags || []).join(' ') : fp.script;
+    if (await copyText(text)) { sfx.stamp(); haptic(); burstAt(act, [YEL, PINK, BLK], 14, 8); toast('已複製'); } else toast('複製失敗，請長按文字自己複製', 'warn');
+    return true;
+  }
+  if (a === 'postreset') { delete S.edits[key]; save('edits'); route(); return true; }
+  if (a === 'posted') {
+    if (S.posted[key]) delete S.posted[key]; else S.posted[key] = todayTW(); save('posted');
+    act.textContent = S.posted[key] ? '已發佈（點一下取消）' : '標記為已發佈'; act.classList.toggle('p', !S.posted[key]);
+    if (S.posted[key]) { sfx.ding(); impact(act, [RED, YEL, BLK], true); toast('蓋章！已發佈'); } else sfx.scratch();
+    setTabs('fan'); return true;
+  }
+  return false;
+}
+
+/* ---------- 週報圖卡：封面／Tier 表／下週出擊（1080×1350 或 1080×1080） ---------- */
+async function drawWeekCard(cv, wk, opt) {
+  const W = 1080, H = opt.ratio === '11' ? 1080 : 1350; cv.width = W; cv.height = H;
+  const c = cv.getContext('2d'); const R = rnd(opt.seed * 7919 + hashStr(wk.id + opt.kind)); const sq = opt.ratio === '11';
+  const fp = wk.fanpage || {}; const cover = fp.cover || {};
+  const names = (wk.tiers || []).map((x) => (wkRef(x.ref) || {}).it).filter(Boolean).map((x) => x.zh);
+  const allText = [cover.kicker, cover.title, cover.sub, wk.title, ...names, ...(wk.next || []).map((n) => n.name + n.t), '遊戲狂想曲本週下週出擊上市MVPTIER表日一二三四五六', fp.credit].join('');
+  try { await Promise.race([Promise.all([document.fonts.load(`900 80px ${CFONT}`, allText), document.fonts.load(`700 40px ${CFONT}`, allText), document.fonts.load('400 40px "Bebas Neue"', 'WEEK 0123456789 GAME RHAPSODY')]), sleep(4000)]); } catch (e) { /* 系統字 */ }
+  c.textAlign = 'left'; c.textBaseline = 'top';
+  const dark = opt.kind === 'tier';
+  if (dark) { c.fillStyle = '#111'; c.fillRect(0, 0, W, H); halftone(c, W, H, 'rgba(255,255,255,.07)', 16, 2.6); }
+  else {
+    c.fillStyle = '#FFE600'; c.fillRect(0, 0, W, H);
+    c.save(); c.translate(W * 0.82, H * 0.16); c.fillStyle = 'rgba(0,0,0,.045)';
+    for (let i = 0; i < 24; i++) { c.rotate(Math.PI / 12); c.beginPath(); c.moveTo(0, 0); c.lineTo(1800, -120); c.lineTo(1800, 120); c.closePath(); c.fill(); }
+    c.restore(); halftone(c, W, H, 'rgba(0,0,0,.09)', 18, 3.2);
+  }
+  [[W * 0.05, H * 0.1], [W * 0.95, H * 0.06], [W * 0.94, H * 0.62], [W * 0.05, H * 0.7], [W * 0.6, H * 0.985]].forEach(([x, y], i) => blobAt(c, x + (R() - 0.5) * 60, y + (R() - 0.5) * 60, 22 + R() * 34, i % 2 ? (dark ? '#FFE600' : '#111') : '#FF2E88', R));
+  const weekNoTag = (x, y, ang, inv) => { c.save(); c.translate(x, y); c.rotate(ang); c.font = '400 64px "Bebas Neue",sans-serif'; const t = `WEEK ${wkNo(wk.id)}  ·  ${dotDay(wk.from)}–${dotDay(wk.to)}`; const tw = c.measureText(t).width + 50; c.fillStyle = '#111'; c.fillRect(8, 8, tw, 82); c.fillStyle = inv ? '#FFE600' : '#FF2E88'; c.fillRect(0, 0, tw, 82); c.strokeStyle = '#111'; c.lineWidth = 4; c.strokeRect(0, 0, tw, 82); c.fillStyle = inv ? '#111' : '#fff'; c.textBaseline = 'middle'; c.fillText(t, 25, 46); c.restore(); };
+  if (opt.kind === 'cover') {
+    // 膠帶標語
+    c.font = `900 40px ${CFONT}`; const kick = cover.kicker || '每週遊戲懶人包'; const kw = Math.min(W - 90, c.measureText(kick).width + 56);
+    c.save(); c.translate(44 + kw / 2, 84); c.rotate(-0.035); c.fillStyle = '#111'; c.fillRect(-kw / 2, -32, kw, 64); c.fillStyle = '#FFE600'; c.textBaseline = 'middle'; c.textAlign = 'center'; c.fillText(kick, 0, 3, kw - 30); c.restore();
+    c.textAlign = 'left'; c.textBaseline = 'top';
+    // 巨大週數
+    c.save(); c.translate(52, sq ? 132 : 150); c.rotate(-0.03);
+    c.font = `400 ${sq ? 200 : 236}px "Bebas Neue",sans-serif`; const wt = 'WEEK ' + wkNo(wk.id);
+    for (let k = 4; k >= 1; k--) { c.fillStyle = k === 4 ? '#111' : '#FF2E88'; c.fillText(wt, k * 7, k * 7); }
+    c.fillStyle = '#fff'; c.lineWidth = 12; c.strokeStyle = '#111'; c.lineJoin = 'round'; c.strokeText(wt, 0, 0); c.fillText(wt, 0, 0); c.restore();
+    let y = sq ? 340 : 400;
+    c.save(); c.translate(W - 60, y - 34); c.rotate(0.05); c.font = '400 48px "Bebas Neue",sans-serif'; const dr = `${dotDay(wk.from)} – ${dotDay(wk.to)}`; const dw = c.measureText(dr).width + 40; c.fillStyle = '#111'; c.fillRect(-dw, 0, dw, 64); c.fillStyle = '#FFE600'; c.textBaseline = 'middle'; c.fillText(dr, -dw + 20, 34); c.restore();
+    y += 46;
+    const tl = String(cover.title || wk.title).split('\n').slice(0, 2);
+    const ts = fitSize(c, tl, W - 120, sq ? 74 : 86, 48);
+    tl.forEach((ln, i) => stepText(c, ln, 54, y + i * ts * 1.18, ts, '#111', '#fff'));
+    y += tl.length * ts * 1.18 + 30;
+    // MVP 撕紙框
+    const mvp = wkRef(wk.mvp && wk.mvp.ref);
+    const im = mvp ? await loadImgCors(heroOf(mvp.it, liveOf(mvp.it.steam))) : null;
+    const bottom = H - (sq ? 170 : 230); const ih = Math.max(200, bottom - y - 20); const iw = W - 120, ix = 60, iy = y;
+    c.save(); c.translate(W / 2, iy + ih / 2); c.rotate(-0.018); c.translate(-W / 2, -(iy + ih / 2));
+    tornPath(c, ix - 16, iy - 16, iw + 32, ih + 32, R, 10); c.fillStyle = '#111'; c.save(); c.translate(10, 10); c.fill(); c.restore();
+    tornPath(c, ix - 16, iy - 16, iw + 32, ih + 32, R, 10); c.fillStyle = '#fff'; c.fill();
+    c.save(); c.beginPath(); c.rect(ix, iy, iw, ih); c.clip();
+    if (im) coverDraw(c, im, ix, iy, iw, ih); else { c.fillStyle = '#222'; c.fillRect(ix, iy, iw, ih); }
+    const g = c.createLinearGradient(0, iy + ih * 0.55, 0, iy + ih); g.addColorStop(0, 'rgba(17,17,17,0)'); g.addColorStop(1, 'rgba(17,17,17,.88)'); c.fillStyle = g; c.fillRect(ix, iy, iw, ih);
+    if (mvp) { c.font = `900 ${sq ? 46 : 54}px ${CFONT}`; c.fillStyle = '#FFE600'; c.textBaseline = 'alphabetic'; c.fillText(mvp.it.zh, ix + 28, iy + ih - 30, iw - 220); c.textBaseline = 'top'; }
+    else { c.fillStyle = '#FFE600'; c.font = `900 ${sq ? 40 : 46}px ${CFONT}`; (wk.news || []).slice(0, 3).forEach((n, i) => c.fillText(`${String(i + 1).padStart(2, '0')}  ${n.h}`, ix + 28, iy + 34 + i * (sq ? 62 : 74), iw - 56)); }
+    c.restore(); c.restore();
+    tape(c, ix + 40, iy - 10, 170, 46, -0.5); tape(c, ix + iw - 40, iy - 6, 170, 46, 0.45);
+    // MVP 皇冠章
+    if (mvp) {
+    c.save(); c.translate(W - 170, iy + 70); c.rotate(-0.22);
+    c.fillStyle = '#FF2E88'; c.beginPath(); c.arc(6, 6, 92, 0, 7); c.fillStyle = '#111'; c.fill();
+    c.beginPath(); c.arc(0, 0, 92, 0, 7); c.fillStyle = '#FF2E88'; c.fill(); c.lineWidth = 6; c.strokeStyle = '#111'; c.stroke();
+    c.fillStyle = '#FFE600'; c.strokeStyle = '#111'; c.lineWidth = 5; c.beginPath(); c.moveTo(-44, -6); c.lineTo(-50, -52); c.lineTo(-22, -30); c.lineTo(0, -62); c.lineTo(22, -30); c.lineTo(50, -52); c.lineTo(44, -6); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#fff'; c.font = '400 66px "Bebas Neue",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('MVP', 0, 34); c.restore();
+    }
+    c.textAlign = 'left'; c.textBaseline = 'top';
+    // 這週還有
+    const others = names.filter((n) => !mvp || n !== mvp.it.zh);
+    if (others.length) {
+      c.font = `900 ${sq ? 30 : 34}px ${CFONT}`; c.fillStyle = '#111';
+      let line = '本週還有：', k = 0;
+      for (; k < others.length; k++) { const t = line + (k ? '、' : '') + others[k]; const rest = others.length - k - 1; if (c.measureText(t + (rest ? ` 等 ${others.length} 款` : '')).width > W - 400) break; line = t; }
+      if (!k) line += others[0].slice(0, 8) + '…';
+      if (k && k < others.length) line += ` 等 ${others.length} 款`;
+      c.fillText(line, 56, bottom + 10);
+    }
+  } else if (opt.kind === 'tier') {
+    stepText(c, '本週遊戲 TIER 表', 54, 56, sq ? 72 : 84, '#FFE600', '#111');
+    weekNoTag(56, sq ? 158 : 176, -0.02, true);
+    const rows = TIERS.map((t) => [t, (wk.tiers || []).filter((x) => x.tier === t).map((x) => wkRef(x.ref)).filter(Boolean)]).filter(([, a]) => a.length);
+    const top = sq ? 270 : 300, bottom = H - (sq ? 150 : 190), perLine = 3;
+    const lines = rows.reduce((n, [, a]) => n + Math.ceil(a.length / perLine), 0) || 1;
+    const gap = 16; const lineH = Math.min(260, (bottom - top - gap * (rows.length - 1)) / lines);
+    const lx = 50, lw = 130, tx0 = lx + lw + 16, tw = (W - tx0 - 50 - (perLine - 1) * 14) / perLine;
+    let y = top;
+    for (const [t, a] of rows) {
+      const n = Math.ceil(a.length / perLine); const rh = n * lineH;
+      c.fillStyle = '#111'; c.fillRect(lx + 6, y + 6, lw, rh - 8); c.fillStyle = TIER_COL[t]; c.fillRect(lx, y, lw, rh - 8); c.strokeStyle = '#111'; c.lineWidth = 4; c.strokeRect(lx, y, lw, rh - 8);
+      c.fillStyle = '#111'; c.font = `400 ${Math.min(120, rh * 0.6)}px "Bebas Neue",sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, lx + lw / 2, y + (rh - 8) / 2 + 6); c.textAlign = 'left'; c.textBaseline = 'top';
+      const imgs = await Promise.all(a.map((r) => loadImgCors(headerOf(r.it, liveOf(r.it.steam)) || heroOf(r.it))));
+      a.forEach((r, i) => {
+        const col = i % perLine, ln = Math.floor(i / perLine); const x = tx0 + col * (tw + 14), yy = y + ln * lineH; const ih = lineH - 8 - 46;
+        c.fillStyle = '#000'; c.fillRect(x + 5, yy + 5, tw, lineH - 8);
+        c.save(); c.beginPath(); c.rect(x, yy, tw, ih); c.clip(); if (imgs[i]) coverDraw(c, imgs[i], x, yy, tw, ih); else { c.fillStyle = '#2a2a2a'; c.fillRect(x, yy, tw, ih); } c.restore();
+        c.fillStyle = '#fff'; c.fillRect(x, yy + ih, tw, 46); c.strokeStyle = '#111'; c.lineWidth = 3; c.strokeRect(x, yy, tw, lineH - 8);
+        c.fillStyle = '#111'; c.font = `900 26px ${CFONT}`; c.textBaseline = 'middle'; let nm = r.it.zh; while (c.measureText(nm).width > tw - 20 && nm.length > 2) nm = nm.slice(0, -1); c.fillText(nm === r.it.zh ? nm : nm + '…', x + 10, yy + ih + 24); c.textBaseline = 'top';
+      });
+      y += rh + gap;
+    }
+  } else {
+    stepText(c, '下週出擊', 54, 56, sq ? 96 : 112, '#111', '#fff');
+    const nf = isoWeekOf(new Date(Date.parse(wk.to + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10));
+    c.save(); c.translate(60, sq ? 186 : 206); c.rotate(-0.02); c.font = '400 58px "Bebas Neue",sans-serif'; const t2 = `NEXT WEEK  ${dotDay(nf.from)}–${dotDay(nf.to)}`; const w2 = c.measureText(t2).width + 46; c.fillStyle = '#111'; c.fillRect(0, 0, w2, 76); c.fillStyle = '#FFE600'; c.textBaseline = 'middle'; c.fillText(t2, 23, 42); c.restore();
+    const list = (wk.next || []).slice(0, sq ? 5 : 6);
+    let y = sq ? 300 : 330; const bottom = H - (sq ? 150 : 190); const rh = Math.min(list.length <= 3 ? 236 : 170, (bottom - y) / Math.max(1, list.length));
+    list.forEach((n, i) => {
+      const d = new Date(n.d + 'T00:00:00Z'); const ds = n.d.length > 7 ? mdDay(n.d) : n.d.slice(0, 7).replace('-', '/'); const wd = n.d.length > 7 ? '週' + WK[d.getUTCDay()] : '未定';
+      c.save(); c.translate(56, y); c.rotate((R() - 0.5) * 0.02);
+      c.fillStyle = '#111'; c.fillRect(6, 6, W - 112, rh - 16); c.fillStyle = '#fff'; c.fillRect(0, 0, W - 112, rh - 16); c.strokeStyle = '#111'; c.lineWidth = 4; c.strokeRect(0, 0, W - 112, rh - 16);
+      c.fillStyle = i % 2 ? '#111' : '#FF2E88'; c.fillRect(0, 0, 190, rh - 16);
+      c.fillStyle = i % 2 ? '#FFE600' : '#fff'; c.font = `400 ${Math.min(64, rh * 0.48)}px "Bebas Neue",sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(ds, 95, (rh - 16) * 0.42);
+      c.font = `900 ${Math.min(28, rh * 0.2)}px ${CFONT}`; c.fillText(wd, 95, (rh - 16) * 0.78); c.textAlign = 'left';
+      const big = rh > 190;
+      c.fillStyle = '#111'; c.font = `900 ${Math.min(big ? 48 : 42, rh * 0.3)}px ${CFONT}`; let nm = n.name; while (c.measureText(nm).width > W - 112 - 230 && nm.length > 2) nm = nm.slice(0, -1); c.fillText(nm === n.name ? nm : nm + '…', 214, (rh - 16) * (big ? 0.27 : 0.36));
+      c.fillStyle = '#444'; c.font = `700 ${Math.min(big ? 30 : 27, rh * 0.19)}px ${CFONT}`; const lns = wrapText(c, n.t || '', W - 112 - 240).slice(0, big ? 2 : 1); lns.forEach((ln, j) => c.fillText(ln, 214, (rh - 16) * (big ? 0.6 + j * 0.2 : 0.72)));
+      c.restore(); y += rh;
+    });
+    if (!list.length) { c.fillStyle = '#111'; c.font = `900 40px ${CFONT}`; c.fillText('下週沒有大作上市，正好清遊戲庫存！', 60, 380); }
+  }
+  brandSticker(c, W - 200, H - 82, -0.05);
+  c.fillStyle = dark ? 'rgba(255,255,255,.75)' : 'rgba(17,17,17,.75)'; c.font = `700 22px ${CFONT}`; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+  wrapText(c, fp.credit || '', 600).slice(0, 2).forEach((ln, i, a) => c.fillText(ln, 52, H - 34 - (a.length - 1 - i) * 30));
+}
+
 /* ---- main.js ---- */
 /* 解包 — 啟動、路由、互動 */
 const VIEW = () => $('#view');
@@ -2753,12 +3744,13 @@ let NAVN = 0;   // App 裡往前走了幾步（「回牆上」才知道能不能
 
 function setTabs(name) {
   $$('.tab').forEach((t) => t.classList.toggle('on', t.dataset.go === name));
-  const wait = S.index ? S.index.items.filter((x) => !S.posted[x.id]).length : 0;
+  const wait = (S.index ? S.index.items.filter((x) => !S.posted[x.id]).length : 0) + weekUnposted();
   const dot = $('.tab[data-go="fan"] .dot'); if (dot) { dot.textContent = wait; dot.classList.toggle('hide', !wait); }
   const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
   const pnew = pi.filter((x) => x.date === pl && !S.seen['p:' + x.id]).length;
   const pd = $('.tab[data-go="picks"] .dot'); if (pd) { pd.textContent = pnew; pd.classList.toggle('hide', !pnew); }
   const sn = shNewCount(); const sd = $('.tab[data-go="shorts"] .dot'); if (sd) { sd.textContent = sn; sd.classList.toggle('hide', !sn); }
+  const hn = huntSaleCount(); const hd = $('.tab[data-go="hunt"] .dot'); if (hd) { hd.textContent = hn; hd.classList.toggle('hide', !hn); }
 }
 function tapeText() {
   const it = S.index ? S.index.items : []; const last = it[0] && it[0].date;
@@ -2775,7 +3767,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
@@ -2793,7 +3785,10 @@ async function route() {
       S.seen['p:' + arg] = 1; save('seen'); setTabs('picks');
       afterFeature();
       scrollTo(0, 0);
-    } else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
+    } else if (name === 'hunt') { setTabs('hunt'); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
+    else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
+    else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
+    else if (name === 'fan' && arg && arg.startsWith('w:')) { setTabs('fan'); v.innerHTML = await renderWeekFan(arg.slice(2)); scrollTo(0, 0); weekCardRender(); }
     else if (name === 'fan' && arg) { setTabs('fan'); v.innerHTML = await renderFanDetail(arg); scrollTo(0, 0); cardRender(await loadFeature(arg)); }
     else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); }
     else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); homeFx(); }
@@ -3092,6 +4087,10 @@ document.addEventListener('click', async (ev) => {
     ev.preventDefault();
     if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = ROUTE.startsWith('p/') ? 'picks' : 'home'; return; }
     if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); return; }
+    if (a === 'hf' || a === 'hs') { if (a === 'hf') HUNT.f = act.dataset.v; else HUNT.sort = act.dataset.v; sfx.click(); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); return; }
+    if (a === 'hinfo') { ev.stopPropagation(); huntInfo(act.dataset.k); return; }
+    if (a === 'hunwant') { delete S.marks[act.dataset.id]; save('marks'); closeSheet(); sfx.scratch(); toast('已經從獵物移除'); if (ROUTE.startsWith('hunt')) route(); return; }
+    if (a === 'ha-go' || a === 'ha-x') { huntAlertClose(a === 'ha-go'); return; }
     if (a === 'jump') { const el = document.getElementById(act.dataset.to); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); sfx.click(); return; }
     if (a === 'fact') { act.classList.toggle('open'); sfx.click(); return; }
     if (a === 'play') { playVideo(+act.dataset.i); return; }
@@ -3101,7 +4100,9 @@ document.addEventListener('click', async (ev) => {
     if (a === 'spoil') { act.closest('.spoil').classList.add('open'); sfx.rip(); haptic(20); burstAt(act, ['#FFE600', '#111'], 16, 8); return; }
     if (a === 'mark') {
       const k = act.dataset.k; const id = S.curId; S.marks[id] = S.marks[id] === k ? undefined : k; if (!S.marks[id]) delete S.marks[id]; save('marks');
-      $$('.mkb').forEach((b) => b.classList.toggle('on', b.dataset.k === S.marks[id])); sfx.slap(); haptic(); burstAt(act, ['#FFE600', '#FF2E88'], 14, 8); return;
+      $$('.mkb').forEach((b) => b.classList.toggle('on', b.dataset.k === S.marks[id])); sfx.slap(); haptic(); burstAt(act, ['#FFE600', '#FF2E88'], 14, 8);
+      if (S.marks[id] === 'want') { const it = findItem(id); const inWish = it && it.steam && ((S.wish && S.wish.items) || []).some((w) => w.appid === it.steam); toast(inWish ? '收進獵價（它也在你的 Steam 願望單上）' : '收進獵價：一特價就會跳出來'); }
+      setTabs(ROUTE.startsWith('p/') ? 'picks' : ''); return;
     }
     if (a === 'speak') { speakFeature(); sfx.click(); return; }
     if (a === 'lf') {
@@ -3134,6 +4135,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'bgm') { audioInit(); S.settings.bgm = !S.settings.bgm; if (S.settings.bgm) S.muted = false; save('settings'); audioApply(); topIcons(); sfx.scratch(); toast(S.settings.bgm ? '背景鼓組：開' : '背景鼓組：關'); return; }
     // 粉專
     const fid = ROUTE.startsWith('fan/') ? ROUTE.split('/')[1] : null;
+    if (fid && fid.startsWith('w:') && await weekFanAct(a, act, fid.slice(2))) return;
     if (a === 'cl' || a === 'cr' || a === 'respray') {
       if (a === 'cl') CARD.layout = act.dataset.v; if (a === 'cr') CARD.ratio = act.dataset.v; if (a === 'respray') { CARD.seed++; sfx.rattle(); setTimeout(() => sfx.hiss(0.6), 200); } else sfx.click();
       $$('[data-act="cl"]').forEach((b) => b.classList.toggle('y', b.dataset.v === CARD.layout)); $$('[data-act="cr"]').forEach((b) => b.classList.toggle('y', b.dataset.v === CARD.ratio));
@@ -3197,7 +4199,7 @@ async function boot() {
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
     <button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
-  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
+  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
   try { await loadIndex(); } catch (e) { ok = false; console.error(e); }
@@ -3216,13 +4218,14 @@ async function boot() {
     if (want) { try { await Promise.race([document.fonts.load('900 120px "Noto Sans TC"', '解包'), sleep(700)]); } catch (e) { /* */ } await runIntro(want, nToday); }
     S.introPending = false; if (ROUTE === 'home' || ROUTE === '') homeDrop();
     bgmStart();
+    setTimeout(huntAlert, 500);
     if (!ok) toast('資料讀不到，檢查一下網路', 'warn');
   };
   gate.addEventListener('click', (e) => { e.stopPropagation(); enter(!!e.target.closest('.gm')); }, { once: true });
   addEventListener('hashchange', route);
   if ('serviceWorker' in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register('sw.js').catch(() => {});
   // 每 20 分鐘看一次有沒有新資料（App 開著的時候）
-  setInterval(async () => { try { const old = S.index && S.index.at; await loadIndex(); if (S.index.at !== old) { tapeText(); if (ROUTE === 'home' || ROUTE === '') route(); toast('有新的解包！'); } } catch (e) { /* */ } }, 20 * 60e3);
+  setInterval(async () => { try { const old = S.index && S.index.at; await loadIndex(); if (S.index.at !== old) { tapeText(); if (ROUTE === 'home' || ROUTE === '') route(); toast('有新的解包！'); } setTabs(ROUTE.split('/')[0]); } catch (e) { /* */ } }, 20 * 60e3);
   // 自動測試用：?enter=1 直接進
   if (/[?&]enter=1/.test(location.search)) gate.click();
 }

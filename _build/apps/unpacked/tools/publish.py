@@ -8,6 +8,7 @@
 
 有 BAD 就不准推。WARN 要看過、能改就改。
 推坑（data/picks/<id>.json）另外產生 data/picks.json；推坑的 Steam appid 也會進 track.json。
+每週懶人包（data/weekly/<YYYY-Www>.json，WEEKLY_GUIDE.md）也一起檢查，並產生目錄 data/weekly.json。
 """
 import argparse
 import datetime as dt
@@ -21,6 +22,8 @@ REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..', '..'))
 DATA = os.path.join(REPO, 'apps', 'unpacked', 'data')
 FEAT = os.path.join(DATA, 'features')
 PICKS = os.path.join(DATA, 'picks')      # 推坑：已上市、不分新舊的私房推薦（PICKS_GUIDE.md）
+WEEKLY = os.path.join(DATA, 'weekly')    # 每週懶人包（WEEKLY_GUIDE.md）
+TIERS = ['S', 'A', 'B', 'C', 'D']
 
 KINDS = {'new': '新作', 'ea': '搶先體驗', 'upcoming': '即將推出', 'update': '大型更新', 'exclusive': '平台獨佔',
          'hot': '熱門話題', 'classic': '經典回顧', 'free': '限時免費', 'indie': '獨立黑馬'}
@@ -334,6 +337,127 @@ def check_pick(f, r):
     text_quality(f, fid, r)
 
 
+def iso_week(d):
+    y, w, _ = d.isocalendar()
+    mon = d - dt.timedelta(days=d.weekday())
+    return f'{y}-W{w:02d}', mon, mon + dt.timedelta(days=6)
+
+
+def check_week(w, r, refs):
+    """每週懶人包：本週結算（MVP、Tier 表、本週大事、下週出擊）＋粉專稿。格式見 WEEKLY_GUIDE.md。"""
+    wid = 'weekly/' + str(w.get('id', '?'))
+    need = ['id', 'from', 'to', 'date', 'title', 'intro', 'mvp', 'tiers', 'news', 'next', 'fanpage', 'sources']
+    miss = [k for k in need if k not in w]
+    if miss:
+        r.B(wid, f'少了欄位 {"、".join(miss)}')
+        return
+    try:
+        fr, to = dt.date.fromisoformat(w['from']), dt.date.fromisoformat(w['to'])
+        dt.date.fromisoformat(w['date'])
+    except ValueError:
+        r.B(wid, 'from、to、date 要是 YYYY-MM-DD')
+        return
+    i, mon, sun = iso_week(fr)
+    if w['id'] != i or fr != mon or to != sun:
+        r.B(wid, f'id／from／to 要對上同一個 ISO 週（週一到週日）：{i} {mon}～{sun}')
+    if not (8 <= len(w['title']) <= 40):
+        r.W(wid, f'title {len(w["title"])} 字（建議 10～32）')
+    if not (60 <= len(w['intro']) <= 280):
+        r.W(wid, f'intro {len(w["intro"])} 字（建議 80～220）')
+    src = w['sources']
+    if not isinstance(src, list) or len(src) < 6:
+        r.B(wid, '來源至少 6 個')
+    for k, s in enumerate(src or []):
+        if not s.get('t') or not re.match(r'https?://', s.get('u') or ''):
+            r.B(wid, f'sources[{k}] 要有標題與網址')
+
+    def srcs_ok(ss, what):
+        if not isinstance(ss, list) or not ss:
+            r.B(wid, f'{what} 沒有標來源')
+            return
+        for j in ss:
+            if not isinstance(j, int) or j < 0 or j >= len(src):
+                r.B(wid, f'{what} 來源編號 {j} 不存在')
+    week_refs = {k for k, v in refs.items() if w['from'] <= v['date'] <= w['to']}
+    m = w['mvp'] or {}
+    if not week_refs:
+        if w['mvp'] is not None or w['tiers']:
+            r.B(wid, '這一週沒有專題和推坑：mvp 要是 null、tiers 要是 []')
+    elif m.get('ref') not in week_refs:
+        r.B(wid, f'mvp.ref 要是這一週的專題或推坑（f:<id> 或 p:<id>）：{m.get("ref")}')
+    elif not (20 <= len(m.get('why') or '') <= 220):
+        r.B(wid, 'mvp.why 要寫 20～220 字')
+    seen = set()
+    for k, t in enumerate(w['tiers']):
+        if t.get('ref') not in refs:
+            r.B(wid, f'tiers[{k}].ref 不存在：{t.get("ref")}')
+        elif t['ref'] not in week_refs:
+            r.B(wid, f'tiers[{k}] {t["ref"]} 不是這一週的')
+        if t.get('ref') in seen:
+            r.B(wid, f'tiers 重複：{t.get("ref")}')
+        seen.add(t.get('ref'))
+        if t.get('tier') not in TIERS:
+            r.B(wid, f'tiers[{k}].tier 要是 {TIERS}')
+        if not (8 <= len(t.get('line') or '') <= 90):
+            r.B(wid, f'tiers[{k}].line 要寫 8～90 字')
+    lost = sorted(week_refs - seen)
+    if lost:
+        r.B(wid, f'這一週的專題／推坑都要排進 Tier 表，漏了：{"、".join(lost)}')
+    if not (3 <= len(w['news']) <= 6):
+        r.B(wid, 'news 本週大事要 3～6 則')
+    for k, n in enumerate(w['news']):
+        if not (n.get('h') and n.get('t')):
+            r.B(wid, f'news[{k}] 要有 h、t')
+        srcs_ok(n.get('s'), f'news[{k}]')
+    if not (2 <= len(w['next']) <= 8):
+        r.B(wid, 'next 下週出擊要 2～8 款')
+    nfr, nto = (fr + dt.timedelta(days=7)).isoformat(), (to + dt.timedelta(days=7)).isoformat()
+    for k, n in enumerate(w['next']):
+        d = n.get('d') or ''
+        if not re.fullmatch(r'\d{4}-\d{2}(-\d{2})?', d):
+            r.B(wid, f'next[{k}].d 要是 YYYY-MM-DD（日期未定才用 YYYY-MM）')
+        elif len(d) == 10 and not (nfr <= d <= nto):
+            r.W(wid, f'next[{k}] {n.get("name")} 的日期 {d} 不在下週（{nfr}～{nto}）')
+        if not (n.get('name') and n.get('t')):
+            r.B(wid, f'next[{k}] 要有 name、t')
+        if n.get('ref') and n['ref'] not in refs:
+            r.B(wid, f'next[{k}].ref 不存在：{n["ref"]}')
+        srcs_ok(n.get('s'), f'next[{k}]')
+    fp = w['fanpage'] or {}
+    post = fp.get('post') or ''
+    if not (200 <= len(post) <= 800):
+        r.W(wid, f'粉專貼文 {len(post)} 字（建議 250～700）')
+    if not post.rstrip().endswith(('？', '?')):
+        r.W(wid, '粉專貼文最後一句建議是給讀者的提問')
+    if len(fp.get('titles') or []) != 3:
+        r.B(wid, '粉專標題要剛好 3 個')
+    tags = fp.get('tags') or []
+    if not (3 <= len(tags) <= 8) or any(not t.startswith('#') or ' ' in t for t in tags):
+        r.B(wid, 'hashtag 要 3～8 個、# 開頭、不能有空格')
+    if not fp.get('script') or len(fp['script']) < 150:
+        r.B(wid, '60 秒口播稿至少 150 字')
+    if not fp.get('credit'):
+        r.W(wid, '沒有寫素材來源（credit）')
+    cv = fp.get('cover') or {}
+    if not cv.get('kicker') or not cv.get('title'):
+        r.B(wid, '封面圖卡 cover.kicker、cover.title 不能空')
+    for ln in (cv.get('title') or '').split('\n'):
+        if len(ln) > 13:
+            r.W(wid, f'封面標題一行 {len(ln)} 字，可能太長（建議 ≤ 12）：{ln}')
+    text_quality(w, wid, r)
+
+
+def build_weekly(weeks, refs):
+    items = []
+    for w in weeks:
+        tops = [t['ref'] for tier in TIERS for t in w.get('tiers') or [] if t.get('tier') == tier and t.get('ref') in refs]
+        mref = (w.get('mvp') or {}).get('ref')
+        items.append({'id': w['id'], 'from': w['from'], 'to': w['to'], 'date': w['date'], 'title': w['title'],
+                      'mvp': mref, 'mvp_name': (refs.get(mref) or {}).get('zh'), 'top': tops[:4], 'updated': w.get('updated')})
+    items.sort(key=lambda x: x['id'], reverse=True)
+    return {'at': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'n': len(items), 'items': items}
+
+
 def yt_list(f):
     """短影音要用的 YouTube 預告清單（id＋標題），最多 4 支。"""
     return [{'id': y['id'], 't': (y.get('title') or '')[:40]} for y in ((f.get('media') or {}).get('yt') or []) if y.get('id')][:4]
@@ -476,11 +600,28 @@ def main():
             if not a.only or f.get('id') == a.only:
                 check_pick(f, r)
             picks.append(f)
+    refs = {'f:' + f['id']: {'date': f.get('date', ''), 'zh': (f.get('game') or {}).get('zh')} for f in feats if f.get('id')}
+    refs.update({'p:' + f['id']: {'date': f.get('date', ''), 'zh': (f.get('game') or {}).get('zh')} for f in picks if f.get('id')})
+    weeks = []
+    if os.path.isdir(WEEKLY):
+        for fn in sorted(os.listdir(WEEKLY)):
+            if not fn.endswith('.json'):
+                continue
+            try:
+                w = json.load(open(os.path.join(WEEKLY, fn), encoding='utf-8'))
+            except Exception as e:  # noqa: BLE001
+                r.B('weekly/' + fn, f'JSON 壞掉：{e}')
+                continue
+            if w.get('id') != fn[:-5]:
+                r.B('weekly/' + fn, f'檔名要和 id 一樣（{w.get("id")}）')
+            if not a.only or w.get('id') == a.only:
+                check_week(w, r, refs)
+            weeks.append(w)
     for w in r.warn:
         print('WARN', w)
     for b in r.bad:
         print('BAD ', b)
-    print(f'{len(feats)} 篇專題、{len(picks)} 款推坑，BAD {len(r.bad)}，WARN {len(r.warn)}')
+    print(f'{len(feats)} 篇專題、{len(picks)} 款推坑、{len(weeks)} 份週報，BAD {len(r.bad)}，WARN {len(r.warn)}')
     if r.bad:
         sys.exit(1)
     if a.check:
@@ -492,6 +633,7 @@ def main():
     tr = build_track(feats, old, picks)
     pk = build_picks(picks)
     write_if_changed(os.path.join(DATA, 'picks.json'), pk)
+    write_if_changed(os.path.join(DATA, 'weekly.json'), build_weekly(weeks, refs))
     old_s = json.dumps(old, ensure_ascii=False, sort_keys=True)
     new_s = json.dumps(tr, ensure_ascii=False, sort_keys=True)
     if old_s != new_s:

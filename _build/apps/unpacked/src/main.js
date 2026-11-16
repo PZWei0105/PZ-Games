@@ -5,12 +5,13 @@ let NAVN = 0;   // App 裡往前走了幾步（「回牆上」才知道能不能
 
 function setTabs(name) {
   $$('.tab').forEach((t) => t.classList.toggle('on', t.dataset.go === name));
-  const wait = S.index ? S.index.items.filter((x) => !S.posted[x.id]).length : 0;
+  const wait = (S.index ? S.index.items.filter((x) => !S.posted[x.id]).length : 0) + weekUnposted();
   const dot = $('.tab[data-go="fan"] .dot'); if (dot) { dot.textContent = wait; dot.classList.toggle('hide', !wait); }
   const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
   const pnew = pi.filter((x) => x.date === pl && !S.seen['p:' + x.id]).length;
   const pd = $('.tab[data-go="picks"] .dot'); if (pd) { pd.textContent = pnew; pd.classList.toggle('hide', !pnew); }
   const sn = shNewCount(); const sd = $('.tab[data-go="shorts"] .dot'); if (sd) { sd.textContent = sn; sd.classList.toggle('hide', !sn); }
+  const hn = huntSaleCount(); const hd = $('.tab[data-go="hunt"] .dot'); if (hd) { hd.textContent = hn; hd.classList.toggle('hide', !hn); }
 }
 function tapeText() {
   const it = S.index ? S.index.items : []; const last = it[0] && it[0].date;
@@ -27,7 +28,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
@@ -45,7 +46,10 @@ async function route() {
       S.seen['p:' + arg] = 1; save('seen'); setTabs('picks');
       afterFeature();
       scrollTo(0, 0);
-    } else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
+    } else if (name === 'hunt') { setTabs('hunt'); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
+    else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
+    else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
+    else if (name === 'fan' && arg && arg.startsWith('w:')) { setTabs('fan'); v.innerHTML = await renderWeekFan(arg.slice(2)); scrollTo(0, 0); weekCardRender(); }
     else if (name === 'fan' && arg) { setTabs('fan'); v.innerHTML = await renderFanDetail(arg); scrollTo(0, 0); cardRender(await loadFeature(arg)); }
     else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); }
     else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); homeFx(); }
@@ -344,6 +348,10 @@ document.addEventListener('click', async (ev) => {
     ev.preventDefault();
     if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = ROUTE.startsWith('p/') ? 'picks' : 'home'; return; }
     if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); return; }
+    if (a === 'hf' || a === 'hs') { if (a === 'hf') HUNT.f = act.dataset.v; else HUNT.sort = act.dataset.v; sfx.click(); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); return; }
+    if (a === 'hinfo') { ev.stopPropagation(); huntInfo(act.dataset.k); return; }
+    if (a === 'hunwant') { delete S.marks[act.dataset.id]; save('marks'); closeSheet(); sfx.scratch(); toast('已經從獵物移除'); if (ROUTE.startsWith('hunt')) route(); return; }
+    if (a === 'ha-go' || a === 'ha-x') { huntAlertClose(a === 'ha-go'); return; }
     if (a === 'jump') { const el = document.getElementById(act.dataset.to); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); sfx.click(); return; }
     if (a === 'fact') { act.classList.toggle('open'); sfx.click(); return; }
     if (a === 'play') { playVideo(+act.dataset.i); return; }
@@ -353,7 +361,9 @@ document.addEventListener('click', async (ev) => {
     if (a === 'spoil') { act.closest('.spoil').classList.add('open'); sfx.rip(); haptic(20); burstAt(act, ['#FFE600', '#111'], 16, 8); return; }
     if (a === 'mark') {
       const k = act.dataset.k; const id = S.curId; S.marks[id] = S.marks[id] === k ? undefined : k; if (!S.marks[id]) delete S.marks[id]; save('marks');
-      $$('.mkb').forEach((b) => b.classList.toggle('on', b.dataset.k === S.marks[id])); sfx.slap(); haptic(); burstAt(act, ['#FFE600', '#FF2E88'], 14, 8); return;
+      $$('.mkb').forEach((b) => b.classList.toggle('on', b.dataset.k === S.marks[id])); sfx.slap(); haptic(); burstAt(act, ['#FFE600', '#FF2E88'], 14, 8);
+      if (S.marks[id] === 'want') { const it = findItem(id); const inWish = it && it.steam && ((S.wish && S.wish.items) || []).some((w) => w.appid === it.steam); toast(inWish ? '收進獵價（它也在你的 Steam 願望單上）' : '收進獵價：一特價就會跳出來'); }
+      setTabs(ROUTE.startsWith('p/') ? 'picks' : ''); return;
     }
     if (a === 'speak') { speakFeature(); sfx.click(); return; }
     if (a === 'lf') {
@@ -386,6 +396,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'bgm') { audioInit(); S.settings.bgm = !S.settings.bgm; if (S.settings.bgm) S.muted = false; save('settings'); audioApply(); topIcons(); sfx.scratch(); toast(S.settings.bgm ? '背景鼓組：開' : '背景鼓組：關'); return; }
     // 粉專
     const fid = ROUTE.startsWith('fan/') ? ROUTE.split('/')[1] : null;
+    if (fid && fid.startsWith('w:') && await weekFanAct(a, act, fid.slice(2))) return;
     if (a === 'cl' || a === 'cr' || a === 'respray') {
       if (a === 'cl') CARD.layout = act.dataset.v; if (a === 'cr') CARD.ratio = act.dataset.v; if (a === 'respray') { CARD.seed++; sfx.rattle(); setTimeout(() => sfx.hiss(0.6), 200); } else sfx.click();
       $$('[data-act="cl"]').forEach((b) => b.classList.toggle('y', b.dataset.v === CARD.layout)); $$('[data-act="cr"]').forEach((b) => b.classList.toggle('y', b.dataset.v === CARD.ratio));
@@ -449,7 +460,7 @@ async function boot() {
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
     <button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
-  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
+  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
   try { await loadIndex(); } catch (e) { ok = false; console.error(e); }
@@ -468,13 +479,14 @@ async function boot() {
     if (want) { try { await Promise.race([document.fonts.load('900 120px "Noto Sans TC"', '解包'), sleep(700)]); } catch (e) { /* */ } await runIntro(want, nToday); }
     S.introPending = false; if (ROUTE === 'home' || ROUTE === '') homeDrop();
     bgmStart();
+    setTimeout(huntAlert, 500);
     if (!ok) toast('資料讀不到，檢查一下網路', 'warn');
   };
   gate.addEventListener('click', (e) => { e.stopPropagation(); enter(!!e.target.closest('.gm')); }, { once: true });
   addEventListener('hashchange', route);
   if ('serviceWorker' in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register('sw.js').catch(() => {});
   // 每 20 分鐘看一次有沒有新資料（App 開著的時候）
-  setInterval(async () => { try { const old = S.index && S.index.at; await loadIndex(); if (S.index.at !== old) { tapeText(); if (ROUTE === 'home' || ROUTE === '') route(); toast('有新的解包！'); } } catch (e) { /* */ } }, 20 * 60e3);
+  setInterval(async () => { try { const old = S.index && S.index.at; await loadIndex(); if (S.index.at !== old) { tapeText(); if (ROUTE === 'home' || ROUTE === '') route(); toast('有新的解包！'); } setTabs(ROUTE.split('/')[0]); } catch (e) { /* */ } }, 20 * 60e3);
   // 自動測試用：?enter=1 直接進
   if (/[?&]enter=1/.test(location.search)) gate.click();
 }

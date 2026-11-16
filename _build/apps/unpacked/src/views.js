@@ -74,13 +74,21 @@ function renderHome() {
   return `<div class="sec-h"><h2 class="spray-h">${lastDate === today ? '今日解包' : '最新解包'}</h2>
       <span class="date-stk">${esc(lastDate.slice(5).replace('-', '.'))} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</span></div>
     ${lastDate !== today ? `<p class="sub-note">今天的專題還在寫，先看 ${mdDay(lastDate)} 這批。</p>` : ''}
+    ${weekBanner()}${huntStrip()}
     <div class="posters">${todays.map(posterHtml).join('')}</div>
     ${picksTeaser()}
     <h3 class="tape-h">追蹤牆</h3>
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="f/${esc(n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
-    <div class="endcta"><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+}
+/* 首頁：願望單有特價就貼一條警示膠帶 */
+function huntStrip() {
+  const sale = huntTargets().filter((t) => t.onSale || t.giveaway).sort((a, b) => b.score - a.score);
+  if (!sale.length) return '';
+  const lows = sale.filter((t) => t.lowState === 'low').length;
+  return `<div class="hstrip" data-go="hunt"><span class="hs-k">${ICON.target}獵價</span><span class="hs-t">你的獵物 <b>${sale.length}</b> 款正在特價${lows ? `，<b>${lows}</b> 款史低` : ''}：${sale.slice(0, 2).map((t) => `${esc(t.name)} ${t.giveaway ? '免費' : '-' + t.disc + '%'}`).join('、')}${sale.length > 2 ? '…' : ''}</span><span class="hs-a">→</span></div>`;
 }
 
 function picksTeaser() {
@@ -145,7 +153,7 @@ function liveHtml(f, lv, h) {
   const low = pr.low && !lv.free ? `<div class="ld">追蹤以來最低 ${fmtNT(pr.low.v)}（${mdDay(pr.low.at.slice(0, 10))}）${pr.final <= pr.low.v && pr.disc > 0 ? '<span class="lowtag">史低</span>' : ''}</div>` : '';
   const d24 = p.d24 != null ? `<span class="${p.d24 >= 0 ? 'up' : 'dn'}">${p.d24 >= 0 ? '▲' : '▼'}${Math.abs(p.d24)}%</span> 比 24 小時前` : '';
   return `<div class="live"><div class="lh"><span>STEAM 即時數據 · 台灣區</span><small>更新於 ${esc(ago(lv.at))}</small></div><div class="lgrid">
-    <div class="lc"><div class="ll">台灣售價</div><div class="lv">${esc(priceV)}${pr.disc > 0 ? `<span class="disc">-${pr.disc}%</span>` : ''}</div>${pr.disc > 0 && pr.orig ? `<div class="ld">原價 ${fmtNT(pr.orig)}</div>` : ''}${low}</div>
+    <div class="lc"><div class="ll">台灣售價</div><div class="lv">${esc(priceV)}${pr.disc > 0 ? `<span class="disc">-${pr.disc}%</span>` : ''}</div>${pr.disc > 0 && pr.orig ? `<div class="ld">原價 ${fmtNT(pr.orig)}${pr.end && Date.parse(pr.end) > Date.now() ? `・特價到 ${esc(endDate(pr.end))}（${esc(leftTxt(Date.parse(pr.end) - Date.now()))}）` : ''}</div>` : ''}${low}</div>
     <div class="lc"><div class="ll">Steam 評價</div><div class="lv">${rv.pct != null ? `<span class="cu" data-n="${rv.pct}" data-f="i">${rv.pct}</span><small>%</small>` : '—'}</div><div class="ld">${esc(rv.label || '評論還不夠')} · ${fmtN(rv.n)} 則${rv.recent ? `<br>近 ${rv.recent.days} 天 ${rv.recent.pct}%（${fmtN(rv.recent.n)} 則）` : ''}</div></div>
     <div class="lc wide"><div class="ll">目前同上人數</div><div class="lv">${p.n != null ? `<span class="cu" data-n="${p.n}">${esc(fmtN(p.n))}</span>` : '—'}<small>${p.peak ? `追蹤以來最高 ${esc(fmtN(p.peak.n))}` : ''}</small></div><div class="ld">${d24}</div>${h ? sparkSvg(h.pl, 7) : ''}</div>
     <div class="lc"><div class="ll">繁中玩家評價</div><div class="lv">${tc && tc.pct != null ? `<span class="cu" data-n="${tc.pct}" data-f="i">${tc.pct}</span><small>%</small>` : '—'}</div><div class="ld">${!tc ? '這一輪沒抓到，下次更新再補' : tc.n ? `${fmtN(tc.n)} 則繁中評論` : '還沒有繁中評論'}</div></div>
@@ -435,7 +443,8 @@ function renderFanList() {
   const items = S.index.items;
   const wait = items.filter((x) => !S.posted[x.id]).length;
   return `<div class="brandbar"><h2 class="spray-h">出稿台</h2><div class="brandstk"><b>遊戲狂想曲</b><i>GAME RHAPSODY</i></div></div>
-    <p class="sub-note">每篇專題都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。還有 ${wait} 篇沒發。</p>
+    <p class="sub-note">每篇專題和每週懶人包都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。還有 ${wait + weekUnposted()} 篇沒發。</p>
+    ${((S.weekly && S.weekly.items) || []).length ? `<h3 class="tape-h y" style="margin-top:6px">每週懶人包</h3><div class="drafts">${S.weekly.items.slice(0, 6).map((w) => `<div class="draft wkd" data-go="fan/w:${esc(w.id)}"><div class="di wk-no sm"><span>WEEK</span><b>${wkNo(w.id)}</b></div><div><h4>${esc(w.title)}</h4><p>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}・封面／Tier 表／下週出擊三張圖卡</p></div><span class="st-chip ${S.posted['w:' + w.id] ? 'done' : ''}">${S.posted['w:' + w.id] ? '已發 ' + esc(mdDay(S.posted['w:' + w.id])) : '待發'}</span></div>`).join('')}</div><h3 class="tape-h" style="margin-top:10px">每日專題</h3>` : ''}
     <div class="drafts">${items.map((x) => { const img = headerOf(x); return `<div class="draft" data-go="fan/${esc(x.id)}"><div class="di" style="background-image:url('${esc(img)}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.headline)}</p></div><span class="st-chip ${S.posted[x.id] ? 'done' : ''}">${S.posted[x.id] ? '已發 ' + esc(mdDay(S.posted[x.id])) : '待發'}</span></div>`; }).join('')}</div>`;
 }
 const CARD = { layout: 'A', ratio: '45', seed: 1 };
@@ -493,6 +502,7 @@ function settingsHtml() {
     <div class="setrow"><div class="st"><b>特效</b><small>收斂：不震動、不閃光、少噴濺</small></div>${seg('fx', [['full', '全開'], ['calm', '收斂']])}</div>
     <div class="setrow"><div class="st"><b>短影音連播</b><small>開：一支播完自動滑到下一款；關：同一支重複播</small></div>${seg('shAuto', [[true, '開'], [false, '關']])}</div>
     <div class="setrow"><div class="st"><b>短影音聲音</b><small>預告預設要不要出聲（「靜音進入」時一律先靜音）</small></div>${seg('shSound', [[true, '有聲'], [false, '靜音']])}</div>
+    <div class="setrow"><div class="st"><b>獵物出現警報</b><small>願望單或想玩的遊戲開始特價時，打開 App 跳出警報（一天最多一次）</small></div>${seg('huntAlert', [[true, '開'], [false, '關']])}</div>
     <div class="setrow"><div class="st"><b>我的標記與筆記</b><small>想玩／玩過、筆記、討論想法、已發佈紀錄，只存在這台裝置</small></div><button class="btn sm" data-act="wipe">清除</button></div>
     <p class="sub-note" style="margin-top:14px">解包 UNPACKED v${VERSION} · 專題 ${S.index ? S.index.n : 0} 篇 · 目錄更新 ${esc(ago(S.index && S.index.at))} · Steam 資料 ${esc(ago(S.live && S.live.at)) || '還沒有'}</p>`;
 }

@@ -16,7 +16,7 @@ const LS = {
 };
 
 const S = {
-  settings: Object.assign({ sfx: true, bgm: true, vol: 0.8, bgmVol: 0.32, intro: 'daily', fx: 'full', shAuto: true, shSound: true }, LS.get('settings', {})),
+  settings: Object.assign({ sfx: true, bgm: true, vol: 0.8, bgmVol: 0.32, intro: 'daily', fx: 'full', shAuto: true, shSound: true, huntAlert: true }, LS.get('settings', {})),
   marks: LS.get('marks', {}),        // id → want/playing/done/no
   notes: LS.get('notes', {}),        // id → 我的筆記
   thoughts: LS.get('thoughts', {}),  // id#i → 我對討論題的想法
@@ -26,6 +26,8 @@ const S = {
   seen: LS.get('seen', {}),          // id → 看過
   muted: false,                      // 這一次「靜音進入」
   index: null, live: null, feats: {}, hist: {},
+  wish: null, weekly: null, weekF: {},   // Steam 願望單（獵價）、每週懶人包
+  huntSeen: LS.get('huntSeen', {}),  // 看過的特價（appid:價格）
   picks: null, pickF: {},           // 推坑目錄、推坑稿
   scroll: {},
 };
@@ -110,5 +112,7 @@ const ICON = {
   film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2"/><path d="M7.5 4.5v15M16.5 4.5v15M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/></svg>',
   page: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M6 2.5h9l4 4v15H6z"/><path d="M15 2.5v4h4M9 12h7M9 16h5"/></svg>',
   cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M2.5 4h2.6l2.3 11h11l2.3-8H6.2"/><circle cx="9.5" cy="19.5" r="1.6"/><circle cx="17" cy="19.5" r="1.6"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3.5h10v5a5 5 0 0 1-10 0z"/><path d="M7 5.5H3.5a3.5 3.5 0 0 0 4 4M17 5.5h3.5a3.5 3.5 0 0 1-4 4M12 13.5v3.5M8 21h8l-1-4H9z"/></svg>',
   full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
 };

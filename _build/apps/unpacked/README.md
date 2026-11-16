@@ -1,6 +1,6 @@
 # 解包 UNPACKED
 
-痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆，以及「遊戲狂想曲」粉專出稿台（貼文、三個標題、塗鴉圖卡、60 秒口播稿）。
+痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達、每週懶人包（本週結算），以及「遊戲狂想曲」粉專出稿台（貼文、三個標題、塗鴉圖卡、60 秒口播稿）。
 網址：https://pzwei0105.github.io/PZ-Games/apps/unpacked/
 
 起因：痞子葳看到 TGP 玩家口袋的 FB 遊戲介紹貼文，想要一個 App「主動抓取並寫成一篇篇遊戲詳細介紹」。他要求：主頁自己看、要詳盡、要有討論，像《玩真的》一樣附影片與圖片預覽，**而且要比玩真的更強、更全面**；粉專分頁照 Claude 建議的格式。全部收（大作、獨立、免費、平台獨佔），**手機遊戲一律排除**（他不喜歡什麼都得課金才能解鎖的遊戲）；每天 2～3 篇深度專題。視覺要呼應頻道的噴漆塗鴉風、聲光效果拉滿。
@@ -11,6 +11,8 @@
 |---|---|---|
 | 推坑（已上市、不分新舊的私房推薦） | 每日推坑排程（Claude 的排程任務「解包：每日推坑」，每天台灣時間 11:43，寫完推播） | `apps/unpacked/data/picks/<id>.json`，規範在 `PICKS_GUIDE.md`；publish.py 產生 `data/picks.json` |
 | 專題（深度介紹＋粉專稿） | 每日寫稿排程（Claude 的排程任務「解包：每日寫稿」，每天台灣時間 05:23，寫完推播到痞子葳手機） | `apps/unpacked/data/features/<id>.json`，規範在 `WRITER_GUIDE.md` |
+| 每週懶人包（本週結算＋粉專稿） | 每週排程（Claude 的排程任務「解包：每週懶人包」，每週日台灣時間 19:43，寫完推播） | `apps/unpacked/data/weekly/<YYYY-Www>.json`，規範在 `WEEKLY_GUIDE.md`；publish.py 產生 `data/weekly.json` |
+| Steam 願望單（獵價） | 同一個 GitHub Actions：每小時讀痞子葳的公開願望單、對台灣區價格 | `tools/live.py` → `data/wish.json`（價格歷史也記在 `hist/<appid>.json` 的 `pr`）。Steam 代號放 repo 的 Actions 密碼 `UNP_STEAM`（Settings → Secrets and variables → Actions；不公開），沒有才讀 `data/wish-cfg.json` 的 `steam`（會公開）。代號不寫進 log 和輸出檔 |
 | Steam 即時資料與選題候選 | GitHub Actions `.github/workflows/unpacked-live.yml`，每小時＋track.json 一變就跑。最新的 120 款、盯上市的、還沒抓過的每輪更新；其餘每輪輪流更新 40 款（最久沒更新的先），所以專題和推坑再多，每款也至少約一天更新一次 | `tools/live.py` → `data/live.json`、`data/hist/<appid>.json`、`data/candidates.json` |
 | App 本體 | 這個資料夾的 `src/`，`build.py` 組成單一 index.html | `apps/unpacked/`（`build.py` 不碰 `data/`） |
 
@@ -36,6 +38,19 @@
   - 版面：直拿＝標題在上、預告在中間、資訊在下、右邊一排按鈕（矮手機自動收小）；手機橫拿＝沉浸模式，預告吃滿高度、分頁列收起、字和按鈕疊在上面且不動 2.8 秒會淡掉（左上 ✕ 離開）；電腦／平板橫放＝劇院版，左邊大預告、右邊資訊欄。
   - 網址會跟著換成 `#shorts/f:<id>` 或 `#shorts/p:<id>`：分享出去打開就是那一支；去看專題再按「回牆上」會回到剛剛那一支。專題頁、推坑頁的 `/影像` 也有「用短影音直式滑著看」直接跳過來。
   - 技術：整面牆共用一個 `<video>`（iPhone 點過一次之後，換片也能直接有聲播放；開門畫面、任何一次點擊都會先「解鎖」它），滑到哪張就搬到哪張；只畫目前這張的前一張、後兩張，其他留空殼。底圖是 Steam 橫幅圖縮成 24 格寬的 canvas 再放大（看起來像毛玻璃，不用模糊濾鏡）。YouTube 只能用 iframe，靠 postMessage 聽「播完了」好連播（iPhone 在 iframe 裡不給有聲自動播放，會先靜音並提示點喇叭）。
+- **獵價**（分頁列第四個）：Steam 願望單＋App 裡標「想玩」的遊戲（專題、推坑、短影音點兩下）合成一份獵物清單。
+  - 雷達：掃描線 4 秒一圈，每一款是一個光點——特價是粉紅（越靠中心折越多）、史低是黃色加粉紅圈、未上市是白色三角形、等降價是灰點；掃到特價的光點會亮一下、嗶一聲。旁邊是特價中、史低、獵物總數和「這波特價一共便宜」（數字跳上來）。
+  - 鎖定！正在特價：懸賞單（WANTED、懸賞 -XX%、原價劃掉、省多少、NEW、史低、特價倒數、出手／快收／鎖定章）。價格血條：滿格＝原價，剩下的血＝現在價格，黃線＝追蹤以來最低。
+  - 即將上市（上市倒數）、等降價（現價、史低）兩個清單；篩選：特價中、史低、未上市、有繁中、NT$300 內、我想玩；排序：先看該出手的、折扣、便宜、好評、新加入。
+  - 點任何一款（或雷達光點）打開情報卡：動態預告、現價／特價到幾點／史低、價格血條、價格紀錄階梯線、介紹；寫過專題或推坑的可以直接打開，標想玩的可以「不想玩了」。
+  - 「史低」＝這個 App 開始追蹤以來的最低價，**追蹤滿 14 天才叫史低**，之前只說「追蹤 N 天內最低」（不是 Steam 有史以來的最低價；IsThereAnyDeal 要金鑰，沒接）。特價結束時間來自 Steam（`active_discounts`），專題和推坑的即時數據也會顯示「特價到幾點」。
+  - 獵物出現警報：打開 App 時，有沒看過的新特價就跳出黃黑警示膠帶的「獵物出現」（警報聲、最多列 3 款），一天最多一次；設定可以關。進過獵價頁就算看過（分頁上的數字歸零）。首頁也會貼一條「你的獵物 N 款正在特價」的警示膠帶。
+  - 還沒連結願望單（`wish.json` 的 `state` 不是 `ok`）時，顯示連結說明：Steam「遊戲詳細資料」設成公開，把個人檔案網址給 Claude。
+  - 每天清晨的寫稿排程推播會帶上「願望單特價快報」（新特價、史低、快結束、限免）；推坑排程平常不推願望單上的，大特價時一天最多推 1 款「特價入」。
+- **每週懶人包**（`#week`；首頁上方「WEEK 47 結算出爐」橫幅〔結算後 3 天內〕、首頁最下面的按鈕、粉專出稿台）：
+  - 結算畫面：WEEK 數字砸下＋噴漆＋重低音、結算條跑完「本週結算 COMPLETE」、解包／推坑／大事／下週上市數字跳上來、Claude 的開場、本週 MVP（旋轉光芒、皇冠、MVP 章蓋下）、Tier 表（S～D，方塊一個個拍上去，點了打開那款）和每一款的排名理由、本週大事、下週出擊、特價戰利品（現在正在特價的獵物和解包過的遊戲）、數據王（同上人數、好評率、24 小時暴漲，用現在的 Steam 即時資料）、歷屆週報。
+  - 還沒結算的這一週：上面顯示「WEEK N 進行中」面板（結算倒數到週日 21:00、這週到目前的解包和推坑）。
+  - 粉專出稿：`#fan/w:<id>`，貼文、三個標題、hashtag、口播稿、已發佈，圖卡有封面（WEEK 大字＋MVP 撕紙框）、Tier 表、下週出擊三種，可以一次下載或分享三張。
 - **庫存**：搜尋、結論／平台／類型／中文／課金／我的標記篩選、排序，最多 3 款加入比較（比較表）。
 - **粉專**：每篇的出稿台（稿子如果是前幾天寫的、又有「倒數幾天」這類會過期的字，上方會提醒先改）。塗鴉圖卡產生器（版型 A 黃牆撕紙框、B 黑牆大圖；4:5／1:1；重噴換濺漆與截圖；下載 PNG、手機可直接分享）、可編輯的貼文（只存這台裝置）、三個標題、hashtag、口播稿、素材標註、標記已發佈（分頁上的數字是還沒發的篇數）。
 
@@ -58,10 +73,12 @@
 - `data/index.json`：`{at, n, items:[{id,date,rank,kind,kind_label,zh,en,steam,platforms,genres,release,price_text,headline,stamp,label,money,zhs,tw,yt,yts,img,gal,updated}]}`（publish.py 產生；`img` 是 `media.images` 第一張，`gal` 是第 2～6 張，首頁海報輪播用；`yts` 是 `media.yt` 的 `[{id,t}]` 最多 4 支，短影音用）。
 - `data/features/<id>.json`：見 `WRITER_GUIDE.md` 第 3、4 節；範例 `rob-run`、`gta-vi`、`unhinged`。
 - `data/picks/<id>.json`：見 `PICKS_GUIDE.md` 第 3 節；範例 `balatro`、`octopath-traveler-2`、`xcom-2`。`data/picks.json`：`{at, n, items:[{id,date,rank,zh,en,steam,year,release,genres,platforms,stamp,label,pitch,zhs,hours,price_text,money,yt,yts,img,gal,updated}]}`（publish.py 產生）。
-- `data/candidates.json` 另有 `gems`（Steam 評價最高的遊戲）、`gems_sale`（評價最高又正在特價），推坑選題用；`picked: true` 是推過的。
+- `data/wish.json`：`{at, ok, state(ok/unset/badid/empty/stale), n, items:[{appid, added, pri, name, img, cap, free, p:[現價,原價,折扣], low:[最低價,那天,開始追蹤日], sale:{from,end}, rv:[%,則數,標籤], rel, zh, tags, dev, short, deck, micro?}]}`（live.py 產生；價格單位「分」）。`sale.from` 是我們看到它開始特價的時間（第一次抓或剛加進願望單時不知道，是 null）。
+- `data/weekly/<YYYY-Www>.json`：見 `WEEKLY_GUIDE.md` 第 4 節。`data/weekly.json`：`{at, n, items:[{id, from, to, date, title, mvp, mvp_name, top, updated}]}`（publish.py 產生；`top` 是 Tier 表前 4 名，首頁橫幅用）。
+- `data/candidates.json` 另有 `gems`（Steam 評價最高的遊戲）、`gems_sale`（評價最高又正在特價），推坑選題用；`picked: true` 是推過的；每份清單的 `mine: true` 是在痞子葳的 Steam 願望單上。
 - `data/live.json`：`{at, apps:{appid:{name,free,price{final,orig,disc,fmt,low},rv{n,pct,label,recent},rv_tc,players{n,at,peak,d24},rel,langs{tc,sc},tags,img{hero,header,wide,box},shots[],micro,trailers[{hls,mp4,poster,name}],…}}}`；價格單位是「分」（NT$ × 100）。
 - `data/hist/<appid>.json`：`pl` 同上 `[分鐘時間戳, 人數]`、`pr` 價格（有變才記）、`rv`／`rt` 全球與繁中評價 `[時間, 好評數, 總數]`（一天一筆）。
-- localStorage 前綴 `unpacked.v1.`：`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`。
+- localStorage 前綴 `unpacked.v1.`：`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
 
 ## 組建與測試
 
@@ -70,7 +87,7 @@ python3 _build/apps/unpacked/build.py                    # → apps/unpacked/（
 python3 _build/apps/unpacked/build.py --icons            # 重畫圖示
 python3 _build/apps/unpacked/tools/publish.py            # 專題檢查＋重建目錄
 # 本機看畫面（雲端沙盒連不到 Steam、YouTube、github.io：外部圖片用假圖代替）
-python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data
+python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data --hunt   # --hunt：假願望單＋假週報；再加 --noweek 測「本週進行中」
 python3 _build/apps/unpacked/tools/shoot.py /tmp/shots /tmp/unp phone '[{"wait":4800},{"shot":"home"},{"go":"#f/rob-run","ms":2500},{"shot":"feat"}]'
 ```
 `shoot.py` 的畫面：`phone`（390×844 @3）、`se`（375×667，小手機）、`android`（412×915）、`land`（844×390 @3）、`pad`（820×1180）、`desk`（1440×900）；步驟支援 wait、go、click、tap（觸控點擊）、key（按鍵）、eval、print（把運算結果印出來，用來驗證狀態）、scroll、shot、savecanvas（把圖卡存成 PNG）。注意 Playwright 的 eval 算「使用者點擊」，要測「有聲自動播放被擋」得自己把 `HTMLMediaElement.prototype.play` 換成會擋的版本。
