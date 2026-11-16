@@ -11,7 +11,7 @@ out, root = sys.argv[1], sys.argv[2]
 vp = sys.argv[3] if len(sys.argv) > 3 else 'phone'
 steps = json.loads(sys.argv[4]) if len(sys.argv) > 4 else [{'wait': 1500}, {'shot': 'home'}]
 os.makedirs(out, exist_ok=True)
-VP = {'phone': (390, 844, 3), 'land': (844, 390, 3), 'desk': (1440, 900, 1)}[vp]
+VP = {'phone': (390, 844, 3), 'phone1': (390, 844, 1), 'land': (844, 390, 3), 'desk': (1440, 900, 1)}[vp]   # phone1：整頁長截圖用
 
 
 class H(http.server.SimpleHTTPRequestHandler):
@@ -38,6 +38,7 @@ def fake_img(seed, w=1280, h=720):
     b = io.BytesIO(); im.save(b, 'JPEG', quality=70); return b.getvalue()
 
 
+TESTVID = open(os.environ.get('UNP_TESTVID', '/tmp/unp_test.webm'), 'rb').read() if os.path.exists(os.environ.get('UNP_TESTVID', '/tmp/unp_test.webm')) else b''
 errors = []
 with sync_playwright() as p:
     b = p.chromium.launch()
@@ -48,9 +49,11 @@ with sync_playwright() as p:
 
     def handle(route):
         u = route.request.url
-        if 'i.ytimg.com' in u or 'steamstatic.com' in u or 'images.weserv.nl' in u:
-            if u.endswith('.m3u8'):
-                return route.abort()
+        if '.webm' in u:      # 動態預告：本機用一段測試影片代替
+            return route.fulfill(status=200, content_type='video/webm', body=TESTVID, headers={'Access-Control-Allow-Origin': '*'})
+        if '.mp4' in u or '.m3u8' in u:
+            return route.fulfill(status=404, body=b'')
+        if any(h in u for h in ('i.ytimg.com', 'steamstatic.com', 'images.weserv.nl', 'gmedia.playstation.com', 'nflximg.net')):
             return route.fulfill(status=200, content_type='image/jpeg', body=fake_img(u), headers={'Access-Control-Allow-Origin': '*'})
         if '127.0.0.1' in u:
             return route.continue_()

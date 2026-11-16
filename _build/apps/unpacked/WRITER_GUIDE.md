@@ -11,7 +11,7 @@
 1. 用 add_repo 加 `PZWei0105/PZ-Games`（要 push 權限），照工具說明 clone 到 `/home/claude/pz-games`，再用 register_repo_root 登記。
 2. 讀這幾個檔（全部在 `apps/unpacked/data/`）：
    - `index.json`：已經寫過哪些（不要重複）。
-   - `candidates.json`：GitHub Actions 每 3 小時從 Steam 抓的選題候選——同上排行（`most_played`，`last_week` 是上週名次，名次暴衝的要特別看）、熱銷、新品、即將推出、願望清單熱門、特價。`covered: true` 是寫過的。
+   - `candidates.json`：GitHub Actions 每小時從 Steam 抓的選題候選——同上排行（`most_played`，`last_week` 是上週名次，名次暴衝的要特別看）、熱銷、新品、即將推出、願望清單熱門、特價。`covered: true` 是寫過的。
    - 範例專題：`features/rob-run.json`（Steam 搶先體驗）、`features/gta-vi.json`（主機即將上市）、`features/unhinged.json`（非 Steam 平台獨佔）。**照這三篇的深度寫，不能比它們薄。**
 3. 不要動 `live.json`、`hist/`、`candidates.json`（那是 Actions 的）。
 
@@ -65,7 +65,8 @@
 | `zh`、`tw` | 中文與台灣能不能玩（`tw.ok`：true／false／"partial"） |
 | `rig` | 「你的 SCAR 18」：拿他的筆電對照官方需求（見下） |
 | `time` | 遊玩時間或一輪多久 |
-| `media.yt` | 官方預告 YouTube id（11 碼），先找官方或發行商頻道，找不到才用 IGN／GameSpot 轉載；用 WebSearch 限定 youtube.com 確認 id |
+| `media.yt` | 官方預告 YouTube id（11 碼），先找官方或發行商頻道，找不到才用 IGN／GameSpot 轉載；用 WebSearch 限定 youtube.com 確認 id。可以放 2～3 支（上市預告、玩法預告…），App 會從每支預告各抓 3 張畫面進相簿 |
+| `media.images` | **非 Steam 遊戲必放** 4～8 張官方截圖或主視覺（PlayStation／Xbox／Nintendo 商店頁、官方網站、Netflix Tudum、發行商新聞稿裡能直接連結的 https 圖片；用 WebFetch 打開官方頁、請它列出圖片網址）。第一張當主視覺，最好是橫的主視覺圖。Steam 遊戲可以不放（會自動用 Steam 截圖和動態預告） |
 | `watch` | 接下來要盯的 2～3 件事（追蹤牆會用） |
 | `sections.gameplay` | `loop` 4～6 步核心循環；`body` 3～4 段，講「你在遊戲裡實際會做什麼」 |
 | `sections.hour` | 「你的第一個小時」3～5 步，實用（設定、選什麼、先做什麼、要避開什麼）。沒玩過就寫「照官方說明和玩家整理」 |

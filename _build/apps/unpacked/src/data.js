@@ -1,4 +1,4 @@
-/* 解包 — 資料：目錄、專題、Steam 即時資料（GitHub Actions 每 3 小時更新） */
+/* 解包 — 資料：目錄、專題、Steam 即時資料（GitHub Actions 每小時更新） */
 const DATA = (() => {
   const q = new URLSearchParams(location.search);
   const local = !/github\.io$/.test(location.hostname);
@@ -40,12 +40,39 @@ function headerOf(it, lv) {
   const yt = it.yt;
   return (lv && lv.img && (lv.img.header || lv.img.wide || lv.img.hero)) || it.img || (yt ? ytThumb(yt, 'hqdefault') : '');
 }
+/* YouTube 自動截的預告畫面（影片 1/4、1/2、3/4 處），每支預告多 3 張圖 */
+const ytFrame = (id, n) => `https://i.ytimg.com/vi/${id}/maxres${n}.jpg`;
+const ytLow = (s) => { const m = /\/maxres(default|\d)\.jpg/.exec(s || ''); return m ? s.replace(m[0], `/${m[1] === 'default' ? 'hqdefault' : 'hq' + m[1]}.jpg`) : ''; };
 /* 圖片壞掉時：maxres → hq；再壞就換成塗鴉底 */
 function imgFail(img) {
-  const s = img.getAttribute('src') || '';
-  if (s.includes('/maxresdefault.jpg')) { img.src = s.replace('maxresdefault', 'hqdefault'); return; }
+  const low = ytLow(img.getAttribute('src'));
+  if (low) { img.src = low; return; }
   img.style.display = 'none';
   const ph = img.parentElement && img.parentElement.querySelector('.ph'); if (ph) ph.style.display = 'grid';
+}
+/* 相簿：Steam 截圖 → 專題附的官方圖 → 每支預告的畫面 */
+function galleryOf(f, lv) {
+  const out = [];
+  for (const s of (lv && lv.shots) || []) out.push(s);
+  for (const s of (f.media && f.media.images) || []) out.push(s);
+  for (const y of (f.media && f.media.yt) || []) for (const n of [1, 2, 3]) out.push(ytFrame(y.id, n));
+  return [...new Set(out)].slice(0, 18);
+}
+/* 動態主視覺輪播用的圖：主視覺打頭，再來是截圖和預告封面 */
+function heroList(f, lv, hero) {
+  const out = [hero];
+  for (const s of (lv && lv.shots) || []) out.push(s);
+  for (const s of (f.media && f.media.images) || []) out.push(s);
+  for (const y of (f.media && f.media.yt) || []) { out.push(ytThumb(y.id)); out.push(ytFrame(y.id, 2)); }
+  return [...new Set(out.filter(Boolean))].slice(0, 12);
+}
+/* 首頁海報輪播用（只有目錄資料：Steam 截圖、官方圖、第一支預告） */
+function posterList(it, lv, first) {
+  const out = [first];
+  for (const s of ((lv && lv.shots) || []).slice(0, 5)) out.push(s);
+  for (const s of it.gal || []) out.push(s);
+  if (it.yt) { out.push(ytThumb(it.yt)); for (const n of [1, 2, 3]) out.push(ytFrame(it.yt, n)); }
+  return [...new Set(out.filter(Boolean))].slice(0, 8);
 }
 /* YouTube 不存在的影片會回 120×90 的灰圖 */
 function ytCheck(img) { if (img.naturalWidth && img.naturalWidth <= 120) imgFail(img); }

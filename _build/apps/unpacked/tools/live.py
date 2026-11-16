@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""《解包 UNPACKED》資料管線：GitHub Actions 每 3 小時跑一次（也會在 track.json 變動時跑）。
+"""《解包 UNPACKED》資料管線：GitHub Actions 每小時跑一次（也會在 track.json 變動時跑）。
 
 做三件事，全部只用 Steam 的公開端點（不用金鑰）：
 1. 追蹤清單（data/track.json，由 publish.py 從專題自動產生）裡每一款 Steam 遊戲：
@@ -44,7 +44,7 @@ ADULT = {3, 4}
 
 MAX_PER_RUN = 160          # 一輪最多追幾款
 FRESH_DAYS = 120           # 這幾天內寫過的每輪都更新；更舊的一天更新一次
-HIST_PL = 480              # 同上紀錄（每 3 小時一筆 ≈ 60 天）
+HIST_PL = 720              # 同上紀錄（每小時一筆 ≈ 30 天）
 HIST_PR = 240
 HIST_RV = 240
 UA = 'Mozilla/5.0 (UNPACKED data pipeline; +https://pzwei0105.github.io/PZ-Games/apps/unpacked/)'

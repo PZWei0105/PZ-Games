@@ -10,15 +10,22 @@
     "steam": null,
     "dev": "Rockstar North",
     "pub": "Rockstar Games",
-    "platforms": ["PS5（PS5 Pro 強化）", "Xbox Series X|S"],
-    "genres": ["開放世界", "動作冒險", "犯罪"],
+    "platforms": [
+      "PS5（PS5 Pro 強化）",
+      "Xbox Series X|S"
+    ],
+    "genres": [
+      "開放世界",
+      "動作冒險",
+      "犯罪"
+    ],
     "release": "2026-11-19",
-    "release_text": "2026/11/19（四）上市，11/12 起預載",
+    "release_text": "2026/11/19（四）上市，數位版 11/10 起預載",
     "price_text": "標準版 NT$2,320／終極版 NT$2,900",
     "site": "https://www.rockstargames.com/VI"
   },
   "headline": "睽違 13 年的 GTA 正傳倒數 3 天：價格、版本、中文、容量、PC 版一次查清楚",
-  "hook": "預載條從 11 月 12 日就開始跑，等的只是 19 號解鎖那一刻。十三年了，罪惡市的霓虹又要亮起來——這一次，你要跟一對被逼到牆角的亡命鴛鴦，在雷歐奈達州找一條活路。",
+  "hook": "預載條從 11 月 10 日就開始跑，等的只是 19 號解鎖那一刻。十三年了，罪惡市的霓虹又要亮起來——這一次，你要跟一對被逼到牆角的亡命鴛鴦，在雷歐奈達州找一條活路。",
   "verdict": {
     "stamp": "推薦",
     "label": "有主機就衝",
@@ -31,25 +38,132 @@
     "against": [
       "只用 PC 玩（PC 版尚未公布）",
       "期待一上市就有新的 GTA Online（首發是單人體驗）",
-      "硬碟空間吃緊（傳出約 210GB）"
+      "硬碟空間吃緊（至少要 212GB）"
     ]
   },
   "facts": [
-    {"k": "上市日", "v": "2026/11/19（四）；原定 2025 年，兩度延期（先延到 2026/5/26，再延到 11/19）", "s": [0, 1]},
-    {"k": "平台", "v": "PS5（PS5 Pro 強化）、Xbox Series X|S；PC 版尚未公布", "s": [2, 7, 1]},
-    {"k": "台灣售價", "v": "標準版 NT$2,320、終極版 NT$2,900（PlayStation Store）", "s": [4, 5]},
-    {"k": "美國售價", "v": "標準版 US$79.99、終極版 US$99.99", "s": [6]},
-    {"k": "實體版", "v": "盒裝只附下載序號、沒有光碟；11/12 起上架", "s": [4, 6]},
-    {"k": "預載", "v": "11/12 起可預載（數位版與盒裝序號都可以），19 號才能玩", "s": [2, 5]},
-    {"k": "下載容量", "v": "約 210GB（PlayStation 容量帳號截圖流出，Rockstar 未正式公布）", "s": [7, 4], "p": true},
-    {"k": "中文", "v": "介面與字幕支援繁體中文、簡體中文；語音只有英文", "s": [3]},
-    {"k": "首發模式", "v": "單人體驗；新的 GTA Online 沒有跟著上市", "s": [8, 9]},
-    {"k": "特典", "v": "11/20 前購買送「罪惡市復古包」；PlayStation 版附 GTA+ 一個月", "s": [5, 2]},
-    {"k": "終極版多什麼", "v": "16 項故事模式內容：專屬載具與車庫、改裝店、經典車收藏任務、專屬武器、額外據點任務、主角服裝", "s": [5, 10]},
-    {"k": "故事", "v": "雷歐奈達州與罪惡市；雙主角傑森（Jason Duval）與露西亞（Lucia Caminos）", "s": [2, 19]},
-    {"k": "音樂", "v": "法國電子樂團 Justice 負責原創配樂；原聲專輯收錄 34 首原創歌曲，與遊戲同日上架", "s": [11, 18]},
-    {"k": "分級", "v": "ESRB M（17 歲以上）", "s": [10]},
-    {"k": "開發", "v": "Rockstar North 製作、Rockstar Games 發行", "s": [19]}
+    {
+      "k": "上市日",
+      "v": "2026/11/19（四）；原定 2025 年，兩度延期（先延到 2026/5/26，再延到 11/19）",
+      "s": [
+        0,
+        1
+      ]
+    },
+    {
+      "k": "平台",
+      "v": "PS5（PS5 Pro 強化）、Xbox Series X|S；PC 版尚未公布",
+      "s": [
+        2,
+        7,
+        1
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "標準版 NT$2,320、終極版 NT$2,900（PlayStation Store）",
+      "s": [
+        4,
+        5
+      ]
+    },
+    {
+      "k": "美國售價",
+      "v": "標準版 US$79.99、終極版 US$99.99",
+      "s": [
+        6
+      ]
+    },
+    {
+      "k": "實體版",
+      "v": "盒裝只附下載序號、沒有光碟；11/12 起上架",
+      "s": [
+        4,
+        6
+      ]
+    },
+    {
+      "k": "預載",
+      "v": "數位版 11/10 起預載（PS5 依各地區午夜開放、Xbox 是台灣早上 8 點）；盒裝序號 11/12 上架，兌換後也能先載；19 號才能玩",
+      "s": [
+        2,
+        3,
+        4,
+        22
+      ]
+    },
+    {
+      "k": "下載容量",
+      "v": "至少 212GB（Rockstar 11/3 公布，PlayStation 官方同樣標示）",
+      "s": [
+        21,
+        2,
+        4
+      ]
+    },
+    {
+      "k": "中文",
+      "v": "介面與字幕支援繁體中文、簡體中文；語音只有英文",
+      "s": [
+        3
+      ]
+    },
+    {
+      "k": "首發模式",
+      "v": "單人體驗；新的 GTA Online 沒有跟著上市",
+      "s": [
+        8,
+        9
+      ]
+    },
+    {
+      "k": "特典",
+      "v": "11/20 前購買送「罪惡市復古包」；數位版（PS、Xbox 都算）11/20 前購買另送 GTA+ 一個月，盒裝沒有",
+      "s": [
+        5,
+        22,
+        23
+      ]
+    },
+    {
+      "k": "終極版多什麼",
+      "v": "16 項故事模式內容：專屬載具與車庫、改裝店、經典車收藏任務、專屬武器、額外據點任務、主角服裝",
+      "s": [
+        5,
+        10
+      ]
+    },
+    {
+      "k": "故事",
+      "v": "雷歐奈達州與罪惡市；雙主角傑森（Jason Duval）與露西亞（Lucia Caminos）",
+      "s": [
+        2,
+        19
+      ]
+    },
+    {
+      "k": "音樂",
+      "v": "法國電子樂團 Justice 負責原創配樂；原聲專輯收錄 34 首原創歌曲，與遊戲同日上架",
+      "s": [
+        11,
+        18
+      ]
+    },
+    {
+      "k": "分級",
+      "v": "ESRB M（17 歲以上）",
+      "s": [
+        2,
+        20
+      ]
+    },
+    {
+      "k": "開發",
+      "v": "Rockstar North 製作、Rockstar Games 發行",
+      "s": [
+        19
+      ]
+    }
   ],
   "money": {
     "level": 1,
@@ -57,21 +171,59 @@
     "notes": [
       "首發是單人遊戲；PlayStation 商店頁仍標示「可選擇購買遊戲內項目」，內容還沒公布（多半跟日後的線上模式有關）。",
       "終極版多 NT$580 換 16 項故事模式內容（車、武器、據點任務、服裝），不影響主線；之後也能補差價升級。",
-      "GTA+ 是 Rockstar 現有的訂閱服務，PlayStation Store 預購送一個月。"
+      "GTA+ 是 Rockstar 現有的訂閱服務；數位版（PS、Xbox 都算）11/20 前買送一個月，盒裝版沒有。"
     ],
-    "flags": ["買斷 NT$2,320 起", "語音只有英文"]
+    "flags": [
+      "買斷 NT$2,320 起",
+      "語音只有英文"
+    ]
   },
-  "zh": {"ui": true, "sub": true, "voice": false, "note": "介面與字幕有繁體中文，語音只有英文。"},
-  "tw": {"ok": true, "note": "台灣 PlayStation Store 與 Xbox 商店同步上市，有繁中字幕。"},
-  "rig": {"verdict": "首發用不上", "note": "GTA VI 首發只有 PS5 和 Xbox Series X|S，PC 版 Rockstar 還沒公布（有媒體引述匿名消息說 2027 年第一季，目前只是傳聞）。照 GTA V、碧血狂殺 2 的前例，PC 版通常晚一年以上——你的 RTX 5090 筆電得先等等；要首發玩，只能靠主機接你的 4K 大電視。"},
-  "time": {"text": "未公布", "note": "Rockstar 沒公布主線長度，評測解禁後補上。"},
+  "zh": {
+    "ui": true,
+    "sub": true,
+    "voice": false,
+    "note": "介面與字幕有繁體中文，語音只有英文。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "台灣 PlayStation Store 與 Xbox 商店同步上市，有繁中字幕。"
+  },
+  "rig": {
+    "verdict": "首發用不上",
+    "note": "GTA VI 首發只有 PS5 和 Xbox Series X|S，PC 版 Rockstar 還沒公布（有媒體引述匿名消息說 2027 年第一季，目前只是傳聞）。照 GTA V、碧血狂殺 2 的前例，PC 版通常晚一年以上——你的 RTX 5090 筆電得先等等；要首發玩，只能靠主機接你的 4K 大電視。"
+  },
+  "time": {
+    "text": "約 80 小時",
+    "note": "Rockstar North 的 Rob Nelson 說，他自己玩主線加上劇情支線大約 80 小時；這是開發者本人的時數，正式評測解禁後再看媒體怎麼說。"
+  },
   "media": {
     "yt": [
-      {"id": "oFwB6gZLRmc", "title": "上市預告"},
-      {"id": "VQRLujxTm3c", "title": "預告 2"},
-      {"id": "QdBZY2fkU-0", "title": "預告 1"}
+      {
+        "id": "oFwB6gZLRmc",
+        "title": "上市預告"
+      },
+      {
+        "id": "VQRLujxTm3c",
+        "title": "預告 2"
+      },
+      {
+        "id": "QdBZY2fkU-0",
+        "title": "預告 1"
+      }
     ],
-    "images": []
+    "images": [
+      "https://gmedia.playstation.com/is/image/SIEPDC/Grand-Theft-Auto-VI-pre-order-hero-desktop-03-19jun25$en?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-10-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-08-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-09-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-07-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-02-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-03-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-05-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-06-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-04-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-01-en-06may25?$1600px$"
+    ]
   },
   "watch": [
     "評測解禁時間與媒體分數",
@@ -80,7 +232,13 @@
   ],
   "sections": {
     "gameplay": {
-      "loop": ["接案子", "踩點規劃", "搶劫或偷車", "甩掉通緝", "回據點打理生活"],
+      "loop": [
+        "接案子",
+        "踩點規劃",
+        "搶劫或偷車",
+        "甩掉通緝",
+        "回據點打理生活"
+      ],
       "body": [
         "8 月 27 日在 Netflix 首播的 26 分鐘「An Extended Look」第一次完整秀出實機：過場和操作幾乎無縫接在一起，傑森和露西亞替各式各樣的客戶接案子——搶銀行和商店、當保鑣、送貨，還有一份案子只能其中一人去接。",
         "槍戰保留系列的掩體射擊，加入慢動作與敵人弱點、近身格鬥，結尾還有 QTE 掙脫；場景可以破壞。通緝等級回到六顆星（GTA V 是五顆），根據 IGN 的試玩，目擊者、外型描述、面罩、車輛都會影響警方怎麼找你。",
@@ -89,27 +247,39 @@
       ]
     },
     "hour": [
-      "這款還沒上市，以下是 19 號開玩前你可以先做的事：確認主機有約 210GB 空間（Rockstar 沒公布，先抓寬一點），11/12 起就能預載。",
+      "這款還沒上市，以下是 19 號開玩前你可以先做的事：主機至少要空出 212GB（官方公布），數位版 11/10 起就能預載，盒裝序號兌換後也能先載。",
       "預購特典「罪惡市復古包」11/20 前買都有，不必急著在評測前下單。",
       "語言設定記得改成繁體中文字幕；語音只有英文。",
       "首發沒有新的線上模式，前幾天可以專心跑主線，不用擔心被線上玩家拉開差距。"
     ],
     "compare": [
-      {"name": "俠盜獵車手 V", "same": "罪惡市以外的熟悉公式：搶劫、追車、諷刺美國文化", "diff": "V 是三主角切換；VI 集中在一對情侶，關係系統更深，通緝回到六顆星"},
-      {"name": "碧血狂殺 2", "same": "Rockstar 招牌的生活細節和慢節奏沉浸感", "diff": "碧血狂殺 2 是西部開荒；VI 是現代都會，節奏與娛樂性更接近 GTA"},
-      {"name": "ROB RUN", "same": "都在賣「搶劫、甩警察」的犯罪幻想", "diff": "ROB RUN 免費、PC、警察全是真人；GTA VI 是單人、主機獨佔、劇情驅動"}
+      {
+        "name": "俠盜獵車手 V",
+        "same": "罪惡市以外的熟悉公式：搶劫、追車、諷刺美國文化",
+        "diff": "V 是三主角切換；VI 集中在一對情侶，關係系統更深，通緝回到六顆星"
+      },
+      {
+        "name": "碧血狂殺 2",
+        "same": "Rockstar 招牌的生活細節和慢節奏沉浸感",
+        "diff": "碧血狂殺 2 是西部開荒；VI 是現代都會，節奏與娛樂性更接近 GTA"
+      },
+      {
+        "name": "ROB RUN",
+        "same": "都在賣「搶劫、甩警察」的犯罪幻想",
+        "diff": "ROB RUN 免費、PC、警察全是真人；GTA VI 是單人、主機獨佔、劇情驅動"
+      }
     ],
     "story": {
       "safe": [
-        "官方簡介：傑森和露西亞一直都知道自己拿到的是一手爛牌。一次看似簡單的行動出了差錯，兩人被捲進橫跨整個雷歐奈達州的犯罪陰謀，只能比以往更依賴彼此才活得下去。",
-        "雷歐奈達州以佛羅里達為原型，核心城市是系列經典的罪惡市（Vice City）。露西亞是系列第一位女性主角。"
+        "故事從一單搞砸的行動開始：傑森和露西亞本來就是被命運看扁的那種人，一次以為穩賺的案子出了錯，兩人被拖進牽連整個雷歐奈達州的犯罪網，能靠的只剩彼此。",
+        "雷歐奈達州以佛羅里達為原型，核心城市是系列經典的罪惡市（Vice City）。露西亞是系列進入 3D 時代以來第一位女主角（1997 年的初代就有可選的女性角色）。"
       ],
       "spoiler": []
     },
     "studio": [
       "距離 2013 年的 GTA V 已經 13 年。V 的銷量超過 2 億套，所以 VI 從公布那天起就是整個產業在等的遊戲。",
       "2023 年 12 月第一支預告原訂 2025 年；2025 年 5 月延到 2026/5/26，同月釋出預告 2；2025 年 11 月再延到 2026/11/19。Rockstar 兩次都說是為了打磨品質。",
-      "2026 年 6 月 25 日開放預購，8 月 27 日在 Netflix 首播 26 分鐘實機，10 月 15 日釋出由 Justice 配樂的上市預告，片尾再次確認 11/19。",
+      "2026 年 6 月 25 日全球開放預購（台灣 9 月中才開放），8 月 27 日在 Netflix 首播 26 分鐘實機，10 月 15 日釋出由 Justice 配樂的上市預告，片尾再次確認 11/19。",
       "Sony 拿到行銷合作，主打「在 PS5 上玩最好」：DualSense 震動、自適應扳機、手把喇叭都有支援，PS5 Pro 另有強化。"
     ],
     "voices": {
@@ -129,25 +299,68 @@
       ]
     },
     "timeline": [
-      {"d": "2023-12-05", "t": "預告 1 公開，原訂 2025 年"},
-      {"d": "2025-05-02", "t": "第一次延期，定在 2026/5/26"},
-      {"d": "2025-05-06", "t": "預告 2 公開"},
-      {"d": "2025-11-06", "t": "第二次延期，改為 2026/11/19"},
-      {"d": "2026-06-25", "t": "開放預購，公布標準版／終極版"},
-      {"d": "2026-08-27", "t": "26 分鐘實機「An Extended Look」在 Netflix 首播"},
-      {"d": "2026-10-15", "t": "上市預告公開，Justice 配樂"},
-      {"d": "2026-11-12", "t": "開放預載、盒裝序號上架"},
-      {"d": "2026-11-19", "t": "正式上市（PS5、Xbox Series X|S）"}
+      {
+        "d": "2023-12-05",
+        "t": "預告 1 公開，原訂 2025 年"
+      },
+      {
+        "d": "2025-05-02",
+        "t": "第一次延期，定在 2026/5/26"
+      },
+      {
+        "d": "2025-05-06",
+        "t": "預告 2 公開"
+      },
+      {
+        "d": "2025-11-06",
+        "t": "第二次延期，改為 2026/11/19"
+      },
+      {
+        "d": "2026-06-25",
+        "t": "全球開放預購，公布標準版／終極版（台灣 9 月中才開放）"
+      },
+      {
+        "d": "2026-08-27",
+        "t": "26 分鐘實機「An Extended Look」在 Netflix 首播"
+      },
+      {
+        "d": "2026-10-15",
+        "t": "上市預告公開，Justice 配樂"
+      },
+      {
+        "d": "2026-11-10",
+        "t": "數位版開放預載"
+      },
+      {
+        "d": "2026-11-12",
+        "t": "盒裝序號上架"
+      },
+      {
+        "d": "2026-11-19",
+        "t": "正式上市（PS5、Xbox Series X|S）"
+      }
     ],
     "discuss": [
-      {"q": "一個沒有線上模式的 GTA 首發，是 Rockstar 的自信還是延誤？", "why": "GTA V 的長壽很大一部分來自 GTA Online。VI 先推單人，線上模式什麼時候來、會長什麼樣子，決定它能不能再紅十年。"},
-      {"q": "80 美元的定價，會不會讓之後的 3A 跟著漲？", "why": "大家擔心的 100 美元沒有成真，但 80 美元已經比主流 70 美元貴一截。龍頭定價，往往就是產業的新天花板。"},
-      {"q": "盒裝只放序號，你還會買實體版嗎？", "why": "沒有光碟就不能借、不能賣二手。這對收藏派和二手市場都是大事。"},
-      {"q": "PC 版要等多久？", "why": "GTA V、碧血狂殺 2 的 PC 版都晚了一年以上。等 PC 版能玩到更好的畫面，但也會被劇透一整年。"}
+      {
+        "q": "一個沒有線上模式的 GTA 首發，是 Rockstar 的自信還是延誤？",
+        "why": "GTA V 的長壽很大一部分來自 GTA Online。VI 先推單人，線上模式什麼時候來、會長什麼樣子，決定它能不能再紅十年。"
+      },
+      {
+        "q": "80 美元的定價，會不會讓之後的 3A 跟著漲？",
+        "why": "大家擔心的 100 美元沒有成真，但 80 美元已經比主流 70 美元貴一截。龍頭定價，往往就是產業的新天花板。"
+      },
+      {
+        "q": "盒裝只放序號，你還會買實體版嗎？",
+        "why": "沒有光碟就不能借、不能賣二手。這對收藏派和二手市場都是大事。"
+      },
+      {
+        "q": "PC 版要等多久？",
+        "why": "GTA V、碧血狂殺 2 的 PC 版都晚了一年以上。等 PC 版能玩到更好的畫面，但也會被劇透一整年。"
+      }
     ]
   },
   "fanpage": {
-    "post": "預載條從 11/12 就開始跑了，等的只是 19 號那一刻。距離上一代，整整 13 年。\n\n《俠盜獵車手 VI》11/19 登上 PS5 和 Xbox Series X|S：傑森和露西亞這對亡命鴛鴦，一次失手被捲進橫跨雷歐奈達州的犯罪陰謀，舞台回到罪惡市。8 月那段 26 分鐘實機已經看得到：通緝回到六顆星、兩人關係會被你的選擇影響、連 NPC 的動作都有幾十萬種。\n\n台灣 PS Store 標準版 NT$2,320、終極版 NT$2,900，有繁中字幕、語音是英文。首發是單人遊戲，新的 GTA Online 沒有一起來；盒裝版只附下載序號、沒有光碟。PC 版還沒公布，電腦玩家只能再等。\n\n你會首發衝，還是等評測、等 PC 版？",
+    "post": "預載條從 11/10 就開始跑了，等的只是 19 號那一刻。距離上一代，整整 13 年。\n\n《俠盜獵車手 VI》11/19 登上 PS5 和 Xbox Series X|S：傑森和露西亞這對亡命鴛鴦，一次失手被捲進橫跨雷歐奈達州的犯罪陰謀，舞台回到罪惡市。從 8 月那段 26 分鐘實機和媒體專訪看得出來：通緝回到六顆星、兩人關係會被你的選擇影響，NPC 動畫多達 60 萬種。\n\n台灣 PS Store 標準版 NT$2,320、終極版 NT$2,900，有繁中字幕、語音是英文，主機至少要留 212GB。首發是單人遊戲，新的 GTA Online 沒有一起來；盒裝版只附下載序號、沒有光碟。PC 版還沒公布，電腦玩家只能再等。\n\n你會首發衝，還是等評測、等 PC 版？",
     "titles": [
       "倒數 3 天！GTA VI 價格、中文、容量、PC 版一次看",
       "等了 13 年：GTA VI 11/19 上市前你該知道的 7 件事",
@@ -157,44 +370,172 @@
       "kicker": "倒數 3 天｜11/19 上市",
       "title": "罪惡市回來了\nGTA VI 上市懶人包",
       "sub": "《俠盜獵車手 VI》PS5／Xbox Series X|S",
-      "tags": ["繁中字幕", "NT$2,320 起", "PC 版未公布"],
+      "tags": [
+        "繁中字幕",
+        "NT$2,320 起",
+        "PC 版未公布"
+      ],
       "points": [
-        {"h": "11/12 起預載", "t": "數位版和盒裝序號都能先載，19 號解鎖。"},
-        {"h": "盒裝沒光碟", "t": "實體版只附下載序號，容量傳出約 210GB。"},
-        {"h": "首發是單人", "t": "新的 GTA Online 沒有一起上市。"}
+        {
+          "h": "11/10 起預載",
+          "t": "數位版先載，盒裝序號 11/12 上架。"
+        },
+        {
+          "h": "盒裝沒光碟",
+          "t": "只附下載序號；容量至少 212GB。"
+        },
+        {
+          "h": "首發是單人",
+          "t": "新的 GTA Online 沒有一起上市。"
+        }
       ]
     },
-    "tags": ["#GTA6", "#俠盜獵車手6", "#GTAVI", "#罪惡市", "#PS5", "#遊戲狂想曲"],
-    "script": "等了十三年，GTA VI 這個禮拜四，11 月 19 號就要上市了。\n平台是 PS5 跟 Xbox Series X|S，PC 版目前還沒公布，電腦玩家只能再等。台灣 PS Store 標準版 2,320，終極版 2,900，多出來的 580 塊換的是車、武器、據點任務和服裝這類故事模式內容，不影響主線。\n有繁中字幕，語音只有英文。11/12 已經可以預載，容量傳出大概 210GB，Rockstar 沒正式公布，硬碟先清一清。要注意兩件事：盒裝版裡面沒有光碟，只有下載序號；而且首發是單人遊戲，新的 GTA Online 沒有一起來。\n預購特典 11/20 前買都有，不急的話，等評測出來再下手也不吃虧。你會首發衝，還是等 PC 版？留言告訴我。",
-    "credit": "影片來源：Rockstar Games 官方預告"
+    "tags": [
+      "#GTA6",
+      "#俠盜獵車手6",
+      "#GTAVI",
+      "#罪惡市",
+      "#PS5",
+      "#遊戲狂想曲"
+    ],
+    "script": "等了十三年，GTA VI 這個禮拜四，11 月 19 號就要上市了。\n平台是 PS5 跟 Xbox Series X|S，PC 版目前還沒公布，電腦玩家只能再等。台灣 PS Store 標準版 2,320，終極版 2,900，多出來的 580 塊換的是車、武器、據點任務和服裝這類故事模式內容，不影響主線。\n有繁中字幕，語音只有英文。數位版 11/10 就開放預載，容量至少 212GB，硬碟先清一清。要注意兩件事：盒裝版裡面沒有光碟，只有下載序號；而且首發是單人遊戲，新的 GTA Online 沒有一起來。\n預購特典 11/20 前買都有，不急的話，等評測出來再下手也不吃虧。你會首發衝，還是等 PC 版？留言告訴我。",
+    "credit": "圖片／影片：PlayStation 官方頁、Rockstar 官方預告"
   },
   "sources": [
-    {"t": "TechRadar：GTA VI 再延期到 2026/11/19", "u": "https://www.techradar.com/gaming/grand-theft-auto-6-delayed-again-but-itll-still-ship-in-2026", "d": "2025-11-06"},
-    {"t": "GTABoom：GTA VI 上市日與延期史", "u": "https://www.gtaboom.com/gta-6-release-date-and-delay-history-9f6b", "d": "2026-10"},
-    {"t": "PlayStation 官方：Grand Theft Auto VI 遊戲頁", "u": "https://www.playstation.com/games/grand-theft-auto-vi", "d": ""},
-    {"t": "PlayStation 支援：GTA VI 支援語言", "u": "https://www.playstation.com/en-th/support/games/gta-vi-support/", "d": ""},
-    {"t": "NOWnews：GTA 6 台灣售價、實體版沒光碟、容量", "u": "https://www.nownews.com/news/6891025", "d": "2026-11"},
-    {"t": "玩具人：GTA 6 台灣預購、版本內容與預載日", "u": "https://www.toy-people.com/?p=114506", "d": "2026-06"},
-    {"t": "GamesIndustry（gamedev.net 轉載）：US$79.99、盒裝只有序號", "u": "https://gamedev.net/news/4075/", "d": "2026-06"},
-    {"t": "GameBrief：GTA VI 時程、PS5 Pro 強化、容量未證實", "u": "https://www.gamebrief.net/blog/gta-6-release-date-price-pre-order-pc-2026", "d": "2026-10-28"},
-    {"t": "TweakTown：Sony 稱 GTA VI 在 PS5 玩最好、單人體驗", "u": "https://www.tweaktown.com/news/112345/gta-6-plays-best-on-ps5-sony-confirms-ps5-pro-enhancements/", "d": "2026-06"},
-    {"t": "FRVR：GTA VI 定價 80 美元、首發只有單人", "u": "https://frvr.com/blog/gta-6-costs-80-launches-single-player-only-and-has-no-disc-version-on-release/", "d": "2026-06-24"},
-    {"t": "Tech Insider：GTA VI 版本比較、ESRB 分級", "u": "https://tech-insider.org/?p=42755", "d": "2026-10"},
-    {"t": "RockstarINTEL：上市預告與 Justice 配樂", "u": "https://rockstarintel.com/?p=43765", "d": "2026-10-15"},
-    {"t": "The Games Wiki：GTA VI 預告與 Extended Look 紀錄", "u": "https://thegameswiki.com/gta6/wiki/trailers/history/f384c51f-8991-4dda-9bb2-76323f00a538", "d": "2026-10-19"},
-    {"t": "Red Bull：Extended Look 全部重點", "u": "https://www.redbull.com/us-en/gta-6-extended-look-everything-revealed", "d": "2026-08"},
-    {"t": "KeenGamer：Extended Look 玩法整理（六星通緝）", "u": "https://www.keengamer.com/articles/news/gta-6-extended-look-recap-all-gameplay-details/", "d": "2026-08"},
-    {"t": "TechRadar：Extended Look 的 16 個新細節", "u": "https://techradar.com/gaming/ps5/16-new-gta-6-details-we-learned-from-the-big-extended-look-gameplay-video-captured-in-game-on-a-ps5", "d": "2026-08"},
-    {"t": "KOCPC：Extended Look 與媒體專訪 18 個重點", "u": "https://en.kocpc.com.tw/?p=24928", "d": "2026-08-29"},
-    {"t": "Consequence：Extended Look 五大重點（關係系統）", "u": "https://concerts.consequence.net/articles/gta-6-extended-look-netflix-breakdown-details", "d": "2026-08-27"},
-    {"t": "NOWnews：GTA 6 原聲專輯 34 首原創曲", "u": "https://www.nownews.com/news/6876311", "d": "2026"},
-    {"t": "NOWnews：GTA 6 開放預購、故事與上市時間", "u": "https://www.nownews.com/news/6850143", "d": "2026-06-25"},
-    {"t": "Tech Insider：GTA VI 上市日確認（PC 版傳聞）", "u": "https://tech-insider.org/gta-6-release-date-november-19-2026-confirmed/", "d": "2026-10"}
+    {
+      "t": "TechRadar：GTA VI 再延期到 2026/11/19",
+      "u": "https://www.techradar.com/gaming/grand-theft-auto-6-delayed-again-but-itll-still-ship-in-2026",
+      "d": "2025-11-06"
+    },
+    {
+      "t": "GTABoom：GTA VI 上市日與延期史",
+      "u": "https://www.gtaboom.com/gta-6-release-date-and-delay-history-9f6b",
+      "d": "2026-10"
+    },
+    {
+      "t": "PlayStation 官方：Grand Theft Auto VI 遊戲頁",
+      "u": "https://www.playstation.com/games/grand-theft-auto-vi",
+      "d": ""
+    },
+    {
+      "t": "PlayStation 支援：GTA VI 支援語言",
+      "u": "https://www.playstation.com/en-th/support/games/gta-vi-support/",
+      "d": ""
+    },
+    {
+      "t": "NOWnews：GTA 6 台灣售價、實體版沒光碟、容量",
+      "u": "https://www.nownews.com/news/6891025",
+      "d": "2026-11"
+    },
+    {
+      "t": "玩具人：GTA 6 台灣預購、版本內容與預載日",
+      "u": "https://www.toy-people.com/?p=114506",
+      "d": "2026-06"
+    },
+    {
+      "t": "GamesIndustry（gamedev.net 轉載）：US$79.99、盒裝只有序號",
+      "u": "https://gamedev.net/news/4075/",
+      "d": "2026-06"
+    },
+    {
+      "t": "GameBrief：GTA VI 時程、PS5 Pro 強化、容量未證實",
+      "u": "https://www.gamebrief.net/blog/gta-6-release-date-price-pre-order-pc-2026",
+      "d": "2026-10-28"
+    },
+    {
+      "t": "TweakTown：Sony 稱 GTA VI 在 PS5 玩最好、單人體驗",
+      "u": "https://www.tweaktown.com/news/112345/gta-6-plays-best-on-ps5-sony-confirms-ps5-pro-enhancements/",
+      "d": "2026-06"
+    },
+    {
+      "t": "FRVR：GTA VI 定價 80 美元、首發只有單人",
+      "u": "https://frvr.com/blog/gta-6-costs-80-launches-single-player-only-and-has-no-disc-version-on-release/",
+      "d": "2026-06-24"
+    },
+    {
+      "t": "Tech Insider：GTA VI 版本比較、ESRB 分級",
+      "u": "https://tech-insider.org/?p=42755",
+      "d": "2026-10"
+    },
+    {
+      "t": "RockstarINTEL：上市預告與 Justice 配樂",
+      "u": "https://rockstarintel.com/?p=43765",
+      "d": "2026-10-15"
+    },
+    {
+      "t": "The Games Wiki：GTA VI 預告與 Extended Look 紀錄",
+      "u": "https://thegameswiki.com/gta6/wiki/trailers/history/f384c51f-8991-4dda-9bb2-76323f00a538",
+      "d": "2026-10-19"
+    },
+    {
+      "t": "Red Bull：Extended Look 全部重點",
+      "u": "https://www.redbull.com/us-en/gta-6-extended-look-everything-revealed",
+      "d": "2026-08"
+    },
+    {
+      "t": "KeenGamer：Extended Look 玩法整理（六星通緝）",
+      "u": "https://www.keengamer.com/articles/news/gta-6-extended-look-recap-all-gameplay-details/",
+      "d": "2026-08"
+    },
+    {
+      "t": "TechRadar：Extended Look 的 16 個新細節",
+      "u": "https://techradar.com/gaming/ps5/16-new-gta-6-details-we-learned-from-the-big-extended-look-gameplay-video-captured-in-game-on-a-ps5",
+      "d": "2026-08"
+    },
+    {
+      "t": "KOCPC：Extended Look 與媒體專訪 18 個重點",
+      "u": "https://en.kocpc.com.tw/?p=24928",
+      "d": "2026-08-29"
+    },
+    {
+      "t": "Consequence：Extended Look 五大重點（關係系統）",
+      "u": "https://concerts.consequence.net/articles/gta-6-extended-look-netflix-breakdown-details",
+      "d": "2026-08-27"
+    },
+    {
+      "t": "NOWnews：GTA 6 原聲專輯 34 首原創曲",
+      "u": "https://www.nownews.com/news/6876311",
+      "d": "2026"
+    },
+    {
+      "t": "NOWnews：GTA 6 開放預購、故事與上市時間",
+      "u": "https://www.nownews.com/news/6850143",
+      "d": "2026-06-25"
+    },
+    {
+      "t": "Tech Insider：GTA VI 上市日確認（PC 版傳聞）",
+      "u": "https://tech-insider.org/gta-6-release-date-november-19-2026-confirmed/",
+      "d": "2026-10"
+    },
+    {
+      "t": "Shacknews：GTA VI 預載容量 212GB（Rockstar 公布）",
+      "u": "https://shacknews.com/article/151250/gta-6-pre-load-file-size",
+      "d": "2026-11-03"
+    },
+    {
+      "t": "Rockstar 支援中心：GTA VI 平台、版本與預購內容",
+      "u": "https://support.rockstargames.com/articles/4QfG4FmZCf5W1gS8jy4UVT/grand-theft-auto-vi-platform-editions-and-versions",
+      "d": "2026-11"
+    },
+    {
+      "t": "4Gamers：GTA 6 台灣開放預購、終極版與 GTA+ 特典",
+      "u": "https://www.4gamers.com.tw/news/detail/82099/gta-6-taiwan-preorder-ultimate-edition-bonus-gta-plus",
+      "d": "2026-09-17"
+    },
+    {
+      "t": "GamesRadar：Rockstar 開發者自己玩 GTA VI 約 80 小時",
+      "u": "https://www.gamesradar.com/games/grand-theft-auto/how-long-is-gta-6-about-80-hours-according-to-one-rockstar-devs-playthrough/",
+      "d": "2026"
+    },
+    {
+      "t": "mp1st（引用 GamesBeat）：傳聞 GTA VI PC 版 2027 年第一季",
+      "u": "https://mp1st.com/news/rumor-gta-6-pc-release-planned-q1-2027",
+      "d": "2026"
+    }
   ],
   "pending": [
-    "下載容量：約 210GB 是 PlayStation 容量帳號流出的截圖，Rockstar 未正式公布",
-    "評測解禁時間與主線長度：未公布",
-    "PC 版：未公布，2027 年第一季只是傳聞"
+    "評測解禁時間：未公布",
+    "PC 版：Rockstar 未公布；2027 年第一季是 GamesBeat 引述的傳聞"
   ],
-  "updated": "2026-11-16T05:00:00+08:00"
+  "updated": "2026-11-16T16:40:00+08:00"
 }

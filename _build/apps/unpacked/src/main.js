@@ -21,7 +21,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(); stopSpeak();
+  stopVideo(); stopSpeak(); motionStop();
   const v = VIEW();
   try {
     if (name === 'f' && arg) {
@@ -34,7 +34,7 @@ async function route() {
     } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
     else if (name === 'fan' && arg) { setTabs('fan'); v.innerHTML = await renderFanDetail(arg); scrollTo(0, 0); cardRender(await loadFeature(arg)); }
     else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); }
-    else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); }
+    else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); homeFx(); }
   } catch (e) {
     console.error(e);
     v.innerHTML = `<div class="empty">這頁打不開：${esc(e.message)}<br><button class="btn y" style="margin-top:12px" onclick="location.hash='home'">回牆上</button></div>`;
@@ -43,6 +43,152 @@ async function route() {
   v.classList.remove('enter'); void v.offsetWidth; v.classList.add('enter');
 }
 function restoreScroll(k) { const y = S.scroll[k] || 0; requestAnimationFrame(() => scrollTo(0, y)); }
+
+/* ---- 動態畫面：主視覺輪播（Ken Burns）、海報與主視覺的動態預告、段落噴字、數字跳動 ---- */
+const KB = new Map();          // 輪播容器 → { list, i, t, ms }
+const FIO = [];                // 這一頁的觀察器，換頁時收掉
+let HVIO = null, PIO = null, PV = null, PACT = null;
+function kbAnim(img) {
+  const r = Math.random;
+  img.style.setProperty('--kx', ((r() * 2 - 1) * 4).toFixed(1) + '%');
+  img.style.setProperty('--ky', ((r() * 2 - 1) * 3).toFixed(1) + '%');
+  img.style.setProperty('--kz', (1.1 + r() * 0.08).toFixed(3));
+  img.classList.remove('kbgo'); void img.offsetWidth; img.classList.add('kbgo');
+}
+function kbStart(box, list, ms = 5200) {
+  kbStop(box); if (!box) return;
+  const st = { list: list.slice(), i: 0, t: 0, ms }; KB.set(box, st);
+  const first = $('.kbi.on', box); if (first) kbAnim(first);
+  if (st.list.length > 1) st.t = setTimeout(() => kbNext(box), ms);
+}
+function kbStop(box) { const st = KB.get(box); if (st) { clearTimeout(st.t); KB.delete(box); } }
+function kbNext(box) {
+  const st = KB.get(box); if (!st) return; st.t = 0;
+  if (!box.isConnected) { KB.delete(box); return; }
+  const again = (ms) => { if (KB.get(box) === st) st.t = setTimeout(() => kbNext(box), ms); };
+  if (document.hidden || box.classList.contains('vidon')) { again(st.ms); return; }
+  const imgs = $$('.kbi', box); if (imgs.length < 2 || st.list.length < 2) return;
+  const cur = imgs[0].classList.contains('on') ? imgs[0] : imgs[1]; const nxt = cur === imgs[0] ? imgs[1] : imgs[0];
+  let tries = 0;
+  const step = () => {
+    if (st.list.length < 2) return;
+    st.i = (st.i + 1) % st.list.length; const u = st.list[st.i];
+    const pre = new Image(); pre.decoding = 'async';
+    const fail = () => { st.list.splice(st.i, 1); st.i -= 1; if (++tries < 5) step(); else again(st.ms); };
+    pre.onload = () => {
+      if (pre.naturalWidth <= 120) { fail(); return; }
+      if (KB.get(box) !== st) return;
+      nxt.src = u; kbAnim(nxt); nxt.classList.add('on'); cur.classList.remove('on'); again(st.ms);
+    };
+    pre.onerror = fail; pre.src = u;
+  };
+  step();
+}
+/* 主視覺第一張圖壞掉：YouTube 高畫質沒有就換一般畫質，不然直接跳下一張 */
+function heroFail(img) {
+  const low = ytLow(img.getAttribute('src')); if (low) { img.src = low; return; }
+  const bad = img.getAttribute('src'); const box = img.closest('#fhero');
+  const L = (S.curHero || []).filter((u) => u !== bad); S.curHero = L;
+  if (box && L.length) {
+    const st = KB.get(box);
+    if (st) { st.list = L; st.i = -1; clearTimeout(st.t); img.classList.remove('on'); kbNext(box); return; }
+    img.src = L[0]; return;
+  }
+  imgFail(img);
+}
+/* 動態預告：iPhone 吃 mp4，沒有 H.264 的瀏覽器會自己改用 webm */
+function vidSources(v, mp4, webm) {
+  v.textContent = '';
+  for (const [u, t] of [[mp4, 'video/mp4'], [webm, 'video/webm']]) if (u) { const s = document.createElement('source'); s.src = u; s.type = t; v.appendChild(s); }
+  v.load();
+}
+function heroFx() {
+  const box = $('#fhero'); if (!box || !fxOn()) return;
+  kbStart(box, S.curHero || [], 5200);
+  const v = $('.hv', box); if (!v) return;
+  vidSources(v, v.dataset.mp4, v.dataset.webm);
+  v.addEventListener('playing', () => { v.classList.add('on'); box.classList.add('vidon'); }, { once: true });
+  const lastSrc = v.querySelector('source:last-child'); if (lastSrc) lastSrc.addEventListener('error', () => { v.remove(); box.classList.remove('vidon'); }, { once: true });
+  HVIO = new IntersectionObserver(([e]) => { if (e.isIntersecting && !document.hidden) v.play().catch(() => {}); else v.pause(); }, { threshold: 0.2 });
+  HVIO.observe(box);
+}
+/* 首頁：海報拍上牆；捲到哪張，哪張就動起來（Steam 動態預告，沒有就輪播精彩畫面） */
+function homeFx() {
+  const ps = $$('.posters .poster'); if (!ps.length || !fxOn()) return;
+  if (!S.introPending) homeDrop();
+  const ratio = new Map();
+  PIO = new IntersectionObserver((es) => {
+    es.forEach((e) => ratio.set(e.target, e.intersectionRatio));
+    let best = null, br = 0.5; ratio.forEach((r, el) => { if (r > br) { best = el; br = r; } });
+    posterActive(best);
+  }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+  ps.forEach((p) => PIO.observe(p));
+}
+function homeDrop() {
+  if (S.dropped || !fxOn()) return; S.dropped = 1;
+  $$('.posters .poster').forEach((p, i) => {
+    p.style.setProperty('--i', i); p.classList.add('drop');
+    p.addEventListener('animationend', () => p.classList.remove('drop'), { once: true });
+    setTimeout(() => { sfx.slap(); haptic(8); if (i === 0) burstAt(p, [PINK, YEL, BLK], 18, 10); }, 120 + i * 140);
+  });
+}
+function posterActive(p) {
+  if (p === PACT) return;
+  if (PACT) { const b = $('.pimg', PACT); kbStop(b); b.classList.remove('vidon'); PACT.classList.remove('act'); }
+  if (PV) { try { PV.pause(); } catch (e) { /* */ } PV.remove(); PV = null; }
+  PACT = p; if (!p) return;
+  p.classList.add('act');
+  const b = $('.pimg', p);
+  if (p.dataset.mp4 || p.dataset.webm) {
+    const v = document.createElement('video'); v.className = 'pv'; v.muted = true; v.loop = true; v.playsInline = true;
+    v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto';
+    b.insertBefore(v, $('.ht', b)); vidSources(v, p.dataset.mp4, p.dataset.webm);
+    v.addEventListener('playing', () => { v.classList.add('on'); b.classList.add('vidon'); }, { once: true });
+    const ls = v.querySelector('source:last-child'); if (ls) ls.addEventListener('error', () => { v.remove(); b.classList.remove('vidon'); if (PV === v) PV = null; }, { once: true });
+    v.play().catch(() => {}); PV = v;
+  }
+  const it = S.index.items.find((x) => x.id === p.dataset.id);
+  const first = $('.kbi.on', b);
+  if (it && first) kbStart(b, posterList(it, liveOf(it.steam), first.getAttribute('src')), 4600);
+}
+function motionStop() {
+  KB.forEach((st) => clearTimeout(st.t)); KB.clear();
+  FIO.forEach((o) => o.disconnect()); FIO.length = 0;
+  if (HVIO) { HVIO.disconnect(); HVIO = null; }
+  const hv = $('#fhero .hv'); if (hv) { try { hv.pause(); hv.removeAttribute('src'); hv.load(); } catch (e) { /* */ } }
+  if (PIO) { PIO.disconnect(); PIO = null; }
+  if (PV) { try { PV.pause(); } catch (e) { /* */ } PV.remove(); PV = null; }
+  PACT = null;
+}
+document.addEventListener('visibilitychange', () => {
+  const hv = $('#fhero .hv.on');
+  if (document.hidden) { if (hv) hv.pause(); if (PV) PV.pause(); return; }
+  if (hv && hv.getBoundingClientRect().bottom > 0) hv.play().catch(() => {});
+  if (PV) PV.play().catch(() => {});
+});
+/* 即時數據：數字從 0 跳上來、折線畫出來 */
+function countUp(root) {
+  const els = $$('.cu', root); root.classList.add('counting'); if (!els.length) return;
+  const t0 = performance.now(), D = 950; let lastTick = 0, ticks = 0;
+  const fmt = (el, v) => (el.dataset.f === 'i' ? String(Math.round(v)) : fmtN(Math.round(v)));
+  const step = (now) => {
+    const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3);
+    els.forEach((el) => { el.textContent = fmt(el, +el.dataset.n * e); });
+    if (k < 1) { if (now - lastTick > 90 && ticks < 9) { lastTick = now; ticks++; sfx.tick(); } requestAnimationFrame(step); }
+    else { els.forEach((el) => { el.textContent = fmt(el, +el.dataset.n); }); sfx.pop(); }
+  };
+  setTimeout(() => root.classList.remove('counting'), 1600);   // 折線畫完就拿掉虛線設定，免得線斷掉
+  requestAnimationFrame(step);
+}
+/* 相簿：YouTube 高畫質畫面沒有就換一般畫質，再不行就拿掉 */
+function shotFail(img) {
+  const box = img.parentElement; if (!box) return; const i = +box.dataset.i;
+  const low = ytLow(img.getAttribute('src'));
+  if (low) { img.src = low; if (S.curMedia) S.curMedia.shots[i] = low; return; }
+  if (S.curMedia) S.curMedia.shots[i] = null;
+  box.remove();
+  const n = $('.shot-n'); if (n && S.curMedia) n.textContent = `${S.curMedia.shots.filter(Boolean).length} 張・點開可以左右滑`;
+}
 
 /* ---- 「解包中」轉場 ---- */
 async function unpackAnim(id) {
@@ -60,6 +206,20 @@ async function unpackAnim(id) {
 }
 
 function afterFeature() {
+  heroFx();
+  if (fxOn()) {
+    $$('.glance .gl-t').forEach((t, i) => setTimeout(() => sfx.blip(520 + i * 130), 260 + i * 70));
+    const hs = $$('.fsec>h2'); let last = 0;
+    hs.forEach((h) => h.classList.add('rv'));
+    const io3 = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return; io3.unobserve(e.target); e.target.classList.add('in');
+      const now = performance.now();
+      if (now - last > 600) { last = now; sfx.spray(); const pth = $('.path', e.target); setTimeout(() => burstAt(pth, [PINK, YEL], 9, 6), 110); }
+    }), { threshold: 0.5 });
+    hs.forEach((h) => io3.observe(h)); FIO.push(io3);
+    const live = $('.live');
+    if (live) { const io4 = new IntersectionObserver(([e]) => { if (!e.isIntersecting) return; io4.disconnect(); countUp(live); }, { threshold: 0.35 }); io4.observe(live); FIO.push(io4); }
+  }
   const seal = $('.verdict .seal');
   const io = new IntersectionObserver((es) => {
     es.forEach((e) => {
@@ -89,6 +249,7 @@ async function playVideo(i) {
   const v = S.curMedia && S.curMedia.vids[i]; if (!v) return;
   const box = $('#tvbox .tv'); if (!box) return;
   sfx.click(); bgmDuck(true); box.removeAttribute('data-act');
+  if (fxOn()) { sfx.riser(); burstAt($('.playb', box) || box, [PINK, YEL, BLK], 20, 10); }
   if (v.kind === 'yt') {
     box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(v.id)}?autoplay=1&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="${esc(v.title)}"></iframe>`;
     return;
@@ -132,13 +293,19 @@ function openSheet(html, cls = '') {
 function closeSheet() { const s = $('#sheet'); s.classList.remove('on'); s.innerHTML = ''; }
 let LBI = 0;
 function openLightbox(i) {
-  const shots = (S.curMedia && S.curMedia.shots) || []; if (!shots.length) return;
-  LBI = (i + shots.length) % shots.length;
-  const s = $('#sheet'); s.innerHTML = `<div class="sbg" data-act="close"></div><div class="lb" data-act="close"><img src="${esc(shots[LBI])}" alt=""><button class="lbp" data-act="lbn" data-d="-1">‹</button><button class="lbx" data-act="lbn" data-d="1">›</button><div class="lbn">${LBI + 1} / ${shots.length}</div></div>`;
+  const shots = (S.curMedia && S.curMedia.shots) || []; const n = shots.length; if (!shots.some(Boolean)) return;
+  const dir = i < LBI ? -1 : 1; let k = ((i % n) + n) % n, g = 0;
+  while (!shots[k] && g++ < n) k = (((k + dir) % n) + n) % n;
+  LBI = k; const pos = shots.slice(0, k + 1).filter(Boolean).length, tot = shots.filter(Boolean).length;
+  const s = $('#sheet'); s.innerHTML = `<div class="sbg" data-act="close"></div><div class="lb" data-act="close"><img src="${esc(shots[LBI])}" alt="" onerror="lbFail(this)" onload="if(this.naturalWidth<=120)lbFail(this)"><button class="lbp" data-act="lbn" data-d="-1">‹</button><button class="lbx" data-act="lbn" data-d="1">›</button><div class="lbn">${pos} / ${tot}</div></div>`;
   s.classList.add('on');
   let x0 = null; const lb = $('.lb', s);
   lb.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
   lb.addEventListener('touchend', (e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) { openLightbox(LBI + (dx < 0 ? 1 : -1)); sfx.click(); } x0 = null; });
+}
+function lbFail(img) {
+  const low = ytLow(img.getAttribute('src')); if (low) { img.src = low; if (S.curMedia) S.curMedia.shots[LBI] = low; return; }
+  if (S.curMedia) S.curMedia.shots[LBI] = null; openLightbox(LBI + 1);
 }
 function trayUpdate() { const t = $('#tray'); t.innerHTML = trayHtml(); t.classList.toggle('on', S.cmp.length > 0 && ROUTE.startsWith('lib')); }
 
@@ -266,8 +433,10 @@ async function boot() {
     const want = mode === 'off' ? null : mode === 'always' ? 'full' : mode === 'short' ? 'short' : (LS.get('introDay', '') === today ? 'short' : 'full');
     LS.set('introDay', today);
     const nToday = S.index.items.filter((x) => x.date === (S.index.items[0] || {}).date).length;
+    S.introPending = !!want;
     route();
     if (want) { try { await Promise.race([document.fonts.load('900 120px "Noto Sans TC"', '解包'), sleep(700)]); } catch (e) { /* */ } await runIntro(want, nToday); }
+    S.introPending = false; if (ROUTE === 'home' || ROUTE === '') homeDrop();
     bgmStart();
     if (!ok) toast('資料讀不到，檢查一下網路', 'warn');
   };

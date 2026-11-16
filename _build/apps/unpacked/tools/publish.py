@@ -120,8 +120,14 @@ def check(f, r):
     for y in yt:
         if not re.fullmatch(r'[A-Za-z0-9_-]{11}', y.get('id') or ''):
             r.B(fid, f'YouTube id 格式不對：{y.get("id")}')
-    if not yt and not g.get('steam') and not (f['media'] or {}).get('images'):
+    imgs = (f['media'] or {}).get('images') or []
+    if not yt and not g.get('steam') and not imgs:
         r.W(fid, '沒有預告、沒有 Steam、也沒有圖片：專題會沒有影像')
+    elif not g.get('steam') and len(imgs) < 3:
+        r.W(fid, '非 Steam 遊戲建議在 media.images 放 3～8 張官方截圖或主視覺（動態主視覺和相簿會用到）')
+    for u in imgs:
+        if not str(u).startswith('https://'):
+            r.B(fid, f'media.images 要是 https 網址：{str(u)[:60]}')
     S = f['sections']
     gp = S.get('gameplay') or {}
     if len(gp.get('loop') or []) < 3:
@@ -200,6 +206,7 @@ def build_index(feats):
             'stamp': f['verdict']['stamp'], 'label': f['verdict']['label'],
             'money': (f.get('money') or {}).get('level'), 'zhs': zhs, 'tw': (f.get('tw') or {}).get('ok'),
             'yt': yt, 'img': ((f.get('media') or {}).get('images') or [None])[0],
+            'gal': ((f.get('media') or {}).get('images') or [])[1:6],
             'updated': f.get('updated'),
         })
     items.sort(key=lambda x: (x['date'], -x['rank']), reverse=True)

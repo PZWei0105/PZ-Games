@@ -4,7 +4,7 @@ name: unpacked-live
 
 on:
   schedule:
-    - cron: '17 */3 * * *'      # 每 3 小時（UTC 第 17 分，避開整點塞車）
+    - cron: '41 * * * *'        # 每小時（第 41 分，避開整點塞車；GitHub 偶爾會跳過排程，所以排密一點）
   push:
     branches: [main]
     paths:

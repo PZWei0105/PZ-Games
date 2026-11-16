@@ -20,8 +20,9 @@ function sealHtml(stamp, label, cls = 'seal') {
 function posterHtml(it, i) {
   const lv = liveOf(it.steam);
   const img = heroOf(it, lv);
-  return `<article class="poster k-${esc(it.kind)}" data-go="f/${esc(it.id)}" style="--rot:${rot(it.id, i, 1.3)}deg">
-    <div class="pimg">${img ? `<img src="${esc(img)}" alt="" loading="${i ? 'lazy' : 'eager'}" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div><div class="ht"></div></div>
+  const mc = (lv && lv.micro) || {}; const micro = mc.mp4 || mc.webm;
+  return `<article class="poster k-${esc(it.kind)}" data-go="f/${esc(it.id)}" data-id="${esc(it.id)}"${micro ? ` data-mp4="${esc(mc.mp4 || '')}" data-webm="${esc(mc.webm || '')}"` : ''} style="--rot:${rot(it.id, i, 1.3)}deg">
+    <div class="pimg"><div class="kb">${img ? `<img class="kbi on" src="${esc(img)}" alt="" loading="${i ? 'lazy' : 'eager'}" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)"><img class="kbi" alt="" decoding="async">` : ''}</div><div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div><div class="ht"></div>${micro ? '<span class="pv-tag">▶ 動態</span>' : ''}</div>
     <span class="kind-stk">${esc(it.kind_label)}</span>
     <div class="pbody"><h3 class="ptitle">${esc(it.zh)}</h3>${it.en && it.en !== it.zh ? `<div class="pen">${esc(it.en)}</div>` : ''}
       <p class="phead">${esc(it.headline)}</p><div class="chips">${chipsFor(it, lv)}</div></div>
@@ -76,7 +77,7 @@ function renderHome() {
     <div class="posters">${todays.map(posterHtml).join('')}</div>
     <h3 class="tape-h">追蹤牆</h3>
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="f/${esc(n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
-      : '<div class="empty">Steam 即時資料每 3 小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
+      : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
     <div class="endcta"><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
 }
@@ -126,20 +127,20 @@ function sparkSvg(rows, days = 7) {
   const vs = r.map((x) => x[1]); const lo = Math.min(...vs), hi = Math.max(...vs) || 1;
   const pts = r.map((x) => [((x[0] - r[0][0]) / Math.max(1, tmax - r[0][0])) * 100, 40 - ((x[1] - lo) / Math.max(1, hi - lo)) * 36 - 2]);
   const line = pts.map((p) => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join(' ');
-  return `<svg class="spark" viewBox="0 0 100 42" preserveAspectRatio="none"><polygon class="area" points="0,42 ${line} 100,42"/><polyline points="${line}"/></svg>`;
+  return `<svg class="spark" viewBox="0 0 100 42" preserveAspectRatio="none"><polygon class="area" points="0,42 ${line} 100,42"/><polyline pathLength="100" points="${line}"/></svg>`;
 }
 function liveHtml(f, lv, h) {
   if (!f.game.steam) return '';
-  if (!lv) return `<div class="live"><div class="lh"><span>STEAM 即時數據</span><small>資料管線每 3 小時更新</small></div><div class="empty" style="padding:6px 2px">這款剛加入追蹤，台灣區價格、同上人數、評價會在下一輪更新後出現。</div></div>`;
+  if (!lv) return `<div class="live"><div class="lh"><span>STEAM 即時數據</span><small>資料管線每小時更新</small></div><div class="empty" style="padding:6px 2px">這款剛加入追蹤，台灣區價格、同上人數、評價會在下一輪更新後出現。</div></div>`;
   const pr = lv.price || {}, rv = lv.rv || {}, tc = lv.rv_tc, p = lv.players || {};
   const priceV = lv.free ? '免費' : fmtNT(pr.final);
   const low = pr.low && !lv.free ? `<div class="ld">追蹤以來最低 ${fmtNT(pr.low.v)}（${mdDay(pr.low.at.slice(0, 10))}）${pr.final <= pr.low.v && pr.disc > 0 ? '<span class="lowtag">史低</span>' : ''}</div>` : '';
   const d24 = p.d24 != null ? `<span class="${p.d24 >= 0 ? 'up' : 'dn'}">${p.d24 >= 0 ? '▲' : '▼'}${Math.abs(p.d24)}%</span> 比 24 小時前` : '';
   return `<div class="live"><div class="lh"><span>STEAM 即時數據 · 台灣區</span><small>更新於 ${esc(ago(lv.at))}</small></div><div class="lgrid">
     <div class="lc"><div class="ll">台灣售價</div><div class="lv">${esc(priceV)}${pr.disc > 0 ? `<span class="disc">-${pr.disc}%</span>` : ''}</div>${pr.disc > 0 && pr.orig ? `<div class="ld">原價 ${fmtNT(pr.orig)}</div>` : ''}${low}</div>
-    <div class="lc"><div class="ll">Steam 評價</div><div class="lv">${rv.pct != null ? rv.pct + '<small>%</small>' : '—'}</div><div class="ld">${esc(rv.label || '評論還不夠')} · ${fmtN(rv.n)} 則${rv.recent ? `<br>近 ${rv.recent.days} 天 ${rv.recent.pct}%（${fmtN(rv.recent.n)} 則）` : ''}</div></div>
-    <div class="lc wide"><div class="ll">目前同上人數</div><div class="lv">${p.n != null ? esc(fmtN(p.n)) : '—'}<small>${p.peak ? `追蹤以來最高 ${esc(fmtN(p.peak.n))}` : ''}</small></div><div class="ld">${d24}</div>${h ? sparkSvg(h.pl, 7) : ''}</div>
-    <div class="lc"><div class="ll">繁中玩家評價</div><div class="lv">${tc && tc.pct != null ? tc.pct + '<small>%</small>' : '—'}</div><div class="ld">${!tc ? '這一輪沒抓到，下次更新再補' : tc.n ? `${fmtN(tc.n)} 則繁中評論` : '還沒有繁中評論'}</div></div>
+    <div class="lc"><div class="ll">Steam 評價</div><div class="lv">${rv.pct != null ? `<span class="cu" data-n="${rv.pct}" data-f="i">${rv.pct}</span><small>%</small>` : '—'}</div><div class="ld">${esc(rv.label || '評論還不夠')} · ${fmtN(rv.n)} 則${rv.recent ? `<br>近 ${rv.recent.days} 天 ${rv.recent.pct}%（${fmtN(rv.recent.n)} 則）` : ''}</div></div>
+    <div class="lc wide"><div class="ll">目前同上人數</div><div class="lv">${p.n != null ? `<span class="cu" data-n="${p.n}">${esc(fmtN(p.n))}</span>` : '—'}<small>${p.peak ? `追蹤以來最高 ${esc(fmtN(p.peak.n))}` : ''}</small></div><div class="ld">${d24}</div>${h ? sparkSvg(h.pl, 7) : ''}</div>
+    <div class="lc"><div class="ll">繁中玩家評價</div><div class="lv">${tc && tc.pct != null ? `<span class="cu" data-n="${tc.pct}" data-f="i">${tc.pct}</span><small>%</small>` : '—'}</div><div class="ld">${!tc ? '這一輪沒抓到，下次更新再補' : tc.n ? `${fmtN(tc.n)} 則繁中評論` : '還沒有繁中評論'}</div></div>
     <div class="lc"><div class="ll">語言（Steam）</div><div class="lv" style="font-size:24px">${lv.langs && lv.langs.tc ? '有繁中' : lv.langs && lv.langs.sc ? '只有簡中' : '無中文'}</div><div class="ld">${lv.langs && lv.langs.tc ? (lv.langs.tc.audio ? '含中文語音' : '介面／字幕') : ''}</div></div>
   </div></div>`;
 }
@@ -152,10 +153,40 @@ function moneyHtml(m) {
     <p style="color:#fff;font-weight:900">${esc(m.model)}</p><ul>${(m.notes || []).map((n) => `<li>${esc(n)}</li>`).join('')}</ul>
     ${(m.flags || []).length ? `<div class="flags">${m.flags.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}</div>`;
 }
+function zhText(f, lv) {
+  const z = f.zh || {}; const lz = lv && lv.langs;
+  if (lz) return lz.tc ? '有繁中' : lz.sc ? '只有簡中' : '沒有中文';
+  return z.sub || z.ui ? '有繁中' : z.ui === false ? '沒有中文' : '未知';
+}
+/* 一眼看懂：上市、售價、平台、中文、課金、你的筆電 */
+function glanceHtml(f, it, lv) {
+  const g = f.game; const today = todayTW();
+  const rel = /^\d{4}-\d{2}-\d{2}$/.test(g.release || '') ? g.release : null;
+  let rv = '待公告', rs = g.release_text ? '' : '日期未定', rc = 'w';
+  if (rel) {
+    const dd = dayDiff(today, rel);
+    if (dd > 0) { rv = `${dd}<small>天</small>`; rs = `倒數・${mdDay(rel)} 上市`; rc = 'p'; }
+    else if (dd === 0) { rv = '今天'; rs = '上市日'; rc = 'p'; }
+    else { rv = esc(mdDay(rel)); rs = `${rel.slice(0, 4)}${it.kind === 'ea' || f.kind === 'ea' ? '・搶先體驗' : ' 年'}`; }
+  }
+  const price = priceLabel(it, lv) || '—';
+  const plats = [...new Set((g.platforms || []).map((p) => PLAT_SHORT(p).replace(/（.*$/, '')))].join('／') || '—';
+  const zt = zhText(f, lv); const m = (f.money || {}).level;
+  const T = [
+    ['上市', rv, rs, rc],
+    ['台灣售價', esc(price), lv && lv.price && lv.price.disc > 0 ? `特價 -${lv.price.disc}%` : (lv && !lv.free ? 'Steam 台灣區' : ''), 'y'],
+    ['平台', esc(plats), '', 'w'],
+    ['中文', esc(zt), '', zt === '有繁中' ? 'g' : zt === '未知' ? 'w' : 'p'],
+    ['課金', m == null ? '未確認' : esc(moneyLabel(m)), m == null ? '內購內容還沒公開' : '', m == null ? 'w' : m <= 1 ? 'g' : m === 2 ? 'y' : 'p'],
+    ['你的 SCAR 18', esc(f.rig.verdict), '', 'k'],
+  ];
+  // 字多就縮小一點：中文算 1 格、英數算半格多
+  const fs = (v) => { const t = String(v).replace(/<[^>]+>/g, ''); let u = 0; for (const ch of t) u += /[\u2e80-\uffff]/.test(ch) ? 1 : 0.55; return u > 9 ? 15 : u > 4.2 ? 16 : 19; };
+  return `<div class="glance">${T.map(([k, v, sm, c], i) => `<div class="gl-t c-${c}" style="--i:${i};--rot:${rot(f.id + k, i, 1.6)}deg"><span class="gk">${k}</span><b class="gv" style="font-size:${fs(v)}px">${v}</b>${sm ? `<span class="gs">${esc(sm)}</span>` : ''}</div>`).join('')}</div>`;
+}
 function infoCards(f, lv) {
   const z = f.zh || {}; const tw = f.tw || {};
-  const lz = lv && lv.langs; let zt = z.sub || z.ui ? '有繁中' : z.ui === false ? '沒有中文' : '未知';
-  if (lz) zt = lz.tc ? '有繁中' : lz.sc ? '只有簡中' : '沒有中文';
+  const zt = zhText(f, lv);
   const twT = tw.ok === true ? '可以玩' : tw.ok === 'partial' ? '能玩，但…' : '還不行';
   return `<div class="cards2">${moneyHtml(f.money || {})}
     <div class="ic"><h4>中文 <span class="tagx ${zt === '有繁中' ? 'g' : zt === '未知' ? 'k' : ''}">${zt}</span></h4><p>${esc(z.note || '')}</p>
@@ -168,19 +199,15 @@ function mediaList(f, lv) {
   const vids = []; const shots = [];
   for (const y of (f.media && f.media.yt) || []) vids.push({ kind: 'yt', id: y.id, title: y.title, poster: ytThumb(y.id) });
   for (const t of (lv && lv.trailers) || []) { const src = t.hls || t.mp4 || t.webm; if (src) vids.push({ kind: 'steam', src, title: 'Steam：' + (t.name || '預告').slice(0, 24), poster: t.poster }); }
-  for (const s of (lv && lv.shots) || []) shots.push(s);
-  for (const s of (f.media && f.media.images) || []) shots.push(s);
-  if (shots.length < 4) {
-    for (const y of (f.media && f.media.yt) || []) { shots.push(ytThumb(y.id)); for (const q of ['hq1', 'hq2', 'hq3']) shots.push(ytThumb(y.id, q)); if (shots.length >= 10) break; }
-  }
-  return { vids: vids.slice(0, 6), shots: [...new Set(shots)].slice(0, 12) };
+  shots.push(...galleryOf(f, lv));
+  return { vids: vids.slice(0, 6), shots };
 }
 function trailerBox(v, i) {
   if (!v) return '<div class="empty">這款目前沒有可以播的預告。</div>';
   return `<div class="tv" data-act="play" data-i="${i}">${v.poster ? `<img src="${esc(v.poster)}" alt="" onerror="imgFail(this)" onload="ytCheck(this)">` : ''}<div class="ph" style="display:none">▶</div>
     <button class="playb" aria-label="播放預告">${ICON.play}</button><span class="tvt">${esc(v.title || '預告')}</span></div>`;
 }
-function sec(id, path, title, body) { return `<section class="fsec" id="${id}"><h2><span class="path">/${path}</span>${esc(title)}</h2>${body}</section>`; }
+function sec(id, path, title, body) { return `<section class="fsec" id="${id}"><h2><span class="path">/${path}</span><span class="ttl">${esc(title)}</span></h2>${body}</section>`; }
 
 async function renderFeature(id) {
   const f = await loadFeature(id);
@@ -189,6 +216,8 @@ async function renderFeature(id) {
   const h = lv ? await loadHist(f.game.steam) : null;
   const M = mediaList(f, lv); S.curMedia = M; S.curId = id;
   const hero = heroOf(Object.assign({}, it, { media: f.media }), lv);
+  const HL = heroList(f, lv, hero); S.curHero = HL;
+  const mc = (lv && lv.micro) || {}; const micro = mc.mp4 || mc.webm;
   const V = f.verdict; const Sx = f.sections;
   const mk = S.marks[id] || '';
   const facts = f.facts.map((x, i) => {
@@ -199,12 +228,16 @@ async function renderFeature(id) {
   const story = Sx.story && ((Sx.story.safe || []).length || (Sx.story.spoiler || []).length);
   const tabs = [['s-info', '資訊'], ['s-media', '影像'], ['s-play', '玩法'], story ? ['s-story', '劇情'] : null, ['s-studio', '幕後'], ['s-voice', '風向'], ['s-talk', '討論'], ['s-src', '來源']].filter(Boolean);
   const today = todayTW();
-  return `<div class="f-top"><div class="f-hero">${hero ? `<img src="${esc(hero)}" alt="" onerror="imgFail(this)" onload="ytCheck(this)">` : ''}<div class="ph" style="${hero ? 'display:none' : ''}">UNPACKED</div><div class="ht"></div></div>
+  return `<div class="f-top"><div class="f-hero" id="fhero"><div class="kb">${hero ? `<img class="kbi on" src="${esc(hero)}" alt="" onerror="heroFail(this)" onload="if(this.naturalWidth<=120)heroFail(this)"><img class="kbi" alt="" decoding="async">` : ''}</div>
+      ${micro ? `<video class="hv" muted loop playsinline preload="none" disablepictureinpicture aria-hidden="true" data-mp4="${esc(mc.mp4 || '')}" data-webm="${esc(mc.webm || '')}"></video>` : ''}
+      <div class="ph" style="${hero ? 'display:none' : ''}">UNPACKED</div><div class="ht"></div>
+      ${micro ? '<span class="hv-tag">● 動態預告</span>' : HL.length > 1 ? `<span class="hv-tag k">◎ ${HL.length} 張精彩畫面</span>` : ''}</div>
       <button class="back" data-act="back">← 回牆上</button></div>
     <div class="f-head"><span class="kind-stk">${esc(f.kind_label || it.kind_label)}</span>
       <h1 class="f-title">${esc(f.game.zh)}</h1>
       <div class="f-en">${esc(f.game.en)}${f.game.zh_note ? `<span class="f-zhnote">（${esc(f.game.zh_note)}）</span>` : ''}</div>
       <p class="f-headline">${esc(f.headline)}</p></div>
+    ${glanceHtml(f, it, lv)}
     <p class="hook">${esc(f.hook)}</p>
     <div class="verdict"><div class="vl">三秒結論 · ${esc(V.label)}</div><div class="vt">${esc(V.stamp === '推薦' ? '值得玩' : V.stamp === '觀望' ? '先觀望' : '先跳過')}</div>
       <p class="vs">${esc(V.summary)}</p>${sealHtml(V.stamp, V.label, 'seal wait')}
@@ -213,7 +246,7 @@ async function renderFeature(id) {
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
     ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源；粉紅色問號是還沒查證的。</p><div class="facts">${facts}</div>${liveHtml(f, lv, h)}${infoCards(f, lv)}`)}
     ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>
-      ${M.shots.length ? `<div class="shots">${M.shots.map((s, i) => `<div class="shot" data-act="lb" data-i="${i}" style="--rot:${rot(id + s, i, 1)}deg"><img src="${esc(s)}" alt="" loading="lazy" decoding="async" onerror="this.parentElement.remove()" onload="if(this.naturalWidth<=120)this.parentElement.remove()"></div>`).join('')}</div>` : ''}`)}
+      ${M.shots.length ? `<h3 class="tape-h">相簿 <small class="shot-n">${M.shots.length} 張・點開可以左右滑</small></h3><div class="shots">${M.shots.map((s, i) => `<div class="shot" data-act="lb" data-i="${i}" style="--rot:${rot(id + s, i, 1)}deg"><img src="${esc(s)}" alt="" loading="lazy" decoding="async" onerror="shotFail(this)" onload="if(this.naturalWidth<=120)shotFail(this)"></div>`).join('')}</div>` : ''}`)}
     ${sec('s-play', 'PLAY', '玩法拆解', `<div class="loop">${Sx.gameplay.loop.map((x, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="lp" style="--rot:${rot(id + x, i, 2)}deg">${esc(x)}</span>`).join('')}<span class="back2">↺ 再來一輪</span></div>
       ${Sx.gameplay.body.map((p) => `<p class="para">${esc(p)}</p>`).join('')}
       <h3 class="tape-h">你的第一個小時</h3><div class="steps">${Sx.hour.map((p) => `<div class="stp">${esc(p)}</div>`).join('')}</div>
@@ -227,7 +260,7 @@ async function renderFeature(id) {
       <textarea class="mynote" data-act="note" placeholder="筆記：例如要不要拍影片、想等特價…">${esc(S.notes[id] || '')}</textarea>`)}
     ${sec('s-src', 'SOURCE', '來源', `<ol class="srcs">${f.sources.map((s, i) => `<li><b>${i + 1}</b><a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>${s.d ? `（${esc(s.d)}）` : ''}</li>`).join('')}</ol>
       ${(f.pending || []).length ? `<div class="pend"><h4>還沒查證、先不當真</h4><ul>${f.pending.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
-      <p class="sub-note" style="margin-top:12px">專題寫於 ${esc(f.date)}${f.updated ? ' · 最後更新 ' + esc(f.updated.slice(0, 16).replace('T', ' ')) : ''}。硬資訊都附來源；Steam 即時數據每 3 小時自動更新。</p>`)}
+      <p class="sub-note" style="margin-top:12px">專題寫於 ${esc(f.date)}${f.updated ? ' · 最後更新 ' + esc(f.updated.slice(0, 16).replace('T', ' ')) : ''}。硬資訊都附來源；Steam 即時數據每小時自動更新。</p>`)}
     <div class="endcta"><button class="btn p" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button><button class="btn k" data-act="back">回牆上</button></div>`;
 }
 
@@ -246,6 +279,7 @@ async function renderFanDetail(id) {
   const full = post + '\n\n' + fp.tags.join(' ');
   return `<div class="fan-detail"><div class="btnrow" style="margin-top:14px"><button class="btn sm k" data-go="fan">← 出稿台</button><button class="btn sm" data-go="f/${esc(id)}">看完整專題</button></div>
     <h2 class="spray-h" style="margin:16px 0 18px">${esc(f.game.zh)}</h2><p class="sub-note">${esc(f.headline)}</p>
+    ${f.date < todayTW() && /倒數|今天|明天|本週|這週|這個禮拜/.test([fp.post, fp.script, fp.card.kicker, ...fp.titles].join('')) ? `<div class="stale">這篇稿寫於 ${esc(mdDay(f.date))}，裡面有「倒數幾天」「這個禮拜」這類會過期的說法，發文前記得改成今天的。</div>` : ''}
     <div class="cardwrap"><canvas id="cardcv" width="1080" height="1350"></canvas><div class="cardbusy" id="cardbusy">噴漆中…</div></div>
     <div class="btnrow" style="justify-content:center"><button class="btn sm ${CARD.layout === 'A' ? 'y' : ''}" data-act="cl" data-v="A">版型 A 黃牆</button><button class="btn sm ${CARD.layout === 'B' ? 'y' : ''}" data-act="cl" data-v="B">版型 B 黑牆</button><button class="btn sm ${CARD.ratio === '45' ? 'y' : ''}" data-act="cr" data-v="45">4:5 直式</button><button class="btn sm ${CARD.ratio === '11' ? 'y' : ''}" data-act="cr" data-v="11">1:1 方形</button></div>
     <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="respray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="cdl">${ICON.dl}<span>下載圖卡</span></button>${navigator.share ? `<button class="btn" data-act="cshare">${ICON.share}<span>分享圖卡</span></button>` : ''}</div>
