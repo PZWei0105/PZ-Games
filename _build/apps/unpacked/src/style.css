@@ -600,3 +600,24 @@ body.calm #tape .in{animation-duration:60s}
   .f-hero{aspect-ratio:21/9}
   #gate .gl{font-size:54px}
 }
+
+/* 推坑：跟朋友玩、版本怎麼選 */
+.multi{position:relative;margin:16px 0 4px;padding:14px 16px 12px;border:3px solid #0d0d0d;background:#fff;color:#0d0d0d;box-shadow:5px 5px 0 #0d0d0d;transform:rotate(-.6deg)}
+.multi .mk{display:inline-block;font:800 12px/1 var(--fd,inherit);letter-spacing:.06em;background:#0d0d0d;color:#FFE600;padding:4px 8px;margin-bottom:8px}
+.multi b{display:block;font-size:20px;font-weight:900;margin-bottom:4px}
+.multi p{margin:0;font-size:15px;line-height:1.65}
+.multi.m-g{background:#2fd06a}.multi.m-y{background:#FFE600}.multi.m-k{background:#f2efe6}
+.eds{display:grid;gap:12px;margin:10px 0 6px}
+.ed{position:relative;padding:14px 16px 12px;border:3px solid #0d0d0d;background:#fffdf3;color:#0d0d0d;box-shadow:4px 4px 0 var(--p,#ff2e88);transform:rotate(var(--rot,0deg))}
+.ed.best{background:#FFE600;box-shadow:6px 6px 0 #0d0d0d}
+.ed h4{margin:0 0 6px;font-size:17px;font-weight:900}
+.ed p{margin:0;font-size:15px;line-height:1.65}
+.ed .ed-t{margin-top:6px;font-weight:800;color:#c4005a}
+.ed.best .ed-t{color:#0d0d0d}
+.ed-b{position:absolute;top:-12px;right:10px;background:#ff2e88;color:#fff;font-weight:900;font-size:12px;padding:3px 8px;border:2px solid #0d0d0d;transform:rotate(3deg)}
+@media (min-width:720px){.eds{grid-template-columns:repeat(3,1fr)}}
+
+/* 手機上任何旋轉的貼紙、印章都不准把畫面撐寬（iPhone 會被拖得左右晃） */
+#app{overflow-x:clip}
+.pk .tp1{right:-9px}
+@media (max-width:480px){.letter .seal{right:-2px}}

@@ -218,6 +218,51 @@ def check_sources_facts(f, fid, r, min_facts):
                     r.B(fid, f'「{x.get("k")}」來源編號 {j} 不存在')
 
 
+def check_pick_depth(f, fid, r):
+    """推坑要跟專題一樣全面：玩法、跟誰像、劇情、幕後、時間軸、玩家風向、版本、多人。"""
+    S = f.get('sections')
+    if not isinstance(S, dict):
+        r.B(fid, '少了 sections（玩法、跟誰像、劇情、幕後、時間軸、玩家風向）')
+        return
+    gp = S.get('gameplay') or {}
+    if len(gp.get('loop') or []) < 4:
+        r.B(fid, 'sections.gameplay.loop 玩法循環至少 4 步')
+    if len(gp.get('body') or []) < 2:
+        r.B(fid, 'sections.gameplay.body 玩法拆解至少 2 段')
+    cmp = S.get('compare') or []
+    if len(cmp) < 2:
+        r.B(fid, 'sections.compare 跟誰像至少 2 款')
+    for i, c in enumerate(cmp):
+        if not (c.get('name') and c.get('same') and c.get('diff')):
+            r.B(fid, f'compare[{i}] 要有 name、same、diff')
+    if 'story' not in S:
+        r.B(fid, 'sections.story 要寫（沒有劇情的遊戲填 null）')
+    elif S['story'] is not None and not (S['story'].get('safe') or []):
+        r.B(fid, 'sections.story.safe 至少 1 段（不劇透的設定與開場）')
+    if len(S.get('studio') or []) < 1:
+        r.B(fid, 'sections.studio 幕後至少 1 段')
+    tl = S.get('timeline') or []
+    if len(tl) < 4:
+        r.B(fid, 'sections.timeline 時間軸至少 4 個時間點')
+    for i, t in enumerate(tl):
+        if not (t.get('d') and t.get('t')):
+            r.B(fid, f'timeline[{i}] 要有 d、t')
+        elif not re.fullmatch(r'\d{4}-\d{2}(-\d{2})?', t['d']):
+            r.B(fid, f'timeline[{i}].d 要是 YYYY-MM-DD 或 YYYY-MM')
+    vo = S.get('voices') or {}
+    if len(vo.get('pros') or []) < 3 or len(vo.get('cons') or []) < 2:
+        r.B(fid, 'sections.voices 誇至少 3 條、罵至少 2 條')
+    eds = f.get('editions') or []
+    if not eds:
+        r.B(fid, 'editions 版本怎麼選至少 1 項')
+    for i, e in enumerate(eds):
+        if not (e.get('name') and e.get('what')):
+            r.B(fid, f'editions[{i}] 要有 name、what')
+    mu = f.get('multi') or {}
+    if mu.get('ok') not in (True, False, 'partial') or not mu.get('text'):
+        r.B(fid, 'multi 要有 ok（true／false／"partial"）與 text（跟朋友玩的說明）')
+
+
 def check_pick(f, r):
     """推坑稿：已經上市、不分新舊，Claude 查過評價、挑過才推的遊戲。格式見 PICKS_GUIDE.md。"""
     fid = f.get('id', '?')
@@ -260,7 +305,10 @@ def check_pick(f, r):
         r.B(fid, 'fit.for、fit.against 各至少 2 條')
     if len(f['howto']) < 3:
         r.B(fid, 'howto（怎麼玩最好玩）至少 3 條')
-    check_sources_facts(f, fid, r, 6)
+    check_sources_facts(f, fid, r, 8)
+    if len(f.get('sources') or []) < 8:
+        r.B(fid, f'推坑來源至少 8 個（現在 {len(f.get("sources") or [])} 個）')
+    check_pick_depth(f, fid, r)
     m = f['money']
     if m.get('level') not in (None, 0, 1, 2, 3, 4):
         r.B(fid, 'money.level 要是 0～4 或 null')

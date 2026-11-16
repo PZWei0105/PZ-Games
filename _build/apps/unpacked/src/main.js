@@ -291,7 +291,10 @@ async function speakFeature() {
   let parts;
   if (S.curKind === 'pick') {
     const f = await loadPick(S.curId);
-    parts = [f.game.zh, f.pitch, f.why, ...f.reasons.map((r, i) => `理由${i + 1}，${r.h}：${r.t}`), '怎麼玩最好玩：' + f.howto.join('；'), '怎麼買：' + f.deals];
+    const Sx = f.sections || {};
+    parts = [f.game.zh, f.pitch, f.why, ...f.reasons.map((r, i) => `理由${i + 1}，${r.h}：${r.t}`), ...((Sx.gameplay || {}).body || []),
+      ...(Sx.voices ? ['玩家怎麼說：誇的是，' + Sx.voices.pros.join('；') + '。罵的是，' + Sx.voices.cons.join('；')] : []),
+      '怎麼玩最好玩：' + f.howto.join('；'), ...(f.multi ? ['跟朋友玩：' + f.multi.text] : []), '怎麼買：' + f.deals];
   } else {
     const f = await loadFeature(S.curId);
     parts = [f.game.zh, f.headline, f.hook, '結論：' + f.verdict.stamp + '，' + f.verdict.summary, ...f.sections.gameplay.body, '玩家怎麼說：誇的是，' + f.sections.voices.pros.join('；') + '。罵的是，' + f.sections.voices.cons.join('；')];

@@ -319,8 +319,230 @@
    "t": "Feral Interactive：XCOM 2 合輯 Android 版 7/13 上市",
    "u": "https://www.feralinteractive.com/en/news/retake-the-earth-in-the-xcom-2-collection-launches-on-android-13th-july/",
    "d": "2021-07"
+  },
+  {
+   "t": "Gamebanshee：2015 年 6 月 1 日公布，原本只出電腦版",
+   "u": "https://gamebanshee.com/kaa6u",
+   "d": "2015-06-01"
+  },
+  {
+   "t": "XCOM 官方：XCOM 2 公布新聞稿（創意總監 Jake Solomon）",
+   "u": "https://xcom.com/news/xcom-2-announced/amp",
+   "d": "2015-06-01"
+  },
+  {
+   "t": "Gameranx：由《文明帝國》的工作室 Firaxis 開發",
+   "u": "https://gameranx.com/updates/id/28377/article/xcom-2-launching-this-november-exclusively-for-pc/",
+   "d": "2015-06-01"
+  },
+  {
+   "t": "GamingBolt：Jake Solomon 談為什麼先只做電腦版",
+   "u": "https://gamingbolt.com/?p=233926",
+   "d": "2015-06-06"
+  },
+  {
+   "t": "Gematsu：PS4／Xbox One 版延到 2016 年 9 月 27 日",
+   "u": "https://www.gematsu.com/2016/08/xcom-2-ps4-xbox-one-delayed-september-27",
+   "d": "2016-08"
+  },
+  {
+   "t": "Take-Two 新聞稿：主機版與 The Workshop 合作移植",
+   "u": "https://ir.take2games.com/static-files/ee1bb161-bcaa-42fe-9318-92265ec7b5af",
+   "d": "2016-06-07"
+  },
+  {
+   "t": "GameSpot：上市當天就有 Long War 團隊做的官方模組",
+   "u": "https://www.gamespot.com/articles/xcom-2-launch-day-mods-from-long-war-team-revealed/1100-6434358/",
+   "d": "2016"
+  },
+  {
+   "t": "Pavonis Interactive：Long War 2（2K 委託，2017 年 1 月 19 日上架）",
+   "u": "https://pavonisinteractive.com/longwar2_features.htm",
+   "d": ""
+  },
+  {
+   "t": "XCOM 官方：戰術遺產包 2018 年 10 月 9 日上架",
+   "u": "https://xcom.com/news/xcom-2-war-of-the-chosen-tactical-legacy-pack-dlc-release-date-pc-steam/amp",
+   "d": "2018-10"
+  },
+  {
+   "t": "Game Informer：XCOM 2 各平台上市日",
+   "u": "https://www.gameinformer.com/index.php/psa/2020/05/29/bioshock-xcom-2-and-more-hit-switch-today",
+   "d": "2020-05-29"
+  },
+  {
+   "t": "Gematsu：Switch 版 XCOM 2 合輯（Virtuos 移植，含 4 個 DLC）",
+   "u": "https://www.gematsu.com/2020/03/xcom-2-collection-coming-to-switch-on-may-29",
+   "d": "2020-03"
+  },
+  {
+   "t": "Epic Games Store：XCOM 2 合輯內容與遊戲介紹",
+   "u": "https://store.epicgames.com/p/xcom-2--collection",
+   "d": ""
+  },
+  {
+   "t": "XCOM Wiki：多人對戰（Steam 版 2022 年 3 月 28 日關閉）",
+   "u": "https://xcom.fandom.com/wiki/Multiplayer_(XCOM_2)",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer：Steam 版關閉多人與挑戰模式，主機版不受影響",
+   "u": "https://www.pcgamer.com/au/xcom-2-is-losing-multiplayer-and-challenge-mode-on-pc",
+   "d": "2022-03"
+  },
+  {
+   "t": "RPGFan：天選者之戰評測（本體幾乎每個任務都限回合）",
+   "u": "https://www.rpgfan.com/review/xcom-2-war-of-the-chosen/",
+   "d": "2017-09-20"
+  },
+  {
+   "t": "Metacritic：XCOM 2（PS4）媒體評論",
+   "u": "https://legacy.prod.metacritic.com/game/playstation-4/xcom-2/critic-reviews",
+   "d": ""
+  },
+  {
+   "t": "Impulse Gamer（2K 新聞稿）：天選者之戰主機版上市與媒體評語",
+   "u": "https://www.impulsegamer.com/?p=85483",
+   "d": "2017-09-12"
+  },
+  {
+   "t": "GameSpot：Marvel's Midnight Suns 評測（攻擊必中，沒有命中率）",
+   "u": "https://gamespot.com/videos/marvels-midnight-suns-video-review/2300-6460116/",
+   "d": "2022"
   }
  ],
  "pending": [],
- "updated": "2026-11-16"
+ "updated": "2026-11-16",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "在復仇者號上排研究、蓋設施",
+    "世界地圖上接任務、應付外星人的黑暗事件",
+    "派 4～6 人小隊出擊，先潛行布置埋伏",
+    "回合制交火：掩體、側翼、高低差、命中率",
+    "撤離、養傷、升級，戰死的隊員回不來",
+    "壓住外星人的計畫進度，推進主線"
+   ],
+   "body": [
+    "戰術層是它的招牌：每名隊員一回合兩個行動點，可以移動加射擊，也可以全拿來衝刺。掩體分半掩和全掩，被敵人繞到側翼就形同沒掩護；每一槍都有命中率，距離、高低差和掩體都會影響。很多任務一開始處於隱匿狀態，可以先把隊員擺好位置，等敵人走進陷阱再一起開火。",
+    "戰略層一樣要動腦：你在改裝過的外星補給艦「復仇者號」上指揮，挖開房間蓋設施、研究外星科技、打造武器裝甲，在世界地圖上跟各地反抗軍聯繫。外星人會不斷推出「黑暗事件」，同時推進他們的計畫；計畫進度條滿了會開始倒數，倒數結束前沒壓下來就輸了。",
+    "隊員會隨著戰鬥升級，走近戰突擊、狙擊、重武器、無人機支援、靈能等兵種的技能樹，外觀和名字都能自訂，帶久了真的會有感情，戰死也就特別痛。《天選者之戰》再加三種英雄兵種、隊員之間的羈絆和疲勞，以及三位專門獵捕你的天選者。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "XCOM：未知敵人（2012）",
+    "same": "同一個團隊做的掩體＋命中率＋永久死亡回合制戰術",
+    "diff": "二代倒過來：人類已經輸了、你是游擊隊；地圖改成隨機生成，加了潛行伏擊、更多兵種，還支援模組"
+   },
+   {
+    "name": "Marvel's Midnight Suns",
+    "same": "一樣是 Firaxis 做的回合制戰術",
+    "diff": "主角是漫威超級英雄，用卡牌出招，攻擊不看命中率；XCOM 2 每一槍都是機率，緊張感完全不同"
+   },
+   {
+    "name": "Phoenix Point",
+    "same": "原版 X-COM 之父 Julian Gollop 的作品，同樣是基地經營＋小隊戰術",
+    "diff": "可以自由瞄準敵人身體部位，玩法更擬真；整體打磨和口碑還是 XCOM 2 比較穩"
+   }
+  ],
+  "story": {
+   "safe": [
+    "接在《XCOM：未知敵人》之後，而且是那場戰爭人類輸了的版本：二十年後，外星人透過政權 ADVENT 統治地球，地表蓋起閃亮的城市、承諾人類美好的未來，暗地裡卻藏著見不得人的計畫。",
+    "XCOM 只剩殘部，成了四處躲藏的游擊隊。你是剛從外星人手中被救回來的指揮官，要在改裝的外星補給艦「復仇者號」上重建組織，點燃全球反抗。",
+    "《天選者之戰》加入三位專門獵捕指揮官的「天選者」，他們會在任務中突襲、綁走隊員，也會來搗亂你的全球行動；另外還有三個理念不同的反抗軍派系可以結盟。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "開發商 Firaxis 就是做《文明帝國》系列的工作室，由 2K 發行，創意總監是 Jake Solomon。2015 年公布時只做電腦版，他說是為了把隨機地圖、模組支援這些野心做滿；主機版到 2016 年 9 月才和 The Workshop 合作移植。",
+   "Firaxis 很挺模組：上市當天就有前作超人氣模組《Long War》團隊做的官方模組可以下載。2017 年 1 月，這個團隊（改名 Pavonis Interactive）又在 2K 委託下推出大改版模組《Long War 2》；加上後來的各種大型模組，一輪戰役可以玩到上百小時。",
+   "後續擴充一路做到 2018 年的「戰術遺產包」（只有電腦版）。電腦版的 XCOM 2 合輯收了本體、天選者之戰和 5 個 DLC；Switch 版（Virtuos 移植）和手機版（Feral Interactive 移植）的合輯則是本體、天選者之戰和 4 個 DLC。"
+  ],
+  "timeline": [
+   {
+    "d": "2015-06-01",
+    "t": "公布，原本只做電腦版"
+   },
+   {
+    "d": "2016-02-05",
+    "t": "電腦版上市，當天就有官方合作模組"
+   },
+   {
+    "d": "2016-09-27",
+    "t": "PS4、Xbox One 版上市（北美）"
+   },
+   {
+    "d": "2017-01-19",
+    "t": "大改版模組 Long War 2 上架 Steam 工作坊"
+   },
+   {
+    "d": "2017-08-29",
+    "t": "資料片《天選者之戰》電腦版上市"
+   },
+   {
+    "d": "2017-09-12",
+    "t": "《天選者之戰》PS4、Xbox One 版上市"
+   },
+   {
+    "d": "2018-10-09",
+    "t": "戰術遺產包上架（電腦版）"
+   },
+   {
+    "d": "2020-05-29",
+    "t": "Switch 版 XCOM 2 合輯上市"
+   },
+   {
+    "d": "2020-11-05",
+    "t": "iOS 版 XCOM 2 合輯上市"
+   },
+   {
+    "d": "2021-07-13",
+    "t": "Android 版 XCOM 2 合輯上市"
+   },
+   {
+    "d": "2022-03-28",
+    "t": "Steam（Windows）版關閉多人對戰與挑戰模式"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "戰術緊張感一流：每一步都是取捨，打贏的每一場都是自己算出來的",
+    "隊員可以自訂、會成長也會戰死，帶久了真的有感情",
+    "隨機地圖加上模組生態，同一款可以玩好幾輪、上百小時",
+    "《天選者之戰》被當成完整版，Game Informer 說它幾乎多出一整款遊戲的份量"
+   ],
+   "cons": [
+    "本體上市時電腦版效能差、讀取久，當年的評測幾乎都提到",
+    "很多任務有回合限制，逼你冒險往前推",
+    "命中率讓人又愛又恨：關鍵一槍打空，整隊可能就崩了",
+    "主機版和 Switch 版的效能、畫質都比電腦版縮水"
+   ],
+   "debate": [
+    "回合限制到底好不好？支持的人說它逼你打得積極、節奏更緊湊；反對的人說它懲罰謹慎的玩家，最早熱門的模組之一就是拿掉回合限制。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "XCOM 2 合輯（Collection）",
+   "what": "本體＋資料片《天選者之戰》＋5 個 DLC（Resistance Warrior Pack、Anarchy's Children、Alien Hunters、Shen's Last Gift、Tactical Legacy Pack），電腦版最完整的一包。",
+   "tip": "最推薦，Steam 特價常打到很低。",
+   "best": true
+  },
+  {
+   "name": "XCOM 2 本體＋天選者之戰",
+   "what": "資料片要先有本體才能玩；加入天選者、三個反抗軍派系與英雄兵種、羈絆和疲勞。",
+   "tip": "已經有本體的話補資料片就好，不建議只玩本體。"
+  },
+  {
+   "name": "Switch／手機版 XCOM 2 合輯",
+   "what": "本體＋天選者之戰＋4 個 DLC（沒有戰術遺產包），可以帶著走；效能和畫質比電腦版縮水。",
+   "tip": "用電腦玩，買 Steam 版就好。"
+  }
+ ],
+ "multi": {
+  "ok": false,
+  "text": "電腦（Steam／Windows）版的一對一線上對戰和挑戰模式在 2022 年 3 月 28 日關閉，現在只能玩單人戰役；網路上有玩家做的合作模組，但不是官方功能。主機版的對戰沒受影響。"
+ }
 }

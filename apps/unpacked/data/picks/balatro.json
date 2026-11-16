@@ -309,8 +309,217 @@
    "t": "Insider Gaming：Balatro 種子模式怎麼玩",
    "u": "https://insider-gaming.com/best-balatro-seeds/",
    "d": "2024"
+  },
+  {
+   "t": "PC Gamer：Balatro 官方開發時間軸（2021 年 12 月開工）",
+   "u": "https://www.pcgamer.com/games/card-games/the-official-balatro-timeline-documents-the-history-of-2024s-biggest-game-as-its-developer-went-from-obsessed-with-making-it-to-shocked-at-the-reception",
+   "d": ""
+  },
+  {
+   "t": "GamesRadar：靈感來自大老二，和《Luck Be a Landlord》的影片",
+   "u": "https://gamesradar.com/exploring-balatros-hype-its-ingenious-twists-on-poker-and-its-mysterious-creator",
+   "d": "2024"
+  },
+  {
+   "t": "Game Informer 專訪：Balatro 差點叫《Joker Poker》",
+   "u": "https://www.gameinformer.com/interview/2024/03/21/balatro-was-almost-called-joker-poker-and-other-details-from-its-creator",
+   "d": "2024-03-21"
+  },
+  {
+   "t": "Windows Central：一人開發、下班時間全投入，從 5 萬套到 500 萬套",
+   "u": "https://www.windowscentral.com/gaming/the-numbers-on-that-page-made-no-sense-balatro-developer-recalls-his-amazement-at-selling-50-000-copies-of-his-game-which-went-on-to-sell-5-million",
+   "d": ""
+  },
+  {
+   "t": "Game Developer：銷量破 500 萬套（2024 年 12 月中為 350 萬）",
+   "u": "https://gamedeveloper.com/business/balatro-sells-5-million-copies-after-end-of-year-spike",
+   "d": "2025-01-21"
+  },
+  {
+   "t": "MobileSyrup：500 萬套不含 Apple Arcade 下載",
+   "u": "https://mobilesyrup.com/2025/01/21/balatro-5-million-copies-sold-update/",
+   "d": "2025-01-21"
+  },
+  {
+   "t": "KUOW（NPR）：2024 TGA 得獎名單，Balatro 拿三個獎",
+   "u": "https://www.kuow.org/stories/the-2024-game-awards-recap-all-winners-and-most-surprising-reveals",
+   "d": "2024-12"
+  },
+  {
+   "t": "Game Developer：PEGI 改判 18 禁，主機商店一度下架",
+   "u": "https://gamedeveloper.com/business/gambling-fears-get-balatro-delisted-after-ratings-board-mixup",
+   "d": "2024-03-01"
+  },
+  {
+   "t": "TechRadar：PEGI 申訴成功，改為 12 歲",
+   "u": "https://www.techradar.com/gaming/balatro-has-had-its-pegi-18-age-rating-overturned-following-appeal-i-hope-this-change-will-allow-developers-to-create-without-being-unfairly-punished",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer：改判後報導（遊戲沒有內購、沒有付費 DLC）",
+   "u": "https://pcgamer.com/games/card-games/balatro-finally-escapes-its-silly-18-age-rating-pegi-promises-a-more-granular-set-of-classification-criteria-for-gambling-themed-games-in-the-future",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer：第一波免費聯名 Friends of Jimbo",
+   "u": "https://www.pcgamer.com/games/card-games/geralt-and-dave-the-diver-are-in-balatro-now",
+   "d": "2024-08-27"
+  },
+  {
+   "t": "MP1st：Friends of Jimbo 4 更新上線",
+   "u": "https://mp1st.com/title-updates-and-patches/balatro-new-update-for-feb-24-brings-friends-of-jimbo-4",
+   "d": "2025-02-24"
+  },
+  {
+   "t": "PC Gamer 評測：91 分",
+   "u": "https://pcgamer.com/balatro-review",
+   "d": "2024"
+  },
+  {
+   "t": "PC Gamer 雜誌評測：運氣成分毫不掩飾",
+   "u": "https://www.pressreader.com/usa/pc-gamer-us/20240416/283042649539824",
+   "d": "2024-04-16"
+  },
+  {
+   "t": "PC Gamer：開發者還在做 1.1 大更新",
+   "u": "https://www.pcgamer.com/games/roguelike/localthunk-had-made-hobby-games-in-the-past-but-realized-balatro-was-something-special-when-a-friend-revealed-he-had-played-it-for-20-30-or-40-hours",
+   "d": ""
+  },
+  {
+   "t": "Balatro HQ：版本更新紀錄",
+   "u": "https://balatrohq.com/news/patches/",
+   "d": ""
+  },
+  {
+   "t": "Wikipedia：Balatro（LÖVE 引擎、單人遊戲、Playstack 2023 年 9 月簽約）",
+   "u": "https://en.wikipedia.org/wiki/Balatro_(video_game)",
+   "d": ""
+  },
+  {
+   "t": "Gematsu：Balatro 各平台上市日",
+   "u": "https://www.gematsu.com/games/balatro",
+   "d": ""
+  },
+  {
+   "t": "TrueAchievements：Balatro 的利息規則（每存 5 元多拿 1 元，最多 5 元）",
+   "u": "https://www.trueachievements.com/a424926/nest-egg-achievement",
+   "d": ""
   }
  ],
  "pending": [],
- "updated": "2026-11-16"
+ "updated": "2026-11-16",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "看這一關的目標分數",
+    "抽 8 張、挑最多 5 張打出牌型",
+    "籌碼 × 倍率算分，過關領錢",
+    "去商店買小丑、塔羅、行星牌",
+    "牌組越養越強，挑戰下一個底注"
+   ],
+   "body": [
+    "一局分成 8 個底注，每個底注有小盲注、大盲注和 Boss 盲注三關，每關要在有限的出牌和棄牌次數內打到目標分數。小、大盲注可以選擇跳過、換一個「標籤」獎勵；Boss 盲注會加上怪規則，例如某個花色整個不計分。打贏第 8 個底注的 Boss 就算通關。",
+    "分數＝籌碼 × 倍率。牌型決定基本的籌碼和倍率，行星牌能把某個牌型升級；塔羅牌用來改造手上的牌，例如換花色、加上強化。真正的引擎是小丑：最多只能帶 5 張，有的加倍率、有的直接乘倍率、有的要達成條件才觸發，幾張搭在一起就會連鎖爆分。",
+    "關卡之間的商店才是決策核心：錢要拿去買小丑、開卡包，還是存著吃利息；要不要把現在的小丑賣掉，換一套更有爆發力的組合。解鎖 15 副牌組和 8 種難度之後，同一套思路常常得整個重來，這就是它能玩幾百小時的原因。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "殺戮尖塔",
+    "same": "一局一局的牌組構築，每局拿到的牌和路線都不一樣，輸了就從頭再來",
+    "diff": "殺戮尖塔是打怪，要看敵人意圖、顧血量；Balatro 沒有戰鬥，只有分數目標，比較像在解一道會變形的算式"
+   },
+   {
+    "name": "Luck Be a Landlord",
+    "same": "開發者最主要的靈感來源，同樣是「湊組合、讓數字爆炸」的 roguelike",
+    "diff": "Landlord 是拉霸機，靠符號相鄰觸發；Balatro 是撲克牌型，每一手打哪幾張都由你決定"
+   },
+   {
+    "name": "吸血鬼倖存者",
+    "same": "同樣是便宜、好上手、一玩就停不下來的獨立爆紅作，爽點都在組合疊起來的那一刻",
+    "diff": "倖存者要即時走位；Balatro 完全回合制，想多久都可以，不考驗手速"
+   }
+  ],
+  "story": null,
+  "studio": [
+   "LocalThunk 是一個人做遊戲的開發者，平常有 IT 正職，下班時間幾乎全投進這款。2021 年 12 月他用三週假期開了一個叫 CardGame 的資料夾，到 2024 年 2 月上市，前後做了兩年半，用的是 LÖVE 這個輕量引擎。",
+   "它一開始其實想做線上版的「大老二」（粵語叫鋤大D），重溫跟朋友打牌的日子；後來看了實況主 Northernlion 玩拉霸 roguelike《Luck Be a Landlord》的影片，才轉成現在的單人計分構築。開發途中一度叫《Joker Poker》，最後取名 Balatro，意思是小丑、弄臣。",
+   "發行商 Playstack 在 2023 年 9 月簽下它。上市 10 天賣破 50 萬套，2024 年 12 月中累計 350 萬，2025 年 1 月破 500 萬套（還不含 Apple Arcade 的下載）。之後的 Friends of Jimbo 聯名卡面（巫師 3、吸血鬼倖存者、異塵餘生、刺客教條……）全部免費更新；開發者說還在做 1.1 大更新，到 2026 年 10 月都還沒推出。"
+  ],
+  "timeline": [
+   {
+    "d": "2021-12",
+    "t": "LocalThunk 用三週假期開工，資料夾叫 CardGame"
+   },
+   {
+    "d": "2023-09",
+    "t": "發行商 Playstack 簽下"
+   },
+   {
+    "d": "2024-02-20",
+    "t": "電腦、PS、Switch、Xbox 同步上市"
+   },
+   {
+    "d": "2024-03",
+    "t": "PEGI 一夜改判 18 禁，部分主機商店一度下架"
+   },
+   {
+    "d": "2024-08-27",
+    "t": "第一波免費聯名更新 Friends of Jimbo"
+   },
+   {
+    "d": "2024-09-26",
+    "t": "iOS、Android 手機版上市"
+   },
+   {
+    "d": "2024-12",
+    "t": "TGA 2024 拿下最佳獨立遊戲、最佳獨立處女作、最佳行動遊戲，並入圍年度遊戲"
+   },
+   {
+    "d": "2025-01-21",
+    "t": "官方宣布銷量破 500 萬套"
+   },
+   {
+    "d": "2025-02-24",
+    "t": "Friends of Jimbo 4 上線（刺客教條、異塵餘生等聯名）"
+   },
+   {
+    "d": "2026-02-25",
+    "t": "Switch 2 版推出"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "規則一句話就懂，深度卻挖不完：同一套小丑換個牌組、換個難度就是另一種打法",
+    "「再一局就好」的魔力：評測幾乎都提到一坐下去就停不下來，PC Gamer 給 91 分",
+    "連鎖爆分那一下非常爽，配上合成器音樂和 CRT 復古畫面，緊張中又很放鬆",
+    "價格便宜、沒有內購，後來的聯名更新全部免費"
+   ],
+   "cons": [
+    "運氣成分重：抽不到要的小丑或牌型，整局就是會崩，評測也直說它不掩飾機率",
+    "後期分數動輒幾十萬、幾百萬，算數味偏重，不愛算的人會累",
+    "高難度非常硬，想全收集要兩百多小時"
+   ],
+   "debate": [
+    "它算不算賭博？歐洲分級機構 PEGI 曾因為「明顯的賭博圖像」判它 18 禁，還一度讓它從部分主機商店下架；開發者和發行商強調遊戲沒有任何真錢或內購，後來申訴成功改成 12 歲。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "Balatro（本體）",
+   "what": "電腦、PS、Switch、Xbox 都只有這一個版本，沒有付費 DLC；Friends of Jimbo 聯名卡面這類更新都是免費的。",
+   "tip": "用電腦玩，直接買 Steam 版就好。",
+   "best": true
+  },
+  {
+   "name": "手機版／Apple Arcade 版",
+   "what": "iOS、Android 版另外買斷；有訂 Apple Arcade 的人可以直接玩 Apple Arcade 版。",
+   "tip": "想在手機上隨時來一局再考慮，電腦和手機要分開買。"
+  }
+ ],
+ "multi": {
+  "ok": false,
+  "text": "純單人遊戲，沒有連線或合作模式，適合自己一個人慢慢算。"
+ }
 }

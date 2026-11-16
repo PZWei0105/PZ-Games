@@ -624,6 +624,27 @@ body.calm #tape .in{animation-duration:60s}
   #gate .gl{font-size:54px}
 }
 
+/* 推坑：跟朋友玩、版本怎麼選 */
+.multi{position:relative;margin:16px 0 4px;padding:14px 16px 12px;border:3px solid #0d0d0d;background:#fff;color:#0d0d0d;box-shadow:5px 5px 0 #0d0d0d;transform:rotate(-.6deg)}
+.multi .mk{display:inline-block;font:800 12px/1 var(--fd,inherit);letter-spacing:.06em;background:#0d0d0d;color:#FFE600;padding:4px 8px;margin-bottom:8px}
+.multi b{display:block;font-size:20px;font-weight:900;margin-bottom:4px}
+.multi p{margin:0;font-size:15px;line-height:1.65}
+.multi.m-g{background:#2fd06a}.multi.m-y{background:#FFE600}.multi.m-k{background:#f2efe6}
+.eds{display:grid;gap:12px;margin:10px 0 6px}
+.ed{position:relative;padding:14px 16px 12px;border:3px solid #0d0d0d;background:#fffdf3;color:#0d0d0d;box-shadow:4px 4px 0 var(--p,#ff2e88);transform:rotate(var(--rot,0deg))}
+.ed.best{background:#FFE600;box-shadow:6px 6px 0 #0d0d0d}
+.ed h4{margin:0 0 6px;font-size:17px;font-weight:900}
+.ed p{margin:0;font-size:15px;line-height:1.65}
+.ed .ed-t{margin-top:6px;font-weight:800;color:#c4005a}
+.ed.best .ed-t{color:#0d0d0d}
+.ed-b{position:absolute;top:-12px;right:10px;background:#ff2e88;color:#fff;font-weight:900;font-size:12px;padding:3px 8px;border:2px solid #0d0d0d;transform:rotate(3deg)}
+@media (min-width:720px){.eds{grid-template-columns:repeat(3,1fr)}}
+
+/* 手機上任何旋轉的貼紙、印章都不准把畫面撐寬（iPhone 會被拖得左右晃） */
+#app{overflow-x:clip}
+.pk .tp1{right:-9px}
+@media (max-width:480px){.letter .seal{right:-2px}}
+
 </style>
 </head>
 <body>
@@ -650,7 +671,7 @@ body.calm #tape .in{animation-duration:60s}
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611160917';
+const VERSION = '1.0.2611161056';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1527,7 +1548,12 @@ async function renderPick(id) {
   const scores = [...(f.scores || []).map((x) => [x.k, x.v, (x.s || []).map((j) => f.sources[j]).filter(Boolean)[0]]),
     ...(rv && rv.pct != null ? [['Steam 評價', `${rv.pct}%`, null, `${rv.label || ''} · ${fmtN(rv.n)} 則`]] : []),
     ...(tc && tc.pct != null && tc.n ? [['繁中玩家', `${tc.pct}%`, null, `${tc.label || ''} · ${fmtN(tc.n)} 則`]] : [])];
-  const tabs = [['s-rate', '評價'], ['s-how', '怎麼玩'], ['s-media', '影像'], ['s-info', '資訊'], ['s-talk', '討論'], ['s-src', '來源']];
+  const Sx = f.sections || {};
+  const story = Sx.story && ((Sx.story.safe || []).length || (Sx.story.spoiler || []).length);
+  const today = todayTW();
+  const tabs = [Sx.gameplay ? ['s-play', '玩法'] : null, ['s-rate', '評價'], ['s-how', '怎麼玩'], story ? ['s-story', '劇情'] : null, ['s-media', '影像'], ['s-info', '資訊'], (Sx.studio || []).length ? ['s-studio', '幕後'] : null, ['s-talk', '討論'], ['s-src', '來源']].filter(Boolean);
+  const MULTI = { true: ['可以一起玩', 'g'], partial: ['部分可以', 'y'], false: ['單人遊戲', 'k'] };
+  const mu = f.multi && MULTI[String(f.multi.ok)];
   return `<div class="f-top"><div class="f-hero" id="fhero"><div class="kb">${hero ? `<img class="kbi on" src="${esc(hero)}" alt="" onerror="heroFail(this)" onload="if(this.naturalWidth<=120)heroFail(this)"><img class="kbi" alt="" decoding="async">` : ''}</div>
       ${micro ? `<video class="hv" muted loop playsinline preload="none" disablepictureinpicture aria-hidden="true" data-mp4="${esc(mc.mp4 || '')}" data-webm="${esc(mc.webm || '')}"></video>` : ''}
       <div class="ph" style="${hero ? 'display:none' : ''}">UNPACKED</div><div class="ht"></div>
@@ -1543,13 +1569,22 @@ async function renderPick(id) {
     <div class="rsns">${f.reasons.map((r, i) => `<div class="rsn" style="--i:${i};--rot:${rot(id + r.h, i, 1.4)}deg"><b class="rn">${i + 1}</b><h4>${esc(r.h)}</h4><p>${esc(r.t)}</p></div>`).join('')}</div>
     <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
+    ${Sx.gameplay ? sec('s-play', 'PLAY', '玩法拆解', `<div class="loop">${Sx.gameplay.loop.map((x, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="lp" style="--rot:${rot(id + x, i, 2)}deg">${esc(x)}</span>`).join('')}<span class="back2">↺ 再來一輪</span></div>
+      ${Sx.gameplay.body.map((p) => `<p class="para">${esc(p)}</p>`).join('')}
+      ${(Sx.compare || []).length ? `<h3 class="tape-h p">跟誰像、差在哪</h3><div class="cmp">${Sx.compare.map((c, i) => `<div class="cmpc" style="--rot:${rot(id + c.name, i, 1.2)}deg"><h4>${esc(c.name)}</h4><div class="row"><b>像</b><span>${esc(c.same)}</span></div><div class="row d"><b>不同</b><span>${esc(c.diff)}</span></div></div>`).join('')}</div>` : ''}`) : ''}
     ${sec('s-rate', 'RATE', '評價怎麼說', `${scores.length ? `<div class="scores">${scores.map(([k, v, s2, sub], i) => `<div class="sc" style="--rot:${rot(id + k, i, 1.4)}deg"><span class="sk">${esc(k)}</span><b class="sv ${String(v).length > 6 ? 'long' : ''}">${esc(v)}</b>${sub ? `<span class="ss">${esc(sub)}</span>` : s2 ? `<a class="ss" href="${esc(s2.u)}" target="_blank" rel="noopener noreferrer">來源</a>` : ''}</div>`).join('')}</div>` : ''}
-      <div class="fa"><div class="st"><h4>適合你，如果…</h4><ul>${f.fit.for.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="st p"><h4>先別買，如果…</h4><ul>${f.fit.against.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>`)}
+      <div class="fa"><div class="st"><h4>適合你，如果…</h4><ul>${f.fit.for.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="st p"><h4>先別買，如果…</h4><ul>${f.fit.against.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
+      ${Sx.voices ? `<h3 class="tape-h">玩家和媒體怎麼說</h3><div class="voices"><div class="vc pro"><h4>誇的</h4><ul>${Sx.voices.pros.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="vc con"><h4>罵的</h4><ul>${Sx.voices.cons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
+      ${(Sx.voices.debate || []).length ? `<div class="debate"><h4>吵最兇的</h4>${Sx.voices.debate.map((x) => `<p>${esc(x)}</p>`).join('')}</div>` : ''}` : ''}`)}
     ${sec('s-how', 'HOW', '怎麼玩最好玩', `<div class="steps">${f.howto.map((p) => `<div class="stp">${esc(p)}</div>`).join('')}</div>
+      ${mu ? `<div class="multi m-${mu[1]}"><span class="mk">跟朋友玩？</span><b>${mu[0]}</b><p>${esc(f.multi.text)}</p></div>` : ''}
+      ${(f.editions || []).length ? `<h3 class="tape-h y">版本怎麼選</h3><div class="eds">${f.editions.map((e, i) => `<div class="ed ${e.best ? 'best' : ''}" style="--rot:${rot(id + e.name, i, 1.1)}deg">${e.best ? '<span class="ed-b">建議買這個</span>' : ''}<h4>${esc(e.name)}</h4><p>${esc(e.what)}</p>${e.tip ? `<p class="ed-t">${esc(e.tip)}</p>` : ''}</div>`).join('')}</div>` : ''}
       <div class="deal"><b>怎麼買最划算</b><p>${esc(f.deals)}</p></div>`)}
+    ${story ? sec('s-story', 'STORY', '劇情與世界觀', `${(Sx.story.safe || []).map((p) => `<p class="para">${esc(p)}</p>`).join('')}${(Sx.story.spoiler || []).length ? `<div class="spoil"><div class="inner">${Sx.story.spoiler.map((p) => `<p class="para">${esc(p)}</p>`).join('')}</div><div class="cover" data-act="spoil"><b>⚠ 有雷，撕開才看</b><span>tap to rip!</span></div></div>` : ''}`) : ''}
     ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>
       ${M.shots.length ? `<h3 class="tape-h">相簿 <small class="shot-n">${M.shots.length} 張・點開可以左右滑</small></h3><div class="shots">${M.shots.map((s2, i) => `<div class="shot" data-act="lb" data-i="${i}" style="--rot:${rot(id + s2, i, 1)}deg"><img src="${esc(s2)}" alt="" loading="lazy" decoding="async" onerror="shotFail(this)" onload="if(this.naturalWidth<=120)shotFail(this)"></div>`).join('')}</div>` : ''}`)}
     ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源。</p><div class="facts">${factsHtml(f)}</div>${liveHtml(f, lv, h)}${infoCards(f, lv)}`)}
+    ${(Sx.studio || []).length ? sec('s-studio', 'STUDIO', '幕後：誰做的', `${Sx.studio.map((p) => `<p class="para">${esc(p)}</p>`).join('')}${(Sx.timeline || []).length ? `<h3 class="tape-h">時間軸</h3><div class="tl">${Sx.timeline.map((t) => `<div class="tli ${t.d > today ? 'fut' : ''}"><div class="td">${esc(t.d.replace(/-/g, '.'))}</div><div class="tt">${esc(t.t)}</div></div>`).join('')}</div>` : ''}`) : ''}
     ${sec('s-talk', 'TALK', '玩完可以聊', `${(f.talk || []).length ? `<div class="qs">${f.talk.map((q, i) => `<div class="q" style="--rot:${rot(id + q.q, i, 0.9)}deg"><h4>${esc(q.q)}</h4><p>${esc(q.why)}</p><textarea data-act="thought" data-k="${esc(id)}#${i}" placeholder="我的想法（只存在這台裝置）">${esc(S.thoughts[id + '#' + i] || '')}</textarea></div>`).join('')}</div>` : ''}
       <h3 class="tape-h">我的標記</h3><div class="marks">${[['want', '想玩'], ['playing', '在玩'], ['done', '玩過'], ['no', '沒興趣']].map(([k, l], i) => `<button class="mkb ${mk === k ? 'on' : ''}" data-act="mark" data-k="${k}" style="--rot:${rot(id + k, i, 2)}deg">${l}</button>`).join('')}</div>
       <textarea class="mynote" data-act="note" placeholder="筆記：例如玩到哪、要不要等特價、適不適合拍影片…">${esc(S.notes[id] || '')}</textarea>`)}
@@ -2141,7 +2176,10 @@ async function speakFeature() {
   let parts;
   if (S.curKind === 'pick') {
     const f = await loadPick(S.curId);
-    parts = [f.game.zh, f.pitch, f.why, ...f.reasons.map((r, i) => `理由${i + 1}，${r.h}：${r.t}`), '怎麼玩最好玩：' + f.howto.join('；'), '怎麼買：' + f.deals];
+    const Sx = f.sections || {};
+    parts = [f.game.zh, f.pitch, f.why, ...f.reasons.map((r, i) => `理由${i + 1}，${r.h}：${r.t}`), ...((Sx.gameplay || {}).body || []),
+      ...(Sx.voices ? ['玩家怎麼說：誇的是，' + Sx.voices.pros.join('；') + '。罵的是，' + Sx.voices.cons.join('；')] : []),
+      '怎麼玩最好玩：' + f.howto.join('；'), ...(f.multi ? ['跟朋友玩：' + f.multi.text] : []), '怎麼買：' + f.deals];
   } else {
     const f = await loadFeature(S.curId);
     parts = [f.game.zh, f.headline, f.hook, '結論：' + f.verdict.stamp + '，' + f.verdict.summary, ...f.sections.gameplay.body, '玩家怎麼說：誇的是，' + f.sections.voices.pros.join('；') + '。罵的是，' + f.sections.voices.cons.join('；')];
