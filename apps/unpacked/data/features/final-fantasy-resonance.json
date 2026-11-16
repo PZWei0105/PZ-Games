@@ -1,0 +1,493 @@
+{
+  "id": "final-fantasy-resonance",
+  "date": "2026-11-17",
+  "rank": 1,
+  "kind": "new",
+  "kind_label": "新作熱評",
+  "game": {
+    "zh": "FINAL FANTASY RESONANCE",
+    "zh_note": "暫無官方中文名（台灣商店與實體版都用英文原名）",
+    "en": "FINAL FANTASY RESONANCE",
+    "steam": 3259780,
+    "dev": "Square Enix／LANCARSE",
+    "pub": "Square Enix",
+    "platforms": [
+      "PC（Steam）",
+      "PS5",
+      "Xbox Series X|S",
+      "Switch 2",
+      "Switch"
+    ],
+    "genres": [
+      "日式角色扮演",
+      "回合制",
+      "HD-2D"
+    ],
+    "release": "2026-10-22",
+    "release_text": "2026/10/22 全平台上市（Steam 為台灣時間 10/23 凌晨解鎖）",
+    "price_text": "Steam／PS5 標準版 NT$1,490／PS5 數位豪華版 NT$1,890",
+    "site": "https://store.steampowered.com/app/3259780/"
+  },
+  "headline": "第一款 HD-2D 的 Final Fantasy：把關服手遊的故事重做成買斷制，評價九成五",
+  "hook": "你的飛空艇剛降落在大地神殿，水晶就在眼前碎成光點。下一場戰鬥，你盯著畫面上方的行動順序，算準哪一刀能把三隻怪的崩潰量表同時打空——全場僵直的那一瞬間，整隊多拿一回合，克勞德的幻影在你身後亮起來。",
+  "verdict": {
+    "stamp": "推薦",
+    "label": "現在就玩（先玩免費體驗版）",
+    "summary": "戰鬥和「幻影」配裝很有深度、HD-2D 畫面是目前同類的高標，Steam 評價九成五好評、有繁中字幕、你的筆電跑起來毫無壓力。最大的爭議是劇情偏老套；不確定就先玩免費體驗版的第一章，存檔能帶進正式版。",
+    "for": [
+      "玩過《歧路旅人》、喜歡算行動順序和弱點的回合制玩家",
+      "FF5 職業系統的老粉，愛研究技能繼承、配出怪招",
+      "想找一款 40 小時左右、不用課金、能好好破關的日式 RPG"
+    ],
+    "against": [
+      "玩 RPG 主要是為了劇情、討厭王道老梗的人",
+      "受不了隨機遇敵、又沒有自動戰鬥的人",
+      "想聽中文配音的人（只有日文和英文語音）"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Square Enix 與 LANCARSE 開發，Square Enix 發行；製作人中島啟介、總監古屋博人",
+      "s": [
+        0,
+        12,
+        13
+      ]
+    },
+    {
+      "k": "上市",
+      "v": "2026/10/22 全平台同步（Steam 解鎖是台灣時間 10/23 凌晨；台灣 PS Store 頁面標示 10/21）；9/3 起有免費體驗版，涵蓋第一章，存檔可接續",
+      "s": [
+        3,
+        4,
+        2,
+        15
+      ]
+    },
+    {
+      "k": "平台",
+      "v": "PC（Steam、Xbox PC）、PS5、Xbox Series X|S、Switch 2、Switch；實體版只有 Switch 2、Switch、PS5",
+      "s": [
+        3,
+        4
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Steam 台灣 NT$1,490；PS Store 台灣標準版 NT$1,490、數位豪華版 NT$1,890、豪華升級包 NT$529；PS5 中文實體版定價 NT$1,490",
+      "s": [
+        1,
+        2,
+        18
+      ]
+    },
+    {
+      "k": "收費模式",
+      "v": "買斷制，拿掉了原作手遊的抽角色、體力與計時器；豪華版的道具也有分開販售",
+      "s": [
+        5,
+        19,
+        0
+      ]
+    },
+    {
+      "k": "語言",
+      "v": "介面與字幕有繁中、簡中；語音只有日文、英文",
+      "s": [
+        0,
+        2
+      ]
+    },
+    {
+      "k": "分級",
+      "v": "台灣輔 15 級",
+      "s": [
+        2
+      ]
+    },
+    {
+      "k": "防盜版",
+      "v": "Steam 版使用 Denuvo，需同意第三方授權條款；單人遊戲",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "電腦需求",
+      "v": "Windows 11、8GB RAM、15GB 空間；建議配備 GTX 1650 等級可 1080p／60fps 最高畫質",
+      "s": [
+        0,
+        20
+      ]
+    },
+    {
+      "k": "遊玩時數",
+      "v": "主線大約 40 小時，共 8 章；另有競技場、究極武器等挑戰",
+      "s": [
+        10,
+        8,
+        0
+      ]
+    },
+    {
+      "k": "媒體評分",
+      "v": "OpenCritic 85 分、92% 推薦；Metacritic PS5 版 86、Switch 2 版 82（10/27 統計）",
+      "s": [
+        6,
+        7
+      ]
+    },
+    {
+      "k": "Steam 評價",
+      "v": "壓倒性好評，約 6,300 則、95% 好評（11/17 讀取；即時數字見下方）",
+      "s": [
+        1
+      ]
+    },
+    {
+      "k": "後續內容",
+      "v": "製作人表示目前沒有追加幻影的計畫，後續要看銷量",
+      "s": [
+        14
+      ]
+    }
+  ],
+  "money": {
+    "level": 1,
+    "model": "買斷制＋可選豪華版道具",
+    "notes": [
+      "原作是 2025 年結束營運的抽卡手遊《FINAL FANTASY BRAVE EXVIUS》，這次官方明講拿掉抽角色、體力和計時器，所有角色靠劇情取得。",
+      "數位豪華版多一組道具包（魔導裝甲鑰匙、飾品和一些回復品），Steam 頁面提醒這些道具也有單獨販售，別重複買。",
+      "這些道具偏向前期方便，不是付費才能變強的設計；不買豪華版也能完整破關。"
+    ],
+    "flags": [
+      "買斷制",
+      "Denuvo",
+      "無抽卡"
+    ]
+  },
+  "zh": {
+    "ui": true,
+    "sub": true,
+    "voice": false,
+    "note": "介面、字幕有繁體中文；語音只有日文、英文。PlayStation 官方頁註明，中文翻譯字幕僅限主線與主要角色，部分支線或次要角色的對話可能沒有翻譯。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區、PS Store 台灣都有上架，台灣也有中文實體版（輔 15 級）；單人遊戲，沒有伺服器問題。"
+  },
+  "rig": {
+    "verdict": "綽綽有餘",
+    "note": "官方建議配備只要 GTX 1650 等級、15GB 空間，你的 RTX 5090 Laptop 開最高畫質完全不用想；接 4K 電視拿手把玩最舒服。"
+  },
+  "time": {
+    "text": "主線約 40 小時",
+    "note": "共 8 章；體驗版第一章大約 3～5 小時，存檔可以接到正式版。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "xpxi0MEVsus",
+        "title": "上市預告"
+      },
+      {
+        "id": "wbsfQYI_IIY",
+        "title": "發表預告"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "會不會因為銷量好而追加幻影或第二季劇情",
+    "Steam 評價能不能維持在壓倒性好評",
+    "第一次特價會打幾折"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "推進主線章節",
+        "大地圖探索、搭飛空艇",
+        "回合制戰鬥打崩潰",
+        "換幻影、繼承技能",
+        "支線收集召喚獸",
+        "破關後挑戰隱藏魔王"
+      ],
+      "body": [
+        "戰鬥是回合制，畫面上有完整的行動順序。每隻敵人身上有一條「崩潰量表」，打弱點掉得最快；把一隻打到崩潰，攻擊者能多動一次，整場敵人同時崩潰，全隊都多一回合。這套節奏和《歧路旅人》很像，但多了「抓時機一次清空」的爽感。",
+        "全場崩潰之後，角色可以放出「共鳴」大招，效果看你身上裝的幻影而定。",
+        "幻影是這款的職業系統：每個角色裝一個，可能是自己隊友，也可能是克勞德、蒂娜、克萊夫這些歷代主角。幻影給能力值和技能，學會的技能在成本上限內能帶著走，所以可以配出雙重詠唱、魔法劍雙持這類組合。總監說這是 FF5 職業系統的進化版。",
+        "召喚獸要靠支線取得，耗魔大、上場打三回合後放大絕。地圖上有陸行鳥、飛空艇，遇敵是隨機的。"
+      ]
+    },
+    "hour": [
+      "先在 Steam 下載免費體驗版玩第一章，確定喜歡再買，存檔可以直接接上。",
+      "戰鬥前先看行動順序：把能打弱點的角色排在敵人出手前，比亂打有效得多。",
+      "別急著把所有角色都練成輸出：留一個能補、能解狀態的，前期王戰會輕鬆很多。",
+      "拿到新幻影就順手換上試試，技能學會後再換回去也帶得走。"
+    ],
+    "compare": [
+      {
+        "name": "歧路旅人系列",
+        "same": "HD-2D 畫面、打弱點破防、回合制",
+        "diff": "RESONANCE 是單一主線、一組固定隊伍，加上幻影配裝和歷代 FF 角色客串"
+      },
+      {
+        "name": "Final Fantasy V",
+        "same": "職業切換、技能繼承、配出怪招的樂趣",
+        "diff": "RESONANCE 的「職業」是一個個角色幻影，還有崩潰與共鳴的戰鬥節奏"
+      },
+      {
+        "name": "FINAL FANTASY BRAVE EXVIUS（原作手遊）",
+        "same": "主角群、第一季的故事骨架、配樂",
+        "diff": "手遊靠抽角色和體力賺錢；這次是買斷制單機，劇情重寫、戰鬥系統全新"
+      }
+    ],
+    "story": {
+      "safe": [
+        "騎士之國格蘭謝爾特的飛空艇隊長雷恩，和夥伴拉斯威爾前往大地神殿，卻被一名神祕男子擊敗，眼睜睜看著大地水晶碎裂。",
+        "王國隨後遭到攻擊，雷恩和拉斯威爾帶著失去記憶的少女菲娜踏上旅程，要守住剩下的水晶。官方強調不用玩過原作手遊也能看懂。"
+      ],
+      "spoiler": [
+        "結局：菲娜把自己所有的力量交給雷恩，雷恩活了下來，三人朝著一顆流星展開新的旅程。"
+      ]
+    },
+    "studio": [
+      "故事原型來自 2015 年上線、2025 年結束營運的手遊《FINAL FANTASY BRAVE EXVIUS》。製作團隊說這不是移植也不是重製，而是把第一季的故事重新打造。",
+      "製作人中島啟介、總監古屋博人在訪談中說，做 HD-2D 版 FF 的想法大約 2019 年成形；製作人在手遊還在營運的 2020 年底就提了企劃。",
+      "配樂由 Elements Garden 的上松範康操刀，收錄 33 首新錄曲目與原作音樂。",
+      "製作人 9 月表示目前沒有追加幻影的計畫，第二季劇情並未開發，但不排除可能，要看銷量。"
+    ],
+    "voices": {
+      "pros": [
+        "HD-2D 畫面被很多媒體認為是目前同類的新標竿",
+        "崩潰、共鳴加上幻影配裝，戰鬥越打越有深度",
+        "配樂好聽、節奏俐落、幾乎不用刷等",
+        "拿掉抽卡和體力，玩家普遍買單"
+      ],
+      "cons": [
+        "劇情可預測、寫得偏平，是評分落差的主因",
+        "大地圖內容偏少、迷宮設計普通，隨機遇敵又沒有自動戰鬥",
+        "城鎮鏡頭固定、介面字體不能放大"
+      ],
+      "debate": [
+        "故事到底夠不夠格掛 FF 的招牌？Game Informer 給 9 分，Eurogamer 只給 3 顆星，差距幾乎都出在劇情。",
+        "手遊出身是包袱還是資產？有人覺得角色設計還看得出抽卡時代的痕跡，也有人覺得這是把好故事救回來。"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2015",
+        "t": "原作手遊《FINAL FANTASY BRAVE EXVIUS》上線"
+      },
+      {
+        "d": "2025",
+        "t": "原作手遊結束營運"
+      },
+      {
+        "d": "2026-06-09",
+        "t": "正式發表，公布 10/22 上市"
+      },
+      {
+        "d": "2026-09-03",
+        "t": "全平台免費體驗版推出（第一章）"
+      },
+      {
+        "d": "2026-10-20",
+        "t": "媒體評測解禁"
+      },
+      {
+        "d": "2026-10-22",
+        "t": "全平台上市；隔天 Steam 評價 97% 好評"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "關服手遊重做成買斷單機，是不是 Square Enix 的新路線？",
+        "why": "抽卡手遊一關服，故事和角色就跟著消失。這款證明了這些內容拿掉課金後也能賣，接下來會不會有更多手遊被「救」回來？"
+      },
+      {
+        "q": "戰鬥 9 分、劇情 6 分，你會買嗎？",
+        "why": "媒體的分歧幾乎都在劇情。對回合制玩家來說系統可能才是重點，這題很適合讓觀眾表態。"
+      },
+      {
+        "q": "HD-2D 會不會開始讓人審美疲勞？",
+        "why": "歧路旅人、勇者鬥惡龍重製、現在輪到 FF。畫面依然漂亮，但這種風格還能撐多久新鮮感？"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "水晶在你眼前碎掉，下一場戰鬥你盯著行動順序，算好哪一下能讓整排敵人同時僵住。\n\n《FINAL FANTASY RESONANCE》是 Square Enix 第一款 HD-2D 風格的 Final Fantasy，10/22 登上 PC、PS5、Xbox、Switch 2 和 Switch。故事來自已經關服的手遊《Brave Exvius》，這次重做成買斷制，抽角色和體力全部拿掉。\n\n玩法是回合制：打弱點把敵人的崩潰量表清空就能多動一次，全場崩潰還能放共鳴大招。每個角色可以裝一個「幻影」，克勞德、蒂娜、克萊夫都在裡面，學會的技能能帶著走，配裝空間很大。\n\nSteam 台灣 NT$1,490，有繁中介面和字幕、語音是日英文，主線大約 40 小時，Steam 評價九成五好評。媒體普遍誇戰鬥和畫面，劇情則被說太老套。還有免費體驗版可以先試第一章。\n\n戰鬥夠好、劇情普通，這樣的 FF 你會入手嗎？",
+    "titles": [
+      "第一款 HD-2D 的 FF 上市：繁中、40 小時、九成五好評",
+      "關服手遊變買斷大作？這款 FF 拿掉了抽卡",
+      "戰鬥滿分、劇情被嫌老套，這款 FF 該不該買？"
+    ],
+    "card": {
+      "kicker": "新作熱評｜Steam 95% 好評",
+      "title": "第一款 HD-2D 的\nFinal Fantasy",
+      "sub": "關服手遊重做成買斷制",
+      "tags": [
+        "回合制",
+        "繁中字幕",
+        "無抽卡"
+      ],
+      "points": [
+        {
+          "h": "崩潰再多動",
+          "t": "打空量表多一回合，全場崩潰放共鳴。"
+        },
+        {
+          "h": "幻影配裝",
+          "t": "歷代主角當職業，技能學會能帶走。"
+        },
+        {
+          "h": "主線 40 小時",
+          "t": "Steam NT$1,490，有免費體驗版。"
+        }
+      ]
+    },
+    "tags": [
+      "#FINALFANTASYRESONANCE",
+      "#FinalFantasy",
+      "#HD2D",
+      "#日式RPG",
+      "#回合制",
+      "#遊戲狂想曲"
+    ],
+    "script": "抽卡手遊關服了，故事卻被做成一款買斷制大作，還拿到九成五好評。這款是《FINAL FANTASY RESONANCE》，Square Enix 第一款 HD-2D 風格的 Final Fantasy，10 月 22 號上市，PC、PS5、Xbox、Switch 2 都有。\n戰鬥是回合制，重點在崩潰量表：打弱點把它清空，敵人僵住、你多動一次；全場一起崩潰，還能放共鳴大招。每個角色能裝一個幻影，克勞德、蒂娜都在，技能學會就能帶走，配裝很好玩。\nSteam 台灣一千四百九，有繁中字幕，語音只有日文跟英文，主線大概 40 小時。媒體幾乎都誇戰鬥和畫面，扣分在劇情太王道。\n不放心就先玩免費體驗版，存檔可以接。戰鬥好、劇情普通，你買不買？留言跟我說。",
+    "credit": "圖片／影片來源：Square Enix 官方 Steam 商店頁與 FINAL FANTASY 官方 YouTube 預告"
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：FINAL FANTASY RESONANCE",
+      "u": "https://store.steampowered.com/app/3259780/",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Steam 官方商店資料：台灣售價與評價統計（解包資料管線 11/17 讀取）",
+      "u": "https://store.steampowered.com/api/appdetails?appids=3259780&cc=tw",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "PlayStation Store 台灣：FINAL FANTASY RESONANCE",
+      "u": "https://store.playstation.com/zh-hant-tw/product/HP0082-PPSA34140_00-FFRSSTDHP0000000",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Gematsu：HD-2D RPG Final Fantasy Resonance 發表",
+      "u": "https://www.gematsu.com/2026/06/hd-2d-rpg-final-fantasy-resonance-announced-for-ps5-xbox-series-switch-2-switch-and-pc",
+      "d": "2026-06-09"
+    },
+    {
+      "t": "RPG Site：Final Fantasy Resonance 10/22 上市",
+      "u": "https://www.rpgsite.net/news/20619-final-fantasy-resonance-a-new-hd-2d-ff-game-launches-october-22",
+      "d": "2026-06-09"
+    },
+    {
+      "t": "Notebookcheck：Final Fantasy Resonance 拿掉抽卡",
+      "u": "https://notebookcheck.net/Final-Fantasy-Resonance-drops-gacha-for-turn-based-RPG.1319910.0.html",
+      "d": "2026-06-11"
+    },
+    {
+      "t": "OpenCritic：Final Fantasy Resonance 評測彙整",
+      "u": "https://opencritic.com/game/20820/final-fantasy-resonance/reviews",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "DLCompare：Final Fantasy Resonance 好評但仍有爭議",
+      "u": "https://www.dlcompare.com/gaming-news/final-fantasy-resonance-earns-high-praise-but-still-sparks-debate-86906",
+      "d": "2026-10-27"
+    },
+    {
+      "t": "Game Informer 評測（9 分）",
+      "u": "https://gameinformer.com/review/final-fantasy-resonance/on-its-own-wavelength",
+      "d": "2026-10-20"
+    },
+    {
+      "t": "GamingBolt 評測（9 分）",
+      "u": "https://gamingbolt.com/final-fantasy-resonance-review-a-link-to-the-past",
+      "d": "2026-10-21"
+    },
+    {
+      "t": "Shacknews：Final Fantasy Resonance 破關要多久",
+      "u": "https://www.shacknews.com/article/151079/how-long-does-it-take-to-beat-final-fantasy-resonance",
+      "d": "2026-10-23"
+    },
+    {
+      "t": "RPGamer：Final Fantasy Resonance 發表與戰鬥系統",
+      "u": "https://rpgamer.com/2026/06/final-fantasy-resonance-announced/",
+      "d": "2026-06"
+    },
+    {
+      "t": "Gamereactor 訪談：HD-2D 版 FF 醞釀六、七年",
+      "u": "https://www.gamereactor.eu/from-final-fantasy-brave-exvius-to-resonance-plans-to-create-an-hd-2d-instalment-in-the-series-have-been-on-the-table-for-6-7-years-1735923/",
+      "d": "2026-06-16"
+    },
+    {
+      "t": "Inven Global 訪談：不知道原作也能完整享受",
+      "u": "https://www.invenglobal.com/articles/25555/final-fantasy-resonance-built-to-be-fully-enjoyed-even-without-knowing-the-original",
+      "d": "2026-09-03"
+    },
+    {
+      "t": "Power Up Gaming：Square Enix 目前沒有上市後 DLC 計畫",
+      "u": "https://powerupgaming.co.uk/2026/09/07/square-enix-has-no-post-launch-dlc-plans-for-final-fantasy-resonance/",
+      "d": "2026-09-07"
+    },
+    {
+      "t": "Square Enix 新聞稿：免費體驗版推出",
+      "u": "https://www.mynewsdesk.com/uk/swipe-right/pressreleases/free-demo-for-square-enixs-final-fantasy-resonance-now-available-3464577",
+      "d": "2026-09-03"
+    },
+    {
+      "t": "4Gamers：FINAL FANTASY RESONANCE 搶先試玩",
+      "u": "https://www.4gamers.com.tw/news/detail/81865/final-fantasy-resonance-hands-on-preview",
+      "d": "2026-09-04"
+    },
+    {
+      "t": "PlayStation 香港官網：FINAL FANTASY RESONANCE",
+      "u": "https://www.playstation.com/zh-hant-hk/games/final-fantasy-resonance/",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "電玩遊戲世界：PS5 FINAL FANTASY RESONANCE 中文版",
+      "u": "https://www.tvgameworld.com/product/detail/2615393/PS5-FINAL-FANTASY-RESONANCE",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Push Square：不是關服手遊的移植或重製",
+      "u": "https://www.pushsquare.com/news/2026/06/turn-based-rpg-final-fantasy-resonance-is-not-a-port-or-remake-of-shuttered-gacha-game",
+      "d": "2026-06-12"
+    },
+    {
+      "t": "GamerFuzion：Steam 壓倒性好評、Steam Deck 認證與電腦需求",
+      "u": "https://www.gamerfuzion.com/final-fantasy-resonance-steam-reviews-overwhelmingly-positive-steam-deck-verified-pc-specs/",
+      "d": "2026-10-23"
+    },
+    {
+      "t": "Pocket Tactics 評測（9 分）",
+      "u": "https://www.pockettactics.com/final-fantasy-resonance/review",
+      "d": "2026-10-20"
+    },
+    {
+      "t": "MeowDB：Final Fantasy Resonance 結局整理（含劇透）",
+      "u": "https://meowdb.com/db/final-fantasy-resonance/guides/ending",
+      "d": "2026-10-24"
+    },
+    {
+      "t": "RPG Site：角色、系統與版本內容",
+      "u": "https://www.rpgsite.net/news/20682-square-enix-details-characters-gameplay-systems-purchase-editions-and-more-for-final-fantasy-resonance",
+      "d": "2026"
+    },
+    {
+      "t": "AUTOMATON 訪談：FFBE 好到不該消失，所以重生",
+      "u": "https://automaton-media.com/en/interviews/final-fantasy-resonance-devs-say-ffbe-was-too-good-to-become-unplayable-so-its-been-reborn-with-a-reworked-story-world-map-and-enough-changes-to-feel-like-a-new-game/",
+      "d": "2026"
+    }
+  ],
+  "pending": [
+    "Nintendo eShop 台灣、Xbox 台灣的新台幣售價，還沒查到官方頁面",
+    "幻影總數：攻略站說法不一，官方沒有明確數字"
+  ],
+  "updated": "2026-11-17T06:30:00+08:00"
+}

@@ -1,0 +1,475 @@
+{
+  "id": "warhammer-survivors",
+  "date": "2026-11-17",
+  "rank": 2,
+  "kind": "indie",
+  "kind_label": "新作割草",
+  "game": {
+    "zh": "Warhammer Survivors",
+    "zh_note": "暫無官方繁中名（台灣媒體譯作《戰鎚倖存者》）",
+    "en": "Warhammer Survivors",
+    "steam": 3669620,
+    "dev": "Auroch Digital",
+    "pub": "Auroch Digital",
+    "platforms": [
+      "PC（Steam、GOG、Xbox PC）",
+      "PS5",
+      "Xbox Series X|S",
+      "Switch 2",
+      "Switch"
+    ],
+    "genres": [
+      "割草生存",
+      "類 Rogue",
+      "戰鎚"
+    ],
+    "release": "2026-11-10",
+    "release_text": "2026/11/10 全平台同步（台灣時間晚上 6 點）；首日加入 Game Pass",
+    "price_text": "Steam NT$175（無內購）／PC Game Pass、Game Pass Ultimate 內含",
+    "site": "https://www.aurochdigital.com/warhammer-survivors"
+  },
+  "headline": "《吸血鬼倖存者》官方認證的戰鎚割草：40 多名角色、不到兩百塊",
+  "hook": "第十五分鐘，畫面已經被混沌大軍塞滿。你操縱的星際戰士只負責走位，武器自己在轉；身邊的小隊隊友用的是你拿不到的武器。畫面中央亮起頭目的血條，而你的主力武器還沒進化。",
+  "verdict": {
+    "stamp": "觀望",
+    "label": "Game Pass 先玩／等平衡更新",
+    "summary": "《吸血鬼倖存者》的配方加上戰鎚的角色和小隊系統，不到兩百塊就有幾十小時內容；但上市一週評價從「大多好評」滑到「褒貶不一」，前期太慢、平衡要修，Steam 也沒列繁中。有 Game Pass 就直接玩，沒有就等 12 月的免費新內容和 1 月的平衡更新。",
+    "for": [
+      "玩過《吸血鬼倖存者》、想換個題材繼續割草的人",
+      "戰鎚 40K 或戰鎚：西格瑪時代的粉絲，想看一堆角色和彩蛋",
+      "有 PC Game Pass 或 Game Pass Ultimate、想零成本試的人"
+    ],
+    "against": [
+      "想跟朋友一起玩的人（目前只有單人）",
+      "受不了前期武器弱、要慢慢磨永久升級的人",
+      "一定要繁體中文介面的人（Steam 只列簡中）"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Auroch Digital（《戰鎚 40K：Boltgun》的團隊）；和《吸血鬼倖存者》的 poncle 合作，掛官方「倖存者系列」認證",
+      "s": [
+        0,
+        1,
+        12
+      ]
+    },
+    {
+      "k": "上市",
+      "v": "2026/11/10 全平台同步，10:00 UTC（台灣時間 18:00）",
+      "s": [
+        1,
+        2
+      ]
+    },
+    {
+      "k": "平台",
+      "v": "PC（Steam、GOG、Xbox PC）、PS5、Xbox Series X|S、Switch 2、Switch，另有 iOS／Android；Steam Deck 認證",
+      "s": [
+        1,
+        2
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Steam 台灣 NT$175（首週折扣價 NT$157）；主機版價格比 PC 略高",
+      "s": [
+        3,
+        4
+      ]
+    },
+    {
+      "k": "Game Pass",
+      "v": "首日加入 Game Pass Ultimate 與 PC Game Pass；Essential、Premium 方案沒有",
+      "s": [
+        2,
+        14
+      ]
+    },
+    {
+      "k": "收費模式",
+      "v": "買斷制，Steam、PS Store 都沒有列遊戲內購；手機版也是一次買斷，未見內購或廣告",
+      "s": [
+        0,
+        18,
+        2
+      ]
+    },
+    {
+      "k": "內容",
+      "v": "40 名以上戰鎚 40K 與西格瑪時代角色、75 種以上武器；40K 和西格瑪時代各有一條獨立進度",
+      "s": [
+        0,
+        1,
+        6
+      ]
+    },
+    {
+      "k": "一局多久",
+      "v": "一局多半 10～20 分鐘，部分關卡 25 分鐘才出頭目；評測者玩了 20 小時以上",
+      "s": [
+        6,
+        5
+      ]
+    },
+    {
+      "k": "多人",
+      "v": "只有單人，沒有本機或線上合作",
+      "s": [
+        0,
+        2,
+        6
+      ]
+    },
+    {
+      "k": "語言",
+      "v": "Steam 列 13 種介面語言，含簡體中文、不含繁體中文；遊戲沒有語音",
+      "s": [
+        0,
+        4
+      ]
+    },
+    {
+      "k": "電腦需求",
+      "v": "最低 GTX 750 等級、4GB RAM、5GB 空間",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "媒體評分",
+      "v": "Metacritic PC 版 78 分（14 篇）；OpenCritic 76 分、53% 推薦",
+      "s": [
+        8,
+        9
+      ]
+    },
+    {
+      "k": "Steam 評價",
+      "v": "11/11 約 72% 好評「大多好評」，11/13 起降到 68%「褒貶不一」",
+      "s": [
+        9,
+        7,
+        0
+      ]
+    },
+    {
+      "k": "同上人數",
+      "v": "上市首週單日最高約 1.4 萬人",
+      "s": [
+        7
+      ]
+    },
+    {
+      "k": "更新計畫",
+      "v": "12 月免費新角色與武器；2027 年 1 月體驗改善、平衡調整與跨平台存檔；2027 第一季再一次免費角色更新；第二季推出較大型的內容（收不收費未定）",
+      "s": [
+        10,
+        11
+      ]
+    }
+  ],
+  "money": {
+    "level": 0,
+    "model": "買斷制（無內購）",
+    "notes": [
+      "PC 和主機都是一次買斷，Steam 上目前也沒有 DLC，只有和《吸血鬼倖存者》等遊戲的組合包。",
+      "官方路線圖第二季之前的更新都說是免費；2027 年第二季的大型內容要不要收費，媒體說法不一，先別當真。",
+      "有 PC Game Pass 或 Game Pass Ultimate 就不用另外花錢。"
+    ],
+    "flags": [
+      "買斷制",
+      "Game Pass 內含",
+      "只有單人"
+    ]
+  },
+  "zh": {
+    "ui": "partial",
+    "sub": "partial",
+    "voice": false,
+    "note": "Steam 與台灣 PS Store 只列簡體中文。上市當天有一則官方更新寫到「繁體與簡體中文文字小修正」，但遊戲裡能不能選繁中還沒有確認。遊戲本身沒有語音。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區、PS Store 台灣都有上架；單人遊戲。"
+  },
+  "rig": {
+    "verdict": "不吃硬體",
+    "note": "最低需求只要 GTX 750、5GB 空間，你的 SCAR 18 拿來跑是殺雞用牛刀；比較值得想的是接電視拿手把玩，Steam Deck 也有認證。"
+  },
+  "time": {
+    "text": "一局 10～20 多分鐘",
+    "note": "收集角色、解鎖武器進化，評測者玩了 20 小時以上還沒膩。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "58FJB38HFJY",
+        "title": "上市預告"
+      },
+      {
+        "id": "LgFI-Zzs4C4",
+        "title": "上市日期公開預告"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "平衡更新後 Steam 評價能不能回到大多好評",
+    "12 月免費更新加了哪些角色",
+    "會不會加入繁體中文"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "選角色與陣營",
+        "只走位、武器自動攻擊",
+        "撿經驗升級挑武器",
+        "湊條件讓武器進化",
+        "打倒階段頭目",
+        "帶金幣回去買永久升級"
+      ],
+      "body": [
+        "核心就是《吸血鬼倖存者》那一套：你只控制移動，武器會自己開火，敵人一波比一波多，升級時從幾個選項裡挑武器或被動，湊對組合讓武器進化，畫面最後會被特效塞滿。",
+        "最大的不同是小隊系統：你身邊會跟著 NPC 隊友，用的是你這個角色拿不到的武器。再加上陣營特性和狀態效果，組合比原版更講究陣營搭配。",
+        "40K 和西格瑪時代是兩條分開的進度，各有自己的角色和關卡；頭目戰比原版更有魄力，但如果武器沒進化到位，頭目戰可能直接把你踢出關卡、金幣也沒了。",
+        "裡面塞了很多給模型玩家的彩蛋，例如塗裝用的墨線顏料罐，《Boltgun》的主角也客串登場。"
+      ]
+    },
+    "hour": [
+      "照評測和玩家整理：前幾局武器偏弱、第一個小時很慢，死得快是正常的，先把金幣拿去買永久升級。",
+      "打頭目前先確認主力武器有沒有進化，沒進化硬打容易整局白費。",
+      "40K 和西格瑪時代進度分開，先專心推一邊，解鎖會比較快。"
+    ],
+    "compare": [
+      {
+        "name": "吸血鬼倖存者",
+        "same": "同一套割草公式、同家引擎、官方認證的系列作",
+        "diff": "Warhammer Survivors 多了小隊隊友和陣營特性、頭目更有份量；目前沒有合作模式"
+      },
+      {
+        "name": "Brotato",
+        "same": "自動攻擊、一局短、靠組合變強",
+        "diff": "Brotato 是一波一波的競技場、中間有商店；這款是開放關卡一路撐到時間結束"
+      },
+      {
+        "name": "戰鎚 40K：Boltgun",
+        "same": "同一個開發團隊、同樣是戰鎚 40K，Boltgun 的主角也客串",
+        "diff": "Boltgun 是復古第一人稱射擊；這款是俯視角割草"
+      }
+    ],
+    "story": null,
+    "studio": [
+      "Auroch Digital 2010 年成立於英國布里斯托，做過《Mars Horizon》《Brewmaster》，以及很受戰鎚粉歡迎的復古射擊《戰鎚 40K：Boltgun》。",
+      "2025 年 11 月發表時先只公布 PC 版，2026 年 4 月加上 PS5、Xbox、Switch 2、Switch，5 月在戰鎚官方發表會上推出 Steam 試玩版並宣布手機版。",
+      "poncle 的角色是合作和認證，不是共同開發；外媒報導這款用的是和《吸血鬼倖存者》同一套引擎。",
+      "上市後評價下滑，Auroch 推出更新檔調低部分敵人的難度，並表示接下來的重點是核心玩法平衡。"
+    ],
+    "voices": {
+      "pros": [
+        "割草和武器進化的爽感到位，頭目戰比原版有看頭",
+        "40K 和西格瑪時代兩套風格分明，戰鎚彩蛋很多",
+        "不到兩百塊就有幾十小時內容"
+      ],
+      "cons": [
+        "跟《吸血鬼倖存者》太像，新意不夠",
+        "前期武器弱、第一個小時很慢，永久升級又貴",
+        "敵人太耐打、目標要刷很久，沒有合作模式"
+      ],
+      "debate": [
+        "官方認證的「換皮」值不值得？有人覺得這就是大家要的，也有人覺得只是貼上戰鎚貼紙。",
+        "上市一週評價從大多好評掉到褒貶不一，問題出在平衡還是設計？官方已經在調了。"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2025-11-04",
+        "t": "發表，先公布 PC 版"
+      },
+      {
+        "d": "2026-04-09",
+        "t": "公布 PS5、Xbox、Switch 2、Switch 版"
+      },
+      {
+        "d": "2026-05-21",
+        "t": "戰鎚官方發表會推出 Steam 試玩版、宣布手機版"
+      },
+      {
+        "d": "2026-11-10",
+        "t": "全平台上市，首日加入 Game Pass"
+      },
+      {
+        "d": "2026-11-13",
+        "t": "Steam 評價掉到褒貶不一；公布更新路線圖"
+      },
+      {
+        "d": "2026-12",
+        "t": "預定免費更新：新角色、武器、進化"
+      },
+      {
+        "d": "2027-01",
+        "t": "預定體驗改善與跨平台存檔"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "官方授權的割草遊戲，會不會變成下一個「IP 換皮」潮流？",
+        "why": "《吸血鬼倖存者》把公式開放給大 IP，戰鎚是第一個。下一個會是誰？玩家會不會買單？"
+      },
+      {
+        "q": "一百多塊的遊戲，評價褒貶不一還值得買嗎？",
+        "why": "價格低到幾乎不用想，但前期體驗卡卡。這題可以聊聊大家對「便宜遊戲」的標準是不是比較寬。"
+      },
+      {
+        "q": "割草遊戲一定要有合作模式嗎？",
+        "why": "原版有合作、這款沒有，玩家抱怨不少，官方也沒排進路線圖。"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "第十五分鐘，整個畫面被敵人淹沒，你只管走位，武器自己轉個不停。\n\n《Warhammer Survivors》是《戰鎚 40K：Boltgun》團隊 Auroch Digital 的新作，和《吸血鬼倖存者》的 poncle 合作，算是官方認證的系列作，11/10 在 PC、PS5、Xbox、Switch 2、Switch 同步推出。\n\n玩法照原版：你負責躲、武器自動打，升級湊組合讓武器進化。不一樣的是身邊會跟著小隊隊友，用你拿不到的武器；40K 和西格瑪時代各有一條進度，角色超過 40 名。\n\nSteam 台灣 NT$175、沒有內購，PC Game Pass 也有。目前只有單人模式，Steam 只列簡體中文。上市一週評價滑到褒貶不一，玩家主要嫌前期太慢、平衡要修，官方已經開始調整，12 月還有免費新角色。\n\n戰鎚加割草，你會現在玩，還是等平衡修好？",
+    "titles": [
+      "戰鎚版吸血鬼倖存者上市：NT$175、40 多名角色",
+      "官方認證的割草新作，為什麼一週就掉到褒貶不一？",
+      "星際戰士割草你玩不玩？Game Pass 首日就有"
+    ],
+    "card": {
+      "kicker": "新作割草｜Game Pass 首日",
+      "title": "星際戰士也來\n割草了",
+      "sub": "吸血鬼倖存者官方認證系列",
+      "tags": [
+        "割草生存",
+        "買斷無內購",
+        "只有簡中"
+      ],
+      "points": [
+        {
+          "h": "40 多名角色",
+          "t": "40K 與西格瑪時代各有一條進度。"
+        },
+        {
+          "h": "小隊隊友",
+          "t": "隊友用你拿不到的武器一起清場。"
+        },
+        {
+          "h": "NT$175",
+          "t": "Steam 買斷，PC Game Pass 也有。"
+        }
+      ]
+    },
+    "tags": [
+      "#WarhammerSurvivors",
+      "#戰鎚",
+      "#吸血鬼倖存者",
+      "#割草遊戲",
+      "#GamePass",
+      "#遊戲狂想曲"
+    ],
+    "script": "星際戰士也開始割草了。這款叫《Warhammer Survivors》，做《Boltgun》的 Auroch Digital 跟《吸血鬼倖存者》團隊合作，算官方認證的系列作，11 月 10 號 PC、PS5、Xbox、Switch 都上了。\n玩法你應該很熟：你只管走位，武器自己打，升級湊組合讓武器進化。新東西是小隊系統，身邊的隊友會用你拿不到的武器幫你清場；40K 跟西格瑪時代兩條路線，角色四十幾個。\nSteam 台灣一百七十五塊，沒有內購，PC Game Pass 也有。缺點是只有單人、Steam 只列簡中，而且上市一週評價掉到褒貶不一，大家嫌前期太慢。好消息是官方已經在調，12 月還有免費新角色。\n你會現在玩，還是等平衡修完？留言告訴我。",
+    "credit": "圖片／影片來源：Auroch Digital 官方 Steam 商店頁與預告"
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：Warhammer Survivors",
+      "u": "https://store.steampowered.com/app/3669620/",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Auroch Digital 新聞稿：Warhammer Survivors 正式推出（Gamespress）",
+      "u": "https://www.gamespress.com/Warhammer-Survivors-is-out-now",
+      "d": "2026-11-10"
+    },
+    {
+      "t": "Game Over Interactive：上市時間、價格與 Game Pass",
+      "u": "https://gameoverinteractive.com/news/warhammer-survivors-release-time-price",
+      "d": "2026-11-11"
+    },
+    {
+      "t": "navgame：Warhammer Survivors 上市資訊、價格與語言",
+      "u": "https://navgame.org/zh/games/warhammer-survivors/release-date-price",
+      "d": "2026-11-11"
+    },
+    {
+      "t": "亞洲遊戲大師：戰鎚倖存者評測",
+      "u": "https://asiagamemaster.com/review-warhammer-survivors",
+      "d": "2026-11-11"
+    },
+    {
+      "t": "Pocket Tactics 評測（8 分）",
+      "u": "https://www.pockettactics.com/warhammer-survivors/review",
+      "d": "2026-11-10"
+    },
+    {
+      "t": "Shacknews 評測（8 分）",
+      "u": "https://www.shacknews.com/article/151331/warhammer-survivors-review-score",
+      "d": "2026-11-11"
+    },
+    {
+      "t": "Nerdly：Warhammer Survivors Steam 評價褒貶不一",
+      "u": "https://www.nerdly.co.uk/2026/11/13/warhammer-survivors-draws-a-mixed-steam-rating-from-1798-reviews-at-launch/",
+      "d": "2026-11-13"
+    },
+    {
+      "t": "Metacritic：Warhammer Survivors",
+      "u": "https://www.metacritic.com/game/warhammer-survivors/",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "DLCompare：Warhammer Survivors 媒體與玩家評價",
+      "u": "https://www.dlcompare.co.uk/gaming-news/warhammer-survivors-reviews-what-critics-and-players-say-90023",
+      "d": "2026-11-11"
+    },
+    {
+      "t": "TheSixthAxis：Warhammer Survivors 更新路線圖",
+      "u": "https://www.thesixthaxis.com/2026/11/13/warhammer-survivors-roadmap-will-add-more-characters-cross-save-more/",
+      "d": "2026-11-13"
+    },
+    {
+      "t": "Push Square：Warhammer Survivors 路線圖",
+      "u": "https://www.pushsquare.com/news/2026/11/the-excellent-warhammer-survivors-reveals-roadmap-full-of-free-updates-teases-something-big",
+      "d": "2026-11-14"
+    },
+    {
+      "t": "PC Gamer：Boltgun 團隊的戰鎚新作是官方倖存者系列",
+      "u": "https://www.pcgamer.com/games/roguelike/this-new-warhammer-roguelike-from-the-developer-of-boltgun-is-also-the-official-next-game-in-the-vampire-survivors-series/",
+      "d": "2025-11-04"
+    },
+    {
+      "t": "Gematsu：Warhammer Survivors 追加主機版",
+      "u": "https://www.gematsu.com/2026/04/warhammer-survivors-adds-ps5-xbox-series-switch-2-and-switch-versions",
+      "d": "2026-04-09"
+    },
+    {
+      "t": "GGRecon：Warhammer Survivors 登上 Game Pass、評價出爐",
+      "u": "https://www.ggrecon.com/articles/warhammer-survivors-out-now-game-pass-reviews/",
+      "d": "2026-11-10"
+    },
+    {
+      "t": "Steam 官方公告：繁體與簡體中文文字小修正",
+      "u": "https://store.steampowered.com/news/app/3669620/view/683018270553408451",
+      "d": "2026-11-10"
+    },
+    {
+      "t": "Wikipedia：Auroch Digital",
+      "u": "https://en.wikipedia.org/wiki/Auroch_Digital",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Shacknews：Steam 試玩版與手機版發表",
+      "u": "https://www.shacknews.com/article/149249/warhammer-survivors-steam-demo-mobile-announcement",
+      "d": "2026-05-21"
+    },
+    {
+      "t": "PlayStation Store：Warhammer Survivors",
+      "u": "https://store.playstation.com/concept/10016825/",
+      "d": "2026-11-16"
+    }
+  ],
+  "pending": [
+    "遊戲內能不能選繁體中文：官方公告提到繁中文字修正，但商店頁只列簡中",
+    "2027 年第二季的大型內容是否收費",
+    "PS Store、eShop、Xbox 台灣的新台幣售價"
+  ],
+  "updated": "2026-11-17T06:30:00+08:00"
+}
