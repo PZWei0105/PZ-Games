@@ -6,10 +6,15 @@ const HUNT_LOW_DAYS = 14;
 
 /* appid → 已經寫過的專題／推坑（點了可以直接看） */
 function steamRefs() {
-  const m = {};
-  for (const it of (S.picks && S.picks.items) || []) if (it.steam) m[String(it.steam)] = { route: 'p/' + it.id, it };
-  for (const it of (S.index && S.index.items) || []) if (it.steam) m[String(it.steam)] = { route: 'f/' + it.id, it };
-  return m;
+  // 同一款有好幾篇時用最新那篇（目錄是新的在前）；買不買用最新一篇有寫的
+  const m = {}, f = {};
+  for (const it of (S.picks && S.picks.items) || []) if (it.steam && !m[String(it.steam)]) m[String(it.steam)] = { route: 'p/' + it.id, it };
+  for (const it of (S.index && S.index.items) || []) {
+    if (!it.steam) continue; const k = String(it.steam);
+    if (!f[k]) f[k] = { route: 'f/' + it.id, it: Object.assign({}, it) };
+    if (!f[k].it.buy && it.buy) f[k].it.buy = it.buy;
+  }
+  return Object.assign(m, f);
 }
 function routeOfId(id) { return (S.index && S.index.items.some((x) => x.id === id)) ? 'f/' + id : 'p/' + id; }
 
@@ -23,7 +28,7 @@ function huntTargets() {
       free: !!w.free, final: p[0], orig: p[1], disc: p[2] || 0, low: w.low ? w.low[0] : null, lowAt: w.low && w.low[1], since: w.low && w.low[2],
       sale: w.sale || null, rv: w.rv ? w.rv[0] : null, rvn: w.rv ? w.rv[1] : 0, rvl: w.rv ? w.rv[2] : '', rel: w.rel || {}, zh: w.zh,
       tags: w.tags || [], dev: w.dev, short: w.short, micro: w.micro, added: w.added, deck: w.deck,
-      wish: true, want: false, ref: ref && ref.route,
+      wish: true, want: false, ref: ref && ref.route, buy: ref && ref.it.buy,
     });
   }
   for (const [id, m] of Object.entries(S.marks)) {
@@ -31,7 +36,7 @@ function huntTargets() {
     const it = findItem(id); if (!it) continue;
     const route = routeOfId(id);
     const k = it.steam ? String(it.steam) : 'id:' + id;
-    if (map.has(k)) { const t = map.get(k); t.want = true; t.wantId = id; t.ref = t.ref || route; t.name = it.zh; continue; }
+    if (map.has(k)) { const t = map.get(k); t.want = true; t.wantId = id; t.ref = t.ref || route; t.name = it.zh; t.buy = t.buy || it.buy; continue; }
     const lv = liveOf(it.steam); const pr = (lv && lv.price) || {};
     map.set(k, {
       key: k, appid: it.steam || null, name: it.zh, en: it.en, img: headerOf(it, lv), cap: (lv && lv.img && (lv.img.wide || lv.img.header)) || headerOf(it, lv),
@@ -41,10 +46,19 @@ function huntTargets() {
       rv: lv && lv.rv ? lv.rv.pct : null, rvn: lv && lv.rv ? lv.rv.n : 0, rvl: lv && lv.rv ? lv.rv.label : '',
       rel: lv && lv.rel ? lv.rel : { date: it.release, soon: !!(it.release && it.release > todayTW()) },
       zh: liveZh(lv, it.zhs), tags: (lv && lv.tags) || it.genres || [], dev: lv && lv.dev, short: lv && lv.short, micro: lv && lv.micro,
-      wish: false, want: true, wantId: id, ref: route, priceText: it.price_text, noSteam: !it.steam,
+      wish: false, want: true, wantId: id, ref: route, priceText: it.price_text, noSteam: !it.steam, buy: it.buy,
     });
   }
-  return [...map.values()].map(huntStatus);
+  const q = wishQueue();
+  return [...map.values()].map((t) => { t.queue = t.ref ? 0 : q.get(String(t.appid)) || 0; return huntStatus(t); });
+}
+/* 願望單上還沒寫解包的：照加入時間由新到舊排隊，每天的「願望單解包」排程最多寫 WISH_PER_DAY 款 */
+const WISH_PER_DAY = 2;
+function wishQueue() {
+  const refs = steamRefs(); const skip = S.wishSkip || {};
+  const q = ((S.wish && S.wish.items) || []).filter((w) => !w.adult && !refs[String(w.appid)] && !skip[String(w.appid)])
+    .sort((a, b) => String(b.added || '').localeCompare(String(a.added || '')));
+  return new Map(q.map((w, i) => [String(w.appid), i + 1]));
 }
 function huntStatus(t) {
   const today = todayTW();
@@ -60,11 +74,13 @@ function huntStatus(t) {
   t.relDays = t.soon && t.rel.date ? dayDiff(today, t.rel.date) : null;
   t.saved = t.onSale && t.orig ? t.orig - t.final : 0;
   t.newSale = t.onSale && !S.huntSeen[t.key + ':' + t.final];
-  t.score = t.giveaway ? 2000 : t.onSale ? 300 + t.disc + (t.lowState === 'low' ? 400 : t.lowState === 'near' ? 150 : 0) + (t.endMs != null && t.endMs < 48 * 36e5 ? 120 : 0) + (t.newSale ? 60 : 0)
+  t.hit = !!(t.buy && t.buy.target != null && t.final != null && t.final <= t.buy.target && t.buy.call !== '別買');
+  t.newHit = t.hit && !S.huntSeen['hit:' + t.key + ':' + t.final];
+  t.score = t.giveaway ? 2000 : t.hit ? 1500 + t.disc : t.onSale ? 300 + t.disc + (t.lowState === 'low' ? 400 : t.lowState === 'near' ? 150 : 0) + (t.endMs != null && t.endMs < 48 * 36e5 ? 120 : 0) + (t.newSale ? 60 : 0)
     : t.soon ? 100 - Math.min(99, t.relDays == null ? 99 : t.relDays) : (t.rv || 0) / 10;
   return t;
 }
-function huntSaleCount() { try { return huntTargets().filter((t) => t.newSale).length; } catch (e) { return 0; } }
+function huntSaleCount() { try { return huntTargets().filter((t) => t.newSale || t.newHit).length; } catch (e) { return 0; } }
 
 /* ---- 文字 ---- */
 function leftTxt(ms) {
@@ -103,7 +119,9 @@ function huntChips(t) {
   if (t.deck) out.push('<span class="chip n">Deck 可玩</span>');
   if (t.wish) out.push(`<span class="chip n">願望單${t.added ? '・' + esc(t.added.slice(0, 7).replace('-', '/')) : ''}</span>`);
   if (t.want) out.push('<span class="chip p">我想玩</span>');
-  if (t.ref) out.push(`<span class="chip y">${t.ref[0] === 'f' ? '已解包' : '推坑過'}</span>`);
+  if (t.buy) out.push(`<span class="chip cl ${t.hit ? 'hit' : ''}">Claude：${t.hit ? '到價' : esc(t.buy.call)}${t.buy.target != null && !t.hit ? ' ≤' + esc(fmtNT(t.buy.target)) : ''}</span>`);
+  else if (t.ref) out.push(`<span class="chip y">${t.ref[0] === 'f' ? '已解包' : '推坑過'}</span>`);
+  if (t.queue) out.push(`<span class="chip q">解包排隊 #${t.queue}</span>`);
   return out.join('');
 }
 
@@ -111,7 +129,8 @@ function huntChips(t) {
 function huntItems(all) {
   return all.filter((t) => {
     const f = HUNT.f;
-    if (f === 'sale') return t.onSale || t.giveaway;
+    if (f === 'sale') return t.onSale || t.giveaway || t.hit;
+    if (f === 'hit') return t.hit;
     if (f === 'low') return t.lowState === 'low' || t.lowState === 'near' || t.lowState === 'new';
     if (f === 'soon') return t.soon;
     if (f === 'tc') return t.zh === 'tc';
@@ -144,17 +163,19 @@ function renderHunt() {
   const all = huntTargets();
   const st = wishState();
   const sale = all.filter((t) => t.onSale || t.giveaway);
+  const hits = all.filter((t) => t.hit);
   const lows = all.filter((t) => t.lowState === 'low');
   const saved = sale.reduce((a, t) => a + (t.saved || 0), 0);
   const list = huntItems(all);
-  const hot = list.filter((t) => t.onSale || t.giveaway);
-  const soon = list.filter((t) => !t.onSale && !t.giveaway && t.soon);
-  const rest = list.filter((t) => !t.onSale && !t.giveaway && !t.soon);
+  const isHot = (t) => t.onSale || t.giveaway || t.hit;
+  const hot = list.filter(isHot);
+  const soon = list.filter((t) => !isHot(t) && t.soon);
+  const rest = list.filter((t) => !isHot(t) && !t.soon);
   const fl = (v, label) => `<button class="fl ${HUNT.f === v ? 'on' : ''}" data-act="hf" data-v="${v}">${label}</button>`;
   const so = (v, label) => `<button class="fl ${HUNT.sort === v ? 'on' : ''}" data-act="hs" data-v="${v}">${label}</button>`;
   const w = S.wish || {};
   const sync = w.ok ? `願望單 ${w.n || 0} 款・同步於 ${esc(ago(w.at))}` : '';
-  return `<div class="sec-h"><h2 class="spray-h y">獵價</h2><span class="date-stk">PRICE HUNT</span></div>
+  return `<div class="sec-h"><h2 class="spray-h y">獵價</h2><span class="date-stk">PRICE HUNT</span><button class="btn sm k hcal" data-go="cal">${ICON.cal}<span>出擊日曆</span></button></div>
     <p class="sub-note">Steam 願望單＋你在 App 裡標「想玩」的遊戲，每小時對一次台灣區價格。${sync ? `<b class="hsync">${sync}</b>` : ''}${w.state === 'stale' ? '<span class="hwarn">（這一輪沒讀到，先顯示上一次）</span>' : ''}</p>
     <section class="radarw">
       <div class="radar" id="radar"><div class="rd-grid"></div><div class="rd-sweep" id="rdsweep"></div>${radarBlips(all)}
@@ -162,13 +183,14 @@ function renderHunt() {
       <div class="hstats">
         <div class="hs p"><span>特價中</span><b class="cu" data-n="${sale.length}" data-f="i">${sale.length}</b><small>款</small></div>
         <div class="hs y"><span>史低</span><b class="cu" data-n="${lows.length}" data-f="i">${lows.length}</b><small>款</small></div>
-        <div class="hs"><span>獵物</span><b class="cu" data-n="${all.length}" data-f="i">${all.length}</b><small>款</small></div>
+        <div class="hs"><span>${hits.length ? '到價' : '獵物'}</span><b class="cu" data-n="${hits.length || all.length}" data-f="i">${hits.length || all.length}</b><small>款</small></div>
         ${saved ? `<div class="hs w"><span>這波特價一共便宜</span><b>NT$<span class="cu" data-n="${Math.round(saved / 100)}">${fmtN(Math.round(saved / 100))}</span></b></div>` : '<div class="hs w"><span>目前沒有獵物在特價，雷達持續掃描中</span></div>'}
         <div class="hlegend"><i class="lg-low"></i>史低<i class="lg-sale"></i>特價（越靠中心折越多）<i class="lg-soon"></i>未上市<i class="lg-n"></i>等降價</div>
       </div>
     </section>
     ${st !== 'ok' && st !== 'stale' ? connectHtml(st) : ''}
-    <div class="filters hf">${fl('all', '全部')}${fl('sale', '特價中')}${fl('low', '史低')}${fl('soon', '未上市')}${fl('tc', '有繁中')}${fl('cheap', 'NT$300 內')}${fl('want', '我想玩')}</div>
+    ${huntQueueNote(all)}
+    <div class="filters hf">${fl('all', '全部')}${fl('sale', '特價中')}${hits.length ? fl('hit', '到價') : ''}${fl('low', '史低')}${fl('soon', '未上市')}${fl('tc', '有繁中')}${fl('cheap', 'NT$300 內')}${fl('want', '我想玩')}</div>
     <div class="sortrow">排序 ${so('smart', '先看該出手的')}${so('disc', '折扣')}${so('price', '便宜')}${so('rv', '好評')}${so('new', '新加入')}</div>
     ${!all.length ? `<div class="empty">還沒有獵物。${st === 'ok' ? '' : '在任何專題、推坑或短影音按「想玩」（短影音點兩下），那款就會進來；連好 Steam 願望單後，願望單上的遊戲也會自動進來。'}</div>` : ''}
     ${hot.length ? `<h3 class="tape-h p">鎖定！正在特價 <small>${hot.length} 款</small></h3><div class="bounties">${hot.map(bountyHtml).join('')}</div>` : (all.length && (HUNT.f === 'all' || HUNT.f === 'sale') ? '<div class="hquiet"><b>目前沒有獵物在特價</b><span>雷達持續掃描中，一開打折就會跳出來。</span></div>' : '')}
@@ -177,35 +199,41 @@ function renderHunt() {
     ${all.length && !list.length ? '<div class="empty">沒有符合的獵物，換個篩選試試。</div>' : ''}
     <p class="sub-note" style="margin-top:18px">「史低」是這個 App 開始追蹤以來的最低價（追蹤滿 ${HUNT_LOW_DAYS} 天才算），不是 Steam 有史以來的最低價。特價結束時間來自 Steam 商店。</p>`;
 }
+function huntQueueNote(all) {
+  const q = all.filter((t) => t.queue).length; const done = all.filter((t) => t.wish && t.buy).length;
+  if (!q && !done) return '';
+  return `<div class="hqueue"><b>${ICON.page}Claude 願望單解包</b><span>${done ? `已經寫好 <em>${done}</em> 款的買不買判定` : ''}${done && q ? '・' : ''}${q ? `<em>${q}</em> 款排隊中，每天寫 ${WISH_PER_DAY} 款，大約 ${Math.ceil(q / WISH_PER_DAY)} 天寫完` : '全部寫完了'}</span></div>`;
+}
 function radarBlips(all) {
   HUNT.blips = [];
   return all.slice(0, 160).map((t) => {
     const ang = hashStr(t.key) % 360;
     let r, cls;
-    if (t.giveaway) { r = 0.1; cls = 'b-low'; }
+    if (t.giveaway || t.hit) { r = 0.1; cls = 'b-low'; }
     else if (t.onSale) { r = 0.16 + 0.66 * (1 - Math.min(95, t.disc) / 100); cls = t.lowState === 'low' ? 'b-low' : 'b-sale'; }
     else if (t.soon) { r = 0.72 + (hashStr(t.key + 's') % 10) / 100; cls = 'b-soon'; }
     else { r = 0.84 + (hashStr(t.key + 'r') % 12) / 100; cls = 'b-n'; }
     const x = 50 + r * 47 * Math.sin(ang * Math.PI / 180), y = 50 - r * 47 * Math.cos(ang * Math.PI / 180);
-    if (t.onSale || t.giveaway) HUNT.blips.push({ ang, key: t.key, low: cls === 'b-low' });
+    if (t.onSale || t.giveaway || t.hit) HUNT.blips.push({ ang, key: t.key, low: cls === 'b-low' });
     return `<button class="blip ${cls}" data-act="hinfo" data-k="${esc(t.key)}" data-a="${ang}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%" aria-label="${esc(t.name)}"><i></i></button>`;
   }).join('');
 }
 function bountyHtml(t, i) {
   const lt = lowTxt(t); const img = t.cap || t.img;
   return `<article class="bounty ${t.lowState === 'low' || t.giveaway ? 'gold' : ''}" data-act="hinfo" data-k="${esc(t.key)}" style="--rot:${rot(t.key, i, 1.4)}deg;--i:${i}">
-    <div class="bh"><span class="bw">WANTED</span><span class="bn">${t.giveaway ? '限時免費' : '懸賞 -' + t.disc + '%'}</span></div>
+    <div class="bh"><span class="bw">WANTED</span><span class="bn">${t.giveaway ? '限時免費' : t.hit && !t.onSale ? '到價' : '懸賞 -' + t.disc + '%'}</span></div>
     <div class="bimg">${img ? `<img src="${esc(img)}" alt="" loading="${i > 2 ? 'lazy' : 'eager'}" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">TARGET</div>
-      ${t.newSale ? '<span class="bnew">NEW</span>' : ''}${lt ? `<span class="blow ${t.lowState}">${esc(lt)}</span>` : ''}${t.endMs != null ? `<span class="bend ${t.endMs < 24 * 36e5 ? 'hot' : ''}">⏱ ${esc(leftTxt(t.endMs))}</span>` : ''}</div>
+      ${t.newSale || t.newHit ? '<span class="bnew">NEW</span>' : ''}${lt ? `<span class="blow ${t.lowState}">${esc(lt)}</span>` : ''}${t.endMs != null ? `<span class="bend ${t.endMs < 24 * 36e5 ? 'hot' : ''}">⏱ ${esc(leftTxt(t.endMs))}</span>` : ''}</div>
     <div class="bb"><h3>${esc(t.name)}</h3>${t.en && t.en !== t.name ? `<div class="ben">${esc(t.en)}</div>` : ''}
-      <div class="bprice"><s>${fmtNT(t.orig)}</s><b>${t.giveaway ? '免費領' : fmtNT(t.final)}</b>${t.saved ? `<em>省 ${fmtNT(t.saved).replace('NT$', '')}</em>` : ''}</div>
+      ${t.hit ? `<div class="bhit">到價了！Claude 的目標價 ${fmtNT(t.buy.target)}，現在 ${fmtNT(t.final)}</div>` : ''}
+      <div class="bprice">${t.onSale ? `<s>${fmtNT(t.orig)}</s>` : ''}<b>${t.giveaway ? '免費領' : fmtNT(t.final)}</b>${t.saved ? `<em>省 ${fmtNT(t.saved).replace('NT$', '')}</em>` : ''}</div>
       ${hpBar(t, true)}<div class="chips">${huntChips(t)}</div></div>
-    <div class="bstamp">${t.giveaway ? '快領' : t.lowState === 'low' ? '出手' : t.endMs != null && t.endMs < 48 * 36e5 ? '快收' : '鎖定'}</div><i class="tp tp1"></i></article>`;
+    <div class="bstamp">${t.giveaway ? '快領' : t.hit ? '到價' : t.lowState === 'low' ? '出手' : t.endMs != null && t.endMs < 48 * 36e5 ? '快收' : '鎖定'}</div><i class="tp tp1"></i></article>`;
 }
 function rowHtml(t, i) {
   const img = t.img || t.cap;
   const right = t.soon ? (t.relDays != null ? `<b class="tr-cd">${t.relDays <= 0 ? '今天' : t.relDays}<small>${t.relDays <= 0 ? '' : '天'}</small></b><span>${t.rel.date ? esc(mdDay(t.rel.date)) + ' 上市' : esc(t.rel.text || '日期未定')}</span>` : `<span>${esc(t.rel.text || '日期未定')}</span>`)
-    : `<b class="tr-p">${priceTxt(t)}</b>${t.low != null && t.trackDays >= HUNT_LOW_DAYS && t.final > t.low ? `<span>史低 ${fmtNT(t.low)}</span>` : ''}`;
+    : `<b class="tr-p">${priceTxt(t)}</b>${t.buy && t.buy.target != null ? `<span class="tr-tg">目標 ${fmtNT(t.buy.target)}</span>` : t.low != null && t.trackDays >= HUNT_LOW_DAYS && t.final > t.low ? `<span>史低 ${fmtNT(t.low)}</span>` : ''}`;
   return `<div class="trow" data-act="hinfo" data-k="${esc(t.key)}"><div class="tri">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">?</div></div>
     <div class="trb"><h4>${esc(t.name)}</h4><div class="trc">${huntChips(t)}</div>${t.soon ? '' : hpBar(t, false)}</div><div class="trr">${right}</div></div>`;
 }
@@ -222,9 +250,11 @@ async function huntInfo(key) {
       ${t.endMs != null ? `<div><span>特價到</span><b class="sm">${esc(endDate(t.sale.end))}</b><em>${esc(leftTxt(t.endMs))}</em></div>` : ''}
       ${t.low != null ? `<div><span>${t.trackDays >= HUNT_LOW_DAYS ? '史低' : '追蹤以來最低'}</span><b class="sm">${fmtNT(t.low)}</b><em>${esc(mdDay(t.lowAt))}</em></div>` : ''}
       ${t.soon ? `<div><span>上市</span><b class="sm">${t.rel.date ? esc(mdDay(t.rel.date)) : '未定'}</b><em>${t.relDays != null ? (t.relDays <= 0 ? '今天' : '倒數 ' + t.relDays + ' 天') : esc(t.rel.text || '')}</em></div>` : ''}</div>
+    ${t.buy ? `<div class="hi-buy ${BUY_CLS[t.buy.call] || ''} ${t.hit ? 'hit' : ''}"><span>Claude 判定</span><b>${esc(t.hit ? '到價，可以買' : t.buy.call)}</b>${t.buy.target != null ? `<em>目標價 ${fmtNT(t.buy.target)}${t.final != null && !t.hit ? `・還差 ${fmtNT(t.final - t.buy.target)}` : ''}</em>` : ''}</div>`
+      : t.queue ? `<div class="hi-buy q"><span>Claude 願望單解包</span><b>排隊第 ${t.queue} 位</b><em>大約 ${Math.ceil(t.queue / WISH_PER_DAY)} 天內寫好：完整分析、買不買判定和目標價</em></div>` : ''}
     ${hpBar(t, true)}<div class="hi-chart" id="hichart">${t.appid ? '<span class="sub-note">價格紀錄讀取中…</span>' : ''}</div>
     ${t.short ? `<p class="hi-p">${esc(t.short)}</p>` : ''}${t.dev ? `<p class="sub-note">開發：${esc(t.dev)}${t.rv != null ? `・Steam 評價 ${t.rv}%（${esc(t.rvl || '')}，${fmtN(t.rvn)} 則）` : ''}</p>` : ''}
-    <div class="btnrow">${t.ref ? `<button class="btn y" data-go="${esc(t.ref)}">${t.ref[0] === 'f' ? ICON.page : ICON.gem}<span>${t.ref[0] === 'f' ? '看完整專題' : '看推坑全文'}</span></button>` : ''}${steamUrl ? `<a class="btn" href="${esc(steamUrl)}" target="_blank" rel="noopener noreferrer">${ICON.cart}<span>Steam 商店頁</span></a>` : ''}${t.want ? `<button class="btn sm" data-act="hunwant" data-id="${esc(t.wantId)}">不想玩了</button>` : ''}</div>
+    <div class="btnrow">${t.ref ? `<button class="btn y" data-go="${esc(t.ref)}">${t.ref[0] === 'f' ? ICON.page : ICON.gem}<span>${t.ref[0] === 'f' ? (t.buy ? '看完整解包' : '看完整專題') : '看推坑全文'}</span></button>` : ''}${steamUrl ? `<a class="btn" href="${esc(steamUrl)}" target="_blank" rel="noopener noreferrer">${ICON.cart}<span>Steam 商店頁</span></a>` : ''}${t.want ? `<button class="btn sm" data-act="hunwant" data-id="${esc(t.wantId)}">不想玩了</button>` : ''}</div>
     ${t.want && !t.wish && t.appid && wishState() === 'ok' ? '<p class="sub-note" style="margin-top:10px">這款只在 App 裡標了想玩：加進 Steam 願望單，特價時每天早上的推播才會提醒你。</p>' : ''}</div>`, 'hsheet');
   sfx.lock();
   const v = $('.hi-v'); if (v) { v.addEventListener('playing', () => v.classList.add('on'), { once: true }); v.play().catch(() => {}); }
@@ -279,7 +309,7 @@ function huntFx() {
   // 看過這一波特價：分頁上的數字歸零（卡片上的 NEW 這次還留著）
   setTimeout(() => {
     if (!ROUTE.startsWith('hunt')) return;
-    for (const t of huntTargets()) if (t.onSale) S.huntSeen[t.key + ':' + t.final] = 1;
+    for (const t of huntTargets()) { if (t.onSale) S.huntSeen[t.key + ':' + t.final] = 1; if (t.hit) S.huntSeen['hit:' + t.key + ':' + t.final] = 1; }
     LS.set('huntSeen', S.huntSeen); setTabs('hunt');
   }, 1500);
 }
@@ -289,13 +319,14 @@ function huntStop() { if (HUNT.raf) cancelAnimationFrame(HUNT.raf); HUNT.raf = 0
 function huntAlert() {
   if (!S.settings.huntAlert || ROUTE.startsWith('hunt')) return;
   const today = todayTW(); if (LS.get('huntAlertDay', '') === today) return;
-  const fresh = huntTargets().filter((t) => t.newSale && (t.wish || t.want)).sort((a, b) => b.score - a.score);
+  const fresh = huntTargets().filter((t) => (t.newSale || t.newHit) && (t.wish || t.want)).sort((a, b) => b.score - a.score);
+  const nh = fresh.filter((t) => t.newHit).length;
   if (!fresh.length) return;
   LS.set('huntAlertDay', today);
   const el = document.createElement('div'); el.id = 'halert';
   el.innerHTML = `<div class="ha-bg"></div><div class="ha-st t"></div><div class="ha-st b"></div><div class="ha-box"><div class="ha-k">⚠ WARNING ⚠</div><div class="ha-t">獵物出現</div>
-    <div class="ha-s">你的獵物有 <b>${fresh.length}</b> 款${fresh.some((t) => t.lowState === 'low') ? '正在特價，還有史低' : '正在特價'}</div>
-    <div class="ha-list">${fresh.slice(0, 3).map((t, i) => `<div class="ha-it" style="--i:${i}"><div class="ha-im">${t.img ? `<img src="${esc(t.img)}" alt="" onerror="imgFail(this)">` : ''}</div><b>${esc(t.name)}</b><span>${t.giveaway ? '免費' : '-' + t.disc + '%'}</span></div>`).join('')}</div>
+    <div class="ha-s">${nh ? `<b>${nh}</b> 款到了 Claude 的目標價` : ''}${fresh.length - nh ? `${nh ? '，' : '你的獵物有 '}<b>${fresh.length - nh}</b> 款${nh ? '新特價' : '正在特價'}${!nh && fresh.some((t) => t.lowState === 'low') ? '，還有史低' : ''}` : ''}</div>
+    <div class="ha-list">${fresh.slice(0, 3).map((t, i) => `<div class="ha-it" style="--i:${i}"><div class="ha-im">${t.img ? `<img src="${esc(t.img)}" alt="" onerror="imgFail(this)">` : ''}</div><b>${esc(t.name)}</b><span>${t.giveaway ? '免費' : t.hit ? '到價' : '-' + t.disc + '%'}</span></div>`).join('')}</div>
     <div class="btnrow" style="justify-content:center"><button class="btn y" data-act="ha-go">${ICON.target}<span>去獵價</span></button><button class="btn" data-act="ha-x">晚點</button></div></div>`;
   document.body.appendChild(el);
   requestAnimationFrame(() => el.classList.add('on'));

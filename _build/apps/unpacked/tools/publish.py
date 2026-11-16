@@ -26,7 +26,9 @@ WEEKLY = os.path.join(DATA, 'weekly')    # 每週懶人包（WEEKLY_GUIDE.md）
 TIERS = ['S', 'A', 'B', 'C', 'D']
 
 KINDS = {'new': '新作', 'ea': '搶先體驗', 'upcoming': '即將推出', 'update': '大型更新', 'exclusive': '平台獨佔',
-         'hot': '熱門話題', 'classic': '經典回顧', 'free': '限時免費', 'indie': '獨立黑馬'}
+         'hot': '熱門話題', 'classic': '經典回顧', 'free': '限時免費', 'indie': '獨立黑馬', 'wish': '願望單解包'}
+# 「買不買」：每一篇願望單解包都要有（其他專題可選）。target 是目標價，單位「分」（NT$×100）
+BUY_CALLS = {'現在買', '等特價', '等史低', '等上市後評價', '先觀望', '別買'}
 STAMPS = {'推薦', '觀望', '不推薦'}
 PICK_STAMPS = {'必玩', '閉眼入', '特價入', '冷門神作'}
 # 常見簡體字（台灣不用）：出現就要改
@@ -179,6 +181,21 @@ def check(f, r):
         r.W(fid, '60 秒口播稿太短')
     if not fp.get('credit'):
         r.W(fid, '圖卡／貼文沒有寫素材來源（credit）')
+    b = f.get('buy')
+    if f['kind'] == 'wish' and not b:
+        r.B(fid, '願望單解包一定要有 buy（買不買）')
+    if b is not None:
+        if b.get('call') not in BUY_CALLS:
+            r.B(fid, f'buy.call 要是 {sorted(BUY_CALLS)}')
+        t = b.get('target')
+        if t is not None and (not isinstance(t, int) or t <= 0):
+            r.B(fid, 'buy.target 要是正整數（單位「分」：NT$300 寫 30000）或 null')
+        if b.get('call') in ('等特價', '等史低') and t is None:
+            r.B(fid, 'buy.call 是等特價／等史低時，buy.target 一定要填目標價')
+        if not (40 <= len(b.get('why') or '') <= 260):
+            r.B(fid, 'buy.why 要寫 40～260 字（為什麼這樣判、目標價怎麼來的）')
+        if f['kind'] == 'wish' and not f['game'].get('steam'):
+            r.W(fid, '願望單解包沒有 Steam appid：獵價會對不上')
     text_quality(f, fid, r)
     # 貼文不能出現「待確認」的事
     for p in f.get('pending') or []:
@@ -512,6 +529,7 @@ def build_index(feats):
             'stamp': f['verdict']['stamp'], 'label': f['verdict']['label'],
             'money': (f.get('money') or {}).get('level'), 'zhs': zhs, 'tw': (f.get('tw') or {}).get('ok'),
             'yt': yt, 'yts': yt_list(f), 'img': ((f.get('media') or {}).get('images') or [None])[0],
+            'buy': {'call': f['buy']['call'], 'target': f['buy'].get('target')} if f.get('buy') else None,
             'gal': ((f.get('media') or {}).get('images') or [])[1:6],
             'updated': f.get('updated'),
         })
@@ -617,6 +635,15 @@ def main():
             if not a.only or w.get('id') == a.only:
                 check_week(w, r, refs)
             weeks.append(w)
+    skip = {}
+    sp = os.path.join(DATA, 'wish-skip.json')
+    if os.path.exists(sp):
+        try:
+            skip = json.load(open(sp, encoding='utf-8'))
+            if not isinstance(skip, dict) or any(not str(k).isdigit() or not isinstance(v, str) or not v for k, v in skip.items()):
+                r.B('wish-skip.json', '格式要是 {"appid": "不寫的理由"}')
+        except Exception as e:  # noqa: BLE001
+            r.B('wish-skip.json', f'JSON 壞掉：{e}')
     for w in r.warn:
         print('WARN', w)
     for b in r.bad:

@@ -18,6 +18,7 @@
 """
 import argparse
 import datetime as dt
+import hashlib
 import html as htmllib
 import json
 import os
@@ -562,6 +563,98 @@ def wishlist(D, t0, tagn):
     return set(appids)
 
 
+# ------------------------------------------------------------------ 出擊日曆（可訂閱的 .ics）
+APPURL = 'https://pzwei0105.github.io/PZ-Games/apps/unpacked/'
+
+
+def _ics_esc(s):
+    return str(s or '').replace('\\', '\\\\').replace(';', '\\;').replace(',', '\\,').replace('\n', '\\n')
+
+
+def _ics_fold(line):
+    out, cur, n = [], '', 0
+    for ch in line:
+        b = len(ch.encode('utf-8'))
+        if n + b > 73:
+            out.append(cur)
+            cur, n = ' ', 1
+        cur += ch
+        n += b
+    out.append(cur)
+    return '\r\n'.join(out)
+
+
+def calendar(D, t0):
+    """上市日（專題、願望單）、特價截止（願望單、解包過的）、下週出擊（最新週報）→ data/calendar.ics。
+    手機訂閱一次，之後跟著每小時更新。事件內容沒變就不重寫。"""
+    today = t0.astimezone(TW).strftime('%Y-%m-%d')
+    tw = lambda iso_s: dt.datetime.strptime(iso_s, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=UTC).astimezone(TW)  # noqa: E731
+    idx = load(os.path.join(D, 'index.json'), {}).get('items') or []
+    pk = load(os.path.join(D, 'picks.json'), {}).get('items') or []
+    names = {int(x['steam']): (x['zh'], 'f/' + x['id']) for x in idx if x.get('steam')}
+    for x in pk:
+        if x.get('steam'):
+            names.setdefault(int(x['steam']), (x['zh'], 'p/' + x['id']))
+    ev, seen = [], set()
+
+    def add(kind, d, name, uid, desc, route=''):
+        k = (kind, uid, d)
+        if k in seen or d < today:
+            return
+        seen.add(k)
+        ev.append((d, kind, name, uid, desc, route))
+    for x in idx:
+        r = x.get('release') or ''
+        if re.fullmatch(r'\d{4}-\d{2}-\d{2}', r):
+            add('上市', r, x['zh'], x.get('steam') or x['id'], '、'.join(x.get('platforms') or [])[:80], 'f/' + x['id'])
+    w = load(os.path.join(D, 'wish.json'), {})
+    for x in (w.get('items') or []) if w.get('ok') or w.get('state') == 'stale' else []:
+        if x.get('adult'):
+            continue
+        nm, route = names.get(x['appid'], (x['name'], ''))
+        rel = x.get('rel') or {}
+        if rel.get('soon') and re.fullmatch(r'\d{4}-\d{2}-\d{2}', rel.get('date') or ''):
+            add('上市', rel['date'], nm, x['appid'], '你的 Steam 願望單', route)
+        s = x.get('sale') or {}
+        if s.get('end'):
+            e = tw(s['end'])
+            p = x.get('p') or [None, None, 0]
+            add('特價截止', e.strftime('%Y-%m-%d'), nm, x['appid'], ('限時免費' if p[2] >= 100 else f'-{p[2]}%，NT${round((p[0] or 0) / 100)}') + f'，最後到 {e.strftime("%H:%M")}', route)
+    for a, lv in ((load(os.path.join(D, 'live.json'), {}).get('apps')) or {}).items():
+        pr = lv.get('price') or {}
+        if pr.get('disc') and pr.get('end') and int(a) in names:
+            e = tw(pr['end'])
+            nm, route = names[int(a)]
+            add('特價截止', e.strftime('%Y-%m-%d'), nm, int(a), f'-{pr["disc"]}%，NT${round((pr.get("final") or 0) / 100)}，最後到 {e.strftime("%H:%M")}', route)
+    wk = (load(os.path.join(D, 'weekly.json'), {}).get('items') or [None])[0]
+    if wk:
+        for n in load(os.path.join(D, 'weekly', wk['id'] + '.json'), {}).get('next') or []:
+            if re.fullmatch(r'\d{4}-\d{2}-\d{2}', n.get('d') or '') and not any(e[1] == '上市' and e[2] == n.get('name') for e in ev):
+                add('下週出擊', n['d'], n['name'], n['name'], n.get('t') or '', (n.get('ref') or '').replace(':', '/', 1))
+    ev.sort()
+    L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//UNPACKED//Launch Calendar//ZH', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+         _ics_fold('X-WR-CALNAME:解包・出擊日曆'), 'X-WR-TIMEZONE:Asia/Taipei', 'REFRESH-INTERVAL;VALUE=DURATION:PT3H', 'X-PUBLISHED-TTL:PT3H']
+    for d, kind, name, uid, desc, route in ev:
+        d8 = d.replace('-', '')
+        nx = (dt.date.fromisoformat(d) + dt.timedelta(days=1)).strftime('%Y%m%d')
+        tag = {'上市': 'rel', '特價截止': 'end', '下週出擊': 'next'}[kind]
+        L += ['BEGIN:VEVENT', f'UID:unpacked-{tag}-{re.sub(r"[^A-Za-z0-9]+", "", str(uid)) or hashlib.md5(str(uid).encode()).hexdigest()[:12]}-{d8}@pzwei0105.github.io',
+              f'DTSTAMP:{d8}T000000Z', f'DTSTART;VALUE=DATE:{d8}', f'DTEND;VALUE=DATE:{nx}',
+              _ics_fold('SUMMARY:' + _ics_esc(f'{kind}｜{name}')), _ics_fold('DESCRIPTION:' + _ics_esc(f'{desc}\n解包 UNPACKED')),
+              f'URL:{APPURL}' + (('#' + route) if route else '#hunt'), 'END:VEVENT']
+    L.append('END:VCALENDAR')
+    body = '\r\n'.join(L) + '\r\n'
+    path = os.path.join(D, 'calendar.ics')
+    try:
+        old = open(path, encoding='utf-8', newline='').read()
+    except OSError:
+        old = None
+    if old != body:
+        with open(path, 'w', encoding='utf-8', newline='') as f:
+            f.write(body)
+    print(f'calendar: {len(ev)} 筆，wrote={old != body}')
+
+
 # ------------------------------------------------------------------ main
 def plan(track, live_old, t0):
     """這一輪要更新哪些。最近寫的、盯上市的、還沒抓過的每輪都更新；其餘照「最久沒更新」輪流，
@@ -668,6 +761,10 @@ def main():
     live = {'at': iso(t0), 'ok': ok, 'asked': len(apps), 'errs': ERRS[:20], 'apps': out_apps}
     wrote = save_if_changed(live_path, live)
     print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}')
+    try:
+        calendar(D, t0)
+    except Exception as e:  # noqa: BLE001  日曆壞掉不能拖垮整輪
+        print('calendar fail', e, file=sys.stderr)
 
     if not a.no_candidates:
         c = candidates(covered, tagn, picked, mine)

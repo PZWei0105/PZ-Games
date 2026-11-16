@@ -1,6 +1,6 @@
 # 解包 UNPACKED
 
-痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達、每週懶人包（本週結算），以及「遊戲狂想曲」粉專出稿台（貼文、三個標題、塗鴉圖卡、60 秒口播稿）。
+痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達（每款都有 Claude 的願望單解包、買不買判定與目標價、到價警報）、出擊日曆（可訂閱到手機行事曆）、每週懶人包（本週結算），以及「遊戲狂想曲」粉專出稿台（貼文、三個標題、塗鴉圖卡、60 秒口播稿）。
 網址：https://pzwei0105.github.io/PZ-Games/apps/unpacked/
 
 起因：痞子葳看到 TGP 玩家口袋的 FB 遊戲介紹貼文，想要一個 App「主動抓取並寫成一篇篇遊戲詳細介紹」。他要求：主頁自己看、要詳盡、要有討論，像《玩真的》一樣附影片與圖片預覽，**而且要比玩真的更強、更全面**；粉專分頁照 Claude 建議的格式。全部收（大作、獨立、免費、平台獨佔），**手機遊戲一律排除**（他不喜歡什麼都得課金才能解鎖的遊戲）；每天 2～3 篇深度專題。視覺要呼應頻道的噴漆塗鴉風、聲光效果拉滿。
@@ -11,6 +11,7 @@
 |---|---|---|
 | 推坑（已上市、不分新舊的私房推薦） | 每日推坑排程（Claude 的排程任務「解包：每日推坑」，每天台灣時間 11:43，寫完推播） | `apps/unpacked/data/picks/<id>.json`，規範在 `PICKS_GUIDE.md`；publish.py 產生 `data/picks.json` |
 | 專題（深度介紹＋粉專稿） | 每日寫稿排程（Claude 的排程任務「解包：每日寫稿」，每天台灣時間 05:23，寫完推播到痞子葳手機） | `apps/unpacked/data/features/<id>.json`，規範在 `WRITER_GUIDE.md` |
+| 願望單解包（願望單每一款的深度專題＋買不買＋目標價） | 每日排程（Claude 的排程任務「解包：願望單解包」，每天台灣時間 16:37；排隊名單空了就什麼都不做、不推播） | 一樣寫進 `apps/unpacked/data/features/<id>.json`（`kind: wish`、`rank` 從 20 起、一定有 `buy`），規範在 `WISH_GUIDE.md`；不寫的（DLC、原聲帶、成人向）記在 `data/wish-skip.json` |
 | 每週懶人包（本週結算＋粉專稿） | 每週排程（Claude 的排程任務「解包：每週懶人包」，每週日台灣時間 19:43，寫完推播） | `apps/unpacked/data/weekly/<YYYY-Www>.json`，規範在 `WEEKLY_GUIDE.md`；publish.py 產生 `data/weekly.json` |
 | Steam 願望單（獵價） | 同一個 GitHub Actions：每小時讀痞子葳的公開願望單、對台灣區價格 | `tools/live.py` → `data/wish.json`（價格歷史也記在 `hist/<appid>.json` 的 `pr`）。Steam 代號放 repo 的 Actions 密碼 `UNP_STEAM`（Settings → Secrets and variables → Actions；不公開），沒有才讀 `data/wish-cfg.json` 的 `steam`（會公開）。代號不寫進 log 和輸出檔 |
 | Steam 即時資料與選題候選 | GitHub Actions `.github/workflows/unpacked-live.yml`，每小時＋track.json 一變就跑。最新的 120 款、盯上市的、還沒抓過的每輪更新；其餘每輪輪流更新 40 款（最久沒更新的先），所以專題和推坑再多，每款也至少約一天更新一次 | `tools/live.py` → `data/live.json`、`data/hist/<appid>.json`、`data/candidates.json` |
@@ -45,8 +46,11 @@
   - 點任何一款（或雷達光點）打開情報卡：動態預告、現價／特價到幾點／史低、價格血條、價格紀錄階梯線、介紹；寫過專題或推坑的可以直接打開，標想玩的可以「不想玩了」。
   - 「史低」＝這個 App 開始追蹤以來的最低價，**追蹤滿 14 天才叫史低**，之前只說「追蹤 N 天內最低」（不是 Steam 有史以來的最低價；IsThereAnyDeal 要金鑰，沒接）。特價結束時間來自 Steam（`active_discounts`），專題和推坑的即時數據也會顯示「特價到幾點」。
   - 獵物出現警報：打開 App 時，有沒看過的新特價就跳出黃黑警示膠帶的「獵物出現」（警報聲、最多列 3 款），一天最多一次；設定可以關。進過獵價頁就算看過（分頁上的數字歸零）。首頁也會貼一條「你的獵物 N 款正在特價」的警示膠帶。
+  - Claude 判定：有願望單解包（或任何附 `buy` 的專題）的獵物會貼「Claude：等特價 ≤NT$300」；現價小於等於目標價（而且不是「別買」）＝**到價**：雷達正中心、懸賞單「到價」章、警報「N 款到了 Claude 的目標價」、首頁膠帶、分頁數字、每天早上推播。還沒寫解包的顯示「解包排隊 #N」（照加入願望單由新到舊、每天 2 款，跟排程同一套規則），情報卡會寫大約幾天寫好；獵價頁上方有「Claude 願望單解包」進度條。
+  - 專題頁的「買不買」卡：判定大字、目標價、現在價格離目標還差多少、價格血條上的綠色目標線、理由、什麼情況會改判；到價時蓋「到價」章。
   - 還沒連結願望單（`wish.json` 的 `state` 不是 `ok`）時，顯示連結說明：Steam「遊戲詳細資料」設成公開，把個人檔案網址給 Claude。
   - 每天清晨的寫稿排程推播會帶上「願望單特價快報」（新特價、史低、快結束、限免）；推坑排程平常不推願望單上的，大特價時一天最多推 1 款「特價入」。
+- **出擊日曆**（`#cal`；獵價頁右上、首頁最下面、週報「下週出擊」旁的按鈕）：解包過的上市日、願望單的上市日和特價截止（願望單與解包過的）、最新週報的下週出擊排在一起。最上面是下一個上市的大倒數（D-N），再來是「訂閱到手機行事曆」（`webcal://…/data/calendar.ics`，live.py 每小時重算；內容沒變不重寫）、近五週的日程格（點有事的日子跳到那天）、照日期排的清單，每一筆右邊可以單獨加進行事曆（iPhone 直接開「加入行事曆」畫面，其他瀏覽器下載 .ics），也能全部加入一次。
 - **每週懶人包**（`#week`；首頁上方「WEEK 47 結算出爐」橫幅〔結算後 3 天內〕、首頁最下面的按鈕、粉專出稿台）：
   - 結算畫面：WEEK 數字砸下＋噴漆＋重低音、結算條跑完「本週結算 COMPLETE」、解包／推坑／大事／下週上市數字跳上來、Claude 的開場、本週 MVP（旋轉光芒、皇冠、MVP 章蓋下）、Tier 表（S～D，方塊一個個拍上去，點了打開那款）和每一款的排名理由、本週大事、下週出擊、特價戰利品（現在正在特價的獵物和解包過的遊戲）、數據王（同上人數、好評率、24 小時暴漲，用現在的 Steam 即時資料）、歷屆週報。
   - 還沒結算的這一週：上面顯示「WEEK N 進行中」面板（結算倒數到週日 21:00、這週到目前的解包和推坑）。
@@ -74,6 +78,7 @@
 - `data/features/<id>.json`：見 `WRITER_GUIDE.md` 第 3、4 節；範例 `rob-run`、`gta-vi`、`unhinged`。
 - `data/picks/<id>.json`：見 `PICKS_GUIDE.md` 第 3 節；範例 `balatro`、`octopath-traveler-2`、`xcom-2`。`data/picks.json`：`{at, n, items:[{id,date,rank,zh,en,steam,year,release,genres,platforms,stamp,label,pitch,zhs,hours,price_text,money,yt,yts,img,gal,updated}]}`（publish.py 產生）。
 - `data/wish.json`：`{at, ok, state(ok/unset/badid/empty/stale), n, items:[{appid, added, pri, name, img, cap, free, p:[現價,原價,折扣], low:[最低價,那天,開始追蹤日], sale:{from,end}, rv:[%,則數,標籤], rel, zh, tags, dev, short, deck, micro?}]}`（live.py 產生；價格單位「分」）。`sale.from` 是我們看到它開始特價的時間（第一次抓或剛加進願望單時不知道，是 null）。
+- `data/calendar.ics`：出擊日曆的訂閱檔（live.py 產生，全天事件；UID 固定，訂閱的手機會跟著更新、不會重複）。`data/wish-skip.json`：`{"appid": "不寫解包的理由"}`（願望單解包排程寫）。專題多了 `buy`：`{call, target(分), why, watch}`，目錄只帶 `{call, target}`。
 - `data/weekly/<YYYY-Www>.json`：見 `WEEKLY_GUIDE.md` 第 4 節。`data/weekly.json`：`{at, n, items:[{id, from, to, date, title, mvp, mvp_name, top, updated}]}`（publish.py 產生；`top` 是 Tier 表前 4 名，首頁橫幅用）。
 - `data/candidates.json` 另有 `gems`（Steam 評價最高的遊戲）、`gems_sale`（評價最高又正在特價），推坑選題用；`picked: true` 是推過的；每份清單的 `mine: true` 是在痞子葳的 Steam 願望單上。
 - `data/live.json`：`{at, apps:{appid:{name,free,price{final,orig,disc,fmt,low},rv{n,pct,label,recent},rv_tc,players{n,at,peak,d24},rel,langs{tc,sc},tags,img{hero,header,wide,box},shots[],micro,trailers[{hls,mp4,poster,name}],…}}}`；價格單位是「分」（NT$ × 100）。

@@ -47,6 +47,7 @@ async function route() {
       afterFeature();
       scrollTo(0, 0);
     } else if (name === 'hunt') { setTabs('hunt'); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
+    else if (name === 'cal') { setTabs('hunt'); v.innerHTML = await renderCal(); scrollTo(0, 0); calFx(); }
     else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
     else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
     else if (name === 'fan' && arg && arg.startsWith('w:')) { setTabs('fan'); v.innerHTML = await renderWeekFan(arg.slice(2)); scrollTo(0, 0); weekCardRender(); }
@@ -349,6 +350,10 @@ document.addEventListener('click', async (ev) => {
     if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = ROUTE.startsWith('p/') ? 'picks' : 'home'; return; }
     if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); return; }
     if (a === 'hf' || a === 'hs') { if (a === 'hf') HUNT.f = act.dataset.v; else HUNT.sort = act.dataset.v; sfx.click(); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); return; }
+    if (a === 'cday') { const g = document.getElementById('cd-' + act.dataset.d); if (g) { g.scrollIntoView({ behavior: 'smooth', block: 'center' }); g.classList.remove('flash'); void g.offsetWidth; g.classList.add('flash'); } sfx.click(); return; }
+    if (a === 'caladd') { ev.stopPropagation(); const e = (S.calEv || [])[+act.dataset.i]; if (e) { calSave([e], `unpacked-${e.d}.ics`); sfx.stamp(); burstAt(act, [YEL, PINK], 12, 7); } return; }
+    if (a === 'calall') { const L = S.calEv || []; if (L.length) { calSave(L, 'unpacked-calendar.ics'); sfx.stamp(); toast(`${L.length} 筆一次加入`); } return; }
+    if (a === 'calcopy') { if (await copyText(CAL_URL)) { sfx.stamp(); toast('訂閱網址已複製'); } return; }
     if (a === 'hinfo') { ev.stopPropagation(); huntInfo(act.dataset.k); return; }
     if (a === 'hunwant') { delete S.marks[act.dataset.id]; save('marks'); closeSheet(); sfx.scratch(); toast('已經從獵物移除'); if (ROUTE.startsWith('hunt')) route(); return; }
     if (a === 'ha-go' || a === 'ha-x') { huntAlertClose(a === 'ha-go'); return; }

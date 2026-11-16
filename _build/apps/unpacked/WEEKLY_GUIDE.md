@@ -11,7 +11,7 @@ App 會把週報做成遊戲的「本週結算」畫面（WEEK 數字砸下、�
 1. 用 add_repo 加 `PZWei0105/PZ-Games`（要 push 權限），照工具說明 clone 到 `/home/claude/pz-games`，再用 register_repo_root 登記。
 2. 「這一週」＝今天（台灣日期）所在的 ISO 週，週一到週日；`id` 是 `YYYY-Www`（例：`2026-W47`）。用 `python3 -c "import datetime as d; t=d.date.today(); print(t.isocalendar())"` 算（注意台灣時間）。
 3. 讀這幾個檔（全部在 `apps/unpacked/data/`）：
-   - `index.json`、`picks.json`：這一週（`date` 在週一到週日之間）的專題和推坑——**每一款都要排進 Tier 表**；再打開 `features/<id>.json`、`picks/<id>.json` 看結論、評價、風向。
+   - `index.json`、`picks.json`：這一週（`date` 在週一到週日之間）的專題和推坑——**每一款都要排進 Tier 表**（願望單解包 `kind: wish` 也是專題，一樣要排）；再打開 `features/<id>.json`、`picks/<id>.json` 看結論、評價、風向。
    - `weekly.json`、`weekly/`：之前的週報（語氣、格式照它，不要重複上週的新聞）。
    - `live.json`：Steam 即時數據（同上、評價、特價）。`wish.json`：痞子葳的 Steam 願望單和特價（`p` 是 [現價, 原價, 折扣]，單位「分」＝NT$×100；`sale.end` 是特價結束時間）。`candidates.json`：熱門與即將推出的候選，`mine: true` 是在他願望單上的。
 4. 只能新增或修改 `apps/unpacked/data/weekly/` 和 `weekly.json`。其他一律不動（專題、推坑、live／wish／hist／candidates、App 本體）。

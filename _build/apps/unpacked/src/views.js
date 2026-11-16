@@ -81,14 +81,14 @@ function renderHome() {
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="f/${esc(n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
-    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
 }
 /* 首頁：願望單有特價就貼一條警示膠帶 */
 function huntStrip() {
-  const sale = huntTargets().filter((t) => t.onSale || t.giveaway).sort((a, b) => b.score - a.score);
+  const sale = huntTargets().filter((t) => t.onSale || t.giveaway || t.hit).sort((a, b) => b.score - a.score);
   if (!sale.length) return '';
-  const lows = sale.filter((t) => t.lowState === 'low').length;
-  return `<div class="hstrip" data-go="hunt"><span class="hs-k">${ICON.target}獵價</span><span class="hs-t">你的獵物 <b>${sale.length}</b> 款正在特價${lows ? `，<b>${lows}</b> 款史低` : ''}：${sale.slice(0, 2).map((t) => `${esc(t.name)} ${t.giveaway ? '免費' : '-' + t.disc + '%'}`).join('、')}${sale.length > 2 ? '…' : ''}</span><span class="hs-a">→</span></div>`;
+  const lows = sale.filter((t) => t.lowState === 'low').length; const hits = sale.filter((t) => t.hit).length;
+  return `<div class="hstrip" data-go="hunt"><span class="hs-k">${ICON.target}獵價</span><span class="hs-t">${hits ? `<b>${hits}</b> 款到了 Claude 的目標價，` : ''}你的獵物 <b>${sale.filter((t) => t.onSale || t.giveaway).length}</b> 款正在特價${lows ? `，<b>${lows}</b> 款史低` : ''}：${sale.slice(0, 2).map((t) => `${esc(t.name)} ${t.giveaway ? '免費' : t.hit && !t.onSale ? '到價' : '-' + t.disc + '%'}`).join('、')}${sale.length > 2 ? '…' : ''}</span><span class="hs-a">→</span></div>`;
 }
 
 function picksTeaser() {
@@ -278,6 +278,7 @@ async function renderFeature(id) {
     <div class="verdict"><div class="vl">三秒結論 · ${esc(V.label)}</div><div class="vt">${esc(V.stamp === '推薦' ? '值得玩' : V.stamp === '觀望' ? '先觀望' : '先跳過')}</div>
       <p class="vs">${esc(V.summary)}</p>${sealHtml(V.stamp, V.label, 'seal wait')}
       <div class="fa"><div class="st"><h4>適合你，如果…</h4><ul>${V.for.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="st p"><h4>不適合，如果…</h4><ul>${V.against.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div></div>
+    ${buyHtml(f, lv)}
     <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn p sm" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
     ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源；粉紅色問號是還沒查證的。</p><div class="facts">${facts}</div>${liveHtml(f, lv, h)}${infoCards(f, lv)}`)}
@@ -298,6 +299,34 @@ async function renderFeature(id) {
       ${(f.pending || []).length ? `<div class="pend"><h4>還沒查證、先不當真</h4><ul>${f.pending.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
       <p class="sub-note" style="margin-top:12px">專題寫於 ${esc(f.date)}${f.updated ? ' · 最後更新 ' + esc(f.updated.slice(0, 16).replace('T', ' ')) : ''}。硬資訊都附來源；Steam 即時數據每小時自動更新。</p>`)}
     <div class="endcta"><button class="btn p" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button><button class="btn k" data-act="back">回牆上</button></div>`;
+}
+
+/* ---------- 買不買：願望單解包一定有（其他專題可選），目標價對上即時價格 ---------- */
+const BUY_CLS = { '現在買': 'b-go', '等特價': 'b-wait', '等史低': 'b-wait', '等上市後評價': 'b-mid', '先觀望': 'b-mid', '別買': 'b-no' };
+function priceNow(steam, lv) {
+  lv = lv || liveOf(steam);
+  if (lv && lv.price && lv.price.final != null) return { final: lv.price.final, orig: lv.price.orig, low: lv.price.low && lv.price.low.v };
+  const w = ((S.wish && S.wish.items) || []).find((x) => String(x.appid) === String(steam));
+  if (w && w.p && w.p[0] != null) return { final: w.p[0], orig: w.p[1], low: w.low && w.low[0] };
+  return null;
+}
+function buyHtml(f, lv) {
+  const b = f.buy; if (!b) return '';
+  const p = priceNow(f.game.steam, lv); const fin = p && p.final;
+  const hit = b.target != null && fin != null && fin <= b.target;
+  let now = '';
+  if (fin != null && b.call !== '別買') {
+    now = hit ? `<b class="bc-hit">到價了！</b>現在 ${fmtNT(fin)}，比目標還便宜 ${fmtNT(b.target - fin)}`
+      : b.target != null ? `現在 ${fmtNT(fin)}，還差 ${fmtNT(fin - b.target)}（再便宜 ${Math.round((1 - b.target / fin) * 100)}% 就到價）` : `現在 ${fmtNT(fin)}`;
+  }
+  let bar = '';
+  if (p && p.orig && fin != null && b.target != null) {
+    const cur = Math.max(2, Math.min(100, fin / p.orig * 100)), tg = Math.max(0, Math.min(100, b.target / p.orig * 100));
+    bar = `<div class="hp big ${hit ? 'crit' : cur <= 50 ? 'low' : cur < 100 ? 'mid' : ''}" style="--cur:${cur.toFixed(1)}%"><i class="hpf"></i><i class="hpt" style="left:${tg.toFixed(1)}%"></i></div><div class="hpk"><span>價格血條 ${Math.round(cur)}%</span><span class="tg">▲ 目標價 ${fmtNT(b.target)}</span></div>`;
+  }
+  return `<div class="buycard ${BUY_CLS[b.call] || ''} ${hit ? 'hit' : ''}"><div class="bc-k">Claude 判定・買不買</div><div class="bc-call">${esc(hit ? '到價，可以買' : b.call)}</div>
+    ${b.target != null ? `<div class="bc-t">目標價 <b>${fmtNT(b.target)}</b> 以下出手</div>` : ''}${now ? `<div class="bc-now">${now}</div>` : ''}${bar}
+    <p>${esc(b.why)}</p>${b.watch ? `<p class="bc-w">什麼情況會改判：${esc(b.watch)}</p>` : ''}${hit ? '<i class="bc-stamp">到價</i>' : ''}</div>`;
 }
 
 /* ---------- 推坑：已上市、不分新舊，查過評價才推的私房遊戲 ---------- */

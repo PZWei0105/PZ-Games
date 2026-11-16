@@ -40,7 +40,7 @@ jobs:
         run: |
           git config user.name 'unpacked-bot'
           git config user.email 'unpacked-bot@users.noreply.github.com'
-          git add apps/unpacked/data/live.json apps/unpacked/data/wish.json apps/unpacked/data/hist apps/unpacked/data/candidates.json 2>/dev/null || true
+          git add apps/unpacked/data/live.json apps/unpacked/data/wish.json apps/unpacked/data/calendar.ics apps/unpacked/data/hist apps/unpacked/data/candidates.json 2>/dev/null || true
           if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi
           git commit -q -m '解包：更新 Steam 即時資料'
           for i in 1 2 3 4 5; do

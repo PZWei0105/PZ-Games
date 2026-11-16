@@ -71,7 +71,20 @@ if '--hunt' in sys.argv:
         W(1593500, 'God of War', [99000, 99000, 0], low=49500, zh='tc'),
         W(570940, 'DARK SOULS REMASTERED', [79900, 79900, 0], low=39900, zh='none', rv=(89, 70000, '極度好評')),
     ]
+    items.append(W(4348910, 'Probably Stolen', [27900, 27900, 0], low=27900, added='2026-11-15', tags=('經營', '模擬')))
     wish = {'at': iso(T - 1800), 'ok': True, 'state': 'ok', 'n': len(items), 'items': items}
+    # 把「深空當鋪」當成一篇願望單解包：買不買＝等特價、目標價 NT$300（現價 NT$279 → 到價）
+    fp = os.path.join(d, 'features', 'probably-stolen.json')
+    if os.path.exists(fp):
+        f = json.load(open(fp, encoding='utf-8'))
+        f['kind'] = 'wish'; f['kind_label'] = '願望單解包'
+        f['buy'] = {'call': '等特價', 'target': 30000, 'why': '（測試資料）原價不貴、評價穩，但這類經營小品常常打折；等到 NT$300 以下再買，玩起來沒有負擔。', 'watch': '（測試）出大型更新或評價轉向就改判。'}
+        json.dump(f, open(fp, 'w', encoding='utf-8'), ensure_ascii=False)
+        ix = json.load(open(os.path.join(d, 'index.json'), encoding='utf-8'))
+        for it in ix['items']:
+            if it['id'] == 'probably-stolen':
+                it.update(kind='wish', kind_label='願望單解包', buy={'call': '等特價', 'target': 30000})
+        json.dump(ix, open(os.path.join(d, 'index.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     json.dump(wish, open(os.path.join(d, 'wish.json'), 'w'), ensure_ascii=False)
     now_m = int(T // 60)
     json.dump({'pl': [], 'pr': [[now_m - 40 * 1440, 159900], [now_m - 25 * 1440, 111900], [now_m - 18 * 1440, 159900], [now_m - 5 * 60, 79900]], 'rv': [], 'rt': []},
