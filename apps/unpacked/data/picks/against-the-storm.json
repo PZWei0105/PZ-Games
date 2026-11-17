@@ -1,0 +1,329 @@
+{
+ "id": "against-the-storm",
+ "date": "2026-11-17",
+ "rank": 2,
+ "game": {
+  "zh": "Against the Storm",
+  "zh_note": "暫無官方中文名，沿用英文原名",
+  "en": "Against the Storm",
+  "steam": 1336490,
+  "dev": "Eremite Games",
+  "pub": "Hooded Horse",
+  "platforms": [
+   "PC（Steam、GOG、Epic）",
+   "PS5",
+   "PS4",
+   "Xbox Series X|S",
+   "Xbox One",
+   "Switch"
+  ],
+  "genres": [
+   "城市營造",
+   "Roguelite",
+   "策略"
+  ],
+  "release": "2023-12-08",
+  "year": 2023,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "閉眼入",
+ "label": "經營控的一局兩小時毒品",
+ "pitch": "暴雨裡蓋村子、照顧五個種族的胃口：一局約兩小時、每局都不一樣的 Roguelite 城市營造",
+ "why": "一般的模擬經營，玩到後期常常變成「照公式蓋完、看數字跑」。《Against the Storm》把這件事整個打掉：每一局能蓋什麼建築是抽出來的，這次沒有麵包坊、只有烤肉架，你就得改變整個村子的吃法；海狸要吃餅乾、蜥蜴人要吃肉乾，誰不滿意就走人。女王的耐心一直在掉，你得在信譽滿之前搶時間。最爽的是那種「我把爛牌打成這樣」的成就感，每一局的城市都是你的決策長出來的。一局大約兩小時，可以暫停、可以開三倍速，下班玩一局剛好。要先講：它的資訊量很大，前幾局會被一堆資源和需求淹沒，撐過去就停不下來了。",
+ "reasons": [
+  {
+   "h": "每局藍圖都不一樣",
+   "t": "建築藍圖是隨機抽選的，沒有萬用公式，每座城都得照手上的牌現想生產鏈。"
+  },
+  {
+   "h": "一局兩小時剛好",
+   "t": "一座聚落大約兩小時，可暫停、可加速，輸了也會帶走資源去升級主城。"
+  },
+  {
+   "h": "評價一路很穩",
+   "t": "Metacritic 91、OpenCritic 89，PC Gamer 給 91 分，賣破百萬套。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡模擬經營，但玩膩了「照公式蓋」的人",
+   "喜歡 Roguelite 的「這局爛牌也要打贏」那種臨場決策的人",
+   "時間零碎、想要一次一兩個小時就有完整成就感的人"
+  ],
+  "against": [
+   "想慢慢蓋、蓋出一座漂亮城市長期經營的人：每局蓋完就要離開",
+   "受不了資訊量大、介面一堆數字的人：前幾局學習曲線很陡",
+   "想找朋友一起玩的人：它只有單人"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic",
+   "v": "91（PC）",
+   "s": [16, 0]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "89（91% 推薦）",
+   "s": [17]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "波蘭小團隊 Eremite Games 開發，Hooded Horse 發行",
+   "s": [2, 3]
+  },
+  {
+   "k": "上市",
+   "v": "Epic 搶先體驗 2021/10/18、Steam 與 GOG 搶先體驗 2022/11/1；正式版 2023/12/8，同日登上 PC Game Pass",
+   "s": [14, 2, 3, 5]
+  },
+  {
+   "k": "主機版",
+   "v": "2025/6/26 登上 PS5、PS4、Xbox Series X|S、Xbox One、Switch，主機版有手把介面",
+   "s": [6, 7]
+  },
+  {
+   "k": "中文",
+   "v": "Steam 版介面與字幕有繁體中文；語音只有英文",
+   "s": [0]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 91（PC）、OpenCritic 89",
+   "s": [16, 17]
+  },
+  {
+   "k": "媒體評價",
+   "v": "PC Gamer 91、Eurogamer 5 顆星、Destructoid 9 分、PCGamesN 9 分",
+   "s": [1, 17]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：主線約 37.5 小時、含支線約 106 小時、全收集約 267 小時；單一聚落約 2 小時",
+   "s": [13, 12]
+  },
+  {
+   "k": "多人",
+   "v": "只有單人模式",
+   "s": [0]
+  },
+  {
+   "k": "資料片",
+   "v": "《Keepers of the Stone》2024/9/26 推出（新種族青蛙人）；《Nightwatchers》2025/7/31 推出（新種族蝙蝠人、兩個新地形）",
+   "s": [8, 10, 9]
+  },
+  {
+   "k": "銷量",
+   "v": "2024 年 3 月宣布 Steam 賣破 100 萬套",
+   "s": [4, 25]
+  },
+  {
+   "k": "獎項",
+   "v": "入圍 IGF 2023 傑出設計獎、第 27 屆 D.I.C.E. 年度最佳策略／模擬遊戲",
+   "s": [12, 4]
+  },
+  {
+   "k": "難度",
+   "v": "四種基本難度之外，另有 20 級「聲望」難度，每級加一個不利條件",
+   "s": [18, 21]
+  },
+  {
+   "k": "電腦需求",
+   "v": "建議 GTX 970、8GB 記憶體，容量 5GB",
+   "s": [0]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文（也有簡中）；語音只有英文，而且這款本來就幾乎靠文字和圖示。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據），GOG、Epic 也有。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷＋資料片",
+  "notes": [
+   "本體買斷，兩款資料片《Keepers of the Stone》《Nightwatchers》各自另售，另有原聲帶等收藏包。",
+   "沒有遊戲內購，資料片是加新種族、新地形，不是付費變強。"
+  ],
+  "flags": ["買斷", "資料片另售"]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "官方建議只要 GTX 970、8GB 記憶體，容量 5GB；你的 SCAR 18 隨便跑，接 4K 電視看大地圖也很舒服。"
+ },
+ "time": {
+  "text": "一局約 2 小時",
+  "note": "單一聚落大約 2 小時；HowLongToBeat：主線約 37.5 小時、含支線約 106 小時，想把聲望難度爬完可以玩上百小時。"
+ },
+ "howto": [
+  "第一次玩先跟著教學關走完，再從最低的難度開始，前幾局的重點是學會看需求和生產鏈。",
+  "開局先確保食物和柴火：營火的燃料任何季節都不能斷，斷了村民的決心會大跌；暴風雨季負面效果最重，更要先備好。",
+  "抽藍圖時優先挑能做出多種產品的建築，讓同一條生產鏈餵飽好幾個種族。",
+  "森林空地（Glade）不要亂開：危險和禁忌空地會帶來限時事件和更高的敵意，準備好再開。",
+  "隨時按空白鍵暫停想清楚，熟了再用 1～4 鍵切到三倍速。"
+ ],
+ "deals": "先買本體就夠玩很久；喜歡了再補資料片，或等特賣直接買含兩款資料片的完整組合包。正在訂 PC Game Pass 的話也可以先在那邊試。",
+ "talk": [
+  {
+   "q": "Roguelite 跟城市營造，到底是絕配還是互相打架？",
+   "why": "一般經營遊戲讓你慢慢蓋到完美，這款逼你每兩小時就拆掉重來。你喜歡哪一種？"
+  },
+  {
+   "q": "隨機藍圖是增加挑戰，還是讓運氣決定輸贏？",
+   "why": "玩家最愛它每局都不一樣，抱怨最多的也是抽不到想要的建築。"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "P_etWv_PW3M",
+    "title": "正式版上市日預告"
+   },
+   {
+    "id": "WXZqKal_mpY",
+    "title": "資料片《Keepers of the Stone》預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {"t": "Steam 商店頁：Against the Storm（語言、單人、系統需求、資料片）", "u": "https://store.steampowered.com/app/1336490/Against_the_Storm/", "d": ""},
+  {"t": "PC Gamer：Against the Storm 評測（91 分）", "u": "https://www.pcgamer.com/against-the-storm-review/", "d": "2023-12-19"},
+  {"t": "Game Developer：Against the Storm 11 月登上 Steam 搶先體驗（新聞稿）", "u": "https://www.gamedeveloper.com/press-release/survival-city-builder-against-the-storm-thunders-into-early-access-this-november", "d": "2022-10-13"},
+  {"t": "Game Developer：正式版 12 月推出並登上 PC Game Pass（新聞稿）", "u": "https://www.gamedeveloper.com/press-release/city-building-sensation-against-the-storm-hits-1-0-and-pc-game-pass-this-december", "d": "2023-11-20"},
+  {"t": "Gamespress：Against the Storm 賣破 100 萬套", "u": "https://gamespress.com/Against-the-Storm-1-million-sales", "d": "2024-03-27"},
+  {"t": "Gamespress：Against the Storm 正式版上市", "u": "https://gamespress.com/Against-the-Storm-1-0-out-now", "d": "2023-12-08"},
+  {"t": "Eremite Games：主機版公布", "u": "https://eremitegames.com/ats-console-announcement/", "d": ""},
+  {"t": "Rogueliker：主機版上市日", "u": "https://rogueliker.com/against-the-storm-console-release-date/", "d": "2025-04-29"},
+  {"t": "Steam Deck HQ：資料片 Keepers of the Stone", "u": "https://steamdeckhq.com/news/against-the-storm-keeper-of-the-stone-dlc/", "d": "2024-08-29"},
+  {"t": "Eremite Games：Nightwatchers 主機版上市日", "u": "https://eremitegames.com/nightwatchers-dlc-console-release-date/", "d": "2025-11-14"},
+  {"t": "Rogueliker：Against the Storm 資料片整理", "u": "https://rogueliker.com/against-the-storm-dlc/", "d": "2025-08-01"},
+  {"t": "PCGamesInsider：Eremite Games 訪談", "u": "https://www.pcgamesinsider.biz/interviews-and-opinion/72578/the-big-indie-interviews-eremite-games-discuss-successfully-blending-the-city-builder-and-roguelite-genres-into-one-award-winning-game", "d": ""},
+  {"t": "Game Developer：Road to IGF 2023 訪談（一局約兩小時）", "u": "https://www.gamedeveloper.com/road-to-igf-2023/how-against-the-storm-managed-to-mix-city-building-and-roguelite-play", "d": "2023-02-28"},
+  {"t": "Deku Deals：Against the Storm（HowLongToBeat、平台）", "u": "https://www.dekudeals.com/items/against-the-storm?format=all", "d": ""},
+  {"t": "Worthplaying：Epic 搶先體驗開放", "u": "https://worthplaying.com/article/2021/10/18/news/128905-against-the-storm-available-as-early-access-title-on-the-epic-games-store-trailer", "d": "2021-10-18"},
+  {"t": "PC Gamer：同世界觀的生存新作公布", "u": "https://www.pcgamer.com/games/survival-crafting/theres-something-weve-been-dying-to-tell-you-the-best-city-builder-of-2023-is-getting-a-survival-game-set-in-the-same-world/", "d": "2026-07-01"},
+  {"t": "Metacritic：Against the Storm（PC）", "u": "https://legacy.prod.metacritic.com/game/pc/against-the-storm", "d": ""},
+  {"t": "OpenCritic：Against the Storm", "u": "https://opencritic.com/game/13940/-/reviews", "d": ""},
+  {"t": "官方 Wiki：新手指南（季節、敵意、空地、種族需求、難度）", "u": "https://hoodedhorse.com/wiki/Against_the_Storm/Beginner%27s_Guide", "d": ""},
+  {"t": "官方 Wiki：女王的耐心", "u": "https://hoodedhorse.com/wiki/Against_the_Storm/Queen%27s_Impatience", "d": ""},
+  {"t": "官方 Wiki：教學流程（暫停、加速、藍圖抽選）", "u": "https://hoodedhorse.com/wiki/Against_the_Storm/Tutorial_Walkthrough", "d": ""},
+  {"t": "TechRaptor：Against the Storm 評測（搶先體驗版）", "u": "https://techraptor.net/gaming/reviews/against-storm-ambient-roguelite-city-builder", "d": ""},
+  {"t": "TechRadar：Against the Storm 評測", "u": "https://www.techradar.com/gaming/consoles-pc/against-the-storm-review", "d": "2023-12-18"},
+  {"t": "Vaporlens：Steam 玩家評論分析", "u": "https://vaporlens.app/app/1336490/against_the_storm/stats", "d": "2026-03-24"},
+  {"t": "Adrian Hon：Against the Storm 遊玩心得", "u": "https://adrianhon.substack.com/p/against-the-storm", "d": ""},
+  {"t": "Worthplaying：Against the Storm 賣破 100 萬套", "u": "https://worthplaying.com/article/2024/3/27/news/141372-against-the-storm-sells-over-1-million-copies", "d": "2024-03-27"},
+  {"t": "YouTube（Hooded Horse）：正式版上市日預告", "u": "https://www.youtube.com/watch?v=P_etWv_PW3M", "d": "2023-11-20"},
+  {"t": "YouTube（Hooded Horse）：Keepers of the Stone 預告", "u": "https://www.youtube.com/watch?v=WXZqKal_mpY", "d": "2024-08-29"},
+  {"t": "Fandom Wiki：遊戲機制（主城、循環、暴風重置）", "u": "https://against-the-storm.fandom.com/wiki/Mechanics", "d": ""}
+ ],
+ "pending": [
+  "現在是否還在 PC Game Pass 片單內：2023 年上架時有，目前狀態沒查證。",
+  "HowLongToBeat 數字取自 Deku Deals 的轉載，沒有直接在 HowLongToBeat 官網核對。"
+ ],
+ "updated": "2026-11-17",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "在世界地圖上選一個地點建立新聚落",
+    "照抽到的藍圖蓋生產鏈，滿足各種族的需求",
+    "撐過毛毛雨、放晴、暴風雨三個季節循環",
+    "開森林空地找資源，同時壓住敵意",
+    "趕在女王失去耐心前把信譽衝滿",
+    "帶著資源回主城升級，再出發下一局"
+   ],
+   "body": [
+    "你扮演女王派出的總督，在暴雨不停的荒野上建立聚落。每局的勝利條件是把「信譽」條填滿：完成女王的訂單、讓村民滿意、處理森林事件都能加信譽；同時「女王的耐心」會隨時間一直往下掉，滿 14 點不耐煩就輸了，每拿到一點信譽會讓它退回一點。所以整局都是在跟時間賽跑。",
+    "村民有人類、海狸、蜥蜴人、鷹身人、狐人五種（資料片再加青蛙人、蝙蝠人），每種的口味和需求不一樣：海狸愛吃餅乾和醃菜、蜥蜴人愛吃肉乾和烤串；人類能讓女王比較有耐心、海狸比較省柴火。你得用抽到的建築藍圖拼出生產鏈，同時滿足好幾個種族。每次能挑的藍圖是隨機給的選項，像是這次只能從香草園、種植園、草藥營地裡選一個，這就是每局都不一樣的原因。",
+    "季節是固定循環：毛毛雨 4 分鐘可以播種、放晴 4 分鐘收成、暴風雨 2 分鐘最難熬。敵意會隨年份、人口、開的空地和伐木工增加，敵意越高，暴風雨時的負面效果越多。森林裡有小、危險、禁忌三種空地，越危險獎勵越大，但也會帶來限時事件。",
+    "輸贏都會帶走資源和經驗回主城「悶燒之城」，用來升級、解鎖新建築和新的抽選選項；一個大循環結束時暴風會重置世界地圖，但主城的升級會保留。可以隨時暫停，速度最快到三倍速。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "Frostpunk 冰汽時代",
+    "same": "都是在惡劣天候裡撐住一座聚落、資源和民心要一起顧",
+    "diff": "Frostpunk 是一整場長篇、很重劇情和道德抉擇；Against the Storm 是一局兩小時的 Roguelite，每局藍圖隨機、輸了重來還能變強"
+   },
+   {
+    "name": "Banished／Anno 系列",
+    "same": "生產鏈、居民需求、資源平衡，模擬經營的基本功一樣",
+    "diff": "傳統經營可以慢慢蓋到完美；這款每局建築隨機、有時間壓力，蓋完就要離開，沒有「最佳解」可以背"
+   },
+   {
+    "name": "Balatro",
+    "same": "都是「手上牌不好也要打出最高分」的 Roguelite 決策感",
+    "diff": "Balatro 是撲克牌型計分；Against the Storm 是用建築藍圖當牌，在兩小時裡經營一座城"
+   }
+  ],
+  "story": {
+   "safe": [
+    "世界被永不停止的暴雨和會腐化一切的「枯萎風暴」吞沒，文明只剩最後一座據點「悶燒之城」，由焦灼女王（Scorched Queen）統治。",
+    "你是女王派出去的總督，要帶著人類、海狸、蜥蜴人等村民進入荒野，重新開拓失落的土地；女王的要求越來越多，每過一個大循環，暴風會把一切捲走，你得再出發一次。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "Eremite Games 是一群波蘭朋友組成的小團隊，正式成立於 2021 年 3 月，在那之前已經下班後兼差做了兩年左右；他們之前做過手機付費策略遊戲《Shattered Plane》。全職人數只有 5 人左右，加上一位約聘作曲。發行商 Hooded Horse 專門發行策略遊戲，總部在美國達拉斯。",
+   "遊戲先在 2021 年 10 月登上 Epic 搶先體驗，2022 年 11 月上 Steam、GOG，搶先體驗期間大約每兩週更新一次，陸續加入狐人、改版世界地圖等內容。2023 年 12 月 8 日推出正式版並同日登上 PC Game Pass，2024 年 3 月宣布 Steam 賣破百萬套。",
+   "之後陸續推出兩款資料片，2025 年 6 月登上各家主機；2026 年 7 月，團隊宣布正在做同一個世界觀的生存遊戲新作。"
+  ],
+  "timeline": [
+   {"d": "2021-10-18", "t": "Epic 搶先體驗開放"},
+   {"d": "2022-11-01", "t": "Steam、GOG 搶先體驗開放"},
+   {"d": "2023-12-08", "t": "正式版推出，同日登上 PC Game Pass"},
+   {"d": "2024-03-27", "t": "宣布 Steam 賣破 100 萬套"},
+   {"d": "2024-09-26", "t": "資料片《Keepers of the Stone》推出"},
+   {"d": "2025-06-26", "t": "登上 PS5、PS4、Xbox、Switch"},
+   {"d": "2025-07-31", "t": "資料片《Nightwatchers》電腦版推出"},
+   {"d": "2025-12-04", "t": "《Nightwatchers》主機版推出"},
+   {"d": "2026-07-01", "t": "公布同世界觀的生存遊戲新作"}
+  ],
+  "voices": {
+   "pros": [
+    "Roguelite 和城市營造的結合被一致稱讚，每局都要重新思考，很容易「再一局」",
+    "各種族的需求很有個性，經營起來有角色感",
+    "輸了也有進度，不會覺得白玩",
+    "打磨得很好，挑戰和放鬆之間的平衡抓得好"
+   ],
+   "cons": [
+    "學習曲線很陡，前幾局資訊量大到會被淹沒",
+    "介面和數字很多，閱讀性被不少玩家抱怨",
+    "玩久了循環會重複，隨機藍圖抽不好時很挫折",
+    "部分媒體覺得主機版用手把操作比較彆扭，建議在電腦上玩"
+   ],
+   "debate": [
+    "隨機到底公不公平：喜歡的人說抽藍圖逼你臨場應變、每局都新鮮；不喜歡的人說抽不到關鍵建築就只能硬撐，高聲望難度時更明顯。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "Against the Storm 本體",
+   "what": "完整的單人遊戲，含五個種族、所有免費更新。",
+   "tip": "先買這個就夠玩上幾十小時，喜歡再補資料片。",
+   "best": true
+  },
+  {
+   "name": "完整組合包（Complete Bundle）",
+   "what": "Steam 上把本體、兩款資料片和收藏包（原聲帶、桌布、美術設定集）綁在一起的組合包。",
+   "tip": "確定喜歡、遇到特賣時直接收最划算。"
+  },
+  {
+   "name": "主機版（PS5／Xbox／Switch）",
+   "what": "內容跟電腦版相同，有專門的手把介面。",
+   "tip": "你用電腦玩，買 Steam 版就好。"
+  }
+ ],
+ "multi": {
+  "ok": false,
+  "text": "只有單人模式，沒有任何連線或本機多人功能。"
+ }
+}

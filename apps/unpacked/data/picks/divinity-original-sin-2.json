@@ -1,0 +1,339 @@
+{
+ "id": "divinity-original-sin-2",
+ "date": "2026-11-17",
+ "rank": 1,
+ "game": {
+  "zh": "神界：原罪2 - 終極版",
+  "zh_note": "Steam 繁中商店名；常簡稱「神界原罪 2」",
+  "en": "Divinity: Original Sin 2 – Definitive Edition",
+  "steam": 435150,
+  "dev": "Larian Studios",
+  "pub": "Larian Studios（主機版終極版由 Bandai Namco 發行）",
+  "platforms": [
+   "PC（Steam、GOG）",
+   "Mac",
+   "PS5",
+   "PS4",
+   "Xbox Series X|S",
+   "Xbox One",
+   "Switch",
+   "Switch 2",
+   "iPad"
+  ],
+  "genres": [
+   "CRPG",
+   "回合制戰鬥",
+   "多人合作"
+  ],
+  "release": "2017-09-14",
+  "year": 2017,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "必玩",
+ "label": "四人連線的回合制 RPG 必玩",
+ "pitch": "油、水、火、電全都能拿來打架的回合制 RPG：最多四個朋友一起闖，每場戰鬥都是自己想出來的解法",
+ "why": "痞子葳，這款我想推給你和你那兩三個常連線的朋友。《神界：原罪2》最迷人的是那種「被你想到了」的瞬間：敵人站在水灘上，隊友一道閃電把整片水電起來；或先潑油、再丟火球，整群人燒成一片。地形、元素、高低差全都算數，沒有標準答案，每場仗都是你們四個人吵出來的解法。鏡頭能縮放、能旋轉，戰鬥不是只在跳數字。它也是 Larian 做《柏德之門 3》之前的成名作。要老實說的是：它很長，主線就要 50～60 小時，第三幕的口碑也比前兩幕差一點，比較適合當「每週固定揪團」的長期專案，不是下班隨手一局。",
+ "reasons": [
+  {
+   "h": "元素連鎖超有戲",
+   "t": "水可以導電、油可以點燃、地面還能被祝福或詛咒，用環境把敵人一次打垮是最爽的瞬間。"
+  },
+  {
+   "h": "四人連線一起闖",
+   "t": "線上最多 4 人合作、同台電腦可以 2 人分割畫面，每個人在對話裡各有自己的立場。"
+  },
+  {
+   "h": "職業隨你拼",
+   "t": "沒有固定職業，十個技能系統自由混搭，法師也能學潛行背刺，配法千變萬化。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "有 2～3 個固定朋友、想找一款可以玩好幾個月的合作 RPG 的人",
+   "喜歡回合制、喜歡用地形和元素想出奇招的人",
+   "喜歡角色扮演、在對話裡做選擇、看世界因為自己改變的人"
+  ],
+  "against": [
+   "只有零碎時間、想要一局 30 分鐘結束的人：主線就要 50 小時以上",
+   "不愛看文字的人：對話和任務文字量很大，語音只有英文",
+   "受不了任務指引模糊、偶爾難度突然拉高的人"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic",
+   "v": "93（PC 原版）",
+   "s": [4, 1]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "93（原版，99% 推薦）",
+   "s": [5]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "比利時根特的 Larian Studios 開發，PC 版自己發行；主機版終極版由 Bandai Namco 發行",
+   "s": [0, 1, 18]
+  },
+  {
+   "k": "上市",
+   "v": "PC 原版 2017/9/14；終極版 2018/8/31（PC 原版玩家免費升級，同日登上 PS4、Xbox One）",
+   "s": [0, 3, 18]
+  },
+  {
+   "k": "其他平台",
+   "v": "Mac 2019/1/31、Switch 2019/9/4、iPad 2021 年 5 月；PS5、Xbox Series、Switch 2 版 2025 年 12 月推出",
+   "s": [29, 17, 30, 16]
+  },
+  {
+   "k": "中文",
+   "v": "Steam 版介面與字幕有繁體中文；語音只有英文",
+   "s": [1]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 93（PC 原版）、OpenCritic 93",
+   "s": [4, 5]
+  },
+  {
+   "k": "媒體評價",
+   "v": "GameSpot 10 分、IGN 9.6、Game Informer 9.75、PC Gamer 92",
+   "s": [7, 6]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "玩家回報平均：主線約 58 小時、含支線約 85 小時、全收集約 141 小時",
+   "s": [27]
+  },
+  {
+   "k": "多人",
+   "v": "線上最多 4 人合作、PC 可 2 人分割畫面；另有遊戲主持人（GM）模式和競技場對戰",
+   "s": [0, 2]
+  },
+  {
+   "k": "群眾募資",
+   "v": "2015 年 Kickstarter 目標 50 萬美元，不到 12 小時達標，最後募到約 203 萬美元",
+   "s": [10, 11]
+  },
+  {
+   "k": "銷量",
+   "v": "上市不到一週將近 50 萬套；2017 年 11 月底突破 100 萬套",
+   "s": [13, 14]
+  },
+  {
+   "k": "得獎",
+   "v": "PC Gamer 2017 年度遊戲；入圍 The Game Awards 2017 最佳 RPG",
+   "s": [15, 34]
+  },
+  {
+   "k": "模組",
+   "v": "支援 Steam 工作坊，官方提供免費的關卡編輯工具",
+   "s": [1, 2]
+  },
+  {
+   "k": "史低",
+   "v": "SteamDB 記錄的最低折扣是 2025 年 12 月的 -82%（美區）",
+   "s": [1]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文（也有簡中）；語音只有英文。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據），也能在 GOG 買。"
+ },
+ "money": {
+  "level": 0,
+  "model": "買斷",
+  "notes": [
+   "買斷制，沒有遊戲內購。",
+   "免費的「禮物包」內容更新直接送；唯一付費 DLC 是收錄美術設定集、原聲帶的 Divine Ascension，跟玩法無關。"
+  ],
+  "flags": ["買斷", "無內購"]
+ },
+ "rig": {
+  "verdict": "綽綽有餘",
+  "note": "官方建議配備只要 GTX 770 等級、8GB 記憶體；你的 RTX 5090 筆電接 4K 電視開滿都不會喘。"
+ },
+ "time": {
+  "text": "主線約 58 小時",
+  "note": "玩家回報平均：主線約 58 小時、含支線約 85 小時、全收集約 141 小時；四人連線邊玩邊聊通常更久。"
+ },
+ "howto": [
+  "第一輪建議選一位「起源角色」當主角（例如紅王子、賽比爾），他們有專屬劇情線，比自創角色有戲。",
+  "戰鬥前先看地面：站在水上的敵人用閃電、有油的地方用火，善用高處（傷害較高、射程更遠）。",
+  "敵人有物理和魔法兩條護甲，控場要先打掉對應的那條護甲才會生效（暈眩、冰凍看魔法護甲，擊倒看物理護甲）；隊伍別一半物理一半魔法分散火力。",
+  "朋友連線時每人各帶一個角色；人少也可以點「孤狼」天賦，兩人隊伍就能撐起來。",
+  "覺得難就改用終極版新增的「故事」難度，專心看劇情、享受連鎖。"
+ ],
+ "deals": "直接買終極版（Steam 現在賣的就是）。這款常在大特賣打很低，SteamDB 記錄過 -82% 的價格；不急的話等特賣再入，四個人一起買更划算。",
+ "talk": [
+  {
+   "q": "隊友各有立場，連線時誰說了算？",
+   "why": "起源角色各有目標，連線時可能在對話裡互相扯後腿，這是缺點還是最好玩的地方？"
+  },
+  {
+   "q": "物理、魔法兩條護甲，是讓戰鬥更有策略，還是讓配隊更死板？",
+   "why": "這套護甲系統到現在還在吵，連 Larian 自己都說新作不會沿用。"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "-E-TTpfsBZE",
+    "title": "終極版上市預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {"t": "Larian 新聞稿：神界原罪 2 正式上市（多人、GM 模式、分割畫面）", "u": "https://pressreleases.triplepointpr.com/2017/09/14/divinity-original-sin-2-now-available-sequel-to-award-winning-and-critically-acclaimed-fantasy-rpg/", "d": "2017-09-14"},
+  {"t": "SteamDB：Divinity: Original Sin 2 – Definitive Edition（語言、Metacritic、工作坊、價格紀錄）", "u": "https://steamdb.info/app/435150/info", "d": ""},
+  {"t": "Larian：神界原罪 2 上市資料表（PDF）", "u": "https://cdn.uc.assets.prezly.com/ed1500da-fb58-471d-8321-c3f223dacdfb/-/inline/no/DOS2-Release-Fact-Sheet.pdf", "d": "2017"},
+  {"t": "PC Gamer：終極版 8/31 推出，PC 玩家免費升級", "u": "https://www.pcgamer.com/divinity-original-sin-2-definitive-edition-is-out-friday-as-a-free-update", "d": "2018-08"},
+  {"t": "Metacritic：Divinity: Original Sin II（PC）", "u": "https://legacy.prod.metacritic.com/game/pc/divinity-original-sin-ii", "d": ""},
+  {"t": "OpenCritic：Divinity: Original Sin 2", "u": "https://opencritic.com/game/3828/divinity-original-sin-2", "d": ""},
+  {"t": "PC Gamer：神界原罪 2 評測（92 分）", "u": "https://www.pcgamer.com/divinity-original-sin-2-review/", "d": "2017-09-21"},
+  {"t": "GameSpot：神界原罪 2 媒體評測整理", "u": "https://www.gamespot.com/articles/divinity-original-sin-2-review-roundup/1100-6453602/", "d": "2017"},
+  {"t": "bit-tech：神界原罪 2 評測", "u": "https://bit-tech.net/reviews/divinity-original-sin-II-review/1/", "d": "2017-09-25"},
+  {"t": "USgamer：神界原罪 2 評測", "u": "https://www.usgamer.net/articles/divinity-original-sin-2-review", "d": "2017"},
+  {"t": "Game Informer：神界原罪 2 登上 Kickstarter", "u": "https://gameinformer.com/b/news/archive/2015/08/27/divinity-original-sin-2-lands-on-kickstarter-today", "d": "2015-08-27"},
+  {"t": "PC Gamer：Kickstarter 結束，募到目標的四倍", "u": "https://www.pcgamer.com/divinity-original-sin-2-kickstarter-ends-with-quadruple-its-goal", "d": "2015-09-30"},
+  {"t": "Shacknews：神界原罪 2 搶先體驗今天開放", "u": "https://shacknews.com/article/96790/divinity-original-sin-2-launches-today-in-steam-early-access", "d": "2016-09-15"},
+  {"t": "PC Gamer：上市不到一週將近 50 萬套", "u": "https://pcgamer.com/divinity-original-sin-2-approaches-500000-copies-sold-in-less-than-a-week", "d": "2017-09-18"},
+  {"t": "PC Gamer：神界原罪 2 賣破 100 萬套", "u": "https://www.pcgamer.com/uk/divinity-original-sin-2-has-sold-one-million-copies", "d": "2017-11-28"},
+  {"t": "PC Gamer：2017 年度遊戲", "u": "https://www.pcgamer.com/au/game-of-the-year-2017-divinity-original-sin-2", "d": "2017-12-14"},
+  {"t": "Gematsu：終極版登上 PS5、Xbox Series、Switch 2", "u": "https://www.gematsu.com/2025/12/divinity-original-sin-ii-definitive-edition-now-available-for-ps5-xbox-series-and-switch-2", "d": "2025-12-15"},
+  {"t": "Larian 新聞稿：終極版登上 Switch，可與 Steam 跨平台存檔", "u": "https://larianstudios.prezly.com/divinity-original-sin-2-definitive-edition-lands-on-nintendo-switch-featuring-cross-saves-with-steam", "d": "2019-09-04"},
+  {"t": "Bandai Namco：終極版主機版上市", "u": "https://en.bandainamcoent.eu/divinity-original-sin-2/news/ascend-divinity-divinity-original-sin-2-definitive-edition-out-now", "d": "2018-08-31"},
+  {"t": "dos2.wiki：行動點數（AP）規則", "u": "https://dos2.wiki/wiki/Action_Points", "d": ""},
+  {"t": "Fextralife Wiki：戰鬥系統（護甲、地面效果、高低差、技能系統）", "u": "https://divinityoriginalsin2.wiki.fextralife.com/Combat", "d": ""},
+  {"t": "Gamepressure：操作說明（鏡頭縮放、旋轉）", "u": "https://www.gamepressure.com/originalsinii/controls/ze91ac", "d": "2020-03-09"},
+  {"t": "dos2.wiki：角色創建（起源角色、種族、標籤）", "u": "https://dos2.wiki/wiki/Character_creation", "d": ""},
+  {"t": "dos2.wiki：孤狼天賦", "u": "https://dos2.wiki/wiki/Lone_Wolf", "d": ""},
+  {"t": "PC Gamer：Larian 怎麼重修第三幕", "u": "https://www.pcgamer.com/how-larian-revised-divinity-original-sin-2s-final-act", "d": "2018-09-07"},
+  {"t": "PC Gamer：新作《Divinity》不會沿用原罪 2 的護甲系統", "u": "https://www.pcgamer.com/games/rpg/divinity-will-officially-wave-goodbye-to-original-sin-2s-broken-armour-system", "d": "2026-01-09"},
+  {"t": "Vaporlens：Steam 玩家評論分析", "u": "https://vaporlens.app/app/435150/divinity_original_sin_2_definitive_edition.md", "d": ""},
+  {"t": "HowLongTo（HowLongToBeat 數據整理）：神界原罪 2 遊玩時間", "u": "https://howlongto.gametimes.workers.dev/games/divinity-original-sin-2/", "d": ""},
+  {"t": "GameBanshee：終極版上市（內嵌官方上市預告）", "u": "https://www.gamebanshee.com/k4483", "d": "2018-08-31"},
+  {"t": "MacRumors：終極版登上 Mac", "u": "https://macrumors.com/2019/01/31/divinity-original-sin-2-definitive-edition-for-mac", "d": "2019-01-31"},
+  {"t": "Game Informer：神界原罪 2 登上 iPad", "u": "https://gameinformer.com/2021/05/19/divinity-original-sin-2-comes-to-ipad", "d": "2021-05-19"},
+  {"t": "dos2.wiki：神界原罪 2 總覽（禮物包、劇情背景、地面效果）", "u": "https://dos2.wiki/wiki/Divinity:_Original_Sin_2", "d": ""},
+  {"t": "GamesRadar：原罪 2 登上新主機，Larian 公布新作《Divinity》", "u": "https://www.gamesradar.com/games/rpg/divinity-original-sin-2-is-now-on-current-gen-consoles-and-larian-teases-you-might-even-pick-up-on-certain-things-in-the-newly-announced-divinity-if-you-jump-in", "d": "2025-12-15"},
+  {"t": "Gamepressure：系統需求", "u": "https://www.gamepressure.com/originalsinii/system-requirements/zf91ad", "d": "2020-03-09"},
+  {"t": "Verdict：The Game Awards 2017 入圍與得獎名單", "u": "https://www.verdict.co.uk/the-game-awards-2017-nominees-and-winners", "d": "2017-12-08"},
+  {"t": "Wikipedia（Kiwix 鏡像）：Divinity: Original Sin II", "u": "https://kiwix.lema.org/wikipedia_en_all_mini_2024-02/A/Divinity%3A_Original_Sin_2", "d": "2024-02"},
+  {"t": "Fextralife Wiki：多人模式說明（不支援跨平台）", "u": "https://divinityoriginalsin2.wiki.fextralife.com/Multiplayer", "d": ""}
+ ],
+ "pending": [
+  "線上合作是否每位玩家都要各買一份：官方資料沒有明寫，照一般 Steam 連線遊戲判斷，先不當真。",
+  "HowLongToBeat 官方頁面數字：目前取自第三方整理，可能和官網略有出入。"
+ ],
+ "updated": "2026-11-17",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "選起源角色或自創主角，組四人小隊",
+    "在大地圖上探索、接任務、跟 NPC 對話做選擇",
+    "回合制戰鬥：用行動點移動、施法、利用地形",
+    "撿裝備、升級、在十個技能系統之間配點",
+    "推進主線，前往下一個區域"
+   ],
+   "body": [
+    "戰鬥是回合制，每個角色開戰時有 4 點行動點（AP），之後每回合補 4 點、最多存到 6 點，沒用完的可以留到下回合；普通攻擊花 2 點。所以「這回合省一點、下回合放大招」是常見的盤算。站在高處傷害比較高、射程也更遠，開打前先搶位置很重要。",
+    "它最有名的是地面和元素：水、油、毒、火、血都會在地上形成一片區域，彼此還會起反應——油被點燃會燒起來，水可以被電成一片導電區，火碰到水變成蒸氣雲。這些地面還能被「祝福」或「詛咒」，效果更強。敵人也會用同一套，被逼到油地上的時候就知道怕了。",
+    "每個角色有物理護甲、魔法護甲兩條，像是額外的血條，只有對應的傷害才扣得掉；要等護甲歸零，暈眩、冰凍、魅惑這類控場才會生效。因此配隊時通常會偏重其中一種傷害，集中火力破甲。",
+    "角色沒有固定職業：戰士系、遊俠、盜賊、火系、水系、氣系、土系、死靈、召喚、變形共十個技能系統，可以自由混搭，還能把技能書合成新技能。另外有「源力」技能，消耗源點數放出威力很大的招式。鏡頭可以縮放、旋轉，方便看清地形。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "柏德之門 3",
+    "same": "同一個團隊 Larian 做的回合制 CRPG，一樣能 4 人連線、用地形和元素打架、對話選擇很自由",
+    "diff": "柏德之門 3 用的是龍與地下城規則、擲骰感更重、畫面和演出更新；原罪 2 比較便宜、元素連鎖更誇張，護甲系統也是它獨有的"
+   },
+   {
+    "name": "XCOM 2",
+    "same": "都是回合制、都在算位置與高低差，打贏都是自己想出來的",
+    "diff": "XCOM 2 是小隊戰術加基地經營、沒什麼對話劇情；原罪 2 是完整的角色扮演，戰鬥之外有大量任務和選擇，還能跟朋友一起玩"
+   },
+   {
+    "name": "神界：原罪（第一代）",
+    "same": "一樣的元素戰鬥、回合制和雙人合作",
+    "diff": "二代把連線擴到 4 人、加了起源角色和雙護甲系統，評價也更高；一代可以先略過，直接玩二代"
+   }
+  ],
+  "story": {
+   "safe": [
+    "故事發生在一代的數百年後。守護世界的「神諭者」已經死了，一股叫「虛空」的力量開始蔓延，從虛空裡爬出來的怪物會被「源力」魔法吸引。",
+    "掌權的神諭教團把責任推給會用源力的「源術士」，給他們戴上抑制項圈，抓到喜樂堡（Fort Joy）所在的海島上，名義上是「治療」。",
+    "你就是被抓的源術士之一。逃出去的過程中，你會發現自己是「神選者」，有機會成為下一位神諭者——而跟你一起逃的其他人，也都想搶這個位子。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "Larian Studios 在比利時根特，由 Swen Vincke 帶領。2014 年的一代《神界：原罪》讓他們翻身，二代在 2015 年 8 月上 Kickstarter，原本目標 50 萬美元，不到 12 小時就達標，最後募到約 203 萬美元，連「遊戲主持人模式」等延伸目標全部解鎖。",
+   "2016 年 9 月先開放搶先體驗（內容是第一幕），2017 年 9 月 14 日正式上市，一週內將近賣出 50 萬套、兩個多月破 100 萬套，還拿下 PC Gamer 2017 年度遊戲。2018 年推出終極版，重寫了大量對話、修改評價最差的第三幕、加入「故事」難度，PC 玩家免費升級。",
+   "這套回合制、元素互動、多人合作的設計，後來直接延續到 2023 年的《柏德之門 3》。2025 年 12 月，Larian 公布系列新作《Divinity》，同時把原罪 2 終極版推上 PS5、Xbox Series 和 Switch 2。"
+  ],
+  "timeline": [
+   {"d": "2015-08-27", "t": "登上 Kickstarter 募資"},
+   {"d": "2015-09-30", "t": "募資結束，約 203 萬美元，是目標的四倍"},
+   {"d": "2016-09-15", "t": "Steam 搶先體驗開放（第一幕）"},
+   {"d": "2017-09-14", "t": "PC 版正式上市"},
+   {"d": "2017-09-18", "t": "上市不到一週將近 50 萬套"},
+   {"d": "2017-11-28", "t": "賣破 100 萬套"},
+   {"d": "2017-12-14", "t": "拿下 PC Gamer 2017 年度遊戲"},
+   {"d": "2018-08-31", "t": "終極版推出：PC 免費升級，同日登上 PS4、Xbox One"},
+   {"d": "2019-01-31", "t": "Mac 版上市"},
+   {"d": "2019-09-04", "t": "Switch 版上市，可與 Steam 跨平台存檔"},
+   {"d": "2021-05", "t": "iPad 版上市"},
+   {"d": "2025-12-15", "t": "PS5、Xbox Series、Switch 2 版推出（同月稍早 Larian 在 The Game Awards 公布新作《Divinity》）"}
+  ],
+  "voices": {
+   "pros": [
+    "戰鬥系統的自由度和元素連鎖，幾乎每篇評測都點名，GameSpot 給到滿分",
+    "任務和戰鬥常常有好幾種解法，說服、偷竊、潛行、硬打都行",
+    "起源角色的劇本和整體文筆很受好評，每位隊友都有自己的故事",
+    "4 人連線、GM 模式和競技場，讓它玩起來不只是單機 RPG"
+   ],
+   "cons": [
+    "難度會突然拉高，前期容易被一場仗卡住",
+    "任務日誌和指引很模糊，常常不知道下一步去哪",
+    "第三幕的完成度比前兩幕差，終極版有修但不算翻新",
+    "背包和道具很雜，連線時整理起來更麻煩"
+   ],
+   "debate": [
+    "物理、魔法雙護甲：支持的人說它讓戰術很明確，反對的人說它逼你全隊走同一種傷害、控場要等破甲才生效；連 Larian 都說新作不會沿用這套。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "神界：原罪2 - 終極版（Steam）",
+   "what": "現在 Steam 賣的就是終極版，含重寫的劇情、第三幕修正、故事難度和所有免費禮物包。",
+   "tip": "買這個就對了；四個人一起玩就等特賣一起入。",
+   "best": true
+  },
+  {
+   "name": "Divine Ascension（付費 DLC）",
+   "what": "數位美術設定集、原聲帶等收藏品，不影響遊戲內容。",
+   "tip": "只是收藏用，玩遊戲不需要。"
+  },
+  {
+   "name": "Eternal Edition（GOG）",
+   "what": "原罪 2 加上一代《神界：原罪》加強版、更早的神界系列、設定集、地圖和原聲帶。",
+   "tip": "想把整個系列收齊再考慮。"
+  }
+ ],
+ "multi": {
+  "ok": true,
+  "text": "線上最多 4 人合作，大家一起從頭玩完整個主線；PC 同一台電腦也能 2 人分割畫面。另有一人扮演主持人帶團的 GM 模式，以及最多 4 人的競技場對戰。主機和 PC 之間不能跨平台連線。"
+ }
+}
