@@ -24,6 +24,9 @@ const KIND = {
 const WORTH = { high: '價值高', mid: '價值中', low: '價值低' };
 const EFFORT = { S: '工時小', M: '工時中', L: '工時大' };
 const REASONS = ['太悶', '不夠爽', '做過類似的', '不適合單人', '題材沒興趣', '太像別人的', '規模太大', '看不懂在幹嘛'];
+const VERIFY = { hit: ['說中了', 'HIT'], miss: ['說錯了', 'MISS'], na: ['沒遇到', 'N/A'] };
+const VERIFY_OVERALL = ['報告大致正確', '方向要調整', '漏了重要問題', '工單太保守', '工單太多', '先別動它'];
+const VITALS_DEF = ['核心樂趣', '手感', '介面', '內容量', '回頭率'];
 const PIREP_CHIPS = ['手感很好', '想一直玩', '太難', '太簡單', '卡關了', '有點無聊', '畫面很讚', '操作不順', '有 Bug'];
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -52,6 +55,8 @@ const DEF = () => ({
   queue: [], // {work, t}
   ideas: [], // {id, lane, text, t}
   merges: [], // {id, a, b, t}
+  flight: null, // 正在試飛：{work, insp, t}（回來時跳出試飛回報）
+  verify: {}, // 試飛回報：inspId（沒檢修過的作品用 'w:<id>'）-> {work, items{id: hit|miss|na}, notes{id: 文字}, vitals{名稱: 1~5}, overall[], text, mins, t}
   out: [], // 還沒確認送達的事件
   sent: {}, // eventId -> 送出時間
   delivered: 0,

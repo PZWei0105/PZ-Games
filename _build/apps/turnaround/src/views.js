@@ -3,8 +3,14 @@ const D = { index: null, days: {}, fleet: null, fleetBy: {}, manual: null, ruleB
 
 const STATUS = {
   boarding: ['登機中', 'BOARDING'], ontime: ['準時', 'ON TIME'], board: ['已登機', 'BOARDED'], delay: ['延誤', 'DELAYED'], cancel: ['取消', 'CANCELLED'],
-  service: ['待簽派', 'PENDING'], working: ['檢修中', 'IN SERVICE'], done: ['已簽派', 'DISPATCHED'],
+  service: ['待簽派', 'PENDING'], working: ['檢修中', 'IN SERVICE'], done: ['已簽派', 'DISPATCHED'], recheck: ['已複檢', 'RECHECKED'],
 };
+function flightBanner() {
+  const f = S.flight; if (!f) return '';
+  const w = D.fleetBy[f.work]; if (!w) return '';
+  const ms = Date.now() - Date.parse(f.t); if (ms < 20000) return '';
+  return '<button class="fbn" data-fbn>' + ICON.fly + '<span><b>你試飛了《' + esc(w.zh) + '》</b><i>點這裡填試飛回報：哪裡說中、哪裡說錯</i></span><em>回報</em></button>';
+}
 function stHtml(k) { const s = STATUS[k]; return '<span class="st ' + k + '">' + s[0] + ' <i>' + s[1] + '</i></span>'; }
 function flightState(f, date) { const v = S.votes[f.id]; if (v) return v.v; return date === D.index.latest ? 'boarding' : 'ontime'; }
 function hangarState(ins) {
@@ -41,6 +47,7 @@ function renderDep(date) {
   const disp = ins && S.dispatched[ins.id] ? 1 : 0;
   const w = ins ? D.fleetBy[ins.work] : null;
   let h = '';
+  h += flightBanner();
   h += '<div class="sign">' + ICON.plane + '<span class="s-zh">' + (isToday ? '出發' : '到站') + '</span><span class="s-en">' + (isToday ? 'Departures' : 'Arrivals') + '</span><span class="s-r">DAY ' + String(meta.no).padStart(3, '0') + '</span><i class="arrow-sweep"></i></div>';
   if (!isToday) h += '<button class="chip-btn y" data-go="#dep" style="margin-bottom:12px">' + ICON.back + '回到今天的航班</button>';
   h += '<div class="tower"><div class="t-ico">' + ICON.mic + '</div><div><div class="t-h">TOWER · 塔台的話</div><p>' + esc(day.tower) + '</p>' +
@@ -59,10 +66,17 @@ function renderDep(date) {
   });
   if (ins && w) {
     h += '<button class="b-row lane-hangar" data-i="' + esc(ins.id) + '">' +
-      '<div class="b-l1"><span class="b-lane"><i></i>機庫 HANGAR</span>' + Flap.html(w.reg, 'sm sign') + stHtml(hangarState(ins)) + '</div>' +
+      '<div class="b-l1"><span class="b-lane"><i></i>機庫 HANGAR</span>' + Flap.html(w.reg, 'sm fy') + stHtml(hangarState(ins)) + '</div>' +
       '<div class="b-l2">' + Flap.html(w.zh, 'zh') + '<span class="b-gate">' + esc(ins.check) + '</span></div>' +
       '<div class="b-hook">' + esc(ins.summary) + '</div></button>';
   }
+  (day.rechecks || []).forEach((rc) => {
+    const rw = D.fleetBy[rc.work]; if (!rw) return;
+    h += '<button class="b-row lane-hangar" data-rck="' + esc(rc.insp) + '" data-date="' + esc(rc.date) + '">' +
+      '<div class="b-l1"><span class="b-lane"><i></i>複檢 RECHECK</span>' + Flap.html(rw.reg, 'sm fy') + stHtml('recheck') + '</div>' +
+      '<div class="b-l2">' + Flap.html(rw.zh, 'zh') + '<span class="b-gate">' + fmtDate(rc.date) + '</span></div>' +
+      '<div class="b-hook">' + esc(rc.summary || '照你的試飛回報重新檢查了一次。') + '</div></button>';
+  });
   h += '</div>';
   // 到站紀錄（之前的日子）
   const past = D.index.days.filter((d) => d.date !== meta.date);
@@ -248,7 +262,7 @@ function talkFlight(f, date, pg) {
 function renderHangar() {
   const el = $('#v-hangar');
   const meta = latestInspection();
-  let h = '<div class="sign hazard"><span class="s-plate">' + ICON.wrench + '<span class="s-zh">機庫</span><span class="s-en">Hangar</span></span></div>';
+  let h = flightBanner() + '<div class="sign hazard"><span class="s-plate">' + ICON.wrench + '<span class="s-zh">機庫</span><span class="s-en">Hangar</span></span></div>';
   if (meta) {
     const day = D.days[meta.date];
     if (!day) { el.innerHTML = h + '<div class="empty">讀取檢修報告中…</div>'; App.loadDay(meta.date).then(renderHangar); return; }
@@ -305,17 +319,23 @@ function inspHtml(ins, date, today) {
   const vd = VERDICT[ins.verdict];
   const st = hangarState(ins);
   const its = S.items[ins.id] || {};
-  let h = '<div class="ac"><div class="ac-img" style="' + heroStyle(w) + '"><i class="lamp"></i>' + (coverUrl(w) ? '' : '<span class="tail">' + esc(w.glyph || w.zh.slice(0, 1)) + '</span>') + '</div>' +
+  const fly = !!workUrl(w);
+  let h = '<div class="ac' + (fly ? ' can-fly' : '') + '"' + (fly ? ' data-fly role="button" aria-label="試飛《' + esc(w.zh) + '》"' : '') + '><div class="ac-img" style="' + heroStyle(w) + '"><i class="lamp"></i>' + (coverUrl(w) ? '' : '<span class="tail">' + esc(w.glyph || w.zh.slice(0, 1)) + '</span>') +
+    (fly ? '<span class="fly-pad"><span class="fly-ring">' + ICON.play + '</span><b>試飛</b><i>TEST FLIGHT</i></span>' : '') + '</div>' +
     '<div class="ac-stamp v-' + ins.verdict + '">' + vd.zh + '<i>' + vd.en + '</i></div>' +
     '<div class="ac-meta"><span class="plate">' + esc(w.reg) + '</span><h2>' + esc(w.zh) + '<i>' + esc(w.en) + '</i></h2><div class="ty">' + esc(w.genre_zh || '') + '・' + esc(ins.check) + (ins.check_note ? '（' + esc(ins.check_note) + '）' : '') + '</div></div></div>';
   h += '<div class="card" style="margin-top:-6px;border-radius:0 0 18px 18px;border-top:0;padding:0"><div class="ac-sum">' + esc(ins.summary) + '</div><div class="ac-act">' +
-    (w.url ? '<a class="chip-btn" href="' + esc(workUrl(w)) + '" target="_blank" rel="noopener">' + ICON.open + '打開這架</a>' : '') +
-    '<button class="chip-btn y" data-italk>' + ICON.chat + (IS_WEB || !Tower.ok() ? '拿去聊' : '塔台連線') + '</button></div></div>';
+    (fly ? '<button class="chip-btn y fly-btn" data-fly>' + ICON.play + '試飛《' + esc(w.zh) + '》</button>' : '') +
+    '<button class="chip-btn" data-italk>' + ICON.chat + (IS_WEB || !Tower.ok() ? '拿去聊' : '塔台連線') + '</button></div></div>';
+  h += verifyPanelHtml(ins, w);
+  h += recheckHtml(ins);
   h += '<div class="log"><div class="log-h"><b>檢修單 WORK CARD</b><span>' + fmtDate(date) + '</span></div><div class="log-g">' +
     '<div><i>REGISTRATION</i><b>' + esc(w.reg) + '</b></div><div><i>TYPE</i><b>' + esc(w.genre_zh || '') + '</b></div>' +
     '<div><i>CHECK</i><b>' + esc(ins.check) + '</b></div><div><i>MECHANIC</i><b>Claude</b></div></div>' +
     '<ol>' + (ins.method || []).map((m) => '<li>' + esc(m) + '</li>').join('') + '</ol></div>';
-  h += '<div class="h2"><b>體檢儀表</b><i>VITALS</i></div><div class="gauges">' + (ins.vitals || []).map((v) => gaugeHtml(v)).join('') + '</div>';
+  const ver = S.verify[ins.id];
+  const rcv = (ins.recheck && ins.recheck.vitals) || {};
+  h += '<div class="h2"><b>體檢儀表</b><i>VITALS</i>' + (ver ? '<span class="r">黃色刻度是你試飛後打的分</span>' : '') + '</div><div class="gauges">' + (ins.vitals || []).map((v) => gaugeHtml(v, ver && ver.vitals ? ver.vitals[v.k] : null, rcv[v.k])).join('') + '</div>';
   h += '<div class="tagline red">' + ICON.warn + '<div><b>最大的問題</b>' + esc(ins.worst) + '</div></div>';
   h += '<div class="tagline amber">' + ICON.info + '<div><b>你為什麼可能沒再打開它</b>' + esc(ins.why_not) + '</div></div>';
   h += '<div class="sect"><div class="sect-h"><span class="ico">' + ICON.wrench + '</span><b>技師的判斷</b><i>CORE</i></div><p>' + esc(ins.core) + '</p></div>';
@@ -329,8 +349,12 @@ function inspHtml(ins, date, today) {
     h += '<div class="wo-g"><div class="wo-gh"><span class="k k-' + k + '">' + KIND[k].zh + '</span><b>' + KIND[k].name + '</b><i>' + KIND[k].en + '</i></div>';
     list.forEach((it) => {
       const d = its[it.id];
-      h += '<div class="wo ' + (d || '') + '" data-item="' + esc(it.id) + '">' + (d === 'approve' ? '<span class="ok-stamp">核准</span>' : '') +
-        '<div class="wo-t"><b>' + esc(it.title) + '</b></div><p>' + esc(it.detail) + '</p>' +
+      const vv = ver && ver.items ? ver.items[it.id] : null;
+      const rc = ins.recheck && ins.recheck.items ? ins.recheck.items[it.id] : null;
+      h += '<div class="wo ' + (d || '') + (rc && rc.status === 'withdrawn' ? ' withdrawn' : '') + '" data-item="' + esc(it.id) + '">' + (d === 'approve' ? '<span class="ok-stamp">核准</span>' : '') +
+        '<div class="wo-t"><b>' + esc(it.title) + '</b>' + (vv ? '<span class="vb vb-' + vv + '">你：' + VERIFY[vv][0] + '</span>' : '') + '</div><p>' + esc(it.detail) + '</p>' +
+        (vv && ver.notes && ver.notes[it.id] ? '<div class="vnote">你的試飛筆記：' + esc(ver.notes[it.id]) + '</div>' : '') +
+        (rc ? rcItemHtml(rc) : '') +
         '<div class="wo-m"><span class="w-' + it.worth + '">' + WORTH[it.worth] + '</span><span>' + EFFORT[it.effort] + '</span>' + (it.evidence && it.evidence !== '—' ? '<span>依據：' + esc(it.evidence) + '</span>' : '') + '</div>' +
         '<div class="wo-b"><button class="rj' + (d === 'reject' ? ' on' : '') + '" data-iv="reject">駁回</button><button class="ap' + (d === 'approve' ? ' on' : '') + '" data-iv="approve">核准 ✓</button></div></div>';
     });
@@ -355,14 +379,20 @@ function inspHtml(ins, date, today) {
   return h;
 }
 function shotSrc(src) { if (!IS_WEB && window.TA_DATA && TA_DATA.shots && TA_DATA.shots[src]) return TA_DATA.shots[src]; return 'data/' + src; }
-function gaugeHtml(v) {
+function gaugeHtml(v, mine, rc) {
   const words = ['', '很弱', '偏弱', '普通', '很好', '頂級'];
   const ang = -90 + (v.v - 1) * 45;
-  return '<div class="gauge v' + v.v + '"><svg viewBox="0 0 120 72"><path d="M12 60a48 48 0 0 1 96 0" fill="none" stroke="#232a33" stroke-width="10" stroke-linecap="round"/>' +
+  const show = rc && rc.now ? rc.now : v.v;
+  const tick = (n, cls) => { const a = (-180 + (n - 1) * 45) * Math.PI / 180; const x1 = 60 + Math.cos(a) * 40, y1 = 60 + Math.sin(a) * 40, x2 = 60 + Math.cos(a) * 56, y2 = 60 + Math.sin(a) * 56; return '<line class="' + cls + '" x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>'; };
+  return '<div class="gauge v' + show + '"><svg viewBox="0 0 120 72"><path d="M12 60a48 48 0 0 1 96 0" fill="none" stroke="#232a33" stroke-width="10" stroke-linecap="round"/>' +
     '<path d="M12 60a48 48 0 0 1 96 0" fill="none" stroke="url(#gg)" stroke-width="10" stroke-linecap="round" stroke-dasharray="151" stroke-dashoffset="' + (151 - 151 * (v.v / 5)) + '" opacity=".95"/>' +
     '<defs><linearGradient id="gg"><stop offset="0" stop-color="#ff4b3e"/><stop offset=".5" stop-color="#ffb21e"/><stop offset="1" stop-color="#2fe07f"/></linearGradient></defs>' +
+    (mine ? tick(mine, 'mine') : '') +
     '<g class="needle" data-a="' + ang + '"><path d="M60 60 L58 22 L60 16 L62 22 Z" fill="#f4f1e8"/></g><circle cx="60" cy="60" r="6" fill="#f4f1e8"/><circle cx="60" cy="60" r="2.5" fill="#111"/></svg>' +
-    '<b>' + esc(v.k) + '</b><span>' + words[v.v] + '</span>' + (v.note ? '<p>' + esc(v.note) + '</p>' : '') + '</div>';
+    '<b>' + esc(v.k) + '</b><span>' + words[v.v] + '</span>' +
+    (mine && mine !== v.v ? '<em class="g-mine">你打 ' + mine + '・' + words[mine] + '</em>' : mine ? '<em class="g-mine ok">你也打 ' + mine + '</em>' : '') +
+    (rc && rc.now && rc.now !== v.v ? '<em class="g-rc">複檢改成 ' + rc.now + '</em>' : '') +
+    (v.note ? '<p>' + esc(v.note) + '</p>' : '') + (rc && rc.note ? '<p class="rcn">複檢：' + esc(rc.note) + '</p>' : '') + '</div>';
 }
 function bindInsp(root, ins, date) {
   // 指針：進畫面時才轉上去
@@ -373,6 +403,8 @@ function bindInsp(root, ins, date) {
   // 用 onclick（不是 addEventListener）：機庫每次重畫都會再綁一次，不能疊加
   root.onclick = (ev) => {
     if (ev.target.closest('[data-close]')) return;
+    if (ev.target.closest('[data-fly]')) { startFlight(ins.work, ins.id, ev.target.closest('[data-fly]')); return; }
+    if (ev.target.closest('[data-verify]')) { openVerify(ins.id); return; }
     const b = ev.target.closest('button,[data-shot]'); if (!b) return;
     if (b.dataset.iv) { const card = b.closest('.wo'); itemDecide(ins, card.dataset.item, b.dataset.iv, root, date); return; }
     if (b.hasAttribute('data-dispatch')) { dispatch(ins, date, root); return; }
@@ -416,6 +448,8 @@ function orderText(ins, date) {
   let t = ins.order + '\n\n【核准的工單】\n' + ap.map((x, i) => (i + 1) + '. [' + KIND[x.kind].zh + '] ' + x.title + '——' + x.detail).join('\n');
   if (rj.length) t += '\n\n【駁回（不要做）】\n' + rj.map((x) => '・' + x.title).join('\n');
   if (prs.length) t += '\n\n【機長報告（我的玩後感）】\n' + prs.map((p) => '・' + p.t.slice(0, 10) + '：' + (p.chips && p.chips.length ? '［' + p.chips.join('、') + '］' : '') + p.text).join('\n');
+  const vr = S.verify[ins.id];
+  if (vr) t += '\n\n' + verifyText(ins, vr);
   t += '\n\n（沒核准的工單先不做。這是《' + (w.zh || ins.work) + '》' + fmtDate(date) + ' 的檢修。）';
   return t;
 }
@@ -459,7 +493,10 @@ function workSheet(id) {
     (w.skip ? '<div class="tagline amber">' + ICON.info + '<div><b>不在機庫範圍</b>' + esc(w.skip) + '</div></div>' : '') +
     (ins.length ? '<div class="h2" style="margin-top:14px"><b>檢修紀錄</b></div>' + ins.slice().reverse().map((x) => '<button class="arr" data-insp="' + esc(x.id) + '" data-date="' + x.date + '"><span class="d">' + fmtDate(x.date) + '</span><span class="ds">' + esc(x.check) + '・' + VERDICT[x.verdict].zh + '・' + x.n + ' 張工單</span></button>').join('') : '<p class="muted" style="font-size:13px">還沒檢修過。</p>') +
     (w.skip ? '' : '<button class="btn' + (q ? ' ghost' : '') + '" id="ws-q">' + (q ? '已排進下一班（點一下取消）' : '排進下一班進廠') + '</button>') +
-    (w.url ? '<a class="btn ghost" href="' + esc(workUrl(w)) + '" target="_blank" rel="noopener">' + ICON.open + '打開《' + esc(w.zh) + '》</a>' : ''));
+    (workUrl(w) ? '<button class="btn go" id="ws-fly">' + ICON.play + '試飛《' + esc(w.zh) + '》</button>' : '') +
+    (S.verify['w:' + id] ? '<p class="muted" style="font-size:12.5px;margin:10px 2px 0">上次試飛回報：' + esc(S.verify['w:' + id].t.slice(0, 10)) + '</p>' : ''));
+  const fb = $('#ws-fly', sh);
+  if (fb) fb.onclick = () => { const li = (w.inspections || []).slice(-1)[0]; closeSheet(); startFlight(id, li ? li.id : null, null); };
   const qb = $('#ws-q', sh);
   if (qb) qb.onclick = () => {
     Snd.init();
@@ -473,7 +510,7 @@ function workSheet(id) {
 /* ---------- 手冊 ---------- */
 function notamHtml(n) {
   const d = S.notams[n.id];
-  return '<div class="notam"><div class="nh"><span>NOTAM ' + esc(n.id.toUpperCase()) + '</span><span>' + (n.scope === 'novel' ? '小說' : n.scope === 'game' ? '遊戲' : n.scope === 'app' ? 'App' : '通用') + '・' + (n.kind === 'law' ? '鐵律' : '個案') + '</span></div>' +
+  return '<div class="notam"><div class="nh"><span>NOTAM ' + esc(n.id.toUpperCase()) + '</span><span>' + (n.scope === 'novel' ? '小說' : n.scope === 'game' ? '遊戲' : n.scope === 'app' ? 'App' : n.scope === 'inspect' ? '檢修' : '通用') + '・' + (n.kind === 'law' ? '鐵律' : '個案') + '</span></div>' +
     '<b>' + esc(n.title) + '</b><p>' + esc(n.rule) + '</p><div class="fr">來源：' + esc(n.from || '') + (n.applies ? '<br>適用：' + esc(n.applies) : '') + '</div>' +
     '<div class="nb"><button class="dg' + (d === 'disagree' ? ' on' : '') + '" data-n="' + esc(n.id) + '" data-nv="disagree">不認同</button><button class="ag' + (d === 'agree' ? ' on' : '') + '" data-n="' + esc(n.id) + '" data-nv="agree">認同，寫進手冊</button></div></div>';
 }
@@ -495,7 +532,7 @@ function renderManual() {
   h += '<p class="muted" style="font-size:14px;line-height:1.7;margin:0 2px 14px">你一路定下的創作守則。每天出題前先對過一遍；每次檢修學到的新教訓，你核准後就會寫進來。</p>';
   h += '<div class="mstats"><div><b>' + off.filter((r) => r.kind === 'law').length + '</b><i>鐵律</i></div><div><b>' + off.filter((r) => r.kind === 'case').length + '</b><i>個案經驗</i></div><div><b>' + prop.length + '</b><i>待核准</i></div></div>';
   if (prop.length) h += '<div class="h2"><b>新守則待核准</b><i>NOTAM</i></div>' + prop.map((n) => notamHtml(n)).join('');
-  h += '<div class="h2"><b>守則</b><i>CHECKLIST</i></div><div class="qrh"><div class="qrh-tabs" id="qrh-t">' + [['all', '全部'], ['all-only', '通用'], ['novel', '小說'], ['game', '遊戲'], ['app', 'App']].map(([k, n]) => '<button class="' + (manualTab === k ? 'on' : '') + '" data-mt="' + k + '">' + n + '</button>').join('') + '</div><div id="qrh-l"></div></div>';
+  h += '<div class="h2"><b>守則</b><i>CHECKLIST</i></div><div class="qrh"><div class="qrh-tabs" id="qrh-t">' + [['all', '全部'], ['all-only', '通用'], ['novel', '小說'], ['game', '遊戲'], ['app', 'App'], ['inspect', '檢修']].map(([k, n]) => '<button class="' + (manualTab === k ? 'on' : '') + '" data-mt="' + k + '">' + n + '</button>').join('') + '</div><div id="qrh-l"></div></div>';
   h += '<p class="muted" style="font-size:12.5px;line-height:1.7;margin:12px 2px 0">鐵律＝每一款都適用；個案經驗＝只在寫著的類型參考，不以偏概全。</p>';
   el.innerHTML = h;
   renderRules();
@@ -634,7 +671,7 @@ const FX = {
       const k = Math.min(1, (now - t0) / dur); const e = k * k * (3 - 2 * k) * 0.6 + k * k * 0.4;
       const x = (1 - e) * (1 - e) * x0 + 2 * (1 - e) * e * cx + e * e * x1;
       const y = (1 - e) * (1 - e) * y0 + 2 * (1 - e) * e * cy + e * e * y1;
-      trail.push({ x, y, a: 1 });
+      if (k < 1) trail.push({ x, y, a: 1 });
       g.clearRect(0, 0, W, H);
       trail.forEach((p) => { p.a -= 0.028; if (p.a > 0) { g.globalAlpha = p.a * 0.5; g.fillStyle = '#ffffff'; g.beginPath(); g.arc(p.x, p.y, 2.2, 0, 7); g.fill(); } });
       const nx = trail.length > 1 ? trail[trail.length - 2] : { x: x0, y: y0 };
@@ -682,4 +719,164 @@ const Tower = {
       this.busy = false; paint();
     };
   },
+};
+
+/* ---------- 試飛驗證：開遊戲 → 玩 → 回來逐條回報 → 隔天複檢 ---------- */
+function verifyKey(work, inspId) { return inspId || ('w:' + work); }
+function findInsp(inspId) {
+  for (const k in D.days) { const d = D.days[k]; if (d && d.inspection && d.inspection.id === inspId) return { ins: d.inspection, date: d.date }; }
+  return null;
+}
+function verifyPanelHtml(ins, w) {
+  const vr = S.verify[ins.id];
+  const pend = S.flight && S.flight.work === ins.work;
+  if (!vr) {
+    return '<div class="vpanel' + (pend ? ' pend' : '') + '"><div class="vp-h">' + ICON.fly + '<b>試飛驗證</b><i>VERIFY</i></div>' +
+      (pend ? '<p>你剛剛試飛了《' + esc(w.zh) + '》，報告說得對不對？</p><button class="btn" data-verify>' + ICON.send + '填試飛回報</button>'
+        : '<p>先按「試飛」去玩一下，回來就能逐條驗證這份報告：哪張工單說中了、哪張說錯了、儀表該打幾分、方向要不要調。</p>' +
+          '<button class="chip-btn" data-verify style="margin-top:10px">不用玩，直接回報</button>') + '</div>';
+  }
+  const c = { hit: 0, miss: 0, na: 0 };
+  Object.values(vr.items || {}).forEach((v) => { c[v] = (c[v] || 0) + 1; });
+  return '<div class="vpanel done"><div class="vp-h">' + ICON.fly + '<b>試飛驗證</b><i>VERIFIED · ' + fmtDate(vr.t.slice(0, 10)) + '</i></div>' +
+    '<div class="vp-c"><div class="hit"><b>' + c.hit + '</b><i>說中了</i></div><div class="miss"><b>' + c.miss + '</b><i>說錯了</i></div><div class="na"><b>' + c.na + '</b><i>沒遇到</i></div>' + (vr.mins ? '<div><b>' + vr.mins + '</b><i>分鐘試飛</i></div>' : '') + '</div>' +
+    (vr.overall && vr.overall.length ? '<div class="tags" style="margin-top:10px">' + vr.overall.map((x) => '<span class="tag">' + esc(x) + '</span>').join('') + '</div>' : '') +
+    (vr.text ? '<p class="vp-t">「' + esc(vr.text) + '」</p>' : '') +
+    '<p class="muted" style="font-size:12.5px;margin:8px 0 0">' + (ins.recheck ? '塔台已經照你的回報複檢過了（看下面）。' : '已經送到塔台，明天的排程會照你的回報複檢這份報告。') + '</p>' +
+    '<div class="row2" style="margin-top:4px"><button class="btn ghost" data-verify>修改回報</button>' + (workUrl(w) ? '<button class="btn" data-fly>' + ICON.play + '再試飛一次</button>' : '') + '</div></div>';
+}
+function rcItemHtml(rc) {
+  const lb = { kept: ['維持', 'kept'], revised: ['改寫', 'revised'], withdrawn: ['撤回', 'withdrawn'] }[rc.status] || ['複檢', 'kept'];
+  return '<div class="rc-row rc-' + lb[1] + '"><b>複檢：' + lb[0] + '</b>' + (rc.note ? '<span>' + esc(rc.note) + '</span>' : '') +
+    (rc.status === 'revised' && (rc.title || rc.detail) ? '<div class="rc-now">' + (rc.title ? '<b>' + esc(rc.title) + '</b>' : '') + (rc.detail ? '<p>' + esc(rc.detail) + '</p>' : '') + '</div>' : '') + '</div>';
+}
+function recheckHtml(ins) {
+  const r = ins.recheck; if (!r) return '';
+  const its = r.items || {};
+  const n = (k) => Object.values(its).filter((x) => x.status === k).length;
+  const vb = r.verdict && r.verdict !== ins.verdict;
+  return '<div class="recheck"><div class="rk-h"><b>複檢</b><i>RECHECK · ' + fmtDate(r.date) + '</i></div>' +
+    (r.note ? '<p>' + esc(r.note) + '</p>' : '') +
+    '<div class="rk-c"><span class="k">維持 ' + n('kept') + '</span><span class="r">改寫 ' + n('revised') + '</span><span class="w">撤回 ' + n('withdrawn') + '</span>' + ((r.added || []).length ? '<span class="a">新增 ' + r.added.length + '</span>' : '') + '</div>' +
+    (vb ? '<div class="rk-v">結論：<s>' + VERDICT[ins.verdict].zh + '</s> → <b class="v-' + r.verdict + '">' + VERDICT[r.verdict].zh + '</b></div>' : '') +
+    ((r.added || []).length ? '<div class="rk-add"><b>複檢新增的工單</b>' + r.added.map((x) => '<div class="wo"><div class="wo-t"><b>[' + KIND[x.kind].zh + '] ' + esc(x.title) + '</b></div><p>' + esc(x.detail) + '</p><div class="wo-m"><span class="w-' + x.worth + '">' + WORTH[x.worth] + '</span><span>' + EFFORT[x.effort] + '</span></div></div>').join('') + '</div>' : '') +
+    '</div>';
+}
+function verifyText(ins, vr) {
+  const lines = ['【試飛驗證（我玩過之後的回報）】'];
+  (ins.items || []).forEach((x) => { const v = vr.items && vr.items[x.id]; if (v) lines.push('・[' + KIND[x.kind].zh + '] ' + x.title + '：' + VERIFY[v][0] + (vr.notes && vr.notes[x.id] ? '（' + vr.notes[x.id] + '）' : '')); });
+  if (vr.vitals) lines.push('・我打的儀表：' + Object.keys(vr.vitals).map((k) => k + ' ' + vr.vitals[k]).join('、'));
+  if (vr.overall && vr.overall.length) lines.push('・整體：' + vr.overall.join('、'));
+  if (vr.text) lines.push('・方向：' + vr.text);
+  return lines.join('\n');
+}
+function startFlight(work, inspId, el) {
+  const w = D.fleetBy[work]; if (!w) return;
+  const url = workUrl(w); if (!url) { toast('這一架沒有可以直接開的網址'); return; }
+  Snd.init();
+  S.flight = { work, insp: inspId || null, t: now() };
+  emit('flight', { work, insp: inspId || null });
+  Snd.whoosh(); haptic(24); if (el) FX.takeoff(el);
+  // 在點擊當下開新視窗（手機才不會擋）；玩完回到轉機就會跳出試飛回報
+  const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+  toast('試飛中：玩完回到轉機，就能逐條回報', 3600);
+  App.refresh(true);
+}
+// 回到轉機時：剛剛有試飛就問（玩超過 20 秒才自動跳；太久以前的只在機庫掛提示）
+function checkFlight() {
+  const f = S.flight; if (!f || !App.ready) return;
+  const ms = Date.now() - Date.parse(f.t);
+  if (ms < 20000 || ms > 6 * 3600e3) { App.badges(); return; }
+  if ($('#sheet') && !$('#sheet').hidden) return;
+  setTimeout(() => { if (S.flight === f) { Snd.init(); FX.landing(); setTimeout(() => openVerify(verifyKey(f.work, f.insp), Math.max(1, Math.round(ms / 60000))), 700); } }, 400);
+}
+async function openVerify(key, mins) {
+  if (key.indexOf('w:') !== 0 && !findInsp(key)) {
+    let date = key.slice(0, 10);
+    for (const w of D.fleet.works) { const x = (w.inspections || []).find((i) => i.id === key); if (x) { date = x.date; break; } }
+    await App.loadDay(date);
+    if (!findInsp(key)) { const wk = key.slice(11); key = 'w:' + wk; }
+  }
+  verifySheet(key, mins);
+}
+function verifySheet(key, mins) {
+  const isW = key.indexOf('w:') === 0;
+  const r = isW ? null : findInsp(key);
+  if (!isW && !r) return;
+  const work = isW ? key.slice(2) : r.ins.work;
+  const ins = r ? r.ins : null;
+  const w = D.fleetBy[work] || { zh: work };
+  const old = S.verify[key] || {};
+  const st = { items: Object.assign({}, old.items || {}), notes: Object.assign({}, old.notes || {}), vitals: Object.assign({}, old.vitals || {}), overall: new Set(old.overall || []) };
+  const vit = ins ? (ins.vitals || []) : VITALS_DEF.map((k) => ({ k, v: 0 }));
+  const words = ['', '很弱', '偏弱', '普通', '很好', '頂級'];
+  let h = '<div class="vf-h"><span class="vf-ico">' + ICON.fly + '</span><div><h3>試飛回報</h3><p class="sub" style="margin:0">《' + esc(w.zh) + '》' + (mins ? '・剛剛飛了 ' + mins + ' 分鐘' : '') + (ins ? '・對照 ' + fmtDate(r.date) + ' 的檢修報告' : '・還沒檢修過，你的回報會是第一份依據') + '</p></div></div>';
+  if (ins && (ins.items || []).length) {
+    h += '<div class="vf-sec"><b>每張工單，說得對嗎？</b></div>';
+    ins.items.forEach((x) => {
+      h += '<div class="vf-item" data-it="' + esc(x.id) + '"><div class="vf-t"><span class="k k-' + x.kind + '">' + KIND[x.kind].zh + '</span>' + esc(x.title) + '</div>' +
+        '<div class="vtri">' + ['hit', 'miss', 'na'].map((v) => '<button class="vt-' + v + (st.items[x.id] === v ? ' on' : '') + '" data-v="' + v + '">' + VERIFY[v][0] + '</button>').join('') + '</div>' +
+        '<input type="text" class="vf-note" placeholder="哪裡說錯了？（選填）" value="' + esc(st.notes[x.id] || '') + '"' + (st.items[x.id] === 'miss' || st.notes[x.id] ? '' : ' hidden') + '></div>';
+    });
+  }
+  h += '<div class="vf-sec"><b>' + (ins ? '儀表你會打幾分？' : '你給這架打幾分？') + '</b><span>' + (ins ? '虛線框是技師打的' : '點一格就好') + '</span></div>';
+  vit.forEach((v) => {
+    const cur = st.vitals[v.k] || 0;
+    h += '<div class="lamps" data-k="' + esc(v.k) + '"><span class="lk">' + esc(v.k) + '</span><div class="lr">' + [1, 2, 3, 4, 5].map((n) => '<button data-n="' + n + '" class="' + (n <= cur ? 'on ' : '') + (v.v === n ? 'tech' : '') + '" aria-label="' + n + ' 分"></button>').join('') + '</div><span class="lw">' + (cur ? words[cur] : '') + '</span></div>';
+  });
+  h += '<div class="vf-sec"><b>整體來說</b></div><div class="chips" id="vf-ov">' + VERIFY_OVERALL.map((x) => '<button class="chip' + (st.overall.has(x) ? ' on' : '') + '" data-o="' + x + '">' + x + '</button>').join('') + '</div>' +
+    '<textarea id="vf-text" rows="3" placeholder="檢修方向要怎麼調？漏了什麼？（選填）">' + esc(old.text || '') + '</textarea>' +
+    '<div class="row2"><button class="btn ghost" id="vf-later">晚點再說</button><button class="btn" id="vf-ok">' + ICON.send + '送出試飛回報</button></div>';
+  const sh = openSheet(h);
+  sh.querySelector('.sh').classList.add('vf');
+  sh.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const it = b.closest('.vf-item');
+    if (it && b.dataset.v) {
+      const id = it.dataset.it; st.items[id] = st.items[id] === b.dataset.v ? undefined : b.dataset.v; if (!st.items[id]) delete st.items[id];
+      $$('.vtri button', it).forEach((x) => x.classList.toggle('on', st.items[id] === x.dataset.v));
+      const note = $('.vf-note', it); if (st.items[id] === 'miss') { note.hidden = false; note.focus(); }
+      b.dataset.v === 'hit' ? Snd.beep(true) : b.dataset.v === 'miss' ? Snd.beep(false) : Snd.tick(); haptic(10); return;
+    }
+    const lp = b.closest('.lamps');
+    if (lp && b.dataset.n) {
+      const k = lp.dataset.k, n = +b.dataset.n; st.vitals[k] = st.vitals[k] === n ? n - 1 : n; if (!st.vitals[k]) delete st.vitals[k];
+      $$('.lr button', lp).forEach((x) => x.classList.toggle('on', +x.dataset.n <= (st.vitals[k] || 0)));
+      $('.lw', lp).textContent = st.vitals[k] ? words[st.vitals[k]] : ''; Snd.tick(); haptic(6); return;
+    }
+    if (b.dataset.o) { b.classList.toggle('on'); st.overall.has(b.dataset.o) ? st.overall.delete(b.dataset.o) : st.overall.add(b.dataset.o); Snd.tick(); return; }
+    if (b.id === 'vf-later') { closeSheet(); toast('好，機庫會掛著提醒，想到再回報'); App.refresh(true); return; }
+    if (b.id === 'vf-ok') {
+      $$('.vf-item', sh).forEach((it) => { const v = ($('.vf-note', it).value || '').trim().slice(0, 200); if (v) st.notes[it.dataset.it] = v; else delete st.notes[it.dataset.it]; });
+      const text = ($('#vf-text', sh).value || '').trim().slice(0, 600);
+      if (!Object.keys(st.items).length && !Object.keys(st.vitals).length && !st.overall.size && !text) { toast('至少點一張工單、打一個分，或寫一句'); Snd.beep(false); return; }
+      const rec = { work, items: st.items, notes: st.notes, vitals: st.vitals, overall: Array.from(st.overall), text, mins: mins || old.mins || 0, t: now() };
+      S.verify[key] = rec;
+      if (S.flight && S.flight.work === work) S.flight = null;
+      emit('verify', { insp: isW ? null : key, work, items: rec.items, notes: rec.notes, vitals: rec.vitals, overall: rec.overall, text: rec.text, mins: rec.mins });
+      closeSheet(); Snd.stamp(); setTimeout(() => Snd.chime(true), 250); haptic(28);
+      toast('試飛回報已送塔台：明天會照你的回報複檢', 4200);
+      App.refresh(true);
+      const pgI = $('#pg-i'); if (pgI && r) $('.pg-body', pgI).innerHTML = inspHtml(ins, r.date, false);
+    }
+  });
+}
+FX.landing = function () {
+  if (reduced()) return;
+  const cv = $('#fx'); const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = innerWidth, H = innerHeight; cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const x0 = -60, y0 = H * 0.18, x1 = W * 0.5, y1 = H * 0.62, cx = W * 0.2, cy = H * 0.55;
+  const plane = new Path2D('M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z');
+  const t0 = performance.now(), dur = 900, trail = [];
+  const step = (tm) => {
+    const k = Math.min(1, (tm - t0) / dur), e = 1 - (1 - k) * (1 - k);
+    const x = (1 - e) * (1 - e) * x0 + 2 * (1 - e) * e * cx + e * e * x1, y = (1 - e) * (1 - e) * y0 + 2 * (1 - e) * e * cy + e * e * y1;
+    if (k < 1) trail.push({ x, y, a: 1 }); g.clearRect(0, 0, W, H);
+    trail.forEach((p) => { p.a -= 0.04; if (p.a > 0) { g.globalAlpha = p.a * 0.45; g.fillStyle = '#fff'; g.beginPath(); g.arc(p.x, p.y, 2, 0, 7); g.fill(); } });
+    const pv = trail.length > 1 ? trail[trail.length - 2] : { x: x0, y: y0 };
+    g.globalAlpha = 1 - Math.max(0, k - 0.8) * 5; g.save(); g.translate(x, y); g.rotate(Math.atan2(y - pv.y, x - pv.x) + Math.PI / 2); g.scale(2.4 - e, 2.4 - e); g.translate(-12, -12); g.fillStyle = '#ffd21a'; g.fill(plane); g.restore();
+    if (k < 1 || trail.some((p) => p.a > 0)) requestAnimationFrame(step); else g.clearRect(0, 0, W, H);
+  };
+  requestAnimationFrame(step); Snd.whoosh();
 };

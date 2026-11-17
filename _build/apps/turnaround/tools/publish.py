@@ -83,6 +83,40 @@ def need(where, o, keys):
             B('%s：缺 %s' % (where, k))
 
 
+RC_STATUS = {'kept', 'revised', 'withdrawn'}
+
+
+def check_recheck(w, ins, rc, date):
+    """複檢：痞子葳試飛回報之後，隔天排程寫回原本那份檢修報告的 recheck 欄位。"""
+    w = w + ' 複檢'
+    if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', str(rc.get('date', ''))) or rc['date'] < date:
+        B('%s：date 要是複檢那天（不早於原報告）' % w)
+    if not rc.get('note'):
+        B('%s：缺 note（一兩句說照他的回報改了什麼）' % w)
+    ids = {it.get('id') for it in ins.get('items') or []}
+    for k, v in (rc.get('items') or {}).items():
+        if k not in ids:
+            B('%s：工單 %s 不存在' % (w, k))
+        if v.get('status') not in RC_STATUS:
+            B('%s：工單 %s 的 status 只能是 kept／revised／withdrawn' % (w, k))
+        if v.get('status') == 'revised' and not (v.get('title') or v.get('detail')):
+            B('%s：工單 %s 改寫了就要寫新的 title 或 detail' % (w, k))
+    vks = {v.get('k') for v in ins.get('vitals') or []}
+    for k, v in (rc.get('vitals') or {}).items():
+        if k not in vks:
+            B('%s：儀表「%s」不存在' % (w, k))
+        if not (isinstance(v.get('now'), int) and 1 <= v['now'] <= 5):
+            B('%s：儀表「%s」的 now 要是 1～5' % (w, k))
+    if rc.get('verdict') and rc['verdict'] not in VERDICTS:
+        B('%s：verdict 只能是 %s' % (w, sorted(VERDICTS)))
+    for it in rc.get('added') or []:
+        need(w + ' 新工單', it, ['id', 'kind', 'title', 'detail', 'worth', 'effort'])
+        if it.get('id') in ids:
+            B('%s：新工單 id %s 跟原本的重複' % (w, it.get('id')))
+        if it.get('kind') not in KINDS or it.get('worth') not in WORTH or it.get('effort') not in EFFORT:
+            B('%s：新工單 %s 的 kind／worth／effort 不對' % (w, it.get('id')))
+
+
 def check_day(path, manual_ids, fleet):
     name = os.path.basename(path)
     d = load(path)
@@ -172,6 +206,9 @@ def check_day(path, manual_ids, fleet):
             need(w + ' NOTAM', n, ['id', 'scope', 'kind', 'title', 'rule', 'from'])
             if not re.fullmatch(r'n-\d{4}', n.get('id', '')):
                 B('%s：NOTAM id 要像 n-0001' % w)
+        rc = ins.get('recheck')
+        if rc:
+            check_recheck(w, ins, rc, date)
     else:
         W('%s：今天沒有檢修報告' % name)
     return d
@@ -202,6 +239,19 @@ def main():
     if days and days[-1]['date'] > today:
         W('最新一天 %s 比今天 %s 還晚' % (days[-1]['date'], today))
 
+    insp_by = {d['inspection']['id']: d for d in days if d.get('inspection')}
+    for d in days:
+        for r in d.get('rechecks') or []:
+            src = insp_by.get(r.get('insp'))
+            if not src:
+                B('%s：rechecks 指到不存在的檢修 %s' % (d['date'], r.get('insp')))
+                continue
+            rc = src['inspection'].get('recheck') or {}
+            if rc.get('date') != d['date']:
+                B('%s：rechecks 的 %s 沒有寫 recheck，或 recheck.date 不是這一天' % (d['date'], r.get('insp')))
+            if r.get('date') != src['date'] or r.get('work') != src['inspection']['work']:
+                B('%s：rechecks 的 date／work 要跟原報告一樣（%s／%s）' % (d['date'], src['date'], src['inspection']['work']))
+
     for m in warn:
         print('WARN', m)
     for m in bad:
@@ -230,7 +280,10 @@ def main():
         if not ins:
             continue
         w = fleet[ins['work']]
-        rec = {'date': d['date'], 'id': ins['id'], 'verdict': ins['verdict'], 'check': ins['check'], 'n': len(ins.get('items') or [])}
+        rc = ins.get('recheck') or {}
+        rec = {'date': d['date'], 'id': ins['id'], 'verdict': rc.get('verdict') or ins['verdict'], 'check': ins['check'], 'n': len(ins.get('items') or [])}
+        if rc:
+            rec['rechecked'] = rc.get('date')
         w['inspections'] = [x for x in w.get('inspections', []) if x.get('id') != ins['id']] + [rec]
         w['inspections'].sort(key=lambda x: x['date'])
     ch_f = dump(os.path.join(DATA, 'fleet.json'), fleet_doc)
@@ -248,6 +301,7 @@ def main():
             'date': d['date'], 'no': i + 1, 'tower': d['tower'],
             'flights': [{k: f.get(k) for k in ('id', 'lane', 'no', 'time', 'gate', 'dest', 'zh', 'en', 'kind', 'hook')} for f in d['flights']],
             'hangar': h,
+            'rechecks': [{k: r.get(k) for k in ('insp', 'date', 'work', 'summary')} for r in d.get('rechecks') or []],
         })
     idx_days.reverse()
     index = {

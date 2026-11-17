@@ -61,7 +61,7 @@ const App = {
     const set = (id, n) => { const b = $(id); if (!b) return; b.textContent = n || ''; b.classList.toggle('on', n > 0); };
     set('#tb-dep', latest ? latest.flights.filter((f) => !S.votes[f.id]).length : 0);
     const li = latestInspection(); const ins = li && D.days[li.date] ? D.days[li.date].inspection : null;
-    set('#tb-hangar', ins && !S.dispatched[ins.id] && (ins.items || []).length ? 1 : 0);
+    set('#tb-hangar', (ins && !S.dispatched[ins.id] && (ins.items || []).length ? 1 : 0) + (S.flight && Date.now() - Date.parse(S.flight.t) > 20000 ? 1 : 0));
     set('#tb-manual', D.manual.rules.filter((r) => r.status === 'proposed' && !S.notams[r.id]).length);
   },
   show(tab, keepScroll) {
@@ -101,7 +101,7 @@ window.addEventListener('hashchange', route);
 
 /* 點擊：看板列、到站紀錄、分頁 */
 document.addEventListener('click', (e) => {
-  const t = e.target.closest('[data-f],[data-i],[data-day],[data-go],[data-insp],[data-w],#tabs a,#tower-dot');
+  const t = e.target.closest('[data-f],[data-i],[data-day],[data-go],[data-insp],[data-w],[data-rck],[data-fbn],#tabs a,#tower-dot');
   if (!t) return;
   Snd.init();
   if (t.closest('#tabs')) { Snd.tick(); haptic(8); if (location.hash === t.getAttribute('href')) { window.scrollTo({ top: 0, behavior: 'smooth' }); } return; }
@@ -111,7 +111,9 @@ document.addEventListener('click', (e) => {
   if (t.dataset.day) { e.preventDefault(); Snd.tick(); go('#d/' + t.dataset.day); return; }
   if (t.dataset.go) { e.preventDefault(); Snd.tick(); go(t.dataset.go); return; }
   if (t.dataset.insp && !t.closest('#sheet')) { e.preventDefault(); Snd.tick(); go('#i/' + t.dataset.date + '/' + t.dataset.insp); return; }
-  if (t.dataset.w) { e.preventDefault(); workSheet(t.dataset.w); }
+  if (t.dataset.w) { e.preventDefault(); workSheet(t.dataset.w); return; }
+  if (t.dataset.rck) { e.preventDefault(); Snd.tick(); go('#i/' + t.dataset.date + '/' + t.dataset.rck); return; }
+  if (t.hasAttribute('data-fbn')) { e.preventDefault(); const f = S.flight; if (f) openVerify(verifyKey(f.work, f.insp), Math.max(1, Math.round((Date.now() - Date.parse(f.t)) / 60000))); }
 });
 
 /* ---------- 時鐘 ---------- */
@@ -201,13 +203,15 @@ async function boot() {
     if (today && S.introDay !== D.index.latest && !skipGate) { S.introDay = D.index.latest; save(); App.intro(today); }
     else { Snd.music(true); }
     App.badges();
+    setTimeout(checkFlight, 1500);
   };
   $('#gate-go').addEventListener('click', () => enter(true));
   $('#gate').addEventListener('click', (e) => { if (!e.target.closest('#gate-go')) enter(true); });
   if (skipGate) enter(false);
   App.checkInbox(); Sync.flush();
   setInterval(() => { if (!document.hidden) { Sync.flush(); App.checkInbox(); } }, 5 * 60e3);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { tickClock(); Sync.flush(); App.checkInbox(); App.freshen(); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { tickClock(); Sync.flush(); App.checkInbox(); App.freshen(); if (App.entered) { checkFlight(); App.refresh(true); } } });
+  addEventListener('pageshow', (e) => { if (e.persisted && App.entered) checkFlight(); });
   addEventListener('online', () => { Sync.flush(); Sync.mark(); });
   if (IS_WEB && 'serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js'); } catch (e) { /* 沒有離線 */ } }
 }

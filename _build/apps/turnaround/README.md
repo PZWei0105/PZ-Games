@@ -20,6 +20,9 @@ Claude 版：https://claude.ai/artifact/QMXZwgB7viiDsVMFa2prtc（slug `bd1fe71b-
 | 工單：修／磨／減／加 | 除錯／打磨／做減法／加新東西 |
 | 簽派放行 | 把核准的工單組成開工指令（複製後貼給 Claude） |
 | 機長報告 | 痞子葳的玩後感 |
+| 試飛 | 從機庫一點就開那款作品去玩（新視窗） |
+| 試飛回報 | 玩完回到轉機自動跳出：每張工單「說中了／說錯了／沒遇到」、儀表自己打分、方向要怎麼調 |
+| 複檢 | 隔天排程照試飛回報改那份報告：維持／改寫／撤回／新增，跟原判斷並排 |
 | 飛行手冊、NOTAM | 創作守則；NOTAM＝檢修提出、等他核准的新守則 |
 | 托運點子 | 他自己丟的粗點子，隔天塔台發展成一班航班 |
 | 聯程 | 兩張登機證合體成一個新點子 |
@@ -30,6 +33,7 @@ Claude 版：https://claude.ai/artifact/QMXZwgB7viiDsVMFa2prtc（slug `bd1fe71b-
 - **出發**：機場黃指標牌、塔台的話（可收聽廣播：網頁版用手機內建的中文語音，Claude 版用 Claude 的聲音）、今日進度、翻牌看板（時間、航班號、目的地大字、登機門、狀態燈），最後一列是今天的機庫。下面是到站紀錄（之前每一天）。
 - **登機證**（`#f/<id>`）：整張登機證（航班號、登機門、條碼、蓋章）、航程簡介、機上亮點、亂流警告、安檢 X 光（捲到時掃描）、起飛前檢查表（逐條打勾）、轉機航線、同航線與規模；下方「取消／延誤／登機」，登機時蓋章＋飛機從按鈕起飛。「拿去聊」把整張航班整理好複製，貼給 Claude 接著聊（Claude 版是「塔台連線」，直接在頁面裡問 Claude）。
 - **機庫**：進廠作品（封面、機號牌、檢修等級、結論章）、檢修單、五個儀表、最大問題、為什麼沒再打開、證據照片、工單（核准／駁回）、簽派放行、這次的 NOTAM、機長報告；下面是機隊（所有作品，點了可「排進下一班進廠」）和檢修紀錄。
+- **試飛驗證**（2026-11-17 加）：機庫的進廠卡片整塊就是「▶ 試飛」大按鈕（下面也有一顆「試飛《作品》」），機隊裡每一架的抽屜也有「試飛」。按下去記下 `S.flight`、在新視窗打開作品；回到轉機（切回來或重新打開）而且離開超過 20 秒、6 小時內，就播降落動畫、跳出試飛回報。沒填的話出發和機庫上方會掛「你試飛了《作品》」的綠色提示。回報存在 `S.verify[<報告 id>]`（沒檢修過的作品用 `w:<作品 id>`），工單卡上會貼「你：說中了／說錯了」、儀表多一條黃色刻度（你打的分數），開工指令也會帶上【試飛驗證】一段。報告有 `recheck` 時，上方出現藍色「複檢」欄（維持／改寫／撤回／新增的數量、結論改了沒），每張工單底下標「複檢：維持／改寫／撤回」，改寫的顯示新寫法，撤回的劃掉；儀表標「複檢改成 N」。
 - **手冊**：鐵律／個案經驗／待核准統計、NOTAM（認同、不認同）、守則清單（全部、通用、小說、遊戲、App）。
 - **機長**：護照式機長卡、取消原因統計（口味）、登機證夾（選兩張申請聯程）、延誤中、托運點子、設定（音效、背景音樂、開場廣播、特效、塔台連線狀態）。
 
@@ -41,10 +45,11 @@ Claude 版：https://claude.ai/artifact/QMXZwgB7viiDsVMFa2prtc（slug `bd1fe71b-
 - `days/<YYYY-MM-DD>.json`：每天一份，由每日排程寫（規範在 `INSPECTOR_GUIDE.md`）。
   `{date, made_at, tower, announce, flights:[3], inspection}`
   - 航班：`{id, lane(novel|game|free), no, time, gate, dest(三個大寫字母), zh(≤6 字), en, kind, hook, pitch, fun[], fail, xray{threat, verdict(clear|open|deny), fix}, checks[{rule(手冊 id 或 null), text?, ok(pass|warn|fail), note}], routes[{id, name, line, trade}], like[], scope, seed}`
+  - 複檢（寫回原報告）：`inspection.recheck = {date, note, items{id: {status(kept|revised|withdrawn), note, title?, detail?}}, vitals{名稱: {now(1~5), note}}, verdict?, added[工單]}`；複檢那天的 day 檔加 `rechecks: [{insp, date(原日期), work, summary}]`（看板多一列「複檢」）。規則在 `INSPECTOR_GUIDE.md` 第 4.5 節。
   - 檢修：`{id, work(fleet id), check, check_note, summary, method[], shots[{src, cap}], vitals[{k, v(1~5), note}], core, worst, why_not, items[{id, kind(fix|polish|cut|add), title, detail, worth(high|mid|low), effort(S|M|L), evidence}], verdict(airworthy|service|overhaul|retire), verdict_note, notams[{id(n-XXXX), scope, kind, title, rule, applies?, from}], order}`
 - `shots/`：檢修的證據照（WebP，每張 60 KB 內）。
 - `fleet.json`：機隊（`tools/fleet.py` 從收藏庫總表產生；機號 B-PZ###／B-PA## 不會變；`skip` 是不在機庫範圍的理由；`inspections` 由 publish.py 記）。
-- `manual.json`：飛行手冊 `{rules:[{id, scope(all|novel|game|app), kind(law|case), status(official|proposed), by, date, title, rule, applies?, from}]}`。
+- `manual.json`：飛行手冊 `{rules:[{id, scope(all|novel|game|app|inspect〔檢修守則〕), kind(law|case), status(official|proposed), by, date, title, rule, applies?, from}]}`。
 - `index.json`：目錄（publish.py 產生）。
 - `inbox.json`：塔台收件（GitHub Actions 寫）。
 
@@ -53,7 +58,7 @@ Claude 版：https://claude.ai/artifact/QMXZwgB7viiDsVMFa2prtc（slug `bd1fe71b-
 - 網頁版：每個動作是一筆事件 `{id: <裝置>-<序號>, t, type, …}`，先存在本機（`localStorage` 的 `turnaround.v1.state`，`out` 是還沒確認的），2.5 秒後送到轉發站 `https://ntfy.sh/pz-turnaround-b53ef251972dad327450`（`no-cors` POST，訊息保留約 12 小時；主題寫在公開的程式裡，不是祕密，所以收件端一律當成不可信資料）。
 - GitHub Actions `.github/workflows/turnaround-inbox.yml` 每小時跑 `tools/inbox.py`：收白名單事件、截長度、寫進 `data/inbox.json`。App 每 5 分鐘和每次切回來時讀 `inbox.json`，看到自己的事件就從 `out` 移掉（右上角「塔台」燈：綠＝都收到、黃＝待送、紅＝送不出去）。超過 3 小時沒被確認的事件會重送（收件端用 id 去重）。
 - 送不出去時，「機長」頁可以複製還沒送達的紀錄，貼給 Claude 收進 `inbox.json`。
-- 事件類型：`vote`（board／delay／cancel／none＋reasons、note）、`route`、`talk`、`item`（approve／reject／none）、`dispatch`、`pirep`、`notam`（agree／disagree／none）、`queue`（on／off）、`idea`、`merge`、`ping`（測試）。
+- 事件類型：`vote`（board／delay／cancel／none＋reasons、note）、`route`、`talk`、`item`（approve／reject／none）、`dispatch`、`pirep`、`notam`（agree／disagree／none）、`queue`（on／off）、`idea`、`merge`、`flight`（按了試飛：work、insp）、`verify`（試飛回報：insp、work、items{id: hit／miss／na}、notes{id: 文字}、vitals{儀表名: 1～5}、overall[]、text、mins）、`ping`（測試）。
 - Claude 版：整份狀態存在 artifact 的 db `state/main`（`{state: JSON 字串, at, out}`，規則只有擁有者能讀寫）；排程可以用 `db_get` 讀。
 
 ## 組建與測試

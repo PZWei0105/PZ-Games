@@ -18,6 +18,23 @@ KEEP = 3000
 STR = lambda n: (lambda v: v[:n] if isinstance(v, str) else None)
 LIST = lambda n, m: (lambda v: [x[:m] for x in v[:n] if isinstance(x, str)] if isinstance(v, list) else None)
 ENUM = lambda *a: (lambda v: v if v in a else None)
+INT = lambda lo, hi: (lambda v: v if isinstance(v, int) and not isinstance(v, bool) and lo <= v <= hi else None)
+
+
+def DICT(n, kmax, valf):
+    def f(v):
+        if not isinstance(v, dict):
+            return None
+        out = {}
+        for k, x in list(v.items())[:n]:
+            if isinstance(k, str) and 0 < len(k) <= kmax:
+                y = valf(x)
+                if y is not None:
+                    out[k] = y
+        return out
+    return f
+
+
 FIELDS = {
     'vote': {'card': STR(40), 'v': ENUM('board', 'delay', 'cancel', 'none'), 'reasons': LIST(8, 20), 'note': STR(300), 'lane': ENUM('novel', 'game', 'free'), 'zh': STR(12), 'prev': STR(10)},
     'route': {'card': STR(40), 'route': STR(4), 'zh': STR(12)},
@@ -29,6 +46,9 @@ FIELDS = {
     'queue': {'work': STR(40), 'v': ENUM('on', 'off')},
     'idea': {'lane': ENUM('novel', 'game', 'free'), 'text': STR(500)},
     'merge': {'a': STR(40), 'b': STR(40), 'za': STR(12), 'zb': STR(12)},
+    'flight': {'work': STR(40), 'insp': STR(60)},
+    'verify': {'insp': STR(60), 'work': STR(40), 'items': DICT(20, 10, ENUM('hit', 'miss', 'na')), 'notes': DICT(20, 10, STR(200)),
+               'vitals': DICT(8, 8, INT(1, 5)), 'overall': LIST(6, 12), 'text': STR(600), 'mins': INT(0, 900)},
     'ping': {'note': STR(40)},
 }
 ID = re.compile(r'^d[a-z0-9]{3,10}-\d{1,7}$')
