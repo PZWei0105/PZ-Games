@@ -213,12 +213,14 @@ const Importer = (() => {
     return { title, author, subjects, chapters: merged.filter((c) => c.blocks.length), assets, coverKey: coverPath && have.has(bookId + '/' + coverPath) ? bookId + '/' + coverPath : null };
   }
 
-  async function importFile(file) {
+  /* 讀檔、拆章，但先不存。opt.id：更新舊書時沿用舊書的代號；opt.conv：沿用舊書的繁簡設定 */
+  async function parse(file, opt) {
+    opt = opt || {};
     if (file.size > 120 * 1024 * 1024) throw new Error('檔案超過 120 MB，太大了');
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     const u8 = new Uint8Array(await file.arrayBuffer());
     const isZip = u8[0] === 0x50 && u8[1] === 0x4B;
-    const id = 'u' + hash32(file.name + '|' + file.size).toString(36) + (u8.length > 64 ? hash32(String.fromCharCode.apply(null, u8.subarray(u8.length - 64))).toString(36) : '');
+    const id = opt.id || ('u' + hash32(file.name + '|' + file.size).toString(36) + (u8.length > 64 ? hash32(String.fromCharCode.apply(null, u8.subarray(u8.length - 64))).toString(36) : ''));
     let r;
     if (ext === 'epub' || (isZip && ext !== 'txt')) r = fromEpub(u8, file.name, id);
     else if (ext === 'pdf' || (u8[0] === 0x25 && u8[1] === 0x50 && u8[2] === 0x44 && u8[3] === 0x46)) throw new Error('PDF 的版面是固定的，重新排版後品質不好，目前不支援；請改用 EPUB 或 TXT');
@@ -231,11 +233,17 @@ const Importer = (() => {
     // 簡體書：自動轉成臺灣繁體（書頁可以改回原文，或連詞彙一起換成臺灣用語）
     const sample = r.title + r.chapters.slice(0, 8).map((c) => c.blocks.map((b) => b.x || '').join('')).join('').slice(0, 60000);
     book.simp = Conv.looksSimplified(sample);
-    if (book.simp) {
-      try { await Conv.load(); await applyConv(book, 'tw'); } catch (e) { /* 轉換表下載失敗：先照原文收進來，之後可以在書頁再轉 */ }
+    const mode = opt.conv != null ? opt.conv : book.simp ? 'tw' : '';
+    if (mode) {
+      try { await Conv.load(); await applyConv(book, mode); } catch (e) { /* 轉換表下載失敗：先照原文收進來，之後可以在書頁再轉 */ }
     }
-    await Lib.addLocal(book, r.chapters.map((c) => c.blocks.map((b) => { const o = { t: b.t }; if (b.x != null) o.x = b.x; if (b.k) { o.k = b.k; o.alt = b.alt; } return o; })), r.assets);
-    return book;
+    const blocks = r.chapters.map((c) => c.blocks.map((b) => { const o = { t: b.t }; if (b.x != null) o.x = b.x; if (b.k) { o.k = b.k; o.alt = b.alt; } return o; }));
+    return { book, blocks, assets: r.assets };
+  }
+  async function importFile(file) {
+    const p = await parse(file);
+    await Lib.addLocal(p.book, p.blocks, p.assets);
+    return p.book;
   }
   /* 書名、章名跟著轉；原文留一份，改回原文時用 */
   async function applyConv(book, mode) {
@@ -246,5 +254,5 @@ const Importer = (() => {
     if (!book.cover || !book.cover.img) book.cover = Cover.pick(book.title);
     return book;
   }
-  return { importFile, splitTitle, decodeText, fromText, applyConv };
+  return { parse, importFile, splitTitle, decodeText, fromText, applyConv };
 })();

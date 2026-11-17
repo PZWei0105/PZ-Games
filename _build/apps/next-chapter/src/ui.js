@@ -44,7 +44,7 @@ const UI = (() => {
   /* 書卡下面那一行時間：照排序方式說最相關的那一件事 */
   function timeLine(b, how) {
     if (how === 'read') { const t = Lib.readAt(b); return t ? fmtAgo(t) + '讀過' : '還沒翻開'; }
-    if (!b.remote) return b.added ? fmtDate(b.added) + '收進來' : '';
+    if (!b.remote) return b.upd && how !== 'old' ? fmtDate(b.upd) + '更新' : b.added ? fmtDate(b.added) + '收進來' : '';
     const t = how === 'old' ? Lib.created(b) : Lib.updated(b);
     return t ? fmtDate(t) + (how === 'old' ? '上架' : '更新') : '';
   }
@@ -178,7 +178,7 @@ const UI = (() => {
     const top = ED ? '<span></span><button type="button" class="ib" data-act="settings" aria-label="設定">' + ICON.gear + '</button>'
       : '<button type="button" class="ib" data-act="back" aria-label="回書房">' + ICON.back + '</button>'
         + (b.remote ? (b.ed ? '<button type="button" class="ib" data-act="share-book" data-id="' + esc(b.id) + '" aria-label="分享這本書">' + ICON.share + '</button>' : '')
-          : '<button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button>');
+          : '<span class="bv-acts"><button type="button" class="ib" data-act="upd-book" data-id="' + esc(b.id) + '" aria-label="更新這本書（換成新版的檔案）" title="更新這本書">' + ICON.refresh + '</button><button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button></span>');
     bookv.innerHTML = '<div class="wrap' + (ED ? ' ed' : '') + '"><div class="bv-top">' + top + '</div>'
       + '<div class="bv-head"><div class="bv-cover">' + coverHTML(b, 'b') + '</div><div><h1>' + esc(b.title) + '</h1>' + (b.author ? '<p class="bv-by">' + esc(b.author) + '</p>' : '')
       + '<div class="bv-tags">' + (b.remote && b.status ? '<span class="state">' + esc(b.status) + '</span>' : '')
@@ -479,7 +479,7 @@ const UI = (() => {
 
   /* ── 抽屜 ── */
   function openSheet(kind, html) { closeMenu(); hidePop(); sheetKind = kind; sheetBody.innerHTML = html; sheet.hidden = false; document.body.classList.add('sheet-open'); sheetBody.scrollTop = 0; $('.sheet-panel', sheet).focus({ preventScroll: true }); }
-  function closeSheet() { sheet.hidden = true; sheetKind = ''; sheetBody.innerHTML = ''; share = null; document.body.classList.remove('sheet-open'); }
+  function closeSheet() { if (asking) { const r = asking; asking = null; r('cancel'); } sheet.hidden = true; sheetKind = ''; sheetBody.innerHTML = ''; share = null; document.body.classList.remove('sheet-open'); }
   function repaintLook() { if (sheetKind !== 'look') return; const y = sheetBody.scrollTop; sheetBody.innerHTML = lookHTML(); sheetBody.scrollTop = y; paintVeilPreview(); }
   function lookHTML() {
     const S = Settings, V = !!S.vert, vl = Reader.veilOf();
@@ -611,23 +611,77 @@ const UI = (() => {
     btn.hidden = !mine && !Narrator.hasTrack(b, Reader.ci) && !Narrator.canSpeak();
   }
 
-  /* ── 匯入 ── */
+  /* ── 匯入、更新 ── */
+  let asking = null, upTarget = null;
+  /* 跳出選項，等痞子葳選；關掉面板算「取消」 */
+  function ask(html) { return new Promise((res) => { openSheet('confirm', html); asking = res; }); }
+  function answer(v) { const r = asking; asking = null; closeSheet(); if (r) r(v); }
+  /* 把新版內容換進舊書；回傳 true 表示換好了 */
+  async function applyUpdate(old, p, quiet) {
+    const pv = Lib.previewUpdate(old, p.book), warn = [];
+    if (pv.hit < Math.max(1, Math.ceil(pv.oldN * 0.3))) warn.push('這個檔案的章節跟原本幾乎對不上（' + pv.oldN + ' 章裡只對到 ' + pv.hit + ' 章），可能不是同一本書。');
+    else if (pv.newN < pv.oldN) warn.push('新檔案比原本少了 ' + (pv.oldN - pv.newN) + ' 章，可能是比較舊的版本。');
+    if (warn.length) {
+      $('#busy').hidden = true;
+      const v = await ask('<h2>確定要用這個檔案更新《' + esc(old.title) + '》？</h2><p class="note" style="margin:0 0 18px">' + esc(warn.join('')) + '換了之後，對不上的章節進度會落在最近的一章。</p><div style="display:flex;gap:10px"><button type="button" class="btn" data-act="ask" data-v="cancel" style="flex:1">先不要</button><button type="button" class="btn danger" data-act="ask" data-v="go" style="flex:1">還是換</button></div>');
+      if (v !== 'go') return false;
+    }
+    if (lastNarr.active && lastNarr.book.id === old.id) Narrator.stop();
+    const r = await Lib.replaceLocal(old, p.book, p.blocks, p.assets);
+    if (!quiet) {
+      const last = r.book.chapters[r.book.chapters.length - 1];
+      toast(r.added ? '《' + esc(r.book.title) + '》更新好了：多了 ' + r.added + ' 章，最新到' + esc(chName(last) || '第 ' + r.book.chapters.length + ' 章') : '《' + esc(r.book.title) + '》已經是最新的，沒有新的章節', r.added ? { action: '看目錄', onAction: () => go({ v: 'book', id: r.book.id }) } : {});
+      if (r.added) Sound.chime();
+    }
+    return true;
+  }
+  async function updateBook(old, f) {
+    const busy = $('#busy');
+    $('#busyText').textContent = '正在更新《' + old.title + '》……'; busy.hidden = false;
+    await raf(); await sleep(30);
+    try { const p = await Importer.parse(f, { id: old.id, conv: old.conv || '' }); await applyUpdate(old, p); }
+    catch (e) { toast(esc(f.name) + '：' + esc(e && e.message ? e.message : '更新失敗'), { kind: 'bad', ms: 6000 }); }
+    busy.hidden = true;
+    if (state.v === 'book' && state.id === old.id) renderBook(old.id); else if (state.v === 'lib') renderLib();
+  }
   async function importFiles(files) {
     files = Array.from(files || []); if (!files.length) return;
-    const busy = $('#busy'); let last = null, okN = 0;
+    if (upTarget) { const b = Lib.find(upTarget); upTarget = null; if (b && !b.remote) return updateBook(b, files[0]); }
+    const busy = $('#busy'); let last = null, okN = 0, upN = 0;
     for (const f of files) {
       $('#busyText').textContent = '正在讀《' + f.name.replace(/\.[^.]+$/, '') + '》……'; busy.hidden = false;
       await raf(); await sleep(30);
-      try { last = await Importer.importFile(f); okN++; }
+      try {
+        let p = await Importer.parse(f);
+        const same = Lib.find(p.book.id), twin = same && !same.remote ? same : Lib.sameTitle(p.book);
+        if (twin) {
+          let v = 'up';
+          if (twin.id !== p.book.id) {
+            busy.hidden = true;
+            v = await ask('<h2>藏書裡已經有《' + esc(twin.title) + '》</h2><p class="note" style="margin:0 0 18px">「' + esc(f.name) + '」看起來是同一本書的新版。更新原本那本，閱讀進度、書籤都會留著；新增的章節會標上「新」。</p><div style="display:flex;flex-direction:column;gap:10px"><button type="button" class="btn gilt" data-act="ask" data-v="up">' + ICON.refresh + '更新原本那本</button><button type="button" class="btn" data-act="ask" data-v="new">另外收一本</button><button type="button" class="btn" data-act="ask" data-v="cancel">取消</button></div>');
+            busy.hidden = false;
+          }
+          if (v === 'cancel') continue;
+          if (v === 'up') {
+            if (twin.id !== p.book.id) p = await Importer.parse(f, { id: twin.id, conv: twin.conv || '' });
+            else if ((twin.conv || '') !== (p.book.conv || '')) p = await Importer.parse(f, { id: twin.id, conv: twin.conv || '' });
+            if (await applyUpdate(twin, p, files.length === 1 ? false : true)) { upN++; if (files.length > 1) okN++; }
+            busy.hidden = true;
+            continue;
+          }
+        }
+        await Lib.addLocal(p.book, p.blocks, p.assets); last = p.book; okN++;
+      }
       catch (e) { toast(esc(f.name) + '：' + esc(e && e.message ? e.message : '匯入失敗'), { kind: 'bad', ms: 6000 }); }
     }
     busy.hidden = true;
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-    if (!okN) return;
+    if (state.v === 'lib') renderLib(); else if (state.v === 'book') renderBook(state.id);
+    if (!last) { if (upN > 1 || (upN && files.length > 1)) { toast('更新好了，一共 ' + upN + ' 本'); Sound.chime(); } return; }
     if (gsel) { gsel = ''; Store.set('gsel', ''); }          // 剛收進來的書可能不在現在選的分類裡：回到「全部」
     if (state.v === 'lib') renderLib();
     const b = last;
-    toast(okN > 1 ? '收進藏書了，一共 ' + okN + ' 本' : '《' + esc(b.title) + '》收進藏書了，' + b.chapters.length + ' 章' + (b.simp && b.conv ? '（簡體已轉成繁體）' : ''), { action: '打開', onAction: () => go({ v: 'book', id: b.id }) });
+    toast(okN > 1 ? '收好了，一共 ' + okN + ' 本' + (upN ? '（其中 ' + upN + ' 本是更新）' : '') : '《' + esc(b.title) + '》收進藏書了，' + b.chapters.length + ' 章' + (b.simp && b.conv ? '（簡體已轉成繁體）' : ''), b && okN === 1 ? { action: '打開', onAction: () => go({ v: 'book', id: b.id }) } : {});
     Sound.chime();
   }
   async function convert(b, v) {
@@ -645,7 +699,9 @@ const UI = (() => {
     const a = t.dataset.act; let b;
     switch (a) {
       case 'noop': break;
-      case 'import': $('#file').value = ''; $('#file').click(); break;
+      case 'import': upTarget = null; $('#file').value = ''; $('#file').click(); break;
+      case 'upd-book': upTarget = t.dataset.id; $('#file').value = ''; $('#file').click(); break;
+      case 'ask': answer(t.dataset.v); break;
       case 'settings': openSheet('settings', settingsHTML()); break;
       case 'look-open': openSheet('look', lookHTML()); paintVeilPreview(); break;
       case 'book': Sound.unlock(); Sound.tap(); go({ v: 'book', id: t.dataset.id }); break;

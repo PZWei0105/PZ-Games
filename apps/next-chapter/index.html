@@ -106,6 +106,7 @@ svg .fill { fill: currentColor; stroke: none; }
 
 /* ── 書頁 ── */
 .bv-top { display: flex; justify-content: space-between; margin: 0 -8px 8px; }
+.bv-acts { display: flex; gap: 2px; }
 .bv-head { display: grid; grid-template-columns: minmax(120px, 36%) 1fr; gap: 22px; align-items: end; }
 .bv-head h1 { margin: 0; font: 700 clamp(25px, 7vw, 40px)/1.2 var(--kai); letter-spacing: .04em; }
 .bv-by { margin: 6px 0 0; color: var(--mist); font-size: 13.500px; }
@@ -624,7 +625,7 @@ body.ed .view { background:
 (function () {
 'use strict';
 /* ───────── 基礎工具、設定、儲存 ───────── */
-const VERSION = '2026.11.15-0822';
+const VERSION = '2026.11.17-1721';
 /* 單行本：組建時寫進 window.__PZ_ED（這一本的公開資料），只讀這一本；書房沒有這個 */
 const ED = window.__PZ_ED || null;
 const PFX = ED ? 'pzsb.' + ED.ed + '.' : 'pznc.v1.';
@@ -723,6 +724,7 @@ const ICON = {
   ear: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14.5c0-1 .8-1.5 1.8-1.5H7v6H5.8C4.800 19 4 18.300 4 17.300zM20 14.5c0-1-.8-1.5-1.8-1.5H17v6h1.200c1 0 1.800-.7 1.800-1.700z"/></svg>',
   plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
   moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14.500A7.500 7.500 0 0 1 9.500 5a7.500 7.500 0 1 0 9.500 9.500z"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4"/></svg>',
   trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/></svg>',
   check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>',
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.500M12 18.500V21M3 12h2.500M18.500 12H21M5.600 5.600l1.800 1.800M16.600 16.600l1.800 1.800M5.600 18.400l1.800-1.800M16.600 7.400l1.800-1.800"/></svg>',
@@ -1213,9 +1215,67 @@ const Lib = (() => {
     return clean;
   }
 
+  /* ── 匯入的書出了新版（例如連載的 TXT 更新了）：換成新版，進度、書籤、分類、繁簡都留著 ──
+     章節照章名對：原文章名（轉繁體前）一樣、順序往後的就是同一章；作者改了章名或插了番外，其他章照樣對得上 */
+  const chName0 = (c) => (((c.label0 != null ? c.label0 : c.label) || '') + '|' + ((c.name0 != null ? c.name0 : c.name) || '')).replace(/\s+/g, '');
+  function matchChapters(oldCh, newCh) {
+    const pos = new Map();
+    newCh.forEach((c, j) => { const k = chName0(c); if (!pos.has(k)) pos.set(k, []); pos.get(k).push(j); });
+    const map = [], used = new Set(); let after = -1, hit = 0;
+    oldCh.forEach((c) => {
+      const list = pos.get(chName0(c)) || [], j = list.find((x) => x > after && !used.has(x));
+      if (j == null) { map.push(null); return; }
+      map.push(j); used.add(j); after = j; hit++;
+    });
+    return { map, used, hit };
+  }
+  /* 先算一遍，不動資料：給畫面判斷「是不是同一本書」、預告會多幾章 */
+  function previewUpdate(old, nb) {
+    const m = matchChapters(old.chapters, nb.chapters);
+    return { hit: m.hit, oldN: old.chapters.length, newN: nb.chapters.length, added: nb.chapters.length - m.used.size };
+  }
+  async function replaceLocal(old, nb, chapBlocks, assets) {
+    const id = old.id, m = matchChapters(old.chapters, nb.chapters);
+    // 找不到的舊章（被作者刪掉或改名）：落在前面最近一個對得上的章
+    const near = m.map.slice(); let lastJ = 0;
+    near.forEach((j, i) => { if (j == null) near[i] = Math.min(lastJ, Math.max(0, nb.chapters.length - 1)); else lastJ = j; });
+    const remap = (key) => { const i = /^i(\d+)$/.test(key || '') ? +key.slice(1) : -1; return i >= 0 && i < near.length ? 'i' + near[i] : null; };
+    // 書的資料：章節換新，書名、作者、封面、加入日期照舊（TXT 的書名常常是檔名，像「更新至358章」）
+    const book = Object.assign({}, nb, { id, title: old.title, author: old.author || nb.author, title0: old.title0 != null ? old.title0 : nb.title0, author0: old.author0 != null ? old.author0 : nb.author0,
+      added: old.added, upd: new Date().toISOString(), cover: nb.cover && nb.cover.img ? nb.cover : old.cover, genre: old.genre || nb.genre });
+    delete book.remote;
+    const items = [['books', id, book]];
+    chapBlocks.forEach((blocks, i) => items.push(['chaps', id + ':' + String(i).padStart(5, '0'), { blocks }]));
+    (assets || []).forEach((a) => items.push(['assets', a.k, a.blob]));
+    await DB.putMany(items);                                   // 先寫新的，寫成功才清掉多出來的舊章
+    for (let i = chapBlocks.length; i < old.chapters.length; i++) { try { await DB.del('chaps', id + ':' + String(i).padStart(5, '0')); } catch (e) {} }
+    // 進度、讀完的章、書籤搬到新的章號
+    const p = Store.get('prog', {});
+    if (p[id]) { const ok = m.map[+String(p[id].ck).slice(1)] != null, k = remap(p[id].ck); if (k) { p[id].ck = k; if (!ok) { p[id].b = 0; p[id].s = 0; p[id].f = 0; } } Store.set('prog', p); }
+    const d = Store.get('done', {});
+    if (d[id]) { d[id] = d[id].map((k) => { const i = +String(k).slice(1); return m.map[i] != null ? 'i' + m.map[i] : null; }).filter(Boolean); Store.set('done', d); }
+    const bm = Store.get('bm', {});
+    if (bm[id]) { bm[id].forEach((x) => { const i = +String(x.ck).slice(1); if (m.map[i] != null) x.ck = 'i' + m.map[i]; else { const k = remap(x.ck); if (k) { x.ck = k; x.b = 0; x.s = 0; } } }); Store.set('bm', bm); }
+    // 新出現的章節標上「新」（之前還沒讀的「新」也搬過去）
+    const fl = Store.get('fresh', {}), keep = (fl[id] || []).map((k) => { const i = +String(k).slice(1); return m.map[i] != null ? 'i' + m.map[i] : null; }).filter(Boolean);
+    const added = []; nb.chapters.forEach((c, j) => { if (!m.used.has(j)) added.push('i' + j); });
+    const all = Array.from(new Set(keep.concat(added)));
+    if (all.length) fl[id] = all; else delete fl[id];
+    Store.set('fresh', fl);
+    local = local.filter((b) => b.id !== id); local.unshift(book);
+    for (const key of Array.from(mem.keys())) if (key.indexOf(id + ':') === 0) mem.delete(key);
+    return { book, added: added.length, hit: m.hit };
+  }
+  /* 藏書裡同一本書（照書名對，轉繁體前的原名也算） */
+  function sameTitle(nb) {
+    const norm = (t) => String(t || '').replace(/^(.+?)[（(【\[_\-—－\s]+(更新|最新|連載|连载|完結|完结|全本|完本|全集|精校|校對|校对|txt).*$/i, '$1').replace(/^(.+?)(?:[_\-—－\s]+\d+(?:[-~～]\d+)?|[_\-—－\s]*第\d+[章回卷節节])$/, '$1').replace(/[\s《》「」『』【】\[\]（）()_\-—－·・.,，。:：!！?？]/g, '').toLowerCase();
+    const a = [norm(nb.title), norm(nb.title0)].filter(Boolean);
+    return local.find((b) => b.id !== nb.id && [norm(b.title), norm(b.title0)].some((t) => t && a.indexOf(t) >= 0)) || null;
+  }
+
   /* ── 時間：最近更新、最早上架、最近讀過 ── */
   const chAt = (c) => toMs(c.at || c.added);
-  function updated(b) { if (!b.remote) return toMs(b.added); let t = 0; b.chapters.forEach((c) => { t = Math.max(t, chAt(c) + c.n); }); return t; }
+  function updated(b) { if (!b.remote) return toMs(b.upd || b.added); let t = 0; b.chapters.forEach((c) => { t = Math.max(t, chAt(c) + c.n); }); return t; }
   function created(b) { if (!b.remote) return toMs(b.added); let t = Infinity; b.chapters.forEach((c) => { t = Math.min(t, chAt(c)); }); return isFinite(t) ? t : 0; }
   function readAt(b) { const p = Prog.get(b.id); return p ? p.t || 0 : 0; }
 
@@ -1267,7 +1327,7 @@ const Lib = (() => {
   /* 書房上鎖、單行本失效：把解開的目錄從這台裝置拿掉 */
   function forget() { remote = { books: [] }; mem.clear(); Object.keys(recapMem).forEach((k) => delete recapMem[k]); Store.del('lib'); }
   const site = () => remote.site || '';
-  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, forget, site, hasRemote: () => (remote.books || []).length > 0 };
+  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, replaceLocal, previewUpdate, sameTitle, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, forget, site, hasRemote: () => (remote.books || []).length > 0 };
 })();
 
 /* ── 閱讀進度：每本書記到哪一章、哪一句 ── */
@@ -1543,12 +1603,14 @@ const Importer = (() => {
     return { title, author, subjects, chapters: merged.filter((c) => c.blocks.length), assets, coverKey: coverPath && have.has(bookId + '/' + coverPath) ? bookId + '/' + coverPath : null };
   }
 
-  async function importFile(file) {
+  /* 讀檔、拆章，但先不存。opt.id：更新舊書時沿用舊書的代號；opt.conv：沿用舊書的繁簡設定 */
+  async function parse(file, opt) {
+    opt = opt || {};
     if (file.size > 120 * 1024 * 1024) throw new Error('檔案超過 120 MB，太大了');
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     const u8 = new Uint8Array(await file.arrayBuffer());
     const isZip = u8[0] === 0x50 && u8[1] === 0x4B;
-    const id = 'u' + hash32(file.name + '|' + file.size).toString(36) + (u8.length > 64 ? hash32(String.fromCharCode.apply(null, u8.subarray(u8.length - 64))).toString(36) : '');
+    const id = opt.id || ('u' + hash32(file.name + '|' + file.size).toString(36) + (u8.length > 64 ? hash32(String.fromCharCode.apply(null, u8.subarray(u8.length - 64))).toString(36) : ''));
     let r;
     if (ext === 'epub' || (isZip && ext !== 'txt')) r = fromEpub(u8, file.name, id);
     else if (ext === 'pdf' || (u8[0] === 0x25 && u8[1] === 0x50 && u8[2] === 0x44 && u8[3] === 0x46)) throw new Error('PDF 的版面是固定的，重新排版後品質不好，目前不支援；請改用 EPUB 或 TXT');
@@ -1561,11 +1623,17 @@ const Importer = (() => {
     // 簡體書：自動轉成臺灣繁體（書頁可以改回原文，或連詞彙一起換成臺灣用語）
     const sample = r.title + r.chapters.slice(0, 8).map((c) => c.blocks.map((b) => b.x || '').join('')).join('').slice(0, 60000);
     book.simp = Conv.looksSimplified(sample);
-    if (book.simp) {
-      try { await Conv.load(); await applyConv(book, 'tw'); } catch (e) { /* 轉換表下載失敗：先照原文收進來，之後可以在書頁再轉 */ }
+    const mode = opt.conv != null ? opt.conv : book.simp ? 'tw' : '';
+    if (mode) {
+      try { await Conv.load(); await applyConv(book, mode); } catch (e) { /* 轉換表下載失敗：先照原文收進來，之後可以在書頁再轉 */ }
     }
-    await Lib.addLocal(book, r.chapters.map((c) => c.blocks.map((b) => { const o = { t: b.t }; if (b.x != null) o.x = b.x; if (b.k) { o.k = b.k; o.alt = b.alt; } return o; })), r.assets);
-    return book;
+    const blocks = r.chapters.map((c) => c.blocks.map((b) => { const o = { t: b.t }; if (b.x != null) o.x = b.x; if (b.k) { o.k = b.k; o.alt = b.alt; } return o; }));
+    return { book, blocks, assets: r.assets };
+  }
+  async function importFile(file) {
+    const p = await parse(file);
+    await Lib.addLocal(p.book, p.blocks, p.assets);
+    return p.book;
   }
   /* 書名、章名跟著轉；原文留一份，改回原文時用 */
   async function applyConv(book, mode) {
@@ -1576,7 +1644,7 @@ const Importer = (() => {
     if (!book.cover || !book.cover.img) book.cover = Cover.pick(book.title);
     return book;
   }
-  return { importFile, splitTitle, decodeText, fromText, applyConv };
+  return { parse, importFile, splitTitle, decodeText, fromText, applyConv };
 })();
 
 /* ───────── 閱讀器：仿真翻頁（兩片紙＋摺起來的頁背）與捲動 ───────── */
@@ -2455,7 +2523,7 @@ const UI = (() => {
   /* 書卡下面那一行時間：照排序方式說最相關的那一件事 */
   function timeLine(b, how) {
     if (how === 'read') { const t = Lib.readAt(b); return t ? fmtAgo(t) + '讀過' : '還沒翻開'; }
-    if (!b.remote) return b.added ? fmtDate(b.added) + '收進來' : '';
+    if (!b.remote) return b.upd && how !== 'old' ? fmtDate(b.upd) + '更新' : b.added ? fmtDate(b.added) + '收進來' : '';
     const t = how === 'old' ? Lib.created(b) : Lib.updated(b);
     return t ? fmtDate(t) + (how === 'old' ? '上架' : '更新') : '';
   }
@@ -2589,7 +2657,7 @@ const UI = (() => {
     const top = ED ? '<span></span><button type="button" class="ib" data-act="settings" aria-label="設定">' + ICON.gear + '</button>'
       : '<button type="button" class="ib" data-act="back" aria-label="回書房">' + ICON.back + '</button>'
         + (b.remote ? (b.ed ? '<button type="button" class="ib" data-act="share-book" data-id="' + esc(b.id) + '" aria-label="分享這本書">' + ICON.share + '</button>' : '')
-          : '<button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button>');
+          : '<span class="bv-acts"><button type="button" class="ib" data-act="upd-book" data-id="' + esc(b.id) + '" aria-label="更新這本書（換成新版的檔案）" title="更新這本書">' + ICON.refresh + '</button><button type="button" class="ib" data-act="del-book" data-id="' + esc(b.id) + '" aria-label="把這本書移出藏書">' + ICON.trash + '</button></span>');
     bookv.innerHTML = '<div class="wrap' + (ED ? ' ed' : '') + '"><div class="bv-top">' + top + '</div>'
       + '<div class="bv-head"><div class="bv-cover">' + coverHTML(b, 'b') + '</div><div><h1>' + esc(b.title) + '</h1>' + (b.author ? '<p class="bv-by">' + esc(b.author) + '</p>' : '')
       + '<div class="bv-tags">' + (b.remote && b.status ? '<span class="state">' + esc(b.status) + '</span>' : '')
@@ -2890,7 +2958,7 @@ const UI = (() => {
 
   /* ── 抽屜 ── */
   function openSheet(kind, html) { closeMenu(); hidePop(); sheetKind = kind; sheetBody.innerHTML = html; sheet.hidden = false; document.body.classList.add('sheet-open'); sheetBody.scrollTop = 0; $('.sheet-panel', sheet).focus({ preventScroll: true }); }
-  function closeSheet() { sheet.hidden = true; sheetKind = ''; sheetBody.innerHTML = ''; share = null; document.body.classList.remove('sheet-open'); }
+  function closeSheet() { if (asking) { const r = asking; asking = null; r('cancel'); } sheet.hidden = true; sheetKind = ''; sheetBody.innerHTML = ''; share = null; document.body.classList.remove('sheet-open'); }
   function repaintLook() { if (sheetKind !== 'look') return; const y = sheetBody.scrollTop; sheetBody.innerHTML = lookHTML(); sheetBody.scrollTop = y; paintVeilPreview(); }
   function lookHTML() {
     const S = Settings, V = !!S.vert, vl = Reader.veilOf();
@@ -3022,23 +3090,77 @@ const UI = (() => {
     btn.hidden = !mine && !Narrator.hasTrack(b, Reader.ci) && !Narrator.canSpeak();
   }
 
-  /* ── 匯入 ── */
+  /* ── 匯入、更新 ── */
+  let asking = null, upTarget = null;
+  /* 跳出選項，等痞子葳選；關掉面板算「取消」 */
+  function ask(html) { return new Promise((res) => { openSheet('confirm', html); asking = res; }); }
+  function answer(v) { const r = asking; asking = null; closeSheet(); if (r) r(v); }
+  /* 把新版內容換進舊書；回傳 true 表示換好了 */
+  async function applyUpdate(old, p, quiet) {
+    const pv = Lib.previewUpdate(old, p.book), warn = [];
+    if (pv.hit < Math.max(1, Math.ceil(pv.oldN * 0.3))) warn.push('這個檔案的章節跟原本幾乎對不上（' + pv.oldN + ' 章裡只對到 ' + pv.hit + ' 章），可能不是同一本書。');
+    else if (pv.newN < pv.oldN) warn.push('新檔案比原本少了 ' + (pv.oldN - pv.newN) + ' 章，可能是比較舊的版本。');
+    if (warn.length) {
+      $('#busy').hidden = true;
+      const v = await ask('<h2>確定要用這個檔案更新《' + esc(old.title) + '》？</h2><p class="note" style="margin:0 0 18px">' + esc(warn.join('')) + '換了之後，對不上的章節進度會落在最近的一章。</p><div style="display:flex;gap:10px"><button type="button" class="btn" data-act="ask" data-v="cancel" style="flex:1">先不要</button><button type="button" class="btn danger" data-act="ask" data-v="go" style="flex:1">還是換</button></div>');
+      if (v !== 'go') return false;
+    }
+    if (lastNarr.active && lastNarr.book.id === old.id) Narrator.stop();
+    const r = await Lib.replaceLocal(old, p.book, p.blocks, p.assets);
+    if (!quiet) {
+      const last = r.book.chapters[r.book.chapters.length - 1];
+      toast(r.added ? '《' + esc(r.book.title) + '》更新好了：多了 ' + r.added + ' 章，最新到' + esc(chName(last) || '第 ' + r.book.chapters.length + ' 章') : '《' + esc(r.book.title) + '》已經是最新的，沒有新的章節', r.added ? { action: '看目錄', onAction: () => go({ v: 'book', id: r.book.id }) } : {});
+      if (r.added) Sound.chime();
+    }
+    return true;
+  }
+  async function updateBook(old, f) {
+    const busy = $('#busy');
+    $('#busyText').textContent = '正在更新《' + old.title + '》……'; busy.hidden = false;
+    await raf(); await sleep(30);
+    try { const p = await Importer.parse(f, { id: old.id, conv: old.conv || '' }); await applyUpdate(old, p); }
+    catch (e) { toast(esc(f.name) + '：' + esc(e && e.message ? e.message : '更新失敗'), { kind: 'bad', ms: 6000 }); }
+    busy.hidden = true;
+    if (state.v === 'book' && state.id === old.id) renderBook(old.id); else if (state.v === 'lib') renderLib();
+  }
   async function importFiles(files) {
     files = Array.from(files || []); if (!files.length) return;
-    const busy = $('#busy'); let last = null, okN = 0;
+    if (upTarget) { const b = Lib.find(upTarget); upTarget = null; if (b && !b.remote) return updateBook(b, files[0]); }
+    const busy = $('#busy'); let last = null, okN = 0, upN = 0;
     for (const f of files) {
       $('#busyText').textContent = '正在讀《' + f.name.replace(/\.[^.]+$/, '') + '》……'; busy.hidden = false;
       await raf(); await sleep(30);
-      try { last = await Importer.importFile(f); okN++; }
+      try {
+        let p = await Importer.parse(f);
+        const same = Lib.find(p.book.id), twin = same && !same.remote ? same : Lib.sameTitle(p.book);
+        if (twin) {
+          let v = 'up';
+          if (twin.id !== p.book.id) {
+            busy.hidden = true;
+            v = await ask('<h2>藏書裡已經有《' + esc(twin.title) + '》</h2><p class="note" style="margin:0 0 18px">「' + esc(f.name) + '」看起來是同一本書的新版。更新原本那本，閱讀進度、書籤都會留著；新增的章節會標上「新」。</p><div style="display:flex;flex-direction:column;gap:10px"><button type="button" class="btn gilt" data-act="ask" data-v="up">' + ICON.refresh + '更新原本那本</button><button type="button" class="btn" data-act="ask" data-v="new">另外收一本</button><button type="button" class="btn" data-act="ask" data-v="cancel">取消</button></div>');
+            busy.hidden = false;
+          }
+          if (v === 'cancel') continue;
+          if (v === 'up') {
+            if (twin.id !== p.book.id) p = await Importer.parse(f, { id: twin.id, conv: twin.conv || '' });
+            else if ((twin.conv || '') !== (p.book.conv || '')) p = await Importer.parse(f, { id: twin.id, conv: twin.conv || '' });
+            if (await applyUpdate(twin, p, files.length === 1 ? false : true)) { upN++; if (files.length > 1) okN++; }
+            busy.hidden = true;
+            continue;
+          }
+        }
+        await Lib.addLocal(p.book, p.blocks, p.assets); last = p.book; okN++;
+      }
       catch (e) { toast(esc(f.name) + '：' + esc(e && e.message ? e.message : '匯入失敗'), { kind: 'bad', ms: 6000 }); }
     }
     busy.hidden = true;
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-    if (!okN) return;
+    if (state.v === 'lib') renderLib(); else if (state.v === 'book') renderBook(state.id);
+    if (!last) { if (upN > 1 || (upN && files.length > 1)) { toast('更新好了，一共 ' + upN + ' 本'); Sound.chime(); } return; }
     if (gsel) { gsel = ''; Store.set('gsel', ''); }          // 剛收進來的書可能不在現在選的分類裡：回到「全部」
     if (state.v === 'lib') renderLib();
     const b = last;
-    toast(okN > 1 ? '收進藏書了，一共 ' + okN + ' 本' : '《' + esc(b.title) + '》收進藏書了，' + b.chapters.length + ' 章' + (b.simp && b.conv ? '（簡體已轉成繁體）' : ''), { action: '打開', onAction: () => go({ v: 'book', id: b.id }) });
+    toast(okN > 1 ? '收好了，一共 ' + okN + ' 本' + (upN ? '（其中 ' + upN + ' 本是更新）' : '') : '《' + esc(b.title) + '》收進藏書了，' + b.chapters.length + ' 章' + (b.simp && b.conv ? '（簡體已轉成繁體）' : ''), b && okN === 1 ? { action: '打開', onAction: () => go({ v: 'book', id: b.id }) } : {});
     Sound.chime();
   }
   async function convert(b, v) {
@@ -3056,7 +3178,9 @@ const UI = (() => {
     const a = t.dataset.act; let b;
     switch (a) {
       case 'noop': break;
-      case 'import': $('#file').value = ''; $('#file').click(); break;
+      case 'import': upTarget = null; $('#file').value = ''; $('#file').click(); break;
+      case 'upd-book': upTarget = t.dataset.id; $('#file').value = ''; $('#file').click(); break;
+      case 'ask': answer(t.dataset.v); break;
       case 'settings': openSheet('settings', settingsHTML()); break;
       case 'look-open': openSheet('look', lookHTML()); paintVeilPreview(); break;
       case 'book': Sound.unlock(); Sound.tap(); go({ v: 'book', id: t.dataset.id }); break;

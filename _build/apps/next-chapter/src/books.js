@@ -179,9 +179,67 @@ const Lib = (() => {
     return clean;
   }
 
+  /* ── 匯入的書出了新版（例如連載的 TXT 更新了）：換成新版，進度、書籤、分類、繁簡都留著 ──
+     章節照章名對：原文章名（轉繁體前）一樣、順序往後的就是同一章；作者改了章名或插了番外，其他章照樣對得上 */
+  const chName0 = (c) => (((c.label0 != null ? c.label0 : c.label) || '') + '|' + ((c.name0 != null ? c.name0 : c.name) || '')).replace(/\s+/g, '');
+  function matchChapters(oldCh, newCh) {
+    const pos = new Map();
+    newCh.forEach((c, j) => { const k = chName0(c); if (!pos.has(k)) pos.set(k, []); pos.get(k).push(j); });
+    const map = [], used = new Set(); let after = -1, hit = 0;
+    oldCh.forEach((c) => {
+      const list = pos.get(chName0(c)) || [], j = list.find((x) => x > after && !used.has(x));
+      if (j == null) { map.push(null); return; }
+      map.push(j); used.add(j); after = j; hit++;
+    });
+    return { map, used, hit };
+  }
+  /* 先算一遍，不動資料：給畫面判斷「是不是同一本書」、預告會多幾章 */
+  function previewUpdate(old, nb) {
+    const m = matchChapters(old.chapters, nb.chapters);
+    return { hit: m.hit, oldN: old.chapters.length, newN: nb.chapters.length, added: nb.chapters.length - m.used.size };
+  }
+  async function replaceLocal(old, nb, chapBlocks, assets) {
+    const id = old.id, m = matchChapters(old.chapters, nb.chapters);
+    // 找不到的舊章（被作者刪掉或改名）：落在前面最近一個對得上的章
+    const near = m.map.slice(); let lastJ = 0;
+    near.forEach((j, i) => { if (j == null) near[i] = Math.min(lastJ, Math.max(0, nb.chapters.length - 1)); else lastJ = j; });
+    const remap = (key) => { const i = /^i(\d+)$/.test(key || '') ? +key.slice(1) : -1; return i >= 0 && i < near.length ? 'i' + near[i] : null; };
+    // 書的資料：章節換新，書名、作者、封面、加入日期照舊（TXT 的書名常常是檔名，像「更新至358章」）
+    const book = Object.assign({}, nb, { id, title: old.title, author: old.author || nb.author, title0: old.title0 != null ? old.title0 : nb.title0, author0: old.author0 != null ? old.author0 : nb.author0,
+      added: old.added, upd: new Date().toISOString(), cover: nb.cover && nb.cover.img ? nb.cover : old.cover, genre: old.genre || nb.genre });
+    delete book.remote;
+    const items = [['books', id, book]];
+    chapBlocks.forEach((blocks, i) => items.push(['chaps', id + ':' + String(i).padStart(5, '0'), { blocks }]));
+    (assets || []).forEach((a) => items.push(['assets', a.k, a.blob]));
+    await DB.putMany(items);                                   // 先寫新的，寫成功才清掉多出來的舊章
+    for (let i = chapBlocks.length; i < old.chapters.length; i++) { try { await DB.del('chaps', id + ':' + String(i).padStart(5, '0')); } catch (e) {} }
+    // 進度、讀完的章、書籤搬到新的章號
+    const p = Store.get('prog', {});
+    if (p[id]) { const ok = m.map[+String(p[id].ck).slice(1)] != null, k = remap(p[id].ck); if (k) { p[id].ck = k; if (!ok) { p[id].b = 0; p[id].s = 0; p[id].f = 0; } } Store.set('prog', p); }
+    const d = Store.get('done', {});
+    if (d[id]) { d[id] = d[id].map((k) => { const i = +String(k).slice(1); return m.map[i] != null ? 'i' + m.map[i] : null; }).filter(Boolean); Store.set('done', d); }
+    const bm = Store.get('bm', {});
+    if (bm[id]) { bm[id].forEach((x) => { const i = +String(x.ck).slice(1); if (m.map[i] != null) x.ck = 'i' + m.map[i]; else { const k = remap(x.ck); if (k) { x.ck = k; x.b = 0; x.s = 0; } } }); Store.set('bm', bm); }
+    // 新出現的章節標上「新」（之前還沒讀的「新」也搬過去）
+    const fl = Store.get('fresh', {}), keep = (fl[id] || []).map((k) => { const i = +String(k).slice(1); return m.map[i] != null ? 'i' + m.map[i] : null; }).filter(Boolean);
+    const added = []; nb.chapters.forEach((c, j) => { if (!m.used.has(j)) added.push('i' + j); });
+    const all = Array.from(new Set(keep.concat(added)));
+    if (all.length) fl[id] = all; else delete fl[id];
+    Store.set('fresh', fl);
+    local = local.filter((b) => b.id !== id); local.unshift(book);
+    for (const key of Array.from(mem.keys())) if (key.indexOf(id + ':') === 0) mem.delete(key);
+    return { book, added: added.length, hit: m.hit };
+  }
+  /* 藏書裡同一本書（照書名對，轉繁體前的原名也算） */
+  function sameTitle(nb) {
+    const norm = (t) => String(t || '').replace(/^(.+?)[（(【\[_\-—－\s]+(更新|最新|連載|连载|完結|完结|全本|完本|全集|精校|校對|校对|txt).*$/i, '$1').replace(/^(.+?)(?:[_\-—－\s]+\d+(?:[-~～]\d+)?|[_\-—－\s]*第\d+[章回卷節节])$/, '$1').replace(/[\s《》「」『』【】\[\]（）()_\-—－·・.,，。:：!！?？]/g, '').toLowerCase();
+    const a = [norm(nb.title), norm(nb.title0)].filter(Boolean);
+    return local.find((b) => b.id !== nb.id && [norm(b.title), norm(b.title0)].some((t) => t && a.indexOf(t) >= 0)) || null;
+  }
+
   /* ── 時間：最近更新、最早上架、最近讀過 ── */
   const chAt = (c) => toMs(c.at || c.added);
-  function updated(b) { if (!b.remote) return toMs(b.added); let t = 0; b.chapters.forEach((c) => { t = Math.max(t, chAt(c) + c.n); }); return t; }
+  function updated(b) { if (!b.remote) return toMs(b.upd || b.added); let t = 0; b.chapters.forEach((c) => { t = Math.max(t, chAt(c) + c.n); }); return t; }
   function created(b) { if (!b.remote) return toMs(b.added); let t = Infinity; b.chapters.forEach((c) => { t = Math.min(t, chAt(c)); }); return isFinite(t) ? t : 0; }
   function readAt(b) { const p = Prog.get(b.id); return p ? p.t || 0 : 0; }
 
@@ -233,7 +291,7 @@ const Lib = (() => {
   /* 書房上鎖、單行本失效：把解開的目錄從這台裝置拿掉 */
   function forget() { remote = { books: [] }; mem.clear(); Object.keys(recapMem).forEach((k) => delete recapMem[k]); Store.del('lib'); }
   const site = () => remote.site || '';
-  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, forget, site, hasRemote: () => (remote.books || []).length > 0 };
+  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, replaceLocal, previewUpdate, sameTitle, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, forget, site, hasRemote: () => (remote.books || []).length > 0 };
 })();
 
 /* ── 閱讀進度：每本書記到哪一章、哪一句 ── */

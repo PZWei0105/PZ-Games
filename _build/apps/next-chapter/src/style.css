@@ -85,6 +85,7 @@ svg .fill { fill: currentColor; stroke: none; }
 
 /* ── 書頁 ── */
 .bv-top { display: flex; justify-content: space-between; margin: 0 -8px 8px; }
+.bv-acts { display: flex; gap: 2px; }
 .bv-head { display: grid; grid-template-columns: minmax(120px, 36%) 1fr; gap: 22px; align-items: end; }
 .bv-head h1 { margin: 0; font: 700 clamp(25px, 7vw, 40px)/1.2 var(--kai); letter-spacing: .04em; }
 .bv-by { margin: 6px 0 0; color: var(--mist); font-size: 13.500px; }

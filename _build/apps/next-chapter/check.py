@@ -1001,6 +1001,131 @@ def qr_text(png_bytes):
     return ''
 
 
+def run_update(p, name, opts, base, out, tmp, fx):
+    """匯入的書出新版：書頁「更新這本書」、直接匯入時認出同一本、對不上時要先問"""
+    print('\n== %s：匯入的書更新 ==' % name, flush=True)
+    br = p.chromium.launch(args=['--disable-gpu-compositing'])
+    ctx = br.new_context(locale='zh-TW', timezone_id='Asia/Taipei', **opts)
+    ctx.route(re.compile(r'^https://fonts\.(googleapis|gstatic)\.com/.*'), lambda r: r.abort())
+    page = ctx.new_page()
+    page.add_init_script("if (!sessionStorage.getItem('pznc.t')) { sessionStorage.setItem('pznc.t', '1'); localStorage.setItem('pznc.v1.coach', '1'); localStorage.setItem('pznc.v1.hello', '1'); localStorage.setItem('pznc.v1.km', JSON.stringify(%s)); }" % json.dumps(fx['km']))
+    errs = []
+    page.on('pageerror', lambda e: errs.append('pageerror: ' + str(e)))
+    page.on('console', lambda m: errs.append('console: ' + m.text) if m.type == 'error' and 'Failed to load resource' not in m.text and 'fonts.g' not in m.text else None)
+    n = [0]
+    js = page.evaluate
+
+    def shot(tag):
+        n[0] += 1
+        page.screenshot(path=os.path.join(out, '%s-u%02d-%s.png' % (name, n[0], tag)))
+
+    para = '雪落在城牆上，守夜的人把手縮進袖子裡，聽著遠處的馬蹄聲一陣緊過一陣。' * 4
+
+    def txt(fn, names):
+        path = os.path.join(tmp, fn)
+        open(path, 'w', encoding='utf-8').write('\n\n'.join('%s\n\n%s\n\n%s' % (h, para, para) for h in names) + '\n')
+        return path
+
+    v1 = ['第%d章 標題%d' % (i, i) for i in range(1, 6)]
+    v2 = v1[:2] + ['番外 雪夜'] + v1[2:] + ['第6章 標題6', '第7章 標題7']
+    v3 = v2 + ['第8章 標題8', '第9章 標題9']
+    store = lambda k: js("JSON.parse(localStorage.getItem('pznc.v1.%s') || 'null')" % k)
+    local = lambda: js("""(async () => { const db = await new Promise((res) => { const r = indexedDB.open('pznc', 1); r.onsuccess = () => res(r.result); }); return await new Promise((res) => { const r = db.transaction('books').objectStore('books').getAll(); r.onsuccess = () => res(r.result.map((b) => ({ id: b.id, title: b.title, n: b.chapters.length, upd: b.upd || '', last: b.chapters[b.chapters.length - 1].label }))); }); })()""")
+    toast = lambda: js("[...document.querySelectorAll('.toast')].map((t) => t.textContent).join(' / ')")
+
+    def wait_toast(sub, ms=15000):
+        try:
+            page.wait_for_function("[...document.querySelectorAll('.toast')].some((t) => t.textContent.includes(%s))" % json.dumps(sub), timeout=ms)
+            return True
+        except Exception:
+            return False
+
+    try:
+        page.goto(base + APP, wait_until='load')
+        page.wait_for_selector('#lib:not([hidden])', timeout=20000)
+        page.set_input_files('#file', [txt('連載測試.txt', v1)])
+        page.wait_for_function("[...document.querySelectorAll('.bk-t')].some((e) => e.textContent === '連載測試')", timeout=20000)
+        bk = [b for b in local() if b['title'] == '連載測試']
+        if not ok(len(bk) == 1 and bk[0]['n'] == 5, '第一版應該有 5 章：%s' % local()):
+            return
+        bid = bk[0]['id']
+        # 假裝讀到第 4 章、在第 5 章放了書籤、第 3 章讀完
+        js("(() => { const s = (k, v) => localStorage.setItem('pznc.v1.' + k, JSON.stringify(v)); const id = %s; const p = JSON.parse(localStorage.getItem('pznc.v1.prog') || '{}'); p[id] = { ck: 'i3', b: 1, s: 5, x: '雪落', f: .4, t: Date.now() }; s('prog', p); s('bm', { [id]: [{ ck: 'i4', b: 0, s: 0, x: '雪', t: 1 }] }); s('done', { [id]: ['i2'] }); })()" % json.dumps(bid))
+        page.reload(wait_until='load'); page.wait_for_selector('#lib:not([hidden])')
+        page.locator('.bk:not(.add)', has_text='連載測試').first.click()
+        page.wait_for_selector('#bookv:not([hidden]) [data-act="upd-book"]', timeout=8000)
+        ok(js("!!document.querySelector('#bookv [data-act=\"del-book\"]')"), '更新按鈕旁邊的垃圾桶不見了')
+        shot('book-before')
+        # ── 書頁按「更新這本書」──
+        with page.expect_file_chooser() as fc:
+            page.locator('#bookv [data-act="upd-book"]').click()
+        fc.value.set_files(txt('連載測試_更新至第7章.txt', v2))
+        ok(wait_toast('多了 3 章'), '書頁更新後應該說「多了 3 章」：%s' % toast())
+        ok('最新到第7章' in toast(), '提示應該說最新到第7章：%s' % toast())
+        page.wait_for_timeout(500)
+        shot('book-updated')
+        bk = [b for b in local() if b['title'] == '連載測試']
+        ok(len(bk) == 1 and bk[0]['id'] == bid and bk[0]['n'] == 8 and bk[0]['upd'], '更新後應該還是同一本、8 章：%s' % local())
+        prog = (store('prog') or {}).get(bid) or {}
+        ok(prog.get('ck') == 'i4' and prog.get('b') == 1 and prog.get('s') == 5, '第 4 章前面插了番外，進度應該跟到新的 i4、位置不變：%s' % prog)
+        ok(((store('bm') or {}).get(bid) or [{}])[0].get('ck') == 'i5', '書籤應該跟著搬到新的第 5 章（i5）：%s' % store('bm'))
+        ok((store('done') or {}).get(bid) == ['i3'], '讀完的第 3 章應該搬到 i3：%s' % store('done'))
+        ok(sorted((store('fresh') or {}).get(bid) or []) == ['i2', 'i6', 'i7'], '番外和第 6、7 章應該標成「新」：%s' % store('fresh'))
+        ok(js("document.querySelectorAll('#bookv .toc .new').length") == 3, '目錄上應該有 3 個「新」')
+        ok(js("document.querySelector('#bookv h1').textContent") == '連載測試', '書名不應該被檔名「更新至第7章」換掉')
+        # ── 從「＋」直接匯入新版：認出是同一本、問要不要更新 ──
+        page.locator('#bookv [data-act="back"]').click(); page.wait_for_selector('#lib:not([hidden])')
+        page.set_input_files('#file', [txt('連載測試（最新）.txt', v3)])
+        page.wait_for_selector('#sheet:not([hidden]) [data-act="ask"][data-v="up"]', timeout=15000)
+        shot('ask-same')
+        page.locator('#sheet [data-act="ask"][data-v="up"]').click()
+        ok(wait_toast('多了 2 章'), '匯入時選「更新原本那本」應該多 2 章：%s' % toast())
+        bk = [b for b in local() if b['title'] == '連載測試']
+        ok(len(bk) == 1 and bk[0]['n'] == 10, '選更新以後不應該多出一本：%s' % local())
+        ok(sorted((store('fresh') or {}).get(bid) or []) == ['i2', 'i6', 'i7', 'i8', 'i9'], '還沒讀的「新」要留著、再加上第 8、9 章：%s' % store('fresh'))
+        # 同一個檔案再收一次：直接說已經是最新的
+        js("document.querySelector('#file').value = ''")
+        page.set_input_files('#file', [os.path.join(tmp, '連載測試（最新）.txt')])
+        page.wait_for_selector('#sheet:not([hidden]) [data-act="ask"][data-v="up"]', timeout=15000)
+        page.locator('#sheet [data-act="ask"][data-v="up"]').click()
+        ok(wait_toast('已經是最新的'), '沒有新章節應該說已經是最新的：%s' % toast())
+        # 選「另外收一本」
+        page.set_input_files('#file', [txt('連載測試 精校版.txt', v1)])
+        page.wait_for_selector('#sheet:not([hidden]) [data-act="ask"][data-v="new"]', timeout=15000)
+        page.locator('#sheet [data-act="ask"][data-v="new"]').click()
+        page.wait_for_timeout(1200)
+        ok(len([b for b in local() if '連載測試' in b['title']]) == 2, '選「另外收一本」應該多一本：%s' % local())
+        # 取消：什麼都不動
+        page.set_input_files('#file', [txt('連載測試 更新.txt', v3)])
+        page.wait_for_selector('#sheet:not([hidden]) [data-act="ask"][data-v="cancel"]', timeout=15000)
+        page.locator('#sheet [data-act="ask"][data-v="cancel"]').click(); page.wait_for_timeout(800)
+        ok(len([b for b in local() if '連載測試' in b['title']]) == 2, '按取消不應該動到藏書：%s' % local())
+        # ── 拿一本不相干的書來更新：要先警告 ──
+        page.locator('.bk[data-id="%s"]' % bid).first.click()
+        page.wait_for_selector('#bookv:not([hidden]) [data-act="upd-book"]')
+        cur = page.evaluate("document.querySelector('#bookv [data-act=\"upd-book\"]').dataset.id")
+        before = [b for b in local() if b['id'] == cur][0]
+        with page.expect_file_chooser() as fc:
+            page.locator('#bookv [data-act="upd-book"]').click()
+        fc.value.set_files(txt('別本書.txt', ['第一回 開場', '第二回 收場']))
+        page.wait_for_selector('#sheet:not([hidden]) [data-act="ask"][data-v="go"]', timeout=15000)
+        ok('對不上' in js("document.querySelector('#sheet').textContent"), '不相干的檔案應該警告章節對不上')
+        shot('ask-mismatch')
+        page.locator('#sheet [data-act="ask"][data-v="cancel"]').click(); page.wait_for_timeout(800)
+        ok([b for b in local() if b['id'] == cur][0]['n'] == before['n'], '按「先不要」不應該換掉內容')
+        # 讀起來：打開新的第 7 章看得到內容
+        page.locator('#bookv .tab[data-tab="toc"]').click()
+        page.locator('#bookv .toc .row').nth(7).click()
+        page.wait_for_function("(() => { const r = document.querySelector('#reader'); return !r.hidden && !r.classList.contains('loading') && document.querySelector('#opening').hidden; })()", timeout=15000)
+        ok('雪落在城牆上' in js("document.querySelector('.leaf .flow').textContent"), '更新後的新章節打不開')
+        shot('read-new')
+    except Exception:
+        shot('FAIL'); print('   toast:', toast(), ' local:', local(), flush=True); raise
+    finally:
+        for e in errs:
+            bad('%s：%s' % (name, e))
+        br.close()
+
 def run_secure(p, name, opts, base, out, fx):
     """書房的門（密語、備用碼）、在這台裝置上鎖、書房換鎖、分享這本書（QR、複製、LINE）"""
     import pzcrypt
@@ -1275,6 +1400,7 @@ def main():
     ap.add_argument('--only')
     ap.add_argument('--features', action='store_true', help='只跑新功能那一段（＋上鎖、分享、單行本）')
     ap.add_argument('--secure', action='store_true', help='只跑上鎖、分享、單行本')
+    ap.add_argument('--update', action='store_true', help='只跑匯入的書更新''')
     ap.add_argument('--fixture', help='只組假書房到這個資料夾（check_webkit.py 用）')
     ap.add_argument('--site', help='配 --fixture：單行本網站的網址')
     a = ap.parse_args()
@@ -1299,6 +1425,13 @@ def main():
     with sync_playwright() as p:
         for name, opts in (('phone', PHONE), ('desk', DESK)):
             if a.only and a.only != name:
+                continue
+            if a.update or not a.secure:
+                try:
+                    run_update(p, name, opts, base, a.out, tmp, fx)
+                except Exception as ex:
+                    bad('%s：更新檢查中斷：%s' % (name, str(ex)[:400]))
+            if a.update:
                 continue
             if not a.features and not a.secure:
                 try:
