@@ -1,6 +1,134 @@
 {
 "v": 1,
-"at": "2026-11-17T15:53:33+08:00",
-"cursor": "86g8lDJQNts1",
-"events": []
+"at": "2026-11-18T06:38:21+08:00",
+"cursor": "qZbWi9l2Eiym",
+"events": [
+{
+"id": "dtq3stt-1",
+"type": "route",
+"t": "2026-11-17T17:46:31.637Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n",
+"route": "b",
+"zh": "敗者組"
+},
+{
+"id": "dtq3stt-2",
+"type": "vote",
+"t": "2026-11-17T17:46:49.921Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n",
+"v": "board",
+"reasons": [],
+"note": "",
+"lane": "novel",
+"zh": "敗者組"
+},
+{
+"id": "dtq3stt-3",
+"type": "talk",
+"t": "2026-11-17T17:46:58.021Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n"
+},
+{
+"id": "dtq3stt-4",
+"type": "vote",
+"t": "2026-11-17T17:48:17.413Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n",
+"v": "board",
+"reasons": [],
+"note": "",
+"lane": "novel",
+"zh": "敗者組",
+"prev": "board"
+},
+{
+"id": "dtq3stt-5",
+"type": "vote",
+"t": "2026-11-17T17:49:29.931Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-g",
+"v": "cancel",
+"reasons": [
+"太悶",
+"做過類似的"
+],
+"note": "",
+"lane": "game",
+"zh": "再一層"
+},
+{
+"id": "dtq3stt-6",
+"type": "vote",
+"t": "2026-11-17T17:55:49.425Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n",
+"v": "board",
+"reasons": [],
+"note": "",
+"lane": "novel",
+"zh": "敗者組",
+"prev": "board"
+},
+{
+"id": "dtq3stt-7",
+"type": "vote",
+"t": "2026-11-17T17:55:58.060Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n",
+"v": "board",
+"reasons": [],
+"note": "",
+"lane": "novel",
+"zh": "敗者組",
+"prev": "board"
+},
+{
+"id": "dtq3stt-8",
+"type": "vote",
+"t": "2026-11-17T18:15:34.461Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n",
+"v": "board",
+"reasons": [],
+"note": "",
+"lane": "novel",
+"zh": "敗者組",
+"prev": "board"
+},
+{
+"id": "dtq3stt-9",
+"type": "vote",
+"t": "2026-11-17T19:29:52.584Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-f",
+"v": "delay",
+"reasons": [],
+"note": "",
+"lane": "free",
+"zh": "一人公司"
+},
+{
+"id": "dtq3stt-10",
+"type": "vote",
+"t": "2026-11-17T19:30:07.275Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n",
+"v": "board",
+"reasons": [],
+"note": "",
+"lane": "novel",
+"zh": "敗者組",
+"prev": "board"
+},
+{
+"id": "dtq3stt-11",
+"type": "talk",
+"t": "2026-11-17T19:30:19.639Z",
+"dev": "dtq3stt",
+"card": "2026-11-17-n"
+}
+]
 }
