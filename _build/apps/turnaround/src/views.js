@@ -212,8 +212,9 @@ function reasonSheet(f, date, pg) {
     const c = e.target.closest('.chip'); if (c) { c.classList.toggle('on'); c.classList.contains('on') ? pick.add(c.dataset.r) : pick.delete(c.dataset.r); Snd.tick(); haptic(8); }
   });
   $('#rs-ok', sh).onclick = () => {
+    const note = (($('#rs-note', sh) || {}).value || '').trim().slice(0, 300);
     closeSheet();
-    applyVote(f, date, { v: 'cancel', reasons: Array.from(pick), note: ($('#rs-note', sh).value || '').trim().slice(0, 300), t: now() }, pg);
+    applyVote(f, date, { v: 'cancel', reasons: Array.from(pick), note, t: now() }, pg);
   };
 }
 function pickRoute(f, rid, pg) {
@@ -369,7 +370,9 @@ function bindInsp(root, ins, date) {
   const io = new IntersectionObserver((es) => { es.forEach((e) => { if (e.isIntersecting) { io.unobserve(e.target); const a = e.target.dataset.a; requestAnimationFrame(() => { e.target.style.transform = 'rotate(' + a + 'deg)'; }); Snd.tick(); } }); }, { threshold: 0.4 });
   g.forEach((n) => io.observe(n));
   const pick = new Set();
-  root.addEventListener('click', (ev) => {
+  // 用 onclick（不是 addEventListener）：機庫每次重畫都會再綁一次，不能疊加
+  root.onclick = (ev) => {
+    if (ev.target.closest('[data-close]')) return;
     const b = ev.target.closest('button,[data-shot]'); if (!b) return;
     if (b.dataset.iv) { const card = b.closest('.wo'); itemDecide(ins, card.dataset.item, b.dataset.iv, root, date); return; }
     if (b.hasAttribute('data-dispatch')) { dispatch(ins, date, root); return; }
@@ -386,7 +389,7 @@ function bindInsp(root, ins, date) {
       $('.pireps', root).insertAdjacentHTML('afterbegin', '<div class="pr"><i>' + p.t.slice(0, 10) + (p.chips.length ? '・' + esc(p.chips.join('、')) : '') + '</i>' + esc(p.text) + '</div>');
       Snd.tele(8); haptic(14); toast('機長報告已送出，下次檢修會先看它');
     }
-  });
+  };
   if (!IS_WEB && Tower.ok()) Tower.bind($('#tower-chat-i', root), 'i:' + ins.id, () => inspContext(ins, date));
 }
 function itemDecide(ins, itemId, v, root, date) {
