@@ -1,0 +1,46 @@
+# 《轉機 TURNAROUND》塔台收件：把 App 送到轉發站（ntfy.sh）的表態、工單、機長報告收進 apps/turnaround/data/inbox.json。
+# 每天的開題與檢修排程從 inbox.json 讀痞子葳的表態；App 看到自己的事件出現在這裡就知道「塔台收到了」。
+name: turnaround-inbox
+
+on:
+  schedule:
+    - cron: '17 * * * *'        # 每小時（轉發站只留約 12 小時，GitHub 偶爾會跳過排程，所以排密一點）
+  workflow_dispatch:
+    inputs:
+      selftest:
+        description: '先送一筆 ping 再收回來（測連線）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: turnaround-inbox
+  cancel-in-progress: false
+
+jobs:
+  inbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 收件
+        run: python3 _build/apps/turnaround/tools/inbox.py --data apps/turnaround/data ${{ inputs.selftest && '--selftest' || '' }}
+      - name: 有變動才 commit
+        run: |
+          git config user.name 'turnaround-bot'
+          git config user.email 'turnaround-bot@users.noreply.github.com'
+          git add apps/turnaround/data/inbox.json
+          if git diff --cached --quiet; then echo '沒有新事件'; exit 0; fi
+          git commit -q -m '轉機：塔台收件'
+          for i in 1 2 3 4 5; do
+            git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0
+            echo "push 失敗，重試 $i"; sleep $((i * 7))
+          done
+          exit 1
