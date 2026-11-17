@@ -151,6 +151,12 @@ const Lib = (() => {
       if (got[k] === b.recaps.v) continue;
       try { const r = await fetch(b.base + b.recaps.f + '?v=' + b.recaps.v); if (r.ok) { await r.arrayBuffer(); got[k] = b.recaps.v; } } catch (e) { break; }
     }
+    for (const b of (remote.books || [])) {
+      if (!b.audit) continue;
+      const k = b.base + b.audit.f;
+      if (got[k] === b.audit.v) continue;
+      try { const r = await fetch(b.base + b.audit.f + '?v=' + b.audit.v); if (r.ok) { await r.arrayBuffer(); got[k] = b.audit.v; } } catch (e) { break; }
+    }
     Store.set('cached', got);
     return n;
   }
@@ -289,9 +295,19 @@ const Lib = (() => {
     return null;
   }
   /* 書房上鎖、單行本失效：把解開的目錄從這台裝置拿掉 */
-  function forget() { remote = { books: [] }; mem.clear(); Object.keys(recapMem).forEach((k) => delete recapMem[k]); Store.del('lib'); }
+  /* ── 巡查報告（只有書房有；用總鑰匙加密在書的資料夾 audit.pzx，單行本的鑰匙解不開） ── */
+  const auditMem = {};
+  async function audits(b) {
+    if (ED || !b.remote || !b.audit) return null;
+    const km = Vault.km(); if (!km) return null;
+    const k = b.id + ':' + b.audit.v;
+    if (auditMem[k]) return auditMem[k];
+    try { const r = await fetch(b.base + b.audit.f + '?v=' + b.audit.v); if (!r.ok) return null; const j = await Crypt.json(km, await r.arrayBuffer()); auditMem[k] = j.reports || []; return auditMem[k]; } catch (e) { return null; }
+  }
+
+  function forget() { remote = { books: [] }; mem.clear(); Object.keys(recapMem).forEach((k) => delete recapMem[k]); Object.keys(auditMem).forEach((k) => delete auditMem[k]); Store.del('lib'); }
   const site = () => remote.site || '';
-  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, replaceLocal, previewUpdate, sameTitle, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, chapterText, search, forget, site, hasRemote: () => (remote.books || []).length > 0 };
+  return { all, find, total, init, sync, chapter, timeline, audioURL, prefetch, addLocal, removeLocal, saveLocal, replaceLocal, previewUpdate, sameTitle, imgURL, coverURL, ck, freshSet, clearFresh, updated, created, readAt, recaps, audits, chapterText, search, forget, site, hasRemote: () => (remote.books || []).length > 0 };
 })();
 
 /* ── 閱讀進度：每本書記到哪一章、哪一句 ── */

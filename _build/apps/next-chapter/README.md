@@ -33,6 +33,12 @@ App 裡稱呼使用者一律用「痞子葳」；「魏子葳」是小說主角�
 - 書頁「分享」：複製連結、傳到 LINE（`line.me/R/share`，連結加 `?openExternalBrowser=1` 讓 LINE 用外部瀏覽器開，才能加到主畫面）、系統分享、QR code（`lib/qrcode.js`，用到才下載，中間蓋這本書的朱印，容錯 H）。
 - 收回連結（pz-novels 的 `shelf.py rekey`）會換鑰匙和代號：舊網址 404，單行本會清掉存下來的書和鑰匙，跟讀者說「這本書換了新的連結」。
 
+## 巡查報告（2026-11-17 起）
+
+排程每寫滿五回替連載巡一次（手冊在 pz-novels 的 `tools/AUDIT_GUIDE.md`）。報告由 pz-novels 的 `shelf.py audit … report` 收進 `books/<book>/audit/reports.json`，
+`publish.py` 的 `audit_payload()` 把它用**總鑰匙**加密成 `<pub>/audit.pzx`，目錄裡記 `audit: {f, v, n, open, last, upto}`。**只進書房，不進單行本**（單行本的鑰匙解不開，`site_files` 也不放）。
+App：書頁有「新的巡查報告」橫幅（看過就熄，`pznc.v1.audSeen`）與「巡查」分頁（數字＝待決定的條數）；閱讀器裡的目錄不顯示。`Lib.audits()` 解、`fillAudits()` 畫。check.py 的假書房第一本有一份報告。
+
 ## 說書音軌
 
 App 有兩種說書：

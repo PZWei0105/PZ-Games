@@ -138,16 +138,19 @@ const UI = (() => {
   function tabsHTML(b, tab, ctx) {
     const n = Marks.sorted(b).length, t = [['toc', '目錄'], ['marks', '書籤' + (n ? '<i>' + n + '</i>' : '')], ['search', '搜尋']];
     if (b.remote && b.recaps) t.push(['recap', '提要']);
+    if (hasAudit(b, ctx)) t.push(['audit', '巡查' + (b.audit.open ? '<i>' + b.audit.open + '</i>' : '')]);
     return '<div class="tabs" role="tablist">' + t.map((x) => '<button type="button" class="tab" role="tab" data-act="tab" data-ctx="' + ctx + '" data-tab="' + x[0] + '" aria-selected="' + (x[0] === tab) + '">' + x[1] + '</button>').join('') + '</div>';
   }
   function panelHTML(b, tab) {
     if (tab === 'marks') return marksHTML(b);
     if (tab === 'search') return searchHTML(b);
     if (tab === 'recap') return '<div class="rcl-wrap"><p class="empty">正在翻提要……</p></div>';
+    if (tab === 'audit') return '<div class="aud-wrap"><p class="empty">正在翻巡查報告……</p></div>';
     return b.chapters.length ? tocHTML(b) : '<p class="empty">第一回還在路上。</p>';
   }
   function afterPanel(b, tab, ctx, panel) {
     if (tab === 'recap') fillRecaps(b, panel, ctx);
+    else if (tab === 'audit') fillAudits(b, panel);
     else if (tab === 'search' && qs.id === b.id && qs.q) { if (qs.res) paintSearch(b, qs.res, qs.q, panel); else runSearch(b, qs.q, panel); }
     else if (tab === 'toc' && ctx === 'nav') { const c = $('.row.cur', panel); if (c) c.scrollIntoView({ block: 'center' }); }
   }
@@ -155,6 +158,7 @@ const UI = (() => {
     const root = ctx === 'nav' ? sheetBody : bookv, b = ctx === 'nav' ? Reader.book : Lib.find(bookv.dataset.id);
     if (!b) return;
     if (tab === 'recap' && !(b.remote && b.recaps)) tab = 'toc';
+    if (tab === 'audit' && !hasAudit(b, ctx)) tab = 'toc';
     if (ctx === 'nav') navTab = tab; else bvTab = tab;
     const tabs = $('.tabs', root), panel = $('.tabp', root);
     if (!tabs || !panel) return;
@@ -173,6 +177,7 @@ const UI = (() => {
     if (!b) { if (!ED) go({ v: 'lib' }, true); return; }
     if (bookv.dataset.id !== id) bvTab = 'toc';
     if (bvTab === 'recap' && !(b.remote && b.recaps)) bvTab = 'toc';
+    if (bvTab === 'audit' && !hasAudit(b, 'bv')) bvTab = 'toc';
     const i = Prog.index(b), tot = Lib.total(b), mins = Math.max(1, Math.round(tot / 450)), tracks = b.chapters.filter((c, j) => Narrator.hasTrack(b, j)).length;
     const canHear = b.chapters.length && (Narrator.hasTrack(b, Math.max(0, i)) || Narrator.canSpeak());
     const top = ED ? '<span></span><button type="button" class="ib" data-act="settings" aria-label="設定">' + ICON.gear + '</button>'
@@ -189,6 +194,7 @@ const UI = (() => {
       + '<div class="bv-btns"><button type="button" class="btn gilt" data-act="continue" data-id="' + esc(b.id) + '">' + (i >= 0 ? '接著讀' : '開始讀') + '</button>' + (canHear ? '<button type="button" class="btn" data-act="listen" data-id="' + esc(b.id) + '">' + ICON.ear + '聽說書</button>' : '')
       + (!ED && b.remote && b.ed ? '<button type="button" class="btn" data-act="share-book" data-id="' + esc(b.id) + '">' + ICON.share + '分享</button>' : '') + '</div>'
       + helloHTML(b)
+      + auditBannerHTML(b)
       + '<section class="recap-card" id="bvRecap" hidden></section>'
       + (b.blurb ? '<p class="bv-blurb">' + esc(b.blurb) + '</p>' : '')
       + convRow(b)
@@ -257,6 +263,56 @@ const UI = (() => {
     if (!link || !box) return;
     loadQR().then(() => { if (sheetKind === 'share-book' && box.isConnected) box.innerHTML = qrSVG(link, (b.cover && b.cover.seal) || Array.from(b.title)[0]); })
       .catch(() => { if (box.isConnected) box.innerHTML = '<span class="sb-qr-no">QR code 載入失敗<br>連結一樣能用</span>'; });
+  }
+
+  /* ── 巡查報告（只有痞子葳的書房看得到；單行本沒有） ──
+     排程每寫滿五回就巡一次：小錯直接修好（列在「已直接修正」），劇情、邏輯、人物的問題只寫報告，等他決定 */
+  const hasAudit = (b, ctx) => !ED && ctx !== 'nav' && !!(b && b.remote && b.audit && b.audit.n);
+  const LV = { '重大': 'hi', '一般': 'mid', '小': 'lo' };
+  const ST = { '待決定': 'wait', '已修': 'done', '不修': 'skip' };
+  function audCh(b, n) { const c = b.chapters.find((x) => x.n === +n); return c ? (c.label || ('第 ' + n + ' 回')) : ('第 ' + n + ' 回'); }
+  function audRange(b, r) { return r.from === r.to ? audCh(b, r.from) : audCh(b, r.from) + '～' + audCh(b, r.to); }
+  function auditBannerHTML(b) {
+    if (!hasAudit(b, 'bv')) return '';
+    const seen = Store.get('audSeen', {})[b.id], a = b.audit, fresh = seen !== a.v;
+    if (!fresh && !a.open) return '';
+    return '<button type="button" class="aud-banner' + (fresh ? ' fresh' : '') + '" data-act="tab" data-ctx="bv" data-tab="audit" data-jump="1">'
+      + '<span class="aud-seal" aria-hidden="true">巡</span><span class="aud-bt"><b>' + (fresh ? '新的巡查報告' : '巡查報告') + '</b>'
+      + '<small>已巡到第 ' + a.upto + ' 回・' + (a.open ? a.open + ' 條等你決定' : '沒有待決定的') + '</small></span><span class="aud-go" aria-hidden="true">›</span></button>';
+  }
+  function audItemHTML(b, it) {
+    const st = it.status || '待決定', chs = (Array.isArray(it.ch) ? it.ch : it.ch != null ? [it.ch] : []);
+    return '<li class="aud-it ' + (ST[st] || 'wait') + '">'
+      + '<div class="aud-ih"><span class="aud-no">第 ' + esc(String(it.id)) + ' 條</span>'
+      + (it.level ? '<span class="aud-lv ' + (LV[it.level] || 'mid') + '">' + esc(it.level) + '</span>' : '')
+      + (it.type ? '<span class="aud-ty">' + esc(it.type) + '</span>' : '')
+      + '<span class="aud-st">' + esc(st) + '</span></div>'
+      + (chs.length ? '<p class="aud-ch">' + chs.map((n) => { const j = b.chapters.findIndex((x) => x.n === +n); return j < 0 ? '<span>' + esc(audCh(b, n)) + '</span>' : '<button type="button" data-act="read" data-id="' + esc(b.id) + '" data-i="' + j + '">' + esc(audCh(b, n)) + '</button>'; }).join('') + '</p>' : '')
+      + '<p class="aud-is">' + esc(it.issue || '') + '</p>'
+      + (it.suggest ? '<p class="aud-sg"><b>建議</b>' + esc(it.suggest) + '</p>' : '')
+      + (it.note ? '<p class="aud-nt">' + esc(it.note) + '</p>' : '') + '</li>';
+  }
+  function audReportHTML(b, r, first) {
+    const items = r.items || [], fixed = r.fixed || [], open = items.filter((x) => (x.status || '待決定') === '待決定').length;
+    let h = '<article class="aud-rep' + (first ? ' latest' : '') + '"><header><span class="aud-kind">' + esc(r.kind || '例行巡查') + '</span>'
+      + '<h3>' + esc(audRange(b, r)) + '</h3><p class="aud-meta">' + esc(r.date || '') + '・' + items.length + ' 條' + (open ? '・<em>' + open + ' 條待決定</em>' : '') + (fixed.length ? '・直接修了 ' + fixed.length + ' 處' : '') + '</p></header>'
+      + (r.summary ? '<p class="aud-sum">' + esc(r.summary) + '</p>' : '');
+    if (items.length) h += '<ol class="aud-list">' + items.map((it) => audItemHTML(b, it)).join('') + '</ol>';
+    else h += '<p class="note">這一段沒有找到要你決定的問題。</p>';
+    if (fixed.length) h += '<details class="aud-fx"><summary>已直接修正 ' + fixed.length + ' 處（錯字、小細節，不動劇情）</summary><ul>'
+      + fixed.map((f) => '<li><span>' + esc(audCh(b, f.ch)) + '</span>' + esc(f.what || '') + (f.why ? '<small>' + esc(f.why) + '</small>' : '') + '</li>').join('') + '</ul></details>';
+    return h + '</article>';
+  }
+  async function fillAudits(b, panel) {
+    const box = $('.aud-wrap', panel); if (!box) return;
+    const reps = await Lib.audits(b);
+    if (!box.isConnected) return;
+    if (!reps) { box.innerHTML = '<p class="empty">巡查報告下載不下來，連上網路再試一次。</p>'; return; }
+    const list = reps.slice().reverse();
+    box.innerHTML = '<p class="note aud-how">每寫滿五回自動巡一次。錯字、名字、物件前後不一這類小錯會直接修好；劇情、邏輯、人物的問題只列在這裡，等你決定。'
+      + '要修的話，在寫這本書的對話裡說「照《' + esc(b.title) + '》巡查第幾條修」；不修也可以說「第幾條不修」。</p>'
+      + list.map((r, i) => audReportHTML(b, r, i === 0)).join('');
+    const seen = Store.get('audSeen', {}); if (seen[b.id] !== b.audit.v) { seen[b.id] = b.audit.v; Store.set('audSeen', seen); const bn = $('.aud-banner', bookv); if (bn) bn.classList.remove('fresh'); }
   }
 
   /* ── 前情提要 ── */

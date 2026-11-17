@@ -68,6 +68,20 @@ def book_payload(book, key):
     return files, meta
 
 
+def audit_payload(book, master):
+    """巡查報告：只放書房、用總鑰匙加密（單行本的鑰匙解不開，拿到分享連結的朋友看不到）。
+    book['audit'] = {'reports': [{'id', 'from', 'to', 'date', 'kind', 'summary', 'fixed': [...], 'items': [...]}]}"""
+    a = book.get('audit') or {}
+    reps = [r for r in (a.get('reports') or []) if r]
+    if not reps:
+        return None, None
+    blob = pzcrypt.seal_json(master, {'v': 1, 'reports': reps})
+    items = [it for r in reps for it in (r.get('items') or [])]
+    meta = {'f': 'audit.pzx', 'v': ver(blob), 'n': len(reps), 'open': sum(1 for it in items if it.get('status', '待決定') == '待決定'),
+            'last': reps[-1].get('date', ''), 'upto': max(int(r.get('to') or 0) for r in reps)}
+    return blob, meta
+
+
 def library_files(books, keys, keyring):
     """書房：keyring.json（公開，用密語包著總鑰匙）＋ library.pzx（總鑰匙）＋ 每本書一個看不出書名的資料夾。"""
     out, entries = {}, []
@@ -76,6 +90,10 @@ def library_files(books, keys, keyring):
         files, meta = book_payload(b, k['key'])
         for fn, blob in files.items():
             out[k['pub'] + '/' + fn] = blob
+        ablob, ameta = audit_payload(b, keys['master'])
+        if ablob:
+            out[k['pub'] + '/audit.pzx'] = ablob
+            meta = dict(meta, audit=ameta)
         entries.append(dict(meta, id=b['id'], pub=k['pub'], key=k['key'], ed=k['ed']))
     lib = {'v': 2, 'updated': max([e['updated'] for e in entries] or ['']), 'site': (keys.get('site') or '').rstrip('/'), 'books': entries}
     out['library.pzx'] = pzcrypt.seal_json(keys['master'], lib)

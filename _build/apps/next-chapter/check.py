@@ -177,11 +177,18 @@ def fixture(out):
         books.append({'id': bid, 'title': title, 'author': '測試作者', 'status': status, 'genre': genre,
                       'blurb': '測試用的假書：%s。這裡的句子都是亂數拼出來的，只用來檢查書房和單行本。' % title,
                       'cover': {'cloth': cloth, 'seal': seal, 'motif': motif}, 'chapters': chs, 'recaps': rc})
+    # 巡查報告（只在書房，用總鑰匙加密）：第一本有一份
+    books[0]['audit'] = {'reports': [{'id': 1, 'kind': '例行巡查', 'from': 1, 'to': 4, 'date': '2026-11-17', 'summary': '測試用的巡查總評：前後大致一致，有兩條要你決定。',
+        'fixed': [{'ch': 2, 'what': '「燈火」誤植為「燈伙」', 'why': '錯字'}],
+        'items': [{'id': 1, 'type': '前後矛盾', 'level': '重大', 'ch': [1, 3], 'issue': '測試條目一：第一回說是七個人，第三回變成六個人。', 'suggest': '把第三回改回七個人。', 'status': '待決定'},
+                  {'id': 2, 'type': '人物', 'level': '一般', 'ch': 4, 'issue': '測試條目二：角色反應不符個性。', 'suggest': '改成先觀察再出手。', 'status': '已修', 'note': '寫作端已照建議修好'}]}]}
     site_dir, books_dir = os.path.join(out, 'fx-site'), os.path.join(out, 'fx-books')
     keys = {'master': pzcrypt.new_master(), 'site': '', 'books': {b['id']: {'key': pzcrypt.new_book_key(), 'pub': pzcrypt.rand_id(12), 'ed': pzcrypt.rand_id(10)} for b in books}}
     ring = pzcrypt.make_keyring(keys['master'], FX_PASS, FX_CODE)
     fx = {'books': books, 'keys': keys, 'ring': ring, 'km': keys['master'], 'books_dir': books_dir, 'site_dir': site_dir}
     publish.sync(site_dir, publish.site_files(books, keys, None, render=False))
+    for root, _, fns in os.walk(site_dir):
+        assert 'audit.pzx' not in fns, '單行本網站不應該有巡查報告'
     files = publish.library_files(books, keys, ring)
     # 說書音軌（假的，只有靜音）：第一本的第二章
     b0, k0 = books[0], keys['books'][books[0]['id']]
@@ -771,8 +778,22 @@ def run_features(p, name, opts, base, out, tmp, fx):
     page.locator('.shelf [data-act="book"][data-id="%s"]' % zb['id']).click(); page.wait_for_selector('#bookv:not([hidden]) .tabs')
     page.wait_for_timeout(400)
     ok(js("document.querySelector('#bookv .gchip').textContent") == (zb.get('genre') or '未分類'), '書頁上的分類不對')
-    want_tabs = ['toc', 'marks', 'search'] + (['recap'] if zb.get('recaps') else [])
+    want_tabs = ['toc', 'marks', 'search'] + (['recap'] if zb.get('recaps') else []) + (['audit'] if zb.get('audit') else [])
     ok(js("[...document.querySelectorAll('#bookv .tab')].map((e) => e.dataset.tab)") == want_tabs, '書頁的分頁不對')
+    if zb.get('audit'):
+        ok(js("!!document.querySelector('#bookv .aud-banner.fresh')"), '有新的巡查報告，書頁上應該有亮著的「新的巡查報告」')
+        ok(js("document.querySelector('#bookv .tab[data-tab=audit] i').textContent") == '1', '巡查分頁的數字應該是待決定的條數（1）')
+        shot('audit-banner')
+        page.locator('#bookv .aud-banner').click(); page.wait_for_selector('#bookv .aud-rep')
+        page.wait_for_timeout(400)
+        ok(js("document.querySelectorAll('#bookv .aud-it').length") == 2, '巡查報告應該列出兩條')
+        ok(js("document.querySelectorAll('#bookv .aud-it.wait').length") == 1 and js("document.querySelectorAll('#bookv .aud-it.done').length") == 1, '待決定／已修的樣子不對')
+        ok('測試條目一' in js("document.querySelector('#bookv .aud-wrap').textContent") and '燈伙' in js("document.querySelector('#bookv .aud-fx').textContent"), '巡查報告的內容沒有解出來')
+        ok(not js("document.querySelector('#bookv .aud-banner').classList.contains('fresh')"), '看過報告以後「新的」應該熄掉')
+        page.locator('#bookv .aud-fx summary').click(); page.wait_for_timeout(200)
+        shot('audit-tab')
+        ok(js("[...document.querySelectorAll('#bookv .aud-ch button')].map((e) => e.dataset.act + ':' + e.dataset.i).join(',')") == 'read:0,read:2,read:3', '巡查條目上的章名應該能點開那一回')
+        page.locator('#bookv .tab[data-tab="toc"]').click(); page.wait_for_timeout(200)
     ok(js("document.querySelector('#bvRecap').hidden"), '還沒讀過，書頁不應該先給前情提要')
     if zb.get('recaps'):
         page.locator('#bookv .tab[data-tab="recap"]').click(); page.wait_for_selector('#bookv .rcl-wrap .empty:not(:empty), #bookv .rcl')
