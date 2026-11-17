@@ -32,7 +32,7 @@ DTSTART;VALUE=DATE:20261119
 DTEND;VALUE=DATE:20261120
 SUMMARY:特價截止｜絕對魔權
 DESCRIPTION:-40%，NT$244，最後到 02:00\n解包 UNPACKED
-URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#hunt
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/absolum
 END:VEVENT
 BEGIN:VEVENT
 UID:unpacked-end-1336490-20261127@pzwei0105.github.io
@@ -49,7 +49,8 @@ DTSTAMP:20270128T000000Z
 DTSTART;VALUE=DATE:20270128
 DTEND;VALUE=DATE:20270129
 SUMMARY:上市｜Warhammer 40\,000: Dark Heresy
-DESCRIPTION:你的 Steam 願望單\n解包 UNPACKED
-URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#hunt
+DESCRIPTION:PC（Steam、GOG、Epic）、PS5、Xbox Series X|S、Switch 2
+ （日期未定）\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/warhammer-40000-dark-heresy
 END:VEVENT
 END:VCALENDAR
