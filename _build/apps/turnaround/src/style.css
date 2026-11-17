@@ -4,7 +4,7 @@
   --text:#eef1f5;--dim:#8d97a5;--dim2:#5d6672;
   --sign:#ffd21a;--sign2:#ffbf00;--ink:#111214;
   --amber:#ffb21e;--go:#2fe07f;--red:#ff4b3e;--blue:#4c9dff;
-  --novel:#ff7a59;--game:#4c9dff;--free:#b98cff;
+  --novel:#ff7a59;--game:#4c9dff;--free:#b98cff;--explore:#2fe0c8;
   --paper:#f4efe3;--paper2:#ebe4d3;--pink:#1a1c22;--pdim:#7a756a;
   --zh:"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei","Heiti TC",sans-serif;
   --en:"Barlow Condensed","Arial Narrow",var(--zh);
@@ -122,7 +122,7 @@ b,strong{font-weight:800}
 .b-hook{margin-top:9px;font-size:13px;line-height:1.55;color:#aab3bf;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .b-lane{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
 .b-lane i{width:9px;height:9px;border-radius:2px}
-.lane-novel{--lc:var(--novel)}.lane-game{--lc:var(--game)}.lane-free{--lc:var(--free)}.lane-hangar{--lc:var(--sign)}
+.lane-novel{--lc:var(--novel)}.lane-game{--lc:var(--game)}.lane-free{--lc:var(--free)}.lane-explore{--lc:var(--explore)}.lane-hangar{--lc:var(--sign)}
 .b-lane i{background:var(--lc)}
 .b-gate{margin-left:auto;font-family:var(--mono);font-weight:800;font-size:14px;color:var(--ink);background:var(--lc);padding:3px 8px;border-radius:5px}
 .chev{width:18px;height:18px;fill:var(--dim2);flex:none}
@@ -652,3 +652,10 @@ textarea:focus,input[type=text]:focus{border-color:var(--sign)}
 .lamps .lr button.tech{border:1.5px dashed var(--dim)}
 .lamps .lr button.on{background:var(--sign)}
 .lamps .lw{width:40px;font-size:12px;font-weight:800;color:var(--sign);text-align:right;flex:none}
+
+/* 探索航班：故意出他沒接觸過的類型 */
+.b-row.lane-explore{background:linear-gradient(90deg,rgba(47,224,200,.08),transparent 70%)}
+.xp-tag{display:inline-flex;align-items:center;gap:5px;margin-left:6px;font-size:11px;font-weight:900;color:var(--ink);background:var(--explore);padding:2px 7px;border-radius:5px;letter-spacing:.06em}
+.xp-note{margin-top:14px;padding:12px 14px;border-radius:14px;border:1.5px solid rgba(47,224,200,.55);background:rgba(47,224,200,.08);font-size:14px;line-height:1.7;color:#d6f7f1}
+.xp-note b{color:var(--explore)}
+.taste-note{margin:0 2px 10px;font-size:12.5px;line-height:1.6;color:var(--dim)}

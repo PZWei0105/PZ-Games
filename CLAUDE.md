@@ -10,7 +10,8 @@
 3. 每款遊戲、工具 App 都要有 **Claude 版（artifact）＋獨立網頁版**，做好就**自動加進收藏庫、推上 GitHub**（不用等 PZ 說）。commit 訊息結尾附上當次對話規定的署名行。
 4. 品質至少要有《潮界》的水準：不能廉價、角色不能太小；手機直拿、橫拿、電腦三種畫面都要截圖親眼看過。
 5. 有 `_build/sources/<id>/` 的遊戲改原始碼再組建，**不要直接改 `games/<id>/index.html`**。
-6. **小說原稿只放在私人倉庫 PZWei0105/pz-novels**：這個 repo 是公開的，章節、前情提要、寫作筆記的純文字一律不准 commit 進來（`apps/next-chapter/books/` 只有加密檔，由 pz-novels 的 `tools/shelf.py push` 產生）。
+6. **做任何新遊戲、新 App、新小說之前，先讀《轉機》的飛行手冊 `apps/turnaround/data/manual.json`**（`status: official` 的每一條；`law` 每款都適用、`case` 只在寫著的類型參考），交件時附一段「對照了哪幾條守則、怎麼做到的」。手冊只管**品質**，不管題材：不准拿它或過去的取消紀錄來縮小題材，痞子葳沒接觸過的類型照樣要提（守則 `m-x06`「不扼殺創意」）。
+7. **小說原稿只放在私人倉庫 PZWei0105/pz-novels**：這個 repo 是公開的，章節、前情提要、寫作筆記的純文字一律不准 commit 進來（`apps/next-chapter/books/` 只有加密檔，由 pz-novels 的 `tools/shelf.py push` 產生）。
 
 ## 從哪裡開始
 

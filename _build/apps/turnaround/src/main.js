@@ -162,7 +162,7 @@ App.intro = async function (day, replay) {
   const d = new Date(day.date + 'T00:00:00');
   const no = D.index.days.find((x) => x.date === day.date);
   el.innerHTML = '<div class="il">PZ TERMINAL · DAY ' + String(no ? no.no : 1).padStart(3, '0') + '</div><div class="ib">' + Flap.html('轉機', 'big') + Flap.html('TURNAROUND', 'mid amber') + Flap.html(fmtDate(day.date) + ' ' + WKE[d.getDay()], 'mid') + '</div>' +
-    '<div class="il" style="color:#c8d0da">今日 ' + day.flights.length + ' 班航班' + (day.inspection ? '・1 架進廠檢修' : '') + '</div><button class="skip">點一下跳過</button>';
+    '<div class="il" style="color:#c8d0da">' + (isStale(day.date) ? '最新 ' : '今日 ') + day.flights.length + ' 班航班' + (day.inspection ? '・1 架進廠檢修' : '') + '</div><button class="skip">點一下跳過</button>';
   el.hidden = false; el.classList.remove('out');
   let done = false;
   const finish = () => {

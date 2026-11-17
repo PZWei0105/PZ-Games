@@ -36,7 +36,7 @@ def DICT(n, kmax, valf):
 
 
 FIELDS = {
-    'vote': {'card': STR(40), 'v': ENUM('board', 'delay', 'cancel', 'none'), 'reasons': LIST(8, 20), 'note': STR(300), 'lane': ENUM('novel', 'game', 'free'), 'zh': STR(12), 'prev': STR(10)},
+    'vote': {'card': STR(40), 'v': ENUM('board', 'delay', 'cancel', 'none'), 'reasons': LIST(8, 20), 'note': STR(300), 'lane': ENUM('novel', 'game', 'free', 'explore'), 'zh': STR(12), 'prev': STR(10)},
     'route': {'card': STR(40), 'route': STR(4), 'zh': STR(12)},
     'talk': {'card': STR(40)},
     'item': {'insp': STR(60), 'work': STR(40), 'item': STR(10), 'v': ENUM('approve', 'reject', 'none')},
@@ -44,7 +44,7 @@ FIELDS = {
     'pirep': {'work': STR(40), 'text': STR(600), 'chips': LIST(9, 12)},
     'notam': {'rule': STR(12), 'v': ENUM('agree', 'disagree', 'none')},
     'queue': {'work': STR(40), 'v': ENUM('on', 'off')},
-    'idea': {'lane': ENUM('novel', 'game', 'free'), 'text': STR(500)},
+    'idea': {'lane': ENUM('novel', 'game', 'free', 'explore'), 'text': STR(500)},
     'merge': {'a': STR(40), 'b': STR(40), 'za': STR(12), 'zb': STR(12)},
     'flight': {'work': STR(40), 'insp': STR(60)},
     'verify': {'insp': STR(60), 'work': STR(40), 'items': DICT(20, 10, ENUM('hit', 'miss', 'na')), 'notes': DICT(20, 10, STR(200)),

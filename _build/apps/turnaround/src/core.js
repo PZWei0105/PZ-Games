@@ -8,6 +8,7 @@ const LANE = {
   novel: { zh: '小說', en: 'NOVEL', gate: 'N' },
   game: { zh: '遊戲', en: 'GAME', gate: 'G' },
   free: { zh: '自由', en: 'FREE', gate: 'F' },
+  explore: { zh: '探索', en: 'EXPLORE', gate: 'X' },
 };
 const VERDICT = {
   airworthy: { zh: '適航', en: 'AIRWORTHY', st: 'done' },
@@ -23,7 +24,7 @@ const KIND = {
 };
 const WORTH = { high: '價值高', mid: '價值中', low: '價值低' };
 const EFFORT = { S: '工時小', M: '工時中', L: '工時大' };
-const REASONS = ['太悶', '不夠爽', '做過類似的', '不適合單人', '題材沒興趣', '太像別人的', '規模太大', '看不懂在幹嘛'];
+const REASONS = ['這個寫法不夠好看', '太悶', '不夠爽', '做過類似的', '不適合單人', '現在沒感覺', '太像別人的', '規模太大', '看不懂在幹嘛'];
 const VERIFY = { hit: ['說中了', 'HIT'], miss: ['說錯了', 'MISS'], na: ['沒遇到', 'N/A'] };
 const VERIFY_OVERALL = ['報告大致正確', '方向要調整', '漏了重要問題', '工單太保守', '工單太多', '先別動它'];
 const VITALS_DEF = ['核心樂趣', '手感', '介面', '內容量', '回頭率'];
@@ -38,6 +39,38 @@ function todayStr() { const d = new Date(); return d.getFullYear() + '-' + Strin
 function fmtDate(s) { const d = new Date(s + 'T00:00:00'); return String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'); }
 const WK = ['日', '一', '二', '三', '四', '五', '六'];
 const WKE = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+/* 塔台問候：照他「打開的時間」說，不照排程寫稿的清晨 */
+const GREET_RE = /^\s*(?:痞子葳)?(?:機長)?[，,、\s]*(?:早安|午安|晚安|早上好|中午好|下午好|晚上好|您好|你好|嗨)[，。！!、,\s]*/;
+const GREET_MID = /(?:痞子葳)?機長[，,]?\s*(?:早安|午安|晚安|早上好|中午好|下午好|晚上好|您好|你好)[，。！!、,\s]*/;
+function isStale(date) { return !!date && date < todayStr(); }
+function hello() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 11) return '早安。';
+  if (h >= 11 && h < 14) return '午安，吃飯了嗎？';
+  if (h >= 14 && h < 18) return '下午好。';
+  if (h >= 18 && h < 23) return '晚上好，辛苦一天了。';
+  return '夜深了，還沒睡啊？';
+}
+function staleNote(date, speak) {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const ys = y.getFullYear() + '-' + String(y.getMonth() + 1).padStart(2, '0') + '-' + String(y.getDate()).padStart(2, '0');
+  const which = date === ys ? '昨天' : '上一批';
+  const when = new Date().getHours() < 7 ? '新的航班清晨六點多到站，' : '今天的航班還在路上，';
+  return when + (speak ? '先為您重播' + which + '的航班廣播。' : '下面先看' + which + '這幾班。');
+}
+function towerText(day, live) {
+  const body = (day.tower || '').replace(GREET_RE, '');
+  if (!live) return body;
+  return '痞子葳機長，' + hello() + (isStale(day.date) ? staleNote(day.date) : '') + body;
+}
+function announceText(day) {
+  const g = '痞子葳機長，' + hello() + (isStale(day.date) ? staleNote(day.date, true) : '');
+  const t = day.announce || day.tower || '';
+  if (GREET_MID.test(t)) return t.replace(GREET_MID, g);
+  if (GREET_RE.test(t)) return t.replace(GREET_RE, g);
+  const m = t.match(/^[^。]*各位旅客[^。]*。/);
+  return m ? m[0] + g + t.slice(m[0].length) : g + t;
+}
 function dayLabel(s) { const d = new Date(s + 'T00:00:00'); return fmtDate(s) + '（' + WK[d.getDay()] + '）'; }
 function reduced() { return S.settings.fx === 'calm' || matchMedia('(prefers-reduced-motion: reduce)').matches; }
 

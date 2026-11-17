@@ -18,6 +18,7 @@ REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..', '..'))
 DATA = os.path.join(REPO, 'apps', 'turnaround', 'data')
 
 LANES = {'novel': '小說', 'game': '遊戲', 'free': '自由'}
+OPTIONAL_LANES = {'explore': '探索'}
 VERDICTS = {'airworthy', 'service', 'overhaul', 'retire'}
 KINDS = {'fix', 'polish', 'cut', 'add'}
 WORTH = {'high', 'mid', 'low'}
@@ -128,12 +129,16 @@ def check_day(path, manual_ids, fleet):
         B('%s：date 跟檔名不同' % name)
     need(name, d, ['tower', 'announce', 'flights', 'inspection'])
     check_text(name, d)
+    for k in ('tower', 'announce'):
+        if re.search(r'早安|午安|晚安|早上好|中午好|下午好|晚上好|您好|你好|痞子葳機長', d.get(k, '')):
+            B('%s：%s 不要寫問候語或「痞子葳機長」，App 會照打開的時間自動問候' % (name, k))
     if len(d.get('announce', '')) > 600:
         W('%s：廣播稿太長（%d 字，建議 300 字內）' % (name, len(d['announce'])))
     fl = d.get('flights') or []
     lanes = [f.get('lane') for f in fl]
-    if sorted(lanes) != sorted(LANES):
-        B('%s：航班要剛好三班：小說、遊戲、自由各一（現在是 %s）' % (name, lanes))
+    base = [l for l in lanes if l not in OPTIONAL_LANES]
+    if sorted(base) != sorted(LANES) or lanes.count('explore') > 1 or any(l not in LANES and l not in OPTIONAL_LANES for l in lanes):
+        B('%s：航班要有小說、遊戲、自由各一班，探索航班最多一班（現在是 %s）' % (name, lanes))
     seen = set()
     for f in fl:
         w = '%s 航班 %s' % (name, f.get('id'))
@@ -149,8 +154,8 @@ def check_day(path, manual_ids, fleet):
             W('%s：英文名太長（%d 字元）' % (w, len(f.get('en', ''))))
         if not re.fullmatch(r'[A-Z]{3}', f.get('dest', '')):
             B('%s：dest 要是三個大寫英文字母' % w)
-        if not re.fullmatch(r'[NGF]\d', f.get('gate', '')):
-            B('%s：gate（登機門）要像 N1、G1、F1' % w)
+        if not re.fullmatch(r'[NGFX]\d', f.get('gate', '')):
+            B('%s：gate（登機門）要像 N1、G1、F1、X1' % w)
         if len(f.get('hook', '')) > 70:
             W('%s：鉤子太長（%d 字）' % (w, len(f.get('hook', ''))))
         x = f.get('xray') or {}

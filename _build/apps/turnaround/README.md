@@ -12,7 +12,9 @@ Claude 版：https://claude.ai/artifact/QMXZwgB7viiDsVMFa2prtc（slug `bd1fe71b-
 | 機場說法 | 意思 |
 |---|---|
 | 航班 | 一個新點子（小說 N、遊戲 G、自由 F 三個登機門） |
-| 登機／延誤／取消 | 想做／再想想／不要（取消要點原因） |
+| 登機／延誤／取消 | 確定想做／方向不錯但時機不對：塔台記住方向、之後換個企劃再提（不囤在畫面上）／換一班（原因只當寫法參考，不封殺題材） |
+| 塔台問候 | 照打開的時間：早安／午安／下午好／晚上好／夜深了；最新航班還是昨天的，就說新航班幾點到（`core.js` 的 `towerText`／`announceText`）。稿子本身不寫問候。 |
+| 探索航班 | 每天第四班（登機門 X1）：故意飛他沒接觸過的類型；取消不算進口味 |
 | 轉機航線 | 這個點子的 2～3 個發展方向 |
 | 安檢 X 光 | 紅隊：這個點子最強的反對理由和處置 |
 | 起飛前檢查表 | 拿飛行手冊逐條對這個點子 |
@@ -35,7 +37,7 @@ Claude 版：https://claude.ai/artifact/QMXZwgB7viiDsVMFa2prtc（slug `bd1fe71b-
 - **機庫**：進廠作品（封面、機號牌、檢修等級、結論章）、檢修單、五個儀表、最大問題、為什麼沒再打開、證據照片、工單（核准／駁回）、簽派放行、這次的 NOTAM、機長報告；下面是機隊（所有作品，點了可「排進下一班進廠」）和檢修紀錄。
 - **試飛驗證**（2026-11-17 加）：機庫的進廠卡片整塊就是「▶ 試飛」大按鈕（下面也有一顆「試飛《作品》」），機隊裡每一架的抽屜也有「試飛」。按下去記下 `S.flight`、在新視窗打開作品；回到轉機（切回來或重新打開）而且離開超過 20 秒、6 小時內，就播降落動畫、跳出試飛回報。沒填的話出發和機庫上方會掛「你試飛了《作品》」的綠色提示。回報存在 `S.verify[<報告 id>]`（沒檢修過的作品用 `w:<作品 id>`），工單卡上會貼「你：說中了／說錯了」、儀表多一條黃色刻度（你打的分數），開工指令也會帶上【試飛驗證】一段。報告有 `recheck` 時，上方出現藍色「複檢」欄（維持／改寫／撤回／新增的數量、結論改了沒），每張工單底下標「複檢：維持／改寫／撤回」，改寫的顯示新寫法，撤回的劃掉；儀表標「複檢改成 N」。
 - **手冊**：鐵律／個案經驗／待核准統計、NOTAM（認同、不認同）、守則清單（全部、通用、小說、遊戲、App）。
-- **機長**：護照式機長卡、取消原因統計（口味）、登機證夾（選兩張申請聯程）、延誤中、托運點子、設定（音效、背景音樂、開場廣播、特效、塔台連線狀態）。
+- **機長**：護照式機長卡、取消原因統計（口味）、登機證夾（選兩張申請聯程）、托運點子、設定（音效、背景音樂、開場廣播、特效、塔台連線狀態）。
 
 聲音全部 Web Audio 即時合成：翻牌喀啦聲（限流）、機場三音鈴、蓋章、掃描器嗶聲、起飛呼嘯、撕紙、電傳打字聲；背景是候機室的慢氛圍（四個和弦循環＋鐘琴），廣播時自動壓低。
 手機記憶體：不用 filter／backdrop-filter／模糊陰影；動畫只動 transform、opacity；特效畫布裝置像素比上限 2，飛完就清掉；跑道動畫只在開門畫面跑。
@@ -44,7 +46,7 @@ Claude 版：https://claude.ai/artifact/QMXZwgB7viiDsVMFa2prtc（slug `bd1fe71b-
 
 - `days/<YYYY-MM-DD>.json`：每天一份，由每日排程寫（規範在 `INSPECTOR_GUIDE.md`）。
   `{date, made_at, tower, announce, flights:[3], inspection}`
-  - 航班：`{id, lane(novel|game|free), no, time, gate, dest(三個大寫字母), zh(≤6 字), en, kind, hook, pitch, fun[], fail, xray{threat, verdict(clear|open|deny), fix}, checks[{rule(手冊 id 或 null), text?, ok(pass|warn|fail), note}], routes[{id, name, line, trade}], like[], scope, seed}`
+  - 航班：`{id, lane(novel|game|free|explore；探索最多一班), no, time, gate, dest(三個大寫字母), zh(≤6 字), en, kind, hook, pitch, fun[], fail, xray{threat, verdict(clear|open|deny), fix}, checks[{rule(手冊 id 或 null), text?, ok(pass|warn|fail), note}], routes[{id, name, line, trade}], like[], scope, seed}`
   - 複檢（寫回原報告）：`inspection.recheck = {date, note, items{id: {status(kept|revised|withdrawn), note, title?, detail?}}, vitals{名稱: {now(1~5), note}}, verdict?, added[工單]}`；複檢那天的 day 檔加 `rechecks: [{insp, date(原日期), work, summary}]`（看板多一列「複檢」）。規則在 `INSPECTOR_GUIDE.md` 第 4.5 節。
   - 檢修：`{id, work(fleet id), check, check_note, summary, method[], shots[{src, cap}], vitals[{k, v(1~5), note}], core, worst, why_not, items[{id, kind(fix|polish|cut|add), title, detail, worth(high|mid|low), effort(S|M|L), evidence}], verdict(airworthy|service|overhaul|retire), verdict_note, notams[{id(n-XXXX), scope, kind, title, rule, applies?, from}], order}`
 - `shots/`：檢修的證據照（WebP，每張 60 KB 內）。

@@ -50,19 +50,19 @@ function renderDep(date) {
   h += flightBanner();
   h += '<div class="sign">' + ICON.plane + '<span class="s-zh">' + (isToday ? '出發' : '到站') + '</span><span class="s-en">' + (isToday ? 'Departures' : 'Arrivals') + '</span><span class="s-r">DAY ' + String(meta.no).padStart(3, '0') + '</span><i class="arrow-sweep"></i></div>';
   if (!isToday) h += '<button class="chip-btn y" data-go="#dep" style="margin-bottom:12px">' + ICON.back + '回到今天的航班</button>';
-  h += '<div class="tower"><div class="t-ico">' + ICON.mic + '</div><div><div class="t-h">TOWER · 塔台的話</div><p>' + esc(day.tower) + '</p>' +
+  h += '<div class="tower"><div class="t-ico">' + ICON.mic + '</div><div><div class="t-h">TOWER · 塔台的話</div><p>' + esc(towerText(day, isToday)) + '</p>' +
     (Voice.can() ? '<button class="t-play" id="t-play">' + ICON.play + '<span>收聽塔台廣播</span></button>' : '') + '</div></div>';
   h += '<div class="progress"><div class="pg"><i>表態 BOARDING</i><b>' + voted + '<em>/' + fl.length + '</em></b><div class="bar"><u style="transform:scaleX(' + (voted / fl.length) + ')"></u></div></div>' +
     '<div class="pg"><i>簽派 DISPATCH</i><b>' + disp + '<em>/' + (ins ? 1 : 0) + '</em></b><div class="bar"><u style="transform:scaleX(' + disp + ')"></u></div></div>' +
     '<div class="pg"><i>塔台 TOWER</i><b>' + (S.out.length ? S.out.length + '<em> 待送</em>' : '<em style="color:var(--go)">已收到</em>') + '</b><div class="bar"><u style="transform:scaleX(' + (S.out.length ? 0.4 : 1) + ')"></u></div></div></div>';
-  h += '<div class="h2"><b>' + (isToday ? '今日航班' : '那天的航班') + '</b><i>FLIGHTS</i><span class="r">' + dayLabel(meta.date) + '</span></div>';
+  h += '<div class="h2"><b>' + (isToday ? (isStale(meta.date) ? '最新航班' : '今日航班') : '那天的航班') + '</b><i>FLIGHTS</i><span class="r">' + dayLabel(meta.date) + '</span></div>';
   h += '<div class="board" id="board"><div class="b-head"><span>TIME · FLIGHT · DESTINATION</span><span>STATUS</span></div>';
   fl.forEach((f) => {
     h += '<button class="b-row ' + lanes(f) + '" data-f="' + esc(f.id) + '">' +
       '<div class="b-l1">' + Flap.html(f.time, 'sm amber') + Flap.html(f.no, 'sm') + stHtml(flightState(f, meta.date)) + '</div>' +
       '<div class="b-l2">' + Flap.html(f.zh, 'zh') + '<span class="b-gate">' + esc(f.gate) + '</span></div>' +
       '<div class="b-hook">' + esc(f.hook) + '</div>' +
-      '<div class="b-lane" style="margin-top:8px"><i></i>' + LANE[f.lane].zh + '航班 · ' + esc(f.kind) + '</div></button>';
+      '<div class="b-lane" style="margin-top:8px"><i></i>' + LANE[f.lane].zh + '航班 · ' + esc(f.kind) + (f.lane === 'explore' ? '<span class="xp-tag">沒走過的航線</span>' : '') + '</div></button>';
   });
   if (ins && w) {
     h += '<button class="b-row lane-hangar" data-i="' + esc(ins.id) + '">' +
@@ -104,7 +104,7 @@ function setPlayBtn() {
 }
 async function announce(day) {
   Snd.chime(); await sleep(1350);
-  Voice.say(day.announce || day.tower);
+  Voice.say(announceText(day));
 }
 Voice.onState = () => setPlayBtn();
 
@@ -138,6 +138,7 @@ function flightPage(id) {
   let h = '<div class="pg-top"><button class="pg-x" data-close>' + ICON.x + '</button><div class="pg-t"><i>BOARDING PASS · ' + esc(f.no) + '</i><b>' + esc(f.zh) + '</b></div>' +
     '<div class="pg-a"><button class="chip-btn y" data-talk>' + ICON.chat + (IS_WEB || !Tower.ok() ? '拿去聊' : '塔台連線') + '</button></div></div>';
   h += '<div class="pg-body ' + lanes(f) + '">' + passHtml(f, date);
+  if (f.lane === 'explore') h += '<div class="xp-note"><b>探索航班</b>：這班故意飛你可能還沒接觸過的類型或題材。不懂、沒試過都很正常——看看有沒有火花就好；取消也不會算進你的口味。</div>';
   h += '<div class="sect"><div class="sect-h"><span class="ico">' + ICON.fly + '</span><b>航程簡介</b><i>THE TRIP</i></div><p>' + esc(f.pitch) + '</p></div>';
   h += '<div class="sect"><div class="sect-h"><span class="ico">' + ICON.star + '</span><b>機上亮點</b><i>WHY IT HITS</i></div><ul class="fun">' + (f.fun || []).map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul></div>';
   h += '<div class="sect turb"><div class="sect-h"><span class="ico">' + ICON.warn + '</span><b>亂流警告</b><i>TURBULENCE</i></div><p>' + esc(f.fail) + '</p></div>';
@@ -162,9 +163,9 @@ function flightPage(id) {
   if (S.votes[f.id]) h += '<button class="undo" data-undo>改變主意：撤回表態</button>';
   h += '</div>';
   h += '<div class="actbar"><div class="in">' +
-    '<button class="act cancel' + (S.votes[f.id] && S.votes[f.id].v === 'cancel' ? ' sel' : '') + '" data-vote="cancel">取消<i>CANCEL</i></button>' +
-    '<button class="act delay' + (S.votes[f.id] && S.votes[f.id].v === 'delay' ? ' sel' : '') + '" data-vote="delay">延誤<i>THINK MORE</i></button>' +
-    '<button class="act board' + (S.votes[f.id] && S.votes[f.id].v === 'board' ? ' sel' : '') + '" data-vote="board">登機・想做<i>BOARD</i></button></div></div>';
+    '<button class="act cancel' + (S.votes[f.id] && S.votes[f.id].v === 'cancel' ? ' sel' : '') + '" data-vote="cancel">取消<i>換一班</i></button>' +
+    '<button class="act delay' + (S.votes[f.id] && S.votes[f.id].v === 'delay' ? ' sel' : '') + '" data-vote="delay">延誤<i>記住方向</i></button>' +
+    '<button class="act board' + (S.votes[f.id] && S.votes[f.id].v === 'board' ? ' sel' : '') + '" data-vote="board">登機<i>確定想做</i></button></div></div>';
   const pg = openPage(h, 'pg-f');
   if (!isToday && !S.votes[f.id]) toast('這是 ' + fmtDate(date) + ' 的航班，一樣可以表態');
   // 安檢掃描、檢查表打勾：捲到時才演
@@ -203,8 +204,8 @@ function applyVote(f, date, rec, pg) {
   Snd.stamp(); haptic(rec.v === 'board' ? 30 : 18);
   $$('.act', pg).forEach((b) => b.classList.toggle('sel', b.dataset.vote === rec.v));
   if (rec.v === 'board') { setTimeout(() => { Snd.whoosh(); FX.takeoff($('.act.board', pg)); }, 260); toast('已登機！收進「機長」的登機證夾'); }
-  else if (rec.v === 'delay') toast('延誤：先放著，想好再回來');
-  else toast('已取消。塔台記下原因了，明天的航班會避開');
+  else if (rec.v === 'delay') toast('延誤：方向記住了，之後換個企劃再提');
+  else toast('已取消，換一班。原因只當參考，不會因此封殺這類題材');
   if (!$('[data-undo]', pg)) $('.pg-body', pg).insertAdjacentHTML('beforeend', '<button class="undo" data-undo>改變主意：撤回表態</button>');
   App.refresh(true);
 }
@@ -218,7 +219,7 @@ function undoVote(f, pg) {
 }
 function reasonSheet(f, date, pg) {
   const pick = new Set((S.votes[f.id] && S.votes[f.id].reasons) || []);
-  const sh = openSheet('<h3>為什麼取消這班？</h3><p class="sub">點一個或幾個原因。塔台會照你的原因調整明天出的題。</p>' +
+  const sh = openSheet('<h3>為什麼換掉這班？</h3><p class="sub">點一個或幾個原因（可以不點）。原因只拿來把下一班寫得更好，<b>不會封殺這類題材</b>——換個寫法，它之後還可能回來。</p>' +
     '<div class="chips">' + REASONS.map((r) => '<button class="chip red' + (pick.has(r) ? ' on' : '') + '" data-r="' + r + '">' + r + '</button>').join('') + '</div>' +
     '<textarea id="rs-note" rows="2" placeholder="想多說一句也可以（選填）"></textarea>' +
     '<div class="row2"><button class="btn ghost" data-close>先不要</button><button class="btn red" id="rs-ok">確認取消</button></div>');
@@ -529,7 +530,7 @@ function renderManual() {
   const off = rules.filter((r) => r.status === 'official');
   const prop = rules.filter((r) => r.status === 'proposed');
   let h = '<div class="sign dark">' + '<svg viewBox="0 0 24 24"><path d="M5 3h11.5A2.5 2.5 0 0 1 19 5.5V21H6.5A2.5 2.5 0 0 1 4 18.5V4a1 1 0 0 1 1-1zm1.5 15a.5.5 0 0 0 0 1H17v-1zM8 7v2h8V7zm0 4v2h6v-2z"/></svg><span class="s-zh">飛行手冊</span><span class="s-en">Flight Manual</span><span class="s-r" style="border-color:var(--sign);color:var(--sign)">' + off.length + ' 條</span></div>';
-  h += '<p class="muted" style="font-size:14px;line-height:1.7;margin:0 2px 14px">你一路定下的創作守則。每天出題前先對過一遍；每次檢修學到的新教訓，你核准後就會寫進來。</p>';
+  h += '<p class="muted" style="font-size:14px;line-height:1.7;margin:0 2px 14px">你一路定下的創作守則。<b style="color:var(--text)">手冊只管「做得好不好」，不管「做什麼題材」</b>：沒接觸過的類型照樣會出現，每天還有一班探索航班。每次檢修學到的新教訓，你核准後就會寫進來；做新遊戲、新 App、新小說之前，也都要先對過這本。</p>';
   h += '<div class="mstats"><div><b>' + off.filter((r) => r.kind === 'law').length + '</b><i>鐵律</i></div><div><b>' + off.filter((r) => r.kind === 'case').length + '</b><i>個案經驗</i></div><div><b>' + prop.length + '</b><i>待核准</i></div></div>';
   if (prop.length) h += '<div class="h2"><b>新守則待核准</b><i>NOTAM</i></div>' + prop.map((n) => notamHtml(n)).join('');
   h += '<div class="h2"><b>守則</b><i>CHECKLIST</i></div><div class="qrh"><div class="qrh-tabs" id="qrh-t">' + [['all', '全部'], ['all-only', '通用'], ['novel', '小說'], ['game', '遊戲'], ['app', 'App'], ['inspect', '檢修']].map(([k, n]) => '<button class="' + (manualTab === k ? 'on' : '') + '" data-mt="' + k + '">' + n + '</button>').join('') + '</div><div id="qrh-l"></div></div>';
@@ -558,23 +559,21 @@ function renderMe() {
   const vs = Object.values(S.votes);
   const cnt = (k) => vs.filter((v) => v.v === k).length;
   const reasons = {};
-  vs.filter((v) => v.v === 'cancel').forEach((v) => (v.reasons || []).forEach((r) => { reasons[r] = (reasons[r] || 0) + 1; }));
+  Object.keys(S.votes).forEach((k) => { const v = S.votes[k]; const fl = S.flights[k]; if (v.v !== 'cancel' || (fl && fl.lane === 'explore')) return; (v.reasons || []).forEach((r) => { reasons[r] = (reasons[r] || 0) + 1; }); });
   const rk = Object.entries(reasons).sort((a, b) => b[1] - a[1]);
   const maxR = rk.length ? rk[0][1] : 1;
   const boarded = Object.keys(S.votes).filter((k) => S.votes[k].v === 'board' && S.flights[k]).map((k) => S.flights[k]).sort((a, b) => (b._date || '').localeCompare(a._date || ''));
-  const delayed = Object.keys(S.votes).filter((k) => S.votes[k].v === 'delay' && S.flights[k]).map((k) => S.flights[k]);
   mergeSel = mergeSel.filter((id) => boarded.some((f) => f.id === id));
   let h = '<div class="passport" style="margin-top:16px"><div class="pp-h">CAPTAIN · 機長</div><h2>痞子葳</h2><div class="pp-s">轉機航廈第 ' + D.index.counts.days + ' 天・航班 ' + D.index.counts.flights + ' 班・檢修 ' + D.index.counts.inspections + ' 架</div>' +
     '<div class="stats"><div><b>' + vs.length + '</b><i>表態</i></div><div><b>' + cnt('board') + '</b><i>登機</i></div><div><b>' + cnt('delay') + '</b><i>延誤</i></div><div><b>' + cnt('cancel') + '</b><i>取消</i></div>' +
     '<div><b>' + Object.keys(S.dispatched).length + '</b><i>簽派</i></div><div><b>' + S.pireps.length + '</b><i>機長報告</i></div><div><b>' + S.ideas.length + '</b><i>托運</i></div><div><b>' + S.merges.length + '</b><i>聯程</i></div></div></div>';
-  h += '<div class="h2"><b>你的口味</b><i>TASTE</i><span class="r">取消的原因</span></div><div class="card bars">' +
-    (rk.length ? rk.map(([r, n]) => '<div class="br"><span>' + esc(r) + '</span><u><i style="transform:scaleX(' + (n / maxR) + ')"></i></u><b>' + n + '</b></div>').join('') : '<p class="muted" style="margin:0;font-size:14px;line-height:1.7">還沒有取消過的航班。你取消時點的原因會累積在這裡，塔台出題就是照這張表在避坑。</p>') + '</div>';
+  h += '<div class="h2"><b>你的口味</b><i>TASTE</i><span class="r">取消的原因</span></div><p class="taste-note">只是參考：塔台拿它把下一班寫得更好，不會因此封殺任何題材。探索航班的取消不算進來。</p><div class="card bars">' +
+    (rk.length ? rk.map(([r, n]) => '<div class="br"><span>' + esc(r) + '</span><u><i style="transform:scaleX(' + (n / maxR) + ')"></i></u><b>' + n + '</b></div>').join('') : '<p class="muted" style="margin:0;font-size:14px;line-height:1.7">還沒有取消過的航班。你取消時點的原因會累積在這裡，提醒塔台「這種寫法不夠好看」，但不會讓任何題材從此消失。</p>') + '</div>';
   h += '<div class="h2"><b>登機證夾</b><i>WALLET</i><span class="r">' + boarded.length + ' 張</span></div>';
   if (boarded.length) {
     h += '<p class="muted" style="font-size:13px;margin:0 2px 10px">點一張打開；按住（或點左上角）選兩張可以申請「聯程」：把兩個點子合體。</p><div class="wallet" id="wallet">' + boarded.map((f) => '<button class="wl ' + lanes(f) + (mergeSel.includes(f.id) ? ' sel' : '') + '" data-wf="' + esc(f.id) + '"><span class="ck">✓</span><div class="wt"><b>' + esc(f.zh) + '</b><span class="muted" style="font-size:12px">' + LANE[f.lane].zh + '</span><span class="cd">' + esc(f.dest) + '</span></div><div class="wm">' + esc(f.no) + '・' + fmtDate(f._date || '') + (S.routes[f.id] ? '・航線 ' + esc((f.routes.find((r) => r.id === S.routes[f.id]) || {}).name || '') : '') + '</div></button>').join('') + '</div>' +
       '<button class="btn ghost" id="merge" ' + (mergeSel.length === 2 ? '' : 'disabled') + '>' + ICON.merge + (mergeSel.length === 2 ? '申請聯程：合體這兩個點子' : '選兩張登機證來聯程（已選 ' + mergeSel.length + '）') + '</button>';
   } else h += '<div class="empty">還沒有登機的航班。看到想做的點子，按「登機」就會收進來。</div>';
-  if (delayed.length) h += '<div class="h2"><b>延誤中</b><i>DELAYED</i></div><div class="arrivals">' + delayed.map((f) => '<button class="arr" data-wf="' + esc(f.id) + '"><span class="d">' + fmtDate(f._date || '') + '</span><span class="ds"><b>' + esc(f.zh) + '</b>　' + esc(f.hook) + '</span></button>').join('') + '</div>';
   h += '<div class="h2"><b>托運點子</b><i>CHECK-IN</i></div><div class="card"><p class="muted" style="margin:0 0 10px;font-size:13.5px;line-height:1.6">你自己有一個還很粗的點子？丟進來。明天的塔台會把它發展成一班完整的航班：鉤子、安檢、檢查表、航線全套。</p>' +
     '<div class="lanepick" id="lp">' + ['novel', 'game', 'free'].map((k, i) => '<button class="lane-' + k + (i === 1 ? ' on' : '') + '" data-l="' + k + '">' + LANE[k].zh + '</button>').join('') + '</div>' +
     '<textarea id="idea-t" rows="3" placeholder="例如：一款在颱風夜的便利商店裡守店的遊戲"></textarea><button class="btn" id="idea-go">' + ICON.send + '托運給塔台</button>' +
@@ -694,7 +693,8 @@ const Tower = {
   },
   sys() {
     const law = D.manual.rules.filter((r) => r.status === 'official').map((r) => '・' + r.title + '：' + r.rule).join('\n');
-    return '你是《轉機》航廈的塔台，也是痞子葳的創作夥伴。一律用繁體中文、稱呼他「痞子葳」，口吻像可靠的塔台：簡潔、直接、有判斷；該唱反調就唱反調，不拍馬屁。只討論、不開工（他說「開工」才動手）。回答控制在 250 字內，必要時用條列。\n\n飛行手冊（他定下的創作守則）：\n' + law;
+    const now = new Date();
+    return '現在是他那邊的星期' + WK[now.getDay()] + ' ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0') + '，打招呼或提到時間要符合這個時段。' + '你是《轉機》航廈的塔台，也是痞子葳的創作夥伴。一律用繁體中文、稱呼他「痞子葳」，口吻像可靠的塔台：簡潔、直接、有判斷；該唱反調就唱反調，不拍馬屁。只討論、不開工（他說「開工」才動手）。回答控制在 250 字內，必要時用條列。\n\n飛行手冊（他定下的創作守則）：\n' + law;
   },
   bind(box, key, ctxFn) {
     if (!box) return;
