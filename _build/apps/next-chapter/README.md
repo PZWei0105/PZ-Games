@@ -33,11 +33,14 @@ App 裡稱呼使用者一律用「痞子葳」；「魏子葳」是小說主角�
 - 書頁「分享」：複製連結、傳到 LINE（`line.me/R/share`，連結加 `?openExternalBrowser=1` 讓 LINE 用外部瀏覽器開，才能加到主畫面）、系統分享、QR code（`lib/qrcode.js`，用到才下載，中間蓋這本書的朱印，容錯 H）。
 - 收回連結（pz-novels 的 `shelf.py rekey`）會換鑰匙和代號：舊網址 404，單行本會清掉存下來的書和鑰匙，跟讀者說「這本書換了新的連結」。
 
-## 巡查報告（2026-11-17 起）
+## 巡查報告（2026-11-17 起；2026-11-18 加定案、複查、大巡察）
 
-排程每寫滿五回替連載巡一次（手冊在 pz-novels 的 `tools/AUDIT_GUIDE.md`）。報告由 pz-novels 的 `shelf.py audit … report` 收進 `books/<book>/audit/reports.json`，
-`publish.py` 的 `audit_payload()` 把它用**總鑰匙**加密成 `<pub>/audit.pzx`，目錄裡記 `audit: {f, v, n, open, last, upto}`。**只進書房，不進單行本**（單行本的鑰匙解不開，`site_files` 也不放）。
-App：書頁有「新的巡查報告」橫幅（看過就熄，`pznc.v1.audSeen`）與「巡查」分頁（數字＝待決定的條數）；閱讀器裡的目錄不顯示。`Lib.audits()` 解、`fillAudits()` 畫。check.py 的假書房第一本有一份報告。
+排程每天替連載看一次（手冊在 pz-novels 的 `tools/AUDIT_GUIDE.md`）：**複查**（巡過以後又改過的回數，只看修好沒、接不接得上）→ **例行巡查**（每寫滿五回）→ **大巡察**（每三十回、一卷寫完要求時、完結時）。
+痞子葳決定過的條目（已修、不修）是**定案**，巡查端不因口味翻案；真的改不動別處時才會出現「動到定案」的條目（`reopens`），附「改別處」「改定案」兩條路。
+報告由 pz-novels 的 `shelf.py audit … report` 收進 `books/<book>/audit/reports.json`，`publish.py` 的 `audit_payload()` 把它用**總鑰匙**加密成 `<pub>/audit.pzx`，目錄裡記 `audit: {f, v, n, open, last, upto}`。**只進書房，不進單行本**（單行本的鑰匙解不開，`site_files` 也不放）。
+App：書頁有「新的巡查報告」橫幅（看過就熄，`pznc.v1.audSeen`）與「巡查」分頁（數字＝待決定的條數）；閱讀器裡的目錄不顯示。`Lib.audits()` 解、`fillAudits()`／`paintAudits()` 畫。
+條目狀態（`audState()`）：待決定、已修・待複查、複查通過、複查未過、由第 N 條補好、不修・定案、維持定案（`kept`）、已重新檢討（`reopened`）。報告樣式分例行巡查、複查（`rechecks` 列表）、大巡察（朱印「大」）。
+待決定的條目可挑「要修／不修」（動到定案的是「改別處／改定案／不修」），一鍵「複製給寫作端」（`audMessage()`，選擇記在 `pznc.v1.audPick`）。check.py 的假書房第一本有三份報告（例行、複查、大巡察）。
 
 ## 說書音軌
 

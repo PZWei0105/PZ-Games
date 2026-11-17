@@ -598,3 +598,31 @@ body.ed .view { background:
 .aud-bar .btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .aud-bar .btn small { font: 400 12px/1 var(--song); letter-spacing: 0; opacity: .8; }
 .aud-clr { flex: none; padding: 8px 12px; color: var(--mist); font-size: 13px; }
+/* 巡查：定案、複查、大巡察 */
+.aud-it.ok .aud-st { color: #8fc3a0; }
+.aud-it.bad .aud-st { color: #f0a596; }
+.aud-it.kept .aud-st { color: var(--gilt-2); }
+.aud-it.ok, .aud-it.kept { opacity: .62; }
+.aud-it.bad { border-left-color: rgba(240,165,150,.6); }
+.aud-it.reo { border-left-color: var(--seal); }
+.aud-reo, .aud-fol { margin: 8px 0 0; font: 700 12.5px/1.6 var(--kai); letter-spacing: .1em; }
+.aud-reo { display: inline-block; padding: 1px 9px; border-radius: 4px; background: var(--seal); color: #fff; }
+.aud-fol { color: var(--gilt-2); }
+.aud-sg.alt { background: rgba(179,56,44,.1); }
+.aud-sg.alt b { color: #f0a596; }
+.aud-rc { margin: 6px 0 0; font-size: 13px; line-height: 1.8; }
+.aud-rc.ok { color: #8fc3a0; }
+.aud-rc.bad { color: #f0a596; }
+.aud-rcl { list-style: none; margin: 10px 0 0; padding: 0; }
+.aud-rcl li { display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 4px 10px; padding: 7px 0; border-top: 1px solid rgba(190,210,235,.08); font-size: 13.5px; }
+.aud-rcl b { font: 700 13.5px/1.5 var(--kai); color: var(--moon); }
+.aud-rcl span { padding: 0 7px; border-radius: 4px; font-size: 12px; line-height: 1.7; }
+.aud-rcl li.ok span { background: rgba(143,195,160,.18); color: #a8d6b6; }
+.aud-rcl li.bad span { background: rgba(240,165,150,.16); color: #f0a596; }
+.aud-rcl small { color: var(--mist); font-size: 12.5px; line-height: 1.6; }
+.aud-rep.k-re .aud-kind { background: rgba(143,195,160,.15); color: #a8d6b6; }
+.aud-rep.k-big { border-color: rgba(179,56,44,.55); background: linear-gradient(180deg, rgba(179,56,44,.12), rgba(17,29,48,.8) 45%); }
+.aud-rep.k-big .aud-kind { background: rgba(179,56,44,.25); color: #f4c9bf; }
+.aud-bigseal { position: absolute; top: -4px; right: -2px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 6px; background: var(--seal); color: #fff; font: 700 22px/1 var(--kai); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.3), 0 4px 14px rgba(179,56,44,.4); transform: rotate(6deg); }
+.aud-pk button[data-v="改別處"][aria-pressed="true"] { background: var(--gilt); border-color: var(--gilt); color: #1d150d; }
+.aud-pk button[data-v="改定案"][aria-pressed="true"] { background: var(--seal); border-color: var(--seal); color: #fff; }

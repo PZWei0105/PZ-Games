@@ -266,12 +266,32 @@ const UI = (() => {
   }
 
   /* ── 巡查報告（只有痞子葳的書房看得到；單行本沒有） ──
-     排程每寫滿五回就巡一次：小錯直接修好（列在「已直接修正」），劇情、邏輯、人物的問題只寫報告，等他決定 */
+     例行巡查：每寫滿五回巡一次，小錯直接修好，劇情、邏輯、人物的問題只寫報告等他決定。
+     定案：已修、不修都算，不因口味翻案。複查：改過的地方只看修好沒、跟前後接不接得上。大巡察：每三十回、完結時，連定案一起放回整本書看。 */
   const hasAudit = (b, ctx) => !ED && ctx !== 'nav' && !!(b && b.remote && b.audit && b.audit.n);
   const LV = { '重大': 'hi', '一般': 'mid', '小': 'lo' };
-  const ST = { '待決定': 'wait', '已修': 'done', '不修': 'skip' };
+  const KIND = { '例行巡查': 'k-run', '複查': 'k-re', '大巡察': 'k-big', '全書總巡': 'k-big' };
   function audCh(b, n) { const c = b.chapters.find((x) => x.n === +n); return c ? (c.label || ('第 ' + n + ' 回')) : ('第 ' + n + ' 回'); }
-  function audRange(b, r) { return r.from === r.to ? audCh(b, r.from) : audCh(b, r.from) + '～' + audCh(b, r.to); }
+  function audRange(b, r) {
+    if (r.kind === '複查') return (r.chapters && r.chapters.length) ? r.chapters.map((n) => audCh(b, n)).join('、') : '改過的地方';
+    return r.from === r.to ? audCh(b, r.from) : audCh(b, r.from) + '～' + audCh(b, r.to);
+  }
+  const audChs = (it) => (Array.isArray(it.ch) ? it.ch : it.ch != null ? [it.ch] : []);
+  /* 條目給人看的狀態 → [文字, class] */
+  function audState(it, idx) {
+    const st = it.status || '待決定', rc = it.recheck || {};
+    if (it.reopened) return ['已重新檢討', 'skip'];
+    if (it.kept) return ['維持定案', 'kept'];
+    if (st === '已修' && rc.result === '未過' && rc.next && idx) {           // 複查沒過，但接手的那一條已經處理好了
+      const f = idx[rc.next];
+      if (f && (f.status === '不修' || (f.recheck && f.recheck.result === '通過') || f.kept)) return ['由第 ' + rc.next + ' 條補好', 'ok'];
+    }
+    if (st === '已修') return rc.result === '通過' ? ['複查通過', 'ok'] : rc.result === '未過' ? ['複查未過', 'bad'] : ['已修・待複查', 'done'];
+    if (st === '不修') return ['不修・定案', 'skip'];
+    return ['待決定', 'wait'];
+  }
+  const PICKS = (it) => it.reopens ? ['改別處', '改定案', '不修'] : ['要修', '不修'];
+  const isFix = (v) => v === '要修' || v === '改別處' || v === '改定案';
   function auditBannerHTML(b) {
     if (!hasAudit(b, 'bv')) return '';
     const seen = Store.get('audSeen', {})[b.id], a = b.audit, fresh = seen !== a.v;
@@ -281,27 +301,40 @@ const UI = (() => {
       + '<small>已巡到第 ' + a.upto + ' 回・' + (a.open ? a.open + ' 條等你決定' : '沒有待決定的') + '</small></span><span class="aud-go" aria-hidden="true">›</span></button>';
   }
   function audItemHTML(b, it) {
-    const pick = audPicks(b.id)[it.id];
-    const st = it.status || '待決定', chs = (Array.isArray(it.ch) ? it.ch : it.ch != null ? [it.ch] : []);
-    return '<li class="aud-it ' + (ST[st] || 'wait') + (pick ? ' pk-' + (pick === '要修' ? 'fix' : 'skip') : '') + '">'
+    const idx = {}; (audCache[b.id] || []).forEach((x) => (x.items || []).forEach((y) => { idx[y.id] = y; }));
+    const pick = audPicks(b.id)[it.id], stt = audState(it, idx), st = it.status || '待決定', chs = audChs(it), rc = it.recheck;
+    return '<li class="aud-it ' + stt[1] + (it.reopens ? ' reo' : '') + (pick ? ' pk-' + (isFix(pick) ? 'fix' : 'skip') : '') + '">'
       + '<div class="aud-ih"><span class="aud-no">第 ' + esc(String(it.id)) + ' 條</span>'
       + (it.level ? '<span class="aud-lv ' + (LV[it.level] || 'mid') + '">' + esc(it.level) + '</span>' : '')
       + (it.type ? '<span class="aud-ty">' + esc(it.type) + '</span>' : '')
-      + '<span class="aud-st">' + esc(st) + '</span></div>'
+      + '<span class="aud-st">' + esc(stt[0]) + '</span></div>'
+      + (it.reopens ? '<p class="aud-reo">動到定案・第 ' + esc(String(it.reopens)) + ' 條</p>' : it.follows ? '<p class="aud-fol">延續第 ' + esc(String(it.follows)) + ' 條</p>' : '')
       + (chs.length ? '<p class="aud-ch">' + chs.map((n) => { const j = b.chapters.findIndex((x) => x.n === +n); return j < 0 ? '<span>' + esc(audCh(b, n)) + '</span>' : '<button type="button" data-act="read" data-id="' + esc(b.id) + '" data-i="' + j + '">' + esc(audCh(b, n)) + '</button>'; }).join('') + '</p>' : '')
       + '<p class="aud-is">' + esc(it.issue || '') + '</p>'
-      + (it.suggest ? '<p class="aud-sg"><b>建議</b>' + esc(it.suggest) + '</p>' : '')
-      + (it.note ? '<p class="aud-nt">' + esc(it.note) + '</p>' : '')
-      + (st === '待決定' ? '<div class="aud-pk">' + ['要修', '不修'].map((v) => '<button type="button" data-act="aud-pick" data-id="' + esc(b.id) + '" data-n="' + esc(String(it.id)) + '" data-v="' + v + '"' + pressed(pick === v) + '>' + v + '</button>').join('') + '</div>' : '')
+      + (it.suggest ? '<p class="aud-sg"><b>' + (it.reopens ? '改別處' : '建議') + '</b>' + esc(it.suggest) + '</p>' : '')
+      + (it.suggest_alt ? '<p class="aud-sg alt"><b>改定案</b>' + esc(it.suggest_alt) + '</p>' : '')
+      + (it.note ? '<p class="aud-nt">處理：' + esc(it.note) + '</p>' : '')
+      + (rc ? '<p class="aud-rc ' + (rc.result === '通過' ? 'ok' : 'bad') + '">複查 ' + esc(rc.date || '') + '：' + esc(rc.result || '') + (rc.note ? '。' + esc(rc.note) : '') + (rc.next ? '（見第 ' + esc(String(rc.next)) + ' 條）' : '') + '</p>' : '')
+      + (it.kept ? '<p class="aud-nt">' + esc(it.kept) + ' 你決定維持這個定案，之後不會再因口味被提起。</p>' : '')
+      + (it.reopened ? '<p class="aud-nt">這個定案已經照第 ' + esc(String(it.reopened)) + ' 條重新檢討過。</p>' : '')
+      + (st === '待決定' ? '<div class="aud-pk">' + PICKS(it).map((v) => '<button type="button" data-act="aud-pick" data-id="' + esc(b.id) + '" data-n="' + esc(String(it.id)) + '" data-v="' + v + '"' + pressed(pick === v) + '>' + v + '</button>').join('') + '</div>' : '')
       + '</li>';
   }
   function audReportHTML(b, r, first) {
-    const items = r.items || [], fixed = r.fixed || [], open = items.filter((x) => (x.status || '待決定') === '待決定').length;
-    let h = '<article class="aud-rep' + (first ? ' latest' : '') + '"><header><span class="aud-kind">' + esc(r.kind || '例行巡查') + '</span>'
-      + '<h3>' + esc(audRange(b, r)) + '</h3><p class="aud-meta">' + esc(r.date || '') + '・' + items.length + ' 條' + (open ? '・<em>' + open + ' 條待決定</em>' : '') + (fixed.length ? '・直接修了 ' + fixed.length + ' 處' : '') + '</p></header>'
+    const items = r.items || [], fixed = r.fixed || [], rcs = r.rechecks || [], open = items.filter((x) => (x.status || '待決定') === '待決定').length;
+    const byId = {}; (audCache[b.id] || []).forEach((x) => (x.items || []).forEach((it) => { byId[it.id] = it; }));
+    const kind = r.kind === '全書總巡' ? '大巡察' : (r.kind || '例行巡查');
+    const pass = rcs.filter((x) => x.result === '通過').length;
+    let h = '<article class="aud-rep ' + (KIND[kind] || '') + (first ? ' latest' : '') + '"><header>'
+      + (kind === '大巡察' ? '<span class="aud-bigseal" aria-hidden="true">大</span>' : '') + '<span class="aud-kind">' + esc(kind) + '</span>'
+      + '<h3>' + esc(audRange(b, r)) + '</h3><p class="aud-meta">' + esc(r.date || '')
+      + (rcs.length ? '・複查 ' + rcs.length + ' 條' + (pass === rcs.length ? '全部通過' : '，通過 ' + pass) : '')
+      + (items.length || !rcs.length ? '・' + items.length + ' 條' : '') + (open ? '・<em>' + open + ' 條待決定</em>' : '') + (fixed.length ? '・直接修了 ' + fixed.length + ' 處' : '') + '</p></header>'
       + (r.summary ? '<p class="aud-sum">' + esc(r.summary) + '</p>' : '');
+    if (rcs.length) h += '<ul class="aud-rcl">' + rcs.map((x) => { const o = byId[x.id] || {}; return '<li class="' + (x.result === '通過' ? 'ok' : 'bad') + '"><b>第 ' + esc(String(x.id)) + ' 條</b><span>' + esc(x.result || '') + '</span>'
+      + '<small>' + esc(x.note || (o.issue || '').slice(0, 40) + ((o.issue || '').length > 40 ? '……' : '')) + '</small></li>'; }).join('') + '</ul>';
     if (items.length) h += '<ol class="aud-list">' + items.map((it) => audItemHTML(b, it)).join('') + '</ol>';
-    else h += '<p class="note">這一段沒有找到要你決定的問題。</p>';
+    else if (!rcs.length) h += '<p class="note">這一段沒有找到要你決定的問題。</p>';
     if (fixed.length) h += '<details class="aud-fx"><summary>已直接修正 ' + fixed.length + ' 處（錯字、小細節，不動劇情）</summary><ul>'
       + fixed.map((f) => '<li><span>' + esc(audCh(b, f.ch)) + '</span>' + esc(f.what || '') + (f.why ? '<small>' + esc(f.why) + '</small>' : '') + '</li>').join('') + '</ul></details>';
     return h + '</article>';
@@ -329,25 +362,28 @@ const UI = (() => {
     Store.set('audPick', all);
     const box = $('.aud-wrap', bookv); if (box) paintAudits(b, box);
   }
-  function audBrief(b, it) {
-    const chs = (Array.isArray(it.ch) ? it.ch : it.ch != null ? [it.ch] : []).map((n) => audCh(b, n)).join('、');
+  function audBrief(b, it, v) {
+    const chs = audChs(it).map((n) => audCh(b, n)).join('、');
+    const path = v === '改別處' ? '\n→ 改別處去配合定案：' + (it.suggest || '') : v === '改定案' ? '\n→ 重新檢討定案：' + (it.suggest_alt || '') : (it.suggest ? '\n建議：' + it.suggest : '');
     return '第 ' + it.id + ' 條' + (chs ? '（' + chs + '）' : '') + (it.level || it.type ? '［' + [it.level, it.type].filter(Boolean).join('／') + '］' : '')
-      + '\n問題：' + (it.issue || '') + (it.suggest ? '\n建議：' + it.suggest : '');
+      + (it.reopens ? '［動到定案：第 ' + it.reopens + ' 條］' : it.follows ? '［延續第 ' + it.follows + ' 條］' : '')
+      + '\n問題：' + (it.issue || '') + path;
   }
   function audMessage(b) {
     const p = audPicks(b.id), items = [];
     (audCache[b.id] || []).forEach((r) => (r.items || []).forEach((it) => { if (p[it.id]) items.push(it); }));
-    const fix = items.filter((it) => p[it.id] === '要修'), skip = items.filter((it) => p[it.id] === '不修');
+    const fix = items.filter((it) => isFix(p[it.id])), skip = items.filter((it) => p[it.id] === '不修');
     let t = '';
-    if (fix.length) t += '照《' + b.title + '》巡查修以下' + (fix.length > 1 ? '幾' : '這一') + '條：\n\n' + fix.map((it) => audBrief(b, it)).join('\n\n');
+    if (fix.length) t += '照《' + b.title + '》巡查修以下' + (fix.length > 1 ? '幾' : '這一') + '條：\n\n' + fix.map((it) => audBrief(b, it, p[it.id])).join('\n\n');
     if (skip.length) t += (t ? '\n\n' : '《' + b.title + '》巡查') + '第 ' + skip.map((it) => it.id).join('、') + ' 條不修。';
     return t;
   }
   function paintAudits(b, box) {
     const list = (audCache[b.id] || []).slice().reverse(), p = audPicks(b.id);
-    const nf = Object.values(p).filter((v) => v === '要修').length, ns = Object.values(p).filter((v) => v === '不修').length;
-    box.innerHTML = '<p class="note aud-how">每寫滿五回自動巡一次。錯字、名字、物件前後不一這類小錯會直接修好；劇情、邏輯、人物的問題只列在這裡，等你決定。'
-      + '看完每一條按「要修」或「不修」，再按下面的「複製給寫作端」，貼到寫這本書的對話裡就好。</p>'
+    const nf = Object.values(p).filter(isFix).length, ns = Object.values(p).filter((v) => v === '不修').length;
+    box.innerHTML = '<p class="note aud-how">每寫滿五回自動巡一次：小錯直接修好，劇情、邏輯、人物的問題列在這裡等你決定。'
+      + '你決定過的（修或不修）就是定案，不會因為口味再被翻出來；改過的地方會再複查一次接不接得上。每三十回、完結時各做一次大巡察。'
+      + '看完按「要修」或「不修」，再按下面的「複製給寫作端」，貼到寫這本書的對話裡就好。</p>'
       + list.map((r, i) => audReportHTML(b, r, i === 0)).join('')
       + (nf + ns ? '<div class="aud-bar"><button type="button" class="btn gilt" data-act="aud-copy" data-id="' + esc(b.id) + '">' + ICON.link + '複製給寫作端<small>' + [nf ? '要修 ' + nf + ' 條' : '', ns ? '不修 ' + ns + ' 條' : ''].filter(Boolean).join('・') + '</small></button>'
         + '<button type="button" class="aud-clr" data-act="aud-clear" data-id="' + esc(b.id) + '">清掉</button></div>' : '');

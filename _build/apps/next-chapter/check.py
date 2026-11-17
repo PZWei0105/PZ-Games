@@ -181,7 +181,13 @@ def fixture(out):
     books[0]['audit'] = {'reports': [{'id': 1, 'kind': '例行巡查', 'from': 1, 'to': 4, 'date': '2026-11-17', 'summary': '測試用的巡查總評：前後大致一致，有兩條要你決定。',
         'fixed': [{'ch': 2, 'what': '「燈火」誤植為「燈伙」', 'why': '錯字'}],
         'items': [{'id': 1, 'type': '前後矛盾', 'level': '重大', 'ch': [1, 3], 'issue': '測試條目一：第一回說是七個人，第三回變成六個人。', 'suggest': '把第三回改回七個人。', 'status': '待決定'},
-                  {'id': 2, 'type': '人物', 'level': '一般', 'ch': 4, 'issue': '測試條目二：角色反應不符個性。', 'suggest': '改成先觀察再出手。', 'status': '已修', 'note': '寫作端已照建議修好'}]}]}
+                  {'id': 2, 'type': '人物', 'level': '一般', 'ch': 4, 'issue': '測試條目二：角色反應不符個性。', 'suggest': '改成先觀察再出手。', 'status': '已修', 'note': '寫作端已照建議修好',
+                   'recheck': {'date': '2026-11-18', 'result': '通過', 'note': '改法跟第三回接得上'}}]},
+        {'id': 2, 'kind': '複查', 'chapters': [4], 'from': 4, 'to': 4, 'date': '2026-11-18', 'summary': '測試用的複查：第四回改過的地方接得上。',
+         'rechecks': [{'id': 2, 'result': '通過', 'note': '改法跟第三回接得上'}], 'items': []},
+        {'id': 3, 'kind': '大巡察', 'from': 1, 'to': 4, 'date': '2026-11-19', 'summary': '測試用的大巡察：整體主線沒有走偏，有一個定案放回整本書看有問題。',
+         'items': [{'id': 3, 'type': '銜接', 'level': '重大', 'ch': [4], 'reopens': 2, 'issue': '測試條目三：第二條的改法讓第四回的高潮少了理由。',
+                    'suggest': '在第三回補一句交代動機，第二條的定案不動。', 'suggest_alt': '把第二條改回原本的寫法，因為第四回的高潮建立在原本的反應上。', 'status': '待決定'}]}]}
     site_dir, books_dir = os.path.join(out, 'fx-site'), os.path.join(out, 'fx-books')
     keys = {'master': pzcrypt.new_master(), 'site': '', 'books': {b['id']: {'key': pzcrypt.new_book_key(), 'pub': pzcrypt.rand_id(12), 'ed': pzcrypt.rand_id(10)} for b in books}}
     ring = pzcrypt.make_keyring(keys['master'], FX_PASS, FX_CODE)
@@ -782,27 +788,36 @@ def run_features(p, name, opts, base, out, tmp, fx):
     ok(js("[...document.querySelectorAll('#bookv .tab')].map((e) => e.dataset.tab)") == want_tabs, '書頁的分頁不對')
     if zb.get('audit'):
         ok(js("!!document.querySelector('#bookv .aud-banner.fresh')"), '有新的巡查報告，書頁上應該有亮著的「新的巡查報告」')
-        ok(js("document.querySelector('#bookv .tab[data-tab=audit] i').textContent") == '1', '巡查分頁的數字應該是待決定的條數（1）')
+        ok(js("document.querySelector('#bookv .tab[data-tab=audit] i').textContent") == '2', '巡查分頁的數字應該是待決定的條數（2）')
         shot('audit-banner')
         page.locator('#bookv .aud-banner').click(); page.wait_for_selector('#bookv .aud-rep')
         page.wait_for_timeout(400)
-        ok(js("document.querySelectorAll('#bookv .aud-it').length") == 2, '巡查報告應該列出兩條')
-        ok(js("document.querySelectorAll('#bookv .aud-it.wait').length") == 1 and js("document.querySelectorAll('#bookv .aud-it.done').length") == 1, '待決定／已修的樣子不對')
+        ok(js("document.querySelectorAll('#bookv .aud-it').length") == 3, '巡查報告應該列出三條')
+        ok(js("document.querySelectorAll('#bookv .aud-it.wait').length") == 2 and js("document.querySelectorAll('#bookv .aud-it.ok').length") == 1, '待決定／複查通過的樣子不對')
+        ok(js("[...document.querySelectorAll('#bookv .aud-rep')].map((e) => e.querySelector('.aud-kind').textContent).join(',')") == '大巡察,複查,例行巡查', '報告應該新的在上面：大巡察、複查、例行巡查')
+        ok(js("!!document.querySelector('#bookv .aud-rep.k-big .aud-bigseal')") and '動到定案・第 2 條' in js("document.querySelector('#bookv .aud-it.reo').textContent"), '大巡察的樣式、動到定案的標籤沒有出現')
+        ok('複查通過' in js("document.querySelector('#bookv .aud-it.ok .aud-st').textContent") and '通過' in js("document.querySelector('#bookv .aud-rcl').textContent"), '複查結果沒有顯示')
+        ok(js("document.querySelectorAll('#bookv .aud-it.reo .aud-pk button').length") == 3, '動到定案的條目要有三個選擇：改別處、改定案、不修')
         ok('測試條目一' in js("document.querySelector('#bookv .aud-wrap').textContent") and '燈伙' in js("document.querySelector('#bookv .aud-fx').textContent"), '巡查報告的內容沒有解出來')
         ok(not js("document.querySelector('#bookv .aud-banner').classList.contains('fresh')"), '看過報告以後「新的」應該熄掉')
         page.locator('#bookv .aud-fx summary').click(); page.wait_for_timeout(200)
         shot('audit-tab')
-        ok(js("[...document.querySelectorAll('#bookv .aud-ch button')].map((e) => e.dataset.act + ':' + e.dataset.i).join(',')") == 'read:0,read:2,read:3', '巡查條目上的章名應該能點開那一回')
-        ok(js("document.querySelectorAll('#bookv .aud-pk button').length") == 2, '只有待決定的條目才有「要修／不修」')
+        ok(js("[...document.querySelectorAll('#bookv .aud-ch button')].map((e) => e.dataset.act + ':' + e.dataset.i).join(',')") == 'read:3,read:0,read:2,read:3', '巡查條目上的章名應該能點開那一回')
+        ok(js("document.querySelectorAll('#bookv .aud-pk button').length") == 5, '只有待決定的條目才有選擇鈕')
         page.locator('#bookv .aud-pk [data-v="要修"]').click(); page.wait_for_selector('#bookv .aud-bar')
         ok(js("document.querySelector('#bookv .aud-it.pk-fix') != null") and '要修 1 條' in js("document.querySelector('#bookv .aud-bar').textContent"), '按「要修」以後應該亮起來、下面出現複製列')
         page.locator('#bookv [data-act="aud-copy"]').click(); page.wait_for_timeout(400)
         amsg = js("navigator.clipboard.readText()") if clip_ok else ''
         ok(not clip_ok or (amsg.startswith('照《%s》巡查修以下這一條' % zb['title']) and '第 1 條' in amsg and '建議：把第三回改回七個人' in amsg), '複製給寫作端的內容不對：%s' % amsg[:80])
         shot('audit-pick')
-        page.locator('#bookv .aud-pk [data-v="不修"]').click(); page.wait_for_timeout(200)
+        page.locator('#bookv .aud-it', has_text='測試條目一').locator('[data-v="不修"]').click(); page.wait_for_timeout(200)
         page.locator('#bookv [data-act="aud-copy"]').click(); page.wait_for_timeout(400)
         ok(not clip_ok or js("navigator.clipboard.readText()") == '《%s》巡查第 1 條不修。' % zb['title'], '只挑「不修」時複製的內容不對')
+        page.locator('#bookv .aud-it.reo [data-v="改定案"]').click(); page.wait_for_timeout(200)
+        page.locator('#bookv [data-act="aud-copy"]').click(); page.wait_for_timeout(400)
+        amsg = js("navigator.clipboard.readText()") if clip_ok else ''
+        ok(not clip_ok or ('第 3 條' in amsg and '［動到定案：第 2 條］' in amsg and '→ 重新檢討定案：把第二條改回原本的寫法' in amsg and amsg.endswith('第 1 條不修。')), '選「改定案」複製的內容不對：%s' % amsg[:120])
+        shot('audit-reopen')
         page.locator('#bookv [data-act="aud-clear"]').click(); page.wait_for_timeout(200)
         ok(js("document.querySelector('#bookv .aud-bar') == null"), '按「清掉」以後複製列應該收起來')
         page.locator('#bookv .tab[data-tab="toc"]').click(); page.wait_for_timeout(200)
