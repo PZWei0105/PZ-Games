@@ -793,6 +793,18 @@ def run_features(p, name, opts, base, out, tmp, fx):
         page.locator('#bookv .aud-fx summary').click(); page.wait_for_timeout(200)
         shot('audit-tab')
         ok(js("[...document.querySelectorAll('#bookv .aud-ch button')].map((e) => e.dataset.act + ':' + e.dataset.i).join(',')") == 'read:0,read:2,read:3', '巡查條目上的章名應該能點開那一回')
+        ok(js("document.querySelectorAll('#bookv .aud-pk button').length") == 2, '只有待決定的條目才有「要修／不修」')
+        page.locator('#bookv .aud-pk [data-v="要修"]').click(); page.wait_for_selector('#bookv .aud-bar')
+        ok(js("document.querySelector('#bookv .aud-it.pk-fix') != null") and '要修 1 條' in js("document.querySelector('#bookv .aud-bar').textContent"), '按「要修」以後應該亮起來、下面出現複製列')
+        page.locator('#bookv [data-act="aud-copy"]').click(); page.wait_for_timeout(400)
+        amsg = js("navigator.clipboard.readText()") if clip_ok else ''
+        ok(not clip_ok or (amsg.startswith('照《%s》巡查修以下這一條' % zb['title']) and '第 1 條' in amsg and '建議：把第三回改回七個人' in amsg), '複製給寫作端的內容不對：%s' % amsg[:80])
+        shot('audit-pick')
+        page.locator('#bookv .aud-pk [data-v="不修"]').click(); page.wait_for_timeout(200)
+        page.locator('#bookv [data-act="aud-copy"]').click(); page.wait_for_timeout(400)
+        ok(not clip_ok or js("navigator.clipboard.readText()") == '《%s》巡查第 1 條不修。' % zb['title'], '只挑「不修」時複製的內容不對')
+        page.locator('#bookv [data-act="aud-clear"]').click(); page.wait_for_timeout(200)
+        ok(js("document.querySelector('#bookv .aud-bar') == null"), '按「清掉」以後複製列應該收起來')
         page.locator('#bookv .tab[data-tab="toc"]').click(); page.wait_for_timeout(200)
     ok(js("document.querySelector('#bvRecap').hidden"), '還沒讀過，書頁不應該先給前情提要')
     if zb.get('recaps'):

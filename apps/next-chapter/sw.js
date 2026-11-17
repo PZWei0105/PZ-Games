@@ -1,5 +1,5 @@
-/* 下回分解 service worker — version 2026.11.17-2010 */
-const V = 'pznc-2026.11.17-2010', BOOKS = 'pznc-books-v2', FONTS = 'pznc-fonts-v1', LIBS = 'pznc-lib-v1';
+/* 下回分解 service worker — version 2026.11.17-2042 */
+const V = 'pznc-2026.11.17-2042', BOOKS = 'pznc-books-v2', FONTS = 'pznc-fonts-v1', LIBS = 'pznc-lib-v1';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(V).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));

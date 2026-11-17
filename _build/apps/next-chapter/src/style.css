@@ -588,3 +588,13 @@ body.ed .view { background:
 .aud-fx li { padding: 6px 0; color: #c3cedb; font-size: 13.5px; line-height: 1.8; }
 .aud-fx li span { margin-right: .7em; color: var(--gilt-2); font-size: 12.5px; }
 .aud-fx li small { display: block; color: var(--mist); font-size: 12.5px; }
+.aud-pk { display: flex; gap: 8px; margin: 10px 0 0; }
+.aud-pk button { padding: 5px 16px; border-radius: 99px; border: 1px solid var(--line); color: #b9c6d6; font: 700 13.5px/1.5 var(--kai); letter-spacing: .12em; transition: background .15s, color .15s, border-color .15s; }
+.aud-pk button[data-v="要修"][aria-pressed="true"] { background: var(--gilt); border-color: var(--gilt); color: #1d150d; }
+.aud-pk button[data-v="不修"][aria-pressed="true"] { background: rgba(143,160,181,.25); border-color: rgba(143,160,181,.5); color: var(--moon); }
+.aud-it.pk-fix { border-left-color: var(--gilt-2); background: linear-gradient(90deg, rgba(201,164,92,.08), transparent 60%); }
+.aud-it.pk-skip .aud-is, .aud-it.pk-skip .aud-sg { opacity: .55; }
+.aud-bar { position: sticky; bottom: calc(var(--sb) + 14px); z-index: 5; display: flex; align-items: center; gap: 10px; margin: 18px 0 0; padding: 10px; border-radius: 14px; background: rgba(11,20,34,.94); border: 1px solid rgba(201,164,92,.35); box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.aud-bar .btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.aud-bar .btn small { font: 400 12px/1 var(--song); letter-spacing: 0; opacity: .8; }
+.aud-clr { flex: none; padding: 8px 12px; color: var(--mist); font-size: 13px; }
