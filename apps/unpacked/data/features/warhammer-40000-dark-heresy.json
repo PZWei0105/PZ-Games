@@ -1,0 +1,549 @@
+{
+  "id": "warhammer-40000-dark-heresy",
+  "date": "2026-11-17",
+  "rank": 20,
+  "kind": "wish",
+  "kind_label": "願望單解包",
+  "game": {
+    "zh": "Warhammer 40,000: Dark Heresy",
+    "zh_note": "暫無官方中文名",
+    "en": "Warhammer 40,000: Dark Heresy",
+    "steam": 3710600,
+    "dev": "Owlcat Games",
+    "pub": "Owlcat Games",
+    "platforms": [
+      "PC（Steam、GOG、Epic）",
+      "PS5",
+      "Xbox Series X|S",
+      "Switch 2（日期未定）"
+    ],
+    "genres": [
+      "組隊角色扮演",
+      "回合制戰術",
+      "調查辦案"
+    ],
+    "release": "2027-01-28",
+    "release_text": "2027/01/28 上市（Switch 2 版之後推出）",
+    "price_text": "Steam 尚未開價／官網創始者包 US$39.99 起",
+    "site": "https://darkheresy.owlcat.games/"
+  },
+  "headline": "《行商浪人》團隊的下一步：在戰鎚 40K 裡當審判官辦案，判錯也沒人告訴你",
+  "hook": "證詞兩兩對不上，筆記本上的矛盾一條條亮起。你手上沒有標準答案，只有一把槍和審判庭給的權力。今晚你蓋章定罪的那個工人，可能真是異端，也可能只是運氣不好——遊戲不會跳出來說你對了。",
+  "verdict": {
+    "stamp": "觀望",
+    "label": "等上市評測",
+    "summary": "辦案系統是近年 cRPG 少見的大膽設計：線索自己拼、判錯也不會被糾正，決策真的會長出後果。但 Owlcat 過去兩款大作首發都被 bug 拖累，這款的 beta 也被說戰鬥偏硬、節奏一卡就停；加上只有簡中、沒有繁中，等 1 月底評測出來再決定最穩。",
+    "for": [
+      "喜歡自己的判斷決定劇情走向、不想照標準答案過關的人",
+      "玩過《戰鎚 40K：行商浪人》或《開拓者》系列、吃得下大量文字的 cRPG 玩家",
+      "想要回合制戰鬥有士氣、部位瞄準、可破壞掩體這種戰術層次的人"
+    ],
+    "against": [
+      "一定要繁體中文的人（目前只有簡中介面與字幕）",
+      "時間零碎、受不了長對話和慢熱開場的人（光第一幕就約 20 小時）",
+      "想一上市就玩到穩定版本的人（Owlcat 首發品質有前科）"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Owlcat Games（《開拓者：擁王者》《開拓者：正義之怒》《戰鎚 40K：行商浪人》）",
+      "s": [
+        0,
+        23
+      ]
+    },
+    {
+      "k": "發表",
+      "v": "2025/05/22 在 Warhammer Skulls 線上發表會公開",
+      "s": [
+        27,
+        3
+      ]
+    },
+    {
+      "k": "上市日",
+      "v": "2027/01/28；在這之前官方從沒給過年份，也沒有發過延期公告",
+      "s": [
+        1,
+        2,
+        22
+      ]
+    },
+    {
+      "k": "平台",
+      "v": "PC（Steam、GOG、Epic）、PS5、Xbox Series X|S 同步；Switch 2 版之後推出、日期未定",
+      "s": [
+        1,
+        2,
+        19
+      ]
+    },
+    {
+      "k": "價格",
+      "v": "Steam、GOG、Epic 都還沒開價也沒有預購；Owlcat 官網創始者包 US$39.99（含 beta）、US$49.99、US$79，實體典藏版 US$289",
+      "s": [
+        0,
+        4,
+        5
+      ]
+    },
+    {
+      "k": "創始者包",
+      "v": "官網創始者包 2027 年 1 月初下架；beta 測試 2027/01/07 關閉",
+      "s": [
+        2
+      ]
+    },
+    {
+      "k": "語言",
+      "v": "介面與字幕有簡體中文，沒有繁體中文；語音只有英文（上市時全程英文配音）",
+      "s": [
+        0,
+        6
+      ]
+    },
+    {
+      "k": "測試",
+      "v": "付費 alpha 2025/12/16 開始；創始者封閉 beta 2026/05/21 起，只限 PC／Steam，內容是完整第一幕、約 20 小時",
+      "s": [
+        5,
+        28,
+        8
+      ]
+    },
+    {
+      "k": "角色建立",
+      "v": "5 種初始職業原型（含新的「祕術師」Mystic）、4 種出身、3 種母星；beta 有 10 名可招募同伴，官方說會有戀愛線",
+      "s": [
+        8,
+        6
+      ]
+    },
+    {
+      "k": "規模",
+      "v": "官方說比《行商浪人》小、沒有星艦戰那一層，但劇情走向更多樣",
+      "s": [
+        9
+      ]
+    },
+    {
+      "k": "建議配備",
+      "v": "Windows 10、i5-12600／Ryzen 5 5600、RTX 3060 Ti／RX 6700 XT、16GB RAM、40GB 空間；Steam 未列最低需求",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "DRM",
+      "v": "GOG 版標示無 DRM、不需連線啟動",
+      "s": [
+        16
+      ]
+    },
+    {
+      "k": "內容警示",
+      "v": "Steam 頁標示血腥、酷刑、虐待、性侵、自殺、食人等成人內容",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "多人",
+      "v": "Steam 功能列有「線上合作」，但官方還沒說明怎麼玩",
+      "s": [
+        0
+      ],
+      "p": true
+    },
+    {
+      "k": "前作參考價",
+      "v": "《行商浪人》首發 US$49.99；上市約 18 個月第一次打到 5 折，後來 45 折、SteamDB 記錄最低 4 折（2026/03）",
+      "s": [
+        13,
+        14,
+        15
+      ]
+    }
+  ],
+  "money": {
+    "level": 1,
+    "model": "買斷制（多版本）",
+    "notes": [
+      "目前只有 Owlcat 官網的創始者包：差價買的是 beta／alpha 搶先玩、幾件裝備外觀、電子美術集和原聲帶，不影響正式版能玩到的主線。",
+      "Dark Heresy 還沒公布 DLC 或季票；但前作《行商浪人》出了兩季季票（第二季 US$29.99），照前例上市後很可能也走「本體＋擴充」。",
+      "Steam 還沒開價，台灣售價要等商店頁上架才知道。"
+    ],
+    "flags": [
+      "尚未開價",
+      "只有簡中",
+      "前作有季票"
+    ]
+  },
+  "zh": {
+    "ui": "partial",
+    "sub": "partial",
+    "voice": false,
+    "note": "介面、字幕只有簡體中文，沒有繁中；語音只有英文。官方說之後可能加語言，但沒有承諾繁中。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 頁沒有看到台灣區限制，可以直接加入願望單；但沒有繁中，要看簡中。"
+  },
+  "rig": {
+    "verdict": "綽綽有餘",
+    "note": "建議配備只要 RTX 3060 Ti 等級、16GB 記憶體、40GB 空間，你的 RTX 5090 Laptop＋64GB 遠遠超過，接 4K 電視也沒問題。DLSS／FSR 官方還沒說明。"
+  },
+  "time": {
+    "text": "全長未公布（第一幕約 20 小時）",
+    "note": "官方說規模比《行商浪人》小，但光 beta 的第一幕就約 20 小時，整體肯定是長篇。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "PKccIqfBskc",
+        "title": "上市日期預告"
+      },
+      {
+        "id": "bYGyZLAQdr4",
+        "title": "封閉測試實機預告"
+      },
+      {
+        "id": "KVqOfHFJQFA",
+        "title": "發表預告"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "Steam 台灣售價公布（會不會比官網 US$39.99 便宜）",
+    "1 月底評測解禁：首發 bug 多不多",
+    "會不會補上繁體中文"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "接下案件",
+        "跑現場、問證人",
+        "在筆記裡比對矛盾",
+        "回合制交火",
+        "自己下判決",
+        "承擔後果"
+      ],
+      "body": [
+        "你扮演審判庭的侍從，一路升成審判官，帶著一支小隊在卡利克西斯星區辦案。跟《行商浪人》一樣是俯視角、組隊、回合制的 cRPG，但重心從「開疆拓土」換成「查案」。",
+        "辦案是這款最大的賣點：你蒐集證據、訪問證人，筆記本會把互相矛盾的說法標出來，但最後誰有罪由你判斷——遊戲不會告訴你判對了沒有，判錯就可能讓無辜的人被處決。",
+        "戰鬥變少但每場都有劇情鋪陳：每個角色有士氣條，敵人士氣崩了會逃跑或投降；可以瞄準部位，掩體也會被打爛。",
+        "角色建立有 5 種初始原型、4 種出身、3 種母星可以組合，beta 就有 10 名同伴可招募，包含歐格林人、克魯特人和靈族；官方說會有戀愛線。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和 beta 玩家整理：建角時先想好路線，出身和母星會影響之後的對話選項，不是單純加數值。",
+      "前期節奏偏慢、文字量很大——給它兩三個小時再判斷。",
+      "辦案時養成翻筆記的習慣，矛盾會被標出來；不確定就先多問幾個人，再下判決。",
+      "戰鬥偏硬，beta 有人說數值調太高；先熟悉掩體和士氣機制，別只想硬拚血量。"
+    ],
+    "compare": [
+      {
+        "name": "戰鎚 40K：行商浪人",
+        "same": "同一團隊、同一個戰鎚 40K 宇宙、組隊回合制 cRPG",
+        "diff": "行商浪人有星艦戰和殖民經營、規模更大；Dark Heresy 砍掉星艦戰，改成以辦案為核心"
+      },
+      {
+        "name": "極樂迪斯可",
+        "same": "辦案、對話決定一切、沒有人告訴你真相",
+        "diff": "極樂迪斯可幾乎沒有戰鬥；Dark Heresy 還是有完整的回合制戰術戰鬥"
+      },
+      {
+        "name": "柏德之門 3",
+        "same": "組隊、同伴、戀愛線、選擇影響劇情",
+        "diff": "柏德之門 3 是 D&D 奇幻、有完整中文配套；Dark Heresy 是黑暗科幻、目前只有簡中"
+      },
+      {
+        "name": "Pentiment（福音書）",
+        "same": "查案查到最後也不確定真兇是誰",
+        "diff": "Pentiment 是純敘事冒險；Dark Heresy 加了戰鬥和角色養成"
+      }
+    ],
+    "story": {
+      "safe": [
+        "舞台是戰鎚 40K 的卡利克西斯星區，beta 的主要據點是首府星球斯辛提拉。你從審判庭的侍從起家，追查一連串失蹤案和名為「暴君之星」的謎團。",
+        "審判官可以嚴守帝皇的命令，也可以走更務實、不擇手段的路線；反派之一是混沌星際戰士「夜之領主」，由戰鎚小說作家 Aaron Dembski-Bowden 擔任顧問。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "Owlcat Games 2016 年成立、現在總部在賽普勒斯，靠桌上角色扮演改編的 cRPG 起家：《開拓者：擁王者》（2018）首發技術問題多、修了很久；《開拓者：正義之怒》（2021）賣破百萬。",
+      "2023 年 12 月的《戰鎚 40K：行商浪人》評價不錯，但首發被媒體點名 bug 多：角色卡住、過場壞掉。執行製作人事後承認是因為第四章重做才趕不及，說現在會用數據排時程。",
+      "這次做法不同：2025 年 12 月先開付費 alpha、2026 年 5 月開創始者 beta，讓買創始者包的玩家先測了大半年。",
+      "Owlcat 同時在做《The Expanse: Osiris Reborn》，預計 2027 年春天推出——兩款大作都擠在 2027 年初，是值得留意的風險。"
+    ],
+    "voices": {
+      "pros": [
+        "辦案系統被拿來和《極樂迪斯可》《Pentiment》比：判斷完全交給玩家，判錯也不會被糾正",
+        "士氣、部位瞄準和可破壞掩體讓戰鬥比《行商浪人》更有變化；也有玩家說戰鬥變少，但每場更難",
+        "新的角色建立和同伴陣容受到肯定，beta 玩家覺得職業專精和成長系統比《行商浪人》做得更好"
+      ],
+      "cons": [
+        "卡關時節奏斷斷續續，跑腿任務偏多",
+        "beta 戰鬥數值偏硬，alpha 時護甲像第二條血、被說是最弱的一環",
+        "介面小 bug、鏡頭會被牆擋住，beta 配音也還沒補齊"
+      ],
+      "debate": [
+        "戰鬥變少是好是壞？喜歡辦案的人覺得剛好，衝著戰術戰鬥來的人覺得不夠打。",
+        "Owlcat 這次真的能穩定首發嗎？長期測試是加分，但兩款大作同時開發也讓人擔心。"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2025-05-22",
+        "t": "Warhammer Skulls 發表，官網同步開賣創始者包"
+      },
+      {
+        "d": "2025-12-16",
+        "t": "付費 alpha 測試開始"
+      },
+      {
+        "d": "2026-05-21",
+        "t": "創始者封閉 beta 開始，開放完整第一幕"
+      },
+      {
+        "d": "2026-08-26",
+        "t": "Xbox 預告說明第一次寫出 2027 年"
+      },
+      {
+        "d": "2026-11-09",
+        "t": "公布 2027/01/28 上市"
+      },
+      {
+        "d": "2027-01-07",
+        "t": "beta 測試關閉"
+      },
+      {
+        "d": "2027-01-28",
+        "t": "PC、PS5、Xbox Series X|S 上市"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "遊戲不告訴你判對了沒，這樣好玩還是折磨？",
+        "why": "多數推理遊戲都有標準答案；把真相藏起來，讓玩家帶著不確定往下走，是很少見的設計，也是最值得拍成影片聊的地方。"
+      },
+      {
+        "q": "只有簡中沒有繁中，台灣玩家該不該買單？",
+        "why": "《行商浪人》也是類似情況。對文字量這麼大的 cRPG，語言版本影響的不只是方便，而是能不能讀進劇情。"
+      },
+      {
+        "q": "付費 beta 測大半年，是誠意還是讓玩家當白老鼠？",
+        "why": "Owlcat 吸取首發 bug 的教訓先開長期測試，但測試要花錢買創始者包才能進。"
+      },
+      {
+        "q": "戰鎚 40K 遊戲越來越多，這款憑什麼不一樣？",
+        "why": "同一年就有割草、射擊、策略各種 40K 遊戲；Dark Heresy 押的是「辦案」這個很少人做的角度。"
+      }
+    ]
+  },
+  "buy": {
+    "call": "等上市後評價",
+    "target": null,
+    "why": "Steam 還沒開價，現在沒有價格可比。Owlcat 前兩款大作首發都 bug 多，等 1 月底評測再說最穩。參考前作《行商浪人》：上市約 18 個月打到 5 折、後來最低 4 折，這款開價後，目標先抓定價的 5 折左右。只有簡中、全長是長篇，不急著首發。",
+    "watch": "Steam 開價、評測解禁後首發品質穩定，或補上繁體中文，就改判成等特價或現在買。"
+  },
+  "fanpage": {
+    "post": "筆記本上兩份證詞互相打架，你得在天亮前決定把誰送上火刑台。最麻煩的是，遊戲不會告訴你抓對人了沒有。\n\n《Warhammer 40,000: Dark Heresy》是《行商浪人》團隊 Owlcat 的新作，2027 年 1 月 28 日在 PC、PS5、Xbox Series X|S 推出，Switch 2 版之後跟上。這次你是審判庭的人，帶著小隊在卡利克西斯星區辦案：跑現場、問證人、比對矛盾，最後自己下判決；動起手來則是回合制戰鬥，有士氣、能瞄準部位、掩體打得爛。\n\n硬資訊先講：Steam 還沒開價，官網創始者包 39.99 美元起；介面字幕只有簡中、沒有繁中，語音英文；建議配備 RTX 3060 Ti、需要 40GB 空間。封閉測試光第一幕就約 20 小時。\n\n辦案遊戲你想要有標準答案，還是寧願永遠不知道自己有沒有冤枉人？",
+    "titles": [
+      "Owlcat 戰鎚新作定檔 2027/1/28",
+      "當審判官辦案，判錯了遊戲也不會告訴你？",
+      "只有簡中沒有繁中，這款戰鎚 cRPG 你等不等？"
+    ],
+    "card": {
+      "kicker": "願望單解包｜2027/1/28",
+      "title": "審判官辦案\n判錯沒人告訴你",
+      "sub": "Owlcat 新作戰鎚 40K cRPG",
+      "tags": [
+        "回合制",
+        "辦案",
+        "只有簡中"
+      ],
+      "points": [
+        {
+          "h": "自己下判決",
+          "t": "比對證詞矛盾，對錯遊戲不說。"
+        },
+        {
+          "h": "戰鬥有士氣",
+          "t": "部位瞄準、掩體會爛、敵人會投降。"
+        },
+        {
+          "h": "還沒開價",
+          "t": "官網創始者包 39.99 美元起。"
+        }
+      ]
+    },
+    "tags": [
+      "#DarkHeresy",
+      "#戰鎚40K",
+      "#Owlcat",
+      "#角色扮演",
+      "#Steam遊戲",
+      "#遊戲狂想曲"
+    ],
+    "script": "如果你抓錯人，遊戲不會跟你說。這款叫《Warhammer 40,000: Dark Heresy》，做《行商浪人》的 Owlcat 新作，2027 年 1 月 28 號上 PC、PS5 跟 Xbox。\n你是審判庭的人，帶小隊在卡利克西斯星區辦案：跑現場、問證人，筆記本會標出互相矛盾的證詞，但誰是異端由你判，判錯就可能冤枉人。\n戰鬥是回合制，角色有士氣，敵人崩潰會逃跑或投降，還能瞄準部位、打爛掩體。\n缺點先講：Steam 還沒開價；只有簡中沒有繁中，語音英文；Owlcat 前作首發 bug 不少，我建議等評測。\n你覺得辦案遊戲要有標準答案嗎？留言聊聊。",
+    "credit": "圖片／影片來源：Owlcat Games 官方 Steam 商店頁與預告"
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：Warhammer 40,000: Dark Heresy",
+      "u": "https://store.steampowered.com/app/3710600/Warhammer_40000_Dark_Heresy/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "RPG Site：Dark Heresy 上市日與平台",
+      "u": "https://www.rpgsite.net/news/21725-warhammer-40k-dark-heresy-release-date-ps5-xbox-seriex-x-pc-steam-epic-gog",
+      "d": "2026-11-09"
+    },
+    {
+      "t": "Gematsu：Dark Heresy 2027/1/28 上市、Switch 2 版之後推出",
+      "u": "https://gematsu.com/2026/11/warhammer-40000-dark-heresy-launches-january-28-2027-for-ps5-xbox-series-and-pc-later-for-switch-2",
+      "d": "2026-11-09"
+    },
+    {
+      "t": "Owlcat 官方新聞：Dark Heresy 發表",
+      "u": "https://owlcat.games/news/95",
+      "d": "2025-05-23"
+    },
+    {
+      "t": "GameSpace：Dark Heresy 同伴與版本內容",
+      "u": "https://gamespace.com/all-articles/news/warhammer-40000-dark-heresy-check-out-companions-game-editions/",
+      "d": "2025-05-23"
+    },
+    {
+      "t": "Gematsu：Dark Heresy 付費 alpha 12/16 開始",
+      "u": "https://www.gematsu.com/2025/10/warhammer-40000-dark-heresy-open-alpha-test-for-pc-begins-december-16",
+      "d": "2025-10-23"
+    },
+    {
+      "t": "Steam 社群：Dark Heresy 官方 FAQ",
+      "u": "https://steamcommunity.com/app/3710600/discussions/0/591772295701285290/",
+      "d": "2026-05-21"
+    },
+    {
+      "t": "Wikipedia：Warhammer 40,000: Dark Heresy",
+      "u": "https://en.wikipedia.org/wiki/Warhammer_40,000:_Dark_Heresy",
+      "d": ""
+    },
+    {
+      "t": "新聞稿：Dark Heresy 封閉 beta 詳細介紹",
+      "u": "https://www.uberstrategist.com/press-releases/warhammer-40-000-dark-heresy----a-detailed-look-at-the-closed-beta",
+      "d": "2026-06-17"
+    },
+    {
+      "t": "FRVR 訪談：規模比行商浪人小、劇情更多樣",
+      "u": "https://frvr.com/blog/warhammer-40000-dark-heresy-is-smaller-in-scale-than-rogue-trader-but-broader-in-narrative-variety",
+      "d": "2025-12-11"
+    },
+    {
+      "t": "PCGamesN：Dark Heresy beta 試玩心得",
+      "u": "https://www.pcgamesn.com/warhammer-40k-dark-heresy/beta-impressions",
+      "d": "2026-05"
+    },
+    {
+      "t": "PCGamesN：Owlcat 談行商浪人首發的教訓",
+      "u": "https://www.pcgamesn.com/warhammer-40k-dark-heresy/rogue-trader-learnings",
+      "d": "2025"
+    },
+    {
+      "t": "GamesRadar：Dark Heresy 一小時試玩",
+      "u": "https://www.gamesradar.com/games/rpg/if-baldurs-gate-3-and-pentiment-were-blasted-into-space-youd-get-warhammer-40k-dark-heresy-and-after-checking-it-out-for-an-hour-i-couldnt-have-plucked-a-better-rpg-from-my-dreams",
+      "d": "2025"
+    },
+    {
+      "t": "Notebookcheck：行商浪人 Steam 5 折史低",
+      "u": "https://www.notebookcheck.net/Deal-Best-Steam-price-yet-130-hour-CRPG-drops-to-all-time-low.1023196.0.html",
+      "d": "2025-05-23"
+    },
+    {
+      "t": "Mein-MMO：行商浪人 55% 折扣",
+      "u": "https://mein-mmo.de/en/the-best-role-playing-game-in-the-universe-of-warhammer-40000-is-currently-cheaper-than-ever-before,1529811/",
+      "d": "2025-09-30"
+    },
+    {
+      "t": "SteamDB：戰鎚 40K：行商浪人價格紀錄",
+      "u": "https://steamdb.info/app/2186680/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "GOG 商店頁：Dark Heresy",
+      "u": "https://www.gog.com/en/game/warhammer_40000_dark_heresy",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "TechRadar：行商浪人評測（首發 bug）",
+      "u": "https://www.techradar.com/gaming/consoles-pc/warhammer-40000-rogue-trader-review",
+      "d": "2023-12-06"
+    },
+    {
+      "t": "RPG Site：行商浪人 Lex Imperialis 與第二季季票",
+      "u": "https://www.rpgsite.net/news/17499-warhammer-40000-rogue-trader-lex-imperialis-expansion-release-date-season-pass-2-price",
+      "d": "2025-05-22"
+    },
+    {
+      "t": "Windows Central：Dark Heresy 上市日公布",
+      "u": "https://www.windowscentral.com/gaming/warhammer-40-000-dark-heresy-release-date-revealed",
+      "d": "2026-11-10"
+    },
+    {
+      "t": "遊戲基地：Dark Heresy 報導",
+      "u": "https://news.gamebase.com.tw/news/detail/99436220",
+      "d": "2025-08-27"
+    },
+    {
+      "t": "巴哈姆特 GNN：Dark Heresy 上市日",
+      "u": "https://gnn.gamer.com.tw/detail.php?sn=314756",
+      "d": "2026-11"
+    },
+    {
+      "t": "PC Games：Xbox 預告透露 2027 年",
+      "u": "https://www.pcgames.de/Warhammer-40-000-Dark-Heresy-Spiel-78081/News/Fans-bekommen-endlich-einen-Hinweis-zum-Release-1552202/",
+      "d": "2026-08-27"
+    },
+    {
+      "t": "Wikipedia：Owlcat Games",
+      "u": "https://en.wikipedia.org/wiki/Owlcat_Games",
+      "d": ""
+    },
+    {
+      "t": "Xbox Wire：The Expanse: Osiris Reborn",
+      "u": "https://news.xbox.com/en-us/2026/03/26/the-expanse-osiris-reborn/",
+      "d": "2026-03-26"
+    },
+    {
+      "t": "Steam 社群：beta 玩起來如何？",
+      "u": "https://steamcommunity.com/app/3710600/discussions/0/568164456893342574/",
+      "d": "2026-07"
+    },
+    {
+      "t": "PCGamesN：Dark Heresy alpha 心得",
+      "u": "https://www.pcgamesn.com/warhammer-40k-dark-heresy/alpha-disco-elysium",
+      "d": "2025-12"
+    },
+    {
+      "t": "Game Developer 新聞稿：Warhammer Skulls 公布 Dark Heresy",
+      "u": "https://www.gamedeveloper.com/press-release/owlcat-games-reveals-rogue-trader-s-lex-imperialis-dlc-and-announces-warhammer-40-000-dark-heresy-during-warhammer-skulls",
+      "d": "2025-05-22"
+    },
+    {
+      "t": "新聞稿：Dark Heresy beta 今天開始",
+      "u": "https://www.uberstrategist.com/press-releases/warhammer-40-000-dark-heresy-beta-starts-today",
+      "d": "2026-05-21"
+    }
+  ],
+  "pending": [
+    "Steam 台灣售價與預購時間",
+    "是否會加入繁體中文",
+    "Steam 頁列的「線上合作」怎麼玩",
+    "全長遊玩時數、DLSS／FSR 支援、分級",
+    "會不會加入 Game Pass"
+  ],
+  "updated": "2026-11-17T17:30:00+08:00"
+}

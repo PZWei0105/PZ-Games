@@ -1,6 +1,12 @@
 {
  "apps": [
   {
+   "appid": 1904480,
+   "id": "absolum",
+   "date": "2026-11-17",
+   "watch": false
+  },
+  {
    "appid": 1203620,
    "id": "enshrouded",
    "date": "2026-11-17",
@@ -11,6 +17,12 @@
    "id": "final-fantasy-resonance",
    "date": "2026-11-17",
    "watch": true
+  },
+  {
+   "appid": 3710600,
+   "id": "warhammer-40000-dark-heresy",
+   "date": "2026-11-17",
+   "watch": false
   },
   {
    "appid": 3669620,

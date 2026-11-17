@@ -1,0 +1,506 @@
+{
+  "id": "absolum",
+  "date": "2026-11-17",
+  "rank": 21,
+  "kind": "wish",
+  "kind_label": "願望單解包",
+  "game": {
+    "zh": "絕對魔權",
+    "en": "Absolum",
+    "steam": 1904480,
+    "dev": "Guard Crush Games、Supamonks",
+    "pub": "Dotemu",
+    "platforms": [
+      "PC（Steam）",
+      "PS5",
+      "PS4",
+      "Switch",
+      "Switch 2",
+      "Xbox Series X|S（Game Pass）"
+    ],
+    "genres": [
+      "清版動作",
+      "類 Rogue",
+      "雙人合作"
+    ],
+    "release": "2025-10-09",
+    "release_text": "2025/10/09 上市（Xbox 版 2026/03/25、Switch 2 版 2026/09/17）",
+    "price_text": "Steam 特價 NT$244（原價 NT$408）",
+    "site": "https://www.dotemu.com/"
+  },
+  "headline": "《怒之鐵拳 4》團隊的手繪奇幻清版：OpenCritic 86 分，現在 6 折",
+  "hook": "你一拳把騎士打上天，連段累出的魔力剛好夠放一發法術；旁邊的朋友騎著坐騎衝進敵陣補刀。這一輪死了，身上的祝福全沒了——但你已經記住下一個岔路該往哪走。",
+  "verdict": {
+    "stamp": "推薦",
+    "label": "趁最低價入手",
+    "summary": "打擊感、手繪美術和 Gareth Coker 的配樂都是一線水準，媒體幾乎一面倒推薦，上市一年還有免費更新，也補上全平台跨平台連線。它終究是要手眼反應的動作遊戲，一輪約 30 分鐘、可以分段玩；只是最多 2 人合作，3 個朋友一起玩就有人要排隊。",
+    "for": [
+      "想找一款打起來很爽、一輪半小時就能收工的遊戲",
+      "有一個固定朋友能連線一起打（本機或線上都行）",
+      "喜歡一輪輪變強、慢慢解鎖新招式的成長感"
+    ],
+    "against": [
+      "不喜歡拼手速、躲招和連段的人",
+      "想要 3～4 人一起玩的朋友團（最多只支援 2 人）",
+      "期待每輪地圖都隨機生成的硬派 Roguelite 玩家（關卡是固定的）"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Guard Crush Games（《怒之鐵拳 4》）與法國動畫工作室 Supamonks 開發，Dotemu 發行；Dotemu 第一款原創作品",
+      "s": [
+        0,
+        3,
+        4
+      ]
+    },
+    {
+      "k": "上市日",
+      "v": "2025/10/09 PC、PS4、PS5、Switch；Xbox Series X|S 2026/03/25（首日加入 Game Pass）；Switch 2 版 2026/09/17",
+      "s": [
+        3,
+        10,
+        11
+      ]
+    },
+    {
+      "k": "Steam 台灣價",
+      "v": "原價 NT$408，目前 -40% 為 NT$244，是 SteamDB 記錄到的台灣區最低價；特價到台灣時間 11/19 凌晨 2 點",
+      "s": [
+        1,
+        2
+      ]
+    },
+    {
+      "k": "中文",
+      "v": "介面與字幕有繁體中文；語音只有英文",
+      "s": [
+        0,
+        13
+      ]
+    },
+    {
+      "k": "幾人玩",
+      "v": "1～2 人，本機或線上合作；2026/05 起 PC、PS、Xbox、Switch 全平台跨平台連線",
+      "s": [
+        0,
+        3,
+        9
+      ]
+    },
+    {
+      "k": "Steam 評價",
+      "v": "SteamDB 統計約 1.1 萬則評論、91% 好評，屬「極度好評」（11/17 查詢）",
+      "s": [
+        1
+      ]
+    },
+    {
+      "k": "媒體評分",
+      "v": "OpenCritic 86 分、97% 評論者推薦；Metacritic Switch 版 90、PC 版 87",
+      "s": [
+        5,
+        3
+      ]
+    },
+    {
+      "k": "獎項",
+      "v": "入圍 The Game Awards 2025 最佳獨立遊戲（得獎的是《光與影：33 號遠征隊》）",
+      "s": [
+        15
+      ]
+    },
+    {
+      "k": "銷量",
+      "v": "首週賣破 20 萬套，2026 年 1 月破 50 萬套",
+      "s": [
+        6,
+        7
+      ]
+    },
+    {
+      "k": "長度",
+      "v": "一輪約 30 分鐘；主線約 9 小時，全收集約 27 小時",
+      "s": [
+        16,
+        18
+      ]
+    },
+    {
+      "k": "免費更新",
+      "v": "2026/02/12 免費更新「Threads of Fate」：加入可調整的挑戰規則、破關後的腐化區域、對戰競技場和新外觀",
+      "s": [
+        8
+      ]
+    },
+    {
+      "k": "內購",
+      "v": "沒有內購；唯一的付費 DLC 是原聲帶",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "配樂",
+      "v": "Gareth Coker 作曲，客座有 Mick Gordon、北村友香、櫻庭統",
+      "s": [
+        3,
+        4
+      ]
+    },
+    {
+      "k": "建議配備",
+      "v": "i5-2550K／Ryzen 3 1200、GTX 1060 6GB／RX 580、8GB RAM、5GB 空間；本機雙人一定要手把",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "中文實體版",
+      "v": "PS5／Switch 中文盒裝版 2025/11/06 推出，由 Arc System Works 在亞洲發行",
+      "s": [
+        17,
+        14
+      ]
+    }
+  ],
+  "money": {
+    "level": 0,
+    "model": "買斷制，無內購",
+    "notes": [
+      "一次買斷，沒有內購；上市後的大型更新（Threads of Fate、跨平台連線）都免費。",
+      "唯一的付費 DLC 是原聲帶，不影響遊戲內容。",
+      "線上合作兩個人都要各自擁有遊戲；PlayStation 上連線要 PS Plus。"
+    ],
+    "flags": [
+      "買斷無內購",
+      "免費更新",
+      "線上合作要各買一份"
+    ]
+  },
+  "zh": {
+    "ui": true,
+    "sub": true,
+    "voice": false,
+    "note": "介面、字幕都有繁體中文，語音只有英文。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區、PS Store 台灣都有上架，PS5／Switch 也有中文盒裝版。"
+  },
+  "rig": {
+    "verdict": "不吃硬體",
+    "note": "建議配備只要 GTX 1060 等級、5GB 空間，你的 SCAR 18 閉著眼睛跑。接 4K 大電視、兩支手把本機雙人最舒服。"
+  },
+  "time": {
+    "text": "主線約 9 小時，一輪約 30 分鐘",
+    "note": "全收集約 27 小時；一輪半小時，適合下班打兩輪。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "i0QWQ8L1HRg",
+        "title": "上市預告"
+      },
+      {
+        "id": "w3zhPXKrv3M",
+        "title": "實機玩法預告"
+      },
+      {
+        "id": "R0hhAoz0wLA",
+        "title": "免費更新 Threads of Fate 預告"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "這次特價 11/19 凌晨結束，之後要等下一次大型特賣",
+    "會不會出新角色或付費擴充",
+    "下一次免費大型更新"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "從據點出發",
+        "選路線推關",
+        "連段累魔力放法術",
+        "挑祝福強化這一輪",
+        "打王拿新招式",
+        "死亡回據點升級"
+      ],
+      "body": [
+        "骨子裡是《怒之鐵拳 4》團隊最拿手的橫向清版：輕重攻擊、閃避、格擋，連段打得越漂亮，累積的魔力越多，可以放出各種法術。",
+        "外面套了一層類 Rogue 的殼：每一輪會撿到不同的「儀式」祝福，改變你的攻擊性質；死掉這些就沒了，但回到據點可以花資源做永久升級。關卡地圖是固定的，隨機的是祝福和岔路上的事件。",
+        "打倒頭目會解鎖新的主動技能，還有支線任務、坐騎、飾品可以收集。你會越打越熟路線，也越能把一輪的組合玩出花樣。",
+        "四名主角風格差很多：揮巨劍的精靈劍士加蘭德拉、用拳頭和火藥的矮人卡爾、雙匕首的盜賊西德，以及踩著法杖衝浪的青蛙法師布羅姆。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和評測整理：先從手感最直覺的加蘭德拉或卡爾開始，熟悉格擋和閃避的時機。",
+      "前幾輪死得快很正常——每次回據點記得把資源花在永久升級上，不要存著。",
+      "設定裡有輔助選項，覺得太難可以打開；但線上合作時輔助選項會被鎖住，要先知道。",
+      "想跟朋友玩：本機雙人要兩支手把；線上合作兩個人都要買，現在全平台跨平台。"
+    ],
+    "compare": [
+      {
+        "name": "怒之鐵拳 4",
+        "same": "同一個團隊、同樣紮實的清版打擊感",
+        "diff": "怒之鐵拳 4 是一關一關的傳統清版、最多 4 人；絕對魔權改成奇幻世界加類 Rogue 成長、最多 2 人"
+      },
+      {
+        "name": "黑帝斯",
+        "same": "一輪一輪打、死了回據點升級、每輪挑祝福",
+        "diff": "黑帝斯是俯視角、地圖隨機；絕對魔權是橫向清版、地圖固定、可以雙人合作"
+      },
+      {
+        "name": "忍者龜：許瑞德的復仇",
+        "same": "Dotemu 發行、手繪風格清版、合作打很爽",
+        "diff": "忍者龜是純懷舊清版、最多 6 人；絕對魔權有成長系統和更深的連段"
+      }
+    ],
+    "story": {
+      "safe": [
+        "舞台是塔拉姆大陸：一場魔法災難之後，太陽王阿茲拉帶著腥紅教團獵殺所有巫師。",
+        "你是被流放的英雄之一，跟著高階女巫烏查維領導的反抗軍，一路打回去奪回魔法。"
+      ],
+      "spoiler": [
+        "結局揭曉：真正的反派不是太陽王，而是一個來自其他維度、名叫 Absolum 的存在。"
+      ]
+    },
+    "studio": [
+      "Guard Crush Games 是《怒之鐵拳 4》的共同開發商，2020 年和 Dotemu、Lizardcube 一起推出這款續作，是近年清版遊戲復興的代表作。",
+      "Dotemu 是法國發行商，代表作有《怒之鐵拳 4》、《忍者龜：許瑞德的復仇》；2021 年被 Focus Home Interactive（現在的 Pullup Entertainment）買下 77.5% 股份。",
+      "絕對魔權是 Dotemu 第一款原創作品，美術和動畫由法國動畫工作室 Supamonks 手繪。2025/03/04 公布、10/09 上市，之後陸續推出 Xbox（首日 Game Pass）、Switch 2 和手機版。",
+      "商業模式乾淨：買斷、沒有內購，大型更新都免費，只賣原聲帶。"
+    ],
+    "voices": {
+      "pros": [
+        "打擊感和連段手感一流，頭目戰設計被大量好評",
+        "手繪美術和 Gareth Coker 領軍的配樂被一致誇獎",
+        "雙人合作很爽，還有輔助選項讓手殘也能玩"
+      ],
+      "cons": [
+        "上市時破關後的內容偏薄（2026/02 的免費更新補了挑戰規則和新區域）",
+        "劇情不太吸引人，配音品質也不穩",
+        "特效一多畫面容易看不清楚；線上合作時輔助選項會被鎖住"
+      ],
+      "debate": [
+        "類 Rogue 結構是加分還是拖累？IGN 給 7 分，說清版很優秀但 Roguelite 結構沒幫上忙；GameSpot、Game Informer 則給 9 分。"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2025-03-04",
+        "t": "公布，釋出手繪動畫預告"
+      },
+      {
+        "d": "2025-08-19",
+        "t": "公布上市日期"
+      },
+      {
+        "d": "2025-10-09",
+        "t": "PC、PS4、PS5、Switch 上市，首週賣破 20 萬套"
+      },
+      {
+        "d": "2025-12",
+        "t": "入圍 The Game Awards 最佳獨立遊戲"
+      },
+      {
+        "d": "2026-01",
+        "t": "銷量破 50 萬套"
+      },
+      {
+        "d": "2026-02-12",
+        "t": "免費更新 Threads of Fate"
+      },
+      {
+        "d": "2026-03-25",
+        "t": "Xbox 版上市，首日加入 Game Pass"
+      },
+      {
+        "d": "2026-05",
+        "t": "全平台跨平台連線上線"
+      },
+      {
+        "d": "2026-09-17",
+        "t": "Switch 2 版上市"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "清版遊戲加上類 Rogue，是進化還是畫蛇添足？",
+        "why": "媒體分數從 IGN 的 7 分到 GameSpot 的 9 分，吵的都是同一件事：一輪輪重來的結構適不適合清版。"
+      },
+      {
+        "q": "只支援 2 人，對清版遊戲是不是太保守？",
+        "why": "同團隊的《怒之鐵拳 4》能 4 人、《忍者龜》能 6 人；絕對魔權只有 2 人，換來的是更精細的平衡。"
+      },
+      {
+        "q": "NT$244 的台灣區最低價，買斷無內購還有免費更新，算不算今年 CP 值最高？",
+        "why": "上市一年、OpenCritic 86 分，還在持續更新，價格卻打到 6 折。"
+      }
+    ]
+  },
+  "buy": {
+    "call": "現在買",
+    "target": 24400,
+    "why": "現在 NT$244 是 SteamDB 記錄到的台灣區最低價，比原價省 164 元，特價到台灣時間 11/19 凌晨 2 點。買斷、無內購、更新免費，評價 91% 好評。缺點是要手速、最多 2 人；不愛動作遊戲就跳過，愛的話這價格不用再等。",
+    "watch": "錯過這波就等下一次大型特賣回到 NT$244；若之後出付費擴充或完整版，再重新評估。"
+  },
+  "fanpage": {
+    "post": "連段打到第二十下，魔力條滿了，一發法術把整排騎士轟出畫面。朋友在旁邊騎著坐騎衝進來補刀——這一輪你們撐到了第三個頭目。\n\n《絕對魔權》是《怒之鐵拳 4》團隊 Guard Crush Games 跟法國動畫工作室 Supamonks 合作、Dotemu 發行的手繪奇幻清版，2025 年 10 月上市。它把清版打擊感和類 Rogue 結構綁在一起：每一輪撿不同祝福，死了回據點升級，再出發，一輪大約 30 分鐘。\n\n硬資訊：Steam 原價 NT$408，現在 6 折 NT$244，是 SteamDB 記錄的台灣最低價，11/19 凌晨結束；有繁中介面與字幕、語音英文；買斷無內購；1～2 人本機或線上合作，全平台跨平台。OpenCritic 86 分，Steam 九成以上好評，還入圍了 TGA 2025 最佳獨立遊戲。\n\n清版遊戲加上一輪輪重來的結構，你覺得是進化，還是破壞了清版的爽快？",
+    "titles": [
+      "絕對魔權 Steam 6 折 NT$244，台灣區最低價",
+      "怒之鐵拳 4 團隊做的奇幻清版，值得現在入手嗎？",
+      "清版遊戲加上類 Rogue，是進化還是畫蛇添足？"
+    ],
+    "card": {
+      "kicker": "願望單解包｜Steam 6 折",
+      "title": "怒之鐵拳團隊\n手繪奇幻清版",
+      "sub": "絕對魔權 NT$244 最低價",
+      "tags": [
+        "清版動作",
+        "雙人合作",
+        "繁中字幕"
+      ],
+      "points": [
+        {
+          "h": "一輪半小時",
+          "t": "撿祝福變強，死了回據點升級。"
+        },
+        {
+          "h": "最多 2 人",
+          "t": "本機或線上合作，全平台跨平台。"
+        },
+        {
+          "h": "OpenCritic 86",
+          "t": "入圍 TGA 2025 最佳獨立遊戲。"
+        }
+      ]
+    },
+    "tags": [
+      "#絕對魔權",
+      "#Absolum",
+      "#清版動作",
+      "#Steam特價",
+      "#雙人合作",
+      "#遊戲狂想曲"
+    ],
+    "script": "做《怒之鐵拳 4》的團隊，把清版遊戲變成一輪輪重來的冒險，現在 Steam 只要 244 塊。這款叫《絕對魔權》，Dotemu 發行，去年 10 月上市。\n玩法是橫向清版：輕重攻擊、閃避、格擋，連段累魔力放法術。每輪撿不同祝福，死了回據點做永久升級，一輪大概半小時，下班打兩輪剛好。\n評價很硬：OpenCritic 86 分，Steam 九成好評，還入圍去年 TGA 最佳獨立遊戲。有繁中字幕，買斷沒內購，最多兩人本機或線上合作。\n原價 408，現在六折，是台灣區有紀錄的最低價，11 月 19 號凌晨結束。缺點是要手速。\n清版加上類 Rogue，你覺得是進化還是多此一舉？",
+    "credit": "圖片／影片來源：Dotemu 官方 Steam 商店頁與預告"
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：絕對魔權",
+      "u": "https://store.steampowered.com/app/1904480/Absolum/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "SteamDB：Absolum 價格紀錄",
+      "u": "https://steamdb.info/app/1904480/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "SteamDB：Absolum 套件（台灣區價格與特價結束時間）",
+      "u": "https://steamdb.info/sub/685849/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Wikipedia：Absolum",
+      "u": "https://en.wikipedia.org/wiki/Absolum",
+      "d": ""
+    },
+    {
+      "t": "Dotemu 新聞稿：公布 Absolum",
+      "u": "https://gamespress.com/Dotemu-Announces-Beat-em-Up-Action-RPG-Absolum-with-Guard-Crush-Games-",
+      "d": "2025-03-04"
+    },
+    {
+      "t": "OpenCritic：Absolum 評測彙整",
+      "u": "https://opencritic.com/game/19143/absolum/reviews",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Gamereactor：首週銷量破 20 萬",
+      "u": "https://www.gamereactor.eu/absolum-sold-over-200000-copies-in-its-launch-week-1620133/",
+      "d": "2025-10"
+    },
+    {
+      "t": "GoNintendo：銷量破 50 萬、Threads of Fate 更新日期",
+      "u": "https://gonintendo.com/contents/57048-absolum-hits-500k-sold-free-threads-of-fate-update-coming-feb-12th-2026",
+      "d": "2026-01"
+    },
+    {
+      "t": "Nintendo Life：Threads of Fate 更新內容",
+      "u": "https://www.nintendolife.com/news/2026/02/absolums-threads-of-fate-update-out-now-includes-balance-tweaks-corrupted-biomes-and-more",
+      "d": "2026-02-12"
+    },
+    {
+      "t": "Push Square：全平台跨平台連線上線",
+      "u": "https://www.pushsquare.com/news/2026/05/excellent-co-op-brawler-absolum-now-has-full-cross-play-support-across-all-platforms",
+      "d": "2026-05-13"
+    },
+    {
+      "t": "Windows Central：Xbox 版日期與 Game Pass",
+      "u": "https://www.windowscentral.com/gaming/xbox/absolum-release-date-confirmed-for-xbox-game-pass",
+      "d": "2026-03-17"
+    },
+    {
+      "t": "Game Developer 新聞稿：Switch 2 實體版 9/17",
+      "u": "https://www.gamedeveloper.com/press-release/absolum-strikes-nintendo-switch-2-physical-september-17",
+      "d": "2026-06-25"
+    },
+    {
+      "t": "Gematsu：iOS／Android 版 11/5 推出",
+      "u": "https://www.gematsu.com/2026/09/absolum-coming-to-ios-android-on-november-5",
+      "d": "2026-09-08"
+    },
+    {
+      "t": "PlayStation Store 台灣：絕對魔權",
+      "u": "https://www.playstation.com/zh-hant-tw/games/absolum/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Arc System Works：絕對魔權繁中官網",
+      "u": "https://www.arcsystemworks.jp/absolum/zh-hant/",
+      "d": ""
+    },
+    {
+      "t": "Gematsu：The Game Awards 2025 得獎名單",
+      "u": "https://www.gematsu.com/2025/12/the-game-awards-2025-winners-announced",
+      "d": "2025-12"
+    },
+    {
+      "t": "Push Square：Absolum 評測",
+      "u": "https://www.pushsquare.com/reviews/ps5/absolum",
+      "d": "2025-10-09"
+    },
+    {
+      "t": "遊戲基地（LINE TODAY）：中文實體版消息",
+      "u": "https://today.line.me/tw/v3/article/1DrnwYE",
+      "d": "2025-10-01"
+    },
+    {
+      "t": "Deku Deals：Absolum（含 HowLongToBeat 時數）",
+      "u": "https://www.dekudeals.com/items/absolum",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Push Square：Focus Home 收購 Dotemu",
+      "u": "https://www.pushsquare.com/news/2021/08/focus_home_interactive_acquires_streets_of_rage_4_publisher_dotemu",
+      "d": "2021-08-05"
+    },
+    {
+      "t": "機核：Gamescom ONL 公布新角色與上市日",
+      "u": "https://www.gcores.com/articles/203339",
+      "d": "2025-08-20"
+    }
+  ],
+  "pending": [
+    "Steam 頁的第五名英雄說法未確認（目前只看到四名）",
+    "PS Store 與 Nintendo eShop 台灣價格",
+    "2026/10 一週年活動內容（只有非官方網站提到）"
+  ],
+  "updated": "2026-11-17T17:30:00+08:00"
+}
