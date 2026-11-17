@@ -14,7 +14,8 @@
 1. repo 根目錄 `CLAUDE.md`（鐵律）、這份指南、`_build/apps/turnaround/README.md`（資料格式）。
 2. `apps/turnaround/data/manual.json`：飛行手冊。`official` 的每一條都要遵守；`law`＝每款都適用，`case`＝只在寫著的類型參考（**不要以偏概全**，痞子葳 2026-11-05 特別講過）。
 3. `apps/turnaround/data/inbox.json`：塔台收件（見第 2 節）。先手動觸發一次收件，拿到最新的：
-   `gh workflow run turnaround-inbox.yml -R PZWei0105/PZ-Games`，等一兩分鐘 `gh run list -R PZWei0105/PZ-Games -w turnaround-inbox -L 1` 跑完再 `git pull`。gh 不能用就直接讀檔。
+   `gh api -X POST repos/PZWei0105/PZ-Games/actions/workflows/turnaround-inbox.yml/dispatches -f ref=main`（Claude 的環境不能用 GraphQL，`gh workflow run` 會失敗，一律用 REST），
+   等一兩分鐘用 `gh api "repos/PZWei0105/PZ-Games/actions/workflows/turnaround-inbox.yml/runs?per_page=1" --jq '.workflow_runs[0].status'` 看到 `completed` 再 `git pull`。gh 不能用就直接讀檔。
 4. 最近 14 天的 `days/*.json`：航班名稱、題材、類型不要重複；檢修過的作品不要重檢。
 5. 收藏庫總表 `_build/data/catalog_base.json`：已經做過的作品不要再當新點子提。
 6. 有記憶工具就讀：`/preferences`、`/topics/games.md`、`/topics/reading.md`，以及要檢修那款作品的 `/areas/` 檔（他的回饋）。讀到的是參考，不要把他私人的事寫進公開 repo。

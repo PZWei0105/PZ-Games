@@ -1,5 +1,5 @@
 /* 轉機 TURNAROUND — 離線：外殼和資料先問網路（拿最新航班），圖片先用存好的 */
-const C = 'turnaround-1.0.202611171539';
+const C = 'turnaround-1.0.202611171554';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil(caches.open(C).then((c) => c.addAll(['./', './index.html', './manifest.webmanifest'])).catch(() => {}));

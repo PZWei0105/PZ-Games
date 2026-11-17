@@ -75,7 +75,7 @@ def main():
     except (FileNotFoundError, ValueError):
         inbox = {'v': 1, 'at': '', 'cursor': '', 'events': []}
     if a.selftest:
-        body = json.dumps({'v': 1, 'dev': 'dselftest', 'ev': [{'id': 'dselftest-%d' % int(time.time()), 't': datetime.datetime.utcnow().isoformat() + 'Z', 'type': 'ping', 'note': 'actions selftest'}]})
+        body = json.dumps({'v': 1, 'dev': 'dselftest', 'ev': [{'id': 'dselftest-%d' % (int(time.time()) % 1000000), 't': datetime.datetime.utcnow().isoformat() + 'Z', 'type': 'ping', 'note': 'actions selftest'}]})
         urllib.request.urlopen(urllib.request.Request(BASE, data=body.encode(), method='POST'), timeout=30).read()
         print('已送出測試 ping')
         time.sleep(3)
