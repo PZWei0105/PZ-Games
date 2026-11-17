@@ -1,6 +1,24 @@
 {
  "apps": [
   {
+   "appid": 2406770,
+   "id": "bodycam",
+   "date": "2026-11-18",
+   "watch": false
+  },
+  {
+   "appid": 2272360,
+   "id": "dawn-of-war-iv",
+   "date": "2026-11-18",
+   "watch": true
+  },
+  {
+   "appid": 5200620,
+   "id": "dungeonbound",
+   "date": "2026-11-18",
+   "watch": true
+  },
+  {
    "appid": 1904480,
    "id": "absolum",
    "date": "2026-11-17",

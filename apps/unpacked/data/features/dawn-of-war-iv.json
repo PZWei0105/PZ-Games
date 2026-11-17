@@ -1,0 +1,487 @@
+{
+  "id": "dawn-of-war-iv",
+  "date": "2026-11-18",
+  "rank": 2,
+  "kind": "upcoming",
+  "kind_label": "倒數上市",
+  "game": {
+    "zh": "戰鎚 40,000：破曉之戰 IV",
+    "en": "Warhammer 40,000: Dawn of War IV",
+    "steam": 2272360,
+    "dev": "KING Art Games",
+    "pub": "Deep Silver",
+    "platforms": [
+      "PC（Steam）"
+    ],
+    "genres": [
+      "即時戰略",
+      "基地建設",
+      "戰鎚 40K"
+    ],
+    "release": "2026-12-03",
+    "release_text": "2026/12/03 上市（原定 9/17，延期約兩個半月）；指揮官版 11/30 提前 3 天開玩",
+    "price_text": "Steam 標準版預購 NT$1,574（-10%）",
+    "site": "https://www.deepsilver.com/games/dawn-of-war-iv"
+  },
+  "headline": "睽違 9 年的《破曉之戰》正傳倒數兩週：四大陣營、70 多關戰役，回到一代的味道",
+  "hook": "你的星際戰士小隊衝進獸人陣地，一名連長在掩體後把獸人老大舉起來、狠狠摔在地上——那是遊戲自己演出的處決動畫。旁邊的部隊還在搶據點、蓋砲台，後方基地的生產列表排得滿滿的。這就是老玩家等了很久的那種即時戰略。",
+  "verdict": {
+    "stamp": "觀望",
+    "label": "等評測",
+    "summary": "試玩評價幾乎一面倒說「回到一代」：有基地、有掩體、有處決動畫，四條戰役加 70 多關分量很足，還有繁中字幕。但它延期過一次、正式評測還沒出，多人平衡要上市後才看得出來，多數試玩也沒碰到太空死靈戰役；12/3 上市後看評測再決定，不急著預購。",
+    "for": [
+      "玩過《破曉之戰》一、二代，或《英雄連隊》這類小隊即時戰略的老玩家",
+      "喜歡戰鎚 40K 世界觀，想看機械神教第一次在系列登場",
+      "想要一款能玩很久的單人戰役＋合作＋多人對戰"
+    ],
+    "against": [
+      "不玩即時戰略、手速和多工會讓你壓力很大",
+      "硬碟空間吃緊（要 125GB）",
+      "只想等便宜：首年還有兩個付費擴充，完整版之後可能更划算"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "KING Art Games（德國不萊梅，前作是即時戰略《Iron Harvest》）開發，Deep Silver 發行，Games Workshop 授權",
+      "s": [
+        0,
+        14,
+        20
+      ]
+    },
+    {
+      "k": "上市日",
+      "v": "2026/12/3；原本定在 9/17，8 月宣布延期，理由是效能最佳化、修錯與參考玩家測試意見",
+      "s": [
+        1,
+        5,
+        4
+      ]
+    },
+    {
+      "k": "指揮官版",
+      "v": "11/30 提前 3 天開玩，內含第一年的擴充內容",
+      "s": [
+        0,
+        1,
+        16
+      ]
+    },
+    {
+      "k": "平台",
+      "v": "只有 PC（Steam），沒有公布主機版；NVIDIA 說會上 GeForce NOW，日期未定",
+      "s": [
+        0,
+        12
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Steam 台灣區標準版預購 NT$1,574（-10% 預購優惠）；美國區標準版 US$59.99、指揮官版 US$89.99",
+      "s": [
+        15,
+        0
+      ]
+    },
+    {
+      "k": "語言",
+      "v": "介面與字幕有繁體中文、簡體中文；語音只有英文",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "陣營",
+      "v": "上市有 4 個：星際戰士（血鴉、暗黑天使）、獸人、太空死靈、機械神教（系列第一次登場）",
+      "s": [
+        2,
+        6,
+        7
+      ]
+    },
+    {
+      "k": "戰役",
+      "v": "4 條戰役、70 多關，可以單人或合作玩；舞台回到克羅努斯星球，時間在《黑暗遠征》約 200 年後",
+      "s": [
+        2,
+        3,
+        9,
+        19
+      ]
+    },
+    {
+      "k": "其他模式",
+      "v": "遭遇戰最多 5 個電腦對手；多人 1v1、2v2、3v3，30 張地圖；3 人合作生存「最後防線」回歸",
+      "s": [
+        7,
+        2
+      ]
+    },
+    {
+      "k": "需求",
+      "v": "必須 Windows 11；最低 GTX 1660、16GB RAM，建議 RTX 3060 Ti、32GB RAM；容量 125GB",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "DLSS",
+      "v": "NVIDIA 確認支援 DLSS 4.5 超解析度，Game Ready 驅動首日支援",
+      "s": [
+        11
+      ]
+    },
+    {
+      "k": "封閉測試",
+      "v": "10/21～26 封閉 Beta；官方說參與人數超過預期一倍，約八成玩家回來玩了不只一次",
+      "s": [
+        8,
+        13
+      ]
+    },
+    {
+      "k": "第一年內容",
+      "v": "免費：征戰模式、地圖包、關卡編輯器；付費：兩個劇情擴充，其中一個加入第 5 個陣營（指揮官版內含）；延期後上市後時程尚未公布",
+      "s": [
+        1,
+        4,
+        16
+      ]
+    },
+    {
+      "k": "試玩評價",
+      "v": "PC Gamer 等媒體 10 月試玩普遍正面，說它回到一代的味道；疑慮集中在電腦 AI 偏難、近戰偶爾揮空",
+      "s": [
+        9,
+        10,
+        17
+      ]
+    }
+  ],
+  "money": {
+    "level": 2,
+    "model": "買斷制＋第一年付費擴充（指揮官版內含）",
+    "notes": [
+      "標準版就是完整的 4 陣營、4 條戰役和多人模式；指揮官版多了提前 3 天和第一年的兩個劇情擴充（含第 5 個陣營）。",
+      "征戰模式、地圖包和關卡編輯器是免費更新，不用另外買。",
+      "台灣區指揮官版的價格這次還沒查到；Denuvo 等防盜版也還沒確認，上市前要再看一次商店頁。"
+    ],
+    "flags": [
+      "首年付費擴充",
+      "125GB",
+      "Windows 11 限定"
+    ]
+  },
+  "zh": {
+    "ui": true,
+    "sub": true,
+    "voice": false,
+    "note": "介面與字幕有繁體中文，語音只有英文。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區已開放預購、有繁中字幕，12/3 全球同步上市。"
+  },
+  "rig": {
+    "verdict": "綽綽有餘",
+    "note": "建議配備是 RTX 3060 Ti、32GB RAM，你的 RTX 5090 Laptop＋64GB 遠遠超過，還有 DLSS 4.5 可以開。要注意兩件事：容量 125GB（你剩約 800GB，放得下），而且官方要求 Windows 11。"
+  },
+  "time": {
+    "text": "4 條戰役、70 多關",
+    "note": "官方沒有公布通關時數；每條戰役有分歧路線，想全看完要重玩。另外還有遭遇戰、多人和合作生存。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "lAPm8fIy5mg",
+        "title": "官方公布預告（gamescom 2025）"
+      },
+      {
+        "id": "b-yiTAKbCKc",
+        "title": "劇情預告"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "12/3 前後的媒體評分與 Steam 評價",
+    "多人平衡與各陣營戰役的完整評價",
+    "台灣區指揮官版價格、有沒有 Denuvo"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "搶據點拿資源",
+        "蓋基地、出兵",
+        "小隊找掩體交火",
+        "放戰略技能",
+        "英雄帶隊推進",
+        "摧毀敵方基地"
+      ],
+      "body": [
+        "這一代刻意回到一代的玩法：有基地要蓋、有資源點要搶、有部隊要生產。部隊是小隊制，打散了可以在戰場上補兵，所以保住老兵比一直出新兵划算。",
+        "掩體回來了。三代被罵的護盾泡泡拿掉，改回利用地形和建築擋子彈；遠程部隊站對位置，戰局就會差很多。",
+        "招牌的處決動畫升級成「戰鬥導演」系統：近戰時遊戲會自動挑出精彩的擊殺動作來演，大型單位之間的對決特別有看頭。另外還有指揮點數可以呼叫的戰略技能。",
+        "四個陣營玩法差很多：獸人越打越瘋的「Waaagh」值、機械神教的資訊網路和護盾、太空死靈的不死機械大軍。單人有 4 條戰役，每條會分歧；玩完還有遭遇戰、多人對戰和 3 人合作生存。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和試玩報導整理：先打兩關的帝國防衛軍序章，熟悉搶點、生產和補兵。",
+      "第一條戰役建議從星際戰士開始：系列主角陣營，部隊耐打、容錯率高。",
+      "遭遇戰先從簡單難度開：試玩媒體說中等難度的電腦已經很兇。",
+      "記得用塗裝工具做一套自己的戰團配色——這是戰鎚玩家的儀式感。"
+    ],
+    "compare": [
+      {
+        "name": "破曉之戰（一代）",
+        "same": "基地建設、搶據點、處決動畫、小隊補兵",
+        "diff": "四代畫面和動畫全面翻新，多了機械神教和更大的戰役分量"
+      },
+      {
+        "name": "破曉之戰 III",
+        "same": "同系列、同樣有英雄單位",
+        "diff": "三代偏向 MOBA 化、護盾泡泡被罵；四代回到掩體和傳統基地玩法"
+      },
+      {
+        "name": "英雄連隊 3",
+        "same": "小隊即時戰略、掩體、搶資源點",
+        "diff": "英雄連隊是二戰寫實；破曉之戰是戰鎚 40K 的科幻奇幻，近戰演出更誇張"
+      },
+      {
+        "name": "Iron Harvest",
+        "same": "同一家 KING Art 做的即時戰略、有戰役和掩體",
+        "diff": "Iron Harvest 是架空 1920 年代機甲；四代有戰鎚授權和更大的規模"
+      }
+    ],
+    "story": {
+      "safe": [
+        "舞台回到系列熟悉的克羅努斯星球，時間在《破曉之戰：黑暗遠征》約 200 年後。星際戰士血鴉戰團再次登場，獸人、太空死靈和機械神教也各有自己的目的。",
+        "劇情由戰鎚官方小說品牌 Black Library 的作家 John French 參與撰寫；開場是兩關帝國防衛軍的序章。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "原本的《破曉之戰》系列是 Relic 做的；2017 年的三代口碑不佳，PC Gamer 甚至說它差點讓整個系列斷氣。這次換成德國 KING Art 接手。",
+      "KING Art 2000 年在不萊梅成立，做過冒險遊戲《The Book of Unwritten Tales》、奇幻戰略《The Dwarves》，2020 年的《Iron Harvest》是他們第一款完整的即時戰略，也是 Deep Silver 發行。",
+      "遊戲 2025 年 8 月在 gamescom 公布，2026 年 5 月定在 9/17 上市，8 月再延到 12/3；創意總監 Jan Theysen 說要多花時間最佳化和修正。",
+      "商業模式是買斷＋第一年兩個付費劇情擴充，另有免費的征戰模式和關卡編輯器。"
+    ],
+    "voices": {
+      "pros": [
+        "試玩媒體普遍說「這才是破曉之戰」：基地、掩體、處決動畫都回來了",
+        "四個陣營差異大，機械神教第一次登場很有新鮮感",
+        "戰役分量足、有分歧，還能合作玩"
+      ],
+      "cons": [
+        "近戰部隊偶爾對空氣揮砍，動作還不夠精準",
+        "遭遇戰電腦 AI 在中等難度就很兇，新手容易被打爆",
+        "有媒體擔心基地戰關卡變成拚數量，自動瞄準等便利設計也被擔心會拉近高手和新手的差距"
+      ],
+      "debate": [
+        "延期兩個半月是好事還是警訊？官方說是為了品質，封測口碑也不錯，但多人平衡要上市後才看得出來。",
+        "付費擴充加第 5 陣營：該直接買指揮官版，還是等完整版特價？"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2017-04",
+        "t": "前作《破曉之戰 III》上市，口碑不佳"
+      },
+      {
+        "d": "2025-08-19",
+        "t": "gamescom 開幕夜公布《破曉之戰 IV》"
+      },
+      {
+        "d": "2026-05",
+        "t": "公布上市日 9/17 與第一年內容規劃"
+      },
+      {
+        "d": "2026-08-12",
+        "t": "宣布延期到 12/3"
+      },
+      {
+        "d": "2026-10-21",
+        "t": "公開 9 分鐘玩法總覽預告，媒體試玩解禁；封閉 Beta 開跑到 10/26"
+      },
+      {
+        "d": "2026-11-30",
+        "t": "指揮官版提前開玩"
+      },
+      {
+        "d": "2026-12-03",
+        "t": "正式上市"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "換一家工作室接手，能救回一個系列嗎？",
+        "why": "Relic 做了一到三代，三代失手後換成做過《Iron Harvest》的 KING Art。試玩口碑很好，但老粉的標準也最高。"
+      },
+      {
+        "q": "即時戰略還有大作的市場嗎？",
+        "why": "這幾年 RTS 新作不多，《破曉之戰 IV》延期還選在 GTA VI 之後兩週上市，它能不能證明這個類型還有人買單？"
+      },
+      {
+        "q": "「回到一代」是進步還是懷舊？",
+        "why": "把三代的新點子拿掉、回到經典公式，老玩家很開心；但新玩家會不會覺得太傳統？"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "星際戰士的連長把獸人老大舉起來摔在地上，旁邊的小隊還在搶據點、後方基地忙著出兵。老玩家熟悉的那種即時戰略，要回來了。\n\n《戰鎚 40,000：破曉之戰 IV》由做過《Iron Harvest》的德國團隊 KING Art Games 開發、Deep Silver 發行，12/3 在 Steam 上市（指揮官版 11/30 可以先玩）。這一代把基地建設、掩體和處決動畫找回來，上市就有星際戰士、獸人、太空死靈，還有第一次在系列登場的機械神教，4 條戰役、70 多關，可以單人或合作。\n\n只有 PC，介面和字幕有繁中，語音只有英文；台灣區標準版預購 NT$1,574。容量要 125GB，而且只支援 Windows 11。10 月的媒體試玩普遍說它回到一代的味道，但正式評測還沒出來。\n\n你是會首發衝，還是等評測出來再說？",
+    "titles": [
+      "破曉之戰 IV 12/3 上市：四大陣營、繁中字幕、NT$1,574",
+      "睽違 9 年的破曉之戰新作，真的回到一代的味道了嗎？",
+      "機械神教首度登場！RTS 老玩家等的那一款要來了"
+    ],
+    "card": {
+      "kicker": "倒數上市｜12/3 Steam",
+      "title": "破曉之戰回來了\n四大陣營開打",
+      "sub": "《戰鎚 40,000：破曉之戰 IV》",
+      "tags": [
+        "即時戰略",
+        "繁中字幕",
+        "只有 PC"
+      ],
+      "points": [
+        {
+          "h": "4 陣營 70 關",
+          "t": "4 條戰役，可以單人或合作。"
+        },
+        {
+          "h": "回到一代",
+          "t": "基地、掩體、處決動畫都回來了。"
+        },
+        {
+          "h": "機械神教",
+          "t": "系列第一次登場的新陣營。"
+        }
+      ]
+    },
+    "tags": [
+      "#破曉之戰4",
+      "#戰鎚40K",
+      "#即時戰略",
+      "#Steam遊戲",
+      "#新作倒數",
+      "#遊戲狂想曲"
+    ],
+    "script": "RTS 老玩家注意，《破曉之戰》要回來了。《戰鎚 40,000：破曉之戰 IV》12 月 3 號在 Steam 上市，買指揮官版的 11 月 30 號就能先玩。\n這次換成做過《Iron Harvest》的德國團隊 KING Art 開發，方向很明確：回到一代。蓋基地、搶據點、躲掩體，近戰還有處決動畫，一隻大傢伙把敵人舉起來摔，超有戲。\n上市就有四個陣營：星際戰士、獸人、太空死靈，還有第一次在系列登場的機械神教。四條戰役、七十多關，可以單人也能合作。\n只有 PC，有繁中字幕，語音是英文，台灣區標準版預購 1574 塊。注意它要 125GB，而且只支援 Windows 11。\n10 月的試玩評價很好，但正式評測還沒出。你會首發衝，還是等評測？留言告訴我。",
+    "credit": "圖片／影片來源：Deep Silver 官方 Steam 商店頁與 Warhammer 官方預告"
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：Warhammer 40,000: Dawn of War IV",
+      "u": "https://store.steampowered.com/app/2272360/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Game Developer（新聞稿）：Dawn of War IV 改在 12 月 3 日上市",
+      "u": "https://www.gamedeveloper.com/press-release/dawn-of-war-iv-now-launches-on-december-3",
+      "d": "2026-08-12"
+    },
+    {
+      "t": "Gematsu：Warhammer 40,000: Dawn of War IV 公布",
+      "u": "https://www.gematsu.com/2025/08/warhammer-40000-dawn-of-war-iv-announced-for-pc",
+      "d": "2025-08-19"
+    },
+    {
+      "t": "Deep Silver 官方：Dawn of War IV 2026 年推出",
+      "u": "https://www.deepsilver.com/games/dawn-of-war-iv/news/warhammer-40-000-dawn-of-war-iv-coming-in-2026",
+      "d": "2025-08"
+    },
+    {
+      "t": "PC Gamer：Dawn of War 4 公布上市日、DLC 規劃與征戰模式",
+      "u": "https://www.pcgamer.com/games/strategy/dawn-of-war-4-just-got-a-release-date-or-2-a-dlc-roadmap-and-crusade-mode-plans/",
+      "d": "2026-05-21"
+    },
+    {
+      "t": "Windows Central：Dawn of War IV 延期約兩個月",
+      "u": "https://www.windowscentral.com/gaming/warhammer-40-000-dawn-of-war-iv-delayed-by-two-months",
+      "d": "2026-08-13"
+    },
+    {
+      "t": "PLAION 新聞稿（繁中）：《戰鎚 40,000：破曉之戰 IV》機械神教 CG 公開",
+      "u": "https://press.plaion.com/zh-TW/DAWN-OF-WAR-IV-THE-ADEPTUS-MECHANICUS-EMERGES-IN-NEW-CGI-REVEAL",
+      "d": "2026"
+    },
+    {
+      "t": "Warhammer Community：Dawn of War IV 玩法總覽預告",
+      "u": "https://www.warhammer-community.com/en-gb/articles/0ruvpa79/huge-warhammer-40000-dawn-of-war-iv-game-overview-trailer-revealed/",
+      "d": "2026-10-21"
+    },
+    {
+      "t": "Worthplaying：Dawn of War IV 封閉 Beta 開放報名",
+      "u": "https://worthplaying.com/article/2026/10/7/news/151181-warhammer-40000-dawn-of-war-iv-closed-beta-later-this-month-accepting-sign-ups/",
+      "d": "2026-10-07"
+    },
+    {
+      "t": "PC Gamer 試玩：玩了兩條戰役，完全符合期待",
+      "u": "https://www.pcgamer.com/games/rts/ive-played-2-of-dawn-of-war-4s-campaigns-and-theyre-everything-i-hoped-theyd-be/",
+      "d": "2026-10-21"
+    },
+    {
+      "t": "After Strategy：Dawn of War 4 各家試玩整理",
+      "u": "https://after-strategy.com/en/dawn-of-war-4-preview-roundup-ork-adeptus-mechanicus-campaigns/",
+      "d": "2026-11-03"
+    },
+    {
+      "t": "NVIDIA：Dawn of War 4 Game Ready 驅動與 DLSS 4.5",
+      "u": "https://www.nvidia.com/en-au/geforce/news/warhammer-40000-dawn-of-war-4-geforce-rtx-spark-game-ready-driver/",
+      "d": "2026-11"
+    },
+    {
+      "t": "NVIDIA Blog：Dawn of War IV 將登上 GeForce NOW",
+      "u": "https://blogs.nvidia.com/?p=99861",
+      "d": "2026-11-12"
+    },
+    {
+      "t": "Inven Global：八成 Beta 玩家回鍋，開發團隊致謝",
+      "u": "https://www.invenglobal.com/articles/28066/80-of-dawn-of-war-4-beta-participants-reconnected-devs-share-message-of-thanks",
+      "d": "2026-11-02"
+    },
+    {
+      "t": "Deep Silver 官方：認識 KING Art Games",
+      "u": "https://www.deepsilver.com/games/dawn-of-war-iv/news/meet-king-art-games-the-studio-behind-dawn-of-war-iv",
+      "d": "2026"
+    },
+    {
+      "t": "Steam 台灣區商店資料：Dawn of War IV 預購價（解包資料管線 11/18 讀取）",
+      "u": "https://store.steampowered.com/api/appdetails?appids=2272360&cc=tw",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Bell of Lost Souls：Dawn of War IV 上市日與 Aftermath 擴充",
+      "u": "https://www.belloflostsouls.net/2026/05/warhammer-40k-dawn-of-war-iv-release-date-and-new-aftermath-campaign-revealed.html",
+      "d": "2026-05-22"
+    },
+    {
+      "t": "Game Informer 試玩：A New Dawn Rises",
+      "u": "https://gameinformer.com/preview/2026/11/03/a-new-dawn-rises",
+      "d": "2026-11-03"
+    },
+    {
+      "t": "Wikipedia：Warhammer 40,000: Dawn of War III（2017/4/27 上市）",
+      "u": "https://en.wikipedia.org/wiki/Warhammer_40,000:_Dawn_of_War_III",
+      "d": ""
+    },
+    {
+      "t": "Deep Silver 官方：打造《破曉之戰 IV》的史詩劇情",
+      "u": "https://www.deepsilver.com/games/dawn-of-war-iv/news/crafting-an-epic-dawn-of-war-iv-story-fit-for-the-warhammer-40-000-universe",
+      "d": "2026"
+    },
+    {
+      "t": "Wikipedia：King Art Games",
+      "u": "https://en.wikipedia.org/wiki/King_Art_Games",
+      "d": ""
+    }
+  ],
+  "pending": [
+    "台灣區指揮官版價格",
+    "是否使用 Denuvo 防盜版",
+    "有沒有完整模組或 Steam 工作坊支援",
+    "第一年付費擴充的推出時間（延期後官方未公布）"
+  ],
+  "updated": "2026-11-18T06:30:00+08:00"
+}
