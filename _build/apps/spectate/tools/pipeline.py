@@ -671,6 +671,9 @@ def resolve_roster(seed, roster, me, cache):
     # 名單上拿掉的頻道：不再算精選（訂閱的照留）
     names = {s['name'] for s in seed}
     by_id = {s['name']: s['id'] for s in seed if s.get('id')}
+    for key in list(cache['tries']):
+        if key not in names or key in by_id:
+            cache['tries'].pop(key)
     for cid, r in list(chans.items()):
         if r.get('seed') and (r['seed'] not in names or (r['seed'] in by_id and by_id[r['seed']] != cid)):
             log('精選名單拿掉：%s（%s）' % (r['seed'], r.get('n')))
@@ -1030,6 +1033,16 @@ def classify(cache, roster):
                     break
             else:
                 v['g'] = None
+    # 「薩爾達傳說:時之笛-重製版」只抓到「薩爾達傳說」：標題裡有更完整、別人也在用的名稱，就併過去
+    used = {v['g'][2:] for v in vids.values() if (v.get('g') or '').startswith('n:')}
+    for v in vids.values():
+        g = v.get('g') or ''
+        if not g.startswith('n:'):
+            continue
+        nt = X.norm(v.get('t') or '')
+        longer = [b for b in used if len(b) > len(g) - 2 and b.startswith(g[2:]) and b in nt]
+        if longer:
+            v['g'] = 'n:' + max(longer, key=len)
 
 
 def repair_images(cache, used):
