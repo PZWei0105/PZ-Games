@@ -13,6 +13,7 @@
   python3 _build/apps/spectate/tools/pipeline.py --repo . --prev /tmp/prev --out /tmp/out [--offline fixtures/]
 """
 import argparse
+import collections
 import concurrent.futures as cf
 import datetime as dt
 import html as htmlmod
@@ -618,7 +619,8 @@ def main():
             enrich_api(cache)
             refresh_channel_stats(roster, cache)
         # 先補熱門遊戲的橫幅（上一輪已經對到的遊戲），再拿剩下的 Steam 額度去對新名稱
-        repair_images(cache, {v.get('g') for v in cache['videos'].values() if v.get('g') and NOW - (v.get('p') or 0) < 14 * 86400})
+        hot = collections.Counter(v['g'] for v in cache['videos'].values() if v.get('g') and NOW - (v.get('p') or 0) < 14 * 86400)
+        repair_images(cache, [k for k, _ in hot.most_common()])
         classify(cache, roster)
         games = build_games(cache, roster)
         # ---- 5. 新秀（有金鑰、每天一次）
@@ -1042,14 +1044,15 @@ def classify(cache, roster):
                     break
             else:
                 v['g'] = None
-    # 「薩爾達傳說:時之笛-重製版」只抓到「薩爾達傳說」：標題裡有更完整、別人也在用的名稱，就併過去
+    # 「薩爾達傳說:時之笛-重製版」只抓到系列名「薩爾達傳說」：標題裡有更完整、別人也在用的名稱，就併過去；
+    # 只寫副標「《時之笛》」的，併到「薩爾達傳說時之笛」（副標三個字以上、是完整名稱的結尾）
     used = {v['g'][2:] for v in vids.values() if (v.get('g') or '').startswith('n:')}
     for v in vids.values():
         g = v.get('g') or ''
         if not g.startswith('n:'):
             continue
-        nt = X.norm(v.get('t') or '')
-        longer = [b for b in used if len(b) > len(g) - 2 and b.startswith(g[2:]) and b in nt]
+        a, nt = g[2:], X.norm(v.get('t') or '')
+        longer = [b for b in used if len(b) > len(a) and ((b.startswith(a) and b in nt) or (len(a) >= 3 and b.endswith(a)))]
         if longer:
             v['g'] = 'n:' + max(longer, key=len)
 
