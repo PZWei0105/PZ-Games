@@ -2,6 +2,7 @@
 R.skins.def({
   id: 'gacha', name: '扭蛋機', group: '可愛', en: 'SONG GACHA',
   desc: '每首歌都是一顆扭蛋，轉一下把手就換下一首',
+  bloom: { s: 0.22, th: 0.8 }, hero: '.gc-cap', glare: false, trans: 'pixel',
   theme: { bg: '#ffe9b8', fg: '#4a1d1f', accent: '#ff3b4a', accent2: '#2fc4b2', ui: 'rgba(70,24,30,.97)', dock: 'rgba(255,255,255,.6)', dockfg: '#c4232f' },
   enterMs: 1600,
   emblem: `<svg class="em" viewBox="0 0 116 150"><rect width="116" height="150" fill="#ffd970"/><g opacity=".35" fill="#fff"><path d="M58 70L0 30V0h20zM58 70L60 0h30zM58 70L116 20v30zM58 70L116 110v30zM58 70L40 150H10zM58 70L0 110V80z"/></g><rect x="26" y="10" width="64" height="16" rx="6" fill="#e8323f" stroke="#fff3dc" stroke-width="2"/><g fill="#fff6c8"><circle cx="34" cy="18" r="2"/><circle cx="46" cy="18" r="2"/><circle cx="58" cy="18" r="2"/><circle cx="70" cy="18" r="2"/><circle cx="82" cy="18" r="2"/></g><circle cx="58" cy="58" r="30" fill="#e9fbff" fill-opacity=".55" stroke="#fff" stroke-width="3"/><g><circle cx="46" cy="68" r="8" fill="#ff7aa8"/><circle cx="64" cy="72" r="8" fill="#2fc4b2"/><circle cx="56" cy="54" r="8" fill="#ffc31f"/><circle cx="70" cy="56" r="7" fill="#7a6bff"/><circle cx="44" cy="52" r="6" fill="#ff8a3d"/></g><path d="M30 86h56l6 50H24z" fill="#e8323f" stroke="#7a1218" stroke-width="2"/><circle cx="58" cy="104" r="9" fill="#d9dde3" stroke="#5c6670" stroke-width="2"/><rect x="54" y="92" width="8" height="24" rx="3" fill="#f2f4f7" stroke="#5c6670" stroke-width="1.5"/><rect x="44" y="120" width="28" height="12" rx="5" fill="#3a1416"/></svg>`,

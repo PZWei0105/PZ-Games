@@ -319,6 +319,14 @@ R.app = (() => {
     R.loop.start();
     setTimeout(() => $('#splash').classList.add('off'), 120);
     setTimeout(() => $('#splash').remove(), 900);
+    R.tilt.resume();
+    // iPhone: offer the gyroscope once (the permission prompt can only come from a tap)
+    if (R.tilt.needsAsk() && settings.get('tilt') !== false && !settings.get('tiltOk') && !settings.get('tiltAsked') && !R.embedded && !R.CLAUDE) {
+      setTimeout(() => {
+        settings.set('tiltAsked', true);
+        R.toast('傾斜手機，畫面會有 3D 立體感', { ms: 9000, action: { label: '打開', fn: () => { R.tilt.enable().then((r) => { if (r === 'granted') R.toast('立體感打開了：歪歪手機看看', { ms: 2600 }); }); } } });
+      }, 6000);
+    }
     updateEmpty();
     setTimeout(() => R.analysis.resume(), 1500);
     if (R.lib.count()) {

@@ -1,0 +1,60 @@
+/* ---------- 節奏大師 BEAT RUSH ---------- */
+.skin-rhythm { color: #f2f0ff; font-family: "Chakra Petch", var(--sans); background: #060313; }
+.skin-rhythm .rr-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-rhythm .rr-top { position: absolute; left: calc(var(--sl) + 16px); top: calc(var(--st) + 17px); pointer-events: none; }
+.skin-rhythm .rr-top b { display: block; font-family: "Orbitron", sans-serif; font-weight: 900; font-size: 13px; letter-spacing: .24em; color: #8af6ff; text-shadow: 0 0 12px rgba(34,229,255,.7); }
+.skin-rhythm .rr-top b i { font-style: normal; color: #ff3fa4; margin: 0 .1em; }
+.skin-rhythm .rr-top span { display: block; margin-top: 6px; font-family: "Share Tech Mono", monospace; font-size: 10.5px; letter-spacing: .2em; color: rgba(242,240,255,.5); }
+.skin-rhythm .rr-top em { font-style: normal; color: #ffd23f; text-shadow: 0 0 8px rgba(255,210,63,.6); }
+@media (max-width: 460px) { .skin-rhythm .rr-top b { font-size: 11.5px; letter-spacing: .18em; } }
+.skin-rhythm .rr-score { position: absolute; right: calc(var(--sr) + 16px); top: calc(var(--st) + 66px); text-align: right; pointer-events: none; }
+.skin-rhythm .rr-score small { display: block; font-family: "Orbitron", sans-serif; font-weight: 700; font-size: 9.5px; letter-spacing: .32em; color: rgba(138,246,255,.7); }
+.skin-rhythm .rr-score b { display: block; margin-top: 3px; font-family: "Orbitron", sans-serif; font-weight: 900; font-size: 21px; letter-spacing: .05em; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 14px rgba(34,229,255,.75); }
+.skin-rhythm .rr-score span { display: block; margin-top: 4px; font-family: "Share Tech Mono", monospace; font-size: 9.5px; letter-spacing: .18em; color: #ffd23f; opacity: .8; }
+.skin-rhythm .rr-card { position: absolute; left: calc(var(--sl) + 16px); right: calc(var(--sr) + 150px); top: calc(var(--st) + 62px); display: flex; align-items: center; gap: 12px; }
+.skin-rhythm .rr-jacket { position: relative; flex: none; width: 58px; height: 58px; border-radius: 9px; overflow: hidden; background: #140a2a; box-shadow: 0 0 0 1.5px rgba(138,246,255,.85), 0 0 calc(14px + var(--rp, 0) * 18px) rgba(34,229,255,.55); }
+.skin-rhythm .rr-jacket img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-rhythm .rr-jacket img.blank { opacity: 0; }
+.skin-rhythm .rr-tx { min-width: 0; flex: 1; }
+.skin-rhythm .rr-t { font-weight: 700; font-size: 17px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: 0 0 14px rgba(164,107,255,.5); }
+.skin-rhythm .rr-a { margin-top: 2px; font-size: 12.5px; color: #ff8fd0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-rhythm .rr-meta { margin-top: 4px; font-family: "Share Tech Mono", monospace; font-size: 10.5px; letter-spacing: .14em; color: rgba(242,240,255,.5); }
+.skin-rhythm .rr-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 calc(var(--sr) + 22px) calc(var(--sb) + 12px) calc(var(--sl) + 22px); max-width: 620px; margin: 0 auto; }
+.skin-rhythm .rr-seek { padding: 10px 0 2px; }
+.skin-rhythm .rr-seek .seek-track { height: 3px; border-radius: 3px; background: rgba(242,240,255,.12); }
+.skin-rhythm .rr-seek .seek-fill { border-radius: 3px; background: linear-gradient(90deg, #22e5ff, #a46bff 55%, #ff3fa4); }
+.skin-rhythm .rr-seek .seek-knob { width: 12px; height: 12px; border-radius: 3px; transform: translate(-50%, -50%) rotate(45deg); background: #fff; box-shadow: 0 0 12px 2px rgba(34,229,255,.8); }
+.skin-rhythm .rr-seek .seek-times { margin-top: 8px; font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: .12em; color: rgba(242,240,255,.5); }
+.skin-rhythm .rr-ctrl { margin-top: 6px; justify-content: space-between; }
+.skin-rhythm .rr-ctrl button { width: 50px; height: 50px; border-radius: 14px; font-size: 21px; color: #f2f0ff; transition: transform .12s, background .2s; }
+.skin-rhythm .rr-ctrl button:active { transform: scale(.86); background: rgba(34,229,255,.15); }
+.skin-rhythm .rr-ctrl .c-shuf, .skin-rhythm .rr-ctrl .c-rep { font-size: 17px; }
+.skin-rhythm .rr-ctrl .c-play { width: 72px; height: 72px; border-radius: 20px; font-size: 27px; color: #fff; background: linear-gradient(145deg, rgba(34,229,255,.24), rgba(255,63,164,.24)); box-shadow: inset 0 0 0 2px rgba(138,246,255,.85), 0 0 calc(16px + var(--rp, 0) * 22px) rgba(34,229,255,.55); }
+/* enter: the label types in, the song card slides in from the left, the score from the right, the deck rises */
+.skin-rhythm.enter .rr-top b { animation: rr-type .7s steps(10) .2s both; }
+.skin-rhythm.enter .rr-top span { animation: rr-fade .5s ease .8s both; }
+.skin-rhythm.enter .rr-card { animation: rr-slideL .7s cubic-bezier(.2,.9,.25,1.15) .45s both; }
+.skin-rhythm.enter .rr-score { animation: rr-slideR .7s cubic-bezier(.2,.9,.25,1.15) .55s both; }
+.skin-rhythm.enter .rr-panel { animation: rr-rise .8s cubic-bezier(.2,.8,.2,1) .7s both; }
+@keyframes rr-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes rr-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rr-slideL { from { opacity: 0; transform: translateX(-40px) skewX(-12deg); } to { opacity: 1; transform: none; } }
+@keyframes rr-slideR { from { opacity: 0; transform: translateX(40px) skewX(12deg); } to { opacity: 1; transform: none; } }
+@keyframes rr-rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+/* next song: the card flips over to the new track like a song select */
+.skin-rhythm.swap .rr-card { animation: rr-flip .9s cubic-bezier(.3,.8,.3,1) both; }
+.skin-rhythm.swap .rr-score b { animation: rr-reset .6s ease both; }
+@keyframes rr-flip { 0% { transform: perspective(600px) rotateX(0); } 45% { transform: perspective(600px) rotateX(90deg); opacity: .3; } 100% { transform: perspective(600px) rotateX(0); opacity: 1; } }
+@keyframes rr-reset { 0% { opacity: 1; } 30% { opacity: 0; transform: translateY(-8px); } 100% { opacity: 1; transform: none; } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-rhythm .rr-card { top: calc(var(--st) + 56px); right: auto; width: min(36vw, 330px); }
+  .skin-rhythm .rr-jacket { width: 44px; height: 44px; }
+  .skin-rhythm .rr-t { font-size: 15px; }
+  .skin-rhythm .rr-meta { display: none; }
+  .skin-rhythm .rr-score { top: calc(var(--st) + 60px); }
+  .skin-rhythm .rr-panel { max-width: 560px; padding-bottom: calc(var(--sb) + 6px); }
+  .skin-rhythm .rr-seek { padding-top: 4px; }
+  .skin-rhythm .rr-ctrl { margin-top: 0; }
+  .skin-rhythm .rr-ctrl button { height: 42px; }
+  .skin-rhythm .rr-ctrl .c-play { width: 58px; height: 52px; }
+}

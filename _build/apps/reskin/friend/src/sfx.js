@@ -80,6 +80,16 @@ R.sfx = (() => {
     ok(s, t) { s.notes(t, [hz(76), hz(84)], { dur: 0.16, v: 0.1, type: 'sine', gap: 0.07 }); },
     err(s, t) { s.tone(t, { f: 220, f2: 150, dur: 0.22, v: 0.12, type: 'sawtooth', lp: 900 }); },
     tick(s, t) { s.tone(t, { f: 2400, dur: 0.025, v: 0.05, type: 'square', lp: 5000 }); },
+    // skin changes
+    portal(s, t) { s.tone(t, { f: 70, f2: 520, dur: 0.62, v: 0.09, type: 'sawtooth', lp: 1600, glide: 0.5 }); s.noise(t, { f: 300, f2: 5200, dur: 0.6, v: 0.05, q: 2.2 }); s.tone(t + 0.08, { f: 1300, f2: 2600, dur: 0.32, v: 0.025, type: 'sine' }); },
+    shatter(s, t) {
+      s.noise(t, { f: 4200, dur: 0.05, v: 0.1, type: 'highpass' }); s.tone(t, { f: 180, f2: 60, dur: 0.18, v: 0.1, type: 'sine' });
+      s.noise(t + 0.16, { f: 2600, f2: 7500, dur: 0.55, v: 0.11, q: 0.7 });
+      for (let i = 0; i < 9; i++) s.tone(t + 0.17 + i * 0.05 + Math.random() * 0.04, { f: 2400 + Math.random() * 4200, dur: 0.09 + Math.random() * 0.08, v: 0.03, type: 'sine' });
+    },
+    pixel(s, t) { s.notes(t, [hz(88), hz(84), hz(79), hz(76), hz(72), hz(67)], { dur: 0.055, v: 0.055, type: 'square', gap: 0.045, lp: 4200 }); s.noise(t, { f: 1600, dur: 0.1, v: 0.035, q: 3 }); },
+    boot(s, t) { s.tone(t, { f: 55, f2: 220, dur: 0.9, v: 0.08, type: 'sawtooth', lp: 900, glide: 0.8 }); s.notes(t + 0.5, [hz(76), hz(83), hz(88), hz(95)], { dur: 0.16, v: 0.045, type: 'triangle', gap: 0.07 }); s.noise(t + 0.9, { f: 600, f2: 6000, dur: 0.45, v: 0.04, q: 1.5 }); },
+    rec(s, t) { s.notes(t, [hz(81), hz(81), hz(93)], { dur: 0.09, v: 0.07, type: 'sine', gap: 0.33 }); },
   };
 
   function unlock() { const c = ensure(); if (!c) return; try { const b = c.createBuffer(1, 1, 22050); const s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) { /* ignore */ } }

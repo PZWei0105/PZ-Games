@@ -2,6 +2,7 @@
 R.skins.def({
   id: 'nebula', name: '星雲', group: '酷炫', en: 'NEBULA',
   desc: '星雲粒子繞著封面轉，鼓點一下就炸開',
+  bloom: { s: 0.62, th: 0.5 }, hero: '.nb-art', trans: 'portal',
   theme: { bg: '#03030c', fg: '#eef2ff', accent: '#9d8bff', accent2: '#3ff0d0', ui: 'rgba(10,10,28,.97)', dock: 'rgba(20,18,50,.45)', dockfg: '#dcd6ff' },
   enterMs: 2150,
   emblem: `<svg class="em" viewBox="0 0 116 150"><defs><radialGradient id="nbg" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#ffe6f6"/><stop offset=".12" stop-color="#ff7ac8"/><stop offset=".35" stop-color="#5a3fc0" stop-opacity=".8"/><stop offset="1" stop-color="#03030c" stop-opacity="0"/></radialGradient></defs><rect width="116" height="150" fill="#03030c"/><circle cx="58" cy="62" r="58" fill="url(#nbg)"/><g fill="#bfe9ff"><circle cx="20" cy="20" r=".9"/><circle cx="96" cy="30" r="1.1"/><circle cx="12" cy="110" r=".8"/><circle cx="102" cy="128" r="1"/><circle cx="80" cy="12" r=".7"/></g><g fill="none" stroke-linecap="round"><path d="M58 62c14-2 22 10 16 22s-30 12-40 0" stroke="#9d8bff" stroke-width="3" opacity=".8"/><path d="M58 62c-14 2-22-10-16-22s30-12 40 0" stroke="#3ff0d0" stroke-width="3" opacity=".8"/></g><circle cx="58" cy="62" r="9" fill="#fff"/><path d="M30 128h56" stroke="#eef2ff" stroke-width="2" opacity=".6"/></svg>`,

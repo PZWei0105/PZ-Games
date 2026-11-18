@@ -2,6 +2,7 @@
 R.skins.def({
   id: 'mecha', name: '機甲反應爐', group: '酷炫', en: 'REACTOR RX-09',
   desc: '低音一打核心就脈動，儀表指針跟著甩',
+  bloom: { s: 0.55, streak: 0.3, tint: '#ffb347' }, hero: '.mx-core', depth: [['.mx-plate', 0.5]], trans: 'shatter',
   theme: { bg: '#1c2027', fg: '#f4f1e8', accent: '#ffc21a', accent2: '#3fe3ff', ui: 'rgba(28,31,38,.98)', dock: 'rgba(16,18,22,.75)', dockfg: '#ffc21a' },
   enterMs: 1500,
   emblem: `<svg class="em" viewBox="0 0 116 150"><rect width="116" height="150" fill="#262b33"/><path d="M0 128h116v22H0z" fill="#ffc21a"/><path d="M-6 150l22-22h10l-22 22zM18 150l22-22h10l-22 22zM42 150l22-22h10l-22 22zM66 150l22-22h10l-22 22zM90 150l22-22h10l-22 22z" fill="#15171b"/><circle cx="58" cy="62" r="44" fill="#3b424c" stroke="#0d0f12" stroke-width="4"/><path d="M27 93A44 44 0 0 0 102 62L58 62z" fill="#2c3239"/><circle cx="58" cy="62" r="31" fill="none" stroke="#ffc21a" stroke-width="9" stroke-dasharray="9 7"/><circle cx="58" cy="62" r="31" fill="none" stroke="#0d0f12" stroke-width="2"/><circle cx="58" cy="62" r="18" fill="#3fe3ff" stroke="#0d0f12" stroke-width="3"/><circle cx="58" cy="62" r="9" fill="#e9fdff"/><g fill="#c7ccd3" stroke="#0d0f12" stroke-width="1.5"><circle cx="58" cy="22" r="3.5"/><circle cx="98" cy="62" r="3.5"/><circle cx="58" cy="102" r="3.5"/><circle cx="18" cy="62" r="3.5"/></g></svg>`,

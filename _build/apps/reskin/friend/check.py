@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""耳目一新 RESKIN 朋友版（凍結的十五套 Skin 版本，只收除錯）的檢查。
+"""耳目一新 RESKIN 朋友版（二十三套 Skin，只收除錯與補早期 Skin）的檢查。
 
   python3 _build/apps/reskin/friend/check.py     # 組好朋友版（多檔案網站＋單一檔案），跑完整流程，要看到「全部 OK」
 
@@ -13,7 +13,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..', '..'))
 sys.path.insert(0, os.path.abspath(os.path.join(HERE, '..')))
 import check as MAIN  # the main edition's check: the beat-engine tests are shared
-SKINS = ['neon', 'stage', 'mecha', 'nebula', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+SKINS = ['neon', 'rhythm', 'blackhole', 'particles', 'neoncity', 'woofer', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
 PHONE = {'viewport': {'width': 390, 'height': 844}, 'device_scale_factor': 2, 'has_touch': True, 'is_mobile': True}
 DESK = {'viewport': {'width': 1280, 'height': 800}}
 LAND = {'width': 844, 'height': 390}

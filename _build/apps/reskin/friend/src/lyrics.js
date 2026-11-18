@@ -85,6 +85,7 @@ R.lyrics = (() => {
     if (R.ui.sheetKind()) R.ui.closeSheet(true);
     open = true; render();
     box.hidden = false; requestAnimationFrame(() => box.classList.add('on'));
+    R.fx.focus('lyrics', true);
     document.body.classList.add('ly-open');   // the skin's own title and buttons step back while the lyrics are up
     R.stage.sfx('open');
     cancelAnimationFrame(raf); raf = requestAnimationFrame(follow);
@@ -94,6 +95,7 @@ R.lyrics = (() => {
     if (!open) return;
     open = false; cancelAnimationFrame(raf);
     box.classList.remove('on'); setTimeout(() => { if (!open) { box.hidden = true; box.innerHTML = ''; } }, 320);
+    R.fx.focus('lyrics', false);
     document.body.classList.remove('ly-open');
     R.stage.sfx('close');
     bus.emit('lyrics', false);

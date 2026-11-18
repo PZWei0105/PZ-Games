@@ -37,7 +37,26 @@ svg.fi { fill: currentColor; stroke: none; }
 /* generic controls (each skin restyles) */
 #hype { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 6; pointer-events: none; }
 /* lyrics */
-#lyrics { position: fixed; inset: 0; z-index: 8; display: flex; flex-direction: column; color: #fff; opacity: 0; transition: opacity .3s;
+/* light: transitions draw on #trans, the bloom glow (only ever adds light) on #fx */
+#trans { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 7; pointer-events: none; }
+#fx, .fx-css { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; mix-blend-mode: screen; }
+@supports (mix-blend-mode: plus-lighter) { #fx, .fx-css { mix-blend-mode: plus-lighter; } }
+.fx-css { filter: brightness(.72) contrast(3.4) saturate(1.3) blur(12px); }
+/* depth of field: the skin goes soft behind lyrics and full-screen panels */
+#stage { transition: filter .55s ease, transform .65s cubic-bezier(.2,.8,.2,1); }
+#stage.defocus { filter: blur(13px) brightness(.58) saturate(1.35); transform: scale(1.05); }
+.skin.tr-sink { animation: tr-sink var(--trd, .9s) cubic-bezier(.55,0,.3,1) both; }
+@keyframes tr-sink { to { transform: scale(1.32) rotate(-9deg); filter: brightness(.28) blur(3px); } }
+/* tilt: layers drift with the phone (--dz: + toward you, - behind), the hero picture turns in 3D and catches the light */
+.rs-depth { translate: calc(var(--tx, 0) * var(--dz, 0) * 9px) calc(var(--ty, 0) * var(--dz, 0) * 9px); }
+.rs-persp { perspective: 900px; }
+.rs-hero { rotate: var(--hx, 0) var(--hy, 1) 0 var(--ha, 0deg); scale: calc(1 + var(--rp, 0) * var(--hp, .045) + var(--rd, 0) * var(--hp, .045) * .6); }
+/* the beat on every skin: --rp pump (1 on the beat → 0 by the next), --rd bar's first beat, --rk kick, --rs snare, --rh hats */
+.rs-glare { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; mix-blend-mode: soft-light;
+  background: radial-gradient(120% 90% at calc(30% + var(--tx, 0) * 55%) calc(18% + var(--ty, 0) * 50%), rgba(255,255,255,.6), rgba(255,255,255,0) 55%),
+    linear-gradient(calc(110deg + var(--tx, 0) * 40deg), transparent 34%, rgba(255,255,255,.26) 47%, transparent 60%); }
+@media (prefers-reduced-motion: reduce) { .rs-hero { rotate: none; scale: none; } .rs-depth { translate: none; } }
+#lyrics { position: fixed; inset: 0; z-index: 9; display: flex; flex-direction: column; color: #fff; opacity: 0; transition: opacity .3s;
   background: linear-gradient(to bottom, rgba(4,4,12,.93), rgba(4,4,12,.86) 30%, rgba(4,4,12,.86) 70%, rgba(4,4,12,.95)); }
 #lyrics.on { opacity: 1; }
 .ly-head { flex: none; display: flex; align-items: center; gap: 12px; padding: calc(var(--st) + 64px) calc(var(--sr) + 14px) 6px calc(var(--sl) + 14px); }

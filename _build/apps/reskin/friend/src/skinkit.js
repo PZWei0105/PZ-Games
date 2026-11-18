@@ -196,19 +196,21 @@ R.stage = (() => {
     }
     const L = { def, root, inst, offs, b: binder(root), dead: false };
     layers.push(L);
+    try { R.tilt.wire(def, root); } catch (e) { console.error(e); }
     const t = R.player.current();
     L.b.track(t); L.b.queue(); L.b.state({ playing: R.player.isPlaying() || R.player.wants(), shuffle: R.player.S.shuffle, repeat: R.player.S.repeat }); L.b.tick(true);
     try { inst.onTrack && inst.onTrack(t); inst.onState && inst.onState({ playing: R.player.wants() }); } catch (e) { console.error(e); }
     bus.emit('skin', def);
-    if (prev && !opts.instant) {
-      root.style.setProperty('--rx', opts.x || '50%'); root.style.setProperty('--ry', opts.y || '50%');
-      root.classList.add(opts.fast ? 'reveal-fast' : 'reveal');
-    }
     root.classList.add('enter');
     try { inst.enter && inst.enter(!!opts.fast); } catch (e) { console.error(e); }
     if (!opts.silent) R.sfx.play('enter', def.sfx);
-    const wait = prev && !opts.instant ? (opts.fast ? 460 : 820) : 0;
-    setTimeout(() => { if (layers.includes(prev)) { kill(prev); layers = layers.filter((x) => x !== prev); } root.classList.remove('reveal', 'reveal-fast'); }, wait);
+    // the old skin leaves through a transition (portal, shatter, pixels, or the classic circle); release() takes it away
+    const release = () => { if (layers.includes(prev)) { kill(prev); layers = layers.filter((x) => x !== prev); } root.classList.remove('reveal', 'reveal-fast'); };
+    let wait = 0;
+    if (prev && !opts.instant) {
+      try { wait = R.trans.run(prev, L, opts, release); }
+      catch (e) { console.error('transition', e); root.style.setProperty('--rx', opts.x || '50%'); root.style.setProperty('--ry', opts.y || '50%'); root.classList.add(opts.fast ? 'reveal-fast' : 'reveal'); wait = opts.fast ? 460 : 820; setTimeout(release, wait); }
+    } else release();
     setTimeout(() => { if (!L.dead) root.classList.remove('enter'); }, Math.max(wait, def.enterMs || 1300));
     if (my !== tok) return L;
     return L;
@@ -228,7 +230,7 @@ R.stage = (() => {
     const L = top(); if (!L || L.dead) return;
     const v = R.viz, b = document.body.classList;
     const amt = L.def.punch === undefined ? 1 : +L.def.punch || 0;
-    const want = R.reduced || !v.playing || amt <= 0 || b.contains('deep') || b.contains('ly-open') ? 0 : amt * (0.0055 * Math.min(1.2, v.beat) + 0.0045 * v.down);
+    const want = R.reduced || !v.playing || amt <= 0 || b.contains('deep') || b.contains('ly-open') || R.trans.active() ? 0 : amt * (0.0055 * Math.min(1.2, v.beat) + 0.0045 * v.down);
     pk = want > pk ? want : pk + (want - pk) * Math.min(1, dt * 12);
     const s = pk > 0.0003 ? (1 + pk).toFixed(4) : '';
     if (L.root.style.scale !== s) L.root.style.scale = s;
@@ -269,6 +271,7 @@ R.stage = (() => {
     show, frame, theme,
     current: () => (top() ? top().def : null),
     root: () => (top() ? top().root : null),
+    layer: () => top(),
     sfx: (n) => { const L = top(); R.sfx.play(n, L ? L.def.sfx : null); },
     refreshTheme: () => { const L = top(); if (L) theme(L.def.theme); },
   };
@@ -282,8 +285,12 @@ R.loop = (() => {
     const dt = Math.min(0.1, Math.max(0.001, (now - (last || now - 16)) / 1000)); last = now;
     R.qualityMonitor(dt);
     R.viz.update(dt);
+    R.tilt.update(dt);
     R.stage.frame(dt, now / 1000);
     if (R.hype) R.hype.frame(dt);
+    if (R.trans) R.trans.frame(dt);
+    R.fx.frame(dt, now / 1000);
+    if (R.clip) R.clip.frame(dt);
   }
   const start = () => { if (on) return; on = true; last = 0; requestAnimationFrame(frame); };
   const stop = () => { on = false; };

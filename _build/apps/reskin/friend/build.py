@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """耳目一新 RESKIN — 朋友版組建（凍結版，只收除錯）
 
-朋友那份停在 2026-11-13 的十五套 Skin 版本（commit 360fb9f）：之後的新 Skin、新功能都不加，只放修正。
+朋友那份停在 2026-11-13 的版本（commit 360fb9f）：新功能不加，只放修正。2026-11-18 痞子葳要求把早期做的 Skin 補上：
+現在是二十三套（十五套原有＋節奏大師、粒子封面、重低音、黑洞、霓虹夜城、超跑、格鬥、液態），連同泛光、陀螺儀、轉場；
+最新做的四套（鼓機、聲紋山脈、音紋、真空管）與音效、卡拉 OK、短片、報告等不放。
 原始碼是這個資料夾的 src/（字型借用 ../src/fonts，主畫面圖示借用 apps/reskin/icons）；不會寫到 apps/reskin/。
 
 用法：
@@ -23,8 +25,8 @@ REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..', '..'))
 FONTDIR = os.path.abspath(os.path.join(ROOT, '..', 'src', 'fonts'))
 ICONS = os.path.join(REPO, 'apps', 'reskin', 'icons')
 
-SKINS = ['neon', 'stage', 'mecha', 'nebula', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
-JS_ORDER = ['core.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'skinkit.js', 'hype.js'] \
+SKINS = ['neon', 'rhythm', 'blackhole', 'particles', 'neoncity', 'woofer', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+JS_ORDER = ['core.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'glkit.js', 'tilt.js', 'skinkit.js', 'snap.js', 'fx.js', 'trans.js', 'hype.js'] \
     + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'lyrics.js', 'share.js', 'sync.js', 'extras.js', 'main.js']
 CSS_ORDER = ['style.css'] + ['skins/%s.css' % s for s in SKINS] + ['skins/diy.css']
 FONTS = [  # file, family, weight, style
@@ -135,7 +137,7 @@ def friendly(html):
 MANIFEST = {
     'name': '耳目一新 RESKIN',
     'short_name': '耳目一新',
-    'description': '痞子葳的換膚音樂播放器：十五套 Skin 一鍵換裝，副歌全開特效、歌詞、睡眠定時，播自己的音樂檔，離線也能聽。',
+    'description': '痞子葳的換膚音樂播放器：二十三套 Skin 踩著拍子一鍵換裝，GPU 泛光、陀螺儀立體感、轉場、副歌全開特效、歌詞、睡眠定時，播自己的音樂檔，離線也能聽。',
     'lang': 'zh-Hant-TW',
     'start_url': './',
     'scope': './',
