@@ -12,6 +12,7 @@
     "forreal": { "tier": "free", "text": "每小時自動抓新聞；外文翻譯是 GitHub 上的開源模型做的，不花 Claude。只少了週二巡檢。" },
     "unpacked": { "tier": "max", "text": "每天三班排程寫專題、推坑、願望單解包，加週日懶人包和點播台回答，是用量最大的一個。停訂後 Steam 特價、行情板、免費補給站照常更新，但不會再有新文章。" },
     "spectate": { "tier": "free", "text": "每 20 分鐘由 GitHub 收新片，不靠 Claude。" },
+    "binge": { "tier": "free", "text": "每 30 分鐘由 GitHub 收新片，不靠 Claude。" },
     "turnaround": { "tier": "max", "text": "每天清晨一班排程開題、進廠檢修，全靠 Claude。單獨跑 Pro 勉強撐得住，和解包一起就要 Max。停訂後你的表態還收得到，但不會有新航班。" },
     "sandtable": { "tier": "free", "text": "吃冷眼的真實行情，停訂照常練；只少了巡檢。" },
     "echo-radar": { "tier": "free", "text": "每小時自動更新；只少了週六巡檢。" },
