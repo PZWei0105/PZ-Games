@@ -1,0 +1,87 @@
+{
+ "v": 1,
+ "at": "2026-11-18T13:29:20Z",
+ "subs": {
+  "UCU6nhA37pbvzw-JXhAB87Mg": {
+   "t": 1794980903932,
+   "n": "大閒者",
+   "src": "pool"
+  },
+  "UCKPflKAE2Y1tm8VSi32iboQ": {
+   "t": 1794980910451,
+   "n": "老孫聊遊戲",
+   "src": "pool"
+  },
+  "UCpa10CkG5snpKfyF4LZdXcA": {
+   "t": 1794980921125,
+   "n": "阿路的精神時光屋",
+   "src": "pool"
+  },
+  "UCApOZopSIse5XHTX-cnMacw": {
+   "t": 1794980926159,
+   "n": "第九頻道",
+   "src": "pool"
+  },
+  "UCmtmIF-u0ojej0y9i9STuIw": {
+   "t": 1794980948011,
+   "n": "GamerSecret 玩家機密",
+   "src": "pool"
+  },
+  "UCLgGLSFMZQB8c0WGcwE49Gw": {
+   "t": 1794980949220,
+   "n": "Gamker攻壳官方频道",
+   "src": "pool"
+  }
+ },
+ "blocks": {},
+ "passes": {},
+ "later": {},
+ "adds": [],
+ "seen": [
+  "dzi5270-1",
+  "dzi5270-2",
+  "dzi5270-3",
+  "dzi5270-4",
+  "dzi5270-5",
+  "dzi5270-6"
+ ],
+ "log": [
+  {
+   "id": "dzi5270-1",
+   "type": "sub",
+   "t": 1794980903932,
+   "ch": "UCU6nhA37pbvzw-JXhAB87Mg"
+  },
+  {
+   "id": "dzi5270-2",
+   "type": "sub",
+   "t": 1794980910451,
+   "ch": "UCKPflKAE2Y1tm8VSi32iboQ"
+  },
+  {
+   "id": "dzi5270-3",
+   "type": "sub",
+   "t": 1794980921125,
+   "ch": "UCpa10CkG5snpKfyF4LZdXcA"
+  },
+  {
+   "id": "dzi5270-4",
+   "type": "sub",
+   "t": 1794980926159,
+   "ch": "UCApOZopSIse5XHTX-cnMacw"
+  },
+  {
+   "id": "dzi5270-5",
+   "type": "sub",
+   "t": 1794980948011,
+   "ch": "UCmtmIF-u0ojej0y9i9STuIw"
+  },
+  {
+   "id": "dzi5270-6",
+   "type": "sub",
+   "t": 1794980949220,
+   "ch": "UCLgGLSFMZQB8c0WGcwE49Gw"
+  }
+ ],
+ "cursor": 1794980950
+}
