@@ -124,7 +124,19 @@ function memoize(fn) { const m = new Map(); return (x) => { if (!m.has(x)) { if 
 
 /* ------------------------------------------------------------ 片庫 */
 const D = { cat: null, me: null, at: 0, ok: false, err: null, busy: false };
-const IDX = { vids: [], byId: new Map(), ch: {}, chs: [], shows: [], showById: new Map(), rev: 0 };
+const IDX = { vids: [], byId: new Map(), ch: {}, chs: [], shows: [], showById: new Map(), ext: [], rev: 0 };
+/* 播放器回報「頻道不允許嵌入」的影片：記在這台裝置，下次直接標出來 */
+const NE = store.get('ne', {});
+function markNoEmbed(id) {
+  if (!id || NE[id]) return;
+  NE[id] = Date.now();
+  const keys = Object.keys(NE);
+  if (keys.length > 800) keys.sort((a, b) => NE[a] - NE[b]).slice(0, keys.length - 800).forEach((k) => delete NE[k]);
+  store.set('ne', NE);
+  const v = IDX.byId.get(id);
+  if (v) v.ne = true;
+  MEMO.clear();
+}
 
 async function getJSON(base, name, fresh) {
   const bust = fresh ? Date.now() : Math.floor(Date.now() / 60000);
@@ -152,7 +164,7 @@ async function loadAll(fresh) {
 }
 
 /* catalog.json 的影片是壓縮過的陣列：[id, 頻道序號, 標題, 片長, 時間, 觀看, 格式, 旗標, 作品序號, 集數, 範圍起, 範圍迄] */
-const F_AI = 1, F_ZH = 2, F_CHAP = 4, F_UP = 8, F_LIVE = 16, F_SIMP = 32, F_NEWEP = 64;
+const F_AI = 1, F_ZH = 2, F_CHAP = 4, F_UP = 8, F_LIVE = 16, F_SIMP = 32, F_NEWEP = 64, F_NE = 128;
 function indexCat() {
   const c = D.cat || {};
   IDX.chs = c.chs || [];
@@ -163,12 +175,21 @@ function indexCat() {
     const fl = a[7] | 0;
     return {
       i: a[0], c: IDX.chs[a[1]], t: a[2], d: a[3] || 0, p: a[4] || 0, v: a[5] || 0, f: a[6] || 'e',
-      ai: !!(fl & F_AI), zh: !!(fl & F_ZH), up: !!(fl & F_UP), live: !!(fl & F_LIVE),
+      ai: !!(fl & F_AI), zh: !!(fl & F_ZH), up: !!(fl & F_UP), live: !!(fl & F_LIVE), ne: !!(fl & F_NE) || !!NE[a[0]],
       s: a[8] == null || a[8] < 0 ? -1 : a[8], e: a[9] || 0, r: a[10] && a[11] ? [a[10], a[11]] : null,
       chap: chap[a[0]] || null, t0: orig[a[0]] || null,
     };
   });
   IDX.byId = new Map(IDX.vids.map((v) => [v.i, v]));
+  // 名單外（金鑰）：全天放送、全網熱補——跟片庫分開，只在自己那兩排出現
+  const x = c.ext || {};
+  (x.ch || []).forEach((o, i) => { const id = (x.chs || [])[i]; if (id && !IDX.ch[id]) IDX.ch[id] = Object.assign({ id, k: 'jp', l: 'zh' }, o); });
+  IDX.ext = (x.vids || []).map((a) => {
+    const fl = a[7] | 0;
+    return { i: a[0], c: (x.chs || [])[a[1]], t: a[2], d: a[3] || 0, p: a[4] || 0, v: a[5] || 0, f: a[6] || 'c', ai: !!(fl & F_AI), zh: true,
+      live: !!(fl & F_LIVE), up: false, ne: !!(fl & F_NE) || !!NE[a[0]], s: -1, e: 0, r: a[10] && a[11] ? [a[10], a[11]] : null, cv: a[12] || 0, chap: null, t0: null, ext: 1 };
+  }).filter((v) => v.c && !IDX.byId.has(v.i));
+  IDX.ext.forEach((v) => IDX.byId.set(v.i, v));
   IDX.shows = (c.shows || []).map((s, k) => {
     const eps = (s.eps || []).map((x) => IDX.vids[x]).filter(Boolean);
     eps.forEach((v) => { v.show = k; });
@@ -426,8 +447,10 @@ const L = {
   eps: (kind) => memo('eps:' + kind, () => spread(newest(base().filter((v) => v.f === 'e' && kindOf(v) === kind && nowS() - v.p < 30 * 86400)))),
   kind: (kind) => memo('kind:' + kind, () => spread(onePerShow(hot(base().filter((v) => kindOf(v) === kind && v.f !== 'p' && v.f !== 'x' && v.f !== 's' && !v.up)), 2))),
   movies: () => memo('movies', () => hot(base().filter((v) => v.f === 'm'))),
-  live: () => memo('live', () => base().filter((v) => v.live || (v.f === 'l' && nowS() - v.p < 2 * 86400)).sort((a, b) => (b.live - a.live) || (b.p - a.p))),
-  shorts: () => memo('shorts', () => spread(hot(base().filter((v) => v.f === 's' && inTab(v, 'ai'))), 1, 4)),
+  live: () => memo('live', () => base().filter((v) => v.live || (v.f === 'l' && nowS() - v.p < 2 * 86400)).sort((a, b) => (b.live - a.live) || (a.ne - b.ne) || (b.p - a.p))),
+  xlive: () => memo('xlive', () => IDX.ext.filter((v) => v.live && !VIEW.blocks[v.c]).sort((a, b) => (a.ne - b.ne) || (b.cv - a.cv))),
+  xcomps: () => memo('xcomps', () => IDX.ext.filter((v) => !v.live && !VIEW.blocks[v.c]).sort((a, b) => (a.ne - b.ne) || (b.v - a.v))),
+  shorts: () => memo('shorts', () => spread(hot(base().filter((v) => v.f === 's' && !v.ne && inTab(v, 'ai'))), 1, 4)),
   genre: (g, tab) => memo('g:' + g + ':' + tab, () => spread(onePerShow(hot(base().filter((v) => (v.f === 'c' || v.f === 'm' || v.f === 'e') && v.d >= 10 * 60 && inTab(v, tab || 'ai') && genreOf(v.t).includes(g)))))),
   channel: (c) => memo('c:' + c, () => IDX.vids.filter((v) => v.c === c && v.f !== 's').sort((a, b) => b.p - a.p)),
   later: () => Object.entries(VIEW.later).sort((a, b) => b[1] - a[1]).map(([v]) => IDX.byId.get(v)).filter(Boolean),

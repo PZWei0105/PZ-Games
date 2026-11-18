@@ -64,6 +64,12 @@ const Player = (() => {
 
   function playId(v) {
     wantId = v.i;
+    if (v.ne) {
+      try { if (yt && ready) yt.stopVideo(); } catch (e) { /* */ }
+      if (ecOff) { ecOff(); ecOff = null; }
+      showMsg('這支要到 YouTube 看', '頻道不開放在其他 App 播，或有年齡、地區限制。到 YouTube 看，有 Premium 一樣沒有廣告。', true);
+      return;
+    }
     const start = startPos(v);
     resumeHint = start > 60 ? start : null;
     const zhSub = SET.zhSubs && !v.zh;
@@ -115,6 +121,7 @@ const Player = (() => {
   }
   function onErr(e) {
     const code = e.data;
+    if ((code === 101 || code === 150) && cur) markNoEmbed(cur.i);
     const why = code === 101 || code === 150 ? '這支影片的頻道不允許在其他 App 播放，或只在特定地區能看。'
       : code === 100 ? '這支影片已經被刪除或設成私人。' : '播放器出了點問題。';
     if (ecOff) { ecOff(); ecOff = null; }
@@ -287,7 +294,7 @@ const Player = (() => {
     if (!cur) return [];
     const k = ctxIds.indexOf(cur.i);
     const after = ctxIds.slice(k + 1).concat(ctxIds.slice(0, Math.max(0, k)));
-    return after.map((v) => IDX.byId.get(v)).filter((x) => x && !x.up).slice(0, 60);
+    return after.map((v) => IDX.byId.get(v)).filter((x) => x && !x.up && !x.ne).slice(0, 60);
   }
   function nextItem() { return upList()[0] || null; }
   function take(id) {

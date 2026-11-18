@@ -196,6 +196,8 @@ html.sky-day { --top-solid: #1f74e8; } html.sky-dawn { --top-solid: #5465c4; } h
 .mc-len b { font-size: 19px; font-weight: 400; line-height: 1; }
 .mc-rg { position: absolute; z-index: 1; right: 8px; bottom: 9px; padding: 3px 8px; border-radius: 6px; background: #fff; color: var(--ink); border: 2px solid var(--ink); font-style: normal; font-size: 11.5px; font-weight: 900; }
 .mc .vc-new, .mc .vc-done { z-index: 1; }
+.vc-ne { position: absolute; left: 6px; bottom: 8px; z-index: 1; padding: 3px 8px 2px; background: var(--ink); color: #fff; border: 2px solid var(--paper, #fff8ea); border-radius: 8px; font-style: normal; font-size: 11px; font-weight: 800; }
+.vc-x { flex: none; font-style: normal; font-size: 10.5px; font-weight: 800; color: inherit; opacity: .8; border: 1.5px solid currentColor; border-radius: 5px; padding: 0 4px; line-height: 15px; margin-left: 3px; }
 .mc .vc-pg { z-index: 1; }
 .mc.seen .mc-th img { opacity: .5; }
 .mc-t { font-size: 14.5px; margin-top: 10px; }

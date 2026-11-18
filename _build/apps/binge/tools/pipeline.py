@@ -180,19 +180,23 @@ class QuotaStop(Exception):
     pass
 
 
-def api(path, cache, **params):
+def api_search(cache, **params):
+    return api('search', cache, _cost=100, **params)
+
+
+def api(path, cache, _cost=1, **params):
     if not KEY:
         return None
     day = dt.datetime.now(dt.timezone(dt.timedelta(hours=-8))).strftime('%Y-%m-%d')   # 配額照太平洋時間換日
     a = cache.setdefault('api', {})
     if a.get('day') != day:
         a.update({'day': day, 'units': 0})
-    if a['units'] >= API_DAY_CAP:
+    if a['units'] + _cost > API_DAY_CAP:
         raise QuotaStop('今天的額度用完了（%d 點）' % a['units'])
     params['key'] = KEY
     url = 'https://www.googleapis.com/youtube/v3/%s?%s' % (path, urllib.parse.urlencode(params))
-    a['units'] += 1
-    UNITS[0] += 1
+    a['units'] += _cost
+    UNITS[0] += _cost
     try:
         st, j = http_get(url, headers={'User-Agent': 'pz-binge'}, json_out=True)
     except RuntimeError as e:
@@ -575,7 +579,8 @@ def main():
     # ---- 6. 金鑰
     if KEY:
         try:
-            api_fill(pool, chans, cache)
+            prev_cat = load(os.path.join(a.prev, 'catalog.json'), {}) or {}
+            api_fill(pool, chans, cache, {r[0] for r in prev_cat.get('vids') or [] if r})
         except QuotaStop as e:
             err('金鑰暫停使用（%s）' % e)
         except Exception as e:  # noqa: BLE001
@@ -596,6 +601,8 @@ def main():
         'v': 1, 'at': stamp(), 'run_s': round(time.time() - t0, 1), 'channels': len(cat['chs']), 'videos': len(cat['vids']), 'shows': len(cat['shows']),
         'cache_videos': len(cache['v']), 'playlists': len(cache['pl']), 'playlists_done': sum(1 for p in pls if p.get('ts')), 'playlists_kept': len(pls),
         'size_kb': round(os.path.getsize(os.path.join(a.out, 'catalog.json')) / 1024), 'units': UNITS[0], 'units_day': cache['api'].get('units', 0),
+        'noembed': sum(1 for r in cat['vids'] if r[7] & 128), 'ext_live': sum(1 for r in (cat.get('ext') or {}).get('vids') or [] if r[6] == 'l'),
+        'ext_comp': sum(1 for r in (cat.get('ext') or {}).get('vids') or [] if r[6] != 'l'),
         'quiet': quiet, 'unresolved': sorted(cache['tries']), 'errors': ERRS[-40:], 'log': LOG[-200:],
     })
     dump(os.path.join(a.out, 'status.json'), stat, pretty=True)
@@ -789,6 +796,8 @@ def crawl(pool, chans, cache, new_by_ch, deadline, workers):
 
     # 播放清單內容
     want = choose_playlists(pool, chans, cache, new_by_ch)
+    if KEY:
+        want = [pid for pid in want if not chans.get(cache['pl'][pid].get('c'), {}).get('geo')]   # 台灣限定頻道的清單改用 API 讀
     log('播放清單：要抓 %d 個（剩 %.0f 秒）' % (len(want), deadline - time.time()))
 
     def run_pl(pid):
@@ -928,9 +937,64 @@ def watch_fill(pool, chans, cache, deadline):
 
 # ---------------------------------------------------------------- 金鑰
 
-def api_fill(pool, chans, cache):
+EV = 2                      # 金鑰補資料的欄位變了就加一（2：加上能不能嵌入）
+VPARTS = 'contentDetails,liveStreamingDetails,statistics,snippet,status'
+API_PL_PER_RUN = 160        # 每次最多用幾點抓台灣限定頻道的播放清單內容
+API_VID_CALLS = 40          # 每次最多幾次 videos.list（一次 50 支、1 點）
+
+
+def no_embed(it):
+    """這支在 App 裡能不能播：頻道關掉嵌入、有年齡限制、台灣看不到，都只能到 YouTube 看。"""
+    stt, cd = it.get('status') or {}, it.get('contentDetails') or {}
+    if stt.get('embeddable') is False:
+        return 'embed'
+    if (cd.get('contentRating') or {}).get('ytRating') == 'ytAgeRestricted':
+        return 'age'
+    rr = cd.get('regionRestriction') or {}
+    if 'TW' in (rr.get('blocked') or []) or ('allowed' in rr and 'TW' not in (rr.get('allowed') or [])):
+        return 'region'
+    return None
+
+
+def take_api_video(v, it):
+    v['am'], v['ev'] = int(NOW), EV
+    d = iso_dur((it.get('contentDetails') or {}).get('duration'))
+    if d:
+        v['d'] = d
+    sn = it.get('snippet') or {}
+    if (sn.get('localized') or {}).get('title'):
+        v['t'] = sn['localized']['title']
+        v['tl'] = 1
+    if sn.get('publishedAt') and not v.get('p'):
+        v['p'] = iso_epoch(sn['publishedAt'])
+    lb = sn.get('liveBroadcastContent')
+    if lb == 'live':
+        v['lv'], v['lvat'] = 'live', int(NOW)
+        cv = (it.get('liveStreamingDetails') or {}).get('concurrentViewers')
+        if cv and str(cv).isdigit():
+            v['cv'] = int(cv)
+    elif lb == 'upcoming':
+        v['lv'] = 'upcoming'
+        stt = (it.get('liveStreamingDetails') or {}).get('scheduledStartTime')
+        if stt:
+            v['st'] = iso_epoch(stt)
+    elif v.get('lv') in ('live', 'upcoming'):
+        v['lv'] = 'was'
+    stt = it.get('statistics') or {}
+    if stt.get('viewCount'):
+        v['v'] = int(stt['viewCount'])
+    v['cat'] = sn.get('categoryId')
+    ne = no_embed(it)
+    if ne:
+        v['ne'] = ne
+    else:
+        v.pop('ne', None)
+    take_desc(v, sn.get('description'))
+
+
+def api_fill(pool, chans, cache, prev_ids):
     pool_set = set(pool)
-    # 台灣限定頻道的播放清單：每天一次
+    # 1. 台灣限定頻道的播放清單列表：每天一次
     for cid in pool:
         r, cs = chans[cid], cache['ch'].setdefault(cid, {})
         if not r.get('geo') or NOW - cs.get('apl', 0) < 24 * 3600:
@@ -952,13 +1016,95 @@ def api_fill(pool, chans, cache):
         if order:
             cs['pls'] = order[:150]
             cs['apl'] = int(NOW)
-    # 片長、直播狀態：沒片長的、正在直播或即將直播的
-    need = [vid for vid, v in cache['v'].items() if v.get('c') in pool_set and not v.get('gone') and
-            ((not v.get('d') and not v.get('sh')) or v.get('lv') in ('live', 'upcoming')) and NOW - v.get('am', 0) > 3 * 3600]
-    need.sort(key=lambda x: -(cache['v'][x].get('p') or cache['v'][x].get('fs') or 0))
-    for i in range(0, min(len(need), 50 * 12), 50):
+    # 2. 台灣限定頻道的播放清單內容：用 API 讀（GitHub 的機器在美國，網頁版常常讀不到）
+    geo = {c for c in pool if chans[c].get('geo')}
+    fresh_ch = {v.get('c') for v in cache['v'].values() if v.get('c') in geo and NOW - v.get('fs', 0) < 3600}   # 這次 RSS 有新片的
+    due = []
+    for pid, p in cache['pl'].items():
+        if p.get('c') not in geo or not p.get('keep') or p.get('dead'):
+            continue
+        age = NOW - p.get('ts', 0)
+        if not p.get('ts'):
+            due.append((0, -(p.get('cnt') or 0), pid))
+        elif age > PL_EVERY or (p['c'] in fresh_ch and age > 5 * 3600):
+            due.append((1, -age, pid))
+    due.sort()
+    spent, n_pl, n_new = 0, 0, 0
+    for _, _, pid in due:
+        if spent >= API_PL_PER_RUN:
+            break
+        p = cache['pl'][pid]
+        eps, token, pages = [], None, 0
+        while pages < 6:
+            j = api('playlistItems', cache, part='snippet,contentDetails,status', playlistId=pid, maxResults=50, **({'pageToken': token} if token else {}))
+            pages += 1
+            spent += 1
+            if not j:
+                break
+            for it in j.get('items') or []:
+                sn, cd = it.get('snippet') or {}, it.get('contentDetails') or {}
+                vid = cd.get('videoId') or (sn.get('resourceId') or {}).get('videoId')
+                if not vid or not VID_RE.match(vid):
+                    continue
+                title = sn.get('title') or ''
+                if title in ('Private video', 'Deleted video', '私人影片', '已刪除的影片') or (it.get('status') or {}).get('privacyStatus') == 'private':
+                    continue
+                isnew = vid not in cache['v']
+                v = vrec(cache, vid, p['c'])
+                if title and not v.get('tl'):
+                    v['t'] = title
+                if cd.get('videoPublishedAt') and not v.get('p'):
+                    v['p'] = iso_epoch(cd['videoPublishedAt'])
+                v['src'] = v.get('src') or 'pl'
+                v['seen'] = int(NOW)
+                eps.append(vid)
+                n_new += isnew
+            token = j.get('nextPageToken')
+            if not token or len(eps) >= EPS_PER_SHOW + 40:
+                break
+        if not eps:
+            p['fail'] = (p.get('fail') or 0) + 1
+            p['ts'] = int(NOW) - PL_EVERY + 6 * 3600
+            if p['fail'] >= 4:
+                p['dead'] = 1
+            continue
+        old = set(p.get('eps') or [])
+        if p.get('ts') and old:
+            for vid in eps:
+                if vid not in old:
+                    cache['v'][vid]['newep'] = int(NOW)
+            if set(eps) - old:
+                p['upd'] = int(NOW)
+        elif not p.get('ts'):
+            for vid in eps:
+                cache['v'][vid].setdefault('init', 1)
+        p.pop('fail', None)
+        p.update({'ts': int(NOW), 'eps': eps[:EPS_PER_SHOW + 40], 'cnt': len(eps), 'via': 'api'})
+        n_pl += 1
+    if due:
+        log('API 播放清單：讀了 %d／%d 個、新影片 %d 支、%d 點' % (n_pl, len(due), n_new, spent))
+    # 3. 片長、直播狀態、能不能嵌入：沒片長的、在播的、片庫裡還沒檢查過嵌入的（一週複查一次）
+    in_pl = set()
+    for p in cache['pl'].values():
+        if p.get('keep'):
+            in_pl.update(p.get('eps') or [])
+    need = []
+    for vid, v in cache['v'].items():
+        if v.get('c') not in pool_set or v.get('gone'):
+            continue
+        live = v.get('lv') in ('live', 'upcoming')
+        if live and NOW - v.get('am', 0) > 20 * 60:
+            need.append((0, -(v.get('p') or 0), vid))
+        elif not v.get('d') and not v.get('sh') and NOW - v.get('am', 0) > 3 * 3600:
+            need.append((1, -(v.get('p') or v.get('fs') or 0), vid))
+        elif (vid in prev_ids or vid in in_pl) and (v.get('ev') != EV or NOW - v.get('am', 0) > 7 * 86400):
+            need.append((2 if vid in prev_ids else 3, -(v.get('p') or v.get('fs') or 0), vid))
+    need.sort()
+    need = [vid for _, _, vid in need[:50 * API_VID_CALLS]]
+    n_ne = 0
+    for i in range(0, len(need), 50):
         ids = need[i:i + 50]
-        j = api('videos', cache, part='contentDetails,liveStreamingDetails,statistics,snippet', id=','.join(ids), maxResults=50, hl='zh-TW')
+        j = api('videos', cache, part=VPARTS, id=','.join(ids), maxResults=50, hl='zh-TW')
         if not j:
             break
         got = set()
@@ -967,32 +1113,117 @@ def api_fill(pool, chans, cache):
             if not v:
                 continue
             got.add(it['id'])
-            v['am'] = int(NOW)
-            d = iso_dur((it.get('contentDetails') or {}).get('duration'))
-            if d:
-                v['d'] = d
-            sn = it.get('snippet') or {}
-            if (sn.get('localized') or {}).get('title'):
-                v['t'] = sn['localized']['title']
-                v['tl'] = 1
-            lb = sn.get('liveBroadcastContent')
-            if lb == 'live':
-                v['lv'], v['lvat'] = 'live', int(NOW)
-            elif lb == 'upcoming':
-                v['lv'] = 'upcoming'
-                stt = (it.get('liveStreamingDetails') or {}).get('scheduledStartTime')
-                if stt:
-                    v['st'] = iso_epoch(stt)
-            elif v.get('lv') in ('live', 'upcoming'):
-                v['lv'] = 'was'
-            stt = it.get('statistics') or {}
-            if stt.get('viewCount'):
-                v['v'] = int(stt['viewCount'])
-            take_desc(v, sn.get('description'))
+            take_api_video(v, it)
+            n_ne += 1 if v.get('ne') else 0
         for vid in ids:
             if vid not in got:
                 cache['v'][vid]['gone'] = 1
+    if need:
+        log('API 影片：查了 %d 支（只能到 YouTube 看的 %d 支）' % (len(need), n_ne))
+    # 4. 名單外：全天放送（直播馬拉松）、全網熱補（長合輯）
+    try:
+        web_extras(cache, chans)
+    except QuotaStop:
+        raise
+    except Exception as e:  # noqa: BLE001
+        err('全網：%s' % e)
     log('API：這次 %d 點、今天 %d 點' % (UNITS[0], cache['api'].get('units', 0)))
+
+
+# ---------------------------------------------------------------- 名單外（只有金鑰拿得到）
+
+XL_EVERY = 4 * 3600          # 全天放送多久搜一次（兩個關鍵字、一個 100 點）
+XC_EVERY = 24 * 3600         # 全網熱補多久搜一次
+XL_Q = ['動畫 24小時 連播', '動漫 直播 全集']
+XC_Q = ['動畫 合集 一口氣看完', '動漫 全集 合輯', '動態漫 合集']
+ANIME_RX = re.compile(r'動畫|动画|動漫|动漫|卡通|番劇|番剧|新番|アニメ|anime|漫劇|漫剧|動態漫|动态漫|沙雕', re.I)
+XBAD_RX = re.compile(r'vtuber|V皇|歌回|遊戲|游戏|實況|实况|ASMR|新聞|新闻|電影解說|电影解说|解說|解说|講解|讲解|reaction|反應|反应|預告|预告', re.I)
+OK_CATS = {'1', '24', '23'}
+
+
+def web_extras(cache, chans):
+    x = cache.setdefault('ext', {'v': {}, 'ch': {}})
+    x.setdefault('v', {})
+    x.setdefault('ch', {})
+    known = set(chans)
+    for kind, every, qs, extra in (('live', XL_EVERY, XL_Q, {'eventType': 'live', 'order': 'viewCount'}),
+                                    ('comp', XC_EVERY, XC_Q, {'videoDuration': 'long', 'order': 'viewCount',
+                                                               'publishedAfter': dt.datetime.fromtimestamp(NOW - 45 * 86400, dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')})):
+        if NOW - x.get(kind + '_ts', 0) < every:
+            continue
+        left = API_DAY_CAP - cache['api'].get('units', 0)
+        if left < 100 * len(qs) + 400:
+            continue
+        x[kind + '_ts'] = int(NOW)
+        ids = []
+        for q in qs:
+            j = api_search(cache, q=q, type='video', regionCode='TW', relevanceLanguage='zh-Hant', maxResults=25, safeSearch='moderate', **extra)
+            for it in (j or {}).get('items') or []:
+                sn = it.get('snippet') or {}
+                vid, cid = (it.get('id') or {}).get('videoId'), sn.get('channelId')
+                if not vid or not cid or cid in known or vid in ids:
+                    continue
+                t = htmlmod.unescape(sn.get('title') or '')
+                if not ANIME_RX.search(t) or XBAD_RX.search(t) or X.lang_of(t) != 'zh':
+                    continue
+                ids.append(vid)
+        if not ids:
+            continue
+        n = 0
+        for i in range(0, len(ids), 50):
+            j = api('videos', cache, part=VPARTS, id=','.join(ids[i:i + 50]), maxResults=50, hl='zh-TW')
+            for it in (j or {}).get('items') or []:
+                sn = it.get('snippet') or {}
+                if sn.get('categoryId') not in OK_CATS:
+                    continue
+                v = {'c': sn.get('channelId'), 'src': kind, 'fs': int(NOW)}
+                take_api_video(v, it)
+                v['t'] = (sn.get('localized') or {}).get('title') or sn.get('title') or ''
+                if kind == 'live':
+                    if v.get('lv') != 'live' or (v.get('cv') or 0) < 20:
+                        continue
+                elif (v.get('d') or 0) < 60 * 60:
+                    continue
+                old = x['v'].get(it['id']) or {}
+                v['fs'] = old.get('fs') or int(NOW)
+                x['v'][it['id']] = v
+                xc = x['ch'].setdefault(v['c'], {})
+                xc['n'] = sn.get('channelTitle') or xc.get('n')
+                n += 1
+        log('全網%s：收 %d 支' % ('直播' if kind == 'live' else '合輯', n))
+    # 收進來的直播：每次確認還在不在播（1 點）；結束就拿掉
+    lives = [vid for vid, v in x['v'].items() if v.get('src') == 'live']
+    for i in range(0, len(lives), 50):
+        j = api('videos', cache, part=VPARTS, id=','.join(lives[i:i + 50]), maxResults=50, hl='zh-TW')
+        if j is None:
+            break
+        got = {it['id']: it for it in j.get('items') or []}
+        for vid in lives[i:i + 50]:
+            it = got.get(vid)
+            if not it or (it.get('snippet') or {}).get('liveBroadcastContent') != 'live':
+                x['v'].pop(vid, None)
+            else:
+                take_api_video(x['v'][vid], it)
+    # 合輯留兩週；頻道資料（頭像）一天補一次
+    for vid, v in list(x['v'].items()):
+        if v.get('src') == 'comp' and NOW - v.get('fs', NOW) > 14 * 86400:
+            x['v'].pop(vid)
+        elif v.get('c') in known:
+            x['v'].pop(vid)        # 已經收進名單了
+    used = {v['c'] for v in x['v'].values()}
+    for cid in list(x['ch']):
+        if cid not in used:
+            x['ch'].pop(cid)
+    stale = [c for c, r in x['ch'].items() if NOW - r.get('ts', 0) > 86400][:50]
+    if stale:
+        j = api('channels', cache, part='snippet,statistics', id=','.join(stale), maxResults=50)
+        for it in (j or {}).get('items') or []:
+            sn, th = it.get('snippet') or {}, (it.get('snippet') or {}).get('thumbnails') or {}
+            r = x['ch'][it['id']]
+            r.update({'n': sn.get('title') or r.get('n'), 'a': (th.get('default') or th.get('medium') or {}).get('url'), 'ts': int(NOW),
+                      'subs': None if (it.get('statistics') or {}).get('hiddenSubscriberCount') else int((it.get('statistics') or {}).get('subscriberCount') or 0)})
+        for c in stale:
+            x['ch'][c].setdefault('ts', int(NOW))
 
 
 # ---------------------------------------------------------------- 整理
@@ -1273,7 +1504,7 @@ def build_catalog(cache, chans, me):
     for v in vid_list:
         x = info[v]
         c = cache['v'][v]
-        fl = (1 if x['ai'] else 0) | (2 if x['zh'] else 0) | (4 if c.get('chap') else 0) | (8 if c.get('lv') == 'upcoming' else 0) | (16 if c.get('lv') == 'live' else 0)
+        fl = (1 if x['ai'] else 0) | (2 if x['zh'] else 0) | (4 if c.get('chap') else 0) | (8 if c.get('lv') == 'upcoming' else 0) | (16 if c.get('lv') == 'live' else 0) | (128 if c.get('ne') else 0)
         p = c.get('p') or c.get('newep') or 0
         if c.get('lv') == 'upcoming' and c.get('st'):
             p = c['st']
@@ -1288,7 +1519,36 @@ def build_catalog(cache, chans, me):
         vids_out.append([v, ci[c['c']], t, c.get('d') or 0, p, c.get('v') or 0, x['f'], fl, sk, x['ep'] or 0, rg[0], rg[1]])
         if c.get('chap'):
             chap[v] = c['chap']
-    return {'v': 1, 'at': stamp(), 'key': bool(KEY), 'chs': chs, 'ch': ch_out, 'vids': vids_out, 'shows': show_out, 'chap': chap}
+    out = {'v': 1, 'at': stamp(), 'key': bool(KEY), 'chs': chs, 'ch': ch_out, 'vids': vids_out, 'shows': show_out, 'chap': chap}
+    ext = build_ext(cache, me)
+    if ext:
+        out['ext'] = ext
+    return out
+
+
+def build_ext(cache, me):
+    """名單外（金鑰）：全天放送、全網熱補。跟片庫分開放，App 只在自己那兩排用。"""
+    x = cache.get('ext') or {}
+    blocks = set(me.get('blocks') or {})
+    rows = [(vid, v) for vid, v in (x.get('v') or {}).items() if v.get('c') not in blocks and v.get('t')]
+    if not rows:
+        return None
+    rows.sort(key=lambda r: (r[1].get('src') != 'live', -(r[1].get('cv') or 0), -(r[1].get('v') or 0)))
+    chs = sorted({v['c'] for _, v in rows})
+    ci = {c: i for i, c in enumerate(chs)}
+    ch_out = []
+    for c in chs:
+        r = (x.get('ch') or {}).get(c) or {}
+        ch_out.append({k: v for k, v in {'n': nice_ch(s2t(r.get('n') or '')) or '頻道', 'a': r.get('a'), 'subs': r.get('subs'), 'ext': 1}.items() if v is not None})
+    vids = []
+    for vid, v in rows[:60]:
+        raw = s2t(v['t'])
+        t = cut(X.clean_title(raw, '') or raw, TITLE_MAX)
+        f = 'l' if v.get('src') == 'live' else ('m' if X.MOVIE_RX.search(raw) else 'c')
+        fl = (1 if X.is_ai(raw) else 0) | 2 | (16 if v.get('lv') == 'live' else 0) | (128 if v.get('ne') else 0)
+        rg = X.ep_range(raw) or (0, 0)
+        vids.append([vid, ci[v['c']], t, v.get('d') or 0, v.get('lvat') if v.get('src') == 'live' else (v.get('p') or 0), v.get('v') or 0, f, fl, -1, 0, rg[0], rg[1], v.get('cv') or 0])
+    return {'chs': chs, 'ch': ch_out, 'vids': vids}
 
 
 def shorten(t, show, ep=None):

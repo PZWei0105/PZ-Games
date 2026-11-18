@@ -100,3 +100,12 @@ python3 _build/apps/binge/tests/shoot.py --data <資料夾> --out /tmp/bshots [-
 - 標題、作品名的整理規則改了，先跑 `offline_test.py`，再用真的 `cache.json` 重算片庫看一遍作品名（有沒有「限時免費」「第二集」這種名字跑出來）。
 - 頻道換人：改 `apps/binge/data/channels.json`，推上去會觸發管線（push 路徑過濾）。找新頻道：改 `_build/apps/binge/research/queue.json` 推上去（或手動跑 Actions 的 `binge-research`），結果在 `binge-research` 分支。
 - 片庫變太大（手機記憶體）：先調 `BUDGET`，不要拿掉作品。
+
+## 金鑰（`YT_KEY`）才有的（1.1.0）
+
+- **台灣限定頻道的清單內容**：`playlistItems.list`（一頁 50 支、1 點），每次最多 `API_PL_PER_RUN` 點；有金鑰時 yt-dlp 不再抓這些清單。
+- **嵌入檢查**：`videos.list` 加讀 `status`（embeddable）、年齡限制、地區限制 → 影片的 `ne`，catalog 旗標 `128`（`F_NE`）。片庫的影片一週複查一次（優先上一版 catalog 裡有的）。播放器回報 101／150 的記在 localStorage `ne`。
+- **全天放送**：`search eventType=live`（`XL_Q` 兩個關鍵字、四小時一次、200 點），分類 1／23／24、標題像動畫、同時觀看 20 人以上；每次確認還在播，結束就拿掉。
+- **全網熱補**：`search videoDuration=long order=viewCount`（`XC_Q` 三個關鍵字、45 天內、每天一次、300 點），一小時以上才收、留兩週。
+- 名單外的放在 catalog 的 `ext`（`chs`／`ch`／`vids`，vids 多一欄同時觀看），App 只在「全天放送」「全網熱補」兩排與自己的清單頁用，不混進片庫。
+- 額度：`cache.api` 記太平洋時間每天的用量，上限 `API_DAY_CAP` 4,000。

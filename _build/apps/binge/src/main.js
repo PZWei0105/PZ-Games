@@ -113,7 +113,9 @@ document.addEventListener('click', (e) => {
     const href = link.getAttribute('href');
     if (href.startsWith('#watch/')) {
       PENDING_CTX = link.dataset.ctx || '';
-      if (SET.play === 'yt') { e.preventDefault(); const id = href.slice(7); window.open(ytUrl(id, (histOf(id) || [])[1]), '_blank'); Snd.play('tap'); return; }
+      const tid = href.slice(7), tv = IDX.byId.get(tid);
+      // 只能到 YouTube 看的：一點就直接開 YouTube，不用先進放映室看錯誤訊息
+      if (SET.play === 'yt' || (tv && tv.ne)) { e.preventDefault(); window.open(ytUrl(tid, (histOf(tid) || [])[1]), '_blank'); Snd.play('tap'); return; }
       Snd.play('tap');
     } else if (link.target === '_blank') Snd.play('tap');
     else if (href.startsWith('#show/') || href.startsWith('#ch/') || href.startsWith('#list/')) { Snd.play('tap'); if (href.startsWith('#show/')) EPR = 0; }

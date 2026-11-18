@@ -24,7 +24,7 @@ function vcard(v, ctx, opt = {}) {
   const k = KINDS[kindOf(v)] || KINDS.jp, h = histOf(v.i), pg = progOf(v), ch = chOf(v.c);
   const ep = epLabel(v);
   const meta = [];
-  if (v.live) meta.push('<b class="red">直播中</b>');
+  if (v.live) meta.push(`<b class="red">${v.cv ? num(v.cv) + ' 人在看' : '直播中'}</b>`);
   else if (v.up) meta.push('<b class="gold">即將播出</b>');
   else if (v.p) meta.push(esc(ago(v.p)));
   if (v.v && !v.live) meta.push(num(v.v));
@@ -35,10 +35,11 @@ function vcard(v, ctx, opt = {}) {
       ${v.d && !v.live ? `<i class="vc-d">${clock(v.d)}</i>` : ''}
       ${ep && !opt.noep ? `<i class="vc-ep">${esc(ep)}</i>` : ''}
       ${h && h[3] ? '<i class="vc-done d">完食</i>' : isNew(v) ? '<i class="vc-new d">NEW!</i>' : ''}
+      ${v.ne ? '<i class="vc-ne">到 YouTube 看 ↗</i>' : ''}
       ${pg ? `<i class="vc-pg" style="--p:${(pg * 100).toFixed(0)}%"></i>` : ''}
     </span>
     <span class="vc-t">${vtitle(v)}</span>
-    <span class="vc-m">${opt.noch ? '' : avatar(v.c, 18) + `<b>${esc(ch.n || '')}</b>`}${meta.length ? '<span>' + meta.join(' · ') + '</span>' : ''}</span>
+    <span class="vc-m">${opt.noch ? '' : avatar(v.c, 18) + `<b>${esc(ch.n || '')}</b>`}${v.ext ? '<em class="vc-x">名單外</em>' : ''}${meta.length ? '<span>' + meta.join(' · ') + '</span>' : ''}</span>
   </a>`;
 }
 /* 標題：作品的單集 → 作品名＋這一集；長片合輯 → 《》裡的名字放大 */
@@ -59,10 +60,11 @@ function mcard(v, ctx, opt = {}) {
       <i class="mc-len d"><b>${hm(v.d)}</b></i>
       ${v.r ? `<i class="mc-rg">${v.r[0]}–${v.r[1]} 集</i>` : ''}
       ${h && h[3] ? '<i class="vc-done d">完食</i>' : isNew(v) ? '<i class="vc-new d">NEW!</i>' : ''}
+      ${v.ne ? '<i class="vc-ne">到 YouTube 看 ↗</i>' : ''}
       ${pg ? `<i class="vc-pg" style="--p:${(pg * 100).toFixed(0)}%"></i>` : ''}
     </span>
     <span class="mc-t">${vtitle(v)}</span>
-    <span class="mc-m">${avatar(v.c, 18)}<b>${esc(ch.n || '')}</b>${ap ? `<em>${esc(ap.label)}</em>` : pg ? `<em>剩 ${span((1 - pg) * v.d)}</em>` : gs.length ? gs.map((g) => `<u>${esc(g)}</u>`).join('') : `<span>${v.v ? num(v.v) + ' 次' : ''}</span>`}</span>
+    <span class="mc-m">${avatar(v.c, 18)}<b>${esc(ch.n || '')}</b>${v.ext ? '<em class="vc-x">名單外</em>' : ''}${ap ? `<em>${esc(ap.label)}</em>` : pg ? `<em>剩 ${span((1 - pg) * v.d)}</em>` : gs.length ? gs.map((g) => `<u>${esc(g)}</u>`).join('') : `<span>${v.v ? num(v.v) + ' 次' : ''}</span>`}</span>
   </a>`;
 }
 /* 作品卡 */
@@ -146,11 +148,14 @@ function vHome() {
   if (news.length) h += newsRow(news);
   const live = L.live();
   if (live.length) h += row('live', live, { zh: '直播馬拉松', en: 'ON AIR', more: '#list/live', c: 'var(--fire)', note: '官方一口氣連播' });
+  const xlive = L.xlive();
+  if (xlive.length) h += row('xlive', xlive, { zh: '全天放送', en: '24H ON AIR', more: '#list/xlive', c: 'var(--fire)', note: '全網正在連播的動畫' });
   h += row('comps', L.comps('ai'), { zh: '一口氣看完', en: 'MARATHON', more: '#list/comps:ai', c: 'var(--k-ai)', note: 'AI 漫劇・沙雕・動態漫' }, mcard);
   h += gachaBlock();
   h += row('jp', L.eps('jp'), { zh: '日本動畫・新集', en: 'NEW EPISODES', more: '#list/eps:jp', c: 'var(--k-jp)' });
   h += row('cn', L.eps('cn'), { zh: '國漫・新集', en: 'DONGHUA', more: '#list/eps:cn', c: 'var(--k-cn)' });
   h += row('anicomp', L.comps('ani'), { zh: '番劇合輯', en: 'BINGE PACK', more: '#list/comps:ani', c: 'var(--k-cn)', note: '官方整季、全系列合集' }, mcard);
+  h += row('xcomp', L.xcomps(), { zh: '全網熱補', en: 'FOUND ONLINE', more: '#list/xcomp', c: 'var(--sora)', note: '名單外最近很多人補的長合輯' }, mcard);
   h += showRow(SL.all('ani', '').slice(0, 20), { zh: '熱門作品', en: 'TOP SHOWS', more: '#ani', c: 'var(--k-jp)' });
   h += row('movies', L.movies(), { zh: '劇場版・動畫電影', en: 'MOVIES', more: '#list/movies', c: 'var(--sora)' });
   h += row('toon', L.kind('toon'), { zh: '卡通', en: 'CARTOON', more: '#list/kind:toon', c: 'var(--k-toon)' });
@@ -496,6 +501,8 @@ function listOf(kind) {
     case 'kind': return { t: (KINDS[b] || KINDS.jp).zh, en: (KINDS[b] || KINDS.jp).en, items: L.kind(b) };
     case 'movies': return { t: '劇場版・動畫電影', en: 'MOVIES', items: L.movies() };
     case 'live': return { t: '直播馬拉松', en: 'ON AIR', items: L.live() };
+    case 'xlive': return { t: '全天放送', en: '24H ON AIR', items: L.xlive() };
+    case 'xcomp': return { t: '全網熱補', en: 'FOUND ONLINE', items: L.xcomps(), card: mcard };
     case 'genre': { const g = decodeURIComponent(b || ''); return { t: g, en: 'GENRE', items: L.genre(g, 'ai').filter((v) => AIF === 'all' || kindOf(v) === AIF), card: (v, ctx) => (v.f === 'c' || v.f === 'm' ? mcard(v, ctx) : vcard(v, ctx)) }; }
     case 'len': return { t: { 1: '1 小時以下', 3: '1～3 小時', 8: '3～8 小時', 99: '8 小時以上' }[b] || '片長', en: 'LENGTH', items: lenList(b), card: mcard };
     case 'later': return { t: '片單', en: 'SAVED', items: L.later() };
