@@ -1,7 +1,7 @@
 'use strict';
 /* 補番 BINGE — 聲音：全部 Web Audio 即時合成
    音效走動畫的語彙：キラキラ的閃光、太鼓「咚！」、眼睛貼（Eyecatch）的木琴小段、次回預告的「鏘——」、扭蛋的喀啦聲。
-   背景是 Lo-fi 動畫咖啡廳：電鋼琴七和弦、搖擺的鼓、卡林巴旋律（不加黑膠底噪：一直沙沙響聽起來像水聲，痞子葳嫌吵，2026-11-18 拿掉）；白天輕快一點，深夜慢一點。看片時自動停。 */
+   背景是 Lo-fi 動畫咖啡廳：電鋼琴七和弦、搖擺的鼓、卡林巴旋律（背景音樂完全不用白噪音：黑膠底噪、爆擦聲、腳踏鈸、噪音小鼓，疊起來像一直下雨，痞子葳嫌吵，2026-11-18 拿掉）；白天輕快一點，深夜慢一點。看片時自動停。 */
 
 const Snd = (() => {
   let ctx = null, master = null, sfxBus = null, bgmBus = null, comp = null, noiseBuf = null, verb = null;
@@ -235,21 +235,14 @@ const Snd = (() => {
       o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
       env(g, t, 0.004, night ? 0.32 : 0.42, 0.3); o.connect(g); g.connect(B); o.start(t); o.stop(t + 0.32);
     }
-    // 小鼓（悶悶的）：2、4 拍
+    // 小鼓：2、4 拍。只用音高做（木魚般的悶響），不用白噪音、也不進回音——噪音加回音會糊成一片雨聲
     if (pos === 4 || pos === 12) {
-      const sN = ctx.createBufferSource(); sN.buffer = noise();
-      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = night ? 1300 : 1700; f.Q.value = 0.8;
-      const g = ctx.createGain(); env(g, t, 0.003, night ? 0.08 : 0.12, 0.18);
-      sN.connect(f); f.connect(g); g.connect(B); g.connect(verb); sN.start(t, Math.random()); sN.stop(t + 0.2);
-      const o = ctx.createOscillator(), g2 = ctx.createGain(); o.frequency.value = 190; env(g2, t, 0.002, 0.05, 0.08); o.connect(g2); g2.connect(B); o.start(t); o.stop(t + 0.1);
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle';
+      o.frequency.setValueAtTime(night ? 240 : 280, t); o.frequency.exponentialRampToValueAtTime(night ? 150 : 170, t + 0.07);
+      env(g, t, 0.002, night ? 0.07 : 0.1, 0.11); o.connect(g); g.connect(B); o.start(t); o.stop(t + 0.14);
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain(); o2.frequency.value = 190; env(g2, t, 0.002, 0.05, 0.08); o2.connect(g2); g2.connect(B); o2.start(t); o2.stop(t + 0.1);
     }
-    // 腳踏鈸：搖擺八分音符（深夜不打）
-    if (!night && pos % 2 === 0) {
-      const sN = ctx.createBufferSource(); sN.buffer = noise();
-      const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 8000;
-      const g = ctx.createGain(); env(g, t, 0.001, pos % 4 === 2 ? 0.035 : 0.018, 0.045);
-      sN.connect(f); f.connect(g); g.connect(B); sN.start(t, Math.random()); sN.stop(t + 0.06);
-    }
+    // 腳踏鈸拿掉了：白噪音做的，一直嚓嚓嚓聽起來像雨聲（痞子葳 2026-11-18）
     // 貝斯：根音，第一拍與第三拍
     if (pos === 0 || pos === 8 || (pos === 14 && bar % 2 === 0)) {
       const m = ch[0] - 12 + (pos === 14 ? 7 : 0);
