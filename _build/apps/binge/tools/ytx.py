@@ -9,13 +9,18 @@ import re
 
 # ================================================================ yt-dlp 扁平清單
 
-_YDL = {}
+import threading
+
+_TL = threading.local()
 
 
 def _ydl(lang):
-    """共用一個 YoutubeDL（同一個語言），省掉每次初始化。"""
-    if lang in _YDL:
-        return _YDL[lang]
+    """每個執行緒各用一個 YoutubeDL（同一個語言），省掉每次初始化；YoutubeDL 不能跨執行緒共用。"""
+    cache = getattr(_TL, 'ydl', None)
+    if cache is None:
+        cache = _TL.ydl = {}
+    if lang in cache:
+        return cache[lang]
     import yt_dlp  # 只在 Actions 上用得到
     opts = {
         'quiet': True, 'no_warnings': True, 'skip_download': True, 'extract_flat': 'in_playlist',
@@ -23,8 +28,8 @@ def _ydl(lang):
         'extractor_args': {'youtube': {'lang': [lang]}} if lang else {},
         'http_headers': {'Accept-Language': 'zh-TW,zh;q=0.9,en;q=0.5'},
     }
-    _YDL[lang] = yt_dlp.YoutubeDL(opts)
-    return _YDL[lang]
+    cache[lang] = yt_dlp.YoutubeDL(opts)
+    return cache[lang]
 
 
 def flat(url, limit=60, lang='zh-TW'):
@@ -237,7 +242,7 @@ def show_name(title):
 
 
 def tidy(n):
-    n = re.sub(r'\s+', ' ', n).strip(' -–—:：·・')
+    n = re.sub(r'\s+', ' ', n).strip(' -–—:：·・|｜,，')
     n = re.sub(r'\s*[\(（]?(已完[結结]|完[結结]|全集|合集|合輯|合辑)[\)）]?$', '', n)
     return n.strip()
 
@@ -290,3 +295,114 @@ def chapters(desc, dur=None):
             break
         clean.append([s, lb])
     return clean if len(clean) >= 3 else []
+
+
+# ================================================================ 標題整理（顯示用）
+
+_EMOJI = re.compile('[\U0001F000-\U0001FAFF☀-➿⬀-⯿️‍⃣←-⇿〰〽㊗㊙]+')
+_SUBTAG = re.compile(r'[\[【(（]\s*(?:MULTI\s*-?\s*SUBS?|ENG\s*SUBS?|ENG\s*DUB|中英字幕|多語字幕|多语字幕|繁中字幕|中字|CC字幕|4K|1080P|HD)\s*[\]】)）]|\bMULTI\s*-?\s*SUBS?\b|\bMULTISUB\b|\bENG\s*SUBS?\b|\bMUL\b|\bSUB\b', re.I)
+_CHANNELISH = re.compile(r'線上看|免費看|iQIYI|愛奇藝|爱奇艺|YOUKU|優酷|优酷|騰訊|腾讯|WeTV|bilibili|嗶哩|哔哩|Made\s*By|Muse\s*木棉花|木棉花|Ani-?One|羚邦|donghua|\banime\b|'
+                        r'Get the|APP\s*搶先看|APP\s*抢先看|訂閱|订阅|官方頻道|官方频道|Official|Animation\s*Club|Chinese Animation|\bChannel\b|動畫頻道|动画频道', re.I)
+_TRAIL_EN = re.compile(r'(?<=[一-鿿》】」』)）])\s*[A-Za-z][A-Za-z0-9 :,\'’!?.&\-]{9,}$')
+_STRONG = re.compile(r'線上看|免費看|Get the\b|APP\s*[搶抢]先看|iQIYI|愛奇藝|爱奇艺|YOUKU|優酷|优酷|騰訊視頻|腾讯视频|WeTV|Made\s*By|Muse\s*木棉花|Ani-?One|Cartoon Network|Adult Swim|官方頻道|官方频道|\bOfficial\b', re.I)
+_GENERIC_SEG = re.compile(r'^(FULL|FULL MOVIE|完整版|合集|合輯|全集|Collection|Collections|Playlist|donghua|anime|動畫|动画|動漫|动漫|漫劇|漫剧|AI漫劇|AI漫剧|\d{4}年\d{1,2}月新番)$', re.I)
+_PROMO = re.compile(r'^\s*(?:新番上[线線]|最新漫[剧劇]|爆火漫[劇剧]|熱門漫[劇剧]|热门漫[剧劇]|新番速[遞递]|強推|强推|精品沙雕動畫|精品沙雕动画|新番爽漫|NEW|最新合集|更新啦|連載中|连载中|人氣更新|人气更新|新漫更新|已完結|已完结|完結|完结)\s*[:：!！]?\s*', re.I)
+_LEADTAG = re.compile(r'^\s*(?:[【\[]\s*(?:完結|完结|已完結|已完结|完整版|全集|NEW|高清|強推|强推|新番|最新|爆款|熱門|热门|精選|精选|獨家|独家|首播|FULL|HD|4K|一口氣看完|一口气看完)[^】\]]{0,6}[】\]]|沙雕動畫|沙雕动画|動態漫畫|动态漫画)\s*', re.I)
+MEMBERS_RX = re.compile(r'会员专享|會員專享|会员抢先|會員搶先|會員專屬|会员专属|會員限定|会员限定|MEMBERS?\s*ONLY|PLATIN\s*MEMBER', re.I)
+
+
+def clean_title(t, chname=''):
+    """拿掉 hashtag、表情符號、字幕標籤、頻道名的尾巴，留下作品與這一集的資訊。"""
+    t = t or ''
+    t = re.sub(r'\s*#\S*', ' ', t)
+    t = _EMOJI.sub(' ', t)
+    t = _SUBTAG.sub(' ', t)
+    for _ in range(3):
+        t2 = _LEADTAG.sub('', _PROMO.sub('', t))
+        if t2 == t:
+            break
+        t = t2
+    cn = norm(chname)
+    segs = [x.strip() for x in re.split(r'\s*[|｜]\s*', t) if x.strip()]
+    keep = []
+    for x in segs:
+        nx = norm(x)
+        if cn and len(cn) >= 3 and (cn in nx or nx in cn):
+            continue
+        if (_STRONG.search(x) or (_CHANNELISH.search(x) and len(_HAN.findall(x)) < 6)) and not re.search(r'第\s*\d|EP\s*\d|\d+\s*[集話话]', x, re.I):
+            continue
+        if _GENERIC_SEG.match(x):
+            continue
+        if not _HAN.search(x) and any(_HAN.search(y) for y in segs) and not re.search(r'\d', x) and not keep:
+            continue          # 中文標題前面的英文翻譯
+        if not _HAN.search(x) and any(_HAN.search(y) for y in segs) and not re.match(r'^(EP|E|S|Ep)?\s*[\d\-~ ]+$', x, re.I):
+            continue          # 英文翻譯的那一段
+        keep.append(_TRAIL_EN.sub('', x).strip())
+    t = '｜'.join(k for k in keep if k) or (segs[0] if segs else t)
+    t = re.sub(r'【\s*】|\[\s*\]|（\s*）|\(\s*\)', ' ', t)
+    t = re.sub(r'\s+', ' ', t).strip(' -–—:：~～,，.。、|｜')
+    return t[:96]
+
+
+_PL_TAG = re.compile(r'^\s*[【\[]\s*[^】\]]*(?:Free|FREE|Every|NEW|FULL|VIP|MEMBER|COLLECTION|LIMITED|Fresh|Triumphant|Final|Iron|Awakening|Gale|Blade|Get APP|會員|会员|新番|完結|完结)[^】\]]*[】\]]\s*', re.I)
+
+
+def clean_playlist(t, chname=''):
+    t = _EMOJI.sub(' ', t or '')
+    for _ in range(3):
+        t2 = _PL_TAG.sub('', t)
+        if t2 == t:
+            break
+        t = t2
+    t = re.sub(r'\(全部集數\)|（全部集數）|\(全部集数\)|全部集數|全部集数|\(繁中字幕\)|（繁中字幕）|【Ani-One】', ' ', t)
+    return clean_title(t, chname)
+
+
+SKIP_PL = re.compile(r'VIP|MEMBER|會員專|会员专|會員限定|会员限定|CLIP|精彩看[点點]|Highlight|預告|预告|Trailer|\bOST\b|主題曲|主题曲|片頭|片头|片尾|PV\b|花絮|幕後|幕后|'
+                     r'Shorts|直播回放|Music Video|\bMV\b|音樂|音乐|配音|採訪|采访|活動|活动|創作大賽|创作大赛|有獎|有奖|開箱|开箱|教學|教学|制作教程|製作教程|Live\b', re.I)
+
+
+def ep_prefix(t):
+    m = re.match(r'^(.{2,40}?)\s*(?:第\s*\d|EP\s*\d|E\d|#\s*\d|\(EP|（EP|【\s*\d|\d+\s*[集話话])', t or '', re.I)
+    return tidy(m.group(1)) if m else None
+
+
+def common_name(titles, fallback=None):
+    """一個播放清單裡各集標題共有的名字（作品名）。"""
+    from collections import Counter
+    cnt = Counter()
+    for t in titles:
+        cands = set()
+        for rx in (r'《([^《》]{2,40})》', r'【([^【】]{2,40})】', r'「([^「」]{2,40})」'):
+            for m in re.finditer(rx, t):
+                c = tidy(m.group(1))
+                if c and not GENERIC.match(c) and not re.fullmatch(r'[\d\s\-~～]+[集話话]?', c):
+                    cands.add(c)
+        for seg in re.split(r'[|｜]', t):
+            seg = tidy(seg)
+            if 2 <= len(seg) <= 30 and not GENERIC.match(seg) and not re.search(r'^(EP|E)?\s*[\d\-~]+$', seg, re.I) and not re.search(r'第\s*\d+\s*[集話话]|EP\s*\d', seg, re.I):
+                cands.add(seg)
+        p = ep_prefix(t)
+        if p and not GENERIC.match(p):
+            cands.add(p)
+        for c in cands:
+            cnt[c] += 1
+    n = max(1, len(titles))
+    best = [(c, k) for c, k in cnt.most_common(8) if k >= max(2, n * 0.5)]
+    if best:
+        best.sort(key=lambda x: (-x[1], len(x[0])))
+        top = best[0][1]
+        # 次數一樣多時選最長的（「葬送的芙莉蓮」勝過「芙莉蓮」）
+        same = [c for c, k in best if k == top]
+        return max(same, key=len)
+    return fallback
+
+
+def nice_show(n):
+    """作品名稱最後整理：【國語】放到後面。"""
+    if not n:
+        return n
+    m = re.match(r'^[【\[]\s*(國語|国语|粵語|粤语|日語|日语|中配|台配)\s*[】\]]\s*(.+)$', n)
+    if m:
+        return tidy(m.group(2)) + '（' + m.group(1).replace('国语', '國語').replace('粤语', '粵語').replace('日语', '日語') + '）'
+    return tidy(n)

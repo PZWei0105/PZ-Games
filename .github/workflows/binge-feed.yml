@@ -1,0 +1,79 @@
+# 《補番 BINGE》片庫：每 30 分鐘抓片源名單（apps/binge/data/channels.json）的新片（YouTube 官方 RSS），
+# 用 yt-dlp（不下載影片）抓頻道分頁、播放清單（片長、集數、會員限定）、Shorts、直播，整理成作品與長片合輯；
+# 收轉發站（ntfy.sh）上 App 送來的追番、稍後再看、長片進度。
+# 有 YouTube 金鑰（Actions 密碼 YT_KEY，跟《觀戰》共用）時再補：片長、直播狀態、台灣限定頻道的播放清單。
+# 片庫推到 binge-data 分支（強制推送、只留最新一版）；追番狀態 me.json 與頻道名冊 roster.json 有變動才 commit 進 main。
+name: binge-feed
+
+on:
+  schedule:
+    - cron: '23,53 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/binge/data/channels.json'
+      - '_build/apps/binge/tools/**'
+      - '.github/workflows/binge-feed.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: binge-feed
+  cancel-in-progress: false
+
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 安裝 yt-dlp 與簡轉繁
+        run: pip install -q -U yt-dlp opencc-python-reimplemented
+      - name: 取上一版片庫
+        run: |
+          mkdir -p /tmp/prev
+          if git fetch -q --depth=1 origin binge-data 2>/dev/null; then
+            git archive FETCH_HEAD | tar -x -C /tmp/prev && echo '有上一版'
+          else
+            echo '第一次跑'
+          fi
+      - name: 片庫
+        env:
+          YT_KEY: ${{ secrets.YT_KEY }}
+        run: python3 _build/apps/binge/tools/pipeline.py --repo . --prev /tmp/prev --out /tmp/out --budget 11
+      - name: 推 binge-data 分支（只留最新一版）
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd /tmp/out
+          git init -q -b binge-data
+          git config user.name 'binge-bot'
+          git config user.email 'binge-bot@users.noreply.github.com'
+          git add -A
+          git commit -q -m '補番：片庫'
+          for i in 1 2 3; do
+            git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:binge-data && exit 0
+            echo "推送失敗，重試 $i"; sleep $((i * 5))
+          done
+          exit 1
+      - name: 追番狀態、頻道名冊有變動才 commit
+        run: |
+          git config user.name 'binge-bot'
+          git config user.email 'binge-bot@users.noreply.github.com'
+          for f in me.json roster.json; do
+            if [ -f "apps/binge/data/$f" ]; then git add "apps/binge/data/$f"; fi
+          done
+          if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi
+          git commit -q -m '補番：追番與頻道名冊'
+          for i in 1 2 3 4 5; do
+            git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0
+            echo "push 失敗，重試 $i"; sleep $((i * 7))
+          done
+          exit 1

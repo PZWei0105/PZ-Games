@@ -1,0 +1,390 @@
+{
+ "note": "補番 BINGE 的片源名單（手寫）。kind：ai＝AI 漫劇、sd＝沙雕動畫、mc＝動態漫畫、jp＝日本動畫、cn＝國漫、toon＝卡通。geo＝只在台灣能看（管線從美國的機器看不到頻道分頁，改從影片說明欄找播放清單）；live＝會開馬拉松直播；kids＝兒童卡通（App 預設不顯示）；official＝官方或片商。改完推上去，下一次資料管線就會照新名單抓。",
+ "channels": [
+  {
+   "id": "UC_GcrznCXn6b-i1Y7DOn54A",
+   "name": "盛世短剧",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UC80ztI40QAXzWL94eoRzWow",
+   "name": "破晓动漫社",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCNIKva6iDURgVxf44pMZlKA",
+   "name": "动漫魔女",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCmvR7zlN-MWcCutPePPwCTA",
+   "name": "无敌漫剧",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCBp86M0Lnb6tHK9Y-FJ6lbw",
+   "name": "Meow動漫劇場",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCydjE8zQL8v1kn51ct3DgHg",
+   "name": "青禾漫剧社",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCKe24bS3QL9VMQOXPdGtGtQ",
+   "name": "刷剧漫",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCkmHG1BkDCLxjrFP0nHzhnQ",
+   "name": "最新剧场",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UC0Mn7N3sXOCf5mI0eni3gjQ",
+   "name": "AI漫剧WongXin",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCGxvRi8Z9CYYQi-XDWw_iDA",
+   "name": "AI动漫频道",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UC_iyEDS9KWxboB-ZMOUDvMw",
+   "name": "幻夜动漫",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCdqGhjMXxWNgkonTFNbxgIg",
+   "name": "紙飛機動漫",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCTWlZ-ZvUeboOtnO8rX0nIg",
+   "name": "风油精动漫",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCMMb3szJb_fRT0JjhTORhqQ",
+   "name": "九界动漫",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCc3gYrCuBdpHhTjJhfq1Vbw",
+   "name": "一页漫剧",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCe6jYNDddvi1rcPUTSortbQ",
+   "name": "欣欣看剧",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCZ4CHFgtYs1m2P1YkPJGnmw",
+   "name": "星爽劇場",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCOA3m-yAPTeyB1dXGOsiMdQ",
+   "name": "雨霖劇場",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UC9gFL288ka8lYeDvoG8CJpA",
+   "name": "傲世九重天剧社",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCJOpA1JH_sZh8cRFOQOMDqA",
+   "name": "神隐漫研社",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCJSAZ5pbDi8StbSbJI1riEg",
+   "name": "Qixiang-Animation",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCPZ3cuIaE3HeZqAsaZw3fEw",
+   "name": "漫劇嗑",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UCcM03cM38IYCcK7rngujoZA",
+   "name": "manhua大陸劇",
+   "kind": "ai",
+   "lang": "zh"
+  },
+  {
+   "id": "UC3h4rXGhuxGwBWO6etGxUnQ",
+   "name": "咕叽沙雕动画",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCu5p34I1mBvtw4x7lJZEAIQ",
+   "name": "阿乐沙雕动画",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCm3EOudss-V3et-xuRYQa1g",
+   "name": "柒柒漫舍",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCXEGczF6b115WD3XOv4gXpg",
+   "name": "正经人不做沙雕事",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCyCdJ0vcrWvvx6z3bK-9CTQ",
+   "name": "七漫剪",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCXb_dKepE7-1inA_VEOkFfA",
+   "name": "沙雕轻漫",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCGtioqy06ZgFu__oz7v7Fsg",
+   "name": "完结沙雕动画",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCr1T3XD957ayPdZCxlKy7MQ",
+   "name": "夜一漫谈",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCnxiTyl1If7idiLyig3NmeA",
+   "name": "暴走三金",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCisdNw4wxPuQkk8EkWcj-1w",
+   "name": "南风故事会",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCNWNGmoRMYf6Gqu0QinsCaw",
+   "name": "沙雕動畫世界",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UC_JsHod-IAlWFWi7kDhb03Q",
+   "name": "阅文漫画",
+   "kind": "mc",
+   "lang": "zh",
+   "official": 1
+  },
+  {
+   "id": "UCfHgyAigw8aIeU3Trwkuuig",
+   "name": "抖漫MotionComic",
+   "kind": "mc",
+   "lang": "zh",
+   "official": 1
+  },
+  {
+   "id": "UCqICAc_WvfgNne57cFSVqBg",
+   "name": "顶流动画",
+   "kind": "mc",
+   "lang": "zh"
+  },
+  {
+   "id": "UCe_0ShEAlwBRii3bNjK8GVA",
+   "name": "小雪漫画解说",
+   "kind": "mc",
+   "lang": "zh"
+  },
+  {
+   "id": "UC8r57bRU8OrpXnLFNC0ym7Q",
+   "name": "元气动画俱乐部",
+   "kind": "mc",
+   "lang": "zh"
+  },
+  {
+   "id": "UCgdwtyqBunlRb-i-7PnCssQ",
+   "name": "Muse木棉花-TW",
+   "kind": "jp",
+   "lang": "zh",
+   "official": 1,
+   "geo": "TW",
+   "live": 1
+  },
+  {
+   "id": "UCaNJ7uQDxAHXFaRcV8d5eBA",
+   "name": "Muse木棉花-精選動畫",
+   "kind": "jp",
+   "lang": "zh",
+   "official": 1,
+   "geo": "TW"
+  },
+  {
+   "id": "UC45ONEZZfMDZCnEhgYmVu-A",
+   "name": "Ani-One中文官方動畫頻道",
+   "kind": "jp",
+   "lang": "zh",
+   "official": 1,
+   "geo": "TW"
+  },
+  {
+   "id": "UC0wNSTMWIL3qaorLx0jie6A",
+   "name": "Ani-One Asia",
+   "kind": "jp",
+   "lang": "zh",
+   "official": 1
+  },
+  {
+   "id": "UCejtUitnpnf8Be-v5NuDSLw",
+   "name": "GUNDAM CHANNEL",
+   "kind": "jp",
+   "lang": "en",
+   "official": 1
+  },
+  {
+   "id": "UCdpiId0eJGnnIvfhpbJIM1w",
+   "name": "騰訊視頻動漫",
+   "kind": "cn",
+   "lang": "zh",
+   "official": 1,
+   "live": 1
+  },
+  {
+   "id": "UCQe8YEJaNoqWQCiw0p6XjXg",
+   "name": "愛奇藝國漫",
+   "kind": "cn",
+   "lang": "zh",
+   "official": 1,
+   "live": 1
+  },
+  {
+   "id": "UCVQvZ-qsSF2UWzFhmCv079A",
+   "name": "iQIYI Anime Asia",
+   "kind": "cn",
+   "lang": "zh",
+   "official": 1
+  },
+  {
+   "id": "UCQFyMGc6h30NMCd6HCk0ZPA",
+   "name": "嗶哩嗶哩動畫",
+   "kind": "cn",
+   "lang": "zh",
+   "official": 1,
+   "live": 1
+  },
+  {
+   "id": "UCcYw1UUwxjIMYfvmdQrcyUA",
+   "name": "優酷動漫",
+   "kind": "cn",
+   "lang": "zh",
+   "official": 1,
+   "live": 1
+  },
+  {
+   "id": "UCYGppeNR9_jV8RzTTufNT6w",
+   "name": "優酷繁中動漫",
+   "kind": "cn",
+   "lang": "zh",
+   "official": 1
+  },
+  {
+   "id": "UCvuA4549GHcE4ayCVcesQFw",
+   "name": "長安動漫",
+   "kind": "cn",
+   "lang": "zh",
+   "official": 1
+  },
+  {
+   "id": "UC2KAZxMdDc-eveh8_7NoM4A",
+   "name": "孟德四舅",
+   "kind": "toon",
+   "lang": "zh"
+  },
+  {
+   "id": "UCexhmwhQ2zmBDt2Q6qM3hdg",
+   "name": "熊出沒 Boonie Bears",
+   "kind": "toon",
+   "lang": "zh",
+   "official": 1
+  },
+  {
+   "id": "UCbELDDHGqMbjsA_4Kyd7vMw",
+   "name": "喜羊羊與灰太狼",
+   "kind": "toon",
+   "lang": "zh",
+   "official": 1
+  },
+  {
+   "id": "UCoBpC9J2EcbAMprw7YjC93A",
+   "name": "The Amazing World of Gumball",
+   "kind": "toon",
+   "lang": "en",
+   "official": 1
+  },
+  {
+   "id": "UCwna_NDRqUZTU3q2jHIf68w",
+   "name": "Regular Show",
+   "kind": "toon",
+   "lang": "en",
+   "official": 1
+  },
+  {
+   "id": "UC1MEMnZEDKqLPu-B-AHIsyw",
+   "name": "Rick and Morty",
+   "kind": "toon",
+   "lang": "en",
+   "official": 1
+  },
+  {
+   "id": "UCRi0sw4PDw-C2C7fS9hrx5Q",
+   "name": "小豬佩奇 中文官方",
+   "kind": "toon",
+   "lang": "zh",
+   "official": 1,
+   "kids": 1
+  },
+  {
+   "id": "UCfUg5VwJSgauQe1EbkqjE-w",
+   "name": "汪汪隊立大功 中文",
+   "kind": "toon",
+   "lang": "zh",
+   "official": 1,
+   "kids": 1
+  }
+ ]
+}
