@@ -1138,13 +1138,17 @@ XL_Q = ['動畫 24小時 連播', '動漫 直播 全集']
 XC_Q = ['動畫 合集 一口氣看完', '動漫 全集 合輯', '動態漫 合集']
 ANIME_RX = re.compile(r'動畫|动画|動漫|动漫|卡通|番劇|番剧|新番|アニメ|anime|漫劇|漫剧|動態漫|动态漫|沙雕', re.I)
 XBAD_RX = re.compile(r'vtuber|V皇|歌回|遊戲|游戏|實況|实况|ASMR|新聞|新闻|電影解說|电影解说|解說|解说|講解|讲解|reaction|反應|反应|預告|预告', re.I)
-OK_CATS = {'1', '24', '23'}
+OK_CATS = {'1', '24', '23', '22'}     # 動畫、娛樂、喜劇、人物與網誌（很多頻道上傳時沒改分類，停在預設的 22）
+LIVE_HINT = re.compile(r'24\s*小[時时]|24H|24/7|連播|连播|全集|馬拉松|马拉松', re.I)
+XVER = 2                     # 名單外的規則改了就加一：下一次立刻重搜
 
 
 def web_extras(cache, chans):
     x = cache.setdefault('ext', {'v': {}, 'ch': {}})
     x.setdefault('v', {})
     x.setdefault('ch', {})
+    if x.get('ver') != XVER:
+        x.update({'ver': XVER, 'live_ts': 0, 'comp_ts': 0})
     known = set(chans)
     for kind, every, qs, extra in (('live', XL_EVERY, XL_Q, {'eventType': 'live', 'order': 'viewCount'}),
                                     ('comp', XC_EVERY, XC_Q, {'videoDuration': 'long', 'order': 'viewCount',
@@ -1155,19 +1159,24 @@ def web_extras(cache, chans):
         if left < 100 * len(qs) + 400:
             continue
         x[kind + '_ts'] = int(NOW)
-        ids = []
+        ids, raw_n, drop = [], 0, []
         for q in qs:
             j = api_search(cache, q=q, type='video', regionCode='TW', relevanceLanguage='zh-Hant', maxResults=25, safeSearch='moderate', **extra)
             for it in (j or {}).get('items') or []:
                 sn = it.get('snippet') or {}
                 vid, cid = (it.get('id') or {}).get('videoId'), sn.get('channelId')
+                raw_n += 1
                 if not vid or not cid or cid in known or vid in ids:
                     continue
                 t = htmlmod.unescape(sn.get('title') or '')
-                if not ANIME_RX.search(t) or XBAD_RX.search(t) or X.lang_of(t) != 'zh':
+                animeish = ANIME_RX.search(t) or (kind == 'live' and LIVE_HINT.search(t))
+                if not animeish or XBAD_RX.search(t) or X.lang_of(t) != 'zh':
+                    drop.append('標題：' + t[:30])
                     continue
                 ids.append(vid)
+        log('全網%s：搜到 %d 支、標題過關 %d 支%s' % ('直播' if kind == 'live' else '合輯', raw_n, len(ids), ('（例：' + '／'.join(drop[:3]) + '）') if drop else ''))
         if not ids:
+            x[kind + '_ts'] = int(NOW) - every + 4 * 3600      # 沒找到：四小時後再試
             continue
         n = 0
         for i in range(0, len(ids), 50):
@@ -1175,14 +1184,19 @@ def web_extras(cache, chans):
             for it in (j or {}).get('items') or []:
                 sn = it.get('snippet') or {}
                 if sn.get('categoryId') not in OK_CATS:
+                    drop.append('分類%s：%s' % (sn.get('categoryId'), (sn.get('title') or '')[:24]))
                     continue
+                if kind == 'live' and not ANIME_RX.search(sn.get('title') or '') and sn.get('categoryId') != '1':
+                    continue          # 標題沒寫動畫的直播：只收「電影與動畫」分類
                 v = {'c': sn.get('channelId'), 'src': kind, 'fs': int(NOW)}
                 take_api_video(v, it)
                 v['t'] = (sn.get('localized') or {}).get('title') or sn.get('title') or ''
                 if kind == 'live':
                     if v.get('lv') != 'live' or (v.get('cv') or 0) < 20:
+                        drop.append('人數%s' % (v.get('cv') or 0))
                         continue
                 elif (v.get('d') or 0) < 60 * 60:
+                    drop.append('片長%d分' % ((v.get('d') or 0) // 60))
                     continue
                 old = x['v'].get(it['id']) or {}
                 v['fs'] = old.get('fs') or int(NOW)
@@ -1190,7 +1204,7 @@ def web_extras(cache, chans):
                 xc = x['ch'].setdefault(v['c'], {})
                 xc['n'] = sn.get('channelTitle') or xc.get('n')
                 n += 1
-        log('全網%s：收 %d 支' % ('直播' if kind == 'live' else '合輯', n))
+        log('全網%s：收 %d 支%s' % ('直播' if kind == 'live' else '合輯', n, ('（沒收的例：' + '／'.join(drop[-4:]) + '）') if drop else ''))
     # 收進來的直播：每次確認還在不在播（1 點）；結束就拿掉
     lives = [vid for vid, v in x['v'].items() if v.get('src') == 'live']
     for i in range(0, len(lives), 50):
