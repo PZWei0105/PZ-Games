@@ -81,19 +81,6 @@
    ],
    "got": 1794977325
   },
-  "UCw4XOM2OaSnK-IxVyFqJ27g": {
-   "n": "lobotv",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_mptJAhhNr_yR_3UNnwrdKdJX95SLo0vNDWiXKJYeBdMw=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@lobotv",
-   "seed": "Lobo蘿蔔",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "實況"
-   ],
-   "got": 1794977325
-  },
   "UCW7h-1mymnJ96akzjrmiIgA": {
    "n": "Capcom USA",
    "a": "https://yt3.googleusercontent.com/SRO_kMfzm49vUrnhZtkbea7v2syYZCC9qC9r5Vetmjcu25tCleUO6m_CIguYsJnypk-90iIfUfs=s176-c-k-c0x00ffffff-no-rj",
@@ -117,19 +104,6 @@
    "k": "official",
    "tags": [
     "官方"
-   ],
-   "got": 1794977325
-  },
-  "UCtM6Ky7bjI6J0jKskQkno5g": {
-   "n": "Jake",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_lv4BOSdbm1YWmUSYkYOgiOCn1svaBoj0JE4rAqZC975g=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@ashen",
-   "seed": "阿神",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "實況"
    ],
    "got": 1794977325
   },
@@ -461,19 +435,6 @@
    ],
    "got": 1794977325
   },
-  "UC3LhM57azNMcxXaMEaUnksQ": {
-   "n": "GameScience",
-   "a": "https://yt3.googleusercontent.com/huC866v0fMGFML4NA5blR48KsaxG40-9sTzYIM6ndWcSVu1f0qhSZnEKZ_E0IMeqdmBOdCQu8CE=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "Welcome to GameScience!\n\nExplore the science behind video games,\n\nFind out if the latest games are worth your time,\n&\nDiscover the best games on the market\n\n\n\n\n\n\n",
-   "h": "@gamescienceofficial",
-   "seed": "遊戲科學 Game Science",
-   "l": "zh",
-   "k": "official",
-   "tags": [
-    "官方"
-   ],
-   "got": 1794977325
-  },
   "UC0KU8F9jJqSLS11LRXvFWmg": {
    "n": "Ubisoft",
    "a": "https://yt3.googleusercontent.com/yxx3LvnWlyzY5AJbm8WJBTeLkseTBUiDBQcke6fMx1sTmO63SnK8wN95ZacjiajxrPbwRvtS=s176-c-k-c0x00ffffff-no-rj",
@@ -513,7 +474,200 @@
     "任天堂"
    ],
    "got": 1794977325
+  },
+  "UCSc6s-ZJXKlSQr51dsox34g": {
+   "n": "DevolverDigital",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_lyo06mh-9jh4Gn52X4Iken9LHeCvSdoqgUfTJb27fL5g=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "Devolver Digital’s official YouTube channel, featuring trailers, gameplay, showcases, and behind-the-scenes looks at our games and the teams who make them.",
+   "h": "@DevolverDigital",
+   "seed": "Devolver Digital",
+   "l": "en",
+   "k": "official",
+   "tags": [
+    "官方",
+    "獨立"
+   ],
+   "got": 1794978305
+  },
+  "UCKx9fycSal6edp34DQXt3lw": {
+   "n": "Noclip",
+   "a": "https://yt3.googleusercontent.com/5g5lvRenvFGP225Zt-m2etP6qCEDavEw9xg3y3B8v7HqHvYnXy3LR6ZZNq4h0sYeVRZzEG6VeA=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "Zdravo, dobro došli na moj kanal.\n\nNadam se da će Vam se svideti moj sadržaj i molim Vas da me ne shvatate previše ozbiljno. Ovde će te sigurno pronaći zabavne i kvalitetne trenutke igranja.\n\n",
+   "h": "@Noclip",
+   "seed": "Noclip",
+   "l": "en",
+   "k": "media",
+   "tags": [
+    "紀錄片",
+    "深度"
+   ],
+   "got": 1794978305
+  },
+  "UCp1myXRBlU5Weud3bjPKavw": {
+   "n": "皮卡嚕",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nxVsg2YYziQ9V-yCVAEH_nxaFMNy2IQL09WwXX0TsTNrq88oE=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "",
+   "h": "@皮卡嚕",
+   "seed": "皮卡嚕",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "評測"
+   ],
+   "got": 1794978305
+  },
+  "UClOGLGPOqlAiLmOvXW5lKbw": {
+   "n": "MandaloreGaming",
+   "a": "https://yt3.googleusercontent.com/bPFsgXfL1iPr-nyqDvkbrTcueZUg5cLfhP3vYMBwmfUYBOATiac6E9kOJOScf6dopN30jPlSYQ=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "King of Limbo. Video games.",
+   "h": "@MandaloreGaming",
+   "seed": "Mandalore Gaming",
+   "l": "en",
+   "k": "creator",
+   "tags": [
+    "評測",
+    "懷舊"
+   ],
+   "got": 1794978305
+  },
+  "UCb6QDBuxtoIP8kT4cO5BX0A": {
+   "n": "4Gamers",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nASC-vEZYuW9J8M7yBwv5i-PzPZaSw-BFlcTrBBm4Lq7o=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "為玩家而生，同為台灣玩家社群的一份子，我們了解遊戲對於玩家不僅是消遣，更是我們生活的一部分。\n我們分享著玩家生活大小事，不管吃喝玩樂食衣住行，遊戲已是一種 life style，人生無法選擇，但在這裡你可以選擇一切喜好「放肆生活」！\n\n我們總是不斷突破自我，期許能改變大眾對於玩家社群的認知，打造正向發展的 Gaming 生態圈，It's all for Gamers！\n\n商業合作請聯繫：advic",
+   "h": "@4GamersTW",
+   "seed": "4Gamers",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "新聞",
+    "評測"
+   ],
+   "got": 1794978305
+  },
+  "UC6SmH9mR82nj28_NNg_rZvA": {
+   "n": "スクウェア・エニックス",
+   "a": "https://yt3.googleusercontent.com/ddsKaIbpXCjbk3aJvImDlcfMxolIsXBiElHIE-aC4-Dag9liK2hCy840rnuQ58zuEKUGl3hUnt4=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "スクウェア・エニックス チャンネルは株式会社スクウェア・エニックスの公式YouTubeチャンネルです。\nhttps://www.jp.square-enix.com/",
+   "h": "@squareenix",
+   "seed": "Square Enix",
+   "l": "ja",
+   "k": "official",
+   "tags": [
+    "官方"
+   ],
+   "got": 1794978305
+  },
+  "UCyH9xrhAliMGBrnoox5UJuQ": {
+   "n": "柚子木字幕组",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_n_0FkoYhNbmVZptvaHTKUmuxW6NP2NYiZhbipjnDQUJA=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "",
+   "h": "@柚子木字幕组",
+   "seed": "柚子木字幕組",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "中文字幕",
+    "新聞"
+   ],
+   "got": 1794978305
+  },
+  "UCR6vFk2rgmwIkGEPR-xY8xg": {
+   "n": "PlayStation Asia",
+   "a": "https://yt3.googleusercontent.com/F_augRNOo0XoaY3Jk2Td4XOuCJquROMfCORaXflNEhCIMW7JPdqqEzNHHH43sgawXbP9mto9=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "The Official Youtube Channel for PlayStation South East Asia. Follow us for the latest PlayStation trailers, videos and news for and from the region!",
+   "h": "@PlayStationAsia",
+   "seed": "PlayStation Asia",
+   "l": "zh",
+   "k": "official",
+   "tags": [
+    "官方",
+    "PlayStation"
+   ],
+   "got": 1794978305
+  },
+  "UCK-65DO2oOxxMwphl2tYtcw": {
+   "n": "Game Informer",
+   "a": "https://yt3.googleusercontent.com/qxf5b15mN7QQkeF4cfN5KDf-F4d0GzbrCnb6MKBgCICGyW04q0honVrmnQTkwehnMpx1nSqQlQ=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "Over 30 years celebrating the best of games in print and online. Our YouTube channel features never-before-seen videos with exclusive details from the video games on our monthly magazine covers, new g",
+   "h": "@gameinformer",
+   "seed": "Game Informer",
+   "l": "en",
+   "k": "media",
+   "tags": [
+    "新聞",
+    "評測"
+   ],
+   "got": 1794978305
+  },
+  "UCT6QFE3peNry9PdO5uGj96g": {
+   "n": "Kinda Funny Games",
+   "a": "https://yt3.googleusercontent.com/axzTphozq_1Nj3kqHVfWWU-Jby0VhwzRkne0JjnF8eV0lmWv5dyvej0_z6qhFR5Fy3Vqd8cq3g=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "The Kinda Funny Membership gets you Ad-Free and Exclusive Shows: https://www.youtube.com/KindaFunnyGames/join\nhttp://www.patreon.com/KindaFunny \n\nSubscribe And Ring The Notification Bell: \nKinda Funny",
+   "h": "@KindaFunnyGames",
+   "seed": "Kinda Funny Games",
+   "l": "en",
+   "k": "media",
+   "tags": [
+    "新聞",
+    "節目"
+   ],
+   "got": 1794978305
+  },
+  "UCIW0FBZ55C4lQPMMo7VusDQ": {
+   "n": "LAOPI",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_lTVeac9TBBd07-AHzhpJtJaLgoqVGs9xKCtVA_W9cscirrK8ltE9feTCBKXtWrgp2aHQ=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "",
+   "h": "@laopi",
+   "seed": "老皮",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "實況"
+   ],
+   "got": 1794978305
+  },
+  "UCNvzD7Z-g64bPXxGzaQaa4g": {
+   "n": "gameranx",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_mT3hsjvr0yyS6bW4inz3956572zV_j4t7TLsEOkK0G1VM=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "We make videos about video games. Enjoy our Top 10s, the Friday news show, Before You Buy reviews and first impressions, and more.",
+   "h": "@gameranxTV",
+   "seed": "gameranx",
+   "l": "en",
+   "k": "media",
+   "tags": [
+    "新聞",
+    "評測"
+   ],
+   "got": 1794978305
+  },
+  "UCbI-X9F07inmxYvQKDBOU7Q": {
+   "n": "Push Square",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_mqxKrSzbxlRc1Vpeb1A0EHGA0N6Et6-oATmfdZnvvIixc=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "Welcome to Push Square, your one stop destination for all things PlayStation. Here you can expect new content each week from Aaron, including reviews, lists, let's plays, guides and and all the latest",
+   "h": "@pushsquare",
+   "seed": "Push Square",
+   "l": "en",
+   "k": "media",
+   "tags": [
+    "PlayStation",
+    "新聞"
+   ],
+   "got": 1794978305
+  },
+  "UC5Ilyp8IqjvNfaI1V0KPS7A": {
+   "n": "逍遙散人",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nf8HDSFflaSNTKwup4Mnpk2_Kr8TlXPrH9QGYjmb0fDA=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "",
+   "h": "@逍遙散人",
+   "seed": "逍遙散人",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "實況",
+    "獨立"
+   ],
+   "got": 1794978305
   }
  },
- "at": "2026-11-18T04:49:22Z"
+ "at": "2026-11-18T05:05:33Z"
 }
