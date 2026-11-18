@@ -71,6 +71,43 @@ DESCRIPTION:-10%，NT$1574，最後到 00:00\n解包 UNPACKED
 URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/dawn-of-war-iv
 END:VEVENT
 BEGIN:VEVENT
+UID:unpacked-vote-tga2026vote-20261210@pzwei0105.github.io
+DTSTAMP:20261210T000000Z
+DTSTART;VALUE=DATE:20261210
+DTEND;VALUE=DATE:20261211
+SUMMARY:投票截止｜TGA 粉絲投票截止
+DESCRIPTION:台灣時間 12/10 10:00 截止\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#tga
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-show-tga2026-20261211@pzwei0105.github.io
+DTSTAMP:20261211T000000Z
+DTSTART;VALUE=DATE:20261211
+DTEND;VALUE=DATE:20261212
+SUMMARY:頒獎｜TGA 2026 頒獎典禮
+DESCRIPTION:台灣時間 12/11 08:30 開始直播\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#tga
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-sale-steamwinter2026s-20261218@pzwei0105.github.io
+DTSTAMP:20261218T000000Z
+DTSTART;VALUE=DATE:20261218
+DTEND;VALUE=DATE:20261219
+SUMMARY:大特賣｜Steam 冬季特賣 開打
+DESCRIPTION:台灣時間 12/18 02:00 開始，到 1/05 02:00\n解包 UNPA
+ CKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#hunt
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-sale-steamwinter2026e-20270104@pzwei0105.github.io
+DTSTAMP:20270104T000000Z
+DTSTART;VALUE=DATE:20270104
+DTEND;VALUE=DATE:20270105
+SUMMARY:大特賣｜Steam 冬季特賣 最後一晚
+DESCRIPTION:1/05 02:00 結束\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#hunt
+END:VEVENT
+BEGIN:VEVENT
 UID:unpacked-rel-3710600-20270128@pzwei0105.github.io
 DTSTAMP:20270128T000000Z
 DTSTART;VALUE=DATE:20270128
@@ -79,5 +116,34 @@ SUMMARY:上市｜Warhammer 40\,000: Dark Heresy
 DESCRIPTION:PC（Steam、GOG、Epic）、PS5、Xbox Series X|S、Switch 2
  （日期未定）\n解包 UNPACKED
 URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/warhammer-40000-dark-heresy
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-fest-steamnextfest202702-20270223@pzwei0105.github.io
+DTSTAMP:20270223T000000Z
+DTSTART;VALUE=DATE:20270223
+DTEND;VALUE=DATE:20270224
+SUMMARY:活動｜Steam 新品節（2 月）
+DESCRIPTION:上百款新作免費試玩，台灣時間 2/23 02:00 開始
+ ，到 3/02 02:00\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#hunt
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-sale-steamspring2027s-20270319@pzwei0105.github.io
+DTSTAMP:20270319T000000Z
+DTSTART;VALUE=DATE:20270319
+DTEND;VALUE=DATE:20270320
+SUMMARY:大特賣｜Steam 春季特賣 開打
+DESCRIPTION:台灣時間 3/19 01:00 開始，到 3/26 01:00\n解包 UNPAC
+ KED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#hunt
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-sale-steamspring2027e-20270325@pzwei0105.github.io
+DTSTAMP:20270325T000000Z
+DTSTART;VALUE=DATE:20270325
+DTEND;VALUE=DATE:20270326
+SUMMARY:大特賣｜Steam 春季特賣 最後一晚
+DESCRIPTION:3/26 01:00 結束\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#hunt
 END:VEVENT
 END:VCALENDAR
