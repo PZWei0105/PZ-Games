@@ -29,7 +29,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop(); opsStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop(); opsStop(); vsStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
@@ -52,6 +52,7 @@ async function route() {
     } else if (name === 'hunt') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
     else if (name === 'board') { setTabs('home'); if (!S.board || Date.now() - Date.parse(S.board.at) > 15 * 6e4) { try { const b = await getJSON('board.json'); if (b && b.rows) S.board = b; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderBoard(); restoreScroll(h); boardFx(); }
     else if (name === 'tga') { setTabs('home'); if (!S.tgaD || tgaPhase() === 'live') { try { const t = await getJSON('tga.json'); if (t && t.cats) S.tgaD = t; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderTga(); if (prev && prev.startsWith('tga') && prev === h) restoreScroll(h); else scrollTo(0, 0); tgaFx(); }
+    else if (name === 'vs') { setTabs('home'); await vsPrep(arg); v.innerHTML = renderVS(arg); scrollTo(0, 0); vsFx(); }
     else if (name === 'ask') { setTabs('home'); await loadAsk(); v.innerHTML = renderAsk(); scrollTo(0, 0); askFx(); askFlush(); }
     else if (name === 'cal') { setTabs('hunt'); v.innerHTML = await renderCal(); scrollTo(0, 0); calFx(); }
     else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
@@ -387,6 +388,7 @@ document.addEventListener('click', async (ev) => {
     ev.preventDefault();
     if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = ROUTE.startsWith('p/') ? 'picks' : 'home'; return; }
     if (a.startsWith('op') && await opsAct(a, act)) return;   // 粉專作戰台
+    if (a.startsWith('vs') && await vsAct(a, act)) return;   // VS 擂台
     if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); MORE_N.pk = MORE_STEP.pk; const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); moreFx(); return; }
     if (a === 'hf' || a === 'hs') { if (a === 'hf') HUNT.f = act.dataset.v; else HUNT.sort = act.dataset.v; sfx.click(); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); return; }
     if (a === 'cday') { const g = document.getElementById('cd-' + act.dataset.d); if (g) { g.scrollIntoView({ behavior: 'smooth', block: 'center' }); g.classList.remove('flash'); void g.offsetWidth; g.classList.add('flash'); } sfx.click(); return; }
@@ -437,7 +439,7 @@ document.addEventListener('click', async (ev) => {
       if (i >= 0) S.cmp.splice(i, 1); else { if (S.cmp.length >= 3) { toast('最多比較 3 款', 'warn'); return; } S.cmp.push(id); }
       save('cmp'); act.classList.toggle('on', S.cmp.includes(id)); act.textContent = S.cmp.includes(id) ? '✓' : '+'; sfx.pop(); trayUpdate(); return;
     }
-    if (a === 'cmpgo') { if (S.cmp.length < 2) return; openSheet(await compareHtml(), 'wide'); return; }
+    if (a === 'cmpgo') { if (S.cmp.length < 2) return; if (S.cmp.length === 2) { NAVN++; location.hash = 'vs/' + S.cmp.map((id) => 'f:' + id).join(','); return; } openSheet(await compareHtml(), 'wide'); return; }
     if (a === 'cmpclear') { S.cmp = []; save('cmp'); trayUpdate(); $$('.cmpbtn').forEach((b) => { b.classList.remove('on'); b.textContent = '+'; }); sfx.scratch(); return; }
     if (a === 'settings') { openSheet(settingsHtml()); return; }
     if (a === 'set') {

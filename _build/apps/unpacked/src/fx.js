@@ -161,6 +161,8 @@ function runIntro(mode, todayCount) {
     at(2620, () => { $('.stk', box).classList.add('go'); sfx.slap(); burstAt($('.stk', box), [PINK, BLK], 18, 10); });
     // 5 膠帶
     at(3000, () => { $('.tline2', box).classList.add('go'); sfx.scratch(); });
-    at(3650, finish);
+    // 2026/11/18：噴完之後，今天的頭條一張張拍上牆（今日解包、推坑、到價、限免都是真的數字）
+    let tEnd = 0; try { tEnd = introHeadline(box, at); } catch (e) { tEnd = 0; }
+    at(tEnd || 3650, finish);
   });
 }
