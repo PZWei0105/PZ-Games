@@ -268,6 +268,20 @@ const Snd = {
     const x = this.nz(t, 0.3, 'highpass', 1200, 0.7, 0.16); x.fl.frequency.exponentialRampToValueAtTime(6500, t + 0.28);
   },
   tick() { if (!this.ok()) return; this.tone(this.ctx.currentTime, 2400, 0.014, 'sine', 0.05); },
+  // 2026/11/18：雷達的聲納「咚」（短、帶一個回音）、開場飛機掠過的引擎聲（比 whoosh 厚、有渦輪的高音）
+  ping() {
+    if (!this.ok()) return; const t = this.ctx.currentTime;
+    this.tone(t, 1318.5, 0.5, 'sine', 0.05); this.tone(t, 2637, 0.18, 'sine', 0.012);
+    this.tone(t + 0.22, 1318.5, 0.4, 'sine', 0.016);
+  },
+  jet() {
+    if (!this.ok()) return; const t = this.ctx.currentTime;
+    const a = this.nz(t, 1.7, 'bandpass', 160, 0.7, 0.34); a.fl.frequency.exponentialRampToValueAtTime(1500, t + 0.9); a.fl.frequency.exponentialRampToValueAtTime(420, t + 1.7);
+    const b = this.nz(t + 0.05, 1.5, 'lowpass', 260, 0.9, 0.3);
+    this.tone(t, 52, 1.6, 'sawtooth', 0.05, null, 96);
+    this.tone(t + 0.1, 2300, 1.3, 'sine', 0.014, null, 3600);
+    return b;
+  },
   tele(n) {
     if (!this.ok()) return; const t = this.ctx.currentTime;
     for (let i = 0; i < (n || 10); i++) this.nz(t + i * 0.045 + Math.random() * 0.02, 0.012, 'bandpass', 3000, 2, 0.08);

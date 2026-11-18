@@ -19,7 +19,7 @@ SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'turnaround')
 DATA = os.path.join(OUT, 'data')
-JS_ORDER = ['core.js', 'flap.js', 'views.js', 'main.js']
+JS_ORDER = ['core.js', 'flap.js', 'views.js', 'radar.js', 'main.js']
 FONTS = [
     ('barlow-condensed-latin-600-normal.woff2', 'Barlow Condensed', 600),
     ('barlow-condensed-latin-800-normal.woff2', 'Barlow Condensed', 800),

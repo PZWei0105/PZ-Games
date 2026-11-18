@@ -659,3 +659,49 @@ textarea:focus,input[type=text]:focus{border-color:var(--sign)}
 .xp-note{margin-top:14px;padding:12px 14px;border-radius:14px;border:1.5px solid rgba(47,224,200,.55);background:rgba(47,224,200,.08);font-size:14px;line-height:1.7;color:#d6f7f1}
 .xp-note b{color:var(--explore)}
 .taste-note{margin:0 2px 10px;font-size:12.5px;line-height:1.6;color:var(--dim)}
+
+/* ================================================================ 2026/11/18 超級大更新 */
+/* ---------- 開場：今日出發看板 ---------- */
+#intro .ixb{position:relative;width:min(94vw,560px);background:#0a0b0d;border:1px solid #1d2128;border-radius:14px;padding:10px 10px 6px;opacity:0;transform:translateY(24px)}
+#intro.boarded .ixb{transition:opacity .3s,transform .4s cubic-bezier(.2,.9,.3,1.1);opacity:1;transform:none}
+#intro .ixh{display:flex;justify-content:space-between;padding:0 2px 7px;border-bottom:1px solid #1d2128;font-family:var(--en);font-weight:800;font-size:11px;letter-spacing:.18em;color:var(--amber)}
+#intro .ixr{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) auto;align-items:center;gap:6px;padding:7px 2px;border-bottom:1px dashed #22262d;position:relative}
+#intro .ixr:last-of-type{border-bottom:0}
+#intro .ixr::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--lc,#5d6672)}
+#intro .ixr.lane-novel{--lc:var(--novel)}#intro .ixr.lane-game{--lc:var(--game)}#intro .ixr.lane-free{--lc:var(--free)}#intro .ixr.lane-explore{--lc:var(--explore)}#intro .ixr.hang{--lc:var(--sign)}
+#intro .ixr .ixz{font-weight:900;font-size:15px;color:#f3efe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#intro .ixr .ixg{font-family:var(--mono);font-weight:800;font-size:12px;color:var(--dim)}
+#intro .ixr .ixs{grid-column:1/-1;justify-self:end;margin-top:-4px;font-family:var(--en);font-weight:800;font-style:normal;font-size:10.5px;letter-spacing:.14em;color:var(--go)}
+#intro .ixr .ixs::before{content:"● ";animation:blink 1.1s steps(2) infinite}
+#intro .ixr .ixs.y{color:var(--sign)}
+#intro .ixr .ixs.delay{color:var(--amber)}#intro .ixr .ixs.cancel{color:var(--red)}#intro .ixr .ixs.board{color:var(--go)}
+#intro .ixr{opacity:0;transform:translateX(-14px)}
+#intro.boarded .ixr{animation:ixIn .34s cubic-bezier(.2,.9,.3,1.2) forwards;animation-delay:calc(var(--i,0) * .27s)}
+@keyframes ixIn{to{opacity:1;transform:none}}
+/* 飛機：機頭朝右上、沿著看板上緣掠過，後面拖一道尾跡（不用 filter，iPhone 才不會吃記憶體） */
+#intro .ixplane{position:absolute;left:-22%;top:-34px;width:84px;height:84px;color:var(--sign);opacity:0;pointer-events:none}
+#intro .ixplane svg{position:relative;z-index:1;width:100%;height:100%;fill:currentColor}
+#intro .ixplane::after{content:"";position:absolute;left:50%;top:50%;width:min(70vw,420px);height:3px;border-radius:2px;transform-origin:left center;transform:rotate(135deg);background:linear-gradient(90deg,rgba(255,210,26,.7),rgba(255,210,26,.18) 40%,transparent)}
+#intro .ixb.fly .ixplane{animation:ixFly 1.5s cubic-bezier(.4,.05,.5,1) forwards}
+@keyframes ixFly{0%{transform:translate(0,60px) rotate(33deg) scale(.6);opacity:0}12%{opacity:1}80%{opacity:1}100%{transform:translate(min(132vw,900px),-150px) rotate(33deg) scale(1.3);opacity:0}}
+@media (max-width:420px){#intro .ixr{grid-template-columns:auto auto minmax(0,1fr) auto}#intro .ixr .ixt{display:none}}
+@media (min-width:900px){#intro .ixb{width:min(80vw,720px);padding:14px 16px 8px}#intro .ixb .flaps.sm .fc{--fw:20px;--fh:28px;--fs:16px}#intro .ixr .ixz{font-size:19px}#intro .ixr{padding:9px 4px}}
+@media (prefers-reduced-motion:reduce){#intro .ixr{opacity:1;transform:none}}
+/* ---------- 航線雷達 ---------- */
+.radar{padding:12px}
+.rd-wrap{position:relative;width:min(100%,440px);margin:0 auto}
+.rd-wrap canvas{display:block;width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 1px rgba(47,224,127,.25),inset 0 0 0 1px rgba(47,224,127,.1)}
+.rd-tip{position:absolute;z-index:3;width:180px;display:grid;gap:3px;padding:10px;background:#0d1410;border:1px solid rgba(47,224,127,.45);border-radius:10px;font-size:12px;color:var(--dim)}
+.rd-tip b{font-size:15px;color:var(--text)}
+.rd-tip .chip-btn{margin-top:4px;justify-self:start}
+.rd-leg{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;margin:10px 0 6px;font-size:12px;color:var(--dim)}
+.rd-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.rd-leg i.g{background:var(--go)}.rd-leg i.a{background:var(--amber)}.rd-leg i.r{background:var(--red)}.rd-leg i.w{background:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+.rd-leg .rd-r{flex-basis:100%;text-align:center;color:var(--dim2)}
+.rd-rows{display:grid;gap:6px;margin-top:6px}
+.rd-row{display:grid;grid-template-columns:64px repeat(4,auto);justify-content:start;align-items:center;gap:4px 12px;font-size:12.5px;color:var(--dim);position:relative;padding:4px 0 8px}
+.rd-row b{color:var(--lc);font-size:14px}.rd-row b em{font-style:normal;font-family:var(--mono);font-size:11px;margin-left:4px;color:var(--dim2)}
+.rd-row .g{color:var(--go)}.rd-row .a{color:var(--amber)}.rd-row .r{color:var(--red)}
+.rd-row u{position:absolute;left:0;right:0;bottom:2px;height:3px;background:#1b222b;border-radius:2px;overflow:hidden}.rd-row u i{display:block;height:100%;background:var(--lc);transform-origin:left}
+.rd-note{margin:10px 2px 0;font-size:13px;line-height:1.7;color:var(--dim)}
+@media (max-width:400px){.rd-row{grid-template-columns:56px repeat(4,auto);gap:4px 9px;font-size:12px}}

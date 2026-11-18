@@ -678,6 +678,52 @@ textarea:focus,input[type=text]:focus{border-color:var(--sign)}
 .xp-note{margin-top:14px;padding:12px 14px;border-radius:14px;border:1.5px solid rgba(47,224,200,.55);background:rgba(47,224,200,.08);font-size:14px;line-height:1.7;color:#d6f7f1}
 .xp-note b{color:var(--explore)}
 .taste-note{margin:0 2px 10px;font-size:12.5px;line-height:1.6;color:var(--dim)}
+
+/* ================================================================ 2026/11/18 超級大更新 */
+/* ---------- 開場：今日出發看板 ---------- */
+#intro .ixb{position:relative;width:min(94vw,560px);background:#0a0b0d;border:1px solid #1d2128;border-radius:14px;padding:10px 10px 6px;opacity:0;transform:translateY(24px)}
+#intro.boarded .ixb{transition:opacity .3s,transform .4s cubic-bezier(.2,.9,.3,1.1);opacity:1;transform:none}
+#intro .ixh{display:flex;justify-content:space-between;padding:0 2px 7px;border-bottom:1px solid #1d2128;font-family:var(--en);font-weight:800;font-size:11px;letter-spacing:.18em;color:var(--amber)}
+#intro .ixr{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) auto;align-items:center;gap:6px;padding:7px 2px;border-bottom:1px dashed #22262d;position:relative}
+#intro .ixr:last-of-type{border-bottom:0}
+#intro .ixr::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--lc,#5d6672)}
+#intro .ixr.lane-novel{--lc:var(--novel)}#intro .ixr.lane-game{--lc:var(--game)}#intro .ixr.lane-free{--lc:var(--free)}#intro .ixr.lane-explore{--lc:var(--explore)}#intro .ixr.hang{--lc:var(--sign)}
+#intro .ixr .ixz{font-weight:900;font-size:15px;color:#f3efe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#intro .ixr .ixg{font-family:var(--mono);font-weight:800;font-size:12px;color:var(--dim)}
+#intro .ixr .ixs{grid-column:1/-1;justify-self:end;margin-top:-4px;font-family:var(--en);font-weight:800;font-style:normal;font-size:10.5px;letter-spacing:.14em;color:var(--go)}
+#intro .ixr .ixs::before{content:"● ";animation:blink 1.1s steps(2) infinite}
+#intro .ixr .ixs.y{color:var(--sign)}
+#intro .ixr .ixs.delay{color:var(--amber)}#intro .ixr .ixs.cancel{color:var(--red)}#intro .ixr .ixs.board{color:var(--go)}
+#intro .ixr{opacity:0;transform:translateX(-14px)}
+#intro.boarded .ixr{animation:ixIn .34s cubic-bezier(.2,.9,.3,1.2) forwards;animation-delay:calc(var(--i,0) * .27s)}
+@keyframes ixIn{to{opacity:1;transform:none}}
+/* 飛機：機頭朝右上、沿著看板上緣掠過，後面拖一道尾跡（不用 filter，iPhone 才不會吃記憶體） */
+#intro .ixplane{position:absolute;left:-22%;top:-34px;width:84px;height:84px;color:var(--sign);opacity:0;pointer-events:none}
+#intro .ixplane svg{position:relative;z-index:1;width:100%;height:100%;fill:currentColor}
+#intro .ixplane::after{content:"";position:absolute;left:50%;top:50%;width:min(70vw,420px);height:3px;border-radius:2px;transform-origin:left center;transform:rotate(135deg);background:linear-gradient(90deg,rgba(255,210,26,.7),rgba(255,210,26,.18) 40%,transparent)}
+#intro .ixb.fly .ixplane{animation:ixFly 1.5s cubic-bezier(.4,.05,.5,1) forwards}
+@keyframes ixFly{0%{transform:translate(0,60px) rotate(33deg) scale(.6);opacity:0}12%{opacity:1}80%{opacity:1}100%{transform:translate(min(132vw,900px),-150px) rotate(33deg) scale(1.3);opacity:0}}
+@media (max-width:420px){#intro .ixr{grid-template-columns:auto auto minmax(0,1fr) auto}#intro .ixr .ixt{display:none}}
+@media (min-width:900px){#intro .ixb{width:min(80vw,720px);padding:14px 16px 8px}#intro .ixb .flaps.sm .fc{--fw:20px;--fh:28px;--fs:16px}#intro .ixr .ixz{font-size:19px}#intro .ixr{padding:9px 4px}}
+@media (prefers-reduced-motion:reduce){#intro .ixr{opacity:1;transform:none}}
+/* ---------- 航線雷達 ---------- */
+.radar{padding:12px}
+.rd-wrap{position:relative;width:min(100%,440px);margin:0 auto}
+.rd-wrap canvas{display:block;width:100%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 0 1px rgba(47,224,127,.25),inset 0 0 0 1px rgba(47,224,127,.1)}
+.rd-tip{position:absolute;z-index:3;width:180px;display:grid;gap:3px;padding:10px;background:#0d1410;border:1px solid rgba(47,224,127,.45);border-radius:10px;font-size:12px;color:var(--dim)}
+.rd-tip b{font-size:15px;color:var(--text)}
+.rd-tip .chip-btn{margin-top:4px;justify-self:start}
+.rd-leg{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;margin:10px 0 6px;font-size:12px;color:var(--dim)}
+.rd-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.rd-leg i.g{background:var(--go)}.rd-leg i.a{background:var(--amber)}.rd-leg i.r{background:var(--red)}.rd-leg i.w{background:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+.rd-leg .rd-r{flex-basis:100%;text-align:center;color:var(--dim2)}
+.rd-rows{display:grid;gap:6px;margin-top:6px}
+.rd-row{display:grid;grid-template-columns:64px repeat(4,auto);justify-content:start;align-items:center;gap:4px 12px;font-size:12.5px;color:var(--dim);position:relative;padding:4px 0 8px}
+.rd-row b{color:var(--lc);font-size:14px}.rd-row b em{font-style:normal;font-family:var(--mono);font-size:11px;margin-left:4px;color:var(--dim2)}
+.rd-row .g{color:var(--go)}.rd-row .a{color:var(--amber)}.rd-row .r{color:var(--red)}
+.rd-row u{position:absolute;left:0;right:0;bottom:2px;height:3px;background:#1b222b;border-radius:2px;overflow:hidden}.rd-row u i{display:block;height:100%;background:var(--lc);transform-origin:left}
+.rd-note{margin:10px 2px 0;font-size:13px;line-height:1.7;color:var(--dim)}
+@media (max-width:400px){.rd-row{grid-template-columns:56px repeat(4,auto);gap:4px 9px;font-size:12px}}
 </style>
 </head>
 <body>
@@ -729,7 +775,7 @@ textarea:focus,input[type=text]:focus{border-color:var(--sign)}
 <script>window.TA_WEB = true;</script>
 <script>/* ---- core.js ---- */
 /* 轉機 TURNAROUND — 核心：狀態、同步、聲音、震動、語音、小工具 */
-const VERSION = '1.0.202611180223';
+const VERSION = '1.0.202611182036';
 const IS_WEB = !!window.TA_WEB;
 const RELAY = 'https://ntfy.sh/pz-turnaround-b53ef251972dad327450';
 const KEY = 'turnaround.v1.state';
@@ -998,6 +1044,20 @@ const Snd = {
     const x = this.nz(t, 0.3, 'highpass', 1200, 0.7, 0.16); x.fl.frequency.exponentialRampToValueAtTime(6500, t + 0.28);
   },
   tick() { if (!this.ok()) return; this.tone(this.ctx.currentTime, 2400, 0.014, 'sine', 0.05); },
+  // 2026/11/18：雷達的聲納「咚」（短、帶一個回音）、開場飛機掠過的引擎聲（比 whoosh 厚、有渦輪的高音）
+  ping() {
+    if (!this.ok()) return; const t = this.ctx.currentTime;
+    this.tone(t, 1318.5, 0.5, 'sine', 0.05); this.tone(t, 2637, 0.18, 'sine', 0.012);
+    this.tone(t + 0.22, 1318.5, 0.4, 'sine', 0.016);
+  },
+  jet() {
+    if (!this.ok()) return; const t = this.ctx.currentTime;
+    const a = this.nz(t, 1.7, 'bandpass', 160, 0.7, 0.34); a.fl.frequency.exponentialRampToValueAtTime(1500, t + 0.9); a.fl.frequency.exponentialRampToValueAtTime(420, t + 1.7);
+    const b = this.nz(t + 0.05, 1.5, 'lowpass', 260, 0.9, 0.3);
+    this.tone(t, 52, 1.6, 'sawtooth', 0.05, null, 96);
+    this.tone(t + 0.1, 2300, 1.3, 'sine', 0.014, null, 3600);
+    return b;
+  },
   tele(n) {
     if (!this.ok()) return; const t = this.ctx.currentTime;
     for (let i = 0; i < (n || 10); i++) this.nz(t + i * 0.045 + Math.random() * 0.02, 0.012, 'bandpass', 3000, 2, 0.08);
@@ -1781,6 +1841,7 @@ function renderMe() {
   let h = '<div class="passport" style="margin-top:16px"><div class="pp-h">CAPTAIN · 機長</div><h2>痞子葳</h2><div class="pp-s">轉機航廈第 ' + D.index.counts.days + ' 天・航班 ' + D.index.counts.flights + ' 班・檢修 ' + D.index.counts.inspections + ' 架</div>' +
     '<div class="stats"><div><b>' + vs.length + '</b><i>表態</i></div><div><b>' + cnt('board') + '</b><i>登機</i></div><div><b>' + cnt('delay') + '</b><i>延誤</i></div><div><b>' + cnt('cancel') + '</b><i>取消</i></div>' +
     '<div><b>' + Object.keys(S.dispatched).length + '</b><i>簽派</i></div><div><b>' + S.pireps.length + '</b><i>機長報告</i></div><div><b>' + S.ideas.length + '</b><i>托運</i></div><div><b>' + S.merges.length + '</b><i>聯程</i></div></div></div>';
+  h += radarHtml();   // 2026/11/18：航線雷達
   h += '<div class="h2"><b>你的口味</b><i>TASTE</i><span class="r">取消的原因</span></div><p class="taste-note">只是參考：塔台拿它把下一班寫得更好，不會因此封殺任何題材。探索航班的取消不算進來。</p><div class="card bars">' +
     (rk.length ? rk.map(([r, n]) => '<div class="br"><span>' + esc(r) + '</span><u><i style="transform:scaleX(' + (n / maxR) + ')"></i></u><b>' + n + '</b></div>').join('') : '<p class="muted" style="margin:0;font-size:14px;line-height:1.7">還沒有取消過的航班。你取消時點的原因會累積在這裡，提醒塔台「這種寫法不夠好看」，但不會讓任何題材從此消失。</p>') + '</div>';
   h += '<div class="h2"><b>登機證夾</b><i>WALLET</i><span class="r">' + boarded.length + ' 張</span></div>';
@@ -1800,6 +1861,8 @@ function renderMe() {
     '<div class="set"><div class="lb"><b>重看開場</b><i>翻牌開場＋廣播再來一次</i></div><button class="chip-btn" id="replay">播放</button></div>' +
     '<div class="set"><div class="lb"><b>版本</b><i>轉機 TURNAROUND v' + VERSION + (IS_WEB ? '・網頁版' : '・Claude 版') + '</i></div></div></div>';
   el.innerHTML = h;
+  radarStart();
+  radarLoad().then((more) => { if (more && $('#rd-cv')) { const r = $('#v-me .radar'); const hd = $('#radar-h'); if (r && hd) { const tmp = document.createElement('div'); tmp.innerHTML = radarHtml(); hd.replaceWith(tmp.children[0]); r.replaceWith(tmp.children[0]); radarStart(); } } });
   el.onclick = (e) => {
     const t = e.target.closest('button'); if (!t) return;
     if (t.dataset.set) { S.settings[t.dataset.set] = !S.settings[t.dataset.set]; t.classList.toggle('on', S.settings[t.dataset.set]); save(); Snd.init(); Snd.tick(); haptic(8); if (t.dataset.set === 'music') Snd.music(true); return; }
@@ -2095,6 +2158,171 @@ FX.landing = function () {
   requestAnimationFrame(step); Snd.whoosh();
 };
 
+/* ---- radar.js ---- */
+/* 轉機 — 2026/11/18 超級大更新：開場「今日出發看板」、機長分頁「航線雷達」
+   - 開場：翻牌轉機／TURNAROUND／日期之後，今天的每一班航班（時間、班號、目的地代碼、名字、登機門）一列一列翻上看板，
+     最後一列是今天進廠的作品；一架飛機掠過看板起飛。全部是今天 day 檔裡的真實航班。
+   - 航線雷達：塔台雷達幕。每一班航班是一個光點：方位＝登機門（小說、遊戲、自由、探索各一個空域），
+     離中心多遠＝多久以前（越近越靠中心），顏色＝你的表態（登機綠、延誤黃、取消紅、還沒表態白色閃）。
+     點光點打開那張登機證。下面一行一行寫各空域飛過幾班、登機幾班，還有「還沒登機過的空域」——
+     不是要縮小題材，是提醒哪一區你還沒試過（守則 m-x06 不扼殺創意）。 */
+
+/* ---------- 開場：今日出發看板 ---------- */
+function introBoardHtml(day) {
+  const rows = day.flights.map((f, i) => {
+    const v = S.votes[f.id]; const st = v ? STATUS[v.v] : null;
+    return '<div class="ixr lane-' + f.lane + '" style="--i:' + i + '"><span class="ixt">' + Flap.html(f.time || '--:--', 'sm') + '</span><span class="ixn">' + Flap.html(f.no || '', 'sm amber') + '</span><span class="ixd">' + Flap.html(f.dest || '', 'sm') + '</span><b class="ixz">' + esc(f.zh || '') + '</b><span class="ixg">' + esc(f.gate || '') + '</span><i class="ixs ' + (v ? v.v : '') + '">' + (st ? st[1] : 'BOARDING') + '</i></div>';
+  }).join('');
+  const ins = day.inspection; const w = ins && D.fleetBy[ins.work];
+  const hang = ins ? '<div class="ixr hang" style="--i:' + day.flights.length + '"><span class="ixt">' + Flap.html('MRO', 'sm') + '</span><span class="ixn">' + Flap.html(w ? (w.reg || 'B-PZ') : 'B-PZ', 'sm amber') + '</span><span class="ixd"></span><b class="ixz">' + esc(w ? w.zh || '' : '') + '</b><span class="ixg">H1</span><i class="ixs y">' + (S.dispatched[ins.id] ? 'DISPATCHED' : 'IN SERVICE') + '</i></div>' : '';
+  return '<div class="ixb"><div class="ixh"><span>DEPARTURES · 今日出發</span><span>' + fmtDate(day.date) + '</span></div>' + rows + hang + '<i class="ixplane">' + ICON.plane + '</i></div>';
+}
+
+/* ---------- 航線雷達 ---------- */
+const RADAR = { raf: 0, idle: 0, blips: [], hit: null, t0: 0, sweeps: 0 };
+const SECTOR = { novel: -Math.PI * 0.75, game: -Math.PI * 0.25, free: Math.PI * 0.25, explore: Math.PI * 0.75 };   // 四個空域的中心方位
+const LANE_COL = { novel: '#ff7a59', game: '#4c9dff', free: '#b98cff', explore: '#2fe0c8' };
+const RD_SPAN = 30;   // 雷達最外圈＝30 天前
+/** 幾天前 → 離中心多遠（對數，今天、昨天、上週分得開） */
+const rdR = (days) => 0.2 + 0.72 * Math.log1p(Math.min(days, RD_SPAN)) / Math.log1p(RD_SPAN);
+/** 所有看得到的航班：載入過的每一天＋登機證夾的快照（舊的日子不用再載） */
+function radarFlights() {
+  const out = new Map();
+  for (const [date, day] of Object.entries(D.days)) if (day && day.flights) day.flights.forEach((f) => out.set(f.id, Object.assign({}, f, { _date: date })));
+  for (const [id, f] of Object.entries(S.flights)) if (!out.has(id) && f && f._date) out.set(id, f);
+  return [...out.values()];
+}
+async function radarLoad() {
+  const want = (D.index.days || []).slice(0, RD_SPAN).map((d) => d.date).filter((d) => !(d in D.days)).slice(0, 12);
+  if (!want.length) return false;
+  let got = false;
+  // 直接讀、讀不到就算了（不跳「這一天的航班讀不到」；Claude 版本來就只帶最近幾天）
+  await Promise.all(want.map(async (d) => { try { const j = await App.getJSON('data/days/' + d + '.json'); if (j) { D.days[d] = j; got = true; } } catch (e) { /* 不畫那一天 */ } }));
+  return got;
+}
+function radarStats(fl) {
+  const st = {};
+  Object.keys(LANE).forEach((k) => { st[k] = { n: 0, board: 0, delay: 0, cancel: 0 }; });
+  fl.forEach((f) => { const s = st[f.lane]; if (!s) return; s.n++; const v = S.votes[f.id]; if (v && s[v.v] != null) s[v.v]++; });
+  return st;
+}
+function radarHtml() {
+  const fl = radarFlights();
+  const st = radarStats(fl);
+  const empty = Object.keys(LANE).filter((k) => st[k].n && !st[k].board);
+  return '<div class="h2" id="radar-h"><b>航線雷達</b><i>RADAR</i><span class="r">' + fl.length + ' 班航班</span></div>' +
+    '<div class="radar card"><div class="rd-wrap"><canvas id="rd-cv" aria-label="航線雷達：每一班航班的方位、遠近與你的表態"></canvas><div class="rd-tip" id="rd-tip" hidden></div></div>' +
+    '<div class="rd-leg"><span><i class="g"></i>登機</span><span><i class="a"></i>延誤</span><span><i class="r"></i>取消</span><span><i class="w"></i>還沒表態</span><span class="rd-r">越靠中心越新・外圈 ' + RD_SPAN + ' 天前</span></div>' +
+    '<div class="rd-rows">' + Object.keys(LANE).map((k) => { const s = st[k]; return '<div class="rd-row" style="--lc:' + LANE_COL[k] + '"><b>' + LANE[k].zh + '<em>' + LANE[k].gate + '</em></b><span>飛過 ' + s.n + ' 班</span><span class="g">登機 ' + s.board + '</span><span class="a">延誤 ' + s.delay + '</span><span class="r">取消 ' + s.cancel + '</span><u><i style="transform:scaleX(' + (s.n ? s.board / s.n : 0) + ')"></i></u></div>'; }).join('') + '</div>' +
+    (empty.length ? '<p class="rd-note">還沒登機過的空域：' + empty.map((k) => '<b style="color:' + LANE_COL[k] + '">' + LANE[k].zh + '</b>').join('、') + '。不是要你一定要飛，只是提醒那一區還有沒試過的天空。</p>' : '') + '</div>';
+}
+function radarStart() {
+  const cv = $('#rd-cv'); if (!cv) return;
+  cancelAnimationFrame(RADAR.raf); clearTimeout(RADAR.idle); RADAR.sweeps = 0;
+  const box = cv.parentNode;
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  const size = () => { const w = box.clientWidth; cv.width = Math.round(w * dpr); cv.height = Math.round(w * dpr); cv.style.width = w + 'px'; cv.style.height = w + 'px'; return w; };
+  let W = size();
+  const g = cv.getContext('2d');
+  const today = D.index.latest;
+  const days = (a) => Math.max(0, Math.round((new Date(today + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5));
+  RADAR.blips = radarFlights().map((f) => {
+    const h = hash32(f.id);
+    const ang = (SECTOR[f.lane] ?? 0) + (((h % 1000) / 1000) - 0.5) * (Math.PI / 2.6);
+    const r = rdR(days(f._date || today)) + ((h >> 10) % 100) / 100 * 0.04;
+    const v = S.votes[f.id]; const s = v ? v.v : (f._date === today ? 'live' : 'old');
+    return { f, ang, r, s, lit: 0 };
+  });
+  RADAR.t0 = performance.now();
+  const COL = { board: '#2fe07f', delay: '#ffb21e', cancel: '#ff4b3e', live: '#ffffff', old: '#5d6672' };
+  const calm = reduced();
+  let lastSweep = -1;
+  const draw = (now) => {
+    if (!cv.isConnected) { cancelAnimationFrame(RADAR.raf); return; }
+    // 換到別的分頁、App 在背景：不畫，0.7 秒後再看一次（省電）
+    if (!calm && (document.hidden || !cv.offsetParent)) { RADAR.idle = setTimeout(() => { RADAR.raf = requestAnimationFrame(draw); }, 700); return; }
+    const t = (now - RADAR.t0) / 1000;
+    const R0 = W / 2 - 6, cx = W / 2, cy = W / 2;
+    const on = calm ? 1 : Math.min(1, t / 0.8), ease = 1 - Math.pow(1 - on, 3);   // 開機：雷達幕從中心展開
+    const R = R0 * (0.2 + 0.8 * ease);
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, W);
+    // 幕：深綠底、四圈距離環、十字、四個空域的扇形
+    const bg = g.createRadialGradient(cx, cy, 0, cx, cy, R);
+    bg.addColorStop(0, '#0d1a14'); bg.addColorStop(1, '#050807');
+    g.fillStyle = bg; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.fill();
+    Object.entries(SECTOR).forEach(([k, a]) => {
+      g.fillStyle = LANE_COL[k] + '14'; g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, a - Math.PI / 4 + 0.02, a + Math.PI / 4 - 0.02); g.closePath(); g.fill();
+      g.fillStyle = LANE_COL[k]; g.font = '800 ' + Math.round(Math.max(11, R * 0.075)) + 'px "Barlow Condensed","Arial Narrow",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(LANE[k].en, cx + Math.cos(a) * R * 0.9, cy + Math.sin(a) * R * 0.9);
+    });
+    g.strokeStyle = 'rgba(47,224,127,.22)'; g.lineWidth = 1;
+    const RINGS = [[1, '1D'], [7, '7D'], [15, '15D'], [RD_SPAN, RD_SPAN + 'D']];
+    RINGS.forEach(([d]) => { g.beginPath(); g.arc(cx, cy, R * rdR(d), 0, Math.PI * 2); g.stroke(); });
+    g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.moveTo(cx - R, cy); g.lineTo(cx + R, cy); g.moveTo(cx, cy - R); g.lineTo(cx, cy + R); g.stroke();
+    g.fillStyle = 'rgba(47,224,127,' + (0.6 * ease).toFixed(2) + ')'; g.font = '700 10px "JetBrains Mono",monospace'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    RINGS.forEach(([d, s]) => g.fillText(s, cx + 4, cy - R * rdR(d) - 4));
+    // 掃描線：4 秒一圈
+    const sw = calm ? -Math.PI / 2 : ((t / 4) % 1) * Math.PI * 2 - Math.PI / 2;
+    if (!calm) {
+      for (let i = 0; i < 24; i++) {
+        const a0 = sw - (i + 1) * 0.035;
+        g.fillStyle = 'rgba(47,224,127,' + (0.16 * (1 - i / 24)).toFixed(3) + ')';
+        g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R, a0, a0 + 0.036); g.closePath(); g.fill();
+      }
+      g.strokeStyle = 'rgba(120,255,170,.9)'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(sw) * R, cy + Math.sin(sw) * R); g.stroke();
+    }
+    // 光點：掃到的那一下亮起來，慢慢退回
+    const norm = (a) => ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    RADAR.blips.forEach((b) => {
+      const d = norm(sw - b.ang);
+      if (!calm && d < 0.08) { if (b.lit < 0.5 && b.s === 'live' && RADAR.sweeps < 3 && now - lastSweep > 500) { lastSweep = now; Snd.ping(); } b.lit = 1; }   // 還沒表態的光點：前三圈掃到時「咚」一聲
+      b.lit = Math.max(calm ? 0.6 : 0.25, b.lit - 0.012);
+      const x = cx + Math.cos(b.ang) * b.r * R, y = cy + Math.sin(b.ang) * b.r * R;
+      if (ease < 1) b.lit = Math.min(b.lit, ease);
+      b.x = x; b.y = y;
+      const c = COL[b.s] || COL.old;
+      const pulse = b.s === 'live' && !calm ? 0.5 + 0.5 * Math.sin(t * 4 + b.ang) : 0;
+      g.globalAlpha = Math.min(1, 0.35 + b.lit * 0.65);
+      g.fillStyle = c; g.beginPath(); g.arc(x, y, 4 + pulse * 2, 0, Math.PI * 2); g.fill();
+      if (b.lit > 0.6 || b.s === 'live') { g.strokeStyle = c; g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, 8 + (1 - b.lit) * 8 + pulse * 3, 0, Math.PI * 2); g.stroke(); }
+      if (b.s === 'live' || b === RADAR.hit) {
+        // 標籤往外放（左半邊靠右對齊），不擠在塔台上
+        const left = Math.cos(b.ang) < 0;
+        g.globalAlpha = ease; g.fillStyle = '#e6fff0'; g.font = '700 10px "JetBrains Mono",monospace'; g.textAlign = left ? 'right' : 'left'; g.textBaseline = 'middle';
+        g.fillText(b.f.no || '', x + (left ? -11 : 11), y + (Math.sin(b.ang) < 0 ? -9 : 9));
+      }
+      g.globalAlpha = 1;
+    });
+    // 中心：塔台
+    g.fillStyle = '#ffd21a'; g.beginPath(); g.arc(cx, cy, 5, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = 'rgba(255,210,26,.5)'; g.beginPath(); g.arc(cx, cy, 11, 0, Math.PI * 2); g.stroke();
+    const turn = Math.floor(t / 4); if (turn !== RADAR.turn) { RADAR.turn = turn; RADAR.sweeps = turn; }
+    if (!calm) RADAR.raf = requestAnimationFrame(draw);
+  };
+  RADAR.raf = requestAnimationFrame(draw);
+  const pick = (ev) => {
+    const r = cv.getBoundingClientRect();
+    const x = ev.clientX - r.left, y = ev.clientY - r.top;
+    let best = null, bd = 22;
+    RADAR.blips.forEach((b) => { const d = Math.hypot(b.x - x, b.y - y); if (d < bd) { bd = d; best = b; } });
+    return best;
+  };
+  cv.onclick = (ev) => {
+    const b = pick(ev); if (!b) return;
+    RADAR.hit = b; Snd.tick(); haptic(10);
+    const tip = $('#rd-tip');
+    const v = S.votes[b.f.id];
+    tip.innerHTML = '<b>' + esc(b.f.zh) + '</b><span>' + esc(b.f.no) + '・' + LANE[b.f.lane].zh + '・' + fmtDate(b.f._date || '') + '</span><span>' + (v ? STATUS[v.v][0] : b.s === 'live' ? '等你表態' : '沒表態') + '</span><button class="chip-btn y" data-f="' + esc(b.f.id) + '">打開登機證</button>';
+    tip.hidden = false;
+    tip.style.left = Math.min(Math.max(8, b.x - 90), cv.clientWidth - 188) + 'px';
+    tip.style.top = Math.min(b.y + 14, cv.clientHeight - 110) + 'px';
+    if (calm) draw(performance.now());
+  };
+  addEventListener('resize', () => { if (cv.isConnected) W = size(); }, { once: true });
+}
+
 /* ---- main.js ---- */
 /* 開機、路由、讀資料、開場 */
 const App = {
@@ -2260,7 +2488,8 @@ App.intro = async function (day, replay) {
   const d = new Date(day.date + 'T00:00:00');
   const no = D.index.days.find((x) => x.date === day.date);
   el.innerHTML = '<div class="il">PZ TERMINAL · DAY ' + String(no ? no.no : 1).padStart(3, '0') + '</div><div class="ib">' + Flap.html('轉機', 'big') + Flap.html('TURNAROUND', 'mid amber') + Flap.html(fmtDate(day.date) + ' ' + WKE[d.getDay()], 'mid') + '</div>' +
-    '<div class="il" style="color:#c8d0da">' + (isStale(day.date) ? '最新 ' : '今日 ') + day.flights.length + ' 班航班' + (day.inspection ? '・1 架進廠檢修' : '') + '</div><button class="skip">點一下跳過</button>';
+    '<div class="il" style="color:#c8d0da">' + (isStale(day.date) ? '最新 ' : '今日 ') + day.flights.length + ' 班航班' + (day.inspection ? '・1 架進廠檢修' : '') + '</div>' +
+    (reduced() ? '' : introBoardHtml(day)) + '<button class="skip">點一下跳過</button>';
   el.hidden = false; el.classList.remove('out');
   let done = false;
   const finish = () => {
@@ -2271,8 +2500,14 @@ App.intro = async function (day, replay) {
   };
   el.onclick = finish;
   Snd.chime();
-  Flap.run(el, { min: 3, max: 7, step: 55, dur: 80 });
-  setTimeout(finish, reduced() ? 600 : 3300);
+  Flap.run($('.ib', el), { min: 3, max: 7, step: 55, dur: 80 });
+  // 2026/11/18：接著今天的出發看板一列一列翻上來，最後一架飛機掠過看板
+  const bd = $('.ixb', el);
+  if (bd) {
+    setTimeout(() => { if (done) return; el.classList.add('boarded'); Flap.run(bd, { min: 2, max: 5, step: 26, dur: 66 }); }, 1900);
+    setTimeout(() => { if (done) return; bd.classList.add('fly'); Snd.jet(); haptic(30); }, 3900);
+  }
+  setTimeout(finish, reduced() ? 600 : bd ? 5400 : 3300);
 };
 
 /* ---------- 開機 ---------- */

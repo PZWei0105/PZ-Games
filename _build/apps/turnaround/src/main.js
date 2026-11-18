@@ -162,7 +162,8 @@ App.intro = async function (day, replay) {
   const d = new Date(day.date + 'T00:00:00');
   const no = D.index.days.find((x) => x.date === day.date);
   el.innerHTML = '<div class="il">PZ TERMINAL · DAY ' + String(no ? no.no : 1).padStart(3, '0') + '</div><div class="ib">' + Flap.html('轉機', 'big') + Flap.html('TURNAROUND', 'mid amber') + Flap.html(fmtDate(day.date) + ' ' + WKE[d.getDay()], 'mid') + '</div>' +
-    '<div class="il" style="color:#c8d0da">' + (isStale(day.date) ? '最新 ' : '今日 ') + day.flights.length + ' 班航班' + (day.inspection ? '・1 架進廠檢修' : '') + '</div><button class="skip">點一下跳過</button>';
+    '<div class="il" style="color:#c8d0da">' + (isStale(day.date) ? '最新 ' : '今日 ') + day.flights.length + ' 班航班' + (day.inspection ? '・1 架進廠檢修' : '') + '</div>' +
+    (reduced() ? '' : introBoardHtml(day)) + '<button class="skip">點一下跳過</button>';
   el.hidden = false; el.classList.remove('out');
   let done = false;
   const finish = () => {
@@ -173,8 +174,14 @@ App.intro = async function (day, replay) {
   };
   el.onclick = finish;
   Snd.chime();
-  Flap.run(el, { min: 3, max: 7, step: 55, dur: 80 });
-  setTimeout(finish, reduced() ? 600 : 3300);
+  Flap.run($('.ib', el), { min: 3, max: 7, step: 55, dur: 80 });
+  // 2026/11/18：接著今天的出發看板一列一列翻上來，最後一架飛機掠過看板
+  const bd = $('.ixb', el);
+  if (bd) {
+    setTimeout(() => { if (done) return; el.classList.add('boarded'); Flap.run(bd, { min: 2, max: 5, step: 26, dur: 66 }); }, 1900);
+    setTimeout(() => { if (done) return; bd.classList.add('fly'); Snd.jet(); haptic(30); }, 3900);
+  }
+  setTimeout(finish, reduced() ? 600 : bd ? 5400 : 3300);
 };
 
 /* ---------- 開機 ---------- */

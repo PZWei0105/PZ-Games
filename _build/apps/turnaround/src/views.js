@@ -567,6 +567,7 @@ function renderMe() {
   let h = '<div class="passport" style="margin-top:16px"><div class="pp-h">CAPTAIN · 機長</div><h2>痞子葳</h2><div class="pp-s">轉機航廈第 ' + D.index.counts.days + ' 天・航班 ' + D.index.counts.flights + ' 班・檢修 ' + D.index.counts.inspections + ' 架</div>' +
     '<div class="stats"><div><b>' + vs.length + '</b><i>表態</i></div><div><b>' + cnt('board') + '</b><i>登機</i></div><div><b>' + cnt('delay') + '</b><i>延誤</i></div><div><b>' + cnt('cancel') + '</b><i>取消</i></div>' +
     '<div><b>' + Object.keys(S.dispatched).length + '</b><i>簽派</i></div><div><b>' + S.pireps.length + '</b><i>機長報告</i></div><div><b>' + S.ideas.length + '</b><i>托運</i></div><div><b>' + S.merges.length + '</b><i>聯程</i></div></div></div>';
+  h += radarHtml();   // 2026/11/18：航線雷達
   h += '<div class="h2"><b>你的口味</b><i>TASTE</i><span class="r">取消的原因</span></div><p class="taste-note">只是參考：塔台拿它把下一班寫得更好，不會因此封殺任何題材。探索航班的取消不算進來。</p><div class="card bars">' +
     (rk.length ? rk.map(([r, n]) => '<div class="br"><span>' + esc(r) + '</span><u><i style="transform:scaleX(' + (n / maxR) + ')"></i></u><b>' + n + '</b></div>').join('') : '<p class="muted" style="margin:0;font-size:14px;line-height:1.7">還沒有取消過的航班。你取消時點的原因會累積在這裡，提醒塔台「這種寫法不夠好看」，但不會讓任何題材從此消失。</p>') + '</div>';
   h += '<div class="h2"><b>登機證夾</b><i>WALLET</i><span class="r">' + boarded.length + ' 張</span></div>';
@@ -586,6 +587,8 @@ function renderMe() {
     '<div class="set"><div class="lb"><b>重看開場</b><i>翻牌開場＋廣播再來一次</i></div><button class="chip-btn" id="replay">播放</button></div>' +
     '<div class="set"><div class="lb"><b>版本</b><i>轉機 TURNAROUND v' + VERSION + (IS_WEB ? '・網頁版' : '・Claude 版') + '</i></div></div></div>';
   el.innerHTML = h;
+  radarStart();
+  radarLoad().then((more) => { if (more && $('#rd-cv')) { const r = $('#v-me .radar'); const hd = $('#radar-h'); if (r && hd) { const tmp = document.createElement('div'); tmp.innerHTML = radarHtml(); hd.replaceWith(tmp.children[0]); r.replaceWith(tmp.children[0]); radarStart(); } } });
   el.onclick = (e) => {
     const t = e.target.closest('button'); if (!t) return;
     if (t.dataset.set) { S.settings[t.dataset.set] = !S.settings[t.dataset.set]; t.classList.toggle('on', S.settings[t.dataset.set]); save(); Snd.init(); Snd.tick(); haptic(8); if (t.dataset.set === 'music') Snd.music(true); return; }
