@@ -66,7 +66,9 @@ jobs:
         run: |
           git config user.name 'spectate-bot'
           git config user.email 'spectate-bot@users.noreply.github.com'
-          git add apps/spectate/data/me.json apps/spectate/data/roster.json 2>/dev/null || true
+          for f in me.json roster.json; do
+            if [ -f "apps/spectate/data/$f" ]; then git add "apps/spectate/data/$f"; fi
+          done
           if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi
           git commit -q -m '觀戰：訂閱與頻道名冊'
           for i in 1 2 3 4 5; do

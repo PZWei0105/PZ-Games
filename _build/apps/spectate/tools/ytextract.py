@@ -43,8 +43,7 @@ LANES = ('live', 'trailer', 'review', 'guide', 'news', 'deep', 'play')
 _RX = {
     'trailer': re.compile(
         r'預告|预告|宣傳片|宣传片|宣傳影片|首曝|上市影片|發售影片|实机演示|實機演示|實機展示|最新影像|紹介映像|最新映像|'
-        r'トレーラー|ティザー|プロモーション|\bPV\d*\b|\bCM\b|Trailer|Teaser|Reveal\b|Announce(ment)?\b|Launch\b|Cinematic\b|'
-        r'Gameplay Overview|Showcase Trailer|Release Date', re.I),
+        r'トレーラー|ティザー|プロモーション|\bPV\d*\b|\bCM\b|Trailer|Teaser|Release Date Announce', re.I),
     'review': re.compile(
         r'評測|评测|評價|评价|心得|值不值得|值得買|值得买|推不推薦|推不推荐|入坑|試玩|试玩|開箱|开箱|體驗|体验|'
         r'レビュー|感想|\bReview\b|Before You Buy|Impressions?\b|Hands[- ]?On|\bPreview\b|Should You Buy|Worth It', re.I),
@@ -71,6 +70,9 @@ def lane_of(title, kind='creator', live=None):
         return 'live'
     t = title or ''
     hits = [k for k in ('trailer', 'review', 'guide', 'news', 'deep', 'play') if _RX[k].search(t)]
+    if kind == 'official':
+        # 官方頻道上傳的幾乎都是預告、發表會：不分成實況、攻略
+        return 'news' if 'news' in hits and 'trailer' not in hits else 'trailer'
     if 'trailer' in hits:
         # 「實況 + Trailer」幾乎都是預告；「Gameplay Walkthrough」不是
         if 'guide' in hits and kind != 'official':
@@ -151,12 +153,25 @@ def names_in(title):
             m = _EN_SUFFIX.search(s)
             if m and m.start() > 2:
                 cand = s[:m.start()]
+            elif ': ' in s:
+                head = s.split(': ')[0].strip()
+                if 1 <= len(head.split()) <= 5 and head[:1].isupper():
+                    cand = head
         if cand:
             cand = _EN_SUFFIX.sub('', cand).strip()
             cand = _clean_name(cand)
             words = cand.split()
             if 1 <= len(words) <= 7 and len(cand) >= 3 and not GENERIC_EN.match(cand) and not re.search(r'\b(?:I|we|you|my|is|are|was|were)\b', cand):
                 out.append(cand)
+                # 「Grand Theft Auto VI: The Festival」→ 也試冒號前的「Grand Theft Auto VI」
+                if ': ' in cand:
+                    head = _clean_name(cand.split(': ')[0])
+                    if len(head) >= 3 and not GENERIC_EN.match(head):
+                        out.append(head)
+        # 常見的縮寫，例如 GTA 6
+        for rx, full in EN_ALIAS:
+            if rx.search(s) and full not in out:
+                out.append(full)
     else:
         # 中文標題沒有書名號：試「遊戲名：副標」或「遊戲名 - 預告」
         s2 = _CJK_JUNK.sub(' ', t).strip()
@@ -166,6 +181,35 @@ def names_in(title):
             if not LABELS.match(n) and _HAN.search(n):
                 out.append(n)
     return _dedupe(out)
+
+
+EN_ALIAS = [
+    (re.compile(r'\bGTA ?(?:6|VI)\b', re.I), 'Grand Theft Auto VI'),
+    (re.compile(r'\bRDR ?2\b', re.I), 'Red Dead Redemption 2'),
+    (re.compile(r'\bBotW\b'), 'The Legend of Zelda: Breath of the Wild'),
+    (re.compile(r'\bTotK\b'), 'The Legend of Zelda: Tears of the Kingdom'),
+    (re.compile(r'\bFF ?7 ?Rebirth\b', re.I), 'Final Fantasy VII Rebirth'),
+]
+
+# 同一款遊戲的不同叫法（多半是不在 Steam 上、對不到的主機大作）→ 統一用第一個名字
+ALIASES = {
+    'Grand Theft Auto VI': ['GTA 6', 'GTA VI', 'GTA6', '俠盜獵車手6', '俠盜獵車手 6', '俠盜獵車手VI', '侠盗猎车手6', 'グランド・セフト・オートVI', 'Grand Theft Auto 6'],
+    'Ghost of Yōtei': ['Ghost of Yotei', '對馬戰鬼 羊蹄山', '羊蹄山戰鬼', 'Ghost of Yōtei Legends'],
+    'Mario Kart World': ['瑪利歐賽車 世界', 'マリオカート ワールド'],
+    'Pokémon Legends: Z-A': ['寶可夢傳說 Z-A', 'Pokemon Legends Z-A', 'ポケモンレジェンズ Z-A'],
+    'Donkey Kong Bananza': ['咚奇剛 蕉力全開', 'ドンキーコング バナンザ'],
+}
+ALIAS_KEY = {}
+for _main, _alts in ALIASES.items():
+    for _a in [_main] + _alts:
+        ALIAS_KEY[None] = None
+        ALIAS_KEY[re.sub(r'[^0-9a-z\u4e00-\u9fff\u3040-\u30ff]+', '', unicodedata.normalize('NFKC', _a).lower())] = _main
+ALIAS_KEY.pop(None, None)
+
+
+def canonical(name):
+    """別名 → 統一名稱（沒有別名就原樣）。"""
+    return ALIAS_KEY.get(norm(name), name)
 
 
 def _dedupe(xs):

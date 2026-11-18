@@ -952,7 +952,7 @@ def classify(cache, roster):
         names = X.names_in(t) or X.names_in(t0)
         if not names and v.get('tz'):
             names = X.names_in(v['tz'])
-        v['nm'] = names[:3]
+        v['nm'] = list(dict.fromkeys(X.canonical(n) for n in names))[:3]
         v['spam'] = 1 if X.SPAM.search(t) else 0
         v['gacha'] = 1 if X.GACHA.search(t) else 0
         v['cls'] = 1
