@@ -241,7 +241,8 @@ function rowHtml(t, i) {
 }
 /* 情報卡：價格血條、價格紀錄、上市、評價、介紹；寫過專題或推坑的可以直接打開 */
 async function huntInfo(key) {
-  const t = huntTargets().find((x) => x.key === key); if (!t) return;
+  let t = huntTargets().find((x) => x.key === key); if (!t) return;
+  if (t.appid && !t.wish && !liveReady(t.appid)) { await liveLoad([t.appid], 2000); t = huntTargets().find((x) => x.key === key) || t; }   // 介紹、開發商、寬版封面
   const mc = t.micro || {};
   const steamUrl = t.appid ? `https://store.steampowered.com/app/${t.appid}/` : '';
   openSheet(`<div class="hinfo"><div class="hi-img">${t.cap || t.img ? `<img src="${esc(t.cap || t.img)}" alt="" onerror="imgFail(this)">` : ''}${(mc.mp4 || mc.webm) && fxOn() ? `<video class="hi-v" muted loop playsinline autoplay preload="auto"${mc.mp4 ? ` src="${esc(mc.mp4)}"` : ''}></video>` : ''}

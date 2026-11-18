@@ -212,7 +212,7 @@ async function drawCard(cv, f, lv, opt) {
 async function cardRender(f) {
   const cv = $('#cardcv'); if (!cv) return;
   const busy = $('#cardbusy'); if (busy) busy.style.display = 'grid';
-  try { await drawCard(cv, f, liveOf(f.game.steam), CARD); } catch (e) { console.warn(e); toast('圖卡畫不出來：' + e.message, 'warn'); }
+  try { await liveLoad([f.game.steam], 3000); await drawCard(cv, f, liveOf(f.game.steam), CARD); } catch (e) { console.warn(e); toast('圖卡畫不出來：' + e.message, 'warn'); }
   if (busy) busy.style.display = 'none';
 }
 function cardBlob() {

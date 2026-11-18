@@ -791,6 +791,11 @@ def main():
             fn(json.load(open(pth, encoding='utf-8')))
         except ValueError as e:
             r.B(name, f'JSON 壞掉：{e}')
+    # 典藏升級的體檢：每次開 App 都要載的檔案太大時提醒（量測：tools/stress.py＋tools/perf.py，做法見 ROADMAP「典藏」）
+    for name, lim in (('index.json', 3.0), ('picks.json', 2.0), ('live.json', 6.0)):
+        pth = os.path.join(DATA, name)
+        if os.path.exists(pth) and os.path.getsize(pth) > lim * 1e6:
+            r.W(name, f'已經 {os.path.getsize(pth) / 1e6:.1f} MB（超過 {lim:g} MB）：開 App 會開始變慢，照 ROADMAP「典藏」把舊的分出去')
     for w in r.warn:
         print('WARN', w)
     for b in r.bad:

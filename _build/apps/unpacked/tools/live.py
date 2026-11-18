@@ -4,7 +4,8 @@
 做四件事，全部只用 Steam 的公開端點（不用金鑰）：
 1. 追蹤清單（data/track.json，由 publish.py 從專題自動產生）裡每一款 Steam 遊戲：
    台灣區價格與折扣、全球評價、繁中玩家評價、目前同上人數、主視覺／截圖／預告、語言、標籤。
-   → data/live.json（目前的樣子）＋ data/hist/<appid>.json（價格、同上、評價的歷史，App 畫曲線、算史低）
+   → data/live.json（清單用的精簡版）＋ data/live/<appid>.json（預告、截圖、介紹，點開才載）
+     ＋ data/hist/<appid>.json（價格、同上、評價的歷史，App 畫曲線、算史低）
 2. 給每日寫稿用的選題候選 → data/candidates.json
    （同上排行、熱銷、新品、即將推出、願望清單熱門；已經寫過的標 covered）
 3. 痞子葳的 Steam 願望單（獵價分頁）→ data/wish.json：每一款的台灣區價格、特價開始時間與結束時間、
@@ -158,6 +159,60 @@ def save_if_changed(path, obj, ignore=('at',)):
         json.dump(obj, f, ensure_ascii=False, separators=(',', ':'))
     os.replace(tmp, path)
     return True
+
+
+# ------------------------------------------------------------------ 即時資料分兩層（典藏升級，2026-11-18）
+# live.json 只放每次開 App 都要的（價格、同上、評價、語言、主視覺、動態預告）；預告清單、截圖、介紹、開發商
+# 放 live/<appid>.json，App 點開那一款（專題、推坑、短影音、情報卡、圖卡）才載。累積幾千款，開 App 還是一樣快。
+END_CAP = 6          # 出擊日曆：解包過的遊戲同一天特價截止最多列幾款（願望單的全部列）
+LIVE_SUM = ('name', 'appid', 'free', 'adult', 'price', 'players', 'rv', 'rv_tc', 'rel', 'langs', 'tags', 'at')
+
+
+def live_split(x):
+    s = {k: x[k] for k in LIVE_SUM if k in x}
+    img = x.get('img') or {}
+    si = {k: img[k] for k in ('hero', 'header') if img.get(k)}
+    if si:
+        s['img'] = si
+    mc = {k: v for k, v in (x.get('micro') or {}).items() if k in ('mp4', 'webm') and v}
+    if mc:
+        s['micro'] = mc          # mp4 給 iPhone、webm 給沒有 H.264 的瀏覽器，兩個都留（首頁海報、推坑牆直接用）
+    return s, {k: v for k, v in x.items() if k not in LIVE_SUM}
+
+
+def live_load(D):
+    """上一輪的完整即時資料（live.json＋live/<appid>.json 合回去）。舊格式（全部都在 live.json）也讀得懂。"""
+    base = load(os.path.join(D, 'live.json'), None) or {'apps': {}}
+    xd = os.path.join(D, 'live')
+    apps = {}
+    for a, s in (base.get('apps') or {}).items():
+        h = load(os.path.join(xd, f'{a}.json'), None) if os.path.isdir(xd) else None
+        if h:
+            x = dict(h, **s)
+            for k in ('img', 'micro'):
+                if h.get(k):
+                    x[k] = dict(s.get(k) or {}, **h[k])
+            apps[a] = x
+        else:
+            apps[a] = dict(s)
+    base['apps'] = apps
+    return base
+
+
+def live_save(D, live):
+    """寫 live.json（精簡）＋ live/<appid>.json（有變才寫；不再追蹤的刪掉）。回傳（live.json 有沒有寫, 寫了幾個 live/）。"""
+    xd = os.path.join(D, 'live')
+    os.makedirs(xd, exist_ok=True)
+    summ, nx = {}, 0
+    for a, x in (live.get('apps') or {}).items():
+        s, h = live_split(x)
+        summ[a] = s
+        if h and save_if_changed(os.path.join(xd, f'{a}.json'), h):
+            nx += 1
+    for fn in os.listdir(xd):
+        if fn.endswith('.json') and fn[:-5] not in summ:
+            os.remove(os.path.join(xd, fn))
+    return save_if_changed(os.path.join(D, 'live.json'), dict(live, apps=summ)), nx
 
 
 # ------------------------------------------------------------------ Steam GetItems
@@ -973,12 +1028,21 @@ def calendar(D, t0):
             e = tw(s['end'])
             p = x.get('p') or [None, None, 0]
             add('特價截止', e.strftime('%Y-%m-%d'), nm, x['appid'], ('限時免費' if p[2] >= 100 else f'-{p[2]}%，NT${round((p[0] or 0) / 100)}') + f'，最後到 {e.strftime("%H:%M")}', route)
+    # 解包過的特價截止：同一天最多 END_CAP 款（折扣大的先），其他併成一筆——累積幾千款、遇到大特賣也不會洗版
+    ends = {}
     for a, lv in ((load(os.path.join(D, 'live.json'), {}).get('apps')) or {}).items():
         pr = lv.get('price') or {}
         if pr.get('disc') and pr.get('end') and int(a) in names:
             e = tw(pr['end'])
-            nm, route = names[int(a)]
-            add('特價截止', e.strftime('%Y-%m-%d'), nm, int(a), f'-{pr["disc"]}%，NT${round((pr.get("final") or 0) / 100)}，最後到 {e.strftime("%H:%M")}', route)
+            ends.setdefault(e.strftime('%Y-%m-%d'), []).append((pr['disc'], int(a), e, pr))
+    for d, rows in sorted(ends.items()):
+        rows = sorted((r for r in rows if ('特價截止', r[1], d) not in seen), key=lambda r: (-r[0], r[1]))
+        for disc, a, e, pr in rows[:END_CAP]:
+            nm, route = names[a]
+            add('特價截止', d, nm, a, f'-{disc}%，NT${round((pr.get("final") or 0) / 100)}，最後到 {e.strftime("%H:%M")}', route)
+        if len(rows) > END_CAP:
+            more = [names[r[1]][0] for r in rows[END_CAP:]]
+            add('特價截止', d, f'還有 {len(more)} 款解包過的遊戲', f'more{d}', '同一天特價截止的還有：' + '、'.join(more[:15]) + ('…' if len(more) > 15 else ''), 'hunt')
     wk = (load(os.path.join(D, 'weekly.json'), {}).get('items') or [None])[0]
     if wk:
         for n in load(os.path.join(D, 'weekly', wk['id'] + '.json'), {}).get('next') or []:
@@ -1072,8 +1136,7 @@ def main():
     D = a.data
     t0 = now()
     track = load(os.path.join(D, 'track.json'), {'apps': []})
-    live_path = os.path.join(D, 'live.json')
-    live_old = load(live_path, {'apps': {}})
+    live_old = live_load(D)
     idx = load(os.path.join(D, 'index.json'), {'items': []})
     covered = {int(x['steam']) for x in idx.get('items') or [] if x.get('steam')}
     pk = load(os.path.join(D, 'picks.json'), {'items': []})
@@ -1134,8 +1197,8 @@ def main():
         ERRS.append(f'wish: {type(e).__name__}')
         mine = set()
     live = {'at': iso(t0), 'ok': ok, 'asked': len(apps), 'errs': ERRS[:20], 'apps': out_apps}
-    wrote = save_if_changed(live_path, live)
-    print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}')
+    wrote, nx = live_save(D, live)
+    print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}, live/ 更新 {nx} 款')
 
     if not a.no_candidates:
         c = candidates(covered, tagn, picked, mine)

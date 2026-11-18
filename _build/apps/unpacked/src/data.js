@@ -11,11 +11,11 @@ async function getJSON(path, fresh = true) {
   return r.json();
 }
 async function loadIndex() {
-  const [idx, live, picks, wish, weekly] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] })),
-    getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] }))]);
-  S.wishSkip = await getJSON('wish-skip.json').catch(() => ({}));
-  // 行情板、免費補給站、活動時程、TGA、點播台：讀不到都不影響主畫面
-  const [board, free, events, tga, qa, inbox] = await Promise.all(['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json'].map((p) => getJSON(p).catch(() => null)));
+  // 全部一起發出去（以前分三批排隊，手機網路每批多等一趟）；行情板、免費補給站、活動時程、TGA、點播台讀不到都不影響主畫面
+  const [idx, live, picks, wish, weekly, skip, board, free, events, tga, qa, inbox] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })),
+    getJSON('picks.json').catch(() => ({ items: [] })), getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] })), getJSON('wish-skip.json').catch(() => ({})),
+    ...['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json'].map((p) => getJSON(p).catch(() => null))]);
+  S.wishSkip = skip || {};
   if (board && board.rows) S.board = board;
   if (free && free.items) S.free = free;
   if (events && events.items) S.events = events;
@@ -23,12 +23,15 @@ async function loadIndex() {
   if (qa && qa.items) S.qa = qa;
   if (inbox && inbox.events) { S.inbox = inbox; if (typeof askAck === 'function') askAck(); }
   S.index = idx; S.live = live || { apps: {} }; S.picks = picks || { items: [] };
+  for (const id of Object.keys(LIVEX.got)) liveMerge(id);     // 重新讀 live.json 之後，載過的預告、截圖併回去
   S.wish = wish && wish.items ? wish : null; S.weekly = weekly && weekly.items ? weekly : { items: [] };
   return idx;
 }
+const INFLIGHT = {};
+function once(key, fn) { return INFLIGHT[key] || (INFLIGHT[key] = fn().finally(() => { delete INFLIGHT[key]; })); }
 async function loadPick(id) {
   if (S.pickF[id]) return S.pickF[id];
-  const f = await getJSON('picks/' + id + '.json');
+  const f = await once('p:' + id, () => getJSON('picks/' + id + '.json'));
   S.pickF[id] = f; return f;
 }
 /* 目錄裡找一款（專題或推坑） */
@@ -37,13 +40,13 @@ const findItem = (id) => (S.index && S.index.items.find((x) => x.id === id)) || 
 const hoursOf = (t) => { const m = /(\d+(?:\.\d+)?)/.exec(t || ''); return m ? +m[1] : null; };
 async function loadFeature(id) {
   if (S.feats[id]) return S.feats[id];
-  const f = await getJSON('features/' + id + '.json');
+  const f = await once('f:' + id, () => getJSON('features/' + id + '.json'));
   S.feats[id] = f; return f;
 }
 async function loadHist(appid) {
   if (!appid) return null;
   if (S.hist[appid]) return S.hist[appid];
-  try { S.hist[appid] = await getJSON('hist/' + appid + '.json'); } catch (e) { S.hist[appid] = null; }
+  try { S.hist[appid] = await once('h:' + appid, () => getJSON('hist/' + appid + '.json')); } catch (e) { S.hist[appid] = null; }
   return S.hist[appid];
 }
 async function loadBoardD() {
@@ -58,6 +61,36 @@ async function loadAsk() {
   if (inbox && inbox.events) { S.inbox = inbox; askAck(); }
 }
 const liveOf = (steam) => (steam && S.live && S.live.apps) ? S.live.apps[String(steam)] || null : null;
+/* 即時資料分兩層（典藏升級）：live.json 只有清單用的（價格、同上、評價、語言、主視覺、動態預告），每次開 App 都載；
+   預告清單、截圖、介紹、開發商在 live/<appid>.json，點開那一款才載，載好直接併進 live.json 那一筆（之後 liveOf 就是完整的）。
+   舊格式（全部都在 live.json）也能用：有預告或截圖欄位就當作已經載好。 */
+const LIVEX = { got: {}, wait: {} };
+function liveReady(id) {
+  id = String(id || ''); const a = S.live && S.live.apps && S.live.apps[id];
+  return !a || !!LIVEX.got[id] || ['shots', 'trailers', 'short', 'dev'].some((k) => a[k] !== undefined);
+}
+function liveMerge(id) {
+  const a = S.live && S.live.apps && S.live.apps[id]; const x = LIVEX.got[id]; if (!a || !x) return;
+  for (const k of Object.keys(x)) {
+    if ((k === 'img' || k === 'micro') && x[k] && typeof x[k] === 'object') a[k] = Object.assign({}, x[k], a[k] || {});
+    else if (a[k] === undefined) a[k] = x[k];
+  }
+}
+/* 載一批（已經有的直接略過）；ms：最多等多久（網路太慢就先用手上的） */
+function liveLoad(ids, ms) {
+  const ps = [];
+  for (const raw of ids || []) {
+    const id = String(raw || ''); if (!id || liveReady(id)) continue;
+    if (!LIVEX.wait[id]) {
+      LIVEX.wait[id] = fetch(DATA + 'live/' + id + '.json').then((r) => (r.ok ? r.json() : r.status === 404 ? {} : null)).catch(() => null)
+        .then((x) => { delete LIVEX.wait[id]; if (x) { LIVEX.got[id] = x; liveMerge(id); } });
+    }
+    ps.push(LIVEX.wait[id]);
+  }
+  if (!ps.length) return Promise.resolve();
+  const all = Promise.all(ps);
+  return ms ? Promise.race([all, new Promise((r) => setTimeout(r, ms))]) : all;
+}
 
 /* ---- 圖片 ---- */
 const ytThumb = (id, q = 'maxresdefault') => `https://i.ytimg.com/vi/${id}/${q}.jpg`;

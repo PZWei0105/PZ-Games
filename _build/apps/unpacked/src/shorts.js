@@ -240,13 +240,16 @@ function shImgFail(img) {
   img.style.opacity = 0;
 }
 /* 只畫目前這張、上一張、下兩張；離太遠的清掉 */
-function shFill(i) {
+/* 這一款的 Steam 預告清單到了沒（在 live/<appid>.json，滑到附近才載） */
+function shReady(it) { return !it || !it.steam || liveReady(it.steam); }
+function shFill(i, force = -1) {
   for (const k of [...SH.filled]) {
     if (k < i - 2 || k > i + 3) { const s = SH.els[k]; if (s) { s.innerHTML = ''; s.classList.remove('filled'); } SH.filled.delete(k); }
   }
   for (let k = Math.max(0, i - 1); k <= Math.min(SH.list.length - 1, i + 2); k++) {
     if (SH.filled.has(k)) continue;
     const s = SH.els[k]; const it = SH.list[k]; if (!s || !it) continue;
+    if (k !== force && !shReady(it)) continue;      // 預告清單還沒到：先不畫，到了再補（不然封面會先錯一張再換）
     s.innerHTML = shSlideHtml(it, k); s.classList.add('filled'); SH.filled.add(k);
     const vids = shVids(it); shTrUI(s, vids, Math.min(SH.vi[shKeyOf(it)] || 0, Math.max(0, vids.length - 1)));
     shBg(s, headerOf(it, liveOf(it.steam)) || (vids[0] && vids[0].poster));   // 用小張的橫幅圖就夠糊了，不解碼大圖
@@ -284,6 +287,9 @@ function shActivate(i) {
   if (i === SH.i || !SH.els[i]) return;
   shStop();
   SH.i = i;
+  const near = [];
+  for (let k = Math.max(0, i - 2); k <= Math.min(SH.list.length - 1, i + 4); k++) { const x = SH.list[k]; if (x && x.steam && !liveReady(x.steam)) near.push(x.steam); }
+  if (near.length) liveLoad(near).then(() => { if (SH.i === i && shOn()) shFill(i); });
   shFill(i);
   SH.els.forEach((s, k) => s.classList.toggle('act', k === i));
   const n = $('#shorts .sh-n'); if (n) n.textContent = i < SH.list.length ? `${i + 1}/${SH.list.length}` : '';
@@ -299,7 +305,12 @@ function shActivate(i) {
     const nw = $('.sv-new', SH.els[SH.i]); if (nw) nw.classList.add('gone');
   }, 1500);
   shWake();
-  shPlay(SH.els[i], it, SH.vi[key] || 0);
+  if (shReady(it)) { shPlay(SH.els[i], it, SH.vi[key] || 0); return; }
+  const tok = SH.tok;
+  liveLoad([it.steam], 3000).then(() => {       // 這一款的預告清單到了（或等太久）再開始播
+    if (SH.i !== i || SH.tok !== tok || !shOn()) return;
+    shFill(i, i); shPlay(SH.els[i], it, SH.vi[key] || 0);
+  });
 }
 function shStop() {
   SH.tok++;

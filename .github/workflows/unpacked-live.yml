@@ -1,5 +1,5 @@
 # 《解包 UNPACKED》資料管線：Steam 台灣區價格、同上人數、評價、預告與截圖，加上每日寫稿用的選題候選。
-# 只動 apps/unpacked/data/ 底下的 live.json、wish.json、hist/、candidates.json、board.json／board-d.json（行情板）、free.json（免費補給站）、
+# 只動 apps/unpacked/data/ 底下的 live.json＋live/（即時資料分兩層）、wish.json、hist/、candidates.json、board.json／board-d.json（行情板）、free.json（免費補給站）、
 # calendar.ics、inbox.json（點播台收件）；專題、推坑、週報、問答（qa.json）由排程推上來。
 # 願望單：Steam 代號放在 repo 的 Actions 密碼 UNP_STEAM（Settings → Secrets and variables → Actions），不會公開。
 name: unpacked-live
@@ -51,7 +51,7 @@ jobs:
           git config user.name 'unpacked-bot'
           git config user.email 'unpacked-bot@users.noreply.github.com'
           # 一個一個加：還沒產生的檔案不能讓整個 git add 失敗
-          for f in live.json wish.json calendar.ics hist candidates.json board.json board-d.json free.json inbox.json; do
+          for f in live.json live wish.json calendar.ics hist candidates.json board.json board-d.json free.json inbox.json; do
             if [ -e "apps/unpacked/data/$f" ]; then git add "apps/unpacked/data/$f"; fi
           done
           if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi

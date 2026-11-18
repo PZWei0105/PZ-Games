@@ -5,7 +5,7 @@ let NAVN = 0;   // App 裡往前走了幾步（「回牆上」才知道能不能
 
 function setTabs(name) {
   $$('.tab').forEach((t) => t.classList.toggle('on', t.dataset.go === name));
-  const wait = (S.index ? S.index.items.filter((x) => !S.posted[x.id]).length : 0) + weekUnposted();
+  const wait = (S.index ? fanWait() : 0) + weekUnposted();
   const dot = $('.tab[data-go="fan"] .dot'); if (dot) { dot.textContent = wait; dot.classList.toggle('hide', !wait); }
   const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
   const pnew = pi.filter((x) => x.date === pl && !S.seen['p:' + x.id]).length;
@@ -29,34 +29,36 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
     if (name === 'f' && arg) {
       setTabs('');
+      const pr = renderFeature(arg); pr.catch(() => {});     // 解包動畫播的同時就去載
       if (prev !== h) await unpackAnim(arg);
-      v.innerHTML = await renderFeature(arg); S.curKind = 'feature';
+      v.innerHTML = await pr; S.curKind = 'feature';
       S.seen[arg] = 1; save('seen');
       afterFeature();
       scrollTo(0, 0);
     } else if (name === 'p' && arg) {
       setTabs('picks');
+      const pr = renderPick(arg); pr.catch(() => {});
       if (prev !== h) await unpackAnim(arg, 'pick');
-      v.innerHTML = await renderPick(arg);
+      v.innerHTML = await pr;
       S.seen['p:' + arg] = 1; save('seen'); setTabs('picks');
       afterFeature();
       scrollTo(0, 0);
-    } else if (name === 'hunt') { setTabs('hunt'); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
+    } else if (name === 'hunt') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
     else if (name === 'board') { setTabs('home'); if (!S.board || Date.now() - Date.parse(S.board.at) > 15 * 6e4) { try { const b = await getJSON('board.json'); if (b && b.rows) S.board = b; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderBoard(); restoreScroll(h); boardFx(); }
     else if (name === 'tga') { setTabs('home'); if (!S.tgaD || tgaPhase() === 'live') { try { const t = await getJSON('tga.json'); if (t && t.cats) S.tgaD = t; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderTga(); if (prev && prev.startsWith('tga') && prev === h) restoreScroll(h); else scrollTo(0, 0); tgaFx(); }
     else if (name === 'ask') { setTabs('home'); await loadAsk(); v.innerHTML = renderAsk(); scrollTo(0, 0); askFx(); askFlush(); }
     else if (name === 'cal') { setTabs('hunt'); v.innerHTML = await renderCal(); scrollTo(0, 0); calFx(); }
     else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
-    else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
+    else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); moreFx(); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); moreFx(); }
     else if (name === 'fan' && arg && arg.startsWith('w:')) { setTabs('fan'); v.innerHTML = await renderWeekFan(arg.slice(2)); scrollTo(0, 0); weekCardRender(); }
     else if (name === 'fan' && arg) { setTabs('fan'); v.innerHTML = await renderFanDetail(arg); scrollTo(0, 0); cardRender(await loadFeature(arg)); }
-    else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); }
+    else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); moreFx(); }
     else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); homeFx(); }
   } catch (e) {
     console.error(e);
@@ -174,7 +176,34 @@ function posterActive(p) {
   }
   const it = findItem(p.dataset.id);
   const first = $('.kbi.on', b);
-  if (it && first) kbStart(b, posterList(it, liveOf(it.steam), first.getAttribute('src')), 4600);
+  if (it && first) liveLoad([it.steam], 2500).then(() => { if (PACT === p) kbStart(b, posterList(it, liveOf(it.steam), first.getAttribute('src')), 4600); });
+}
+/* 長清單分批畫：捲到離底 1600px 內就接著畫下一批 */
+let MOREIO = null;
+function moreStop() { if (MOREIO) { MOREIO.disconnect(); MOREIO = null; } }
+function moreFx() {
+  moreStop();
+  const ss = $$('.more-s'); if (!ss.length) return;
+  MOREIO = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) moreLoad(e.target.dataset.more); }, { rootMargin: '0px 0px 1600px 0px' });
+  ss.forEach((s) => MOREIO.observe(s));
+}
+function moreLoad(key) {
+  const grew = key === 'lib' ? libMore() : key === 'pk' ? pkMore() : key === 'fan' ? fanMore() : false;
+  if (!grew) return;
+  requestAnimationFrame(() => { const s = $(`.more-s[data-more="${key}"]`); if (s && s.getBoundingClientRect().top < innerHeight + 1600) moreLoad(key); });
+}
+/* 我標「想玩」的遊戲（獵價頁要用寬版封面） */
+function wantSteams() { return Object.keys(S.marks || {}).filter((id) => S.marks[id] === 'want').map((id) => { const it = findItem(id); return it && it.steam; }).filter(Boolean); }
+/* 開完 App、閒下來時先把最可能點開的幾款載好：今天的專題和推坑、我想玩的、短影音最前面幾支 */
+function livePrefetch() {
+  const ids = new Set(); const fi = (S.index && S.index.items) || [], pi = (S.picks && S.picks.items) || [];
+  const fl = fi[0] && fi[0].date, pl = pi[0] && pi[0].date;
+  fi.filter((x) => x.date === fl).forEach((x) => x.steam && ids.add(x.steam));
+  pi.filter((x) => x.date === pl).forEach((x) => x.steam && ids.add(x.steam));
+  wantSteams().forEach((s) => ids.add(s));
+  try { shItems().slice(0, 4).forEach((x) => x.steam && ids.add(x.steam)); } catch (e) { /* 短影音還沒準備好也沒關係 */ }
+  const go = () => liveLoad([...ids]);
+  if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2500 }); else setTimeout(go, 1200);
 }
 function motionStop() {
   KB.forEach((st) => clearTimeout(st.t)); KB.clear();
@@ -352,7 +381,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'close') { if (ev.target.closest('.lb button')) return; closeSheet(); return; }
     ev.preventDefault();
     if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = ROUTE.startsWith('p/') ? 'picks' : 'home'; return; }
-    if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); return; }
+    if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); MORE_N.pk = MORE_STEP.pk; const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); moreFx(); return; }
     if (a === 'hf' || a === 'hs') { if (a === 'hf') HUNT.f = act.dataset.v; else HUNT.sort = act.dataset.v; sfx.click(); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); return; }
     if (a === 'cday') { const g = document.getElementById('cd-' + act.dataset.d); if (g) { g.scrollIntoView({ behavior: 'smooth', block: 'center' }); g.classList.remove('flash'); void g.offsetWidth; g.classList.add('flash'); } sfx.click(); return; }
     if (a === 'caladd') { ev.stopPropagation(); const e = (S.calEv || [])[+act.dataset.i]; if (e) { calSave([e], `unpacked-${e.d}.ics`); sfx.stamp(); burstAt(act, [YEL, PINK], 12, 7); } return; }
@@ -394,8 +423,8 @@ document.addEventListener('click', async (ev) => {
     }
     if (a === 'speak') { speakFeature(); sfx.click(); return; }
     if (a === 'lf') {
-      LIBF[act.dataset.k] = act.dataset.v; sfx.click();
-      const y = scrollY; VIEW().innerHTML = renderLib(); scrollTo(0, y); trayUpdate(); return;
+      LIBF[act.dataset.k] = act.dataset.v; sfx.click(); MORE_N.lib = MORE_STEP.lib;
+      const y = scrollY; VIEW().innerHTML = renderLib(); scrollTo(0, y); trayUpdate(); moreFx(); return;
     }
     if (a === 'cmp') {
       ev.stopPropagation(); const id = act.dataset.id; const i = S.cmp.indexOf(id);
@@ -466,7 +495,11 @@ document.addEventListener('click', async (ev) => {
 });
 document.addEventListener('input', (ev) => {
   const t = ev.target;
-  if (t.id === 'libq') { LIBF.q = t.value; const g = $('#libgrid'); if (g) g.innerHTML = libItems().map((x, i) => miniHtml(x, i, true)).join('') || '<div class="empty">沒有符合的遊戲。</div>'; return; }
+  if (t.id === 'libq') {
+    LIBF.q = t.value; const g = $('#libgrid'); if (!g) return;
+    const old = $('.more-s[data-more="lib"]'); if (old) old.remove();
+    g.outerHTML = libGridHtml(true); moreFx(); return;
+  }
   const a = t.dataset && t.dataset.act;
   if (a === 'thought') { S.thoughts[t.dataset.k] = t.value; save('thoughts'); return; }
   if (a === 'note') { S.notes[S.curId] = t.value; save('notes'); return; }
@@ -493,6 +526,7 @@ async function boot() {
   try { await loadIndex(); } catch (e) { ok = false; console.error(e); }
   if (!ok) { S.index = { items: [], n: 0 }; S.live = { apps: {} }; }
   tapeText();
+  if (ok) livePrefetch();
   const gate = $('#gate');
   const enter = async (muted) => {
     audioInit(); S.muted = !!muted; topIcons();

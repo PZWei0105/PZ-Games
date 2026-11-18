@@ -120,7 +120,35 @@ function renderLib() {
     <div class="fgroup">類型</div><div class="filters">${fl('genre', '', '全部')}${genres.map((g) => fl('genre', g)).join('')}</div>
     <div class="fgroup">中文／課金／我的標記</div><div class="filters">${fl('zh', '', '不限中文')}${fl('zh', 'tc', '有繁中')}${fl('money', '', '不限課金')}${fl('money', 'clean', '無內購或只賣選購')}${fl('mark', '', '不限')}${fl('mark', 'want', '想玩')}${fl('mark', 'playing', '在玩')}${fl('mark', 'done', '玩過')}</div>
     <div class="sortrow">排序 ${fl('sort', 'new', '最新')}${fl('sort', 'go', '推薦優先')}${fl('sort', 'hot', '同上人數')}</div>
-    <div class="grid" id="libgrid">${libItems().map((x, i) => miniHtml(x, i, true)).join('') || '<div class="empty">沒有符合的遊戲，換個篩選試試。</div>'}</div>`;
+    ${libGridHtml()}`;
+}
+/* 清單很長時一次只畫一批（庫存 48 張、推坑牆 24 張），捲到快底就接著畫下一批；回到這一頁照上次畫到的數量畫，捲動位置才回得去 */
+const MORE_STEP = { lib: 48, pk: 24, fan: 40 };
+const MORE_N = { lib: 48, pk: 24, fan: 40 };
+const moreS = (key, n, total) => (n < total ? `<div class="more-s" data-more="${key}"></div>` : '');
+function libGridHtml(reset) {
+  if (reset) MORE_N.lib = MORE_STEP.lib;
+  const list = libItems(); const n = Math.min(list.length, MORE_N.lib);
+  return `<div class="grid" id="libgrid">${list.slice(0, n).map((x, i) => miniHtml(x, i, true)).join('') || '<div class="empty">沒有符合的遊戲，換個篩選試試。</div>'}</div>${moreS('lib', n, list.length)}`;
+}
+function libMore() {
+  const g = $('#libgrid'); if (!g) return false;
+  const list = libItems(); const n0 = g.querySelectorAll('.mini').length; const n1 = Math.min(list.length, n0 + MORE_STEP.lib);
+  if (n1 > n0) g.insertAdjacentHTML('beforeend', list.slice(n0, n1).map((x, i) => miniHtml(x, n0 + i, true)).join(''));
+  MORE_N.lib = Math.max(MORE_STEP.lib, n1);
+  if (n1 >= list.length) { const s = $('.more-s[data-more="lib"]'); if (s) s.remove(); }
+  return n1 > n0;
+}
+function pkMore() {
+  const g = $('.pks'); if (!g) return false;
+  const list = picksItems(); const n0 = g.querySelectorAll('.pk').length; const n1 = Math.min(list.length, n0 + MORE_STEP.pk);
+  if (n1 > n0) {
+    g.insertAdjacentHTML('beforeend', list.slice(n0, n1).map((x, i) => pickCard(x, n0 + i)).join(''));
+    if (typeof PIO !== 'undefined' && PIO) [...g.querySelectorAll('.pk')].slice(n0).forEach((el) => PIO.observe(el));
+  }
+  MORE_N.pk = Math.max(MORE_STEP.pk, n1);
+  if (n1 >= list.length) { const s = $('.more-s[data-more="pk"]'); if (s) s.remove(); }
+  return n1 > n0;
 }
 function libItems() {
   const q = LIBF.q.trim().toLowerCase();
@@ -254,7 +282,9 @@ function trailerBox(v, i) {
 function sec(id, path, title, body) { return `<section class="fsec" id="${id}"><h2><span class="path">/${path}</span><span class="ttl">${esc(title)}</span></h2>${body}</section>`; }
 
 async function renderFeature(id) {
+  const it0 = findItem(id); if (it0 && it0.steam) { liveLoad([it0.steam]); loadHist(it0.steam); }   // 跟專題同時載，不用排隊
   const f = await loadFeature(id);
+  await liveLoad([f.game.steam], 4000);
   const it = S.index.items.find((x) => x.id === id) || { id, kind: f.kind, kind_label: f.kind_label };
   const lv = liveOf(f.game.steam);
   const h = lv ? await loadHist(f.game.steam) : null;
@@ -387,11 +417,11 @@ function renderPicks() {
   const last = items[0].date; const nNew = items.filter((x) => x.date === last).length;
   const fl = (v, label) => `<button class="fl ${PICKF.f === v ? 'on' : ''}" data-act="pf" data-v="${v}">${label}</button>`;
   const sale = items.filter((it) => { const lv = liveOf(it.steam); return lv && lv.price && lv.price.disc > 0; }).length;
-  const list = picksItems();
+  const list = picksItems(); const n = Math.min(list.length, MORE_N.pk);
   return `<div class="sec-h"><h2 class="spray-h y">推坑</h2><span class="date-stk">${esc(last.slice(5).replace('-', '.'))} 新增 ${nNew} 款</span></div>
     <p class="pk-intro"><b>Claude 私房推薦</b>：不分新舊、已經上市，查過評價、挑過才推你的遊戲。每天加 2～3 款，${items.length} 款在坑裡等你${sale ? `，<span class="hl">${sale} 款正在特價</span>` : ''}。</p>
     <div class="filters pkf">${fl('all', '全部')}${fl('tc', '有繁中')}${fl('sale', '特價中')}${fl('short', '15 小時內')}${fl('long', '40 小時以上')}${fl('want', '我想玩')}</div>
-    <div class="pks">${list.map(pickCard).join('') || '<div class="empty">沒有符合的推坑，換個篩選試試。</div>'}</div>`;
+    <div class="pks">${list.slice(0, n).map(pickCard).join('') || '<div class="empty">沒有符合的推坑，換個篩選試試。</div>'}</div>${moreS('pk', n, list.length)}`;
 }
 function pickGlance(f, it, lv) {
   const g = f.game; const today = todayTW();
@@ -417,7 +447,9 @@ function factsHtml(f) {
   }).join('');
 }
 async function renderPick(id) {
+  const it0 = findItem(id); if (it0 && it0.steam) { liveLoad([it0.steam]); loadHist(it0.steam); }
   const f = await loadPick(id);
+  await liveLoad([f.game.steam], 4000);
   const it = (S.picks && S.picks.items.find((x) => x.id === id)) || { id, stamp: f.stamp, label: f.label, zhs: '?', price_text: f.game.price_text };
   const lv = liveOf(f.game.steam);
   const h = lv ? await loadHist(f.game.steam) : null;
@@ -480,11 +512,22 @@ async function renderPick(id) {
 /* ---------- 粉專出稿台 ---------- */
 function renderFanList() {
   const items = S.index.items;
-  const wait = items.filter((x) => !S.posted[x.id]).length;
+  const wait = fanWait(); const n = Math.min(items.length, MORE_N.fan);
   return `<div class="brandbar"><h2 class="spray-h">出稿台</h2><div class="brandstk"><b>遊戲狂想曲</b><i>GAME RHAPSODY</i></div></div>
-    <p class="sub-note">每篇專題和每週懶人包都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。還有 ${wait + weekUnposted()} 篇沒發。</p>
+    <p class="sub-note">每篇專題和每週懶人包都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。最近兩週還有 ${wait + weekUnposted()} 篇沒發。</p>
     ${((S.weekly && S.weekly.items) || []).length ? `<h3 class="tape-h y" style="margin-top:6px">每週懶人包</h3><div class="drafts">${S.weekly.items.slice(0, 6).map((w) => `<div class="draft wkd" data-go="fan/w:${esc(w.id)}"><div class="di wk-no sm"><span>WEEK</span><b>${wkNo(w.id)}</b></div><div><h4>${esc(w.title)}</h4><p>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}・封面／Tier 表／下週出擊三張圖卡</p></div><span class="st-chip ${S.posted['w:' + w.id] ? 'done' : ''}">${S.posted['w:' + w.id] ? '已發 ' + esc(mdDay(S.posted['w:' + w.id])) : '待發'}</span></div>`).join('')}</div><h3 class="tape-h" style="margin-top:10px">每日專題</h3>` : ''}
-    <div class="drafts">${items.map((x) => { const img = headerOf(x); return `<div class="draft" data-go="fan/${esc(x.id)}"><div class="di" style="background-image:url('${esc(img)}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.headline)}</p></div><span class="st-chip ${S.posted[x.id] ? 'done' : ''}">${S.posted[x.id] ? '已發 ' + esc(mdDay(S.posted[x.id])) : '待發'}</span></div>`; }).join('')}</div>`;
+    <div class="drafts" id="fandrafts">${items.slice(0, n).map(draftHtml).join('')}</div>${moreS('fan', n, items.length)}`;
+}
+const draftHtml = (x) => { const img = headerOf(x); return `<div class="draft" data-go="fan/${esc(x.id)}"><div class="di" style="background-image:url('${esc(img)}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.headline)}</p></div><span class="st-chip ${S.posted[x.id] ? 'done' : ''}">${S.posted[x.id] ? '已發 ' + esc(mdDay(S.posted[x.id])) : '待發'}</span></div>`; };
+/* 粉專分頁的數字：最近兩週還沒發的（更早的就算了，不然累積幾百篇數字會一直掛著） */
+function fanWait() { const t = todayTW(); return ((S.index && S.index.items) || []).filter((x) => !S.posted[x.id] && dayDiff(x.date, t) <= 14).length; }
+function fanMore() {
+  const g = $('#fandrafts'); if (!g) return false;
+  const items = S.index.items; const n0 = g.querySelectorAll('.draft').length; const n1 = Math.min(items.length, n0 + MORE_STEP.fan);
+  if (n1 > n0) g.insertAdjacentHTML('beforeend', items.slice(n0, n1).map(draftHtml).join(''));
+  MORE_N.fan = Math.max(MORE_STEP.fan, n1);
+  if (n1 >= items.length) { const s2 = $('.more-s[data-more="fan"]'); if (s2) s2.remove(); }
+  return n1 > n0;
 }
 const CARD = { layout: 'A', ratio: '45', seed: 1 };
 async function renderFanDetail(id) {

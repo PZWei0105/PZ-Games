@@ -3,6 +3,7 @@
 const CAL_URL = 'https://pzwei0105.github.io/PZ-Games/apps/unpacked/data/calendar.ics';
 const CAL_TYPE = { rel: ['上市', 'y'], end: ['特價截止', 'p'], next: ['下週出擊', 'w'], sale: ['大特賣', 's'], fest: ['活動', 'c'], show: ['頒獎典禮', 'g'], vote: ['投票截止', 'g'], free: ['免費截止', 'f'] };
 
+const CAL_END_CAP = 6;
 function twDate(ms) { return new Date(ms + 8 * 3600e3).toISOString().slice(0, 10); }
 function calEvents() {
   const today = todayTW(); const out = []; const seen = new Set(); const refs = steamRefs();
@@ -17,10 +18,21 @@ function calEvents() {
     if (w.rel && w.rel.soon && /^\d{4}-\d{2}-\d{2}$/.test(w.rel.date || '') && w.rel.date >= today) add({ type: 'rel', d: w.rel.date, name, appid: w.appid, img: w.img, route: r && r.route, key: String(w.appid), sub: '你的願望單' });
     if (w.sale && w.sale.end && Date.parse(w.sale.end) > Date.now()) add({ type: 'end', d: twDate(Date.parse(w.sale.end)), at: w.sale.end, name, appid: w.appid, img: w.img, key: String(w.appid), sub: `${w.p[2] >= 100 ? '限時免費' : `-${w.p[2]}%・${fmtNT(w.p[0])}`}・最後到 ${endDate(w.sale.end).split(' ')[1]}` });
   }
+  // 解包過的特價截止：同一天最多 CAL_END_CAP 款（我想玩的一定列、再來折扣大的），其他併成一筆——大特賣時才不會洗版
+  const ends = {};
   for (const [a, lv] of Object.entries((S.live && S.live.apps) || {})) {
     const pr = lv.price; const r = refs[a];
     if (!r || !pr || !(pr.disc > 0) || !pr.end || Date.parse(pr.end) <= Date.now()) continue;
-    add({ type: 'end', d: twDate(Date.parse(pr.end)), at: pr.end, name: r.it.zh, appid: +a, img: headerOf(r.it, lv), route: r.route, sub: `-${pr.disc}%・${fmtNT(pr.final)}・最後到 ${endDate(pr.end).split(' ')[1]}` });
+    const d = twDate(Date.parse(pr.end));
+    if (seen.has('end:' + a + ':' + d)) continue;
+    (ends[d] = ends[d] || []).push({ a, lv, pr, r, want: S.marks[r.it.id] === 'want' });
+  }
+  for (const [d, rows] of Object.entries(ends)) {
+    rows.sort((x, y) => (y.want - x.want) || (y.pr.disc - x.pr.disc));
+    const keep = rows.filter((x, i) => x.want || i < CAL_END_CAP);
+    for (const { a, lv, pr, r } of keep) add({ type: 'end', d, at: pr.end, name: r.it.zh, appid: +a, img: headerOf(r.it, lv), route: r.route, sub: `-${pr.disc}%・${fmtNT(pr.final)}・最後到 ${endDate(pr.end).split(' ')[1]}` });
+    const more = rows.filter((x) => !keep.includes(x));
+    if (more.length) add({ type: 'end', d, at: more[0].pr.end, name: `還有 ${more.length} 款解包過的遊戲`, key2: 'more' + d, sub: more.slice(0, 6).map((x) => x.r.it.zh).join('、') + (more.length > 6 ? '…' : '') });
   }
   // 大特賣、新品節、TGA（官方日期）；免費補給站的截止（最後一晚＝結束前 3 小時那天）
   const lastDay = (iso) => twDate(Date.parse(iso) - 3 * 36e5);

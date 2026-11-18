@@ -105,7 +105,8 @@ function renderAsk() {
   const mine = new Set(S.ask.mine.map((e) => e.id));
   const others = ((S.qa && S.qa.items) || []).filter((q) => !mine.has(q.id) && q.st === 'done').map((q) => ({ id: q.id, t: q.t || q.at, type: q.type, q: q.q, game: q.q, ref: q.ref, other: true }));
   const list = S.ask.mine.concat(others).sort((a, b) => String(b.t).localeCompare(String(a.t)));
-  const games = [...((S.index && S.index.items) || []).map((x) => ['f:' + x.id, x.zh]), ...((S.picks && S.picks.items) || []).map((x) => ['p:' + x.id, x.zh + '（推坑）'])];
+  // 選單只列最近的（專題 60 篇、推坑 40 款）；更早的到那一款的頁面按「問 Claude」就會自動帶進來
+  const games = [...((S.index && S.index.items) || []).slice(0, 60).map((x) => ['f:' + x.id, x.zh]), ...((S.picks && S.picks.items) || []).slice(0, 40).map((x) => ['p:' + x.id, x.zh + '（推坑）'])];
   return `<section class="ask-hero"><div class="ask-air"><i></i>ON AIR</div><h1>點播台</h1><p>你點，我解。指定一款遊戲，或問任何遊戲問題：下一班編輯查證後回答，答案寫回這裡。</p>
       <div class="ask-lamp ok"><i></i><span>都收到了</span></div><div class="ask-waves"><i></i><i></i><i></i></div></section>
     <div class="seg ask-seg"><button class="${mode === 'ask' ? 'on' : ''}" data-act="askmode" data-v="ask">你問我答</button><button class="${mode === 'req' ? 'on' : ''}" data-act="askmode" data-v="req">點播解包</button></div>

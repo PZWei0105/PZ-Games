@@ -14,7 +14,7 @@
 | 願望單解包（願望單每一款的深度專題＋買不買＋目標價） | 每日排程（Claude 的排程任務「解包：願望單解包」，每天台灣時間 16:37；排隊名單空了就什麼都不做、不推播） | 一樣寫進 `apps/unpacked/data/features/<id>.json`（`kind: wish`、`rank` 從 20 起、一定有 `buy`），規範在 `WISH_GUIDE.md`；不寫的（DLC、原聲帶、成人向）記在 `data/wish-skip.json` |
 | 每週懶人包（本週結算＋粉專稿） | 每週排程（Claude 的排程任務「解包：每週懶人包」，每週日台灣時間 19:43，寫完推播） | `apps/unpacked/data/weekly/<YYYY-Www>.json`，規範在 `WEEKLY_GUIDE.md`；publish.py 產生 `data/weekly.json` |
 | Steam 願望單（獵價） | 同一個 GitHub Actions：每小時讀痞子葳的公開願望單、對台灣區價格 | `tools/live.py` → `data/wish.json`（價格歷史也記在 `hist/<appid>.json` 的 `pr`）。Steam 代號放 repo 的 Actions 密碼 `UNP_STEAM`（Settings → Secrets and variables → Actions；不公開），沒有才讀 `data/wish-cfg.json` 的 `steam`（會公開）。代號不寫進 log 和輸出檔 |
-| Steam 即時資料與選題候選 | GitHub Actions `.github/workflows/unpacked-live.yml`，每小時＋track.json 一變就跑。最新的 120 款、盯上市的、還沒抓過的每輪更新；其餘每輪輪流更新 40 款（最久沒更新的先），所以專題和推坑再多，每款也至少約一天更新一次 | `tools/live.py` → `data/live.json`、`data/hist/<appid>.json`、`data/candidates.json` |
+| Steam 即時資料與選題候選 | GitHub Actions `.github/workflows/unpacked-live.yml`，每小時＋track.json 一變就跑。最新的 120 款、盯上市的、還沒抓過的每輪更新；其餘每輪輪流更新 40 款（最久沒更新的先），所以專題和推坑再多，每款也至少約一天更新一次 | `tools/live.py` → `data/live.json`（清單用的精簡版）＋`data/live/<appid>.json`（預告、截圖、介紹，點開才載）、`data/hist/<appid>.json`、`data/candidates.json` |
 | Steam 行情板、免費補給站 | 同一個 GitHub Actions（每小時） | `tools/live.py` → `data/board.json`（前百名＋30 小時曲線＋7 天走勢）、`data/board-d.json`（每天高峰，留 120 天）、`data/free.json`（Epic、Steam、GOG 限時免費；某家這一輪抓不到就沿用上一輪還沒過期的） |
 | 點播台（點播解包、你問我答） | App → 轉發站 ntfy.sh → 同一個 GitHub Actions 每小時收件（`tools/inbox.py` → `data/inbox.json`）→ 寫稿（05:23）、推坑（11:43，只接問答）、願望單（16:37）三班排程回答 | 回答寫進 `data/qa.json`，規範在 `QA_GUIDE.md`。轉發站主題寫在公開的程式裡，收件一律當不可信資料 |
 | TGA 預測戰 | Claude 11/18 封存預測（`data/tga.json`，publish.py 記了指紋，之後只准填 `win`／`result_at`）；12/11 的單次排程「解包：TGA 開獎」填得獎名單、推播比分 | 規範在 `TGA_GUIDE.md` |
@@ -82,6 +82,28 @@
 - **庫存**：搜尋、結論／平台／類型／中文／課金／我的標記篩選、排序，最多 3 款加入比較（比較表）。
 - **粉專**：每篇的出稿台（稿子如果是前幾天寫的、又有「倒數幾天」這類會過期的字，上方會提醒先改）。塗鴉圖卡產生器（版型 A 黃牆撕紙框、B 黑牆大圖；4:5／1:1；重噴換濺漆與截圖；下載 PNG、手機可直接分享）、可編輯的貼文（只存這台裝置）、三個標題、hashtag、口播稿、素材標註、標記已發佈（分頁上的數字是還沒發的篇數）。
 
+## 累積不變慢（典藏升級，2026-11-18）
+
+解包的內容只會累積、不刪（專題、推坑、短影音全部留著）。為了一年、幾年後打開還是一樣快，照這幾條做：
+- **即時資料分兩層**：`live.json` 只放每次開 App 都要的（價格、同上、評價、語言、主視覺、動態預告）；預告清單、截圖、介紹、開發商放 `live/<appid>.json`，點開那一款（專題、推坑、短影音、情報卡、圖卡）才載，載好併進 `live.json` 那一筆。開完 App 閒下來時，先預載今天的專題和推坑、「想玩」的、短影音最前面幾支。舊格式（全部在 live.json）也讀得懂。
+- **長清單分批畫**：庫存一次 48 張、推坑牆 24 張、出稿台 40 篇，捲到離底 1600px 就接著畫；回到那一頁照上次畫到的數量畫，捲動位置回得去。
+- **開 App 的資料一次發出去**（以前分三批排隊）；專題、推坑的資料在解包動畫播的時候就開始載。
+- **日曆不洗版**：解包過的遊戲同一天特價截止最多列 6 款（「想玩」的一定列），其他併成一筆（App 和訂閱的 calendar.ics 都一樣）；願望單的全部列。
+- 粉專分頁的數字只算最近兩週還沒發的；點播台的「關於哪一款」選單只列最近 60 篇專題、40 款推坑（更早的到那一款的頁面按「問 Claude」會自動帶入）。
+- `publish.py` 會檢查每次開 App 都要載的檔案：`index.json` 超過 3 MB、`picks.json` 超過 2 MB、`live.json` 超過 6 MB 就 WARN（到時候再把舊的分到典藏檔）。
+
+量測（`tools/stress.py` 造出一年份的資料：專題 1,473 篇、推坑 921 款、即時資料 2,438 款；`tools/perf.py` 模擬手機：CPU 降速 4 倍、4G、跟 GitHub Pages 一樣 gzip）：
+
+| | 現在・升級前 | 現在・升級後 | 一年後・升級前 | 一年後・升級後 |
+|---|---|---|---|---|
+| 冷開（到首頁海報出來） | 1.16 秒 | 1.02 秒 | 4.88 秒 | 1.97 秒 |
+| 熱開 | 0.89 秒 | 0.69 秒 | 4.66 秒 | 1.50 秒 |
+| 打開專題頁 | 1.14 秒 | 0.97 秒 | 1.37 秒 | 1.01 秒 |
+| 庫存／推坑牆／出稿台 | 0.09／0.24／0.05 秒 | 0.08／0.17／0.06 秒 | 2.95／3.46／2.00 秒 | 0.13／0.26／0.20 秒 |
+| 最高記憶體 | 5.4 MB | 5.3 MB | 46.7 MB | 23.4 MB |
+
+（專題頁的時間含解包轉場動畫約 0.8 秒。）
+
 ## 聲光
 
 - 開門畫面「點我・聲光全開」（iPhone 的 AudioContext 必須在點擊當下建立；`navigator.audioSession.type='playback'` 讓靜音鍵打開也有聲音）。
@@ -105,7 +127,8 @@
 - `data/calendar.ics`：出擊日曆的訂閱檔（live.py 產生，全天事件；UID 固定，訂閱的手機會跟著更新、不會重複）。`data/wish-skip.json`：`{"appid": "不寫解包的理由"}`（願望單解包排程寫）。專題多了 `buy`：`{call, target(分), why, watch}`，目錄只帶 `{call, target}`。
 - `data/weekly/<YYYY-Www>.json`：見 `WEEKLY_GUIDE.md` 第 4 節。`data/weekly.json`：`{at, n, items:[{id, from, to, date, title, mvp, mvp_name, top, updated}]}`（publish.py 產生；`top` 是 Tier 表前 4 名，首頁橫幅用）。
 - `data/candidates.json` 另有 `gems`（Steam 評價最高的遊戲）、`gems_sale`（評價最高又正在特價），推坑選題用；`picked: true` 是推過的；每份清單的 `mine: true` 是在痞子葳的 Steam 願望單上。
-- `data/live.json`：`{at, apps:{appid:{name,free,price{final,orig,disc,fmt,low},rv{n,pct,label,recent},rv_tc,players{n,at,peak,d24},rel,langs{tc,sc},tags,img{hero,header,wide,box},shots[],micro,trailers[{hls,mp4,poster,name}],…}}}`；價格單位是「分」（NT$ × 100）。
+- `data/live.json`：`{at, ok, asked, errs, apps:{appid:{name,appid,free,adult,price{final,orig,disc,fmt,low,end},rv{n,pct,label,recent},rv_tc,players{n,at,peak,d24},rel,langs{tc,sc},tags,at,img{hero,header},micro{mp4,webm}}}}`（清單用的精簡版）；價格單位是「分」（NT$ × 100）。
+- `data/live/<appid>.json`：同一款的其他欄位 `{img{hero,header,wide,box},micro,shots[],trailers[{hls,mp4,webm,poster,name}],short,dev,pub,plat,url}`，App 點開才載（`liveLoad()`），live.py 有變才重寫、不再追蹤的刪掉（`live_load()`／`live_save()` 負責拆和合）。
 - `data/hist/<appid>.json`：`pl` 同上 `[分鐘時間戳, 人數]`、`pr` 價格（有變才記）、`rv`／`rt` 全球與繁中評價 `[時間, 好評數, 總數]`（一天一筆）。
 - `data/board.json`：`{at, src(concurrent/players), since, t:[時間], s:[走勢時間], idx:{n,d1,up,dn,fl,h,sp}, rows:[{a(appid), n, h(30 小時), sp(7 天), d1, d7, pk, r, rp, lw, f:[標記], ath, nm, tags, rv, free, p, img, zh, adult, cov(f:/p:)}], tags:[{t, n, k, d1}]}`；`data/board-d.json`：`{days, pk:{appid:[每天高峰]}, ath, nm, last, since}`。
 - `data/free.json`：`{at, ok, errs, items:[{id(epic:…/steam:…/gog:…), store, title, img, url, orig 或 orig_t, start, end, up(下週才送), mystery, dlc, appid, rv, zh, tags, seen}], past}`。
@@ -123,6 +146,9 @@ python3 _build/apps/unpacked/tools/publish.py            # 專題檢查＋重建
 # 本機看畫面（雲端沙盒連不到 Steam、YouTube、github.io：外部圖片用假圖代替）
 python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data --hunt   # --hunt：假願望單＋假週報；再加 --noweek 測「本週進行中」
 # 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）；只寫進 /tmp，絕不 commit
+# 效能：造一年份的資料再量（--legacy 用舊格式比較）；perf.py 也能量現在的
+python3 _build/apps/unpacked/build.py --out /tmp/unp-y1 && python3 _build/apps/unpacked/tools/stress.py /tmp/unp-y1 --days 365
+python3 _build/apps/unpacked/tools/perf.py /tmp/unp-y1 --label 一年後
 python3 _build/apps/unpacked/tools/shoot.py /tmp/shots /tmp/unp phone '[{"wait":4800},{"shot":"home"},{"go":"#f/rob-run","ms":2500},{"shot":"feat"}]'
 ```
 `shoot.py` 的畫面：`phone`（390×844 @3）、`se`（375×667，小手機）、`android`（412×915）、`land`（844×390 @3）、`pad`（820×1180）、`desk`（1440×900）；步驟支援 wait、go、click、tap（觸控點擊）、key（按鍵）、eval、print（把運算結果印出來，用來驗證狀態）、scroll、shot、savecanvas（把圖卡存成 PNG）。注意 Playwright 的 eval 算「使用者點擊」，要測「有聲自動播放被擋」得自己把 `HTMLMediaElement.prototype.play` 換成會擋的版本。

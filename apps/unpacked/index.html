@@ -1582,7 +1582,7 @@ body.calm .ask-waves i{animation:none;opacity:.25}
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611180442';
+const VERSION = '1.0.2611180529';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2017,11 +2017,11 @@ async function getJSON(path, fresh = true) {
   return r.json();
 }
 async function loadIndex() {
-  const [idx, live, picks, wish, weekly] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] })),
-    getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] }))]);
-  S.wishSkip = await getJSON('wish-skip.json').catch(() => ({}));
-  // 行情板、免費補給站、活動時程、TGA、點播台：讀不到都不影響主畫面
-  const [board, free, events, tga, qa, inbox] = await Promise.all(['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json'].map((p) => getJSON(p).catch(() => null)));
+  // 全部一起發出去（以前分三批排隊，手機網路每批多等一趟）；行情板、免費補給站、活動時程、TGA、點播台讀不到都不影響主畫面
+  const [idx, live, picks, wish, weekly, skip, board, free, events, tga, qa, inbox] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })),
+    getJSON('picks.json').catch(() => ({ items: [] })), getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] })), getJSON('wish-skip.json').catch(() => ({})),
+    ...['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json'].map((p) => getJSON(p).catch(() => null))]);
+  S.wishSkip = skip || {};
   if (board && board.rows) S.board = board;
   if (free && free.items) S.free = free;
   if (events && events.items) S.events = events;
@@ -2029,12 +2029,15 @@ async function loadIndex() {
   if (qa && qa.items) S.qa = qa;
   if (inbox && inbox.events) { S.inbox = inbox; if (typeof askAck === 'function') askAck(); }
   S.index = idx; S.live = live || { apps: {} }; S.picks = picks || { items: [] };
+  for (const id of Object.keys(LIVEX.got)) liveMerge(id);     // 重新讀 live.json 之後，載過的預告、截圖併回去
   S.wish = wish && wish.items ? wish : null; S.weekly = weekly && weekly.items ? weekly : { items: [] };
   return idx;
 }
+const INFLIGHT = {};
+function once(key, fn) { return INFLIGHT[key] || (INFLIGHT[key] = fn().finally(() => { delete INFLIGHT[key]; })); }
 async function loadPick(id) {
   if (S.pickF[id]) return S.pickF[id];
-  const f = await getJSON('picks/' + id + '.json');
+  const f = await once('p:' + id, () => getJSON('picks/' + id + '.json'));
   S.pickF[id] = f; return f;
 }
 /* 目錄裡找一款（專題或推坑） */
@@ -2043,13 +2046,13 @@ const findItem = (id) => (S.index && S.index.items.find((x) => x.id === id)) || 
 const hoursOf = (t) => { const m = /(\d+(?:\.\d+)?)/.exec(t || ''); return m ? +m[1] : null; };
 async function loadFeature(id) {
   if (S.feats[id]) return S.feats[id];
-  const f = await getJSON('features/' + id + '.json');
+  const f = await once('f:' + id, () => getJSON('features/' + id + '.json'));
   S.feats[id] = f; return f;
 }
 async function loadHist(appid) {
   if (!appid) return null;
   if (S.hist[appid]) return S.hist[appid];
-  try { S.hist[appid] = await getJSON('hist/' + appid + '.json'); } catch (e) { S.hist[appid] = null; }
+  try { S.hist[appid] = await once('h:' + appid, () => getJSON('hist/' + appid + '.json')); } catch (e) { S.hist[appid] = null; }
   return S.hist[appid];
 }
 async function loadBoardD() {
@@ -2064,6 +2067,36 @@ async function loadAsk() {
   if (inbox && inbox.events) { S.inbox = inbox; askAck(); }
 }
 const liveOf = (steam) => (steam && S.live && S.live.apps) ? S.live.apps[String(steam)] || null : null;
+/* 即時資料分兩層（典藏升級）：live.json 只有清單用的（價格、同上、評價、語言、主視覺、動態預告），每次開 App 都載；
+   預告清單、截圖、介紹、開發商在 live/<appid>.json，點開那一款才載，載好直接併進 live.json 那一筆（之後 liveOf 就是完整的）。
+   舊格式（全部都在 live.json）也能用：有預告或截圖欄位就當作已經載好。 */
+const LIVEX = { got: {}, wait: {} };
+function liveReady(id) {
+  id = String(id || ''); const a = S.live && S.live.apps && S.live.apps[id];
+  return !a || !!LIVEX.got[id] || ['shots', 'trailers', 'short', 'dev'].some((k) => a[k] !== undefined);
+}
+function liveMerge(id) {
+  const a = S.live && S.live.apps && S.live.apps[id]; const x = LIVEX.got[id]; if (!a || !x) return;
+  for (const k of Object.keys(x)) {
+    if ((k === 'img' || k === 'micro') && x[k] && typeof x[k] === 'object') a[k] = Object.assign({}, x[k], a[k] || {});
+    else if (a[k] === undefined) a[k] = x[k];
+  }
+}
+/* 載一批（已經有的直接略過）；ms：最多等多久（網路太慢就先用手上的） */
+function liveLoad(ids, ms) {
+  const ps = [];
+  for (const raw of ids || []) {
+    const id = String(raw || ''); if (!id || liveReady(id)) continue;
+    if (!LIVEX.wait[id]) {
+      LIVEX.wait[id] = fetch(DATA + 'live/' + id + '.json').then((r) => (r.ok ? r.json() : r.status === 404 ? {} : null)).catch(() => null)
+        .then((x) => { delete LIVEX.wait[id]; if (x) { LIVEX.got[id] = x; liveMerge(id); } });
+    }
+    ps.push(LIVEX.wait[id]);
+  }
+  if (!ps.length) return Promise.resolve();
+  const all = Promise.all(ps);
+  return ms ? Promise.race([all, new Promise((r) => setTimeout(r, ms))]) : all;
+}
 
 /* ---- 圖片 ---- */
 const ytThumb = (id, q = 'maxresdefault') => `https://i.ytimg.com/vi/${id}/${q}.jpg`;
@@ -2253,7 +2286,35 @@ function renderLib() {
     <div class="fgroup">類型</div><div class="filters">${fl('genre', '', '全部')}${genres.map((g) => fl('genre', g)).join('')}</div>
     <div class="fgroup">中文／課金／我的標記</div><div class="filters">${fl('zh', '', '不限中文')}${fl('zh', 'tc', '有繁中')}${fl('money', '', '不限課金')}${fl('money', 'clean', '無內購或只賣選購')}${fl('mark', '', '不限')}${fl('mark', 'want', '想玩')}${fl('mark', 'playing', '在玩')}${fl('mark', 'done', '玩過')}</div>
     <div class="sortrow">排序 ${fl('sort', 'new', '最新')}${fl('sort', 'go', '推薦優先')}${fl('sort', 'hot', '同上人數')}</div>
-    <div class="grid" id="libgrid">${libItems().map((x, i) => miniHtml(x, i, true)).join('') || '<div class="empty">沒有符合的遊戲，換個篩選試試。</div>'}</div>`;
+    ${libGridHtml()}`;
+}
+/* 清單很長時一次只畫一批（庫存 48 張、推坑牆 24 張），捲到快底就接著畫下一批；回到這一頁照上次畫到的數量畫，捲動位置才回得去 */
+const MORE_STEP = { lib: 48, pk: 24, fan: 40 };
+const MORE_N = { lib: 48, pk: 24, fan: 40 };
+const moreS = (key, n, total) => (n < total ? `<div class="more-s" data-more="${key}"></div>` : '');
+function libGridHtml(reset) {
+  if (reset) MORE_N.lib = MORE_STEP.lib;
+  const list = libItems(); const n = Math.min(list.length, MORE_N.lib);
+  return `<div class="grid" id="libgrid">${list.slice(0, n).map((x, i) => miniHtml(x, i, true)).join('') || '<div class="empty">沒有符合的遊戲，換個篩選試試。</div>'}</div>${moreS('lib', n, list.length)}`;
+}
+function libMore() {
+  const g = $('#libgrid'); if (!g) return false;
+  const list = libItems(); const n0 = g.querySelectorAll('.mini').length; const n1 = Math.min(list.length, n0 + MORE_STEP.lib);
+  if (n1 > n0) g.insertAdjacentHTML('beforeend', list.slice(n0, n1).map((x, i) => miniHtml(x, n0 + i, true)).join(''));
+  MORE_N.lib = Math.max(MORE_STEP.lib, n1);
+  if (n1 >= list.length) { const s = $('.more-s[data-more="lib"]'); if (s) s.remove(); }
+  return n1 > n0;
+}
+function pkMore() {
+  const g = $('.pks'); if (!g) return false;
+  const list = picksItems(); const n0 = g.querySelectorAll('.pk').length; const n1 = Math.min(list.length, n0 + MORE_STEP.pk);
+  if (n1 > n0) {
+    g.insertAdjacentHTML('beforeend', list.slice(n0, n1).map((x, i) => pickCard(x, n0 + i)).join(''));
+    if (typeof PIO !== 'undefined' && PIO) [...g.querySelectorAll('.pk')].slice(n0).forEach((el) => PIO.observe(el));
+  }
+  MORE_N.pk = Math.max(MORE_STEP.pk, n1);
+  if (n1 >= list.length) { const s = $('.more-s[data-more="pk"]'); if (s) s.remove(); }
+  return n1 > n0;
 }
 function libItems() {
   const q = LIBF.q.trim().toLowerCase();
@@ -2387,7 +2448,9 @@ function trailerBox(v, i) {
 function sec(id, path, title, body) { return `<section class="fsec" id="${id}"><h2><span class="path">/${path}</span><span class="ttl">${esc(title)}</span></h2>${body}</section>`; }
 
 async function renderFeature(id) {
+  const it0 = findItem(id); if (it0 && it0.steam) { liveLoad([it0.steam]); loadHist(it0.steam); }   // 跟專題同時載，不用排隊
   const f = await loadFeature(id);
+  await liveLoad([f.game.steam], 4000);
   const it = S.index.items.find((x) => x.id === id) || { id, kind: f.kind, kind_label: f.kind_label };
   const lv = liveOf(f.game.steam);
   const h = lv ? await loadHist(f.game.steam) : null;
@@ -2520,11 +2583,11 @@ function renderPicks() {
   const last = items[0].date; const nNew = items.filter((x) => x.date === last).length;
   const fl = (v, label) => `<button class="fl ${PICKF.f === v ? 'on' : ''}" data-act="pf" data-v="${v}">${label}</button>`;
   const sale = items.filter((it) => { const lv = liveOf(it.steam); return lv && lv.price && lv.price.disc > 0; }).length;
-  const list = picksItems();
+  const list = picksItems(); const n = Math.min(list.length, MORE_N.pk);
   return `<div class="sec-h"><h2 class="spray-h y">推坑</h2><span class="date-stk">${esc(last.slice(5).replace('-', '.'))} 新增 ${nNew} 款</span></div>
     <p class="pk-intro"><b>Claude 私房推薦</b>：不分新舊、已經上市，查過評價、挑過才推你的遊戲。每天加 2～3 款，${items.length} 款在坑裡等你${sale ? `，<span class="hl">${sale} 款正在特價</span>` : ''}。</p>
     <div class="filters pkf">${fl('all', '全部')}${fl('tc', '有繁中')}${fl('sale', '特價中')}${fl('short', '15 小時內')}${fl('long', '40 小時以上')}${fl('want', '我想玩')}</div>
-    <div class="pks">${list.map(pickCard).join('') || '<div class="empty">沒有符合的推坑，換個篩選試試。</div>'}</div>`;
+    <div class="pks">${list.slice(0, n).map(pickCard).join('') || '<div class="empty">沒有符合的推坑，換個篩選試試。</div>'}</div>${moreS('pk', n, list.length)}`;
 }
 function pickGlance(f, it, lv) {
   const g = f.game; const today = todayTW();
@@ -2550,7 +2613,9 @@ function factsHtml(f) {
   }).join('');
 }
 async function renderPick(id) {
+  const it0 = findItem(id); if (it0 && it0.steam) { liveLoad([it0.steam]); loadHist(it0.steam); }
   const f = await loadPick(id);
+  await liveLoad([f.game.steam], 4000);
   const it = (S.picks && S.picks.items.find((x) => x.id === id)) || { id, stamp: f.stamp, label: f.label, zhs: '?', price_text: f.game.price_text };
   const lv = liveOf(f.game.steam);
   const h = lv ? await loadHist(f.game.steam) : null;
@@ -2613,11 +2678,22 @@ async function renderPick(id) {
 /* ---------- 粉專出稿台 ---------- */
 function renderFanList() {
   const items = S.index.items;
-  const wait = items.filter((x) => !S.posted[x.id]).length;
+  const wait = fanWait(); const n = Math.min(items.length, MORE_N.fan);
   return `<div class="brandbar"><h2 class="spray-h">出稿台</h2><div class="brandstk"><b>遊戲狂想曲</b><i>GAME RHAPSODY</i></div></div>
-    <p class="sub-note">每篇專題和每週懶人包都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。還有 ${wait + weekUnposted()} 篇沒發。</p>
+    <p class="sub-note">每篇專題和每週懶人包都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。最近兩週還有 ${wait + weekUnposted()} 篇沒發。</p>
     ${((S.weekly && S.weekly.items) || []).length ? `<h3 class="tape-h y" style="margin-top:6px">每週懶人包</h3><div class="drafts">${S.weekly.items.slice(0, 6).map((w) => `<div class="draft wkd" data-go="fan/w:${esc(w.id)}"><div class="di wk-no sm"><span>WEEK</span><b>${wkNo(w.id)}</b></div><div><h4>${esc(w.title)}</h4><p>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}・封面／Tier 表／下週出擊三張圖卡</p></div><span class="st-chip ${S.posted['w:' + w.id] ? 'done' : ''}">${S.posted['w:' + w.id] ? '已發 ' + esc(mdDay(S.posted['w:' + w.id])) : '待發'}</span></div>`).join('')}</div><h3 class="tape-h" style="margin-top:10px">每日專題</h3>` : ''}
-    <div class="drafts">${items.map((x) => { const img = headerOf(x); return `<div class="draft" data-go="fan/${esc(x.id)}"><div class="di" style="background-image:url('${esc(img)}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.headline)}</p></div><span class="st-chip ${S.posted[x.id] ? 'done' : ''}">${S.posted[x.id] ? '已發 ' + esc(mdDay(S.posted[x.id])) : '待發'}</span></div>`; }).join('')}</div>`;
+    <div class="drafts" id="fandrafts">${items.slice(0, n).map(draftHtml).join('')}</div>${moreS('fan', n, items.length)}`;
+}
+const draftHtml = (x) => { const img = headerOf(x); return `<div class="draft" data-go="fan/${esc(x.id)}"><div class="di" style="background-image:url('${esc(img)}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.headline)}</p></div><span class="st-chip ${S.posted[x.id] ? 'done' : ''}">${S.posted[x.id] ? '已發 ' + esc(mdDay(S.posted[x.id])) : '待發'}</span></div>`; };
+/* 粉專分頁的數字：最近兩週還沒發的（更早的就算了，不然累積幾百篇數字會一直掛著） */
+function fanWait() { const t = todayTW(); return ((S.index && S.index.items) || []).filter((x) => !S.posted[x.id] && dayDiff(x.date, t) <= 14).length; }
+function fanMore() {
+  const g = $('#fandrafts'); if (!g) return false;
+  const items = S.index.items; const n0 = g.querySelectorAll('.draft').length; const n1 = Math.min(items.length, n0 + MORE_STEP.fan);
+  if (n1 > n0) g.insertAdjacentHTML('beforeend', items.slice(n0, n1).map(draftHtml).join(''));
+  MORE_N.fan = Math.max(MORE_STEP.fan, n1);
+  if (n1 >= items.length) { const s2 = $('.more-s[data-more="fan"]'); if (s2) s2.remove(); }
+  return n1 > n0;
 }
 const CARD = { layout: 'A', ratio: '45', seed: 1 };
 async function renderFanDetail(id) {
@@ -2894,7 +2970,7 @@ async function drawCard(cv, f, lv, opt) {
 async function cardRender(f) {
   const cv = $('#cardcv'); if (!cv) return;
   const busy = $('#cardbusy'); if (busy) busy.style.display = 'grid';
-  try { await drawCard(cv, f, liveOf(f.game.steam), CARD); } catch (e) { console.warn(e); toast('圖卡畫不出來：' + e.message, 'warn'); }
+  try { await liveLoad([f.game.steam], 3000); await drawCard(cv, f, liveOf(f.game.steam), CARD); } catch (e) { console.warn(e); toast('圖卡畫不出來：' + e.message, 'warn'); }
   if (busy) busy.style.display = 'none';
 }
 function cardBlob() {
@@ -3145,13 +3221,16 @@ function shImgFail(img) {
   img.style.opacity = 0;
 }
 /* 只畫目前這張、上一張、下兩張；離太遠的清掉 */
-function shFill(i) {
+/* 這一款的 Steam 預告清單到了沒（在 live/<appid>.json，滑到附近才載） */
+function shReady(it) { return !it || !it.steam || liveReady(it.steam); }
+function shFill(i, force = -1) {
   for (const k of [...SH.filled]) {
     if (k < i - 2 || k > i + 3) { const s = SH.els[k]; if (s) { s.innerHTML = ''; s.classList.remove('filled'); } SH.filled.delete(k); }
   }
   for (let k = Math.max(0, i - 1); k <= Math.min(SH.list.length - 1, i + 2); k++) {
     if (SH.filled.has(k)) continue;
     const s = SH.els[k]; const it = SH.list[k]; if (!s || !it) continue;
+    if (k !== force && !shReady(it)) continue;      // 預告清單還沒到：先不畫，到了再補（不然封面會先錯一張再換）
     s.innerHTML = shSlideHtml(it, k); s.classList.add('filled'); SH.filled.add(k);
     const vids = shVids(it); shTrUI(s, vids, Math.min(SH.vi[shKeyOf(it)] || 0, Math.max(0, vids.length - 1)));
     shBg(s, headerOf(it, liveOf(it.steam)) || (vids[0] && vids[0].poster));   // 用小張的橫幅圖就夠糊了，不解碼大圖
@@ -3189,6 +3268,9 @@ function shActivate(i) {
   if (i === SH.i || !SH.els[i]) return;
   shStop();
   SH.i = i;
+  const near = [];
+  for (let k = Math.max(0, i - 2); k <= Math.min(SH.list.length - 1, i + 4); k++) { const x = SH.list[k]; if (x && x.steam && !liveReady(x.steam)) near.push(x.steam); }
+  if (near.length) liveLoad(near).then(() => { if (SH.i === i && shOn()) shFill(i); });
   shFill(i);
   SH.els.forEach((s, k) => s.classList.toggle('act', k === i));
   const n = $('#shorts .sh-n'); if (n) n.textContent = i < SH.list.length ? `${i + 1}/${SH.list.length}` : '';
@@ -3204,7 +3286,12 @@ function shActivate(i) {
     const nw = $('.sv-new', SH.els[SH.i]); if (nw) nw.classList.add('gone');
   }, 1500);
   shWake();
-  shPlay(SH.els[i], it, SH.vi[key] || 0);
+  if (shReady(it)) { shPlay(SH.els[i], it, SH.vi[key] || 0); return; }
+  const tok = SH.tok;
+  liveLoad([it.steam], 3000).then(() => {       // 這一款的預告清單到了（或等太久）再開始播
+    if (SH.i !== i || SH.tok !== tok || !shOn()) return;
+    shFill(i, i); shPlay(SH.els[i], it, SH.vi[key] || 0);
+  });
 }
 function shStop() {
   SH.tok++;
@@ -3764,7 +3851,8 @@ function rowHtml(t, i) {
 }
 /* 情報卡：價格血條、價格紀錄、上市、評價、介紹；寫過專題或推坑的可以直接打開 */
 async function huntInfo(key) {
-  const t = huntTargets().find((x) => x.key === key); if (!t) return;
+  let t = huntTargets().find((x) => x.key === key); if (!t) return;
+  if (t.appid && !t.wish && !liveReady(t.appid)) { await liveLoad([t.appid], 2000); t = huntTargets().find((x) => x.key === key) || t; }   // 介紹、開發商、寬版封面
   const mc = t.micro || {};
   const steamUrl = t.appid ? `https://store.steampowered.com/app/${t.appid}/` : '';
   openSheet(`<div class="hinfo"><div class="hi-img">${t.cap || t.img ? `<img src="${esc(t.cap || t.img)}" alt="" onerror="imgFail(this)">` : ''}${(mc.mp4 || mc.webm) && fxOn() ? `<video class="hi-v" muted loop playsinline autoplay preload="auto"${mc.mp4 ? ` src="${esc(mc.mp4)}"` : ''}></video>` : ''}
@@ -4225,6 +4313,7 @@ async function drawWeekCard(cv, wk, opt) {
 const CAL_URL = 'https://pzwei0105.github.io/PZ-Games/apps/unpacked/data/calendar.ics';
 const CAL_TYPE = { rel: ['上市', 'y'], end: ['特價截止', 'p'], next: ['下週出擊', 'w'], sale: ['大特賣', 's'], fest: ['活動', 'c'], show: ['頒獎典禮', 'g'], vote: ['投票截止', 'g'], free: ['免費截止', 'f'] };
 
+const CAL_END_CAP = 6;
 function twDate(ms) { return new Date(ms + 8 * 3600e3).toISOString().slice(0, 10); }
 function calEvents() {
   const today = todayTW(); const out = []; const seen = new Set(); const refs = steamRefs();
@@ -4239,10 +4328,21 @@ function calEvents() {
     if (w.rel && w.rel.soon && /^\d{4}-\d{2}-\d{2}$/.test(w.rel.date || '') && w.rel.date >= today) add({ type: 'rel', d: w.rel.date, name, appid: w.appid, img: w.img, route: r && r.route, key: String(w.appid), sub: '你的願望單' });
     if (w.sale && w.sale.end && Date.parse(w.sale.end) > Date.now()) add({ type: 'end', d: twDate(Date.parse(w.sale.end)), at: w.sale.end, name, appid: w.appid, img: w.img, key: String(w.appid), sub: `${w.p[2] >= 100 ? '限時免費' : `-${w.p[2]}%・${fmtNT(w.p[0])}`}・最後到 ${endDate(w.sale.end).split(' ')[1]}` });
   }
+  // 解包過的特價截止：同一天最多 CAL_END_CAP 款（我想玩的一定列、再來折扣大的），其他併成一筆——大特賣時才不會洗版
+  const ends = {};
   for (const [a, lv] of Object.entries((S.live && S.live.apps) || {})) {
     const pr = lv.price; const r = refs[a];
     if (!r || !pr || !(pr.disc > 0) || !pr.end || Date.parse(pr.end) <= Date.now()) continue;
-    add({ type: 'end', d: twDate(Date.parse(pr.end)), at: pr.end, name: r.it.zh, appid: +a, img: headerOf(r.it, lv), route: r.route, sub: `-${pr.disc}%・${fmtNT(pr.final)}・最後到 ${endDate(pr.end).split(' ')[1]}` });
+    const d = twDate(Date.parse(pr.end));
+    if (seen.has('end:' + a + ':' + d)) continue;
+    (ends[d] = ends[d] || []).push({ a, lv, pr, r, want: S.marks[r.it.id] === 'want' });
+  }
+  for (const [d, rows] of Object.entries(ends)) {
+    rows.sort((x, y) => (y.want - x.want) || (y.pr.disc - x.pr.disc));
+    const keep = rows.filter((x, i) => x.want || i < CAL_END_CAP);
+    for (const { a, lv, pr, r } of keep) add({ type: 'end', d, at: pr.end, name: r.it.zh, appid: +a, img: headerOf(r.it, lv), route: r.route, sub: `-${pr.disc}%・${fmtNT(pr.final)}・最後到 ${endDate(pr.end).split(' ')[1]}` });
+    const more = rows.filter((x) => !keep.includes(x));
+    if (more.length) add({ type: 'end', d, at: more[0].pr.end, name: `還有 ${more.length} 款解包過的遊戲`, key2: 'more' + d, sub: more.slice(0, 6).map((x) => x.r.it.zh).join('、') + (more.length > 6 ? '…' : '') });
   }
   // 大特賣、新品節、TGA（官方日期）；免費補給站的截止（最後一晚＝結束前 3 小時那天）
   const lastDay = (iso) => twDate(Date.parse(iso) - 3 * 36e5);
@@ -4931,7 +5031,8 @@ function renderAsk() {
   const mine = new Set(S.ask.mine.map((e) => e.id));
   const others = ((S.qa && S.qa.items) || []).filter((q) => !mine.has(q.id) && q.st === 'done').map((q) => ({ id: q.id, t: q.t || q.at, type: q.type, q: q.q, game: q.q, ref: q.ref, other: true }));
   const list = S.ask.mine.concat(others).sort((a, b) => String(b.t).localeCompare(String(a.t)));
-  const games = [...((S.index && S.index.items) || []).map((x) => ['f:' + x.id, x.zh]), ...((S.picks && S.picks.items) || []).map((x) => ['p:' + x.id, x.zh + '（推坑）'])];
+  // 選單只列最近的（專題 60 篇、推坑 40 款）；更早的到那一款的頁面按「問 Claude」就會自動帶進來
+  const games = [...((S.index && S.index.items) || []).slice(0, 60).map((x) => ['f:' + x.id, x.zh]), ...((S.picks && S.picks.items) || []).slice(0, 40).map((x) => ['p:' + x.id, x.zh + '（推坑）'])];
   return `<section class="ask-hero"><div class="ask-air"><i></i>ON AIR</div><h1>點播台</h1><p>你點，我解。指定一款遊戲，或問任何遊戲問題：下一班編輯查證後回答，答案寫回這裡。</p>
       <div class="ask-lamp ok"><i></i><span>都收到了</span></div><div class="ask-waves"><i></i><i></i><i></i></div></section>
     <div class="seg ask-seg"><button class="${mode === 'ask' ? 'on' : ''}" data-act="askmode" data-v="ask">你問我答</button><button class="${mode === 'req' ? 'on' : ''}" data-act="askmode" data-v="req">點播解包</button></div>
@@ -5024,7 +5125,7 @@ let NAVN = 0;   // App 裡往前走了幾步（「回牆上」才知道能不能
 
 function setTabs(name) {
   $$('.tab').forEach((t) => t.classList.toggle('on', t.dataset.go === name));
-  const wait = (S.index ? S.index.items.filter((x) => !S.posted[x.id]).length : 0) + weekUnposted();
+  const wait = (S.index ? fanWait() : 0) + weekUnposted();
   const dot = $('.tab[data-go="fan"] .dot'); if (dot) { dot.textContent = wait; dot.classList.toggle('hide', !wait); }
   const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
   const pnew = pi.filter((x) => x.date === pl && !S.seen['p:' + x.id]).length;
@@ -5048,34 +5149,36 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
     if (name === 'f' && arg) {
       setTabs('');
+      const pr = renderFeature(arg); pr.catch(() => {});     // 解包動畫播的同時就去載
       if (prev !== h) await unpackAnim(arg);
-      v.innerHTML = await renderFeature(arg); S.curKind = 'feature';
+      v.innerHTML = await pr; S.curKind = 'feature';
       S.seen[arg] = 1; save('seen');
       afterFeature();
       scrollTo(0, 0);
     } else if (name === 'p' && arg) {
       setTabs('picks');
+      const pr = renderPick(arg); pr.catch(() => {});
       if (prev !== h) await unpackAnim(arg, 'pick');
-      v.innerHTML = await renderPick(arg);
+      v.innerHTML = await pr;
       S.seen['p:' + arg] = 1; save('seen'); setTabs('picks');
       afterFeature();
       scrollTo(0, 0);
-    } else if (name === 'hunt') { setTabs('hunt'); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
+    } else if (name === 'hunt') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
     else if (name === 'board') { setTabs('home'); if (!S.board || Date.now() - Date.parse(S.board.at) > 15 * 6e4) { try { const b = await getJSON('board.json'); if (b && b.rows) S.board = b; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderBoard(); restoreScroll(h); boardFx(); }
     else if (name === 'tga') { setTabs('home'); if (!S.tgaD || tgaPhase() === 'live') { try { const t = await getJSON('tga.json'); if (t && t.cats) S.tgaD = t; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderTga(); if (prev && prev.startsWith('tga') && prev === h) restoreScroll(h); else scrollTo(0, 0); tgaFx(); }
     else if (name === 'ask') { setTabs('home'); await loadAsk(); v.innerHTML = renderAsk(); scrollTo(0, 0); askFx(); askFlush(); }
     else if (name === 'cal') { setTabs('hunt'); v.innerHTML = await renderCal(); scrollTo(0, 0); calFx(); }
     else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
-    else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
+    else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); moreFx(); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); moreFx(); }
     else if (name === 'fan' && arg && arg.startsWith('w:')) { setTabs('fan'); v.innerHTML = await renderWeekFan(arg.slice(2)); scrollTo(0, 0); weekCardRender(); }
     else if (name === 'fan' && arg) { setTabs('fan'); v.innerHTML = await renderFanDetail(arg); scrollTo(0, 0); cardRender(await loadFeature(arg)); }
-    else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); }
+    else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); moreFx(); }
     else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); homeFx(); }
   } catch (e) {
     console.error(e);
@@ -5193,7 +5296,34 @@ function posterActive(p) {
   }
   const it = findItem(p.dataset.id);
   const first = $('.kbi.on', b);
-  if (it && first) kbStart(b, posterList(it, liveOf(it.steam), first.getAttribute('src')), 4600);
+  if (it && first) liveLoad([it.steam], 2500).then(() => { if (PACT === p) kbStart(b, posterList(it, liveOf(it.steam), first.getAttribute('src')), 4600); });
+}
+/* 長清單分批畫：捲到離底 1600px 內就接著畫下一批 */
+let MOREIO = null;
+function moreStop() { if (MOREIO) { MOREIO.disconnect(); MOREIO = null; } }
+function moreFx() {
+  moreStop();
+  const ss = $$('.more-s'); if (!ss.length) return;
+  MOREIO = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) moreLoad(e.target.dataset.more); }, { rootMargin: '0px 0px 1600px 0px' });
+  ss.forEach((s) => MOREIO.observe(s));
+}
+function moreLoad(key) {
+  const grew = key === 'lib' ? libMore() : key === 'pk' ? pkMore() : key === 'fan' ? fanMore() : false;
+  if (!grew) return;
+  requestAnimationFrame(() => { const s = $(`.more-s[data-more="${key}"]`); if (s && s.getBoundingClientRect().top < innerHeight + 1600) moreLoad(key); });
+}
+/* 我標「想玩」的遊戲（獵價頁要用寬版封面） */
+function wantSteams() { return Object.keys(S.marks || {}).filter((id) => S.marks[id] === 'want').map((id) => { const it = findItem(id); return it && it.steam; }).filter(Boolean); }
+/* 開完 App、閒下來時先把最可能點開的幾款載好：今天的專題和推坑、我想玩的、短影音最前面幾支 */
+function livePrefetch() {
+  const ids = new Set(); const fi = (S.index && S.index.items) || [], pi = (S.picks && S.picks.items) || [];
+  const fl = fi[0] && fi[0].date, pl = pi[0] && pi[0].date;
+  fi.filter((x) => x.date === fl).forEach((x) => x.steam && ids.add(x.steam));
+  pi.filter((x) => x.date === pl).forEach((x) => x.steam && ids.add(x.steam));
+  wantSteams().forEach((s) => ids.add(s));
+  try { shItems().slice(0, 4).forEach((x) => x.steam && ids.add(x.steam)); } catch (e) { /* 短影音還沒準備好也沒關係 */ }
+  const go = () => liveLoad([...ids]);
+  if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2500 }); else setTimeout(go, 1200);
 }
 function motionStop() {
   KB.forEach((st) => clearTimeout(st.t)); KB.clear();
@@ -5371,7 +5501,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'close') { if (ev.target.closest('.lb button')) return; closeSheet(); return; }
     ev.preventDefault();
     if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = ROUTE.startsWith('p/') ? 'picks' : 'home'; return; }
-    if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); return; }
+    if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); MORE_N.pk = MORE_STEP.pk; const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); moreFx(); return; }
     if (a === 'hf' || a === 'hs') { if (a === 'hf') HUNT.f = act.dataset.v; else HUNT.sort = act.dataset.v; sfx.click(); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); return; }
     if (a === 'cday') { const g = document.getElementById('cd-' + act.dataset.d); if (g) { g.scrollIntoView({ behavior: 'smooth', block: 'center' }); g.classList.remove('flash'); void g.offsetWidth; g.classList.add('flash'); } sfx.click(); return; }
     if (a === 'caladd') { ev.stopPropagation(); const e = (S.calEv || [])[+act.dataset.i]; if (e) { calSave([e], `unpacked-${e.d}.ics`); sfx.stamp(); burstAt(act, [YEL, PINK], 12, 7); } return; }
@@ -5413,8 +5543,8 @@ document.addEventListener('click', async (ev) => {
     }
     if (a === 'speak') { speakFeature(); sfx.click(); return; }
     if (a === 'lf') {
-      LIBF[act.dataset.k] = act.dataset.v; sfx.click();
-      const y = scrollY; VIEW().innerHTML = renderLib(); scrollTo(0, y); trayUpdate(); return;
+      LIBF[act.dataset.k] = act.dataset.v; sfx.click(); MORE_N.lib = MORE_STEP.lib;
+      const y = scrollY; VIEW().innerHTML = renderLib(); scrollTo(0, y); trayUpdate(); moreFx(); return;
     }
     if (a === 'cmp') {
       ev.stopPropagation(); const id = act.dataset.id; const i = S.cmp.indexOf(id);
@@ -5485,7 +5615,11 @@ document.addEventListener('click', async (ev) => {
 });
 document.addEventListener('input', (ev) => {
   const t = ev.target;
-  if (t.id === 'libq') { LIBF.q = t.value; const g = $('#libgrid'); if (g) g.innerHTML = libItems().map((x, i) => miniHtml(x, i, true)).join('') || '<div class="empty">沒有符合的遊戲。</div>'; return; }
+  if (t.id === 'libq') {
+    LIBF.q = t.value; const g = $('#libgrid'); if (!g) return;
+    const old = $('.more-s[data-more="lib"]'); if (old) old.remove();
+    g.outerHTML = libGridHtml(true); moreFx(); return;
+  }
   const a = t.dataset && t.dataset.act;
   if (a === 'thought') { S.thoughts[t.dataset.k] = t.value; save('thoughts'); return; }
   if (a === 'note') { S.notes[S.curId] = t.value; save('notes'); return; }
@@ -5512,6 +5646,7 @@ async function boot() {
   try { await loadIndex(); } catch (e) { ok = false; console.error(e); }
   if (!ok) { S.index = { items: [], n: 0 }; S.live = { apps: {} }; }
   tapeText();
+  if (ok) livePrefetch();
   const gate = $('#gate');
   const enter = async (muted) => {
     audioInit(); S.muted = !!muted; topIcons();
