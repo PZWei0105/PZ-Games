@@ -16,6 +16,11 @@ on:
       - '_build/apps/unpacked/tools/inbox.py'
       - '_build/apps/unpacked/tools/live.py'
   workflow_dispatch:
+    inputs:
+      selftest:
+        description: '點播台收件自我測試（送一筆 ping 到轉發站再收回來）'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -40,7 +45,7 @@ jobs:
           UNP_STEAM: ${{ secrets.UNP_STEAM }}
         run: python3 _build/apps/unpacked/tools/live.py --data apps/unpacked/data
       - name: 點播台收件
-        run: python3 _build/apps/unpacked/tools/inbox.py --data apps/unpacked/data || echo '收件這輪失敗，下一輪再收'
+        run: python3 _build/apps/unpacked/tools/inbox.py --data apps/unpacked/data ${{ inputs.selftest && '--selftest' || '' }} || echo '收件這輪失敗，下一輪再收'
       - name: 有變動才 commit
         run: |
           git config user.name 'unpacked-bot'
