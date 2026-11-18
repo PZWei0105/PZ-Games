@@ -1132,15 +1132,15 @@ def api_fill(pool, chans, cache, prev_ids):
 
 # ---------------------------------------------------------------- 名單外（只有金鑰拿得到）
 
-XL_EVERY = 4 * 3600          # 全天放送多久搜一次（兩個關鍵字、一個 100 點）
+XL_EVERY = 6 * 3600          # 全天放送多久搜一次（兩個關鍵字、一個 100 點）
 XC_EVERY = 24 * 3600         # 全網熱補多久搜一次
-XL_Q = ['動畫 24小時 連播', '動漫 直播 全集']
-XC_Q = ['動畫 合集 一口氣看完', '動漫 全集 合輯', '動態漫 合集']
+XL_Q = ['動畫 直播 連播', '卡通 24小時']
+XC_Q = ['卡通 合集 全集', '國漫 合集 完整版', '動畫電影 完整版', '動漫 全集 合輯 一口氣看完']
 ANIME_RX = re.compile(r'動畫|动画|動漫|动漫|卡通|番劇|番剧|新番|アニメ|anime|漫劇|漫剧|動態漫|动态漫|沙雕', re.I)
 XBAD_RX = re.compile(r'vtuber|V皇|歌回|遊戲|游戏|實況|实况|ASMR|新聞|新闻|電影解說|电影解说|解說|解说|講解|讲解|reaction|反應|反应|預告|预告', re.I)
 OK_CATS = {'1', '24', '23', '22'}     # 動畫、娛樂、喜劇、人物與網誌（很多頻道上傳時沒改分類，停在預設的 22）
 LIVE_HINT = re.compile(r'24\s*小[時时]|24H|24/7|連播|连播|全集|馬拉松|马拉松', re.I)
-XVER = 2                     # 名單外的規則改了就加一：下一次立刻重搜
+XVER = 3                     # 名單外的規則改了就加一：下一次立刻重搜
 
 
 def web_extras(cache, chans):
@@ -1159,13 +1159,15 @@ def web_extras(cache, chans):
         if left < 100 * len(qs) + 400:
             continue
         x[kind + '_ts'] = int(NOW)
-        ids, raw_n, drop = [], 0, []
+        ids, raw_n, drop, mine = [], 0, [], 0
         for q in qs:
-            j = api_search(cache, q=q, type='video', regionCode='TW', relevanceLanguage='zh-Hant', maxResults=25, safeSearch='moderate', **extra)
+            j = api_search(cache, q=q, type='video', regionCode='TW', relevanceLanguage='zh-Hant', maxResults=50, safeSearch='moderate', **extra)
             for it in (j or {}).get('items') or []:
                 sn = it.get('snippet') or {}
                 vid, cid = (it.get('id') or {}).get('videoId'), sn.get('channelId')
                 raw_n += 1
+                if cid in known:
+                    mine += 1
                 if not vid or not cid or cid in known or vid in ids:
                     continue
                 t = htmlmod.unescape(sn.get('title') or '')
@@ -1174,7 +1176,7 @@ def web_extras(cache, chans):
                     drop.append('標題：' + t[:30])
                     continue
                 ids.append(vid)
-        log('全網%s：搜到 %d 支、標題過關 %d 支%s' % ('直播' if kind == 'live' else '合輯', raw_n, len(ids), ('（例：' + '／'.join(drop[:3]) + '）') if drop else ''))
+        log('全網%s：搜到 %d 支（%d 支已經在名單裡）、標題過關 %d 支%s' % ('直播' if kind == 'live' else '合輯', raw_n, mine, len(ids), ('（例：' + '／'.join(drop[:3]) + '）') if drop else ''))
         if not ids:
             x[kind + '_ts'] = int(NOW) - every + 4 * 3600      # 沒找到：四小時後再試
             continue
