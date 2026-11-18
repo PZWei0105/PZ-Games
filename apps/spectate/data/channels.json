@@ -1,6 +1,20 @@
 {
- "_說明": "觀戰 SPECTATE 的精選頻道名單（手寫，中文為主）。id 是頻道 ID（UC 開頭）；沒有 ID 時可以改寫 try:[\"@代號\", …] 讓管線去解析。lang：zh 中文、en 英文、ja 日文。kind：official 官方、media 媒體節目、creator 創作者。換人前先看 spectate-data 分支 status.json 的 quiet（很久沒更新）和 unresolved（解析不到）；找新頻道可以手動跑 Actions 的 spectate-research。",
+ "_說明": "觀戰 SPECTATE 的精選頻道名單（手寫，中文為主）。id 是頻道 ID（UC 開頭）；沒有 ID 時可以改寫 try:[\"@代號\", …] 讓管線去解析。lang：zh 中文、en 英文、ja 日文。kind：official 官方、media 媒體節目、creator 創作者。換人前先看 spectate-data 分支 status.json 的 quiet（很久沒更新）和 unresolved（解析不到）；找新頻道可以手動跑 Actions 的 spectate-research。 sub:true＝解析到之後自動訂閱一次（痞子葳退訂就不再加回去）；mine:true＝痞子葳自己的頻道。",
  "channels": [
+  {
+   "name": "遊戲狂想曲",
+   "try": [
+    "@Gaming-Rhapsody"
+   ],
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "新遊戲",
+    "推薦"
+   ],
+   "sub": true,
+   "mine": true
+  },
   {
    "name": "PlayStation 台灣",
    "id": "UC9sbkOLjDXRdxhF7VpHG-cQ",

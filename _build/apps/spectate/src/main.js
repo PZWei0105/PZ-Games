@@ -115,7 +115,9 @@ document.addEventListener('click', (e) => {
   if (!a && link) {
     if (link.dataset.ctx != null && link.getAttribute('href').startsWith('#watch/')) {
       PENDING_CTX = link.dataset.ctx;
-      if (SET.play === 'yt') { e.preventDefault(); window.open(ytUrl(link.dataset.v), '_blank'); Snd.play('tap'); return; }
+      const tapped = IDX.byId.get(link.dataset.v);
+      // 只能到 YouTube 看的（頻道關掉嵌入、年齡限制）：一點就直接開 YouTube，不用先進導播台看錯誤訊息
+      if (SET.play === 'yt' || (tapped && tapped.ne)) { e.preventDefault(); window.open(ytUrl(link.dataset.v), '_blank'); Snd.play('tap'); return; }
       Snd.play('tap');
     } else if (link.target === '_blank') {
       Snd.play('tap');

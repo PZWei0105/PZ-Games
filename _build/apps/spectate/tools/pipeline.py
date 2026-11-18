@@ -179,14 +179,34 @@ def shorts_status(vid):
 
 KEY = os.environ.get('YT_KEY', '').strip() or None
 COST = {'search': 100}
+API_DAY_CAP = 5500        # 這把金鑰每天 1 萬點，《補番》最多用 4,000，這裡最多 5,500
+API_DAY = [None]          # cache['api']：{day 太平洋時間的日期, units 今天用了幾點}
+EN_VER = 2                # 金鑰補資料的欄位變了就加一（2：加上能不能嵌入）
+
+
+def api_day():
+    a = API_DAY[0] if API_DAY[0] is not None else {}
+    day = dt.datetime.now(dt.timezone(dt.timedelta(hours=-8))).strftime('%Y-%m-%d')   # 配額照太平洋時間換日
+    if a.get('day') != day:
+        a.update({'day': day, 'units': 0})
+    return a
+
+
+def api_left():
+    return API_DAY_CAP - api_day()['units'] if KEY else 0
 
 
 def api(path, **params):
     if not KEY:
         return None
+    a = api_day()
+    cost = COST.get(path, 1)
+    if a['units'] + cost > API_DAY_CAP:
+        raise QuotaStop('今天的額度用完了（%d 點）' % a['units'])
     params['key'] = KEY
     url = 'https://www.googleapis.com/youtube/v3/%s?%s' % (path, urllib.parse.urlencode(params))
-    UNITS[0] += COST.get(path, 1)
+    UNITS[0] += cost
+    a['units'] += cost
     try:
         st, j = http_get(url, headers={'User-Agent': 'pz-spectate'}, json_out=True)
     except RuntimeError as e:
@@ -591,8 +611,9 @@ def main():
     for k, v in new_me().items():
         me.setdefault(k, v)
     cache = load(os.path.join(args.prev, 'cache.json'), {})
-    for k in ('videos', 'steam', 'games', 'chstat', 'disc', 'tries'):
+    for k in ('videos', 'steam', 'games', 'chstat', 'disc', 'tries', 'api', 'xch', 'ext'):
         cache.setdefault(k, {})
+    API_DAY[0] = cache['api']
     prev_feed_ok = os.path.exists(os.path.join(args.prev, 'cache.json'))
     log('上一版資料：', '有' if prev_feed_ok else '沒有（第一次跑）', '｜金鑰：', '有' if KEY else '沒有')
     roster_before = json.dumps(roster, sort_keys=True, ensure_ascii=False)
@@ -612,6 +633,15 @@ def main():
         pool = build_pool(roster, me, cache, args.max_rss)
         rss_ok, rss_fail = fetch_all_rss(pool, roster, cache)
         stat['rss_ok'], stat['rss_fail'] = rss_ok, rss_fail[:30]
+        # ---- 3b. 名單外：發燒榜、全網直播（有金鑰）
+        if KEY:
+            try:
+                web_extras(cache, roster, me)
+            except QuotaStop:
+                raise
+            except Exception as e:  # noqa: BLE001
+                err('發燒榜／全網直播：%s' % e)
+        prune_ext(cache)
         # ---- 4. 整理影片
         prune(cache, roster, me)
         check_shorts(cache)
@@ -628,6 +658,7 @@ def main():
             discover(cache, roster, me, games)
     except QuotaStop as e:
         err('YouTube 金鑰暫停使用（%s）：這次只用 RSS' % e)
+        prune_ext(cache)
         classify(cache, roster)
         games = build_games(cache, roster)
 
@@ -648,7 +679,9 @@ def main():
     stat['quiet'] = quiet
     stat['unresolved'] = sorted(cache['tries'])
     stat.update({'v': 1, 'at': stamp(), 'run_s': round(time.time() - t0, 1), 'videos': len(feed['items']),
-                 'channels': len(feed['ch']), 'units': UNITS[0], 'steam_left': STEAM_LEFT[0], 'errors': ERRS[-40:], 'log': LOG[-160:]})
+                 'channels': len(feed['ch']), 'units': UNITS[0], 'units_day': cache['api'].get('units', 0), 'hot': len((cache['ext'] or {}).get('hot') or []),
+                 'web_live': sum(1 for v in cache['videos'].values() if v.get('ext') == 'wl' and v.get('lv') == 'live'),
+                 'noembed': sum(1 for v in cache['videos'].values() if v.get('ne')), 'steam_left': STEAM_LEFT[0], 'errors': ERRS[-40:], 'log': LOG[-160:]})
     dump(os.path.join(out, 'status.json'), stat, pretty=True)
     with open(os.path.join(out, 'README.md'), 'w', encoding='utf-8') as f:
         f.write('# 觀戰 SPECTATE 轉播資料\n\n這個分支由 GitHub Actions `spectate-feed` 自動產生、每次只留最新一版（強制推送）。'
@@ -743,6 +776,21 @@ def resolve_roster(seed, roster, me, cache):
         chans[cid] = rec
         cache['tries'].pop(key, None)
         log('解析：%s → %s「%s」' % (key, cid, rec.get('n')))
+    # 名單上寫 sub: true 的（痞子葳自己的頻道）：解析到之後自動訂閱一次；之後他自己退訂就不再加回去
+    for s in seed:
+        if not s.get('sub'):
+            continue
+        cid = s['id'] if s.get('id') and CH_RE.match(s['id']) else next((c for c, r in chans.items() if r.get('seed') == s['name']), None)
+        if not cid:
+            continue
+        rec = chans[cid]
+        if s.get('mine'):
+            rec['mine'] = 1
+        if not rec.get('autosub'):
+            rec['autosub'] = int(NOW)
+            if cid not in me['subs']:
+                me['subs'][cid] = {'t': int(NOW * 1000), 'n': rec.get('n') or s['name'], 'src': 'mine' if s.get('mine') else 'seed'}
+                log('自動訂閱：%s' % (rec.get('n') or s['name']))
     # 痞子葳自己訂的、新增的
     for cid, s in me['subs'].items():
         rec = chans.setdefault(cid, {})
@@ -859,7 +907,7 @@ def fetch_all_rss(pool, roster, cache):
 def prune(cache, roster, me):
     vids = cache['videos']
     later = set(me['later'])
-    pool = set(roster['channels']) | {p['c'] for p in cache['disc'].get('picks') or []}
+    pool = set(roster['channels']) | {p['c'] for p in cache['disc'].get('picks') or []} | set(cache['xch'])
     keep_days = KEEP_DAYS * 86400
     by_ch = {}
     newest = {}
@@ -903,13 +951,60 @@ def check_shorts(cache):
     log('Shorts 檢查：%d 支，其中 Shorts %d 支' % (len(todo), n[0]))
 
 
+def no_embed(it):
+    """這支在 App 裡能不能播：頻道關掉嵌入、有年齡限制、台灣看不到，都只能到 YouTube 看。"""
+    stt, cd = it.get('status') or {}, it.get('contentDetails') or {}
+    if stt.get('embeddable') is False:
+        return 'embed'
+    if (cd.get('contentRating') or {}).get('ytRating') == 'ytAgeRestricted':
+        return 'age'
+    rr = cd.get('regionRestriction') or {}
+    if 'TW' in (rr.get('blocked') or []) or ('allowed' in rr and 'TW' not in (rr.get('allowed') or [])):
+        return 'region'
+    return None
+
+
+def take_api(v, it):
+    """videos.list 的一筆 → 影片紀錄。"""
+    sn, cd, ls, stt = it.get('snippet') or {}, it.get('contentDetails') or {}, it.get('liveStreamingDetails') or {}, it.get('statistics') or {}
+    v['en'], v['ev'] = int(NOW), EN_VER
+    v['d'] = X.iso_dur(cd.get('duration'))
+    lbc = sn.get('liveBroadcastContent')
+    v['lv'] = lbc if lbc in ('live', 'upcoming') else None
+    if ls:
+        v['st'] = iso_epoch(ls.get('actualStartTime') or ls.get('scheduledStartTime'))
+        if ls.get('actualEndTime'):
+            v['rp'] = 1
+        if ls.get('concurrentViewers', '').isdigit():
+            v['cv'] = int(ls['concurrentViewers'])
+        elif v.get('lv') != 'live':
+            v.pop('cv', None)
+    v['cat'] = sn.get('categoryId')
+    v['tags'] = (sn.get('tags') or [])[:12]
+    v['al'] = (sn.get('defaultAudioLanguage') or sn.get('defaultLanguage') or '')[:5]
+    loc = (sn.get('localized') or {}).get('title')
+    if loc and loc != sn.get('title') and X.lang_of(loc) == 'zh' and X.lang_of(sn.get('title')) != 'zh':
+        v['tz'] = loc
+    if stt.get('viewCount', '').isdigit():
+        v['v'] = int(stt['viewCount'])
+    ne = no_embed(it)
+    if ne:
+        v['ne'] = ne
+    else:
+        v.pop('ne', None)
+    v.pop('cls', None)
+
+
+VPARTS = 'snippet,contentDetails,liveStreamingDetails,statistics,status'
+
+
 def enrich_api(cache):
-    """有金鑰：片長、直播狀態、分類、標籤、中文標題、觀看數。"""
+    """有金鑰：片長、直播狀態、分類、標籤、中文標題、觀看數、能不能嵌入。"""
     vids = cache['videos']
     need = []
     for v in vids.values():
         p = v.get('p') or 0
-        if 'en' not in v:
+        if 'en' not in v or v.get('ev') != EN_VER:
             need.append(v)
         elif v.get('lv') in ('live', 'upcoming'):
             need.append(v)
@@ -922,40 +1017,158 @@ def enrich_api(cache):
     n = 0
     for i in range(0, len(need), 50):
         chunk = need[i:i + 50]
-        j = api('videos', part='snippet,contentDetails,liveStreamingDetails,statistics', id=','.join(v['i'] for v in chunk), hl='zh-TW', maxResults=50)
+        j = api('videos', part=VPARTS, id=','.join(v['i'] for v in chunk), hl='zh-TW', maxResults=50)
         if not j:
             continue
         got = {it['id']: it for it in j.get('items') or []}
         for v in chunk:
             it = got.get(v['i'])
-            v['en'] = int(NOW)
             if not it:
+                v['en'], v['ev'] = int(NOW), EN_VER
                 v['gone'] = 1          # 被刪除或設成私人
                 continue
-            sn, cd, ls, stt = it.get('snippet') or {}, it.get('contentDetails') or {}, it.get('liveStreamingDetails') or {}, it.get('statistics') or {}
-            v['d'] = X.iso_dur(cd.get('duration'))
-            lbc = sn.get('liveBroadcastContent')
-            v['lv'] = lbc if lbc in ('live', 'upcoming') else None
-            if ls:
-                v['st'] = iso_epoch(ls.get('actualStartTime') or ls.get('scheduledStartTime'))
-                if ls.get('actualEndTime'):
-                    v['rp'] = 1
-                if ls.get('concurrentViewers', '').isdigit():
-                    v['cv'] = int(ls['concurrentViewers'])
-                elif v.get('lv') != 'live':
-                    v.pop('cv', None)
-            v['cat'] = sn.get('categoryId')
-            v['tags'] = (sn.get('tags') or [])[:12]
-            v['al'] = (sn.get('defaultAudioLanguage') or sn.get('defaultLanguage') or '')[:5]
-            loc = (sn.get('localized') or {}).get('title')
-            if loc and loc != sn.get('title') and X.lang_of(loc) == 'zh' and X.lang_of(sn.get('title')) != 'zh':
-                v['tz'] = loc
-            if stt.get('viewCount', '').isdigit():
-                v['v'] = int(stt['viewCount'])
-            v.pop('cls', None)
+            take_api(v, it)
             n += 1
     if need:
-        log('API 補資料：%d 支' % n)
+        log('API 補資料：%d 支（不能嵌入 %d 支）' % (n, sum(1 for v in need if v.get('ne'))))
+
+
+# ================================================================ 名單外：台灣遊戲發燒榜、全網直播（只有金鑰拿得到）
+
+HOT_EVERY = 2 * 3600       # 發燒榜多久更新一次
+WL_EVERY = 55 * 60         # 全網直播多久搜一次（一次 100 點）
+WU_EVERY = 6 * 3600        # 即將直播多久搜一次
+WL_MIN_CV = 30             # 全網直播：同時觀看至少幾人才收
+WU_MIN_SUBS = 10000        # 即將直播：頻道訂閱至少幾人才收
+
+
+def ext_record(cache, it, tag):
+    """名單外的影片放進影片庫（ext 標記來源）；名單內本來就有的只加標記。"""
+    vid, sn = it['id'], it.get('snippet') or {}
+    cid = sn.get('channelId')
+    if not cid or not CH_RE.match(cid) or not VID_RE.match(vid):
+        return None
+    v = cache['videos'].get(vid)
+    if v is None:
+        v = cache['videos'][vid] = {'i': vid, 'c': cid, 't0': htmlmod.unescape(sn.get('title') or ''), 'p': iso_epoch(sn.get('publishedAt')),
+                                    'ds': re.sub(r'\s+', ' ', sn.get('description') or '')[:240], 'first': int(NOW), 'ext': tag}
+        x = cache['xch'].setdefault(cid, {})
+        x['n'] = htmlmod.unescape(sn.get('channelTitle') or '') or x.get('n')
+    elif v.get('ext') and v['ext'] != tag and tag == 'hot':
+        v['ext'] = 'hot'
+    take_api(v, it)
+    if (v.get('d') or 0) and v['d'] <= 60 and not v.get('lv'):
+        v['s'] = 1
+    v['seen_ext'] = int(NOW)
+    return v
+
+
+def web_extras(cache, roster, me):
+    blocks = set(me['blocks'])
+    tw_hour = dt.datetime.now(TW).hour
+    x = cache.setdefault('ext', {})
+    # 1. 台灣遊戲發燒榜：YouTube 官方的台灣「遊戲」類熱門影片（一頁 1 點）
+    if NOW - x.get('hot_ts', 0) > HOT_EVERY and api_left() > 200:
+        ids, token = [], None
+        for _ in range(2):
+            kw = {'pageToken': token} if token else {}
+            j = api('videos', part=VPARTS, chart='mostPopular', regionCode='TW', videoCategoryId='20', hl='zh-TW', maxResults=50, **kw)
+            if not j:
+                break
+            for it in j.get('items') or []:
+                if (it.get('snippet') or {}).get('channelId') in blocks:
+                    continue
+                v = ext_record(cache, it, 'hot')
+                if v:
+                    ids.append(v['i'])
+            token = j.get('nextPageToken')
+            if not token:
+                break
+        if ids:
+            x['hot'] = ids
+            x['hot_ts'] = int(NOW)
+            log('發燒榜：%d 支' % len(ids))
+        else:
+            x['hot_ts'] = int(NOW) - HOT_EVERY + 3600    # 沒拿到：一小時後再試
+    # 2. 全網直播：搜台灣正在播的中文遊戲直播（凌晨 4～9 點不搜，省額度）
+    if not (4 <= tw_hour < 9) and NOW - x.get('wl_ts', 0) > WL_EVERY and api_left() > 600:
+        x['wl_ts'] = int(NOW)
+        j = api('search', part='snippet', type='video', eventType='live', videoCategoryId='20', regionCode='TW', relevanceLanguage='zh-Hant',
+                order='viewCount', maxResults=50, safeSearch='moderate')
+        n = web_live_take(cache, j, 'wl', blocks)
+        x['wl'] = n
+        log('全網直播：收 %d 場' % n)
+    # 3. 即將直播：發表會、首播、大型直播（每六小時）
+    if NOW - x.get('wu_ts', 0) > WU_EVERY and api_left() > 600:
+        x['wu_ts'] = int(NOW)
+        j = api('search', part='snippet', type='video', eventType='upcoming', videoCategoryId='20', regionCode='TW', relevanceLanguage='zh-Hant',
+                order='relevance', maxResults=50, safeSearch='moderate')
+        n = web_live_take(cache, j, 'wu', blocks)
+        x['wu'] = n
+        log('即將直播（全網）：收 %d 場' % n)
+    # 名單外頻道的名稱、頭像、訂閱數：一天一次
+    stale = [c for c, r in cache['xch'].items() if NOW - r.get('ts', 0) > 86400 and c not in roster['channels']]
+    if stale and api_left() > 50:
+        got = api_channels(stale[:200])
+        for cid, g in got.items():
+            r = cache['xch'][cid]
+            r.update({'n': g.get('n') or r.get('n'), 'a': g.get('a'), 'subs': g.get('subs'), 'country': g.get('country'), 'ts': int(NOW)})
+        for cid in stale[:200]:
+            cache['xch'][cid].setdefault('ts', int(NOW))
+        # 即將直播：頻道太小的不收（搜尋結果很多是一兩百訂閱的個人台）
+        for v in list(cache['videos'].values()):
+            if v.get('ext') == 'wu':
+                subs = (cache['xch'].get(v['c']) or {}).get('subs')
+                if subs is not None and subs < WU_MIN_SUBS:
+                    v['xx'] = 1
+
+
+def web_live_take(cache, j, tag, blocks):
+    ids = []
+    for it in (j or {}).get('items') or []:
+        sn = it.get('snippet') or {}
+        vid = (it.get('id') or {}).get('videoId')
+        if not vid or sn.get('channelId') in blocks:
+            continue
+        title = htmlmod.unescape(sn.get('title') or '')
+        if X.SPAM.search(title) or X.GACHA.search(title) or X.lang_of(title) != 'zh':
+            continue
+        ids.append(vid)
+    if not ids:
+        return 0
+    j = api('videos', part=VPARTS, id=','.join(ids[:50]), hl='zh-TW', maxResults=50)
+    n = 0
+    for it in (j or {}).get('items') or []:
+        lv = (it.get('snippet') or {}).get('liveBroadcastContent')
+        if tag == 'wl' and (lv != 'live' or int((it.get('liveStreamingDetails') or {}).get('concurrentViewers') or 0) < WL_MIN_CV):
+            continue
+        if tag == 'wu' and lv != 'upcoming':
+            continue
+        if ext_record(cache, it, tag):
+            n += 1
+    return n
+
+
+def prune_ext(cache):
+    """名單外的影片：發燒榜掉出去一天就拿掉；直播結束六小時、預定時間過了三小時就拿掉。"""
+    hot = set((cache.get('ext') or {}).get('hot') or [])
+    for vid, v in list(cache['videos'].items()):
+        tag = v.get('ext')
+        if not tag:
+            continue
+        if vid in hot:
+            continue
+        if v.get('lv') == 'live' or (v.get('lv') == 'upcoming' and (v.get('st') or NOW) > NOW - 3 * 3600):
+            continue
+        if tag == 'hot' and NOW - v.get('seen_ext', 0) < 86400:
+            continue
+        if tag in ('wl', 'wu') and NOW - max(v.get('seen_ext', 0), v.get('st') or 0) < 6 * 3600:
+            continue
+        del cache['videos'][vid]
+    used = {v['c'] for v in cache['videos'].values() if v.get('ext')}
+    for cid in list(cache['xch']):
+        if cid not in used:
+            del cache['xch'][cid]
 
 
 def refresh_channel_stats(roster, cache):
@@ -993,7 +1206,8 @@ def to_trad(s):
 
 def classify(cache, roster):
     """標題 → 繁體、語言、車道、遊戲名稱；遊戲名稱拿去 Steam 對。"""
-    chans = roster['channels']
+    chans = dict(cache.get('xch') or {})
+    chans.update(roster['channels'])
     vids = cache['videos']
     fresh = [v for v in vids.values() if v.get('cls') != CLS_VER]
     for v in fresh:
@@ -1252,6 +1466,12 @@ def build_feed(cache, roster, me):
             it['x'] = 1
         if v.get('cat') in NOT_GAMING_CATS and r.get('k') not in ('official',):
             it['x'] = 1
+        if v.get('xx'):
+            it['x'] = 1
+        if v.get('ne'):
+            it['ne'] = v['ne']
+        if v.get('ext') and v['c'] not in chans:
+            it['ext'] = v['ext']
         if v.get('t0') and v.get('t0') != it['t']:
             it['t0'] = v['t0']
         m = med.get(v['c'])
@@ -1272,13 +1492,21 @@ def build_feed(cache, roster, me):
         l = max(set(langs), key=langs.count) if len(langs) >= 3 else r.get('l')
         ch[cid] = {k: v for k, v in {'n': r.get('n') or r.get('seed'), 'a': r.get('a'), 'l': l, 'k': r.get('k') or 'creator',
                                      'tags': r.get('tags') or None, 'seed': 1 if r.get('seed') else None, 'h': r.get('h'),
-                                     'subs': st.get('subs'), 'ds': (r.get('ds') or '')[:140] or None}.items() if v is not None}
+                                     'subs': st.get('subs'), 'ds': (r.get('ds') or '')[:140] or None, 'mine': r.get('mine')}.items() if v is not None}
     for cid, p in pick_ch.items():
         if cid not in ch:
             ch[cid] = {k: v for k, v in {'n': p.get('n'), 'a': p.get('a'), 'l': 'zh', 'k': 'creator', 'cand': 1, 'subs': p.get('subs'),
                                          'ds': p.get('ds') or None}.items() if v is not None}
+    for cid in used:
+        if cid in ch or cid not in cache['xch']:
+            continue
+        x = cache['xch'][cid]
+        ch[cid] = {k: v for k, v in {'n': x.get('n'), 'a': x.get('a'), 'k': 'creator', 'ext': 1, 'subs': x.get('subs'),
+                                     'l': 'zh' if X.lang_of(x.get('n') or '') == 'zh' else None}.items() if v is not None}
     gk = {it.get('g') for it in items if it.get('g')}
-    return {'v': 1, 'at': stamp(), 'key': bool(KEY), 'ch': ch, 'items': items,
+    have = {it['i'] for it in items}
+    hot = [vid for vid in (cache['ext'].get('hot') or []) if vid in have]
+    return {'v': 1, 'at': stamp(), 'key': bool(KEY), 'ch': ch, 'items': items, 'hot': hot,
             'games': {k: {kk: vv for kk, vv in g.items() if kk in ('zh', 'en', 'id', 'img')} for k, g in cache['games'].items() if k in gk}}
 
 

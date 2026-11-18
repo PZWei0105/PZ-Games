@@ -50,6 +50,10 @@
 3. **RSS**：YouTube 官方的 `feeds/videos.xml?channel_id=`（不用金鑰，最新 15 支＋觀看數）。抓的是精選＋訂閱＋新增＋這兩週的新秀候選；封鎖的不抓。
 4. **整理**：Shorts（RSS 連結是 `/shorts/` 就是；其他用 `youtube.com/shorts/<id>` 是否直接打得開判斷）、簡體標題轉繁體（OpenCC s2twp，原標題留在 `t0`）、語言、車道（`ytextract.lane_of`，官方頻道只分預告／新聞）、遊戲名稱（書名號、英文「名稱 - Trailer」、別名表）→ Steam 搜尋對成同一款（`s<appid>`，一次最多 45 次查詢，查不到的記 14 天），沒上 Steam 但兩台以上都在聊的用 `n:<名稱>`。
 5. **有金鑰（Actions 密碼 `YT_KEY`）才做**：`videos.list`（片長、直播中／即將直播、同時觀看、分類、官方給的中文標題 `tz`、觀看數）、頻道訂閱數（每天）、**新秀探勘**（每天台灣時間 5 點後一次：熱門遊戲 4 個＋類型輪替 3 個＋黑馬 2 個搜尋，`relevanceLanguage=zh-Hant`、`regionCode=TW`、遊戲分類；濾掉搬運、兌換碼、抽卡、Shorts 頻道；選 5 位）。一天大約 2,000～3,000 點（免費額度 1 萬）。
+   - **嵌入檢查**：`videos.list` 加讀 `status.embeddable`、年齡限制、地區限制 → 影片的 `ne`（embed／age／region）。App 標「到 YouTube 看」、一點直接開 YouTube、PVW／自動下一支跳過。播放器回報 101／150 的也記在 localStorage `ne`。
+   - **台灣發燒榜**（`web_extras`）：`videos.list chart=mostPopular regionCode=TW videoCategoryId=20`，兩頁 100 支、兩小時一次（2 點）。名單外的影片 `ext: 'hot'`，頻道放 `cache.xch`，feed 的 `hot` 是名次。
+   - **全網直播**：`search eventType=live`（台灣、中文、遊戲類、照觀看排），每小時一次、凌晨 4～9 點不搜；同時觀看 30 人以上才收（`ext: 'wl'`）。**全網即將直播**每六小時一次，頻道訂閱 1 萬以下的濾掉（`ext: 'wu'`）。結束六小時後、掉出發燒榜一天後自動拿掉（`prune_ext`）。
+   - **額度**：`cache.api` 記太平洋時間每天的用量，上限 `API_DAY_CAP` 5,500（同一把金鑰《補番》最多 4,000）。
 6. **輸出**：`feed.json`、`games.json`、`discover.json`、`status.json`、`cache.json` 推到 **`spectate-data` 分支**（每次強制推送、只留最新一版，repo 不會越長越大、也不會每 20 分鐘觸發一次 Pages）。App 從 `raw.githubusercontent.com/PZWei0105/PZ-Games/spectate-data/` 讀。
 
 `status.json` 有 `log`（這次執行的紀錄）、`errors`、`quiet`（精選名單裡 30 天沒更新的頻道）、`unresolved`（解析不到的名單）——**維護時先看這個**，再決定名單要不要換人。

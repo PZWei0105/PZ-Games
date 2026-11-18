@@ -131,6 +131,11 @@ html.watching body { overflow: hidden; }
 .vc-rp { position: absolute; left: 6px; bottom: 9px; padding: 1px 6px 0; background: rgba(5, 6, 10, .88); color: var(--dim); font-style: normal; font-family: var(--f-num); font-size: 14px; letter-spacing: 1.5px; }
 .vc-new { position: absolute; right: 6px; top: 6px; padding: 1px 6px 0; background: var(--red); font-style: normal; font-family: var(--f-num); font-size: 14px; letter-spacing: 1.5px; }
 .vc-dh + .vc-d + .vc-new, .vc-dh ~ .vc-new { top: 30px; }
+.vc-rk { position: absolute; left: 0; bottom: 3px; min-width: 38px; padding: 2px 8px 0 6px; background: #05060a; color: var(--gold); font-style: normal; font-family: var(--f-num); font-size: 26px; line-height: 28px; font-weight: 700; letter-spacing: .5px; text-align: center; clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+.vc-ne { position: absolute; left: 6px; bottom: 9px; padding: 2px 7px 1px; background: rgba(5, 6, 10, .9); border: 1px solid var(--red); color: #ffd9dc; font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .5px; }
+.vc-rk ~ .vc-ne { left: 46px; }
+.vc-mine { flex: none; font-style: normal; font-size: 10.5px; font-weight: 900; color: #07080d; background: var(--gold); padding: 0 5px; margin-left: 2px; line-height: 15px; }
+.vc-ext { flex: none; font-style: normal; font-size: 10.5px; font-weight: 800; color: var(--dim); border: 1px solid var(--line2); padding: 0 4px; margin-left: 2px; line-height: 15px; }
 .vc-pg { position: absolute; left: 0; bottom: 0; height: 3px; width: var(--p); background: var(--red); z-index: 1; }
 .vc.seen .vc-th img { opacity: .62; }
 .vc-t { font-size: 14.5px; font-weight: 700; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: #e9edf7; }
@@ -773,8 +778,8 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
 'use strict';
 /* 觀戰 SPECTATE — 核心：設定、資料、同步、清單 */
 
-const VERSION = '1.1.0';
-const BUILD = '261118132933';   // 每次組建不一樣（build.py 填）：回到 App 時跟網站上的 ver.json 比，看有沒有新版
+const VERSION = '1.2.0';
+const BUILD = '261118180522';   // 每次組建不一樣（build.py 填）：回到 App 時跟網站上的 ver.json 比，看有沒有新版
 const NAME = '痞子葳';
 const RAW = 'https://raw.githubusercontent.com/PZWei0105/PZ-Games';
 const QS = new URLSearchParams(location.search);
@@ -871,7 +876,20 @@ const LANGS = { zh: '中', en: 'EN', ja: '日', ko: '韓' };
 
 /* ------------------------------------------------------------ 資料 */
 const D = { feed: null, games: null, disc: null, me: null, status: null, at: 0, ok: false, err: null, busy: false };
-const IDX = { items: [], byId: new Map(), ch: {}, games: {}, gameList: [], gameMap: new Map(), rev: 0 };
+const IDX = { items: [], byId: new Map(), ch: {}, games: {}, gameList: [], gameMap: new Map(), hot: [], rev: 0 };
+/* 播放器回報「頻道不允許嵌入」的影片：記在這台裝置，下次直接標出來（金鑰沒查到的也補上） */
+const NE = store.get('ne', {});
+function markNoEmbed(v) {
+  if (!v || NE[v]) return;
+  NE[v] = Date.now();
+  const keys = Object.keys(NE);
+  if (keys.length > 600) keys.sort((a, b) => NE[a] - NE[b]).slice(0, keys.length - 600).forEach((k) => delete NE[k]);
+  store.set('ne', NE);
+  const it = IDX.byId.get(v);
+  if (it) it.ne = 'embed';
+  MEMO.clear();
+}
+const NE_WHY = { embed: '頻道不開放在其他 App 播', age: '有年齡限制', region: '台灣看不到' };
 
 async function getJSON(base, name, fresh) {
   const bust = fresh ? Date.now() : Math.floor(Date.now() / 60000);
@@ -912,6 +930,8 @@ function indexFeed() {
   IDX.games = f.games || {};
   IDX.gameList = (D.games && D.games.games) || [];
   IDX.gameMap = new Map(IDX.gameList.map((g) => [g.k, g]));
+  IDX.hot = (f.hot || []).filter((v) => IDX.byId.has(v));
+  for (const v of Object.keys(NE)) { const it = IDX.byId.get(v); if (it && !it.ne) it.ne = 'embed'; }
   IDX.rev++;
   MEMO.clear();
 }
@@ -1129,7 +1149,10 @@ const L = {
   all: () => memo('all', () => spread(rank(baseList().filter((it) => it.lv !== 'upcoming')))),
   lane: (l) => memo('lane:' + l, () => spread(rank(baseList().filter((it) => it.l === l && it.lv !== 'upcoming' && nowS() - it.p < 14 * 86400)))),
   dark: () => memo('dark', () => baseList().filter((it) => it.dh && nowS() - it.p < 14 * 86400).sort((a, b) => (b.dh + (zf(b) ? 1.2 : 0)) - (a.dh + (zf(a) ? 1.2 : 0)))),
-  live: () => memo('live', () => baseList().filter((it) => it.lv === 'live').sort((a, b) => (b.cv || 0) - (a.cv || 0))),
+  live: () => memo('live', () => baseList().filter((it) => it.lv === 'live').sort((a, b) => (!!a.ne - !!b.ne) || (!!a.ext - !!b.ext) || (b.cv || 0) - (a.cv || 0))),
+  liveMine: () => memo('liveM', () => L.live().filter((it) => !it.ext)),
+  liveWeb: () => memo('liveW', () => L.live().filter((it) => it.ext).sort((a, b) => (!!a.ne - !!b.ne) || (b.cv || 0) - (a.cv || 0))),
+  hot: () => memo('hot', () => IDX.hot.map((v) => IDX.byId.get(v)).filter((it) => it && visible(it))),
   upcoming: () => memo('up', () => baseList().filter((it) => it.lv === 'upcoming' && it.st).sort((a, b) => a.st - b.st)),
   replays: () => memo('rp', () => baseList().filter((it) => it.rp && nowS() - it.p < 4 * 86400).sort((a, b) => b.p - a.p)),
   game: (k) => memo('g:' + k, () => rank(baseList().filter((it) => it.g === k))),
@@ -1138,14 +1161,15 @@ const L = {
   cont: () => Object.entries(HIST).filter(([v, h]) => !h[3] && h[1] > 30 && Date.now() - h[0] < 10 * 86400e3 && IDX.byId.get(v)).sort((a, b) => b[1][0] - a[1][0]).map(([v]) => IDX.byId.get(v)),
   history: () => Object.entries(HIST).sort((a, b) => b[1][0] - a[1][0]).map(([v]) => IDX.byId.get(v) || { i: v, c: HIST[v][5] || '', t: 'YouTube 影片', p: 0, l: 'play', ghost: 1 }),
   hero: () => memo('hero', () => {
-    const live = L.live().slice(0, 2);
-    const fresh = baseList().filter((it) => it.l === 'trailer' && nowS() - it.p < 4 * 86400 && it.lv !== 'upcoming' && !it.s);
+    const live = L.liveMine().filter((it) => !it.ne).slice(0, 2);
+    const fresh = baseList().filter((it) => it.l === 'trailer' && nowS() - it.p < 4 * 86400 && it.lv !== 'upcoming' && !it.s && !it.ne);
     const byViews = (a, b) => (b.v || 0) - (a.v || 0);
     // 中文優先：先排中文預告，外文的只補在後面
     const zh = fresh.filter(zf).sort(byViews), xx = fresh.filter((x) => !zf(x)).sort(byViews);
     const mix = SET.zhFirst ? zh.slice(0, 4).concat(xx.slice(0, 1), zh.slice(4), xx.slice(1)) : fresh.sort(byViews);
     const seen = new Set(), out = [];
     for (const it of live.concat(mix, L.main())) {
+      if (it.ne) continue;
       const key = it.g || it.i;
       if (seen.has(key) || seen.has(it.i)) continue;
       seen.add(key); seen.add(it.i);
@@ -1702,6 +1726,11 @@ const Player = (() => {
 
   function playId(it) {
     wantId = it.i;
+    if (it.ne) {
+      try { if (yt && ready) yt.stopVideo(); } catch (e) { /* */ }
+      showMsg('這支要到 YouTube 看', (NE_WHY[it.ne] || '頻道不開放在其他 App 播') + '。到 YouTube 看，有 Premium 一樣沒有廣告。', true);
+      return;
+    }
     const start = startPos(it);
     const zhSub = SET.zhSubs && !zf(it);
     ccFor = zhSub ? it.i : null;
@@ -1747,6 +1776,7 @@ const Player = (() => {
   }
   function onErr(e) {
     const code = e.data;
+    if ((code === 101 || code === 150) && cur) { markNoEmbed(cur.i); renderPvw(); }
     const why = code === 101 || code === 150 ? '這支影片的頻道不允許在其他 App 播放（常見於有年齡限制或音樂版權的預告）。'
       : code === 100 ? '這支影片已經被刪除或設成私人。' : '播放器出了點問題。';
     Snd.play('err');
@@ -1802,11 +1832,11 @@ const Player = (() => {
   /* PVW：接下來／同遊戲／同頻道 */
   function pvwList() {
     if (!cur) return [];
-    if (mode === 'game' && cur.g) return L.game(cur.g).filter((x) => x.i !== cur.i).slice(0, 24);
-    if (mode === 'ch' && cur.c) return L.channel(cur.c).filter((x) => x.i !== cur.i && !x.s).slice(0, 24);
+    if (mode === 'game' && cur.g) return L.game(cur.g).filter((x) => x.i !== cur.i && !x.ne).slice(0, 24);
+    if (mode === 'ch' && cur.c) return L.channel(cur.c).filter((x) => x.i !== cur.i && !x.s && !x.ne).slice(0, 24);
     const k = ctxIds.indexOf(cur.i);
     const after = ctxIds.slice(k + 1).concat(ctxIds.slice(0, Math.max(0, k)));
-    return after.map((v) => IDX.byId.get(v)).filter(Boolean).filter((x) => x.lv !== 'upcoming').slice(0, 24);
+    return after.map((v) => IDX.byId.get(v)).filter(Boolean).filter((x) => x.lv !== 'upcoming' && !x.ne).slice(0, 24);
   }
   function nextItem() { return pvwList()[0] || null; }
 
@@ -1967,13 +1997,15 @@ function card(it, ctx, opt = {}) {
     <span class="vc-th"><img loading="lazy" src="${thumb(it.i)}" alt="">
       <i class="vc-lane">${it.lv === 'live' ? '<b class="dotlive"></b>LIVE' : ln.zh}</i>
       ${it.dh ? `<i class="vc-dh">黑馬 ×${it.dh >= 100 ? '99+' : it.dh}</i>` : ''}
+      ${opt.rank ? `<i class="vc-rk">${opt.rank}</i>` : ''}
+      ${it.ne ? `<i class="vc-ne" title="${esc(NE_WHY[it.ne] || '')}">到 YouTube 看 ↗</i>` : ''}
       ${it.d && it.lv !== 'live' ? `<i class="vc-d">${dur(it.d)}</i>` : ''}
       ${h && h[3] ? '<i class="vc-rp">REPLAY</i>' : ''}
       ${isNew ? '<i class="vc-new">NEW</i>' : ''}
       ${prog ? `<i class="vc-pg" style="--p:${(prog * 100).toFixed(0)}%"></i>` : ''}
     </span>
     <span class="vc-t">${esc(titleOf(it))}</span>
-    <span class="vc-m">${it.c ? avatar(it.c, 18) : ''}<b>${esc(ch.n || '')}</b>${meta.length ? '<span>' + meta.join(' · ') + '</span>' : ''}${zf(it) ? '' : `<em class="vc-lg">${LANGS[it.z] || ''}</em>`}</span>
+    <span class="vc-m">${it.c ? avatar(it.c, 18) : ''}<b>${esc(ch.n || '')}</b>${ch.ext ? '<em class="vc-ext">名單外</em>' : ''}${ch.mine ? '<em class="vc-mine">我的台</em>' : ''}${meta.length ? '<span>' + meta.join(' · ') + '</span>' : ''}${zf(it) ? '' : `<em class="vc-lg">${LANGS[it.z] || ''}</em>`}</span>
   </a>`;
 }
 function row(name, items, opt = {}) {
@@ -1981,12 +2013,12 @@ function row(name, items, opt = {}) {
   const ctx = ctxOf(name, items);
   const shown = items.slice(0, opt.max || 16);
   return `<section class="sec">${secHead(opt.zh, opt.en, opt.more, opt.extra)}
-    <div class="row${opt.big ? ' big' : ''}">${shown.map((it) => card(it, ctx, opt)).join('')}${opt.more && items.length > shown.length ? `<a class="vc more" href="${opt.more}"><span>看全部<b>${items.length}</b></span></a>` : ''}</div></section>`;
+    <div class="row${opt.big ? ' big' : ''}">${shown.map((it, i) => card(it, ctx, opt.ranked ? Object.assign({}, opt, { rank: i + 1 }) : opt)).join('')}${opt.more && items.length > shown.length ? `<a class="vc more" href="${opt.more}"><span>看全部<b>${items.length}</b></span></a>` : ''}</div></section>`;
 }
 function grid(name, items, opt = {}) {
   const ctx = ctxOf(name, items);
   const n = opt.limit || 48;
-  return `<div class="grid">${items.slice(0, n).map((it) => card(it, ctx)).join('')}</div>${items.length > n ? `<button class="btn wide" data-act="more" data-n="${n + 48}">再載入 ${Math.min(48, items.length - n)} 支</button>` : ''}`;
+  return `<div class="grid">${items.slice(0, n).map((it, i) => card(it, ctx, opt.ranked ? { rank: i + 1 } : {})).join('')}</div>${items.length > n ? `<button class="btn wide" data-act="more" data-n="${n + 48}">再載入 ${Math.min(48, items.length - n)} 支</button>` : ''}`;
 }
 function empty(msg, sub = '', act = '') {
   return `<div class="empty"><div class="empty-ic"><i></i><i></i><i></i></div><b>${msg}</b>${sub ? `<p>${sub}</p>` : ''}${act}</div>`;
@@ -2050,7 +2082,10 @@ function vHome() {
     h += `<section class="sec live-sec">${secHead('直播中', 'ON AIR', '#live')}<div class="row big">${live.slice(0, 8).map((it) => card(it, ctx, { big: 1 })).join('')}</div></section>`;
   }
   h += row('main', main.filter((it) => nowS() - it.p < 10 * 86400), { zh: subs ? '你的頻道・新片' : '精選頻道・新片', en: subs ? 'MY FEED' : 'FEATURED', more: subs ? '#list/subs' : '#list/pool', max: 14 });
+  const mineC = Object.keys(IDX.ch).find((c) => IDX.ch[c].mine);
+  if (mineC) h += row('mine', L.channel(mineC).filter((it) => !it.s && it.lv !== 'upcoming'), { zh: chOf(mineC).n || '我的頻道', en: 'MY CHANNEL', more: '#ch/' + mineC, max: 10, extra: '<span class="sh-note">你自己的台</span>' });
   h += row('trailer', L.lane('trailer'), { zh: '新預告', en: 'TRAILERS', more: '#list/trailer' });
+  h += row('hot', L.hot(), { zh: '台灣發燒榜', en: 'TRENDING TW', more: '#list/hot', ranked: 1, max: 20, extra: '<span class="sh-note">兩小時更新</span>' });
   const dark = L.dark();
   h += row('dark', dark, { zh: '黑馬', en: 'DARK HORSE', more: '#list/dark', extra: '<span class="sh-note">比平常多好幾倍人看</span>' });
   const games = gamesList().slice(0, 8);
@@ -2136,14 +2171,18 @@ function loadingView() {
 /* ------------------------------------------------------------ 直播 */
 function vLive() {
   if (!D.feed) return loadingView();
-  const live = L.live(), up = L.upcoming(), rp = L.replays();
+  const live = L.live(), mine = L.liveMine(), web = L.liveWeb(), up = L.upcoming(), rp = L.replays();
   let h = pageHead('直播', 'ON AIR', live.length ? `現在有 <b class="red">${live.length}</b> 場在播` : '名單裡的頻道一開播，這裡就亮紅燈');
   if (!D.feed.key) h += keyCard('直播雷達');
-  if (live.length) {
-    const ctx = ctxOf('live', live);
-    h += `<div class="live-grid">${live.map((it) => card(it, ctx, { big: 1 })).join('')}</div>`;
+  if (mine.length) {
+    const ctx = ctxOf('live', mine);
+    h += `<section class="sec">${secHead('名單台', 'MY CHANNELS')}<div class="live-grid">${mine.map((it) => card(it, ctx, { big: 1 })).join('')}</div></section>`;
   } else if (D.feed.key) {
-    h += empty('現在沒有人在播', '名單裡的頻道開播時會出現在這裡。');
+    h += empty('名單台現在沒有人在播', '名單裡的頻道開播時會出現在這裡；下面是全台灣正在播的中文遊戲直播。');
+  }
+  if (web.length) {
+    const ctx = ctxOf('liveWeb', web);
+    h += `<section class="sec">${secHead('全網直播', 'ACROSS YOUTUBE', '', '<span class="sh-note">台灣正在播的中文遊戲直播，照觀看人數排</span>')}<div class="live-grid">${web.map((it) => card(it, ctx, { big: 1 })).join('')}</div></section>`;
   }
   const shows = memo('shows', () => baseList().filter((it) => !it.lv && nowS() - it.p < 10 * 86400 && /直播|生放送|LIVE|Live\b|Direct|State of Play|Showcase|Game Awards|發表會|发布会|直面會|直面会|Stream/.test(titleOf(it))).sort((a, b) => b.p - a.p));
   if (up.length) {
@@ -2153,7 +2192,7 @@ function vLive() {
       return `<a class="sc" href="#watch/${it.i}" data-v="${it.i}" data-ctx="${ctx}">
         <span class="sc-time"><b>${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}</b><span>${d.getMonth() + 1}/${d.getDate()}</span></span>
         <span class="sc-th"><img loading="lazy" src="${thumb(it.i)}" alt=""></span>
-        <span class="sc-t"><b>${esc(titleOf(it))}</b><span>${esc(chOf(it.c).n)} · <em class="gold">${esc(until(it.st))}</em></span></span></a>`;
+        <span class="sc-t"><b>${esc(titleOf(it))}</b><span>${esc(chOf(it.c).n)}${chOf(it.c).ext ? '（名單外）' : ''} · <em class="gold">${esc(until(it.st))}</em>${it.ne ? ' · 到 YouTube 看' : ''}</span></span></a>`;
     }).join('')}</div></section>`;
   }
   h += row('replay', rp, { zh: '剛結束・重播', en: 'REPLAYS' });
@@ -2295,7 +2334,7 @@ const LIST_META = {
   subs: ['你的頻道', 'MY FEED', () => L.subs()], pool: ['精選頻道', 'FEATURED', () => L.pool()], all: ['全部', 'ALL', () => L.all()],
   trailer: ['新預告', 'TRAILERS', () => L.lane('trailer')], review: ['評測', 'REVIEWS', () => L.lane('review')], guide: ['攻略', 'GUIDES', () => L.lane('guide')],
   play: ['實況', 'LET\'S PLAY', () => L.lane('play')], news: ['新聞與節目', 'NEWS & SHOWS', () => L.lane('news')], deep: ['深度與幕後', 'DEEP DIVE', () => L.lane('deep')],
-  dark: ['黑馬', 'DARK HORSE', () => L.dark()], later: ['稍後觀看', 'QUEUE', () => L.later()], cont: ['繼續觀看', 'CONTINUE', () => L.cont()],
+  dark: ['黑馬', 'DARK HORSE', () => L.dark()], hot: ['台灣發燒榜', 'TRENDING TW', () => L.hot()], later: ['稍後觀看', 'QUEUE', () => L.later()], cont: ['繼續觀看', 'CONTINUE', () => L.cont()],
   hist: ['觀戰紀錄', 'HISTORY', () => L.history()], main: ['新片', 'FEED', () => L.main()],
 };
 const LF = { lane: '', lang: '', limit: 48 };
@@ -2311,7 +2350,8 @@ function vList(kind) {
     `<div class="chips sm">${[['', '全部語言'], ['zh', '中文'], ['x', '外語']].map(([k, t]) => `<button class="${LF.lang === k ? 'on' : ''}" data-act="lf-lang" data-k="${k}">${t}</button>`).join('')}</div>`;
   let h = backBar('轉播台') + pageHead(m[0], m[1], items.length + ' 支') + chips;
   if (kind === 'hist' && items.length) h += `<div class="right"><button class="mini" data-act="clear-hist">清除這台裝置的觀戰紀錄</button></div>`;
-  h += items.length ? grid('list:' + kind, items, { limit: LF.limit }) : empty(kind === 'later' ? '還沒有稍後觀看的影片' : '這裡還沒有影片', kind === 'later' ? '在導播台按「＋ 稍後觀看」就會收進來，手機和電腦都看得到。' : '');
+  if (kind === 'hot') h += '<p class="note">YouTube 官方的台灣「遊戲」類熱門影片，每兩小時更新；名單外的頻道也會上榜。</p>';
+  h += items.length ? grid('list:' + kind, items, { limit: LF.limit, ranked: kind === 'hot' && !LF.lang }) : empty(kind === 'later' ? '還沒有稍後觀看的影片' : '這裡還沒有影片', kind === 'later' ? '在導播台按「＋ 稍後觀看」就會收進來，手機和電腦都看得到。' : '');
   return h;
 }
 
@@ -2717,7 +2757,9 @@ document.addEventListener('click', (e) => {
   if (!a && link) {
     if (link.dataset.ctx != null && link.getAttribute('href').startsWith('#watch/')) {
       PENDING_CTX = link.dataset.ctx;
-      if (SET.play === 'yt') { e.preventDefault(); window.open(ytUrl(link.dataset.v), '_blank'); Snd.play('tap'); return; }
+      const tapped = IDX.byId.get(link.dataset.v);
+      // 只能到 YouTube 看的（頻道關掉嵌入、年齡限制）：一點就直接開 YouTube，不用先進導播台看錯誤訊息
+      if (SET.play === 'yt' || (tapped && tapped.ne)) { e.preventDefault(); window.open(ytUrl(link.dataset.v), '_blank'); Snd.play('tap'); return; }
       Snd.play('tap');
     } else if (link.target === '_blank') {
       Snd.play('tap');

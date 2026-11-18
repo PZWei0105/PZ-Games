@@ -110,6 +110,11 @@ html.watching body { overflow: hidden; }
 .vc-rp { position: absolute; left: 6px; bottom: 9px; padding: 1px 6px 0; background: rgba(5, 6, 10, .88); color: var(--dim); font-style: normal; font-family: var(--f-num); font-size: 14px; letter-spacing: 1.5px; }
 .vc-new { position: absolute; right: 6px; top: 6px; padding: 1px 6px 0; background: var(--red); font-style: normal; font-family: var(--f-num); font-size: 14px; letter-spacing: 1.5px; }
 .vc-dh + .vc-d + .vc-new, .vc-dh ~ .vc-new { top: 30px; }
+.vc-rk { position: absolute; left: 0; bottom: 3px; min-width: 38px; padding: 2px 8px 0 6px; background: #05060a; color: var(--gold); font-style: normal; font-family: var(--f-num); font-size: 26px; line-height: 28px; font-weight: 700; letter-spacing: .5px; text-align: center; clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+.vc-ne { position: absolute; left: 6px; bottom: 9px; padding: 2px 7px 1px; background: rgba(5, 6, 10, .9); border: 1px solid var(--red); color: #ffd9dc; font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .5px; }
+.vc-rk ~ .vc-ne { left: 46px; }
+.vc-mine { flex: none; font-style: normal; font-size: 10.5px; font-weight: 900; color: #07080d; background: var(--gold); padding: 0 5px; margin-left: 2px; line-height: 15px; }
+.vc-ext { flex: none; font-style: normal; font-size: 10.5px; font-weight: 800; color: var(--dim); border: 1px solid var(--line2); padding: 0 4px; margin-left: 2px; line-height: 15px; }
 .vc-pg { position: absolute; left: 0; bottom: 0; height: 3px; width: var(--p); background: var(--red); z-index: 1; }
 .vc.seen .vc-th img { opacity: .62; }
 .vc-t { font-size: 14.5px; font-weight: 700; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: #e9edf7; }

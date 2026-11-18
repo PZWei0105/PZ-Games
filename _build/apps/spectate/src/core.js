@@ -99,7 +99,20 @@ const LANGS = { zh: '中', en: 'EN', ja: '日', ko: '韓' };
 
 /* ------------------------------------------------------------ 資料 */
 const D = { feed: null, games: null, disc: null, me: null, status: null, at: 0, ok: false, err: null, busy: false };
-const IDX = { items: [], byId: new Map(), ch: {}, games: {}, gameList: [], gameMap: new Map(), rev: 0 };
+const IDX = { items: [], byId: new Map(), ch: {}, games: {}, gameList: [], gameMap: new Map(), hot: [], rev: 0 };
+/* 播放器回報「頻道不允許嵌入」的影片：記在這台裝置，下次直接標出來（金鑰沒查到的也補上） */
+const NE = store.get('ne', {});
+function markNoEmbed(v) {
+  if (!v || NE[v]) return;
+  NE[v] = Date.now();
+  const keys = Object.keys(NE);
+  if (keys.length > 600) keys.sort((a, b) => NE[a] - NE[b]).slice(0, keys.length - 600).forEach((k) => delete NE[k]);
+  store.set('ne', NE);
+  const it = IDX.byId.get(v);
+  if (it) it.ne = 'embed';
+  MEMO.clear();
+}
+const NE_WHY = { embed: '頻道不開放在其他 App 播', age: '有年齡限制', region: '台灣看不到' };
 
 async function getJSON(base, name, fresh) {
   const bust = fresh ? Date.now() : Math.floor(Date.now() / 60000);
@@ -140,6 +153,8 @@ function indexFeed() {
   IDX.games = f.games || {};
   IDX.gameList = (D.games && D.games.games) || [];
   IDX.gameMap = new Map(IDX.gameList.map((g) => [g.k, g]));
+  IDX.hot = (f.hot || []).filter((v) => IDX.byId.has(v));
+  for (const v of Object.keys(NE)) { const it = IDX.byId.get(v); if (it && !it.ne) it.ne = 'embed'; }
   IDX.rev++;
   MEMO.clear();
 }
@@ -357,7 +372,10 @@ const L = {
   all: () => memo('all', () => spread(rank(baseList().filter((it) => it.lv !== 'upcoming')))),
   lane: (l) => memo('lane:' + l, () => spread(rank(baseList().filter((it) => it.l === l && it.lv !== 'upcoming' && nowS() - it.p < 14 * 86400)))),
   dark: () => memo('dark', () => baseList().filter((it) => it.dh && nowS() - it.p < 14 * 86400).sort((a, b) => (b.dh + (zf(b) ? 1.2 : 0)) - (a.dh + (zf(a) ? 1.2 : 0)))),
-  live: () => memo('live', () => baseList().filter((it) => it.lv === 'live').sort((a, b) => (b.cv || 0) - (a.cv || 0))),
+  live: () => memo('live', () => baseList().filter((it) => it.lv === 'live').sort((a, b) => (!!a.ne - !!b.ne) || (!!a.ext - !!b.ext) || (b.cv || 0) - (a.cv || 0))),
+  liveMine: () => memo('liveM', () => L.live().filter((it) => !it.ext)),
+  liveWeb: () => memo('liveW', () => L.live().filter((it) => it.ext).sort((a, b) => (!!a.ne - !!b.ne) || (b.cv || 0) - (a.cv || 0))),
+  hot: () => memo('hot', () => IDX.hot.map((v) => IDX.byId.get(v)).filter((it) => it && visible(it))),
   upcoming: () => memo('up', () => baseList().filter((it) => it.lv === 'upcoming' && it.st).sort((a, b) => a.st - b.st)),
   replays: () => memo('rp', () => baseList().filter((it) => it.rp && nowS() - it.p < 4 * 86400).sort((a, b) => b.p - a.p)),
   game: (k) => memo('g:' + k, () => rank(baseList().filter((it) => it.g === k))),
@@ -366,14 +384,15 @@ const L = {
   cont: () => Object.entries(HIST).filter(([v, h]) => !h[3] && h[1] > 30 && Date.now() - h[0] < 10 * 86400e3 && IDX.byId.get(v)).sort((a, b) => b[1][0] - a[1][0]).map(([v]) => IDX.byId.get(v)),
   history: () => Object.entries(HIST).sort((a, b) => b[1][0] - a[1][0]).map(([v]) => IDX.byId.get(v) || { i: v, c: HIST[v][5] || '', t: 'YouTube 影片', p: 0, l: 'play', ghost: 1 }),
   hero: () => memo('hero', () => {
-    const live = L.live().slice(0, 2);
-    const fresh = baseList().filter((it) => it.l === 'trailer' && nowS() - it.p < 4 * 86400 && it.lv !== 'upcoming' && !it.s);
+    const live = L.liveMine().filter((it) => !it.ne).slice(0, 2);
+    const fresh = baseList().filter((it) => it.l === 'trailer' && nowS() - it.p < 4 * 86400 && it.lv !== 'upcoming' && !it.s && !it.ne);
     const byViews = (a, b) => (b.v || 0) - (a.v || 0);
     // 中文優先：先排中文預告，外文的只補在後面
     const zh = fresh.filter(zf).sort(byViews), xx = fresh.filter((x) => !zf(x)).sort(byViews);
     const mix = SET.zhFirst ? zh.slice(0, 4).concat(xx.slice(0, 1), zh.slice(4), xx.slice(1)) : fresh.sort(byViews);
     const seen = new Set(), out = [];
     for (const it of live.concat(mix, L.main())) {
+      if (it.ne) continue;
       const key = it.g || it.i;
       if (seen.has(key) || seen.has(it.i)) continue;
       seen.add(key); seen.add(it.i);

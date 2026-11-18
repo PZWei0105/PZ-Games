@@ -158,9 +158,14 @@ def main():
             pg.wait_for_timeout(700)
             shot('04-home-scroll')
             pg.evaluate('scrollTo(0,0)')
-            for tag, h in (('05-live', 'live'), ('06-games', 'games'), ('08-rookies', 'rookies'), ('09-me', 'me'), ('10-pick', 'pick'), ('11-trailers', 'list/trailer'), ('12-key', 'key')):
+            for tag, h in (('05-live', 'live'), ('06-games', 'games'), ('08-rookies', 'rookies'), ('09-me', 'me'), ('10-pick', 'pick'), ('11-trailers', 'list/trailer'), ('11b-hot', 'list/hot'), ('12-key', 'key')):
                 go(h)
                 shot(tag)
+                if tag == '05-live':
+                    pg.evaluate("() => { const s = [...document.querySelectorAll('.sh h2 b')].find((b) => b.textContent === '全網直播'); if (s) s.closest('.sec').scrollIntoView(); }")
+                    pg.wait_for_timeout(500)
+                    shot('05b-live-web')
+                    pg.evaluate('scrollTo(0,0)')
             go('games')
             first = pg.evaluate("() => { const a = document.querySelector('.gt'); return a ? a.getAttribute('href') : null }")
             if first:
