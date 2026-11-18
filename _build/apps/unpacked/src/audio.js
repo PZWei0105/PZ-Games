@@ -59,6 +59,15 @@ const sfx = {
   siren() { if (!sndOK()) return; const t = T(); for (let i = 0; i < 3; i++) { tone(t + i * 0.32, 0.3, { type: 'sawtooth', f: 620, f2: 1240, g: 0.05 }); tone(t + i * 0.32, 0.3, { type: 'square', f: 310, f2: 620, g: 0.025 }); } },
   lock() { if (!sndOK()) return; const t = T(); [0, 0.07, 0.14].forEach((d, i) => tone(t + d, 0.06, { type: 'square', f: 1400 + i * 260, g: 0.05 })); nz(t + 0.2, 0.08, { type: 'lowpass', f: 1500, g: 0.4 }); },
   pop() { if (!sndOK()) return; const t = T(); tone(t, 0.12, { f: 500, f2: 1200, g: 0.18 }); nz(t, 0.05, { f: 3000, q: 3, g: 0.12 }); },
+  // 行情板：開盤鐘（一天第一次打開）、數字跳動
+  bell() { if (!sndOK()) return; const t = T(); [0, 0.38, 0.76].forEach((d) => { tone(t + d, 1.5, { f: 880, g: 0.13 }); tone(t + d, 1.0, { f: 1763, g: 0.045 }); tone(t + d, 0.6, { f: 2645, g: 0.02 }); }); },
+  tickUp(up = true) { if (!sndOK()) return; tone(T(), 0.06, { type: 'triangle', f: up ? 1500 : 700, f2: up ? 1900 : 520, g: 0.06 }); },
+  // 點播台：無線電發射
+  radio() { if (!sndOK()) return; const t = T(); nz(t, 0.22, { f: 2200, q: 1.5, g: 0.16, a: 0.01 }); [0, 0.08, 0.16, 0.24].forEach((d, i) => tone(t + 0.2 + d, 0.055, { type: 'square', f: i % 2 ? 1320 : 990, g: 0.05 })); nz(t + 0.55, 0.16, { type: 'highpass', f: 3500, g: 0.1 }); },
+  // TGA：拆封、開獎
+  fanfare() { if (!sndOK()) return; const t = T(); [[0, [523, 659, 784]], [0.17, [587, 740, 880]], [0.34, [659, 831, 988]], [0.56, [784, 988, 1175, 1568]]].forEach(([d, ch]) => ch.forEach((f) => tone(t + d, d > 0.5 ? 1.3 : 0.2, { type: 'sawtooth', f, g: 0.032, a: 0.01 }))); tone(t + 0.56, 1.2, { f: 196, f2: 190, g: 0.3 }); nz(t + 0.56, 0.6, { type: 'highpass', f: 6000, g: 0.08, a: 0.02 }); },
+  // 免費補給站：領到
+  coin() { if (!sndOK()) return; const t = T(); tone(t, 0.08, { type: 'square', f: 988, g: 0.06 }); tone(t + 0.08, 0.42, { type: 'square', f: 1319, g: 0.06 }); },
 };
 
 /* ---- boom-bap 鼓組（92 BPM，帶一點搖擺） ---- */

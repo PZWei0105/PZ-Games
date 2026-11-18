@@ -14,6 +14,14 @@ async function loadIndex() {
   const [idx, live, picks, wish, weekly] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] })),
     getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] }))]);
   S.wishSkip = await getJSON('wish-skip.json').catch(() => ({}));
+  // 行情板、免費補給站、活動時程、TGA、點播台：讀不到都不影響主畫面
+  const [board, free, events, tga, qa, inbox] = await Promise.all(['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json'].map((p) => getJSON(p).catch(() => null)));
+  if (board && board.rows) S.board = board;
+  if (free && free.items) S.free = free;
+  if (events && events.items) S.events = events;
+  if (tga && tga.cats) S.tgaD = tga;
+  if (qa && qa.items) S.qa = qa;
+  if (inbox && inbox.events) { S.inbox = inbox; if (typeof askAck === 'function') askAck(); }
   S.index = idx; S.live = live || { apps: {} }; S.picks = picks || { items: [] };
   S.wish = wish && wish.items ? wish : null; S.weekly = weekly && weekly.items ? weekly : { items: [] };
   return idx;
@@ -37,6 +45,17 @@ async function loadHist(appid) {
   if (S.hist[appid]) return S.hist[appid];
   try { S.hist[appid] = await getJSON('hist/' + appid + '.json'); } catch (e) { S.hist[appid] = null; }
   return S.hist[appid];
+}
+async function loadBoardD() {
+  if (S.boardD) return S.boardD;
+  try { S.boardD = await getJSON('board-d.json'); } catch (e) { S.boardD = null; }
+  return S.boardD;
+}
+/* 點播台：問答與收件（開著點播台時每 2 分鐘重讀一次） */
+async function loadAsk() {
+  const [qa, inbox] = await Promise.all([getJSON('qa.json').catch(() => null), getJSON('inbox.json').catch(() => null)]);
+  if (qa && qa.items) S.qa = qa;
+  if (inbox && inbox.events) { S.inbox = inbox; askAck(); }
 }
 const liveOf = (steam) => (steam && S.live && S.live.apps) ? S.live.apps[String(steam)] || null : null;
 

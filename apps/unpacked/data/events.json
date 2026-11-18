@@ -1,0 +1,245 @@
+{
+ "at": "2026-11-18",
+ "note": "Steam 只公布日期；時間照 Steam 慣例的太平洋時間上午 10 點（台灣時間凌晨 1～2 點）。Valve 說黑色星期五另有特價，但還沒公布日期。",
+ "items": [
+  {
+   "id": "steam-autobattler-2026",
+   "kind": "fest",
+   "name": "Steam 自走戰鬥 RPG 主題節",
+   "en": "Auto-Battler RPG Fest",
+   "start": "2026-11-16T18:00:00Z",
+   "end": "2026-11-23T18:00:00Z",
+   "src": {
+    "t": "GamingOnLinux：Steam 2026 下半年活動",
+    "u": "https://www.gamingonlinux.com/2026/01/valve-reveal-all-the-steam-events-scheduled-for-2026"
+   }
+  },
+  {
+   "id": "tga-2026-vote",
+   "kind": "vote",
+   "name": "TGA 粉絲投票截止",
+   "en": "The Game Awards fan voting closes",
+   "start": "2026-12-10T02:00:00Z",
+   "route": "tga",
+   "note": "粉絲票占 10%，評審團占 90%",
+   "src": {
+    "t": "GuruGamer：TGA 2026 時間與投票截止",
+    "u": "https://gurugamer.com/pc-console/the-game-awards-2026-nominees-arrive-november-17-full-date-time-and-viewing-guide-27579/amp"
+   }
+  },
+  {
+   "id": "tga-2026",
+   "kind": "show",
+   "name": "TGA 2026 頒獎典禮",
+   "en": "The Game Awards 2026",
+   "start": "2026-12-11T00:30:00Z",
+   "big": true,
+   "route": "tga",
+   "note": "洛杉磯 Peacock Theater 現場直播",
+   "src": {
+    "t": "GuruGamer：TGA 2026 時間與投票截止",
+    "u": "https://gurugamer.com/pc-console/the-game-awards-2026-nominees-arrive-november-17-full-date-time-and-viewing-guide-27579/amp"
+   }
+  },
+  {
+   "id": "steam-winter-2026",
+   "kind": "sale",
+   "name": "Steam 冬季特賣",
+   "en": "Steam Winter Sale 2026",
+   "start": "2026-12-17T18:00:00Z",
+   "end": "2027-01-04T18:00:00Z",
+   "big": true,
+   "note": "一年最長的大特賣，連 18 天",
+   "src": {
+    "t": "Steamworks 官方活動時程",
+    "u": "https://partner.steamgames.com/doc/marketing/upcoming_events"
+   }
+  },
+  {
+   "id": "steam-companion-2027",
+   "kind": "fest",
+   "name": "Steam 桌面小夥伴主題節",
+   "en": "Desktop Companion Fest",
+   "start": "2027-01-14T18:00:00Z",
+   "end": "2027-01-18T18:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-shopkeeper-2027",
+   "kind": "fest",
+   "name": "Steam 開店經營主題節",
+   "en": "Shop Keeper Fest",
+   "start": "2027-01-25T18:00:00Z",
+   "end": "2027-02-01T18:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-sheep-2027",
+   "kind": "fest",
+   "name": "Steam 綿羊主題節",
+   "en": "Sheep Fest",
+   "start": "2027-02-04T18:00:00Z",
+   "end": "2027-02-08T18:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-couchcoop-2027",
+   "kind": "fest",
+   "name": "Steam 沙發同樂主題節",
+   "en": "Couch Co-Op Fest",
+   "start": "2027-02-08T18:00:00Z",
+   "end": "2027-02-15T18:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-nextfest-2027-02",
+   "kind": "fest",
+   "name": "Steam 新品節（2 月）",
+   "en": "Steam Next Fest: February 2027",
+   "start": "2027-02-22T18:00:00Z",
+   "end": "2027-03-01T18:00:00Z",
+   "big": true,
+   "note": "上百款新作免費試玩",
+   "src": {
+    "t": "Steamworks 官方活動時程",
+    "u": "https://partner.steamgames.com/doc/marketing/upcoming_events"
+   }
+  },
+  {
+   "id": "steam-rhythm-2027",
+   "kind": "fest",
+   "name": "Steam 節奏主題節",
+   "en": "Rhythm Fest",
+   "start": "2027-03-08T18:00:00Z",
+   "end": "2027-03-15T17:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-spring-2027",
+   "kind": "sale",
+   "name": "Steam 春季特賣",
+   "en": "Steam Spring Sale 2027",
+   "start": "2027-03-18T17:00:00Z",
+   "end": "2027-03-25T17:00:00Z",
+   "big": true,
+   "src": {
+    "t": "Steamworks 官方活動時程",
+    "u": "https://partner.steamgames.com/doc/marketing/upcoming_events"
+   }
+  },
+  {
+   "id": "steam-dinorobot-2027",
+   "kind": "fest",
+   "name": "Steam 恐龍大戰機器人主題節",
+   "en": "Dinos vs. Robots Fest",
+   "start": "2027-03-29T17:00:00Z",
+   "end": "2027-04-05T17:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-racing-2027",
+   "kind": "fest",
+   "name": "Steam 競速主題節",
+   "en": "Racing Fest",
+   "start": "2027-04-12T17:00:00Z",
+   "end": "2027-04-19T17:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-witch-2027",
+   "kind": "fest",
+   "name": "Steam 女巫主題節",
+   "en": "Witch Fest",
+   "start": "2027-04-22T17:00:00Z",
+   "end": "2027-04-26T17:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-fighting-2027",
+   "kind": "fest",
+   "name": "Steam 格鬥主題節",
+   "en": "Fighting Fest",
+   "start": "2027-04-26T17:00:00Z",
+   "end": "2027-05-03T17:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-rts-2027",
+   "kind": "fest",
+   "name": "Steam 即時戰略主題節",
+   "en": "Real-Time Strategy Fest",
+   "start": "2027-05-10T17:00:00Z",
+   "end": "2027-05-17T17:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-mountain-2027",
+   "kind": "fest",
+   "name": "Steam 登山主題節",
+   "en": "Mountaineering Fest",
+   "start": "2027-05-31T17:00:00Z",
+   "end": "2027-06-03T17:00:00Z",
+   "src": {
+    "t": "PC Gamer：Steam 2027 上半年活動日期",
+    "u": "https://www.pcgamer.com/games/steam-reveals-all-the-sale-dates-and-themed-events-for-the-first-half-of-2027/"
+   }
+  },
+  {
+   "id": "steam-nextfest-2027-06",
+   "kind": "fest",
+   "name": "Steam 新品節（6 月）",
+   "en": "Steam Next Fest: June 2027",
+   "start": "2027-06-14T17:00:00Z",
+   "end": "2027-06-21T17:00:00Z",
+   "big": true,
+   "note": "上百款新作免費試玩",
+   "src": {
+    "t": "Steamworks 官方活動時程",
+    "u": "https://partner.steamgames.com/doc/marketing/upcoming_events"
+   }
+  },
+  {
+   "id": "steam-summer-2027",
+   "kind": "sale",
+   "name": "Steam 夏季特賣",
+   "en": "Steam Summer Sale 2027",
+   "start": "2027-06-24T17:00:00Z",
+   "end": "2027-07-08T17:00:00Z",
+   "big": true,
+   "src": {
+    "t": "Steamworks 官方活動時程",
+    "u": "https://partner.steamgames.com/doc/marketing/upcoming_events"
+   }
+  }
+ ]
+}

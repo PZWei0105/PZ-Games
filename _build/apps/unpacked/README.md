@@ -1,6 +1,6 @@
 # 解包 UNPACKED
 
-痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達（每款都有 Claude 的願望單解包、買不買判定與目標價、到價警報）、出擊日曆（可訂閱到手機行事曆）、每週懶人包（本週結算），以及「遊戲狂想曲」粉專出稿台（貼文、三個標題、塗鴉圖卡、60 秒口播稿）。
+痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達（每款都有 Claude 的願望單解包、買不買判定與目標價、到價警報）、出擊日曆（可訂閱到手機行事曆）、每週懶人包（本週結算）、Steam 行情板（線上人數前百名做成股市看盤）、大特賣倒數＋免費補給站（Epic／Steam／GOG 限時免費）、TGA 預測戰（跟 Claude 封存的預測比誰準）、點播台（指定遊戲解包、你問我答），以及「遊戲狂想曲」粉專出稿台（貼文、三個標題、塗鴉圖卡、60 秒口播稿）。
 網址：https://pzwei0105.github.io/PZ-Games/apps/unpacked/
 
 起因：痞子葳看到 TGP 玩家口袋的 FB 遊戲介紹貼文，想要一個 App「主動抓取並寫成一篇篇遊戲詳細介紹」。他要求：主頁自己看、要詳盡、要有討論，像《玩真的》一樣附影片與圖片預覽，**而且要比玩真的更強、更全面**；粉專分頁照 Claude 建議的格式。全部收（大作、獨立、免費、平台獨佔），**手機遊戲一律排除**（他不喜歡什麼都得課金才能解鎖的遊戲）；每天 2～3 篇深度專題。視覺要呼應頻道的噴漆塗鴉風、聲光效果拉滿。
@@ -15,6 +15,10 @@
 | 每週懶人包（本週結算＋粉專稿） | 每週排程（Claude 的排程任務「解包：每週懶人包」，每週日台灣時間 19:43，寫完推播） | `apps/unpacked/data/weekly/<YYYY-Www>.json`，規範在 `WEEKLY_GUIDE.md`；publish.py 產生 `data/weekly.json` |
 | Steam 願望單（獵價） | 同一個 GitHub Actions：每小時讀痞子葳的公開願望單、對台灣區價格 | `tools/live.py` → `data/wish.json`（價格歷史也記在 `hist/<appid>.json` 的 `pr`）。Steam 代號放 repo 的 Actions 密碼 `UNP_STEAM`（Settings → Secrets and variables → Actions；不公開），沒有才讀 `data/wish-cfg.json` 的 `steam`（會公開）。代號不寫進 log 和輸出檔 |
 | Steam 即時資料與選題候選 | GitHub Actions `.github/workflows/unpacked-live.yml`，每小時＋track.json 一變就跑。最新的 120 款、盯上市的、還沒抓過的每輪更新；其餘每輪輪流更新 40 款（最久沒更新的先），所以專題和推坑再多，每款也至少約一天更新一次 | `tools/live.py` → `data/live.json`、`data/hist/<appid>.json`、`data/candidates.json` |
+| Steam 行情板、免費補給站 | 同一個 GitHub Actions（每小時） | `tools/live.py` → `data/board.json`（前百名＋30 小時曲線＋7 天走勢）、`data/board-d.json`（每天高峰，留 120 天）、`data/free.json`（Epic、Steam、GOG 限時免費；某家這一輪抓不到就沿用上一輪還沒過期的） |
+| 點播台（點播解包、你問我答） | App → 轉發站 ntfy.sh → 同一個 GitHub Actions 每小時收件（`tools/inbox.py` → `data/inbox.json`）→ 寫稿（05:23）、推坑（11:43，只接問答）、願望單（16:37）三班排程回答 | 回答寫進 `data/qa.json`，規範在 `QA_GUIDE.md`。轉發站主題寫在公開的程式裡，收件一律當不可信資料 |
+| TGA 預測戰 | Claude 11/18 封存預測（`data/tga.json`，publish.py 記了指紋，之後只准填 `win`／`result_at`）；12/11 的單次排程「解包：TGA 開獎」填得獎名單、推播比分 | 規範在 `TGA_GUIDE.md` |
+| 活動表（大特賣、新品節、主題節、頒獎典禮） | 寫稿排程看到官方公告就更新 | `data/events.json`（只收官方來源；格式見 `WRITER_GUIDE.md`「順手更新活動表」） |
 | App 本體 | 這個資料夾的 `src/`，`build.py` 組成單一 index.html | `apps/unpacked/`（`build.py` 不碰 `data/`） |
 
 上架工具 `tools/publish.py`：檢查每篇專題（格式、來源、簡體字、農場用語、貼文長度…），重建 `data/index.json`（目錄）和 `data/track.json`（要追蹤的 Steam appid）。**BAD 不准推。**
@@ -55,6 +59,26 @@
   - 結算畫面：WEEK 數字砸下＋噴漆＋重低音、結算條跑完「本週結算 COMPLETE」、解包／推坑／大事／下週上市數字跳上來、Claude 的開場、本週 MVP（旋轉光芒、皇冠、MVP 章蓋下）、Tier 表（S～D，方塊一個個拍上去，點了打開那款）和每一款的排名理由、本週大事、下週出擊、特價戰利品（現在正在特價的獵物和解包過的遊戲）、數據王（同上人數、好評率、24 小時暴漲，用現在的 Steam 即時資料）、歷屆週報。
   - 還沒結算的這一週：上面顯示「WEEK N 進行中」面板（結算倒數到週日 21:00、這週到目前的解包和推坑）。
   - 粉專出稿：`#fan/w:<id>`，貼文、三個標題、hashtag、口播稿、已發佈，圖卡有封面（WEEK 大字＋MVP 撕紙框）、Tier 表、下週出擊三種，可以一次下載或分享三張。
+- **行情板**（`#board`；首頁「行情板」小卡、最下面的按鈕）：Steam 線上人數前百名做成股市看盤，**紅漲綠跌**（台灣慣例）。
+  - 大盤：前百名總人數（「萬」字縮小、數字跳上來）、比 24 小時前同一時間漲跌幅、30 小時走勢線、上漲／平盤／下跌家數（±1% 以內算平盤）；每天第一次打開敲開盤鐘。
+  - 跑馬燈：漲跌最多的；題材熱度：照 Steam 標籤分組的熱力格（同一款最多算三個標籤），點一下篩選。
+  - 個股列表：名次、名稱（解包過的用中文名）、現在人數、24 小時與 7 天漲跌、7 天走勢小圖、標記（爆量＝24 小時多 40% 以上且至少 3,000 人、暴衝＝週排名升 25 名以上、新進榜、崩跌、新高＝追蹤滿 3 天後創新高）；篩選全部／爆量／新進榜／解包過／免費；排序名次、漲幅、跌幅、人數。
+  - 點一款打開個股卡：數字格、30 小時與 7 天走勢圖、每天高峰長條（board-d.json）、「看解包」或「點播解包這款」、「問 Claude」、Steam 商店頁。
+  - 資料：`ISteamChartsService/GetGamesByConcurrentPlayers`（不到 50 筆就改用每款 `GetNumberOfCurrentPlayers`），名稱與標籤來自 `IStoreBrowseService/GetItems`；`src` 會標用了哪一種。
+- **大特賣倒數＋免費補給站**（在獵價頁裡）：
+  - 下一場大特賣（`events.json` 的 `sale`）：超過 7 天是一條細的倒數，7 天內變大面板（倒數、開打時間、連幾天、你的獵物裡有幾款可能會打折）；特價期間顯示「最後一晚」。專題頁「買不買」判定是等特價／等史低的，卡片下面會提醒下一波大特賣幾號開打、還有幾天。
+  - 免費補給站：Epic、Steam、GOG 現在限時免費、領了就永久留在帳號裡的遊戲（不含本來就免費的），橫向滑卡片：商店、剩幾小時、原價、Steam 評價與繁中（Steam 的）、NEW；「我領了」會記住；也列出 Epic 下週要送的（神秘遊戲照官方寫法）。首頁獵價膠帶和分頁數字會算進新出現的免費遊戲。
+  - 出擊日曆多了大特賣（開打與最後一晚）、新品節、TGA 頒獎與投票截止、免費截止。
+- **TGA 預測戰**（`#tga`；首頁 TGA 橫幅、最下面的按鈕）：
+  - 頒獎台主視覺（聚光燈、倒數到 12/11 08:30）、痞子葳 vs Claude 比分板。
+  - 30 個獎項（照 TGA 官方 11/17 公布的入圍名單）分五組；每一項點一個押，最多 3 張加倍卡；解包過、推坑過的入圍有小標。
+  - Claude 的 30 項預測封存在信封裡，**鎖定之後才拆封**（撕開信封、號角、一張張翻牌，跳「你們有 N 項押得不一樣」）；忍不住可以偷看，但成績單會註記。拆封後每一項都看得到 Claude 押誰、信心星數、理由。
+  - 計分：年度最佳遊戲 5 分、六項製作大獎 2 分、其他 1 分，加倍卡押中翻倍。開獎後得獎的格子蓋「得獎」章、沒中的變暗，比分跳上來、贏的那邊戴皇冠。
+  - 粉專圖卡：預測卡（「遊戲狂想曲先押了」）、開獎後的成績單（猜中幾項、年度最佳押中沒、每項 ✓✗），4:5／1:1，加上可複製的貼文。圖卡和貼文只用「遊戲狂想曲」，不放痞子葳的名字。
+  - 鎖定時把他押的送到點播台的收件匣（開獎排程用它算比分推播）。
+- **點播台**（右上角收音機圖示；`#ask`）：「你問我答」問任何遊戲問題（可以指定關於哪一款，有快速問題貼紙）、「點播解包」指定一款遊戲請編輯寫完整專題。上方燈號：送出中／已送出等收件／都收到了／送不出去（連上網路自動重送）。每一則顯示狀態（排隊中、下一班是誰幾點、處理中、已回覆），回答有段落、重點、來源、「看那一篇」；有新回答時收音機圖示亮數字、打開 App 會提示。三班的時間表也列在頁面上。
+  - 專題頁、推坑頁的「問 Claude」：送到點播台，或「現在就聊」把這款的重點整理好複製、打開 Claude 直接聊；那一款被問過的問答也會出現在專題頁下面。
+  - 問答存在公開的 GitHub 上，頁面上有提醒不要寫私人資料。
 - **庫存**：搜尋、結論／平台／類型／中文／課金／我的標記篩選、排序，最多 3 款加入比較（比較表）。
 - **粉專**：每篇的出稿台（稿子如果是前幾天寫的、又有「倒數幾天」這類會過期的字，上方會提醒先改）。塗鴉圖卡產生器（版型 A 黃牆撕紙框、B 黑牆大圖；4:5／1:1；重噴換濺漆與截圖；下載 PNG、手機可直接分享）、可編輯的貼文（只存這台裝置）、三個標題、hashtag、口播稿、素材標註、標記已發佈（分頁上的數字是還沒發的篇數）。
 
@@ -83,7 +107,12 @@
 - `data/candidates.json` 另有 `gems`（Steam 評價最高的遊戲）、`gems_sale`（評價最高又正在特價），推坑選題用；`picked: true` 是推過的；每份清單的 `mine: true` 是在痞子葳的 Steam 願望單上。
 - `data/live.json`：`{at, apps:{appid:{name,free,price{final,orig,disc,fmt,low},rv{n,pct,label,recent},rv_tc,players{n,at,peak,d24},rel,langs{tc,sc},tags,img{hero,header,wide,box},shots[],micro,trailers[{hls,mp4,poster,name}],…}}}`；價格單位是「分」（NT$ × 100）。
 - `data/hist/<appid>.json`：`pl` 同上 `[分鐘時間戳, 人數]`、`pr` 價格（有變才記）、`rv`／`rt` 全球與繁中評價 `[時間, 好評數, 總數]`（一天一筆）。
-- localStorage 前綴 `unpacked.v1.`：`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
+- `data/board.json`：`{at, src(concurrent/players), since, t:[時間], s:[走勢時間], idx:{n,d1,up,dn,fl,h,sp}, rows:[{a(appid), n, h(30 小時), sp(7 天), d1, d7, pk, r, rp, lw, f:[標記], ath, nm, tags, rv, free, p, img, zh, adult, cov(f:/p:)}], tags:[{t, n, k, d1}]}`；`data/board-d.json`：`{days, pk:{appid:[每天高峰]}, ath, nm, last, since}`。
+- `data/free.json`：`{at, ok, errs, items:[{id(epic:…/steam:…/gog:…), store, title, img, url, orig 或 orig_t, start, end, up(下週才送), mystery, dlc, appid, rv, zh, tags, seen}], past}`。
+- `data/events.json`：`{at, note, items:[{id, kind(sale/fest/show/vote), name, en, start, end, big, note, src:{t,u}}]}`（時間都是 UTC）。
+- `data/tga.json`：`{show, vote_end, venue, vote_url, sealed, result_at, intro, rules, cats:[{id, zh, en, pt, grp, nom:[{n, zh, sub, ref}], claude:{c, conf, why, s}, win}], sources}`。
+- `data/inbox.json`：`{v, at, cursor, events:[{id, type(ask/req/tga/ping), t, dev, …}]}`（inbox.py 產生，欄位見 `QA_GUIDE.md`）；`data/qa.json`：`{at, items:[{id, type, t, q, ref, st(done/no/wip), at, by, a, pts, src, link}]}`（排程寫）。
+- localStorage 前綴 `unpacked.v1.`：`tga`（押注、加倍卡、鎖定時間、偷看過沒）、`ask`（裝置代號、待送、已送、自己的點播、看過的回答）、`freeGot`（領過的免費遊戲）、`freeSeen`、`mkBell`（今天敲過開盤鐘沒）；`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
 
 ## 組建與測試
 
@@ -93,6 +122,7 @@ python3 _build/apps/unpacked/build.py --icons            # 重畫圖示
 python3 _build/apps/unpacked/tools/publish.py            # 專題檢查＋重建目錄
 # 本機看畫面（雲端沙盒連不到 Steam、YouTube、github.io：外部圖片用假圖代替）
 python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data --hunt   # --hunt：假願望單＋假週報；再加 --noweek 測「本週進行中」
+# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）；只寫進 /tmp，絕不 commit
 python3 _build/apps/unpacked/tools/shoot.py /tmp/shots /tmp/unp phone '[{"wait":4800},{"shot":"home"},{"go":"#f/rob-run","ms":2500},{"shot":"feat"}]'
 ```
 `shoot.py` 的畫面：`phone`（390×844 @3）、`se`（375×667，小手機）、`android`（412×915）、`land`（844×390 @3）、`pad`（820×1180）、`desk`（1440×900）；步驟支援 wait、go、click、tap（觸控點擊）、key（按鍵）、eval、print（把運算結果印出來，用來驗證狀態）、scroll、shot、savecanvas（把圖卡存成 PNG）。注意 Playwright 的 eval 算「使用者點擊」，要測「有聲自動播放被擋」得自己把 `HTMLMediaElement.prototype.play` 換成會擋的版本。

@@ -74,21 +74,29 @@ function renderHome() {
   return `<div class="sec-h"><h2 class="spray-h">${lastDate === today ? '今日解包' : '最新解包'}</h2>
       <span class="date-stk">${esc(lastDate.slice(5).replace('-', '.'))} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</span></div>
     ${lastDate !== today ? `<p class="sub-note">今天的專題還在寫，先看 ${mdDay(lastDate)} 這批。</p>` : ''}
-    ${weekBanner()}${huntStrip()}
+    ${weekBanner()}${tgaBanner()}${huntStrip()}
     <div class="posters">${todays.map(posterHtml).join('')}</div>
     ${picksTeaser()}
+    ${marketStrip()}
     <h3 class="tape-h">追蹤牆</h3>
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="f/${esc(n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
-    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="board">${ICON.chart}<span>行情板</span></button><button class="btn y" data-go="tga">${ICON.star}<span>TGA 預測戰</span></button><button class="btn p" data-go="ask">${ICON.radio}<span>點播台</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
 }
 /* 首頁：願望單有特價就貼一條警示膠帶 */
 function huntStrip() {
   const sale = huntTargets().filter((t) => t.onSale || t.giveaway || t.hit).sort((a, b) => b.score - a.score);
-  if (!sale.length) return '';
-  const lows = sale.filter((t) => t.lowState === 'low').length; const hits = sale.filter((t) => t.hit).length;
-  return `<div class="hstrip" data-go="hunt"><span class="hs-k">${ICON.target}獵價</span><span class="hs-t">${hits ? `<b>${hits}</b> 款到了 Claude 的目標價，` : ''}你的獵物 <b>${sale.filter((t) => t.onSale || t.giveaway).length}</b> 款正在特價${lows ? `，<b>${lows}</b> 款史低` : ''}：${sale.slice(0, 2).map((t) => `${esc(t.name)} ${t.giveaway ? '免費' : t.hit && !t.onSale ? '到價' : '-' + t.disc + '%'}`).join('、')}${sale.length > 2 ? '…' : ''}</span><span class="hs-a">→</span></div>`;
+  const free = freeNow().filter((x) => !S.freeGot[x.id]); const big = saleLine();
+  if (!sale.length && !free.length && !big) return '';
+  const lows = sale.filter((t) => t.lowState === 'low').length; const hits = sale.filter((t) => t.hit).length; const on = sale.filter((t) => t.onSale || t.giveaway).length;
+  const parts = [];
+  if (hits) parts.push(`<b>${hits}</b> 款到了 Claude 的目標價`);
+  if (on) parts.push(`獵物 <b>${on}</b> 款特價${lows ? `（<b>${lows}</b> 款史低）` : ''}`);
+  if (free.length) parts.push(`<b>${free.length}</b> 款限時免費${free.some((x) => !S.freeSeen[x.id]) ? '（有新的）' : ''}`);
+  if (big) parts.push(big);
+  const names = sale.slice(0, free.length ? 1 : 2).map((t) => `${esc(t.name)} ${t.giveaway ? '免費' : t.hit && !t.onSale ? '到價' : '-' + t.disc + '%'}`).concat(free.slice(0, sale.length ? 1 : 2).map((x) => `${esc(x.mystery ? '神秘遊戲' : x.title)} 免費領`));
+  return `<div class="hstrip" data-go="hunt"><span class="hs-k">${ICON.target}獵價</span><span class="hs-t">${parts.join('，')}${names.length ? '：' + names.join('、') + (sale.length + free.length > names.length ? '…' : '') : ''}</span><span class="hs-a">→</span></div>`;
 }
 
 function picksTeaser() {
@@ -279,7 +287,8 @@ async function renderFeature(id) {
       <p class="vs">${esc(V.summary)}</p>${sealHtml(V.stamp, V.label, 'seal wait')}
       <div class="fa"><div class="st"><h4>適合你，如果…</h4><ul>${V.for.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="st p"><h4>不適合，如果…</h4><ul>${V.against.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div></div>
     ${buyHtml(f, lv)}
-    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn p sm" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn sm askthis" data-act="askthis" data-k="feature">${ICON.radio}<span>問 Claude</span></button><button class="btn p sm" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    ${askBoxFor('f:' + id)}
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
     ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源；粉紅色問號是還沒查證的。</p><div class="facts">${facts}</div>${liveHtml(f, lv, h)}${infoCards(f, lv)}`)}
     ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>${M.vids.length ? `<div class="btnrow"><button class="btn sm k" data-go="shorts/f:${esc(id)}">${ICON.shorts}<span>用短影音直式滑著看</span></button></div>` : ''}
@@ -325,7 +334,7 @@ function buyHtml(f, lv) {
     bar = `<div class="hp big ${hit ? 'crit' : cur <= 50 ? 'low' : cur < 100 ? 'mid' : ''}" style="--cur:${cur.toFixed(1)}%"><i class="hpf"></i><i class="hpt" style="left:${tg.toFixed(1)}%"></i></div><div class="hpk"><span>價格血條 ${Math.round(cur)}%</span><span class="tg">▲ 目標價 ${fmtNT(b.target)}</span></div>`;
   }
   return `<div class="buycard ${BUY_CLS[b.call] || ''} ${hit ? 'hit' : ''}"><div class="bc-k">Claude 判定・買不買</div><div class="bc-call">${esc(hit ? '到價，可以買' : b.call)}</div>
-    ${b.target != null ? `<div class="bc-t">目標價 <b>${fmtNT(b.target)}</b> 以下出手</div>` : ''}${now ? `<div class="bc-now">${now}</div>` : ''}${bar}
+    ${b.target != null ? `<div class="bc-t">目標價 <b>${fmtNT(b.target)}</b> 以下出手</div>` : ''}${now ? `<div class="bc-now">${now}</div>` : ''}${bar}${hit ? '' : saleHint(b)}
     <p>${esc(b.why)}</p>${b.watch ? `<p class="bc-w">什麼情況會改判：${esc(b.watch)}</p>` : ''}${hit ? '<i class="bc-stamp">到價</i>' : ''}</div>`;
 }
 
@@ -440,7 +449,8 @@ async function renderPick(id) {
     <div class="letter"><i class="tp tp1"></i><div class="lt-h">為什麼推你</div><p>${esc(f.why)}</p><div class="lt-sign">— Claude</div>
       <div class="seal wait pk-seal ${PICK_CLS[f.stamp] || ''}">${esc(f.stamp)}</div></div>
     <div class="rsns">${f.reasons.map((r, i) => `<div class="rsn" style="--i:${i};--rot:${rot(id + r.h, i, 1.4)}deg"><b class="rn">${i + 1}</b><h4>${esc(r.h)}</h4><p>${esc(r.t)}</p></div>`).join('')}</div>
-    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn sm askthis" data-act="askthis" data-k="pick">${ICON.radio}<span>問 Claude</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    ${askBoxFor('p:' + id)}
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
     ${Sx.gameplay ? sec('s-play', 'PLAY', '玩法拆解', `<div class="loop">${Sx.gameplay.loop.map((x, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="lp" style="--rot:${rot(id + x, i, 2)}deg">${esc(x)}</span>`).join('')}<span class="back2">↺ 再來一輪</span></div>
       ${Sx.gameplay.body.map((p) => `<p class="para">${esc(p)}</p>`).join('')}

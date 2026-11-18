@@ -46,6 +46,17 @@ GEMS = 'https://store.steampowered.com/search/results/?sort_by=Reviews_DESC&cate
 WISH = 'https://api.steampowered.com/IWishlistService/GetWishlist/v1/?steamid={}'
 VANITY = 'https://steamcommunity.com/id/{}/?xml=1'
 WISH_MEDIA = 40            # 特價中的願望單遊戲另外抓動態預告（最多這麼多款）
+# 行情板：Steam 線上人數排行（先試一次拿到前百名的現在人數；不行就一款一款問）
+CONC = 'https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/?input_json='
+BOARD_N = 100
+BOARD_H = 30 * 60          # 每小時的樣本留 30 小時（算「比 24 小時前」）
+BOARD_SP = 7.2 * 1440      # 走勢線留 7 天多一點
+BOARD_SP_GAP = 210         # 走勢線的樣本至少隔 3.5 小時
+BOARD_DAYS = 120           # 每日高峰留 120 天
+# 免費補給站：三家官方商店的「限時免費領」
+EPIC_FREE = 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=zh-Hant&country=TW&allowCountries=TW'
+STEAM_FREE = 'https://store.steampowered.com/search/results/?maxprice=free&specials=1&category1=998&json=1&cc=TW&l=tchinese'
+GOG_FREE = 'https://catalog.gog.com/v1/catalog?limit=48&order=desc:trending&discounted=eq:true&price=between:0,0&productType=in:game,pack&page=1&countryCode=TW&locale=zh-Hant&currencyCode=TWD'
 ASSET = 'https://shared.akamai.steamstatic.com/store_item_assets/'
 VIDEO = 'https://video.akamai.steamstatic.com/store_trailers/'
 CTX = {'language': 'tchinese', 'country_code': 'TW', 'steam_realm': 1}
@@ -201,6 +212,9 @@ def trailers(it):
     return micro, full
 
 
+_ITEMS = {}   # 這一輪已經問過的（不含預告）：行情板、免費補給站跟選題候選共用，不重複問
+
+
 def get_items(appids, media=True):
     dr = {'include_basic_info': True, 'include_assets': True, 'include_release': True, 'include_reviews': True,
           'include_tag_count': 12, 'include_supported_languages': True, 'include_platforms': True}
@@ -210,6 +224,9 @@ def get_items(appids, media=True):
     ids = []
     for a in appids:
         if a and a not in ids:
+            if not media and a in _ITEMS:
+                out[a] = _ITEMS[a]
+                continue
             ids.append(a)
     for i in range(0, len(ids), 30):
         part = ids[i:i + 30]
@@ -223,6 +240,7 @@ def get_items(appids, media=True):
         for it in (d.get('response') or {}).get('store_items') or []:
             if it.get('success') == 1 and (it.get('appid') or it.get('id')):
                 out[int(it.get('appid') or it.get('id'))] = it
+                _ITEMS[int(it.get('appid') or it.get('id'))] = it
         time.sleep(0.4)
     return out
 
@@ -563,6 +581,312 @@ def wishlist(D, t0, tagn):
     return set(appids)
 
 
+# ------------------------------------------------------------------ 行情板（Steam 線上人數前百名）
+def _closest(ts, target, tol):
+    """ts（分鐘）裡最接近 target 的位置；差超過 tol 分鐘就回 None。"""
+    best, bd = None, tol + 1
+    for i, t in enumerate(ts):
+        d = abs(t - target)
+        if d < bd:
+            best, bd = i, d
+    return best if bd <= tol else None
+
+
+def _pct(cur, prev):
+    if cur is None or not prev:
+        return None
+    return round((cur - prev) * 100 / prev, 1)
+
+
+def _nonull(d):
+    return {k: v for k, v in d.items() if v is not None}
+
+
+def board(D, t0, tagn, cov):
+    """Steam 線上人數前百名 → data/board.json（每輪）＋ data/board-d.json（每天的高峰、追蹤以來最高；換日那一輪才寫）。
+    漲跌比的是 24 小時前同一時間（GitHub 的排程偶爾會晚，找前後 90 分鐘內最接近的一筆）。
+    cov：appid → 'f:<id>'／'p:<id>'（解包過、推坑過的，App 可以直接點過去）。"""
+    path, dpath = os.path.join(D, 'board.json'), os.path.join(D, 'board-d.json')
+    old = load(path, {}) or {}
+    hd = load(dpath, {}) or {}
+    for k, v in (('days', []), ('pk', {}), ('ath', {}), ('nm', {})):
+        hd.setdefault(k, v)
+    tm = tmin(t0)
+    today = t0.astimezone(TW).strftime('%Y-%m-%d')
+    steam = {}
+    try:
+        d = get_json(MOSTPLAYED, timeout=30)
+        for r in ((d.get('response') or {}).get('ranks') or [])[:BOARD_N]:
+            if r.get('appid'):
+                steam[int(r['appid'])] = r
+    except Exception as e:  # noqa: BLE001
+        ERRS.append(f'board mostplayed: {str(e)[:100]}')
+    conc, src = {}, 'concurrent'
+    try:
+        d = get_json(api(CONC, {'context': CTX}), timeout=30, tries=2)
+        for r in (d.get('response') or {}).get('ranks') or []:
+            if r.get('appid') and r.get('concurrent_in_game') is not None:
+                conc[int(r['appid'])] = int(r['concurrent_in_game'])
+    except Exception as e:  # noqa: BLE001
+        print('board concurrent fail', e, file=sys.stderr)
+    if len(conc) < 50:
+        src, conc = 'players', {}
+        nerr = len(ERRS)
+        for a in list(steam)[:BOARD_N]:
+            n = players(a)
+            if n is not None:
+                conc[a] = n
+            time.sleep(0.12)
+        if len(ERRS) - nerr > 2:
+            del ERRS[nerr + 2:]
+    if len(conc) < 20:
+        print(f'board: 這一輪只拿到 {len(conc)} 款的線上人數，先留上一輪的')
+        return False
+    ids = sorted(conc, key=lambda a: -conc[a])[:BOARD_N]
+    info = get_items(ids, media=False)
+    oT, oS = old.get('t') or [], old.get('s') or []
+    T = [t for t in oT if t >= tm - BOARD_H]
+    cut_h = len(oT) - len(T)
+    Ts = [t for t in oS if t >= tm - BOARD_SP]
+    cut_s = len(oS) - len(Ts)
+    add_s = not Ts or tm - Ts[-1] >= BOARD_SP_GAP
+    orow = {r['a']: r for r in old.get('rows') or []}
+    rows = []
+    for a in ids:
+        o = orow.get(a) or {}
+        h = (list(o.get('h') or [None] * len(oT)) + [None] * len(oT))[:len(oT)][cut_h:] + [conc[a]]
+        sp = (list(o.get('sp') or [None] * len(oS)) + [None] * len(oS))[:len(oS)][cut_s:]
+        if add_s:
+            sp.append(conc[a])
+        rows.append({'a': a, 'n': conc[a], 'h': h, 'sp': sp})
+    T.append(tm)
+    if add_s:
+        Ts.append(tm)
+    # 換日：前一天的高峰記進 board-d.json
+    last = hd.get('last')
+    if not last:
+        hd['last'] = hd['since'] = today
+    elif last != today:
+        d0 = dt.datetime.strptime(last, '%Y-%m-%d').replace(tzinfo=TW)
+        lo, hi = tmin(d0), tmin(d0 + dt.timedelta(days=1))
+        sl = [i for i, t in enumerate(oT) if lo <= t < hi]
+        hd['days'].append(last)
+        for k in hd['pk']:
+            hd['pk'][k].append(None)
+        for r in old.get('rows') or []:
+            vals = [r['h'][i] for i in sl if i < len(r.get('h') or []) and r['h'][i] is not None]
+            if not vals:
+                continue
+            k, v = str(r['a']), max(vals)
+            hd['pk'].setdefault(k, [None] * len(hd['days']))[-1] = v
+            if not hd['ath'].get(k) or v > hd['ath'][k][0]:
+                hd['ath'][k] = [v, last]
+            if r.get('nm'):
+                hd['nm'][k] = r['nm']
+        if len(hd['days']) > BOARD_DAYS:
+            cut = len(hd['days']) - BOARD_DAYS
+            hd['days'] = hd['days'][cut:]
+            for k in list(hd['pk']):
+                hd['pk'][k] = hd['pk'][k][cut:]
+                if not any(v is not None for v in hd['pk'][k]):
+                    del hd['pk'][k]
+                    hd['ath'].pop(k, None)
+                    hd['nm'].pop(k, None)
+        hd['last'] = today
+    j = _closest(T, tm - 1440, 90)
+    js = _closest(Ts, tm - 7 * 1440, 300)
+    for i, r in enumerate(rows):
+        a, k = r['a'], str(r['a'])
+        st = steam.get(a) or {}
+        prev = r['h'][j] if j is not None else None
+        r['d1'] = _pct(r['n'], prev)
+        r['d7'] = _pct(r['n'], r['sp'][js] if js is not None and js < len(r['sp']) else None)
+        own = [v for t, v in zip(T, r['h']) if v is not None and t >= tm - 1440]
+        r['pk'] = max(own + [int(st.get('peak_in_game') or 0)]) or None
+        r['r'] = i + 1
+        r['rp'] = st.get('rank')
+        lw = st.get('last_week_rank')
+        r['lw'] = lw if isinstance(lw, int) and lw > 0 else None
+        f = []
+        if st.get('rank') and r['lw'] is None:
+            f.append('new')
+        if r['d1'] is not None and r['d1'] >= 40 and r['n'] >= 3000:
+            f.append('surge')
+        elif r['lw'] and st.get('rank') and r['lw'] - st['rank'] >= 25:
+            f.append('jump')
+        if r['d1'] is not None and r['d1'] <= -35 and (prev or 0) >= 3000:
+            f.append('crash')
+        ath = hd['ath'].get(k)
+        tracked = sum(1 for v in hd['pk'].get(k) or [] if v is not None)
+        if ath and tracked >= 3 and r['n'] > ath[0]:
+            f.append('ath')
+        r['f'] = f or None
+        r['ath'] = max(ath or [0, None], [r['n'], today], key=lambda x: x[0]) if tracked else None
+        it = info.get(a)
+        if it:
+            x = norm(it, tagn)
+            r['nm'] = x['name'] or hd['nm'].get(k)
+            r['tags'] = x['tags'][:3] or None
+            r['rv'] = [x['rv']['pct'], x['rv']['n']] if x['rv']['n'] else None
+            r['free'] = True if x['free'] else None
+            pr = x['price']
+            r['p'] = [pr['final'], pr['disc']] if pr['final'] is not None and not x['free'] else None
+            r['img'] = x['img'].get('header') or x['img'].get('wide')
+            r['zh'] = 'tc' if 'tc' in x['langs'] else 'sc' if 'sc' in x['langs'] else None
+            if x['adult']:
+                r['adult'] = True
+        else:
+            r['nm'] = hd['nm'].get(k) or f'App {a}'
+        r['cov'] = cov.get(a)
+    rows = [_nonull(r) for r in rows]
+    now_sum = sum(r['n'] for r in rows)
+
+    def series(key, n):
+        out = []
+        for i in range(n):
+            have = [r for r in rows if i < len(r.get(key) or []) and r[key][i] is not None]
+            base = sum(r['n'] for r in have)
+            out.append(round(sum(r[key][i] for r in have) * now_sum / base) if base else None)
+        return out
+    both = [(r['n'], r['h'][j]) for r in rows if j is not None and r['h'][j]]
+    d1 = _pct(sum(x for x, _ in both), sum(y for _, y in both)) if len(both) >= 30 else None
+    up = sum(1 for r in rows if r.get('d1') is not None and r['d1'] > 1)
+    dn = sum(1 for r in rows if r.get('d1') is not None and r['d1'] < -1)
+    fl = sum(1 for r in rows if r.get('d1') is not None) - up - dn
+    agg = {}
+    for r in rows:
+        for t in (r.get('tags') or [])[:3]:
+            g = agg.setdefault(t, {'t': t, 'n': 0, 'k': 0, 'cn': 0, 'pv': 0})
+            g['n'] += r['n']
+            g['k'] += 1
+            if j is not None and r['h'][j]:
+                g['cn'] += r['n']
+                g['pv'] += r['h'][j]
+    tags = [{'t': g['t'], 'n': g['n'], 'k': g['k'], 'd1': _pct(g['cn'], g['pv']) if g['pv'] else None}
+            for g in sorted((g for g in agg.values() if g['k'] >= 3), key=lambda g: -g['n'])[:12]]
+    out = {'at': iso(t0), 'src': src, 'since': hd.get('since'), 't': T, 's': Ts,
+           'idx': {'n': now_sum, 'd1': d1, 'up': up, 'dn': dn, 'fl': fl, 'h': series('h', len(T)), 'sp': series('sp', len(Ts))},
+           'rows': rows, 'tags': [_nonull(x) for x in tags]}
+    wrote = save_if_changed(path, out)
+    wrote_d = save_if_changed(dpath, hd)
+    print(f'board: {len(rows)} 款（{src}），百大線上 {now_sum}，24h {d1}%，wrote={wrote}/{wrote_d}')
+    return True
+
+
+# ------------------------------------------------------------------ 免費補給站（Epic、Steam、GOG 的限時免費領）
+def _iso_any(s):
+    try:
+        return iso(dt.datetime.fromisoformat(str(s).replace('Z', '+00:00')))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def freebies(D, t0, tagn):
+    """三家官方商店現在（和 Epic 下週）限時免費領的遊戲 → data/free.json。哪一家這輪讀不到，就先留那一家上一輪的。"""
+    path = os.path.join(D, 'free.json')
+    old = load(path, {}) or {}
+    now_s = iso(t0)
+    seen = {x['id']: x.get('seen') for x in (old.get('items') or []) + (old.get('past') or []) if x.get('id')}
+    items, errs, ok = [], [], []
+    try:
+        d = get_json(EPIC_FREE, timeout=30, tries=2)
+        els = ((((d.get('data') or {}).get('Catalog') or {}).get('searchStore') or {}).get('elements')) or []
+        for e in els:
+            pr = e.get('promotions') or {}
+            for key, up in (('promotionalOffers', False), ('upcomingPromotionalOffers', True)):
+                for g in pr.get(key) or []:
+                    for o in g.get('promotionalOffers') or []:
+                        ds = o.get('discountSetting') or {}
+                        pct = ds.get('discountPercentage')
+                        if ds.get('discountType') != 'PERCENTAGE' or pct is None or int(pct) != 0:
+                            continue
+                        start, end = _iso_any(o.get('startDate')), _iso_any(o.get('endDate'))
+                        if end and end <= now_s:
+                            continue
+                        maps = (e.get('offerMappings') or []) + ((e.get('catalogNs') or {}).get('mappings') or [])
+                        slug = e.get('productSlug') or next((m.get('pageSlug') for m in maps if m.get('pageSlug')), None)
+                        slug = (slug or '').split('/')[0] or None
+                        if slug == '[]':
+                            slug = None
+                        imgs = {k.get('type'): k.get('url') for k in e.get('keyImages') or [] if k.get('url')}
+                        img = next((imgs[t] for t in ('OfferImageWide', 'DieselStoreFrontWide', 'featuredMedia', 'Thumbnail', 'OfferImageTall') if imgs.get(t)), None)
+                        title = (e.get('title') or '').strip()
+                        tp = (e.get('price') or {}).get('totalPrice') or {}
+                        items.append(_nonull({
+                            'id': f'epic:{e.get("namespace")}:{e.get("id")}', 'store': 'epic', 'title': title, 'img': img,
+                            'url': f'https://store.epicgames.com/zh-Hant/p/{slug}' if slug else 'https://store.epicgames.com/zh-Hant/free-games',
+                            'orig_t': (tp.get('fmtPrice') or {}).get('originalPrice') if (tp.get('originalPrice') or 0) > 0 else None,
+                            'start': start, 'end': end, 'up': True if up else None,
+                            'mystery': True if (not slug or 'mystery' in title.lower() or '神秘' in title) else None,
+                            'dlc': True if e.get('offerType') in ('ADD_ON', 'DLC') else None}))
+        ok.append('epic')
+    except Exception as e:  # noqa: BLE001
+        errs.append(f'epic: {str(e)[:100]}')
+    try:
+        d = get_json(STEAM_FREE, timeout=30, tries=2)
+        ids = []
+        for x in (d.get('items') or [])[:40]:
+            m = re.search(r'/apps/(\d+)/', x.get('logo') or '')
+            if m and int(m.group(1)) not in ids:
+                ids.append(int(m.group(1)))
+        info = get_items(ids, media=False) if ids else {}
+        for a in ids:
+            it = info.get(a)
+            if not it:
+                continue
+            n = norm(it, tagn)
+            p = n['price']
+            if n['adult'] or not ((p['disc'] or 0) >= 100 or (p['final'] == 0 and (p['orig'] or 0) > 0)):
+                continue
+            items.append(_nonull({
+                'id': f'steam:{a}', 'store': 'steam', 'title': n['name'], 'img': n['img'].get('header') or n['img'].get('wide'), 'url': n['url'],
+                'orig': p['orig'], 'end': p.get('end'), 'appid': a, 'rv': [n['rv']['pct'], n['rv']['n']] if n['rv']['n'] else None,
+                'zh': 'tc' if 'tc' in n['langs'] else 'sc' if 'sc' in n['langs'] else None, 'tags': n['tags'][:3] or None}))
+        ok.append('steam')
+    except Exception as e:  # noqa: BLE001
+        errs.append(f'steam: {str(e)[:100]}')
+    try:
+        d = get_json(GOG_FREE, timeout=30, tries=2)
+
+        def amt(m):
+            try:
+                return float(str((m or {}).get('amount')).replace(',', ''))
+            except (TypeError, ValueError):
+                return None
+        for p in d.get('products') or []:
+            pr = p.get('price') or {}
+            fin, base = amt(pr.get('finalMoney')), amt(pr.get('baseMoney'))
+            if fin is None or base is None or fin > 0 or base <= 0:
+                continue
+            items.append(_nonull({
+                'id': f'gog:{p.get("id")}', 'store': 'gog', 'title': (p.get('title') or '').strip(), 'img': p.get('coverHorizontal'),
+                'url': p.get('storeLink') or (f'https://www.gog.com/zh/game/{p.get("slug")}' if p.get('slug') else 'https://www.gog.com/'),
+                'orig_t': pr.get('base')}))
+        ok.append('gog')
+    except Exception as e:  # noqa: BLE001
+        errs.append(f'gog: {str(e)[:100]}')
+    for st in ('epic', 'steam', 'gog'):
+        if st not in ok:        # 這一家這輪讀不到：先留上一輪還沒過期的
+            items += [x for x in old.get('items') or [] if x.get('store') == st and (not x.get('end') or x['end'] > now_s)]
+    uniq = {}
+    for x in items:
+        x['seen'] = seen.get(x['id']) or now_s
+        uniq.setdefault(x['id'], x)
+    items = sorted(uniq.values(), key=lambda x: (bool(x.get('up')), x.get('end') or '9999'))
+    ids = set(uniq)
+    past = [dict(x, gone=now_s) for x in old.get('items') or [] if x['id'] not in ids and not x.get('up')] + list(old.get('past') or [])
+    keep_from = iso(t0 - dt.timedelta(days=30))
+    pd, past2 = set(), []
+    for x in past:
+        if x['id'] in pd or x['id'] in ids or (x.get('gone') or '') < keep_from:
+            continue
+        pd.add(x['id'])
+        past2.append(x)
+    out = {'at': now_s, 'ok': ok, 'errs': errs or None, 'items': items, 'past': past2[:40]}
+    wrote = save_if_changed(path, _nonull(out), ignore=('at', 'errs'))
+    print(f'free: {len([x for x in items if not x.get("up")])} 款現在免費、{len([x for x in items if x.get("up")])} 款預告，來源 {ok}，wrote={wrote}', errs or '')
+
+
 # ------------------------------------------------------------------ 出擊日曆（可訂閱的 .ics）
 APPURL = 'https://pzwei0105.github.io/PZ-Games/apps/unpacked/'
 
@@ -631,13 +955,35 @@ def calendar(D, t0):
         for n in load(os.path.join(D, 'weekly', wk['id'] + '.json'), {}).get('next') or []:
             if re.fullmatch(r'\d{4}-\d{2}-\d{2}', n.get('d') or '') and not any(e[1] == '上市' and e[2] == n.get('name') for e in ev):
                 add('下週出擊', n['d'], n['name'], n['name'], n.get('t') or '', (n.get('ref') or '').replace(':', '/', 1))
+    # 大特賣、Steam 主題節、頒獎典禮（data/events.json，官方公布的日期）；「最後一晚」＝結束前 3 小時那天
+    hm = lambda s: tw(s).strftime('%m/%d %H:%M').lstrip('0')  # noqa: E731
+    lastday = lambda s: (tw(s) - dt.timedelta(hours=3)).strftime('%Y-%m-%d')  # noqa: E731
+    horizon = (t0 + dt.timedelta(days=200)).astimezone(TW).strftime('%Y-%m-%d')
+    for e in load(os.path.join(D, 'events.json'), {}).get('items') or []:
+        s, en, k = e.get('start'), e.get('end'), e.get('kind')
+        if not s or tw(s).strftime('%Y-%m-%d') > horizon:
+            continue
+        if k == 'sale':
+            add('大特賣', tw(s).strftime('%Y-%m-%d'), e['name'] + ' 開打', e['id'] + 's', f'台灣時間 {hm(s)} 開始' + (f'，到 {hm(en)}' if en else ''), 'hunt')
+            if en:
+                add('大特賣', lastday(en), e['name'] + ' 最後一晚', e['id'] + 'e', f'{hm(en)} 結束', 'hunt')
+        elif k == 'fest' and e.get('big'):        # 小型主題節不進行事曆（太雜），只留新品節這種大活動
+            add('活動', tw(s).strftime('%Y-%m-%d'), e['name'], e['id'], (e.get('note') + '，' if e.get('note') else '') + f'台灣時間 {hm(s)} 開始' + (f'，到 {hm(en)}' if en else ''), 'hunt')
+        elif k == 'show':
+            add('頒獎', tw(s).strftime('%Y-%m-%d'), e['name'], e['id'], f'台灣時間 {hm(s)} 開始直播', e.get('route') or 'cal')
+        elif k == 'vote':
+            add('投票截止', tw(s).strftime('%Y-%m-%d'), e['name'], e['id'], f'台灣時間 {hm(s)} 截止', e.get('route') or 'cal')
+    for x in (load(os.path.join(D, 'free.json'), {}).get('items') or []):
+        if x.get('end') and not x.get('up') and not x.get('mystery'):
+            st = {'epic': 'Epic', 'steam': 'Steam', 'gog': 'GOG'}.get(x.get('store'), '')
+            add('免費截止', lastday(x['end']), x['title'], x['id'], f'{st} 限時免費領，{hm(x["end"])} 截止', 'hunt')
     ev.sort()
     L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//UNPACKED//Launch Calendar//ZH', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
          _ics_fold('X-WR-CALNAME:解包・出擊日曆'), 'X-WR-TIMEZONE:Asia/Taipei', 'REFRESH-INTERVAL;VALUE=DURATION:PT3H', 'X-PUBLISHED-TTL:PT3H']
     for d, kind, name, uid, desc, route in ev:
         d8 = d.replace('-', '')
         nx = (dt.date.fromisoformat(d) + dt.timedelta(days=1)).strftime('%Y%m%d')
-        tag = {'上市': 'rel', '特價截止': 'end', '下週出擊': 'next'}[kind]
+        tag = {'上市': 'rel', '特價截止': 'end', '下週出擊': 'next', '大特賣': 'sale', '活動': 'fest', '頒獎': 'show', '投票截止': 'vote', '免費截止': 'free'}[kind]
         L += ['BEGIN:VEVENT', f'UID:unpacked-{tag}-{re.sub(r"[^A-Za-z0-9]+", "", str(uid)) or hashlib.md5(str(uid).encode()).hexdigest()[:12]}-{d8}@pzwei0105.github.io',
               f'DTSTAMP:{d8}T000000Z', f'DTSTART;VALUE=DATE:{d8}', f'DTEND;VALUE=DATE:{nx}',
               _ics_fold('SUMMARY:' + _ics_esc(f'{kind}｜{name}')), _ics_fold('DESCRIPTION:' + _ics_esc(f'{desc}\n解包 UNPACKED')),
@@ -761,15 +1107,26 @@ def main():
     live = {'at': iso(t0), 'ok': ok, 'asked': len(apps), 'errs': ERRS[:20], 'apps': out_apps}
     wrote = save_if_changed(live_path, live)
     print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}')
-    try:
-        calendar(D, t0)
-    except Exception as e:  # noqa: BLE001  日曆壞掉不能拖垮整輪
-        print('calendar fail', e, file=sys.stderr)
 
     if not a.no_candidates:
         c = candidates(covered, tagn, picked, mine)
         wrote_c = save_if_changed(os.path.join(D, 'candidates.json'), c)
         print('candidates:', {k: len(v) for k, v in c.items() if isinstance(v, list)}, 'wrote=', wrote_c)
+    # 行情板、免費補給站、日曆：各自壞掉都不能拖垮整輪
+    cov = {}
+    for x in reversed(pk.get('items') or []):          # 目錄是新的在前：倒著放，最新那篇蓋過舊的；專題優先於推坑
+        if x.get('steam'):
+            cov[int(x['steam'])] = 'p:' + x['id']
+    for x in reversed(idx.get('items') or []):
+        if x.get('steam'):
+            cov[int(x['steam'])] = 'f:' + x['id']
+    for name, fn in (('board', lambda: board(D, t0, tagn, cov)), ('free', lambda: freebies(D, t0, tagn)), ('calendar', lambda: calendar(D, t0))):
+        try:
+            fn()
+        except Exception as e:  # noqa: BLE001
+            import traceback
+            traceback.print_exc()
+            print(f'{name} fail', e, file=sys.stderr)
 
 
 if __name__ == '__main__':

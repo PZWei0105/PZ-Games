@@ -12,6 +12,7 @@ function setTabs(name) {
   const pd = $('.tab[data-go="picks"] .dot'); if (pd) { pd.textContent = pnew; pd.classList.toggle('hide', !pnew); }
   const sn = shNewCount(); const sd = $('.tab[data-go="shorts"] .dot'); if (sd) { sd.textContent = sn; sd.classList.toggle('hide', !sn); }
   const hn = huntSaleCount(); const hd = $('.tab[data-go="hunt"] .dot'); if (hd) { hd.textContent = hn; hd.classList.toggle('hide', !hn); }
+  askLamp();
 }
 function tapeText() {
   const it = S.index ? S.index.items : []; const last = it[0] && it[0].date;
@@ -28,7 +29,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
@@ -47,6 +48,9 @@ async function route() {
       afterFeature();
       scrollTo(0, 0);
     } else if (name === 'hunt') { setTabs('hunt'); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
+    else if (name === 'board') { setTabs('home'); if (!S.board || Date.now() - Date.parse(S.board.at) > 15 * 6e4) { try { const b = await getJSON('board.json'); if (b && b.rows) S.board = b; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderBoard(); restoreScroll(h); boardFx(); }
+    else if (name === 'tga') { setTabs('home'); if (!S.tgaD || tgaPhase() === 'live') { try { const t = await getJSON('tga.json'); if (t && t.cats) S.tgaD = t; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderTga(); if (prev && prev.startsWith('tga') && prev === h) restoreScroll(h); else scrollTo(0, 0); tgaFx(); }
+    else if (name === 'ask') { setTabs('home'); await loadAsk(); v.innerHTML = renderAsk(); scrollTo(0, 0); askFx(); askFlush(); }
     else if (name === 'cal') { setTabs('hunt'); v.innerHTML = await renderCal(); scrollTo(0, 0); calFx(); }
     else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
     else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
@@ -355,6 +359,24 @@ document.addEventListener('click', async (ev) => {
     if (a === 'calall') { const L = S.calEv || []; if (L.length) { calSave(L, 'unpacked-calendar.ics'); sfx.stamp(); toast(`${L.length} 筆一次加入`); } return; }
     if (a === 'calcopy') { if (await copyText(CAL_URL)) { sfx.stamp(); toast('訂閱網址已複製'); } return; }
     if (a === 'hinfo') { ev.stopPropagation(); huntInfo(act.dataset.k); return; }
+    // 行情板
+    if (a === 'mkf' || a === 'mks' || a === 'mktag') { if (a === 'mkf') MK.f = act.dataset.v; else if (a === 'mks') MK.sort = act.dataset.v; else MK.tag = MK.tag === act.dataset.v ? '' : act.dataset.v; sfx.click(); const y = scrollY; VIEW().innerHTML = renderBoard(); scrollTo(0, y); if (a === 'mktag' && MK.tag) { const l = $('.mk-tagon'); if (l) l.scrollIntoView({ behavior: 'smooth', block: 'center' }); } return; }
+    if (a === 'mkinfo') { mkInfo(act.dataset.a); return; }
+    // TGA 預測戰
+    if (a.startsWith('tga') && tgaAct(a, act)) return;
+    // 點播台
+    if (a === 'askmode') { const pre = ASK.pre; ASK.mode = act.dataset.v; ASK.pre = pre && pre.mode === ASK.mode ? pre : null; sfx.click(); VIEW().innerHTML = renderAsk(); askFx(); return; }
+    if (a === 'askchip') { const ta = $('#askq'); if (ta) { const q = QUICK[+act.dataset.i]; ta.value = ta.value.trim() ? ta.value.trim() + ' ' + q : q; ta.focus(); } sfx.pop(); return; }
+    if (a === 'asksend') { askSend(); return; }
+    if (a === 'askq') { closeSheet(); ASK.pre = { mode: 'ask', q: act.dataset.q || '', ref: act.dataset.ref || '', ctx: act.dataset.ctx || '' }; ASK.mode = 'ask'; NAVN++; if (ROUTE === 'ask') route(); else location.hash = 'ask'; return; }
+    if (a === 'askreq') { closeSheet(); ASK.pre = { mode: 'req', game: act.dataset.g || '', appid: act.dataset.a || '' }; ASK.mode = 'req'; NAVN++; if (ROUTE === 'ask') route(); else location.hash = 'ask'; return; }
+    if (a === 'askthis') { askSheet(act.dataset.k, S.curId); return; }
+    if (a === 'asksheet') { const q = ($('#askq') || {}).value || ''; if (q.trim().length < 4) { toast('問題寫長一點點', 'warn'); return; } askEmit('ask', { q: q.trim().slice(0, 600), ref: act.dataset.ref, ctx: (act.dataset.ctx || '').slice(0, 120) }); sfx.radio(); burstAt(act, [PINK, YEL, BLK], 18, 9); closeSheet(); const nx = nextShift('ask'); toast(`送出了！下一班 ${nx.at} ${nx.name}會回答`); const box = $('.qa-box'); const html = askBoxFor(act.dataset.ref); if (box) box.outerHTML = html; else { const br = $('.askthis'); if (br) br.closest('.btnrow').insertAdjacentHTML('afterend', html); } setTabs(ROUTE.startsWith('p/') ? 'picks' : ''); return; }
+    if (a === 'askpack') { askPack(act.dataset.k, act.dataset.id); return; }
+    if (a === 'askchat') { askChat(act.dataset.id); return; }
+    // 免費補給站
+    if (a === 'frgo') { ev.stopPropagation(); S.freeSeen[act.dataset.id] = 1; LS.set('freeSeen', S.freeSeen); sfx.coin(); window.open(act.getAttribute('href'), '_blank', 'noopener'); return; }
+    if (a === 'frgot') { const id = act.dataset.id; if (S.freeGot[id]) delete S.freeGot[id]; else { S.freeGot[id] = todayTW(); sfx.coin(); burstAt(act, [YEL, PINK], 16, 9); } LS.set('freeGot', S.freeGot); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); setTabs('hunt'); return; }
     if (a === 'hunwant') { delete S.marks[act.dataset.id]; save('marks'); closeSheet(); sfx.scratch(); toast('已經從獵物移除'); if (ROUTE.startsWith('hunt')) route(); return; }
     if (a === 'ha-go' || a === 'ha-x') { huntAlertClose(a === 'ha-go'); return; }
     if (a === 'jump') { const el = document.getElementById(act.dataset.to); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); sfx.click(); return; }
@@ -464,7 +486,7 @@ async function boot() {
   fxInit();
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
-    <button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
+    <button class="ib askb" data-go="ask" aria-label="點播台">${ICON.radio}<i class="dot hide"></i></button><button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
   $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
@@ -489,9 +511,12 @@ async function boot() {
   };
   gate.addEventListener('click', (e) => { e.stopPropagation(); enter(!!e.target.closest('.gm')); }, { once: true });
   addEventListener('hashchange', route);
+  addEventListener('online', () => askFlush());
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) askFlush(); });
+  setTimeout(() => askFlush(), 2500);
   if ('serviceWorker' in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register('sw.js').catch(() => {});
   // 每 20 分鐘看一次有沒有新資料（App 開著的時候）
-  setInterval(async () => { try { const old = S.index && S.index.at; await loadIndex(); if (S.index.at !== old) { tapeText(); if (ROUTE === 'home' || ROUTE === '') route(); toast('有新的解包！'); } setTabs(ROUTE.split('/')[0]); } catch (e) { /* */ } }, 20 * 60e3);
+  setInterval(async () => { try { const old = S.index && S.index.at; const unread = askUnread(); await loadIndex(); if (S.index.at !== old) { tapeText(); if (ROUTE === 'home' || ROUTE === '') route(); toast('有新的解包！'); } else if (askUnread() > unread) toast('點播台有新的回覆！'); setTabs(ROUTE.split('/')[0]); } catch (e) { /* */ } }, 20 * 60e3);
   // 自動測試用：?enter=1 直接進
   if (/[?&]enter=1/.test(location.search)) gate.click();
 }

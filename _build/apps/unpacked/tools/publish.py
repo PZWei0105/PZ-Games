@@ -10,7 +10,7 @@
 推坑（data/picks/<id>.json）另外產生 data/picks.json；推坑的 Steam appid 也會進 track.json。
 每週懶人包（data/weekly/<YYYY-Www>.json，WEEKLY_GUIDE.md）也一起檢查，並產生目錄 data/weekly.json。
 """
-import argparse
+import hashlib, argparse
 import datetime as dt
 import json
 import os
@@ -354,6 +354,145 @@ def check_pick(f, r):
     text_quality(f, fid, r)
 
 
+# ------------------------------------------------------------------ 點播台問答、TGA 預測戰、活動時程
+QA_ID = re.compile(r'^d[a-z0-9]{3,10}-[a-z0-9]{4,12}$')
+QA_BY = {'寫稿編輯', '推坑編輯', '願望單編輯', '週報編輯', 'TGA 開獎'}
+ISO_Z = re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$')
+ISO_ANY = re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})$')
+
+
+def simp_check(text, fid, r):
+    simp = sorted({ch for ch in text if ch in SIMPLIFIED and ch not in SIMP_SAFE})
+    if simp:
+        r.B(fid, f'疑似簡體字：{"".join(simp[:30])}')
+
+
+def check_qa(qa, r, refs):
+    """data/qa.json：點播台的回答（QA_GUIDE.md）。排程寫，App 照 id 對上痞子葳送出的問題。"""
+    fid = 'qa.json'
+    if not isinstance(qa, dict) or not isinstance(qa.get('items'), list):
+        r.B(fid, '格式要是 {"at": ..., "items": [...]}')
+        return
+    seen = set()
+    for i, x in enumerate(qa['items']):
+        k = f'{fid}#{i}'
+        if not isinstance(x, dict):
+            r.B(k, '每一筆要是物件')
+            continue
+        if not QA_ID.match(str(x.get('id') or '')):
+            r.B(k, 'id 要照抄 inbox.json 那一筆的 id')
+        if x.get('id') in seen:
+            r.B(k, '重複的 id')
+        seen.add(x.get('id'))
+        if x.get('type') not in ('ask', 'req'):
+            r.B(k, 'type 要是 ask（問答）或 req（點播解包）')
+        if x.get('st') not in ('done', 'no', 'wip'):
+            r.B(k, 'st 要是 done／no／wip')
+        if not isinstance(x.get('q'), str) or not x['q'].strip():
+            r.B(k, 'q（原本的問題或點播的遊戲）不能空白')
+        if x.get('st') in ('done', 'no'):
+            if not ISO_ANY.match(str(x.get('at') or '')):
+                r.B(k, 'at（回答時間）要是 ISO 時間')
+            if x.get('by') not in QA_BY:
+                r.B(k, f'by 要是 {"／".join(sorted(QA_BY))} 其中之一')
+            a = x.get('a') or ''
+            lo, hi = (40, 1800) if x['st'] == 'done' else (10, 400)
+            if not isinstance(a, str) or not lo <= len(a) <= hi:
+                r.B(k, f'a（回答）要 {lo}～{hi} 字')
+            simp_check(a + ''.join(x.get('pts') or []), k, r)
+        src = x.get('src') or []
+        if not isinstance(src, list) or any(not isinstance(s, dict) or not s.get('t') or not re.match(r'https?://', s.get('u') or '') for s in src):
+            r.B(k, 'src 每一項要有 t（標題）和 u（網址）')
+        if x.get('st') == 'done' and x.get('type') == 'ask' and not src and not x.get('link'):
+            r.B(k, '回答至少要附 1 個來源（或連到寫好的專題）')
+        if x.get('link') and x['link'] not in refs:
+            r.B(k, f'link {x["link"]} 找不到（要是 f:<專題 id> 或 p:<推坑 id>）')
+        if x.get('st') == 'done' and x.get('type') == 'req' and not str(x.get('link') or '').startswith(('f:', 'p:')):
+            r.B(k, '點播解包寫好了就要有 link: f:<專題 id>（已經有推坑的就連 p:<推坑 id>）')
+        if x.get('ref') and not re.match(r'^(f:|p:|a:\d+$|tga$|board$|w:)', str(x['ref'])):
+            r.W(k, f'ref 格式看不懂：{x["ref"]}')
+
+
+TGA_SEAL = 'ed568151dca547e8'   # 2026-11-18 封存時 Claude 的 30 項預測（獎項、入圍、押誰）的指紋：之後只准填 win／result_at
+
+
+def tga_digest(t):
+    return hashlib.sha256(json.dumps([[c['id'], [n['n'] for n in c['nom']], c['claude']['c']] for c in t['cats']], ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()[:16]
+
+
+def check_tga(t, r, refs):
+    fid = 'tga.json'
+    try:
+        if tga_digest(t) != TGA_SEAL:
+            r.B(fid, 'Claude 的 TGA 預測已經封存（11/18），獎項、入圍和 claude.c 都不准改；開獎只能填 win 和 result_at')
+    except (KeyError, TypeError):
+        r.B(fid, '獎項格式壞了（cats／nom／claude）')
+    for key in ('show', 'vote_end', 'sealed'):
+        if not ISO_Z.match(str(t.get(key) or '')):
+            r.B(fid, f'{key} 要是 UTC 的 ISO 時間（…Z）')
+    src = t.get('sources') or []
+    if any(not s.get('t') or not re.match(r'https?://', s.get('u') or '') for s in src):
+        r.B(fid, 'sources 每一項要有標題和網址')
+    ids = set()
+    for c in t.get('cats') or []:
+        k = f'{fid}#{c.get("id")}'
+        if not re.fullmatch(r'[a-z0-9]{2,12}', str(c.get('id') or '')) or c.get('id') in ids:
+            r.B(k, 'id 要是 2～12 個小寫英數、不能重複')
+        ids.add(c.get('id'))
+        if c.get('pt') not in (1, 2, 5):
+            r.B(k, 'pt 要是 1、2 或 5')
+        if c.get('grp') not in ('main', 'indie', 'genre', 'more', 'extra'):
+            r.B(k, 'grp 要是 main／indie／genre／more／extra')
+        nom = c.get('nom') or []
+        if not 2 <= len(nom) <= 8 or any(not isinstance(n, dict) or not n.get('n') for n in nom):
+            r.B(k, '入圍要 2～8 個，每個要有 n（名稱）')
+        for n in nom:
+            if n.get('ref') and n['ref'] not in refs:
+                r.B(k, f'{n["n"]} 的 ref {n["ref"]} 找不到')
+        cl = c.get('claude') or {}
+        if not isinstance(cl.get('c'), int) or not 0 <= cl['c'] < len(nom):
+            r.B(k, 'claude.c 要是入圍名單裡的位置')
+        if cl.get('conf') not in (1, 2, 3):
+            r.B(k, 'claude.conf 要是 1～3')
+        if not 20 <= len(cl.get('why') or '') <= 220:
+            r.B(k, 'claude.why 要 20～220 字')
+        for j in cl.get('s') or []:
+            if not isinstance(j, int) or not 0 <= j < len(src):
+                r.B(k, f'claude.s 的來源 {j} 不存在')
+        w = c.get('win')
+        if w is not None and (not isinstance(w, int) or not 0 <= w < len(nom)):
+            r.B(k, 'win 要是 null 或入圍名單裡的位置')
+    if len(ids) < 10:
+        r.B(fid, '獎項太少，是不是檔案壞了？')
+    if t.get('result_at') is not None and not ISO_ANY.match(str(t['result_at'])):
+        r.B(fid, 'result_at 要是 null 或 ISO 時間')
+    if t.get('result_at') and any(c.get('win') is None for c in t.get('cats') or []):
+        r.W(fid, '已經寫了 result_at，但還有獎項沒填 win')
+    simp_check(''.join(txt_all({k: v for k, v in t.items() if k != 'sources'})), fid, r)
+
+
+def check_events(e, r):
+    fid = 'events.json'
+    ids = set()
+    for x in e.get('items') or []:
+        k = f'{fid}#{x.get("id")}'
+        if not x.get('id') or x['id'] in ids:
+            r.B(k, 'id 不能空白或重複')
+        ids.add(x.get('id'))
+        if x.get('kind') not in ('sale', 'fest', 'show', 'vote'):
+            r.B(k, 'kind 要是 sale／fest／show／vote')
+        if not ISO_Z.match(str(x.get('start') or '')):
+            r.B(k, 'start 要是 UTC 的 ISO 時間（…Z）')
+        if x.get('end') and (not ISO_Z.match(str(x['end'])) or x['end'] <= x.get('start', '')):
+            r.B(k, 'end 要是 UTC 的 ISO 時間，而且晚於 start')
+        s = x.get('src') or {}
+        if not s.get('t') or not re.match(r'https?://', s.get('u') or ''):
+            r.B(k, 'src 要有官方或可靠來源的標題與網址')
+        if not x.get('name'):
+            r.B(k, 'name 不能空白')
+    simp_check(''.join(txt_all(e)), fid, r)
+
+
 def iso_week(d):
     y, w, _ = d.isocalendar()
     mon = d - dt.timedelta(days=d.weekday())
@@ -644,6 +783,14 @@ def main():
                 r.B('wish-skip.json', '格式要是 {"appid": "不寫的理由"}')
         except Exception as e:  # noqa: BLE001
             r.B('wish-skip.json', f'JSON 壞掉：{e}')
+    for name, fn in (('qa.json', lambda o: check_qa(o, r, refs)), ('tga.json', lambda o: check_tga(o, r, refs)), ('events.json', lambda o: check_events(o, r))):
+        pth = os.path.join(DATA, name)
+        if not os.path.exists(pth):
+            continue
+        try:
+            fn(json.load(open(pth, encoding='utf-8')))
+        except ValueError as e:
+            r.B(name, f'JSON 壞掉：{e}')
     for w in r.warn:
         print('WARN', w)
     for b in r.bad:

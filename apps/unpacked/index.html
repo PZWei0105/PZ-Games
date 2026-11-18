@@ -1257,6 +1257,304 @@ body.calm .wk-rays,body.calm .mvp-rays{animation:none}
 .ce-add svg{width:20px;height:20px}
 @media (min-width:720px){.cnext{grid-template-columns:120px 1fr}.cgrid{gap:6px}.cd{aspect-ratio:1.6}.clist{grid-template-columns:1fr 1fr}}
 
+/* =========================================================
+   行情板 STEAM 行情（台股習慣：紅漲綠跌）
+   ========================================================= */
+:root{--up:#ff4b4b;--dn:#2fe39a;--gold:#ffd54a}
+.mk-ix .up,.mk-ixd.up,.mk-tk .up,.mk-r .up,.mk-v .up,.mk-ht em.up,.mk-st .up,.mkh-r .up,.mk-home em.up,.mk-info .up{color:var(--up)}
+.mk-ix .dn,.mk-ixd.dn,.mk-tk .dn,.mk-r .dn,.mk-v .dn,.mk-ht em.dn,.mk-st .dn,.mkh-r .dn,.mk-home em.dn,.mk-info .dn{color:var(--dn)}
+.mk-ixd.eq,.mk-tk .eq,.mk-v .eq,.mkh-r .eq,.mk-home em.eq{color:#bdbdbd}
+.mk-acc{display:block;color:var(--y);margin-top:4px}
+.mk-k{display:inline-flex;align-items:center;gap:5px;font:900 13px/1 var(--cjk);letter-spacing:1px;background:var(--y);color:var(--k);padding:5px 7px;border:2px solid var(--k)}
+.mk-k svg{width:16px;height:16px}
+.mk-ix{position:relative;background:#0b0b0b;border:3px solid var(--y);box-shadow:6px 6px 0 var(--p);padding:12px 14px 12px;margin:4px 2px 16px;overflow:hidden}
+.mk-ix::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#ffffff06 0 1px,transparent 1px 4px);pointer-events:none}
+.mk-ixh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mk-ixh small{margin-left:auto;font:700 12px/1 var(--cjk);color:#999}
+.mk-live{display:inline-flex;align-items:center;gap:5px;font:400 16px/1 var(--num);letter-spacing:2px;color:var(--up)}
+.mk-live i{width:9px;height:9px;border-radius:50%;background:var(--up);animation:mkblink 1.1s steps(2) infinite}
+@keyframes mkblink{50%{opacity:.15}}
+.mk-ixv{display:flex;align-items:baseline;gap:8px;margin-top:8px}
+.mk-ixv b{font:400 60px/0.95 var(--num);color:#fff;letter-spacing:1px}
+.mk-ixv i{font:900 26px/1 var(--cjk);font-style:normal;color:#fff;margin-left:-4px}
+.mk-ixv span{font:900 14px var(--cjk);color:#ccc}
+.mk-ixd{font:400 28px/1.1 var(--num);letter-spacing:1px;margin-top:2px}
+.mk-ixd small{font:900 13px var(--cjk);color:#aaa;letter-spacing:0}
+.mk-ixc{display:block;width:100%;height:70px;margin-top:8px}
+.mk-ixc polyline{fill:none;stroke:var(--y);stroke-width:2.2;vector-effect:non-scaling-stroke}
+.mk-ix.up .mk-ixc polyline{stroke:var(--up)}.mk-ix.dn .mk-ixc polyline{stroke:var(--dn)}
+.mk-ixc .a{fill:#ffe60018}.mk-ix.up .mk-ixc .a{fill:#ff4b4b1f}.mk-ix.dn .mk-ixc .a{fill:#2fe39a1f}
+.mk-ixl{display:flex;justify-content:space-between;font:700 11px/1 var(--cjk);color:#888;margin-top:3px}
+.mk-br{margin-top:10px}
+.mk-br .bar{display:flex;height:10px;border:2px solid #000;background:#333}
+.mk-br .bar i{display:block;min-width:2px}.mk-br .u{background:var(--up)}.mk-br .f{background:#777}.mk-br .d{background:var(--dn)}
+.mk-brl{display:flex;justify-content:space-between;font:900 12.5px/1 var(--cjk);color:#bbb;margin-top:5px}
+.mk-brl .up{color:var(--up)}.mk-brl .dn{color:var(--dn)}
+.mk-tk{position:relative;overflow:hidden;white-space:nowrap;background:#000;border-top:2px solid var(--y);border-bottom:2px solid var(--y);margin:0 -14px 6px;padding:7px 0}
+.mk-tk .in{display:inline-block;font:900 14px/1 var(--cjk);color:#fff;animation:tape 46s linear infinite}
+.mk-tk b{color:var(--y);font-weight:900}.mk-tk em{font:400 17px/1 var(--num);font-style:normal;letter-spacing:.5px}
+.mk-tk i{color:var(--p);font-style:normal;margin:0 12px}
+.mk-heat{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.mk-ht{flex-basis:0;min-width:30%;display:grid;align-content:space-between;gap:2px;min-height:70px;padding:8px 9px;border:2px solid #000;color:#fff;text-align:left}
+.mk-ht b{font:900 15px/1.2 var(--cjk)}.mk-ht span{font:700 11px/1.2 var(--cjk);color:#ffffffc0}
+.mk-ht em{font:400 20px/1 var(--num);font-style:normal;color:#fff}
+.mk-ht.on{outline:3px solid var(--y);outline-offset:-3px}
+.mk-tagon{display:flex;align-items:center;gap:8px;font:900 14px var(--cjk);color:#ddd;margin:-4px 0 10px}.mk-tagon b{color:var(--y)}
+.filters .fl b{font:400 15px/1 var(--num);color:var(--p);margin-left:2px}.filters .fl.on b{color:var(--k)}
+.mk-list{display:grid;gap:6px}
+.mk-row{display:grid;grid-template-columns:30px minmax(0,1fr) 64px 78px;align-items:center;gap:8px;background:#161616;border-left:4px solid #555;padding:8px 9px 8px 6px;cursor:pointer;animation:mkin .35s both;animation-delay:calc(var(--i,0) * 22ms)}
+.mk-row.up{border-left-color:var(--up)}.mk-row.dn{border-left-color:var(--dn)}
+.mk-row:active{background:#222}
+@keyframes mkin{from{opacity:0;transform:translateY(8px)}}
+.mk-r{display:grid;justify-items:center;gap:2px}
+.mk-r b{font:400 24px/1 var(--num);color:#fff}
+.mk-r i{font:900 10.5px/1 var(--cjk);font-style:normal}.mk-r .nw{color:var(--k);background:var(--y);padding:2px 3px}
+.mk-im{display:none;position:relative;aspect-ratio:460/215;background:#222;overflow:hidden;border:2px solid #000}
+.mk-im img{width:100%;height:100%;object-fit:cover}.mk-im .ph{position:absolute;inset:0;display:grid;place-items:center;font:400 12px var(--num);color:#666}
+.mk-b{min-width:0}
+.mk-b h4{font:900 15px/1.3 var(--cjk);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk-m{display:flex;align-items:center;gap:4px;margin-top:4px;min-width:0;white-space:nowrap;overflow:hidden}
+.mk-m span{font:700 11.5px/1 var(--cjk);color:#8d8d8d;overflow:hidden;text-overflow:ellipsis}
+.mkf{flex:none;font:900 10.5px/1 var(--cjk);font-style:normal;padding:3px 5px;border:1.5px solid #000;color:#000}
+.mkf.f-surge{background:var(--up);color:#fff}.mkf.f-ath{background:var(--gold)}.mkf.f-crash{background:var(--dn)}.mkf.f-jump{background:var(--p);color:#fff}.mkf.f-new{background:var(--y)}.mkf.f-cov{background:#fff}
+.mk-sp{display:block;width:100%;height:30px}
+.mk-sp polyline{fill:none;stroke:#bbb;stroke-width:1.8;vector-effect:non-scaling-stroke}.mk-sp .a{fill:#ffffff10}
+.mk-sp.up polyline{stroke:var(--up)}.mk-sp.up .a{fill:#ff4b4b22}.mk-sp.dn polyline{stroke:var(--dn)}.mk-sp.dn .a{fill:#2fe39a22}
+span.mk-sp.none{font:700 10.5px/30px var(--cjk);color:#666;text-align:center}
+.mk-v{display:grid;justify-items:end;gap:3px}
+.mk-v b{font:400 22px/1 var(--num);color:#fff;letter-spacing:.5px}.mk-v span{font:400 16px/1 var(--num);letter-spacing:.5px}
+@media (min-width:560px){.mk-row{grid-template-columns:34px 92px minmax(0,1fr) 90px 92px}.mk-im{display:block}}
+@media (min-width:900px){.mk-ix.big{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:22px}.mk-ix.big .mk-ixh{grid-column:1/-1}.mk-ix.big .mk-ixc{grid-row:2/5;grid-column:2;height:100%;min-height:110px;margin:0}.mk-ix.big .mk-ixl{grid-column:2}.mk-ix.big .mk-br{grid-column:1}}
+.mk-st{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.mk-st>div{background:#1e1e1e;border:2px solid #333;padding:8px 9px;display:grid;gap:3px}
+.mk-st span{font:900 11.5px/1 var(--cjk);color:#999}.mk-st b{font:400 26px/1 var(--num);color:#fff}.mk-st em{font:700 11.5px/1.3 var(--cjk);font-style:normal;color:#aaa}.mk-st em i{font-style:normal;font-weight:900}
+@media (min-width:560px){.mk-st{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mk-ch{background:#0b0b0b;border:2px solid #333;padding:8px 10px;margin:10px 0}
+.mk-chh{display:flex;justify-content:space-between;gap:8px;font:900 12.5px/1.2 var(--cjk);color:#ddd;margin-bottom:6px}.mk-chh span{color:#999;font-weight:700}
+.mk-ch svg{display:block;width:100%;height:90px}
+.mk-ch .g{stroke:#ffffff14;stroke-width:1;vector-effect:non-scaling-stroke}
+.mk-ch polyline{fill:none;stroke:var(--y);stroke-width:2;vector-effect:non-scaling-stroke}.mk-ch .a{fill:#ffe60014}
+.mk-days{display:flex;align-items:flex-end;gap:2px;height:80px}.mk-days i{flex:1;background:var(--p);min-width:2px}
+.mk-info .hi-img .bn{background:#000;font:400 26px/1 var(--num);letter-spacing:1px}
+.mk-home{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 12px;align-items:center;margin:26px 2px 6px;padding:12px;background:#0b0b0b;border:3px solid var(--y);box-shadow:6px 6px 0 var(--p);cursor:pointer;transform:rotate(-.4deg)}
+.mkh-l{display:grid;gap:3px}
+.mkh-l b{font:400 40px/0.95 var(--num);color:#fff}.mkh-l em{font:400 20px/1 var(--num);font-style:normal}.mkh-l small{font:700 11px/1 var(--cjk);color:#888}
+.mkh-c{width:100%;height:46px}.mkh-c polyline{fill:none;stroke:var(--y);stroke-width:2;vector-effect:non-scaling-stroke}
+.mk-home.up .mkh-c polyline{stroke:var(--up)}.mk-home.dn .mkh-c polyline{stroke:var(--dn)}
+.mkh-r{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.mkh-r div{background:#1b1b1b;border:2px solid #2c2c2c;padding:6px 7px;display:grid;gap:3px;min-width:0}
+.mkh-r b{font:900 12.5px/1.25 var(--cjk);color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mkh-r span{font:400 17px/1 var(--num)}
+.mk-home .hs-a{position:absolute;right:8px;top:8px;font:900 18px/1 var(--cjk);color:var(--y)}
+
+/* =========================================================
+   大特賣倒數＋免費補給站
+   ========================================================= */
+.dl-sale{position:relative;margin:4px 2px 18px;padding:12px 14px 12px;background:#141414;border:3px solid var(--k);box-shadow:6px 6px 0 var(--y);overflow:hidden}
+.dl-sale::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;background:repeating-linear-gradient(-45deg,var(--y) 0 12px,var(--k) 12px 24px)}
+.dl-sale.on{border-color:var(--up);box-shadow:6px 6px 0 var(--up)}
+.dl-sale.on::after{content:"";position:absolute;inset:0;border:3px solid var(--up);animation:dlpulse 1.2s ease-in-out infinite;pointer-events:none}
+@keyframes dlpulse{50%{opacity:0}}
+.dl-k{font:400 16px/1 var(--num);letter-spacing:3px;color:var(--p);margin-top:8px}.dl-sale.on .dl-k{color:var(--up)}
+.dl-sale h3{font:900 24px/1.2 var(--cjk);color:#fff;margin-top:4px}
+.dl-cd{display:grid;gap:4px;margin-top:6px}
+.dl-cd b{font:400 46px/1 var(--num);color:var(--y);letter-spacing:2px}
+.dl-cd span{font:900 13px/1.4 var(--cjk);color:#ccc}
+.dl-war{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:10px;background:var(--y);color:var(--k);padding:8px 10px;border:2px solid var(--k)}
+.dl-war b{display:inline-flex;align-items:center;gap:4px;font:900 14px/1 var(--cjk)}.dl-war b svg{width:18px;height:18px}
+.dl-war span{font:900 13px/1.4 var(--cjk)}.dl-war em{font:400 22px/1 var(--num);font-style:normal;color:var(--r)}
+.dl-next{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.dl-next span{font:900 12px/1.3 var(--cjk);color:#ddd;background:#222;border:2px solid #333;padding:5px 7px}.dl-next b{font:400 16px/1 var(--num);color:var(--p);margin-right:5px}
+.dl-src{display:inline-block;margin-top:8px;font:700 11.5px/1.4 var(--cjk);color:#888}
+.dl-sale.mini{padding:10px 12px 10px;margin-bottom:14px}.dl-sale.mini::before{height:6px}
+.dl-sale.mini .dl-k{margin-top:4px;font-size:13px}
+.dl-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dl-row h3{font:900 19px/1.2 var(--cjk);color:#fff;margin:0}.dl-row b{font:400 30px/1 var(--num);color:var(--y);letter-spacing:1px}
+.dl-sale.mini .dl-cd{margin-top:2px}.dl-sale.mini .dl-cd span{font-size:12px;color:#bbb}
+.bc-sale{margin-top:8px;font:900 13px/1.45 var(--cjk);background:var(--k);color:var(--y);padding:7px 9px;border:2px solid var(--k)}
+.dl-free{margin:6px 0 4px}
+.dl-free .tape-h svg{width:18px;height:18px;vertical-align:-3px;margin-right:4px}
+.frs{display:flex;gap:16px;overflow-x:auto;padding:8px 6px 18px;margin:0 -6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.frs::-webkit-scrollbar{display:none}
+.frs .fr{flex:none;width:min(74vw,290px);scroll-snap-align:start}
+.fr{position:relative;background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:6px 6px 0 var(--dn);transform:rotate(var(--rot,0deg))}
+.fr.up{box-shadow:6px 6px 0 #666;opacity:.9}
+.fr.got{box-shadow:6px 6px 0 #999}
+.fr-im{position:relative;aspect-ratio:16/9;background:#222;overflow:hidden;border-bottom:3px solid var(--k)}
+.fr-im img{width:100%;height:100%;object-fit:cover}.fr-im .ph{position:absolute;inset:0;display:grid;place-items:center;font:400 30px var(--num);color:#555}
+.fr.got .fr-im img{opacity:.55}
+.fr-st{position:absolute;right:8px;top:8px;font:400 18px/1 var(--num);letter-spacing:2px;padding:5px 8px 3px;border:2px solid var(--k);background:#fff;color:#000}
+.fr-st.ep{background:#111;color:#fff;border-color:#fff}.fr-st.st{background:#1b2838;color:#66c0f4}.fr-st.gg{background:#7a1fa2;color:#fff}
+.fr-b{padding:10px 12px 4px}
+.fr-b h4{font:900 16px/1.35 var(--cjk);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fr-p{display:flex;align-items:baseline;gap:8px;margin-top:6px}.fr-p s{font:700 13px var(--cjk);color:#888}.fr-p b{font:900 20px/1 var(--cjk);color:#0a8f5a}
+.fr.up .fr-p b{color:#666}
+.fr-t{font:700 12.5px/1.5 var(--cjk);color:#555;margin-top:4px}
+.fr .btnrow{margin:10px 0 8px}
+.fr-stamp{position:absolute;right:10px;top:42%;font:400 46px/1 var(--num);color:var(--r);border:4px solid var(--r);padding:2px 10px;transform:rotate(-14deg);letter-spacing:3px;opacity:.85}
+.hstrip.free .hs-k{background:#0a8f5a}
+.hstrip.sale{background:repeating-linear-gradient(-45deg,var(--up) 0 14px,var(--k) 14px 28px)}.hstrip.sale .hs-k{background:var(--k);color:var(--y)}
+
+/* =========================================================
+   TGA 預測戰
+   ========================================================= */
+.tg-hero{position:relative;overflow:hidden;text-align:center;padding:22px 14px 16px;margin:4px 2px 14px;background:radial-gradient(90% 70% at 50% -10%,#6b4a0c 0%,#2a1d05 45%,#0b0906 80%);border:3px solid var(--gold);box-shadow:6px 6px 0 var(--p)}
+.tg-beams{position:absolute;inset:0;pointer-events:none}
+.tg-beams i{position:absolute;top:-30%;left:50%;width:22%;height:150%;background:linear-gradient(180deg,#ffe9a066,#ffe9a000 75%);transform-origin:50% 0;clip-path:polygon(45% 0,55% 0,100% 100%,0 100%);opacity:.5}
+.tg-beams i:nth-child(1){transform:translateX(-50%) rotate(-28deg);animation:tgsway 6s ease-in-out infinite alternate}
+.tg-beams i:nth-child(2){transform:translateX(-50%) rotate(-9deg);animation:tgsway2 7s ease-in-out infinite alternate}
+.tg-beams i:nth-child(3){transform:translateX(-50%) rotate(10deg);animation:tgsway 8s ease-in-out infinite alternate-reverse}
+.tg-beams i:nth-child(4){transform:translateX(-50%) rotate(29deg);animation:tgsway2 6.5s ease-in-out infinite alternate-reverse}
+@keyframes tgsway{from{transform:translateX(-50%) rotate(-30deg)}to{transform:translateX(-50%) rotate(-6deg)}}
+@keyframes tgsway2{from{transform:translateX(-50%) rotate(6deg)}to{transform:translateX(-50%) rotate(30deg)}}
+body.calm .tg-beams i{animation:none}
+.tg-stars{position:absolute;inset:0;background-image:radial-gradient(#ffd54a 1px,transparent 1.6px),radial-gradient(#fff 1px,transparent 1.6px);background-size:46px 46px,71px 71px;background-position:0 0,23px 30px;opacity:.35;pointer-events:none}
+.tg-hero>*:not(.tg-beams):not(.tg-stars){position:relative}
+.tg-k{font:400 17px/1 var(--num);letter-spacing:4px;color:var(--gold)}
+.tg-t{margin-top:6px;font:900 40px/1.05 var(--cjk);color:#fff;-webkit-text-stroke:5px #000;paint-order:stroke fill;text-shadow:3px 3px 0 var(--p),6px 6px 0 #000;letter-spacing:2px}
+.tg-t span{font:400 52px/1 var(--num);color:var(--gold);margin-right:8px;-webkit-text-stroke:0;letter-spacing:2px}
+.tg-hero.go .tg-t{animation:tgdrop .6s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes tgdrop{from{opacity:0;transform:translateY(-30px) scale(1.3)}}
+.tg-cd{display:grid;gap:3px;margin-top:10px}
+.tg-cd b{font:400 34px/1 var(--num);color:var(--gold);letter-spacing:2px}
+.tg-cd span{font:900 12.5px/1.4 var(--cjk);color:#ddd}
+.tg-sb{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;margin-top:14px}
+.tg-p{position:relative;display:grid;gap:3px;padding:10px 8px;border:3px solid #000;box-shadow:4px 4px 0 #000}
+.tg-p.me{background:var(--y);color:var(--k);transform:rotate(-1.5deg)}.tg-p.cl{background:var(--p);color:#fff;transform:rotate(1.5deg)}
+.tg-p span{font:900 13px/1 var(--cjk)}
+.tg-p b{font:400 40px/1 var(--num);letter-spacing:1px}.tg-p b small{font-size:22px;opacity:.7}.tg-p b.txt{font:900 24px/1.25 var(--cjk);letter-spacing:2px;padding:5px 0 3px}
+.tg-p em{font:900 11.5px/1.3 var(--cjk);font-style:normal;opacity:.85}
+.tg-p.lead{outline:4px solid var(--gold);outline-offset:3px}
+.tg-p .crown{position:absolute;top:-24px;right:-14px;transform:rotate(18deg);font-size:30px;font-style:normal;text-shadow:2px 2px 0 #000}
+.tg-vs{font:400 28px/1 var(--num);color:#fff;-webkit-text-stroke:1px #000}
+.tg-info{background:#151515;border:2px solid #333;padding:10px 12px;margin:0 2px 14px}
+.tg-info p{font:700 13.5px/1.7 var(--cjk);color:#ddd}.tg-info .tg-rule{color:var(--gold);margin-top:4px}
+.tg-info .btn{margin-top:10px}
+.tg-env{display:flex;gap:14px;align-items:center;background:#1c1406;border:3px dashed var(--gold);padding:12px;margin:0 2px 8px}
+.env{position:relative;flex:none;width:76px;height:52px;background:#f3ead2;border:3px solid #000;overflow:hidden}
+.env .flap{position:absolute;left:-3px;right:-3px;top:-3px;height:34px;background:#e6d8b0;clip-path:polygon(0 0,100% 0,50% 100%);border-bottom:3px solid #000}
+.env .wax{position:absolute;left:50%;top:22px;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;background:var(--r);color:#fff;font:400 18px/26px var(--num);text-align:center;border:2px solid #000}
+.tg-et{display:grid;gap:4px;min-width:0}.tg-et b{font:900 15px/1.3 var(--cjk);color:var(--gold)}.tg-et span{font:700 12.5px/1.5 var(--cjk);color:#ccc}.tg-et .btn{justify-self:start;margin-top:4px}
+.tg-cats{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-bottom:6px}
+@media (min-width:760px){.tg-cats{grid-template-columns:repeat(2,minmax(0,1fr))}.tg-cat.goty{grid-column:1/-1}}
+.tg-cat{background:#141414;border:2px solid #333;padding:10px;scroll-margin-top:110px}
+.tg-cat.has{border-color:#5a4a16}
+.tg-cat.goty{border:3px solid var(--gold);background:linear-gradient(180deg,#2a1f08,#141414 60%);box-shadow:5px 5px 0 var(--p)}
+.tg-ch{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tg-cn{flex:1;min-width:0}.tg-cn h4{font:900 17px/1.3 var(--cjk);color:#fff}.tg-cn span{font:700 11.5px/1.2 var(--cjk);color:#888}
+.tg-cat.goty .tg-cn h4{font-size:21px;color:var(--gold)}
+.tg-pt{font:400 26px/1 var(--num);color:var(--gold);text-align:center}.tg-pt small{font:900 11px var(--cjk);margin-left:1px}
+.tg-x2{font:400 18px/1 var(--num);letter-spacing:1px;padding:6px 8px;border:2px solid #555;color:#aaa;background:#1d1d1d}
+.tg-x2.on{background:var(--p);color:#fff;border-color:#000;box-shadow:2px 2px 0 var(--y)}
+.tg-noms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.tg-cat.goty .tg-noms{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:760px){.tg-cat.goty .tg-noms{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tg-n{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:8px;text-align:left;background:#202020;border:2px solid #3a3a3a;padding:8px 8px 8px 7px;min-height:58px;color:#eee;transition:transform .12s}
+.tg-n:active{transform:scale(.97)}
+.tg-l{display:grid;place-items:center;width:24px;height:24px;font:400 18px/1 var(--num);color:var(--gold);border:2px solid #4a3d18;background:#151208}
+.tg-n.me .tg-l{background:#000;color:var(--y);border-color:#000}
+.tg-nt{display:grid;gap:2px;min-width:0}
+.tg-nt em{justify-self:start;font:900 10.5px/1 var(--cjk);font-style:normal;color:var(--k);background:var(--y);padding:3px 4px;margin-top:3px}.tg-n.me .tg-nt em{background:#000;color:var(--y)}
+.tg-nt b{font:900 13.5px/1.3 var(--cjk);word-break:break-word}.tg-nt small{font:700 10.5px/1.3 var(--cjk);color:#999;word-break:break-word}
+.tg-n.me{background:var(--y);color:var(--k);border-color:#000;box-shadow:3px 3px 0 var(--p)}.tg-n.me .tg-nt small{color:#555}
+.tg-n.cl{border-color:var(--p)}
+.tg-n.win{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold)}
+.tg-n.out{opacity:.42}
+.tg-n[aria-disabled]{cursor:default}
+.tg-mk{position:absolute;right:-6px;top:-9px;display:flex;gap:4px;align-items:flex-start;pointer-events:none}
+.tg-me{font:900 14px/1 var(--cjk);font-style:normal;color:#fff;background:var(--r);border:2px solid #000;padding:4px 5px;transform:rotate(10deg)}
+.tg-cl{font:400 15px/1 var(--num);font-style:normal;color:#fff;background:var(--p);border:2px solid #000;padding:3px 6px;transform:rotate(-8deg)}
+.tg-win{position:absolute;right:-5px;bottom:-9px;display:flex;align-items:center;gap:3px;background:#000;color:var(--gold);border:2px solid var(--gold);padding:3px 6px 3px 4px;font-style:normal;transform:rotate(-4deg);pointer-events:none}.tg-win svg{width:14px;height:14px}.tg-win b{font:900 12px/1 var(--cjk);letter-spacing:1px}
+.tg-why{margin-top:8px;background:#1f1a10;border-left:4px solid var(--gold);padding:8px 10px}
+.tg-why.diff{border-left-color:var(--p);background:#1f1018}
+.tg-why b{display:block;font:900 13px/1.4 var(--cjk);color:var(--gold)}.tg-why.diff b{color:#ff8fbf}
+.tg-why b i{font-style:normal;letter-spacing:1px;margin-left:4px}
+.tg-why p{font:700 12.5px/1.65 var(--cjk);color:#ddd;margin-top:3px}
+.tg-why.pre{opacity:0;transform:rotateX(80deg)}
+.tg-why.flip{animation:tgflip .45s cubic-bezier(.2,1.3,.4,1) both;transform-origin:50% 0}
+@keyframes tgflip{from{opacity:0;transform:rotateX(80deg)}to{opacity:1;transform:none}}
+.tg-res{display:flex;gap:8px;margin-top:8px}.tg-res b{flex:1;font:900 12.5px/1 var(--cjk);text-align:center;padding:7px 4px;border:2px solid #000}
+.tg-res .ok{background:var(--dn);color:#000}.tg-res .no{background:#2a2a2a;color:#999}
+.tg-bar{position:sticky;bottom:calc(var(--tabs) + var(--sab) + 10px);z-index:20;display:flex;align-items:center;gap:10px;margin:18px 0 0;padding:10px 12px;background:#0b0b0b;border:3px solid var(--y);box-shadow:5px 5px 0 var(--p)}
+.tgb-p{position:relative;flex:1;min-width:0;display:grid;gap:2px;padding-bottom:7px}
+.tgb-p b{font:400 30px/1 var(--num);color:#fff}.tgb-p b small{font-size:18px;color:#888}.tgb-p span{font:900 12px/1 var(--cjk);color:#bbb}
+.tgb-p i{position:absolute;left:0;right:0;bottom:0;height:4px;background:#333}.tgb-p i::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--p,0%);background:var(--y)}
+.tg-bar .btn{flex:none;white-space:normal;max-width:60%;text-align:center}
+@media (max-height:500px) and (orientation:landscape){
+  .tg-bar{padding:5px 10px;bottom:calc(var(--tabs) + var(--sab) + 6px);max-width:620px;margin-left:auto;margin-right:auto}
+  .tgb-p{grid-template-columns:auto 1fr;align-items:end;column-gap:10px;padding-bottom:6px}.tgb-p b{font-size:22px}.tgb-p b small{font-size:14px}
+  .tg-bar .btn{padding-top:7px;padding-bottom:7px}
+  .tg-hero{padding-top:14px;padding-bottom:14px}
+}
+.tg-ban{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;margin:2px 2px 18px;padding:10px 12px;background:radial-gradient(120% 140% at 0% 0%,#5c3f08,#141009 60%);border:3px solid var(--gold);box-shadow:5px 5px 0 var(--p);cursor:pointer;transform:rotate(.4deg)}
+.tgb-l{display:grid;justify-items:center;color:var(--gold)}.tgb-l svg{width:26px;height:26px}.tgb-l b{font:400 22px/1 var(--num);letter-spacing:2px}.tgb-l span{font:400 13px/1 var(--num);letter-spacing:2px;color:#fff}
+.tgb-b{display:grid;gap:3px;min-width:0}.tgb-b b{font:900 15px/1.35 var(--cjk);color:#fff}.tgb-b span{font:900 12.5px/1.35 var(--cjk);color:var(--gold)}
+.tg-ban .hs-a{font:900 20px/1 var(--cjk);color:var(--gold)}
+
+/* =========================================================
+   點播台
+   ========================================================= */
+.askb{position:relative}
+.askb .dot{position:absolute;right:2px;top:3px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--p);color:#fff;font:400 13px/17px var(--num);text-align:center;font-style:normal}
+.ask-hero{position:relative;overflow:hidden;margin:10px 2px 14px;padding:16px 14px 14px;background:#0b0b0b;border:3px solid var(--p);box-shadow:6px 6px 0 var(--y)}
+.ask-air{display:inline-flex;align-items:center;gap:6px;font:400 18px/1 var(--num);letter-spacing:3px;color:#fff;background:var(--up);padding:5px 9px 3px;border:2px solid #000;transform:rotate(-3deg)}
+.ask-air i{width:9px;height:9px;border-radius:50%;background:#fff;animation:mkblink 1s steps(2) infinite}
+.ask-hero h1{font:900 38px/1.1 var(--cjk);color:#fff;margin-top:8px;-webkit-text-stroke:4px #000;paint-order:stroke fill;text-shadow:3px 3px 0 var(--p),6px 6px 0 #000;letter-spacing:3px}
+.ask-hero p{font:700 13.5px/1.7 var(--cjk);color:#ddd;margin-top:6px;max-width:30em;position:relative}
+.ask-waves{position:absolute;right:-30px;top:-30px;width:150px;height:150px;pointer-events:none}
+.ask-waves i{position:absolute;inset:0;border:3px solid var(--p);border-radius:50%;animation:askwave 2.4s ease-out infinite;animation-delay:calc(var(--i,0) * .8s);opacity:0}
+@keyframes askwave{from{transform:scale(.2);opacity:.9}to{transform:scale(1);opacity:0}}
+body.calm .ask-waves i{animation:none;opacity:.25}
+.ask-lamp{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font:900 12px/1 var(--cjk);color:#ddd;background:#1d1d1d;border:2px solid #333;padding:6px 8px;position:relative}
+.ask-lamp i{width:10px;height:10px;border-radius:50%;background:var(--dn)}.ask-lamp.wait i{background:var(--y)}.ask-lamp.off i{background:var(--up)}
+.ask-seg{justify-content:stretch;margin:0 2px 10px}.ask-seg button{flex:1;font-size:15px;padding:11px 8px}
+.ask-form{background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:6px 6px 0 var(--p);padding:12px;margin:0 2px 12px;display:grid;gap:10px}
+.ask-form label{display:grid;gap:5px;font:900 13px/1.3 var(--cjk);color:var(--p)}
+.ask-form input,.ask-form textarea,.ask-form select,.ask-opt textarea{width:100%;font:700 15px/1.6 var(--cjk);color:#111;background:#fffef5;border:2px solid #111;padding:8px 9px;border-radius:0}
+.ask-form textarea,.ask-opt textarea{min-height:92px;resize:vertical}
+.ask-form .sub-note{color:#555;margin:0}
+.ask-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ask-chips .chip{cursor:pointer;font-size:12px;padding:7px 8px}
+.ask-send{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.ask-send span{font:900 12.5px/1.4 var(--cjk);color:#555}.ask-send b{color:var(--r)}
+.ask-shifts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 2px 6px}
+.ask-shifts div{display:grid;gap:3px;background:#161616;border:2px solid #2c2c2c;padding:7px 8px}
+.ask-shifts b{font:400 22px/1 var(--num);color:var(--y)}.ask-shifts span{font:900 12px/1.2 var(--cjk);color:#ddd}.ask-shifts em{font:700 11px/1.2 var(--cjk);font-style:normal;color:#888}
+.qas{display:grid;gap:14px}
+.qa{display:grid;gap:8px}
+.qa-q{justify-self:end;width:min(92%,640px);background:var(--y);color:var(--k);border:3px solid var(--k);box-shadow:4px 4px 0 var(--p);padding:9px 11px;transform:rotate(.5deg)}
+.qa.sent .qa-q{animation:qasend .6s cubic-bezier(.2,1.3,.4,1)}
+@keyframes qasend{from{transform:translateY(-30px) scale(.9) rotate(-4deg);opacity:0}}
+.qa-qh{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:5px}
+.qa-tag{font:900 11px/1 var(--cjk);background:var(--k);color:var(--y);padding:4px 6px}.qa-tag.req{background:var(--p);color:#fff}
+.qa-ref{font:900 11.5px/1 var(--cjk);color:#444}
+.qa-qh time{margin-left:auto;font:700 11px var(--cjk);color:#555}
+.qa-q p{font:900 15px/1.6 var(--cjk);word-break:break-word}
+.qa-st{display:flex;align-items:center;gap:6px;margin-top:6px;font:900 12px/1.3 var(--cjk);color:#333}
+.qa-st i{flex:none;width:9px;height:9px;border-radius:50%;background:#999}.qa-st.s-y i{background:var(--p);animation:mkblink 1.2s steps(2) infinite}.qa-st.s-g i{background:#0a8f5a}.qa-st.s-k i{background:#111}
+.qa-a{width:min(96%,720px);background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:5px 5px 0 var(--y);padding:10px 12px;position:relative}
+.qa-a::before{content:"";position:absolute;right:70px;top:-11px;width:76px;height:20px;background:#ffffffcc;border:1px solid #ddd;transform:rotate(4deg)}
+.qa-a.no{box-shadow:5px 5px 0 #777}
+.qa-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.qa-h b{font:900 13px/1 var(--cjk);color:#fff;background:var(--p);padding:5px 7px}.qa-h span{font:700 11.5px var(--cjk);color:#666}
+.qa-a p{font:700 14.5px/1.75 var(--cjk);color:#222;margin-top:5px}
+.qa-a ul{margin:6px 0 0 18px}.qa-a li{font:700 14px/1.65 var(--cjk);color:#222}
+.qa-a .btnrow{margin:10px 0 2px}
+.qa-src{margin-top:8px;font:700 12px var(--cjk);color:#555}.qa-src summary{cursor:pointer}.qa-src li{margin:4px 0 0 18px}.qa-src a{color:#333}
+.qa.new .qa-a{outline:3px solid var(--p);outline-offset:3px}
+.qa.new .qa-a::after{content:"NEW";position:absolute;right:-8px;top:-12px;font:400 18px/1 var(--num);letter-spacing:2px;background:var(--y);color:#000;border:2px solid #000;padding:3px 6px;transform:rotate(8deg)}
+.qa-more{justify-self:start}
+.qa-box{margin:6px 0 10px}
+.qa-box .tape-h svg{width:18px;height:18px;vertical-align:-3px;margin-right:4px}
+.qa-mini{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start;margin:8px 2px 14px}
+.qa-mini>b{font:400 28px/1 var(--num);color:var(--y)}
+.qa-mini>p{font:900 14.5px/1.55 var(--cjk);color:#fff}
+.qa-mini>span{grid-column:2;font:900 12px/1.3 var(--cjk);color:var(--y)}
+.qa-mini .qa-a{grid-column:1/-1;width:100%}
+.ask-opt{background:#1b1b1b;border:2px solid #333;padding:12px;margin-bottom:12px;display:grid;gap:8px}
+.ask-opt>b{display:flex;align-items:center;gap:6px;font:900 16px/1.2 var(--cjk);color:var(--y)}.ask-opt>b svg{width:20px;height:20px}
+.ask-opt p{font:700 13px/1.6 var(--cjk);color:#ccc}.ask-opt p b{color:#fff}
+.c-s{background:var(--up)}.c-f{background:var(--dn)}.c-g{background:var(--gold)}.c-c{background:#4fd1ff}
+.ce-t.c-s{color:#fff}
+.tg-et a{color:var(--y);text-decoration:underline;text-underline-offset:2px}
+
 </style>
 </head>
 <body>
@@ -1284,7 +1582,7 @@ body.calm .wk-rays,body.calm .mvp-rays{animation:none}
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611161620';
+const VERSION = '1.0.2611180428';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1313,6 +1611,9 @@ const S = {
   wish: null, weekly: null, weekF: {}, wishSkip: {},   // Steam 願望單（獵價）、每週懶人包、願望單裡不寫解包的
   huntSeen: LS.get('huntSeen', {}),  // 看過的特價（appid:價格）
   picks: null, pickF: {},           // 推坑目錄、推坑稿
+  board: null, boardD: null,        // 行情板（Steam 線上人數前百名）、每日高峰
+  free: null, events: null,         // 免費補給站、大特賣與活動時程
+  tgaD: null, qa: null, inbox: null, // TGA 預測戰、點播台的回答與收件
   scroll: {},
 };
 const save = (k) => LS.set(k, S[k]);
@@ -1399,6 +1700,10 @@ const ICON = {
   target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg>',
   cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 14h3v3H8z" fill="currentColor"/></svg>',
   trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3.5h10v5a5 5 0 0 1-10 0z"/><path d="M7 5.5H3.5a3.5 3.5 0 0 0 4 4M17 5.5h3.5a3.5 3.5 0 0 1-4 4M12 13.5v3.5M8 21h8l-1-4H9z"/></svg>',
+  radio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="11" r="2.2" fill="currentColor"/><path d="M8.2 7.2a5.4 5.4 0 0 0 0 7.6M15.8 7.2a5.4 5.4 0 0 1 0 7.6M5.4 4.4a9.4 9.4 0 0 0 0 13.2M18.6 4.4a9.4 9.4 0 0 1 0 13.2M12 13.2 9 22h6z"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M6.5 15.5 11 11l3 3 6.5-7"/><path d="M15.5 7h5v5"/></svg>',
+  gift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="8" width="18" height="5" rx="1"/><path d="M5 13v8h14v-8M12 8v13"/><path d="M12 8C10.5 4.5 6.5 4 6.5 6.5S11 8 12 8zM12 8c1.5-3.5 5.5-4 5.5-1.5S13 8 12 8z"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>',
   full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
 };
 
@@ -1464,6 +1769,15 @@ const sfx = {
   siren() { if (!sndOK()) return; const t = T(); for (let i = 0; i < 3; i++) { tone(t + i * 0.32, 0.3, { type: 'sawtooth', f: 620, f2: 1240, g: 0.05 }); tone(t + i * 0.32, 0.3, { type: 'square', f: 310, f2: 620, g: 0.025 }); } },
   lock() { if (!sndOK()) return; const t = T(); [0, 0.07, 0.14].forEach((d, i) => tone(t + d, 0.06, { type: 'square', f: 1400 + i * 260, g: 0.05 })); nz(t + 0.2, 0.08, { type: 'lowpass', f: 1500, g: 0.4 }); },
   pop() { if (!sndOK()) return; const t = T(); tone(t, 0.12, { f: 500, f2: 1200, g: 0.18 }); nz(t, 0.05, { f: 3000, q: 3, g: 0.12 }); },
+  // 行情板：開盤鐘（一天第一次打開）、數字跳動
+  bell() { if (!sndOK()) return; const t = T(); [0, 0.38, 0.76].forEach((d) => { tone(t + d, 1.5, { f: 880, g: 0.13 }); tone(t + d, 1.0, { f: 1763, g: 0.045 }); tone(t + d, 0.6, { f: 2645, g: 0.02 }); }); },
+  tickUp(up = true) { if (!sndOK()) return; tone(T(), 0.06, { type: 'triangle', f: up ? 1500 : 700, f2: up ? 1900 : 520, g: 0.06 }); },
+  // 點播台：無線電發射
+  radio() { if (!sndOK()) return; const t = T(); nz(t, 0.22, { f: 2200, q: 1.5, g: 0.16, a: 0.01 }); [0, 0.08, 0.16, 0.24].forEach((d, i) => tone(t + 0.2 + d, 0.055, { type: 'square', f: i % 2 ? 1320 : 990, g: 0.05 })); nz(t + 0.55, 0.16, { type: 'highpass', f: 3500, g: 0.1 }); },
+  // TGA：拆封、開獎
+  fanfare() { if (!sndOK()) return; const t = T(); [[0, [523, 659, 784]], [0.17, [587, 740, 880]], [0.34, [659, 831, 988]], [0.56, [784, 988, 1175, 1568]]].forEach(([d, ch]) => ch.forEach((f) => tone(t + d, d > 0.5 ? 1.3 : 0.2, { type: 'sawtooth', f, g: 0.032, a: 0.01 }))); tone(t + 0.56, 1.2, { f: 196, f2: 190, g: 0.3 }); nz(t + 0.56, 0.6, { type: 'highpass', f: 6000, g: 0.08, a: 0.02 }); },
+  // 免費補給站：領到
+  coin() { if (!sndOK()) return; const t = T(); tone(t, 0.08, { type: 'square', f: 988, g: 0.06 }); tone(t + 0.08, 0.42, { type: 'square', f: 1319, g: 0.06 }); },
 };
 
 /* ---- boom-bap 鼓組（92 BPM，帶一點搖擺） ---- */
@@ -1706,6 +2020,14 @@ async function loadIndex() {
   const [idx, live, picks, wish, weekly] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })), getJSON('picks.json').catch(() => ({ items: [] })),
     getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] }))]);
   S.wishSkip = await getJSON('wish-skip.json').catch(() => ({}));
+  // 行情板、免費補給站、活動時程、TGA、點播台：讀不到都不影響主畫面
+  const [board, free, events, tga, qa, inbox] = await Promise.all(['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json'].map((p) => getJSON(p).catch(() => null)));
+  if (board && board.rows) S.board = board;
+  if (free && free.items) S.free = free;
+  if (events && events.items) S.events = events;
+  if (tga && tga.cats) S.tgaD = tga;
+  if (qa && qa.items) S.qa = qa;
+  if (inbox && inbox.events) { S.inbox = inbox; if (typeof askAck === 'function') askAck(); }
   S.index = idx; S.live = live || { apps: {} }; S.picks = picks || { items: [] };
   S.wish = wish && wish.items ? wish : null; S.weekly = weekly && weekly.items ? weekly : { items: [] };
   return idx;
@@ -1729,6 +2051,17 @@ async function loadHist(appid) {
   if (S.hist[appid]) return S.hist[appid];
   try { S.hist[appid] = await getJSON('hist/' + appid + '.json'); } catch (e) { S.hist[appid] = null; }
   return S.hist[appid];
+}
+async function loadBoardD() {
+  if (S.boardD) return S.boardD;
+  try { S.boardD = await getJSON('board-d.json'); } catch (e) { S.boardD = null; }
+  return S.boardD;
+}
+/* 點播台：問答與收件（開著點播台時每 2 分鐘重讀一次） */
+async function loadAsk() {
+  const [qa, inbox] = await Promise.all([getJSON('qa.json').catch(() => null), getJSON('inbox.json').catch(() => null)]);
+  if (qa && qa.items) S.qa = qa;
+  if (inbox && inbox.events) { S.inbox = inbox; askAck(); }
 }
 const liveOf = (steam) => (steam && S.live && S.live.apps) ? S.live.apps[String(steam)] || null : null;
 
@@ -1874,21 +2207,29 @@ function renderHome() {
   return `<div class="sec-h"><h2 class="spray-h">${lastDate === today ? '今日解包' : '最新解包'}</h2>
       <span class="date-stk">${esc(lastDate.slice(5).replace('-', '.'))} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</span></div>
     ${lastDate !== today ? `<p class="sub-note">今天的專題還在寫，先看 ${mdDay(lastDate)} 這批。</p>` : ''}
-    ${weekBanner()}${huntStrip()}
+    ${weekBanner()}${tgaBanner()}${huntStrip()}
     <div class="posters">${todays.map(posterHtml).join('')}</div>
     ${picksTeaser()}
+    ${marketStrip()}
     <h3 class="tape-h">追蹤牆</h3>
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="f/${esc(n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
-    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="board">${ICON.chart}<span>行情板</span></button><button class="btn y" data-go="tga">${ICON.star}<span>TGA 預測戰</span></button><button class="btn p" data-go="ask">${ICON.radio}<span>點播台</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
 }
 /* 首頁：願望單有特價就貼一條警示膠帶 */
 function huntStrip() {
   const sale = huntTargets().filter((t) => t.onSale || t.giveaway || t.hit).sort((a, b) => b.score - a.score);
-  if (!sale.length) return '';
-  const lows = sale.filter((t) => t.lowState === 'low').length; const hits = sale.filter((t) => t.hit).length;
-  return `<div class="hstrip" data-go="hunt"><span class="hs-k">${ICON.target}獵價</span><span class="hs-t">${hits ? `<b>${hits}</b> 款到了 Claude 的目標價，` : ''}你的獵物 <b>${sale.filter((t) => t.onSale || t.giveaway).length}</b> 款正在特價${lows ? `，<b>${lows}</b> 款史低` : ''}：${sale.slice(0, 2).map((t) => `${esc(t.name)} ${t.giveaway ? '免費' : t.hit && !t.onSale ? '到價' : '-' + t.disc + '%'}`).join('、')}${sale.length > 2 ? '…' : ''}</span><span class="hs-a">→</span></div>`;
+  const free = freeNow().filter((x) => !S.freeGot[x.id]); const big = saleLine();
+  if (!sale.length && !free.length && !big) return '';
+  const lows = sale.filter((t) => t.lowState === 'low').length; const hits = sale.filter((t) => t.hit).length; const on = sale.filter((t) => t.onSale || t.giveaway).length;
+  const parts = [];
+  if (hits) parts.push(`<b>${hits}</b> 款到了 Claude 的目標價`);
+  if (on) parts.push(`獵物 <b>${on}</b> 款特價${lows ? `（<b>${lows}</b> 款史低）` : ''}`);
+  if (free.length) parts.push(`<b>${free.length}</b> 款限時免費${free.some((x) => !S.freeSeen[x.id]) ? '（有新的）' : ''}`);
+  if (big) parts.push(big);
+  const names = sale.slice(0, free.length ? 1 : 2).map((t) => `${esc(t.name)} ${t.giveaway ? '免費' : t.hit && !t.onSale ? '到價' : '-' + t.disc + '%'}`).concat(free.slice(0, sale.length ? 1 : 2).map((x) => `${esc(x.mystery ? '神秘遊戲' : x.title)} 免費領`));
+  return `<div class="hstrip" data-go="hunt"><span class="hs-k">${ICON.target}獵價</span><span class="hs-t">${parts.join('，')}${names.length ? '：' + names.join('、') + (sale.length + free.length > names.length ? '…' : '') : ''}</span><span class="hs-a">→</span></div>`;
 }
 
 function picksTeaser() {
@@ -2079,7 +2420,8 @@ async function renderFeature(id) {
       <p class="vs">${esc(V.summary)}</p>${sealHtml(V.stamp, V.label, 'seal wait')}
       <div class="fa"><div class="st"><h4>適合你，如果…</h4><ul>${V.for.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="st p"><h4>不適合，如果…</h4><ul>${V.against.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div></div>
     ${buyHtml(f, lv)}
-    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn p sm" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn sm askthis" data-act="askthis" data-k="feature">${ICON.radio}<span>問 Claude</span></button><button class="btn p sm" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    ${askBoxFor('f:' + id)}
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
     ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源；粉紅色問號是還沒查證的。</p><div class="facts">${facts}</div>${liveHtml(f, lv, h)}${infoCards(f, lv)}`)}
     ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>${M.vids.length ? `<div class="btnrow"><button class="btn sm k" data-go="shorts/f:${esc(id)}">${ICON.shorts}<span>用短影音直式滑著看</span></button></div>` : ''}
@@ -2125,7 +2467,7 @@ function buyHtml(f, lv) {
     bar = `<div class="hp big ${hit ? 'crit' : cur <= 50 ? 'low' : cur < 100 ? 'mid' : ''}" style="--cur:${cur.toFixed(1)}%"><i class="hpf"></i><i class="hpt" style="left:${tg.toFixed(1)}%"></i></div><div class="hpk"><span>價格血條 ${Math.round(cur)}%</span><span class="tg">▲ 目標價 ${fmtNT(b.target)}</span></div>`;
   }
   return `<div class="buycard ${BUY_CLS[b.call] || ''} ${hit ? 'hit' : ''}"><div class="bc-k">Claude 判定・買不買</div><div class="bc-call">${esc(hit ? '到價，可以買' : b.call)}</div>
-    ${b.target != null ? `<div class="bc-t">目標價 <b>${fmtNT(b.target)}</b> 以下出手</div>` : ''}${now ? `<div class="bc-now">${now}</div>` : ''}${bar}
+    ${b.target != null ? `<div class="bc-t">目標價 <b>${fmtNT(b.target)}</b> 以下出手</div>` : ''}${now ? `<div class="bc-now">${now}</div>` : ''}${bar}${hit ? '' : saleHint(b)}
     <p>${esc(b.why)}</p>${b.watch ? `<p class="bc-w">什麼情況會改判：${esc(b.watch)}</p>` : ''}${hit ? '<i class="bc-stamp">到價</i>' : ''}</div>`;
 }
 
@@ -2240,7 +2582,8 @@ async function renderPick(id) {
     <div class="letter"><i class="tp tp1"></i><div class="lt-h">為什麼推你</div><p>${esc(f.why)}</p><div class="lt-sign">— Claude</div>
       <div class="seal wait pk-seal ${PICK_CLS[f.stamp] || ''}">${esc(f.stamp)}</div></div>
     <div class="rsns">${f.reasons.map((r, i) => `<div class="rsn" style="--i:${i};--rot:${rot(id + r.h, i, 1.4)}deg"><b class="rn">${i + 1}</b><h4>${esc(r.h)}</h4><p>${esc(r.t)}</p></div>`).join('')}</div>
-    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn sm askthis" data-act="askthis" data-k="pick">${ICON.radio}<span>問 Claude</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
+    ${askBoxFor('p:' + id)}
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
     ${Sx.gameplay ? sec('s-play', 'PLAY', '玩法拆解', `<div class="loop">${Sx.gameplay.loop.map((x, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="lp" style="--rot:${rot(id + x, i, 2)}deg">${esc(x)}</span>`).join('')}<span class="back2">↺ 再來一輪</span></div>
       ${Sx.gameplay.body.map((p) => `<p class="para">${esc(p)}</p>`).join('')}
@@ -3260,7 +3603,7 @@ function huntStatus(t) {
     : t.soon ? 100 - Math.min(99, t.relDays == null ? 99 : t.relDays) : (t.rv || 0) / 10;
   return t;
 }
-function huntSaleCount() { try { return huntTargets().filter((t) => t.newSale || t.newHit).length; } catch (e) { return 0; } }
+function huntSaleCount() { try { return huntTargets().filter((t) => t.newSale || t.newHit).length + freeNewCount(); } catch (e) { return 0; } }
 
 /* ---- 文字 ---- */
 function leftTxt(ms) {
@@ -3357,6 +3700,7 @@ function renderHunt() {
   const sync = w.ok ? `願望單 ${w.n || 0} 款・同步於 ${esc(ago(w.at))}` : '';
   return `<div class="sec-h"><h2 class="spray-h y">獵價</h2><span class="date-stk">PRICE HUNT</span><button class="btn sm k hcal" data-go="cal">${ICON.cal}<span>出擊日曆</span></button></div>
     <p class="sub-note">Steam 願望單＋你在 App 裡標「想玩」的遊戲，每小時對一次台灣區價格。${sync ? `<b class="hsync">${sync}</b>` : ''}${w.state === 'stale' ? '<span class="hwarn">（這一輪沒讀到，先顯示上一次）</span>' : ''}</p>
+    ${saleHtml()}
     <section class="radarw">
       <div class="radar" id="radar"><div class="rd-grid"></div><div class="rd-sweep" id="rdsweep"></div>${radarBlips(all)}
         <span class="rd-tl">TARGETS<b>${all.length}</b></span><span class="rd-br">${sale.length ? 'LOCK ON' : 'SCANNING'}<i>…</i></span></div>
@@ -3368,6 +3712,7 @@ function renderHunt() {
         <div class="hlegend"><i class="lg-low"></i>史低<i class="lg-sale"></i>特價（越靠中心折越多）<i class="lg-soon"></i>未上市<i class="lg-n"></i>等降價</div>
       </div>
     </section>
+    ${freeHtml()}
     ${st !== 'ok' && st !== 'stale' ? connectHtml(st) : ''}
     ${huntQueueNote(all)}
     <div class="filters hf">${fl('all', '全部')}${fl('sale', '特價中')}${hits.length ? fl('hit', '到價') : ''}${fl('low', '史低')}${fl('soon', '未上市')}${fl('tc', '有繁中')}${fl('cheap', 'NT$300 內')}${fl('want', '我想玩')}</div>
@@ -3464,6 +3809,7 @@ function huntFx() {
   huntStop();
   const sw = $('#rdsweep'); if (!sw) return;
   countUp($('.hstats'));
+  dealsFx();
   // 第一次進來：懸賞單一張張拍上牆
   const bs = $$('.bounty');
   if (fxOn()) dropIn(bs, 'hunt');
@@ -3490,7 +3836,7 @@ function huntFx() {
   setTimeout(() => {
     if (!ROUTE.startsWith('hunt')) return;
     for (const t of huntTargets()) { if (t.onSale) S.huntSeen[t.key + ':' + t.final] = 1; if (t.hit) S.huntSeen['hit:' + t.key + ':' + t.final] = 1; }
-    LS.set('huntSeen', S.huntSeen); setTabs('hunt');
+    LS.set('huntSeen', S.huntSeen); freeSeenAll(); setTabs('hunt');
   }, 1500);
 }
 function huntStop() { if (HUNT.raf) cancelAnimationFrame(HUNT.raf); HUNT.raf = 0; }
@@ -3877,12 +4223,12 @@ async function drawWeekCard(cv, wk, opt) {
 /* 解包 — 出擊日曆：上市日（專題、願望單）、特價截止（願望單、解包過的）、下週出擊（週報）排成日程。
    每一筆都能加進手機行事曆（.ics）；也能訂閱 data/calendar.ics（GitHub Actions 每小時重算），之後自動更新。 */
 const CAL_URL = 'https://pzwei0105.github.io/PZ-Games/apps/unpacked/data/calendar.ics';
-const CAL_TYPE = { rel: ['上市', 'y'], end: ['特價截止', 'p'], next: ['下週出擊', 'w'] };
+const CAL_TYPE = { rel: ['上市', 'y'], end: ['特價截止', 'p'], next: ['下週出擊', 'w'], sale: ['大特賣', 's'], fest: ['活動', 'c'], show: ['頒獎典禮', 'g'], vote: ['投票截止', 'g'], free: ['免費截止', 'f'] };
 
 function twDate(ms) { return new Date(ms + 8 * 3600e3).toISOString().slice(0, 10); }
 function calEvents() {
   const today = todayTW(); const out = []; const seen = new Set(); const refs = steamRefs();
-  const add = (e) => { const k = e.type + ':' + (e.appid || e.name) + ':' + e.d; if (seen.has(k)) return; seen.add(k); out.push(e); };
+  const add = (e) => { const k = e.type + ':' + (e.appid || e.key2 || e.name) + ':' + e.d; if (seen.has(k)) return; seen.add(k); out.push(e); };
   for (const it of (S.index && S.index.items) || []) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(it.release || '') || it.release < today) continue;
     add({ type: 'rel', d: it.release, name: it.zh, appid: it.steam, img: headerOf(it), route: 'f/' + it.id, sub: (it.platforms || []).map(PLAT_SHORT).slice(0, 3).join('／') });
@@ -3898,6 +4244,17 @@ function calEvents() {
     if (!r || !pr || !(pr.disc > 0) || !pr.end || Date.parse(pr.end) <= Date.now()) continue;
     add({ type: 'end', d: twDate(Date.parse(pr.end)), at: pr.end, name: r.it.zh, appid: +a, img: headerOf(r.it, lv), route: r.route, sub: `-${pr.disc}%・${fmtNT(pr.final)}・最後到 ${endDate(pr.end).split(' ')[1]}` });
   }
+  // 大特賣、新品節、TGA（官方日期）；免費補給站的截止（最後一晚＝結束前 3 小時那天）
+  const lastDay = (iso) => twDate(Date.parse(iso) - 3 * 36e5);
+  for (const e of evList()) {
+    if (!e.start) continue;
+    if (e.kind === 'sale') {
+      if (twDate(Date.parse(e.start)) >= today) add({ type: 'sale', d: twDate(Date.parse(e.start)), name: e.name + ' 開打', route: 'hunt', key2: e.id + 's', sub: `${twWhen(e.start)} 開始${e.end ? `・到 ${twWhen(e.end)}` : ''}` });
+      if (e.end && lastDay(e.end) >= today) add({ type: 'sale', d: lastDay(e.end), name: e.name + ' 最後一晚', route: 'hunt', key2: e.id + 'e', sub: `${twWhen(e.end)} 結束` });
+    } else if (e.kind === 'fest' && e.big && twDate(Date.parse(e.start)) >= today) add({ type: 'fest', d: twDate(Date.parse(e.start)), name: e.name, route: 'hunt', key2: e.id, sub: `${e.note ? e.note + '・' : ''}${twWhen(e.start)} 開始` });
+    else if ((e.kind === 'show' || e.kind === 'vote') && twDate(Date.parse(e.start)) >= today) add({ type: e.kind, d: twDate(Date.parse(e.start)), name: e.name, route: e.route || 'tga', key2: e.id, sub: `台灣時間 ${twWhen(e.start)}${e.kind === 'vote' ? ' 截止' : ' 開播'}${e.note ? '・' + e.note : ''}` });
+  }
+  for (const x of freeNow()) if (x.end && !x.mystery && lastDay(x.end) >= today) add({ type: 'free', d: lastDay(x.end), name: x.title, img: x.img, route: 'hunt', key2: x.id, sub: `${(STORE[x.store] || [''])[0]} 限時免費・${twWhen(x.end)} 截止` });
   const wk = latestWeek(); const wf = wk && S.weekF && S.weekF[wk.id];
   for (const n of (wf && wf.next) || []) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(n.d) || n.d < today) continue;
@@ -3925,13 +4282,13 @@ async function renderCal() {
   }).join('')}</div>`;
   const groups = []; ev.forEach((e, i) => { const g = groups[groups.length - 1]; if (g && g.d === e.d) g.i.push(i); else groups.push({ d: e.d, i: [i] }); });
   return `<div class="sec-h"><h2 class="spray-h y">出擊日曆</h2><span class="date-stk">LAUNCH CAL</span></div>
-    <p class="sub-note">解包過的上市日、你願望單的上市日和特價截止、週報的下週出擊，全部排在一起。資料每小時更新。</p>
+    <p class="sub-note">解包過的上市日、你願望單的上市日和特價截止、Steam 大特賣、免費遊戲截止、TGA、週報的下週出擊，全部排在一起。資料每小時更新。</p>
     ${next ? `<section class="cnext" ${next.route ? `data-go="${esc(next.route)}"` : next.key ? `data-act="hinfo" data-k="${esc(next.key)}"` : ''}><div class="cn-img">${next.img ? `<img src="${esc(next.img)}" alt="" onerror="imgFail(this)">` : ''}<div class="ht"></div></div>
       <div class="cn-d"><b>${esc(dLabel(next.d))}</b><span>${esc(mdDay(next.d))}（${wdOf(next.d)}）</span></div><div class="cn-b"><span class="cn-k">下一個${CAL_TYPE[next.type][0]}</span><h3>${esc(next.name)}</h3><p>${esc(next.sub || '')}</p></div></section>` : ''}
     <div class="csub"><div><b>${ICON.cal}訂閱到手機行事曆</b><span>訂閱一次，上市日和特價截止會自動出現在 iPhone 行事曆，之後每小時跟著更新。</span></div>
       <div class="btnrow"><a class="btn y sm" href="${CAL_URL.replace('https://', 'webcal://')}">${ICON.cal}<span>訂閱</span></a><button class="btn sm" data-act="calcopy">${ICON.copy}<span>複製訂閱網址</span></button>${ev.length ? `<button class="btn sm" data-act="calall">${ICON.dl}<span>全部加入一次</span></button>` : ''}</div></div>
     ${grid}
-    <div class="clegend"><i class="c-y"></i>上市<i class="c-p"></i>特價截止<i class="c-w"></i>下週出擊（週報）</div>
+    <div class="clegend"><i class="c-y"></i>上市<i class="c-p"></i>特價截止<i class="c-s"></i>大特賣<i class="c-f"></i>免費截止<i class="c-g"></i>TGA<i class="c-c"></i>新品節<i class="c-w"></i>下週出擊</div>
     ${groups.length ? `<div class="clist">${groups.map((g) => `<div class="cg" id="cd-${g.d}"><div class="cg-d ${g.d === today ? 'today' : ''}"><b>${esc(mdDay(g.d))}</b><span>週${wdOf(g.d)}</span><em>${esc(dLabel(g.d))}</em></div><div class="cg-l">${g.i.map((i) => { const e = ev[i]; return `<div class="ce" ${e.route ? `data-go="${esc(e.route)}"` : e.key ? `data-act="hinfo" data-k="${esc(e.key)}"` : ''}><span class="ce-t c-${CAL_TYPE[e.type][1]}">${CAL_TYPE[e.type][0]}</span><div class="ce-b"><h4>${esc(e.name)}</h4>${e.sub ? `<p>${esc(e.sub)}</p>` : ''}</div><button class="ce-add" data-act="caladd" data-i="${i}" aria-label="加入行事曆">${ICON.cal}</button></div>`; }).join('')}</div></div>`).join('')}</div>`
       : '<div class="empty">接下來沒有排定的上市或特價截止。專題、願望單、週報有新的日期就會自動出現。</div>'}`;
 }
@@ -3952,7 +4309,7 @@ function icsOf(list) {
   const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//UNPACKED//Launch Calendar//ZH', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
   for (const e of list) {
     const nx = new Date(Date.parse(e.d + 'T00:00:00Z') + 864e5).toISOString().slice(0, 10);
-    L.push('BEGIN:VEVENT', `UID:unpacked-${e.type}-${e.appid || hashStr(e.name)}-${d8(e.d)}@pzwei0105.github.io`, `DTSTAMP:${d8(e.d)}T000000Z`,
+    L.push('BEGIN:VEVENT', `UID:unpacked-${e.type}-${e.appid || (e.key2 ? String(e.key2).replace(/[^A-Za-z0-9]+/g, '') : hashStr(e.name))}-${d8(e.d)}@pzwei0105.github.io`, `DTSTAMP:${d8(e.d)}T000000Z`,
       `DTSTART;VALUE=DATE:${d8(e.d)}`, `DTEND;VALUE=DATE:${d8(nx)}`, icsFold(`SUMMARY:${icsEsc(CAL_TYPE[e.type][0] + '｜' + e.name)}`),
       icsFold(`DESCRIPTION:${icsEsc((e.sub || '') + '\n解包 UNPACKED')}`), `URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/${e.route ? '#' + e.route : '#hunt'}`, 'END:VEVENT');
   }
@@ -3962,6 +4319,701 @@ async function calSave(list, name) {
   const blob = new Blob([icsOf(list)], { type: 'text/calendar' }); const u = URL.createObjectURL(blob);
   if (IOS) { location.href = u; setTimeout(() => URL.revokeObjectURL(u), 60e3); return; }   // iPhone 直接開成「加入行事曆」畫面
   const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+}
+
+/* ---- market.js ---- */
+/* 解包 — 行情板：Steam 線上人數前百名（data/board.json，GitHub Actions 每小時更新）。
+   用看盤的方式看遊戲人氣：大盤（百大總線上）、漲跌家數、題材熱度、每一款的 24 小時漲跌與七天走勢。
+   台股習慣：紅漲綠跌。漲跌比的是 24 小時前同一時間的線上人數；「爆量」＝比 24 小時前多 40% 以上（至少 3,000 人）。 */
+const MK = { f: 'all', sort: 'n', tag: '', bellDay: LS.get('mkBell', '') };
+const MK_F = { surge: '爆量', new: '新進榜', ath: '創新高', crash: '急跌', jump: '排名飆升' };
+
+const bd = () => (S.board && S.board.rows && S.board.rows.length ? S.board : null);
+function mkPct(v, d = 1) { return v == null ? '—' : (v > 0 ? '▲' : v < 0 ? '▼' : '') + Math.abs(v).toFixed(d) + '%'; }
+function mkCls(v) { return v == null ? 'eq' : v > 0.05 ? 'up' : v < -0.05 ? 'dn' : 'eq'; }
+function mkNum(n) {
+  if (n == null) return '—';
+  if (n >= 1e6) return (n / 10000).toFixed(0) + '萬';
+  if (n >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, '') + '萬';
+  return Number(n).toLocaleString('zh-TW');
+}
+/* 解包過、推坑過的用 App 裡的台灣中文名 */
+function mkName(r) { const x = r.cov && wkRef(r.cov); return x ? x.it.zh : r.nm; }
+function mkHours() { const b = bd(); return b && b.t && b.t.length > 1 ? (b.t[b.t.length - 1] - b.t[0]) / 60 : 0; }
+
+/* 折線：空值跳過；cls 決定顏色 */
+function mkPts(vals, w = 100, h = 30, pad = 2) {
+  const pts = (vals || []).map((v, i) => [i, v]).filter((p) => p[1] != null);
+  if (pts.length < 2) return null;
+  const n = vals.length - 1 || 1; const vs = pts.map((p) => p[1]); const lo = Math.min(...vs), hi = Math.max(...vs);
+  return pts.map(([i, v]) => [(i / n) * w, h - pad - ((v - lo) / Math.max(1, hi - lo)) * (h - pad * 2)]);
+}
+function mkSpark(vals, cls, w = 100, h = 30) {
+  const p = mkPts(vals, w, h); if (!p) return `<span class="mk-sp none">累積中</span>`;
+  const line = p.map((x) => x[0].toFixed(1) + ',' + x[1].toFixed(1)).join(' ');
+  return `<svg class="mk-sp ${cls}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polygon class="a" points="${p[0][0].toFixed(1)},${h} ${line} ${p[p.length - 1][0].toFixed(1)},${h}"/><polyline points="${line}"/></svg>`;
+}
+
+function mkRows() {
+  const b = bd(); if (!b) return [];
+  let a = b.rows.filter((r) => !r.adult);
+  if (MK.f === 'cov') a = a.filter((r) => r.cov);
+  else if (MK.f !== 'all') a = a.filter((r) => (r.f || []).includes(MK.f));
+  if (MK.tag) a = a.filter((r) => (r.tags || []).includes(MK.tag));
+  const s = MK.sort;
+  const key = { n: (r) => -r.n, up: (r) => -(r.d1 ?? -1e9), dn: (r) => (r.d1 ?? 1e9), wk: (r) => -((r.lw && r.rp) ? r.lw - r.rp : -1e9) }[s] || ((r) => -r.n);
+  return a.slice().sort((x, y) => key(x) - key(y));
+}
+function mkRow(r, i) {
+  const c = mkCls(r.d1); const wk = r.lw && r.rp ? r.lw - r.rp : null;
+  return `<div class="mk-row ${c}" data-act="mkinfo" data-a="${r.a}" style="--i:${Math.min(i, 24)}">
+    <div class="mk-r"><b>${r.r}</b>${wk ? `<i class="${wk > 0 ? 'up' : 'dn'}">${wk > 0 ? '↑' : '↓'}${Math.abs(wk)}</i>` : (r.f || []).includes('new') ? '<i class="nw">NEW</i>' : ''}</div>
+    <div class="mk-im">${r.img ? `<img src="${esc(r.img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${r.img ? 'display:none' : ''}">STEAM</div></div>
+    <div class="mk-b"><h4>${esc(mkName(r))}</h4><div class="mk-m">${(r.f || []).filter((f) => f !== 'new').map((f) => `<i class="mkf f-${f}">${MK_F[f]}</i>`).join('')}${r.cov ? `<i class="mkf f-cov">${r.cov[0] === 'f' ? '解包過' : '推坑過'}</i>` : ''}<span>${esc((r.tags || []).slice(0, 2).join('・'))}</span></div></div>
+    ${mkSpark(r.sp && r.sp.filter((v) => v != null).length > 2 ? r.sp : r.h, c)}
+    <div class="mk-v"><b>${mkNum(r.n)}</b><span class="${c}">${mkPct(r.d1)}</span></div></div>`;
+}
+/* 大盤：百大總線上＋30 小時走勢＋漲跌家數 */
+function mkIndexHtml(b, big) {
+  const ix = b.idx || {}; const c = mkCls(ix.d1); const hrs = mkHours();
+  const p = mkPts(ix.h, 300, 70, 4);
+  const line = p ? p.map((x) => x[0].toFixed(1) + ',' + x[1].toFixed(1)).join(' ') : '';
+  const tot = (ix.up || 0) + (ix.dn || 0) + (ix.fl || 0);
+  return `<section class="mk-ix ${c} ${big ? 'big' : ''}"><div class="mk-ixh"><span class="mk-k">STEAM 百大</span><span class="mk-live"><i></i>LIVE</span><small>更新於 ${esc(ago(b.at))}</small></div>
+    <div class="mk-ixv"><b data-w="${ix.n || 0}">${ix.n >= 10000 ? (ix.n / 10000).toFixed(1) : ix.n || 0}</b><i>${ix.n >= 10000 ? '萬' : ''}</i><span>人正在玩</span></div>
+    <div class="mk-ixd ${c}">${ix.d1 != null ? `${mkPct(ix.d1, 2)} <small>比 24 小時前</small>` : `<small>24 小時漲跌累積中（還要 ${Math.max(1, Math.ceil(24 - hrs))} 小時）</small>`}</div>
+    ${p ? `<svg class="mk-ixc" viewBox="0 0 300 70" preserveAspectRatio="none"><polygon class="a" points="0,70 ${line} 300,70"/><polyline points="${line}"/></svg><div class="mk-ixl"><span>${Math.round(hrs)} 小時前</span><span>現在</span></div>` : ''}
+    ${tot ? `<div class="mk-br"><div class="bar"><i class="u" style="flex:${ix.up}"></i><i class="f" style="flex:${ix.fl}"></i><i class="d" style="flex:${ix.dn}"></i></div><div class="mk-brl"><span class="up">上漲 ${ix.up}</span><span>平盤 ${ix.fl}</span><span class="dn">下跌 ${ix.dn}</span></div></div>` : ''}</section>`;
+}
+function mkTicker(b) {
+  const rows = b.rows.filter((r) => !r.adult);
+  const mv = rows.filter((r) => r.d1 != null).sort((x, y) => Math.abs(y.d1) - Math.abs(x.d1)).slice(0, 12);
+  const list = (mv.length >= 4 ? mv : rows.slice(0, 12));
+  const one = list.map((r) => `<b>${esc(mkName(r))}</b> ${esc(mkNum(r.n))} <em class="${mkCls(r.d1)}">${mkPct(r.d1)}</em>`).join('<i>◆</i>');
+  return `<div class="mk-tk"><div class="in">${one}<i>◆</i>${one}<i>◆</i></div></div>`;
+}
+function mkHeat(b) {
+  const tags = b.tags || []; if (!tags.length) return '';
+  const tot = (b.idx && b.idx.n) || 1;
+  return `<h3 class="tape-h">題材熱度 <small>同一款最多算三個標籤</small></h3><div class="mk-heat">${tags.map((t) => {
+    const a = t.d1 == null ? 0 : Math.min(1, Math.abs(t.d1) / 12);
+    const bg = t.d1 == null ? '#262626' : t.d1 >= 0 ? `rgba(255,75,75,${(0.2 + a * 0.7).toFixed(2)})` : `rgba(47,227,154,${(0.2 + a * 0.7).toFixed(2)})`;
+    return `<button class="mk-ht ${MK.tag === t.t ? 'on' : ''}" data-act="mktag" data-v="${esc(t.t)}" style="flex-grow:${Math.max(1, Math.round(t.n / tot * 100))};background:${bg}"><b>${esc(t.t)}</b><span>${esc(mkNum(t.n))}・${t.k} 款</span><em>${mkPct(t.d1)}</em></button>`;
+  }).join('')}</div>`;
+}
+function renderBoard() {
+  const b = bd();
+  const head = `<div class="sec-h"><h2 class="spray-h y">行情板</h2><span class="date-stk">STEAM LIVE</span></div>`;
+  if (!b) return head + `<div class="empty">行情資料還沒進來：GitHub 每小時抓一次 Steam 線上人數前百名，第一筆進來就會出現在這裡。</div>`;
+  const rows = mkRows();
+  const cnt = (f) => b.rows.filter((r) => (r.f || []).includes(f)).length;
+  const fl = (v, label, n) => `<button class="fl ${MK.f === v ? 'on' : ''}" data-act="mkf" data-v="${v}">${label}${n != null ? ` <b>${n}</b>` : ''}</button>`;
+  const so = (v, label) => `<button class="fl ${MK.sort === v ? 'on' : ''}" data-act="mks" data-v="${v}">${label}</button>`;
+  const hrs = mkHours();
+  return head + `<p class="sub-note">Steam 線上人數前百名，每小時更新。紅漲綠跌，比的是 24 小時前同一時間；爆量＝多 40% 以上。${hrs < 24 ? `<b class="mk-acc">剛開始追蹤 ${Math.max(1, Math.round(hrs))} 小時，漲跌要滿 24 小時才算得出來，排名變化先看 Steam 的上週名次。</b>` : ''}</p>
+    ${mkIndexHtml(b, true)}${mkTicker(b)}${mkHeat(b)}
+    <div class="filters">${fl('all', '全部')}${fl('surge', '爆量', cnt('surge'))}${fl('new', '新進榜', cnt('new'))}${fl('ath', '創新高', cnt('ath'))}${fl('jump', '排名飆升', cnt('jump'))}${fl('crash', '急跌', cnt('crash'))}${fl('cov', '解包過', b.rows.filter((r) => r.cov).length)}</div>
+    ${MK.tag ? `<div class="mk-tagon">題材：<b>${esc(MK.tag)}</b><button class="btn sm" data-act="mktag" data-v="">清除</button></div>` : ''}
+    <div class="sortrow">排序 ${so('n', '線上人數')}${so('up', '漲幅')}${so('dn', '跌幅')}${so('wk', '週排名')}</div>
+    <div class="mk-list">${rows.map(mkRow).join('') || '<div class="empty">沒有符合的遊戲，換個篩選試試。</div>'}</div>
+    <p class="sub-note" style="margin-top:14px">資料：Steam 官方的線上人數（${b.src === 'concurrent' ? '線上人數排行' : '每款遊戲的線上人數'}）。週排名是 Steam 每日高峰排行跟上週比；「創新高」是這個 App 開始追蹤以來的最高（追蹤滿 3 天才算）。</p>`;
+}
+/* 個股：30 小時走勢、7 天走勢、每日高峰 */
+function mkChart(vals, ts, label) {
+  const p = mkPts(vals, 300, 90, 6); if (!p) return '';
+  const line = p.map((x) => x[0].toFixed(1) + ',' + x[1].toFixed(1)).join(' ');
+  const v = vals.filter((x) => x != null); const hi = Math.max(...v), lo = Math.min(...v);
+  const hrs = ts && ts.length > 1 ? (ts[ts.length - 1] - ts[0]) / 60 : 0;
+  return `<div class="mk-ch"><div class="mk-chh"><b>${esc(label)}</b><span>最高 ${esc(mkNum(hi))}・最低 ${esc(mkNum(lo))}</span></div>
+    <svg viewBox="0 0 300 90" preserveAspectRatio="none"><path class="g" d="M0,30H300M0,60H300"/><polygon class="a" points="${p[0][0].toFixed(1)},90 ${line} ${p[p.length - 1][0].toFixed(1)},90"/><polyline points="${line}"/></svg>
+    <div class="mk-ixl"><span>${hrs >= 48 ? Math.round(hrs / 24) + ' 天前' : Math.round(hrs) + ' 小時前'}</span><span>現在</span></div></div>`;
+}
+async function mkInfo(a) {
+  const b = bd(); const r = b && b.rows.find((x) => x.a === +a); if (!r) return;
+  const nm = mkName(r); const c = mkCls(r.d1); const ref = r.cov && wkRef(r.cov);
+  const wk = r.lw && r.rp ? r.lw - r.rp : null;
+  const why = r.d1 != null && r.d1 >= 15 ? `為什麼最近玩的人變多？` : r.d1 != null && r.d1 <= -15 ? `為什麼最近玩的人變少？` : `現在值得玩嗎？`;
+  openSheet(`<div class="hinfo mk-info"><div class="hi-img">${r.img ? `<img src="${esc(r.img)}" alt="" onerror="imgFail(this)">` : ''}<span class="bn ${c}">${mkPct(r.d1)}</span></div>
+    <h3>${esc(nm)}</h3>${nm !== r.nm ? `<div class="ben">${esc(r.nm)}</div>` : ''}
+    <div class="chips" style="padding:0;margin-top:8px">${(r.f || []).map((f) => `<span class="chip ${f === 'crash' ? 'n' : 'p'}">${MK_F[f]}</span>`).join('')}${(r.tags || []).map((t) => `<span class="chip n">${esc(t)}</span>`).join('')}${r.zh === 'tc' ? '<span class="chip">繁中</span>' : r.zh === 'sc' ? '<span class="chip n">只有簡中</span>' : ''}</div>
+    <div class="mk-st">
+      <div><span>現在線上</span><b>${esc(mkNum(r.n))}</b><em class="${c}">${mkPct(r.d1)}</em></div>
+      <div><span>24 小時最高</span><b>${esc(mkNum(r.pk))}</b><em>${r.d7 != null ? `7 天 <i class="${mkCls(r.d7)}">${mkPct(r.d7)}</i>` : '7 天累積中'}</em></div>
+      <div><span>線上排名</span><b>#${r.r}</b><em>${r.rp ? `每日高峰 #${r.rp}` : ''}${wk ? `・上週 #${r.lw}` : ''}</em></div>
+      <div><span>追蹤以來最高</span><b>${r.ath ? esc(mkNum(r.ath[0])) : '—'}</b><em>${r.ath ? esc(mdDay(r.ath[1])) : '追蹤滿 3 天才算'}</em></div>
+      <div><span>Steam 評價</span><b>${r.rv && r.rv[0] != null ? r.rv[0] + '%' : '—'}</b><em>${r.rv ? esc(fmtN(r.rv[1])) + ' 則' : ''}</em></div>
+      <div><span>台灣售價</span><b>${r.free ? '免費' : r.p ? esc(fmtNT(r.p[0])) : '—'}</b><em>${r.p && r.p[1] ? '-' + r.p[1] + '% 特價中' : ''}</em></div>
+    </div>
+    ${mkChart(r.h, b.t, '30 小時線上人數')}${mkChart(r.sp, b.s, '7 天走勢')}<div id="mkdays"></div>
+    <div class="btnrow">${ref ? `<button class="btn y" data-go="${esc(ref.route)}">${ref.kind === 'f' ? ICON.page : ICON.gem}<span>${ref.kind === 'f' ? '看解包' : '看推坑'}</span></button>` : `<button class="btn y" data-act="askreq" data-g="${esc(nm)}" data-a="${r.a}">${ICON.radio}<span>點播解包這款</span></button>`}
+      <button class="btn p" data-act="askq" data-q="${esc(nm + '：' + why)}" data-ref="${ref ? esc(r.cov) : 'a:' + r.a}" data-ctx="${esc(nm)}">${ICON.radio}<span>問 Claude：${esc(why.replace('？', ''))}</span></button>
+      <a class="btn" href="https://store.steampowered.com/app/${r.a}/" target="_blank" rel="noopener noreferrer">${ICON.cart}<span>Steam 商店頁</span></a></div>
+    <p class="sub-note" style="margin-top:10px">線上人數來自 Steam 官方，每小時一筆；排程偶爾會晚，24 小時漲跌找前後 90 分鐘內最接近的一筆來比。</p></div>`, 'hsheet');
+  sfx.lock();
+  const d = await loadBoardD(); const box = $('#mkdays'); if (!box || !d) return;
+  const k = String(r.a); const pk = (d.pk || {})[k];
+  if (!pk || pk.filter((v) => v != null).length < 2) return;
+  const days = d.days || []; const hi = Math.max(...pk.filter((v) => v != null));
+  const show = pk.map((v, i) => [days[i], v]).slice(-30);
+  box.innerHTML = `<div class="mk-ch"><div class="mk-chh"><b>每日高峰</b><span>最近 ${show.length} 天・最高 ${esc(mkNum(hi))}</span></div><div class="mk-days">${show.map(([dd, v]) => `<i style="height:${v == null ? 0 : Math.max(4, v / hi * 100).toFixed(1)}%" title="${esc(dd + ' ' + (v || ''))}"></i>`).join('')}</div><div class="mk-ixl"><span>${esc(mdDay(show[0][0]))}</span><span>${esc(mdDay(show[show.length - 1][0]))}</span></div></div>`;
+}
+function boardFx() {
+  const w = $('.mk-ixv b[data-w]');
+  if (w && fxOn()) {   // 大盤數字從 0 跳上來（萬、一位小數）
+    const n = +w.dataset.w, t0 = performance.now(), D = 1100, big = n >= 10000; let last = 0;
+    const step = (now) => { const k = Math.min(1, (now - t0) / D), e = 1 - Math.pow(1 - k, 3); const v = n * e; w.textContent = big ? (v / 10000).toFixed(1) : String(Math.round(v)); if (k < 1) { if (now - last > 90) { last = now; sfx.tick(); } requestAnimationFrame(step); } else sfx.pop(); };
+    requestAnimationFrame(step);
+  }
+  if (!fxOn()) return;
+  const today = todayTW();
+  if (MK.bellDay !== today) { MK.bellDay = today; LS.set('mkBell', today); setTimeout(() => sfx.bell(), 250); }
+  $$('.mk-row').slice(0, 14).forEach((r, i) => setTimeout(() => { if (r.isConnected && i % 3 === 0) sfx.tickUp(!r.classList.contains('dn')); }, 300 + i * 55));
+}
+
+/* 首頁：行情小看板 */
+function marketStrip() {
+  const b = bd(); if (!b) return '';
+  const ix = b.idx || {}; const c = mkCls(ix.d1);
+  const rows = b.rows.filter((r) => !r.adult);
+  const mv = rows.filter((r) => r.d1 != null).sort((x, y) => y.d1 - x.d1);
+  const hot = (mv.length >= 3 ? mv.slice(0, 3) : rows.filter((r) => (r.f || []).length).slice(0, 3)).concat(rows).filter((v, i, a) => a.indexOf(v) === i).slice(0, 3);
+  const p = mkPts(ix.h, 120, 36, 3);
+  return `<section class="mk-home ${c}" data-go="board"><div class="mkh-l"><span class="mk-k">${ICON.chart}STEAM 行情</span><b>${esc(mkNum(ix.n))}</b><em class="${c}">${ix.d1 != null ? mkPct(ix.d1, 2) : '累積中'}</em><small>百大線上・${esc(ago(b.at))}</small></div>
+    ${p ? `<svg class="mkh-c" viewBox="0 0 120 36" preserveAspectRatio="none"><polyline points="${p.map((x) => x[0].toFixed(1) + ',' + x[1].toFixed(1)).join(' ')}"/></svg>` : ''}
+    <div class="mkh-r">${hot.map((r) => `<div><b>${esc(mkName(r))}</b><span class="${mkCls(r.d1)}">${r.d1 != null ? mkPct(r.d1) : mkNum(r.n)}</span></div>`).join('')}</div><span class="hs-a">→</span></section>`;
+}
+
+/* ---- deals.js ---- */
+/* 解包 — 大特賣倒數＋免費補給站。
+   data/events.json：官方公布的 Steam 大特賣、新品節、TGA（日期照官方；時間照 Steam 慣例的太平洋時間上午 10 點）。
+   data/free.json：Epic、Steam、GOG 現在限時免費領的遊戲（GitHub Actions 每小時更新；Epic 還有下週預告）。 */
+const DEAL = { cd: 0 };
+S.freeGot = LS.get('freeGot', {});     // 領過的（只存在這台裝置）
+S.freeSeen = LS.get('freeSeen', {});   // 看過的（分頁上的數字）
+const STORE = { epic: ['Epic', 'ep'], steam: ['Steam', 'st'], gog: ['GOG', 'gg'] };
+
+const evList = () => (S.events && S.events.items) || [];
+function evState(e, now = Date.now()) { const s = Date.parse(e.start), en = e.end ? Date.parse(e.end) : s + 36e5; return now < s ? 'soon' : now < en ? 'on' : 'past'; }
+/* 下一波（或正在進行的）大特賣 */
+function nextSale() { return evList().filter((e) => e.kind === 'sale' && evState(e) !== 'past').sort((a, b) => (a.start < b.start ? -1 : 1))[0] || null; }
+function cdTxt(ms, sec = true) {
+  if (ms <= 0) return '00:00:00';
+  const d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4), s = Math.floor(ms % 6e4 / 1e3);
+  return `${d ? d + ' 天 ' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}${sec ? ':' + String(s).padStart(2, '0') : ''}`;
+}
+function twWhen(iso) { const d = new Date(Date.parse(iso) + 8 * 3600e3); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}（${WK[d.getUTCDay()]}）${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`; }
+function daysTo(iso) { return Math.max(0, Math.ceil((Date.parse(iso) - Date.now()) / 864e5)); }
+
+/* 判定是「等特價／等史低」的獵物：照 Claude 的目標價全部入手要多少 */
+function warChest() {
+  const t = huntTargets().filter((x) => x.buy && (x.buy.call === '等特價' || x.buy.call === '等史低') && x.buy.target != null && !x.hit);
+  return { n: t.length, sum: t.reduce((a, x) => a + x.buy.target, 0), list: t };
+}
+/* 買不買卡：等特價的，順便告訴你下一波大特賣還有幾天 */
+function saleHint(b) {
+  if (!b || (b.call !== '等特價' && b.call !== '等史低')) return '';
+  const e = nextSale(); if (!e) return '';
+  const st = evState(e);
+  return `<div class="bc-sale">${st === 'on' ? `🔥 ${esc(e.name)}進行中，到 ${esc(twWhen(e.end))}：現在正是等的那一波` : `⏳ 下一波大特賣：${esc(e.name)} ${esc(twWhen(e.start))} 開打（還有 ${daysTo(e.start)} 天）`}</div>`;
+}
+/* 獵價頁：大特賣倒數 */
+function saleHtml() {
+  const e = nextSale(); if (!e) return '';
+  const st = evState(e); const ms = Date.parse(st === 'on' ? e.end : e.start) - Date.now();
+  if (st !== 'on' && ms > 7 * 864e5) {   // 還早：一條就好，不擋住雷達
+    const wc0 = warChest();
+    return `<section class="dl-sale mini"><div class="dl-k">NEXT BIG SALE</div><div class="dl-row"><h3>${esc(e.name)}</h3><b id="dlcd" data-to="${esc(e.start)}">${esc(cdTxt(ms))}</b></div><div class="dl-cd"><span>${esc(twWhen(e.start))} 開打（台灣時間），連 ${Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5)} 天${wc0.n ? `・備戰：${wc0.n} 款等特價，照目標價全收約 ${esc(fmtNT(wc0.sum))}` : ''}</span></div></section>`;
+  }
+  const wc = warChest(); const nx = evList().filter((x) => x.id !== e.id && evState(x) !== 'past' && (x.big || x.kind === 'sale')).sort((a, b) => (a.start < b.start ? -1 : 1)).slice(0, 3);
+  return `<section class="dl-sale ${st}"><div class="dl-k">${st === 'on' ? '● 進行中' : 'NEXT BIG SALE'}</div><h3>${esc(e.name)}</h3>
+    <div class="dl-cd"><b id="dlcd" data-to="${esc(st === 'on' ? e.end : e.start)}">${esc(cdTxt(ms))}</b><span>${st === 'on' ? `到 ${esc(twWhen(e.end))} 結束` : `${esc(twWhen(e.start))} 開打（台灣時間）`}${e.end && st !== 'on' ? `，連 ${Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5)} 天` : ''}</span></div>
+    ${wc.n ? `<div class="dl-war"><b>${ICON.target}備戰清單</b><span>${wc.n} 款 Claude 判定「等特價／等史低」：照目標價全收約 <em>${esc(fmtNT(wc.sum))}</em></span></div>` : ''}
+    ${nx.length ? `<div class="dl-next">${nx.map((x) => `<span><b>${esc(mdDay(twDate(Date.parse(x.start))))}</b>${esc(x.name)}</span>`).join('')}</div>` : ''}
+    <a class="dl-src" href="${esc((e.src || {}).u || '#')}" target="_blank" rel="noopener noreferrer">日期來源：${esc((e.src || {}).t || '')}</a></section>`;
+}
+/* 首頁的獵價膠帶：大特賣前 7 天、進行中才提 */
+function saleLine() {
+  const e = nextSale(); if (!e) return '';
+  const st = evState(e); const d = daysTo(e.start);
+  if (st !== 'on' && d > 7) return '';
+  return st === 'on' ? `${esc(e.name)}進行中（${esc(twWhen(e.end))} 結束）` : `${esc(e.name)}${d <= 1 ? '明天' : ` ${d} 天後`}開打`;
+}
+
+/* ---- 免費補給站 ---- */
+function freeNow() { const now = new Date().toISOString(); return ((S.free && S.free.items) || []).filter((x) => !x.up && (!x.end || x.end > now) && !x.dlc); }
+function freeSoon() { return ((S.free && S.free.items) || []).filter((x) => x.up); }
+function freeNewCount() { return freeNow().filter((x) => !S.freeSeen[x.id] && !S.freeGot[x.id]).length; }
+function freeCard(x, i) {
+  const [sn, sc] = STORE[x.store] || [x.store, ''];
+  const left = x.end ? Date.parse(x.end) - Date.now() : null; const got = !!S.freeGot[x.id];
+  return `<article class="fr ${got ? 'got' : ''} ${x.up ? 'up' : ''}" style="--i:${i};--rot:${rot(x.id, i, 1.2)}deg">
+    <div class="fr-im">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${x.img ? 'display:none' : ''}">FREE</div><span class="fr-st ${sc}">${esc(sn)}</span>${!x.up && !S.freeSeen[x.id] && !got ? '<span class="bnew">NEW</span>' : ''}</div>
+    <div class="fr-b"><h4>${x.mystery ? '神秘遊戲（開放時才揭曉）' : esc(x.title)}</h4>
+      <div class="fr-p">${x.orig_t || x.orig ? `<s>${esc(x.orig_t || fmtNT(x.orig))}</s>` : ''}<b>${x.up ? '下週免費' : '免費領'}</b></div>
+      <div class="fr-t">${x.up ? `${esc(twWhen(x.start))} 開放` : left != null ? `⏱ ${esc(leftTxt(left))}・${esc(twWhen(x.end))} 截止` : '限時，截止時間看商店頁'}</div>
+      ${x.rv && x.rv[0] != null ? `<div class="fr-t">Steam 評價 ${x.rv[0]}%（${esc(fmtN(x.rv[1]))} 則）${x.zh === 'tc' ? '・繁中' : ''}</div>` : ''}
+      <div class="btnrow">${x.up ? '' : `<a class="btn sm ${got ? '' : 'y'}" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer" data-act="frgo" data-id="${esc(x.id)}">${ICON.gift}<span>${got ? '再看一次' : '去領'}</span></a><button class="btn sm ${got ? 'k' : ''}" data-act="frgot" data-id="${esc(x.id)}">${got ? '✓ 領過了' : '標記領過'}</button>`}</div></div>
+    ${got ? '<i class="fr-stamp">GET!</i>' : ''}</article>`;
+}
+function freeHtml() {
+  const now = freeNow(), soon = freeSoon(); if (!now.length && !soon.length) return '';
+  const left = now.filter((x) => !S.freeGot[x.id]).length;
+  return `<section class="dl-free"><h3 class="tape-h y">${ICON.gift}免費補給站 <small>${now.length ? `${now.length} 款能領${left < now.length ? `・還沒領 ${left}` : ''}` : '下週預告'}</small></h3>
+    <p class="sub-note">Epic、Steam、GOG 現在限時免費、領了就永久留在帳號裡的遊戲（不含本來就免費的）。每小時更新。</p>
+    <div class="frs">${now.map(freeCard).join('')}${soon.map((x, i) => freeCard(x, now.length + i)).join('')}</div></section>`;
+}
+
+function freeSeenAll() { let ch = 0; for (const x of freeNow()) if (!S.freeSeen[x.id]) { S.freeSeen[x.id] = 1; ch = 1; } if (ch) LS.set('freeSeen', S.freeSeen); }
+
+/* 倒數每秒跳 */
+function dealsFx() {
+  clearInterval(DEAL.cd);
+  const el = $('#dlcd'); if (!el) return;
+  DEAL.cd = setInterval(() => { if (!el.isConnected) { clearInterval(DEAL.cd); return; } el.textContent = cdTxt(Date.parse(el.dataset.to) - Date.now()); }, 1000);
+}
+function dealsStop() { clearInterval(DEAL.cd); }
+
+/* ---- tga.js ---- */
+/* 解包 — TGA 預測戰：The Game Awards 2026 的 30 個獎，你先押；Claude 的預測 11/18 就寫好封存在 data/tga.json，你鎖定之後才拆封。
+   開獎當天的排程把得獎填進 tga.json 的 win，App 自動對答案算分（年度遊戲 5 分、六項製作獎 2 分、其他 1 分；加倍卡 3 張）。
+   你的押注只存在這台裝置；鎖定時也送一份到點播台收件，開獎排程的推播才算得出你的分數。 */
+const TGA = { cd: 0, sure: false, card: { mode: 'pred', ratio: '45', seed: 1 }, justLocked: false };
+const TGA_GRP = [['main', '年度大獎與製作獎'], ['indie', '獨立遊戲'], ['genre', '類型獎'], ['more', '其他獎項'], ['extra', '番外：電競與創作者']];
+S.tgaMe = Object.assign({ picks: {}, x2: [], lock: null, peek: false, seenRes: false }, LS.get('tga', {}));
+const tgaSave = () => LS.set('tga', S.tgaMe);
+const nomName = (n) => (n ? n.zh || n.n : '');
+
+function tgaPhase() {
+  const t = S.tgaD; if (!t) return 'none';
+  if (t.result_at || t.cats.some((c) => c.win != null)) return 'result';
+  if (Date.now() >= Date.parse(t.show)) return 'live';
+  return S.tgaMe.lock ? 'locked' : 'pick';
+}
+function tgaReveal() { const ph = tgaPhase(); return !!(S.tgaMe.lock || S.tgaMe.peek || ph === 'live' || ph === 'result'); }
+function tgaPicked() { const t = S.tgaD; return t ? t.cats.filter((c) => S.tgaMe.picks[c.id] != null).length : 0; }
+function tgaScore(who) {
+  const t = S.tgaD; let pts = 0, hit = 0, done = 0, max = 0;
+  for (const c of (t && t.cats) || []) {
+    const p = who === 'me' ? S.tgaMe.picks[c.id] : c.claude.c; const k = who === 'me' && S.tgaMe.x2.includes(c.id) ? 2 : 1;
+    max += c.pt * k;
+    if (c.win == null) continue;
+    done++; if (p === c.win) { hit++; pts += c.pt * k; }
+  }
+  return { pts, hit, done, max };
+}
+function tgaDiff() { const t = S.tgaD; return t ? t.cats.filter((c) => S.tgaMe.picks[c.id] != null && S.tgaMe.picks[c.id] !== c.claude.c).length : 0; }
+
+function tgaNom(c, n, i, my, reveal, can) {
+  const r = n.ref && wkRef(n.ref);
+  const cls = [my === i ? 'me' : '', reveal && c.claude.c === i ? 'cl' : '', c.win === i ? 'win' : '', c.win != null && c.win !== i ? 'out' : ''].join(' ');
+  const mk = (reveal && c.claude.c === i ? '<i class="tg-cl">C</i>' : '') + (my === i ? '<i class="tg-me">押</i>' : '');
+  return `<button class="tg-n ${cls}" data-act="tgapick" data-c="${c.id}" data-i="${i}"${can ? '' : ' aria-disabled="true"'}><span class="tg-l">${'ABCDEFGH'[i]}</span><span class="tg-nt"><b>${esc(nomName(n))}</b>${n.zh ? `<small>${esc(n.n)}</small>` : ''}${n.sub ? `<small>${esc(n.sub)}</small>` : ''}${r ? `<em>${r.kind === 'f' ? '解包過' : '推坑過'}</em>` : ''}</span>${mk ? `<span class="tg-mk">${mk}</span>` : ''}${c.win === i ? `<i class="tg-win">${ICON.trophy}<b>得獎</b></i>` : ''}</button>`;
+}
+function tgaCatHtml(c, ph, reveal) {
+  const me = S.tgaMe; const my = me.picks[c.id]; const x2 = me.x2.includes(c.id); const can = ph === 'pick'; const cl = c.claude;
+  const res = c.win != null ? `<div class="tg-res"><b class="${my === c.win ? 'ok' : 'no'}">${my == null ? '你沒押' : my === c.win ? `你押中 +${c.pt * (x2 ? 2 : 1)}` : '你沒中'}</b><b class="${cl.c === c.win ? 'ok' : 'no'}">Claude ${cl.c === c.win ? '押中 +' + c.pt : '沒中'}</b></div>` : '';
+  return `<section class="tg-cat g-${c.grp} ${c.id === 'goty' ? 'goty' : ''} ${my != null ? 'has' : ''}" id="tg-${c.id}">
+    <div class="tg-ch"><div class="tg-cn"><h4>${esc(c.zh)}</h4><span>${esc(c.en)}</span></div><b class="tg-pt">${c.pt}<small>分</small></b>${can || x2 ? `<button class="tg-x2 ${x2 ? 'on' : ''}" data-act="tgax2" data-c="${c.id}"${can ? '' : ' disabled'}>×2</button>` : ''}</div>
+    <div class="tg-noms">${c.nom.map((n, i) => tgaNom(c, n, i, my, reveal, can)).join('')}</div>
+    ${reveal ? `<div class="tg-why ${my != null && my !== cl.c ? 'diff' : ''}"><b>Claude 押「${esc(nomName(c.nom[cl.c]))}」<i>${'★'.repeat(cl.conf)}${'☆'.repeat(3 - cl.conf)}</i></b><p>${esc(cl.why)}</p></div>` : ''}${res}</section>`;
+}
+function tgaCd() {
+  const t = S.tgaD; const ms = Date.parse(t.show) - Date.now();
+  if (ms <= 0) return tgaPhase() === 'result' ? '已開獎' : '直播中';
+  const d = Math.floor(ms / 864e5); return `D-${d} ${cdTxt(ms % 864e5)}`;
+}
+function renderTga() {
+  const t = S.tgaD;
+  const head = '';
+  if (!t) return `<div class="sec-h"><h2 class="spray-h y">TGA 預測戰</h2></div><div class="empty">TGA 資料讀不到，晚點再試。</div>`;
+  const ph = tgaPhase(); const me = S.tgaMe; const reveal = tgaReveal();
+  const n = t.cats.length; const picked = tgaPicked(); const a = tgaScore('me'), b = tgaScore('cl');
+  const goty = t.cats.find((c) => c.id === 'goty');
+  const res = ph === 'result';
+  const lead = res ? (a.pts > b.pts ? 'me' : a.pts < b.pts ? 'cl' : 'tie') : '';
+  const hero = `<section class="tg-hero ${ph}" id="tghero"><div class="tg-beams"><i></i><i></i><i></i><i></i></div><div class="tg-stars"></div>
+    <div class="tg-k">THE GAME AWARDS 2026</div><h1 class="tg-t"><span>TGA</span>預測戰</h1>
+    <div class="tg-cd"><b id="tgcd">${esc(tgaCd())}</b><span>${res ? `${esc(twWhen(t.show))} 頒獎・開獎完成 ${a.done}/${n}` : `台灣時間 ${esc(twWhen(t.show))} 開播・${esc(t.venue || '')}`}</span></div>
+    <div class="tg-sb">
+      <div class="tg-p me ${lead === 'me' ? 'lead' : ''}"><span>痞子葳</span><b ${res ? `class="cu" data-n="${a.pts}" data-f="i"` : ''}>${res ? a.pts : `${picked}<small>/${n}</small>`}</b><em>${res ? `分・猜中 ${a.hit} 項${me.peek ? '・偷看過' : ''}` : ph === 'pick' ? '押注中' : me.lock ? '已鎖定' : '沒鎖定'}</em>${lead === 'me' ? '<i class="crown">👑</i>' : ''}</div>
+      <div class="tg-vs">VS</div>
+      <div class="tg-p cl ${lead === 'cl' ? 'lead' : ''}"><span>Claude</span><b ${res ? `class="cu" data-n="${b.pts}" data-f="i"` : 'class="txt"'}>${res ? b.pts : reveal ? '已拆封' : '封存中'}</b><em>${res ? `分・猜中 ${b.hit} 項` : reveal ? `跟你不同 ${tgaDiff()} 項` : '11/18 寫好'}</em>${lead === 'cl' ? '<i class="crown">👑</i>' : ''}</div>
+    </div></section>`;
+  const info = res ? `<div class="tg-info"><p class="tg-rule">${esc(t.rules)}</p><a class="btn sm" href="${esc(t.vote_url)}" target="_blank" rel="noopener noreferrer">${ICON.trophy}<span>TGA 官網看完整得獎名單</span></a></div>` : `<div class="tg-info"><p>${esc(t.intro)}</p><p class="tg-rule">${esc(t.rules)}</p>
+    ${Date.now() < Date.parse(t.vote_end) ? `<a class="btn sm y" href="${esc(t.vote_url)}" target="_blank" rel="noopener noreferrer">${ICON.trophy}<span>去官網投粉絲票（${esc(twWhen(t.vote_end))} 截止）</span></a>` : ''}</div>`;
+  const env = !reveal ? `<div class="tg-env"><div class="env"><i class="flap"></i><b class="wax">C</b></div><div class="tg-et"><b>Claude 的 30 項預測封存中</b><span>${esc(mdDay(t.sealed.slice(0, 10)))} 寫好、存在 GitHub 上；你鎖定之後才拆封，誰也不能偷改（<a href="https://github.com/PZWei0105/PZ-Games/commits/main/apps/unpacked/data/tga.json" target="_blank" rel="noopener noreferrer">修改紀錄就是證明</a>）。</span><button class="btn sm" data-act="tgapeek">偷看（成績單會註記）</button></div></div>` : '';
+  const groups = TGA_GRP.map(([g, label]) => { const cs = t.cats.filter((c) => c.grp === g); return cs.length ? `<h3 class="tape-h ${g === 'main' ? 'p' : g === 'extra' ? '' : 'y'}">${esc(label)} <small>${cs.length} 項</small></h3><div class="tg-cats">${cs.map((c) => tgaCatHtml(c, ph, reveal)).join('')}</div>` : ''; }).join('');
+  const bar = ph === 'pick' ? `<div class="tg-bar"><div class="tgb-p"><b>${picked}<small>/${n}</small></b><span>已押・加倍 ${me.x2.length}/3</span><i style="--p:${(picked / n * 100).toFixed(1)}%"></i></div><button class="btn p" data-act="tgalock">${TGA.sure ? '再按一次鎖定（鎖了就不能改）' : '鎖定預測'}</button></div>` : '';
+  const card = (me.lock || res) && goty && me.picks.goty != null ? `<h3 class="tape-h p">粉專圖卡</h3>
+    <div class="cardwrap"><canvas id="cardcv" width="1080" height="1350"></canvas><div class="cardbusy" id="cardbusy">噴漆中…</div></div>
+    <div class="btnrow" style="justify-content:center"><button class="btn sm ${TGA.card.mode === 'pred' ? 'y' : ''}" data-act="tgacm" data-v="pred">預測卡</button>${res ? `<button class="btn sm ${TGA.card.mode === 'score' ? 'y' : ''}" data-act="tgacm" data-v="score">成績單</button>` : ''}<button class="btn sm ${TGA.card.ratio === '45' ? 'y' : ''}" data-act="tgacr" data-v="45">4:5 直式</button><button class="btn sm ${TGA.card.ratio === '11' ? 'y' : ''}" data-act="tgacr" data-v="11">1:1 方形</button></div>
+    <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="tgaspray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="tgadl">${ICON.dl}<span>下載圖卡</span></button>${navigator.share ? `<button class="btn" data-act="tgashare">${ICON.share}<span>分享圖卡</span></button>` : ''}</div>
+    <div class="copybox"><h4>粉專貼文</h4><textarea id="posttxt">${esc(tgaPost())}</textarea><div class="btnrow"><button class="btn y sm" data-act="tgacopy">${ICON.copy}<span>複製貼文</span></button></div></div>` : '';
+  return head + hero + info + env + groups + card
+    + `<details class="wsrc"><summary>入圍名單與 Claude 預測的 ${t.sources.length} 個來源</summary><ol class="srcs">${t.sources.map((s, i) => `<li><b>${i + 1}</b><a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>${s.d ? `（${esc(s.d)}）` : ''}</li>`).join('')}</ol></details>
+    <p class="sub-note" style="margin-top:10px">入圍名單照 TGA 官方公布（11/17）；Claude 的預測是看評價、入圍數和往年頒獎傾向的判斷，不是內線消息。</p>` + bar;
+}
+/* 首頁橫幅：開獎後一週收起來 */
+function tgaBanner() {
+  const t = S.tgaD; if (!t) return '';
+  const show = Date.parse(t.show); if (Date.now() > show + 8 * 864e5) return '';
+  const ph = tgaPhase(); const picked = tgaPicked(); const n = t.cats.length; const d = Math.max(0, Math.ceil((show - Date.now()) / 864e5));
+  let main, sub;
+  if (ph === 'result') { const a = tgaScore('me'), b = tgaScore('cl'); const g = t.cats.find((c) => c.id === 'goty'); main = `TGA 開獎！你 ${a.pts} 分 vs Claude ${b.pts} 分`; sub = g && g.win != null ? `年度最佳遊戲：${nomName(g.nom[g.win])}` : '得獎名單陸續填入中'; }
+  else if (ph === 'live') { main = 'TGA 頒獎直播中'; sub = '得獎名單一出來就自動對答案'; }
+  else if (ph === 'locked') { main = `預測已鎖定・D-${d}`; sub = `${twWhen(t.show)} 開獎，跟 Claude 比誰準`; }
+  else { main = picked ? `TGA 預測戰：已押 ${picked}/${n}，還沒鎖定` : 'TGA 2026 預測戰開打'; sub = `D-${d}・30 個獎你先押，再拆 Claude 的封存預測`; }
+  return `<div class="tg-ban ${ph}" data-go="tga"><div class="tgb-l">${ICON.trophy}<b>TGA</b><span>2026</span></div><div class="tgb-b"><b>${esc(main)}</b><span>${esc(sub)}</span></div><span class="hs-a">→</span></div>`;
+}
+
+/* ---- 互動 ---- */
+function tgaAct(a, act) {
+  const t = S.tgaD; if (!t) return false;
+  const ph = tgaPhase(); const me = S.tgaMe;
+  if (a === 'tgapick') {
+    if (ph !== 'pick') { toast(ph === 'locked' ? '已經鎖定了，等開獎' : '已經開播，不能再押', 'warn'); return true; }
+    const c = act.dataset.c, i = +act.dataset.i;
+    if (me.picks[c] === i) { delete me.picks[c]; sfx.scratch(); } else { me.picks[c] = i; sfx.stamp(); haptic(); burstAt(act, [YEL, PINK, BLK], 12, 7); }
+    tgaSave(); TGA.sure = false; tgaRefreshCat(c); tgaBarUpdate(); return true;
+  }
+  if (a === 'tgax2') {
+    if (ph !== 'pick') return true;
+    const c = act.dataset.c; const k = me.x2.indexOf(c);
+    if (k >= 0) { me.x2.splice(k, 1); sfx.scratch(); } else { if (me.x2.length >= 3) { toast('加倍卡只有 3 張，先收回一張', 'warn'); return true; } me.x2.push(c); sfx.lock(); burstAt(act, [PINK, YEL], 14, 8); }
+    tgaSave(); tgaRefreshCat(c); tgaBarUpdate(); return true;
+  }
+  if (a === 'tgapeek') {
+    me.peek = true; tgaSave(); sfx.rip(); toast('拆開偷看了：成績單會標「偷看過」'); const y = scrollY; VIEW().innerHTML = renderTga(); scrollTo(0, y); tgaFx(); tgaFlip(); return true;
+  }
+  if (a === 'tgalock') {
+    if (ph !== 'pick') return true;
+    if (me.picks.goty == null) { toast('至少先押年度最佳遊戲', 'warn'); const g = $('#tg-goty'); if (g) g.scrollIntoView({ behavior: 'smooth', block: 'center' }); return true; }
+    if (!TGA.sure) { TGA.sure = true; act.textContent = '再按一次鎖定（鎖了就不能改）'; sfx.click(); setTimeout(() => { TGA.sure = false; const bb = $('[data-act="tgalock"]'); if (bb) bb.textContent = '鎖定預測'; }, 4000); return true; }
+    TGA.sure = false; me.lock = new Date().toISOString().replace(/\.\d+Z$/, 'Z'); tgaSave();
+    const picks = {}; for (const c of t.cats) if (me.picks[c.id] != null) picks[c.id] = me.picks[c.id];
+    askEmit('tga', { picks, x2: me.x2.slice(0, 3), peek: !!me.peek, lock: me.lock });
+    TGA.justLocked = true; sfx.drop(); haptic(30); route(); return true;
+  }
+  if (a === 'tgacm' || a === 'tgacr' || a === 'tgaspray') {
+    if (a === 'tgacm') TGA.card.mode = act.dataset.v; if (a === 'tgacr') TGA.card.ratio = act.dataset.v;
+    if (a === 'tgaspray') { TGA.card.seed++; sfx.rattle(); setTimeout(() => sfx.hiss(0.6), 200); } else sfx.click();
+    $$('[data-act="tgacm"]').forEach((x) => x.classList.toggle('y', x.dataset.v === TGA.card.mode)); $$('[data-act="tgacr"]').forEach((x) => x.classList.toggle('y', x.dataset.v === TGA.card.ratio));
+    const pt = $('#posttxt'); if (pt) pt.value = tgaPost();
+    tgaCardRender(); return true;
+  }
+  if (a === 'tgadl' || a === 'tgashare') { tgaCardSave(a === 'tgashare'); return true; }
+  if (a === 'tgacopy') { const v = $('#posttxt') ? $('#posttxt').value : tgaPost(); copyText(v).then((ok) => { if (ok) { sfx.stamp(); toast('已複製'); burstAt(act, [YEL, PINK], 12, 7); } else toast('複製失敗，請長按文字自己複製', 'warn'); }); return true; }
+  return false;
+}
+function tgaRefreshCat(id) {
+  const c = S.tgaD.cats.find((x) => x.id === id); const el = $('#tg-' + id); if (!c || !el) return;
+  el.outerHTML = tgaCatHtml(c, tgaPhase(), tgaReveal());
+}
+function tgaBarUpdate() {
+  const t = S.tgaD; const bar = $('.tg-bar'); const n = t.cats.length; const p = tgaPicked();
+  if (bar) { $('.tgb-p b', bar).innerHTML = `${p}<small>/${n}</small>`; $('.tgb-p span', bar).textContent = `已押・加倍 ${S.tgaMe.x2.length}/3`; $('.tgb-p i', bar).style.setProperty('--p', (p / n * 100).toFixed(1) + '%'); const lb = $('[data-act="tgalock"]', bar); if (lb) lb.textContent = '鎖定預測'; }
+  const me = $('.tg-p.me b'); if (me && tgaPhase() === 'pick') me.innerHTML = `${p}<small>/${n}</small>`;
+}
+/* 拆封：Claude 的理由一張張翻開 */
+function tgaFlip() {
+  const ws = $$('.tg-why'); if (!fxOn()) return;
+  ws.forEach((w, i) => { w.classList.add('pre'); setTimeout(() => { if (!w.isConnected) return; w.classList.remove('pre'); w.classList.add('flip'); if (i < 8) sfx.blip(700 + i * 90); }, 300 + Math.min(i, 14) * 90); });
+}
+function tgaFx() {
+  clearInterval(TGA.cd);
+  const cd = $('#tgcd'); if (cd) TGA.cd = setInterval(() => { if (!cd.isConnected) { clearInterval(TGA.cd); return; } cd.textContent = tgaCd(); }, 1000);
+  const hero = $('#tghero'); const ph = tgaPhase();
+  if (hero && fxOn()) { hero.classList.add('go'); setTimeout(() => { sfx.riser(); }, 120); }
+  if (TGA.justLocked) {
+    TGA.justLocked = false;
+    setTimeout(() => { sfx.rip(); flash(YEL, 0.35); burstAt($('.tg-p.cl') || hero, [YEL, PINK, BLK], 34, 15); }, 250);
+    setTimeout(() => { sfx.fanfare(); toast(`Claude 拆封了：你們有 ${tgaDiff()} 項押得不一樣`); }, 650);
+    tgaFlip();
+  }
+  if (ph === 'result') {
+    const sb = $('.tg-sb'); if (sb) countUp(sb);
+    if (!S.tgaMe.seenRes) { S.tgaMe.seenRes = true; tgaSave(); setTimeout(() => { sfx.fanfare(); const w = $('.tg-p.lead'); if (w) { burstAt(w, [YEL, PINK, BLK], 40, 16); if (fxOn()) shake(8, 260); } }, 900); }
+  }
+  if ($('#cardcv')) tgaCardRender();
+}
+function tgaStop() { clearInterval(TGA.cd); }
+
+/* ---- 粉專：貼文與圖卡（品牌是遊戲狂想曲，不寫名字） ---- */
+function tgaPost() {
+  const t = S.tgaD; const me = S.tgaMe; const pick = (c) => (me.picks[c.id] != null ? nomName(c.nom[me.picks[c.id]]) : '（沒押）');
+  const main = t.cats.filter((c) => c.grp === 'main' || ['indie', 'action', 'actadv', 'rpg'].includes(c.id));
+  if (TGA.card.mode === 'score' && tgaPhase() === 'result') {
+    const a = tgaScore('me'); const hits = t.cats.filter((c) => c.win != null && me.picks[c.id] === c.win); const g = t.cats.find((c) => c.id === 'goty');
+    return `TGA 2026 開獎！遊戲狂想曲的預測成績：${a.done} 項猜中 ${a.hit} 項，拿下 ${a.pts} 分 🏆\n\n押中的：${hits.slice(0, 8).map((c) => `${c.zh}（${nomName(c.nom[c.win])}）`).join('、') || '這次全軍覆沒 😂'}\n\n今年的年度最佳遊戲是《${g && g.win != null ? nomName(g.nom[g.win]) : '？'}》，你猜中了嗎？留言跟我們對答案 👇\n\n#TGA2026 #TheGameAwards #遊戲狂想曲`;
+  }
+  return `TGA 2026 頒獎前，遊戲狂想曲先押了！🏆\n\n${main.filter((c) => me.picks[c.id] != null).map((c) => `${c.zh}：${pick(c)}`).join('\n')}\n\n台灣時間 ${twWhen(t.show)} 開獎。你覺得今年的年度最佳遊戲是誰？留言押一個，開獎後一起對答案 👇\n\n#TGA2026 #TheGameAwards #遊戲狂想曲`;
+}
+async function tgaCardRender() {
+  const cv = $('#cardcv'); if (!cv) return;
+  const busy = $('#cardbusy'); if (busy) busy.style.display = 'grid';
+  try { await drawTgaCard(cv, TGA.card); } catch (e) { console.warn(e); toast('圖卡畫不出來：' + e.message, 'warn'); }
+  if (busy) busy.style.display = 'none';
+}
+async function tgaCardSave(share) {
+  const b = await cardBlob(); if (!b) { toast('這張圖卡含有外部圖片，裝置不讓存。換「重噴一張」再試，或直接截圖。', 'warn'); return; }
+  const name = `tga2026-${TGA.card.mode}-${TGA.card.ratio}.png`;
+  if (share) { const f = new File([b], name, { type: 'image/png' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: '遊戲狂想曲' }); sfx.ding(); } catch (e) { /* 取消 */ } return; } }
+  const u = URL.createObjectURL(b); const l = document.createElement('a'); l.href = u; l.download = name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+  sfx.stamp(); impact($('#cardcv'), [YEL, PINK], false); toast('圖卡已下載');
+}
+async function drawTgaCard(cv, opt) {
+  const t = S.tgaD; const me = S.tgaMe; const W = 1080, H = opt.ratio === '11' ? 1080 : 1350; cv.width = W; cv.height = H;
+  const c = cv.getContext('2d'); const R = rnd(opt.seed * 7919 + 2026); const sq = opt.ratio === '11'; const score = opt.mode === 'score' && tgaPhase() === 'result';
+  const cats = t.cats; const goty = cats.find((x) => x.id === 'goty');
+  const ORDER = ['direction', 'narrative', 'art', 'score', 'audio', 'performance', 'actadv', 'action', 'rpg', 'indie', 'sim', 'family', 'sports', 'multi', 'debut', 'impact', 'fighting', 'ongoing', 'community', 'anticipated', 'adapt', 'access', 'vr', 'mobile', 'ugc', 'esgame', 'esathlete', 'esteam', 'creator'];
+  const rows = cats.filter((x) => x.id !== 'goty' && (score ? x.win != null && me.picks[x.id] != null : me.picks[x.id] != null))
+    .sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id)).slice(0, sq ? 4 : 6);
+  const pickOf = (x) => (score ? (x.win != null ? x.nom[x.win] : null) : me.picks[x.id] != null ? x.nom[me.picks[x.id]] : null);
+  const allText = cats.map((x) => x.zh + nomName(pickOf(x)) + (pickOf(x) || {}).n).join('') + '遊戲狂想曲預測年度最佳遊戲猜中得分成績單押中沒中留言你押誰開獎';
+  try { await Promise.race([Promise.all([document.fonts.load(`900 80px ${CFONT}`, allText), document.fonts.load('400 40px "Bebas Neue"', 'TGA 2026 GAME RHAPSODY 0123456789')]), sleep(4000)]); } catch (e) { /* 系統字 */ }
+  // 舞台：黑底、金色聚光、星點
+  c.fillStyle = '#0d0b08'; c.fillRect(0, 0, W, H);
+  const g = c.createRadialGradient(W * 0.5, -60, 40, W * 0.5, H * 0.25, W * 0.9); g.addColorStop(0, 'rgba(255,214,90,.55)'); g.addColorStop(0.45, 'rgba(255,170,40,.12)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  halftone(c, W, H, 'rgba(255,214,90,.08)', 18, 2.6);
+  for (let i = 0; i < 46; i++) { const x = R() * W, y = R() * H * 0.9, s = 2 + R() * 5; c.fillStyle = R() < 0.5 ? '#FFE600' : '#fff'; c.globalAlpha = 0.3 + R() * 0.6; c.beginPath(); c.arc(x, y, s, 0, 7); c.fill(); }
+  c.globalAlpha = 1;
+  [[W * 0.96, H * 0.06], [W * 0.97, H * 0.55], [W * 0.03, H * 0.33]].forEach(([x, y], i) => blobAt(c, x, y, 22 + R() * 26, i % 2 ? '#FFE600' : '#FF2E88', R));
+  c.textBaseline = 'top'; c.textAlign = 'left';
+  sticker(c, score ? '遊戲狂想曲・預測成績單' : '遊戲狂想曲先押了', 52, 46, '#FF2E88', '#fff', -0.03, sq ? 32 : 36);
+  // TGA 2026 大字
+  c.save(); c.translate(54, sq ? 128 : 140); c.rotate(-0.025); c.font = `400 ${sq ? 190 : 230}px "Bebas Neue",sans-serif`;
+  for (let k = 4; k >= 1; k--) { c.fillStyle = k === 4 ? '#000' : '#FF2E88'; c.fillText('TGA 2026', k * 7, k * 7); }
+  c.lineWidth = 12; c.strokeStyle = '#111'; c.lineJoin = 'round'; c.strokeText('TGA 2026', 0, 0); const gg = c.createLinearGradient(0, 0, 0, 200); gg.addColorStop(0, '#fff6c2'); gg.addColorStop(0.5, '#FFD54A'); gg.addColorStop(1, '#e09b10'); c.fillStyle = gg; c.fillText('TGA 2026', 0, 0); c.restore();
+  let y = sq ? 340 : 400;
+  // 年度遊戲大框
+  const gp = pickOf(goty); const ref = gp && gp.ref && wkRef(gp.ref); const im = ref ? await loadImgCors(heroOf(ref.it, liveOf(ref.it.steam))) : null;
+  const bh = sq ? 230 : 300, bx = 52, bw = W - 104;
+  c.save(); c.translate(W / 2, y + bh / 2); c.rotate(-0.012); c.translate(-W / 2, -(y + bh / 2));
+  tornPath(c, bx - 12, y - 12, bw + 24, bh + 24, R, 9); c.fillStyle = '#FFE600'; c.fill();
+  c.save(); c.beginPath(); c.rect(bx, y, bw, bh); c.clip();
+  if (im) { coverDraw(c, im, bx, y, bw, bh); const sh = c.createLinearGradient(0, y, 0, y + bh); sh.addColorStop(0, 'rgba(0,0,0,.15)'); sh.addColorStop(1, 'rgba(0,0,0,.85)'); c.fillStyle = sh; c.fillRect(bx, y, bw, bh); }
+  else { c.fillStyle = '#16120a'; c.fillRect(bx, y, bw, bh); halftone(c, W, H, 'rgba(255,214,90,.12)', 14, 2.2); }
+  c.fillStyle = '#FFE600'; c.font = `900 ${sq ? 34 : 38}px ${CFONT}`; c.fillText(score ? '年度最佳遊戲得主' : '年度最佳遊戲，我們押', bx + 28, y + 26);
+  const nm = gp ? nomName(gp) : '還沒押'; let fs = sq ? 74 : 92; c.font = `900 ${fs}px ${CFONT}`; while (c.measureText(nm).width > bw - 56 && fs > 44) { fs -= 4; c.font = `900 ${fs}px ${CFONT}`; }
+  c.fillStyle = '#fff'; c.textBaseline = 'alphabetic'; c.fillText(nm, bx + 28, y + bh - 34); c.textBaseline = 'top';
+  c.restore(); c.restore();
+  tape(c, bx + 50, y - 6, 160, 44, -0.45); tape(c, bx + bw - 50, y - 4, 160, 44, 0.4);
+  if (score && goty.win != null) { const ok = me.picks.goty === goty.win; sticker(c, ok ? '押中！' : '沒押中', W - 290, y + bh - 24, ok ? '#FF2E88' : '#fff', ok ? '#fff' : '#111', 0.08, 40); }
+  y += bh + (sq ? 34 : 46);
+  // 其他獎項
+  const rh = Math.min(sq ? 78 : 92, (H - (sq ? 170 : 220) - y) / Math.max(1, rows.length));
+  rows.forEach((x, i) => {
+    const p = pickOf(x); const yy = y + i * rh; const hit = score && x.win != null && me.picks[x.id] === x.win;
+    c.fillStyle = i % 2 ? 'rgba(255,255,255,.06)' : 'rgba(255,214,90,.1)'; c.fillRect(52, yy, W - 104, rh - 8);
+    c.fillStyle = '#FFD54A'; c.font = `900 ${Math.round(rh * 0.3)}px ${CFONT}`; c.textBaseline = 'middle'; c.fillText(x.zh.replace('（新獎項）', ''), 72, yy + (rh - 8) / 2);
+    const vx = 72 + Math.min(330, c.measureText('最佳動作冒險遊戲').width) + 24;
+    let v = p ? nomName(p) : '—'; c.font = `900 ${Math.round(rh * 0.4)}px ${CFONT}`;
+    while (c.measureText(v).width > W - 104 - (vx - 52) - (score ? 90 : 30) && v.length > 2) v = v.slice(0, -1);
+    c.fillStyle = '#fff'; c.fillText(v === nomName(p) || !p ? v : v + '…', vx, yy + (rh - 8) / 2);
+    if (score) { c.fillStyle = hit ? '#7dff9a' : '#ff6b6b'; c.font = `900 ${Math.round(rh * 0.5)}px ${CFONT}`; c.textAlign = 'right'; c.fillText(hit ? '✓' : '✗', W - 74, yy + (rh - 8) / 2); c.textAlign = 'left'; }
+    c.textBaseline = 'top';
+  });
+  if (score) {
+    const a = tgaScore('me');
+    c.save(); c.translate(W - 210, sq ? 200 : 230); c.rotate(0.12); c.fillStyle = '#e3001b'; c.beginPath(); c.arc(0, 0, 118, 0, 7); c.fill(); c.lineWidth = 7; c.strokeStyle = '#fff'; c.stroke();
+    c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '400 92px "Bebas Neue",sans-serif'; c.fillText(`${a.hit}/${a.done}`, 0, -12); c.font = `900 30px ${CFONT}`; c.fillText(`猜中・${a.pts} 分`, 0, 52); c.restore();
+  }
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillStyle = 'rgba(255,255,255,.8)'; c.font = `900 ${sq ? 30 : 34}px ${CFONT}`;
+  c.fillText(score ? '你猜中幾項？留言對答案！' : '你押誰？留言押一個，開獎一起對答案！', 52, H - (sq ? 70 : 92));
+  brandSticker(c, W - 200, H - 82, -0.05);
+}
+
+/* ---- ask.js ---- */
+/* 解包 — 點播台：點播解包（指定一款遊戲，下一班寫完整專題）＋你問我答（任何遊戲問題，下一班編輯查證後回答）。
+   送出：App → 轉發站（ntfy.sh，訊息留約 12 小時）→ GitHub Actions 每小時收進 data/inbox.json
+   → 寫稿（05:23）、推坑（11:43）、願望單（16:37）排程讀了回答，寫進 data/qa.json → 這裡和那一款的頁面都看得到。
+   轉發站的主題寫在公開的程式裡，收件端一律當不可信資料；問答也存在公開的 GitHub 上，不要寫私人資料。 */
+const ASK_RELAY = 'https://ntfy.sh/pz-unpacked-be41c9397306c2b86f06';
+const ASK = { mode: 'ask', pre: null, err: 0, poll: 0, sending: false };
+const SHIFTS = [[5, 23, '寫稿編輯', true], [11, 43, '推坑編輯', false], [16, 37, '願望單編輯', true]];   // 時、分、誰、會不會接點播解包
+const QUICK = ['值得首發嗎？還是等特價？', '跟同類型的哪一款比較像？差在哪？', '適合拍成頻道影片嗎？要抓什麼角度？', '我的 SCAR 18 開最高畫質順嗎？', '有繁中嗎？台灣玩得到嗎？'];
+S.ask = Object.assign({ dev: '', out: [], sent: {}, mine: [], seen: {} }, LS.get('ask', {}));
+if (!/^d[a-z0-9]{3,10}$/.test(S.ask.dev)) { S.ask.dev = 'd' + (Math.random().toString(36).slice(2) + 'x0000000').replace(/[^a-z0-9]/g, '').slice(0, 7); LS.set('ask', S.ask); }
+const askSave = () => LS.set('ask', S.ask);
+const askId = () => S.ask.dev + '-' + (Math.random().toString(36).slice(2) + '00000000').replace(/[^a-z0-9]/g, '').slice(0, 8);
+
+function askEmit(type, data) {
+  const ev = Object.assign({ id: askId(), t: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), type }, data);
+  S.ask.out.push(ev); S.ask.out = S.ask.out.slice(-60);
+  if (type !== 'tga') { S.ask.mine.unshift(ev); S.ask.mine = S.ask.mine.slice(0, 120); }
+  askSave(); askFlush(); return ev;
+}
+async function askFlush(force) {
+  if (ASK.sending || !navigator.onLine) { askLamp(); return; }
+  const ttl = 3 * 3600e3, now = Date.now();
+  const todo = S.ask.out.filter((e) => force || !S.ask.sent[e.id] || now - Date.parse(S.ask.sent[e.id]) > ttl);
+  if (!todo.length) { askLamp(); return; }
+  const enc = new TextEncoder(); const chunks = []; let cur = [];
+  for (const e of todo) { cur.push(e); if (enc.encode(JSON.stringify({ v: 1, dev: S.ask.dev, ev: cur })).length > 3000) { cur.pop(); if (cur.length) chunks.push(cur); cur = [e]; } }
+  if (cur.length) chunks.push(cur);
+  ASK.sending = true;
+  try {
+    for (const c of chunks) {
+      await fetch(ASK_RELAY, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ v: 1, dev: S.ask.dev, ev: c }) });
+      const t = new Date().toISOString(); c.forEach((e) => { S.ask.sent[e.id] = t; });
+    }
+    ASK.err = 0;
+  } catch (e) { ASK.err = Date.now(); }
+  ASK.sending = false; askSave(); askLamp();
+}
+/* inbox.json 收到的就從待送移掉 */
+function askAck() {
+  const got = new Set(((S.inbox && S.inbox.events) || []).map((e) => e.id));
+  const n = S.ask.out.length;
+  S.ask.out = S.ask.out.filter((e) => !got.has(e.id));
+  if (S.ask.out.length !== n) { for (const k of Object.keys(S.ask.sent)) if (got.has(k)) delete S.ask.sent[k]; askSave(); }
+}
+const qaOf = (id) => ((S.qa && S.qa.items) || []).find((x) => x.id === id) || null;
+const inboxHas = (id) => ((S.inbox && S.inbox.events) || []).some((e) => e.id === id);
+function askState(ev) {
+  const qa = qaOf(ev.id);
+  if (qa && (qa.st === 'done' || qa.st === 'no')) return { k: qa.st, qa };
+  if (qa && qa.st === 'wip') return { k: 'wip', qa };
+  if (inboxHas(ev.id)) return { k: 'queued' };
+  if (S.ask.sent[ev.id]) return { k: 'sent' };
+  return { k: 'out' };
+}
+/* 下一班會處理的排程（點播解包只有寫稿、願望單兩班接） */
+function nextShift(type) {
+  const tw = new Date(Date.now() + 8 * 3600e3); const mins = tw.getUTCHours() * 60 + tw.getUTCMinutes();
+  for (let d = 0; d < 2; d++) for (const s of SHIFTS) {
+    if (type === 'req' && !s[3]) continue;
+    const m = s[0] * 60 + s[1] + d * 1440;
+    if (m > mins + 5) return { name: s[2], at: `${d ? '明天' : '今天'} ${String(s[0]).padStart(2, '0')}:${String(s[1]).padStart(2, '0')}`, inMin: m - mins };
+  }
+  return { name: SHIFTS[0][2], at: '明天 05:23', inMin: 0 };
+}
+function askUnread() {
+  return S.ask.mine.filter((e) => { const q = qaOf(e.id); return q && (q.st === 'done' || q.st === 'no') && !S.ask.seen[e.id]; }).length;
+}
+function askLamp() {
+  const un = S.ask.out.filter((e) => !S.ask.sent[e.id]).length; const wt = S.ask.out.length - un;
+  const st = un && ASK.err ? 'off' : un || wt ? 'wait' : 'ok';
+  const txt = un && ASK.err ? `送不出去 ${un}（連上網路會自動重送）` : un ? `送出中 ${un}` : wt ? `已送出 ${wt}・等收件（每小時收一次）` : '都收到了';
+  $$('.ask-lamp').forEach((el) => { el.className = 'ask-lamp ' + st; el.querySelector('span').textContent = txt; });
+  const d = $('.askb .dot'); if (d) { const n = askUnread(); d.textContent = n; d.classList.toggle('hide', !n); }
+}
+
+/* ---- 畫面 ---- */
+function refLabel(ref) {
+  if (!ref) return '';
+  if (ref === 'tga') return 'TGA 預測戰';
+  if (ref === 'board') return '行情板';
+  if (/^a:\d+$/.test(ref)) { const r = bd() && bd().rows.find((x) => 'a:' + x.a === ref); return r ? mkName(r) : 'Steam ' + ref.slice(2); }
+  const r = wkRef(ref); return r ? r.it.zh : '';
+}
+function qaBody(q) {
+  const src = q.src || [];
+  return `<div class="qa-a ${q.st}"><div class="qa-h"><b>${q.st === 'no' ? '這題先不接' : q.st === 'wip' ? esc((q.by || 'Claude') + '・處理中') : esc(q.by || 'Claude')}</b><span>${esc(q.at ? ago(q.at) : '')}</span></div>
+    ${String(q.a || '').split(/\n+/).filter(Boolean).map((p) => `<p>${esc(p)}</p>`).join('')}
+    ${(q.pts || []).length ? `<ul>${q.pts.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+    ${q.link && wkRef(q.link) ? `<div class="btnrow"><button class="btn sm y" data-go="${esc(q.link.replace(':', '/'))}">${ICON.page}<span>${q.type === 'req' ? '看完整解包' : '看那一篇'}</span></button></div>` : ''}
+    ${src.length ? `<details class="qa-src"><summary>${src.length} 個來源</summary><ol>${src.map((s) => `<li><a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a></li>`).join('')}</ol></details>` : ''}</div>`;
+}
+function askItem(ev) {
+  const st = askState(ev); const isReq = ev.type === 'req'; const nx = nextShift(ev.type);
+  const lab = { out: ['送出中', 'w'], sent: ['已送出・等收件（每小時收一次）', 'w'], queued: [`收到了・排隊中，下一班 ${nx.at} ${nx.name}`, 'y'], wip: ['處理中', 'y'], done: ['已回覆', 'g'], no: ['已回覆', 'k'] }[st.k];
+  const ref = refLabel(ev.ref);
+  return `<article class="qa ${st.k} ${st.qa && !ev.other && !S.ask.seen[ev.id] ? 'new' : ''}" id="qa-${esc(ev.id)}">
+    <div class="qa-q"><div class="qa-qh"><span class="qa-tag ${isReq ? 'req' : ''}">${isReq ? '點播解包' : '你問我答'}</span>${ref ? `<span class="qa-ref">關於：${esc(ref)}</span>` : ''}<time>${esc(ago(ev.t))}</time></div>
+      <p>${isReq ? `<b>${esc(ev.game)}</b>${ev.note ? `<br>${esc(ev.note)}` : ''}` : esc(ev.q)}</p><div class="qa-st s-${lab[1]}"><i></i>${esc(lab[0])}</div></div>
+    ${st.qa ? qaBody(st.qa) : ''}
+    ${!isReq ? `<div class="qa-more"><button class="btn sm" data-act="askchat" data-id="${esc(ev.id)}">${ICON.copy}<span>現在就聊：複製去問 Claude</span></button></div>` : ''}</article>`;
+}
+function renderAsk() {
+  const pre = ASK.pre || {}; if (pre.mode) ASK.mode = pre.mode;
+  const mode = ASK.mode; const nx = nextShift(mode === 'req' ? 'req' : 'ask');
+  const mine = new Set(S.ask.mine.map((e) => e.id));
+  const others = ((S.qa && S.qa.items) || []).filter((q) => !mine.has(q.id) && q.st === 'done').map((q) => ({ id: q.id, t: q.t || q.at, type: q.type, q: q.q, game: q.q, ref: q.ref, other: true }));
+  const list = S.ask.mine.concat(others).sort((a, b) => String(b.t).localeCompare(String(a.t)));
+  const games = [...((S.index && S.index.items) || []).map((x) => ['f:' + x.id, x.zh]), ...((S.picks && S.picks.items) || []).map((x) => ['p:' + x.id, x.zh + '（推坑）'])];
+  return `<section class="ask-hero"><div class="ask-air"><i></i>ON AIR</div><h1>點播台</h1><p>你點，我解。指定一款遊戲，或問任何遊戲問題：下一班編輯查證後回答，答案寫回這裡。</p>
+      <div class="ask-lamp ok"><i></i><span>都收到了</span></div><div class="ask-waves"><i></i><i></i><i></i></div></section>
+    <div class="seg ask-seg"><button class="${mode === 'ask' ? 'on' : ''}" data-act="askmode" data-v="ask">你問我答</button><button class="${mode === 'req' ? 'on' : ''}" data-act="askmode" data-v="req">點播解包</button></div>
+    <section class="ask-form">${mode === 'req' ? `<label>想解包哪一款？<input id="askgame" type="text" maxlength="100" placeholder="遊戲名稱（中文或英文都可以）" value="${esc(pre.game || '')}"></label>
+        <label>想特別知道什麼？（選填）<textarea id="asknote" maxlength="300" placeholder="例如：值不值得首發、有沒有中文、適不適合拍影片">${esc(pre.note || '')}</textarea></label>
+        <p class="sub-note">寫好的完整專題會出現在今日牆，跟每天的解包一樣深（研究、查核、粉專稿都有）。一天最多接 1～2 款點播。</p>`
+      : `<label>你的問題<textarea id="askq" maxlength="600" placeholder="例如：Balatro 跟殺戮尖塔比，哪個適合我？">${esc(pre.q || '')}</textarea></label>
+        <div class="ask-chips">${QUICK.map((q, i) => `<button class="chip y" data-act="askchip" data-i="${i}">${esc(q)}</button>`).join('')}</div>
+        <label>關於哪一款？（選填）<select id="askref"><option value="">不指定</option>${pre.ref && !games.some((g) => g[0] === pre.ref) ? `<option value="${esc(pre.ref)}" selected>${esc(refLabel(pre.ref) || pre.ctx || pre.ref)}</option>` : ''}${games.map(([v, l]) => `<option value="${esc(v)}" ${pre.ref === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`}
+      <div class="ask-send"><button class="btn p" data-act="asksend">${ICON.radio}<span>${mode === 'req' ? '點播！' : '送出問題'}</span></button><span>下一班：<b>${esc(nx.at)}</b> ${esc(nx.name)}</span></div></section>
+    <div class="ask-shifts">${SHIFTS.map((s) => `<div><b>${String(s[0]).padStart(2, '0')}:${String(s[1]).padStart(2, '0')}</b><span>${s[2]}</span><em>${s[3] ? '點播＋問答' : '問答'}</em></div>`).join('')}</div>
+    <h3 class="tape-h">點播紀錄 <small>${list.length} 則</small></h3>
+    <div class="qas">${list.map(askItem).join('') || '<div class="empty">還沒有點播。上面打一個問題試試看！</div>'}</div>
+    <p class="sub-note" style="margin-top:14px">問答會存在公開的 GitHub 上（跟每天的解包一樣），不要寫私人資料。排程只回答遊戲相關的問題；回答都會附來源。<br>送不出去時（上面的燈變紅），連上網路或下次打開 App 會自動重送。</p>`;
+}
+function askFx() {
+  askLamp();
+  if (fxOn()) $$('.ask-waves i').forEach((w, i) => w.style.setProperty('--i', i));
+  // 看過的回答：分頁上的數字歸零
+  setTimeout(() => { if (!ROUTE.startsWith('ask')) return; let ch = 0; for (const e of S.ask.mine) { const q = qaOf(e.id); if (q && (q.st === 'done' || q.st === 'no') && !S.ask.seen[e.id]) { S.ask.seen[e.id] = 1; ch = 1; } } if (ch) { askSave(); askLamp(); } }, 1600);
+  clearInterval(ASK.poll);
+  ASK.poll = setInterval(async () => { if (!ROUTE.startsWith('ask')) { clearInterval(ASK.poll); return; } const before = JSON.stringify((S.qa || {}).items || []) + JSON.stringify(((S.inbox || {}).events || []).length); await loadAsk(); if (before !== JSON.stringify((S.qa || {}).items || []) + JSON.stringify(((S.inbox || {}).events || []).length)) { const y = scrollY; VIEW().innerHTML = renderAsk(); scrollTo(0, y); askLamp(); toast('點播台有新動態'); } }, 120e3);
+}
+function askStop() { clearInterval(ASK.poll); }
+
+/* ---- 送出 ---- */
+function askSend() {
+  if (ASK.mode === 'req') {
+    const g = ($('#askgame') || {}).value || ''; const note = ($('#asknote') || {}).value || '';
+    if (g.trim().length < 2) { toast('先寫遊戲名稱', 'warn'); return; }
+    const pre = ASK.pre || {};
+    askEmit('req', Object.assign({ game: g.trim().slice(0, 100) }, note.trim() ? { note: note.trim().slice(0, 300) } : {}, pre.appid ? { appid: +pre.appid } : {}));
+  } else {
+    const q = ($('#askq') || {}).value || ''; const ref = ($('#askref') || {}).value || '';
+    if (q.trim().length < 4) { toast('問題寫長一點點', 'warn'); return; }
+    const pre = ASK.pre || {};
+    askEmit('ask', Object.assign({ q: q.trim().slice(0, 600) }, ref ? { ref } : {}, pre.ctx && ref === pre.ref ? { ctx: pre.ctx.slice(0, 120) } : {}));
+  }
+  ASK.pre = null; sfx.radio(); haptic(20);
+  const b = $('[data-act="asksend"]'); if (b) burstAt(b, [PINK, YEL, BLK], 22, 11);
+  const nx = nextShift(ASK.mode === 'req' ? 'req' : 'ask');
+  toast(`送出了！下一班 ${nx.at} ${nx.name}會處理`);
+  const y = scrollY; VIEW().innerHTML = renderAsk(); scrollTo(0, y); askFx();
+  const first = $('.qas .qa'); if (first) { first.classList.add('sent'); }
+}
+/* 專題／推坑頁的「問 Claude」 */
+async function askSheet(kind, id) {
+  const it = findItem(id); const name = it ? it.zh : id; const ref = (kind === 'pick' ? 'p:' : 'f:') + id; const nx = nextShift('ask');
+  openSheet(`<h3>問 Claude：${esc(name)}</h3>
+    <div class="ask-opt"><b>${ICON.radio}送到點播台</b><p>下一班 <b>${esc(nx.at)} ${esc(nx.name)}</b> 查證後回答，答案會出現在這一頁和點播台。</p>
+      <textarea id="askq" maxlength="600" placeholder="例如：值得首發嗎？跟○○比呢？"></textarea>
+      <div class="ask-chips">${QUICK.map((q, i) => `<button class="chip y" data-act="askchip" data-i="${i}">${esc(q)}</button>`).join('')}</div>
+      <div class="btnrow"><button class="btn p" data-act="asksheet" data-ref="${esc(ref)}" data-ctx="${esc(name)}">${ICON.radio}<span>送出問題</span></button></div></div>
+    <div class="ask-opt"><b>${ICON.copy}現在就聊</b><p>把這款的重點整理好複製起來，貼到 Claude 就能馬上接著聊。</p><div class="btnrow"><button class="btn" data-act="askpack" data-k="${kind}" data-id="${esc(id)}">複製重點、打開 Claude</button></div></div>`, 'hsheet');
+}
+async function askPack(kind, id) {
+  let txt = '';
+  try {
+    if (kind === 'pick') {
+      const f = await loadPick(id); const lv = liveOf(f.game.steam);
+      txt = `我在《解包》看到 Claude 推坑的《${f.game.zh}》（${f.game.en}）。\n推坑理由：${f.pitch}\n${f.why}\n${f.reasons.map((r, i) => `${i + 1}. ${r.h}：${r.t}`).join('\n')}\n價格：${priceLabel({ price_text: f.game.price_text }, lv)}\n（推坑寫於 ${f.date}）\n\n我想問：`;
+    } else {
+      const f = await loadFeature(id); const lv = liveOf(f.game.steam);
+      txt = `我在《解包》看《${f.game.zh}》（${f.game.en}）的專題：${f.headline}\n結論：${f.verdict.stamp}（${f.verdict.label}）${f.verdict.summary}\n${f.buy ? `買不買：${f.buy.call}${f.buy.target != null ? `，目標價 ${fmtNT(f.buy.target)}` : ''}。${f.buy.why}\n` : ''}平台：${f.game.platforms.join('、')}；價格：${priceLabel({ price_text: f.game.price_text }, lv)}；${f.game.release_text}\n（專題寫於 ${f.date}）\n\n我想問：`;
+    }
+  } catch (e) { txt = `我在《解包》看《${(findItem(id) || {}).zh || id}》，我想問：`; }
+  const ok = await copyText(txt);
+  if (ok) { sfx.stamp(); toast('重點已複製：貼到 Claude 就能接著聊'); setTimeout(() => window.open('https://claude.ai/new', '_blank', 'noopener'), 350); } else toast('複製失敗', 'warn');
+}
+async function askChat(id) {
+  const e = S.ask.mine.find((x) => x.id === id) || {}; const q = qaOf(id);
+  const txt = `我在《解包》的點播台問了：${e.q || (q && q.q) || ''}${e.ref ? `（關於：${refLabel(e.ref)}）` : ''}${q && q.a ? `\nClaude 編輯的回答：${q.a}` : ''}\n\n我想接著聊：`;
+  if (await copyText(txt)) { sfx.stamp(); toast('已複製：貼到 Claude 就能接著聊'); setTimeout(() => window.open('https://claude.ai/new', '_blank', 'noopener'), 350); } else toast('複製失敗', 'warn');
+}
+/* 專題／推坑頁：你問過的 */
+function askBoxFor(ref) {
+  const items = ((S.qa && S.qa.items) || []).filter((q) => q.ref === ref && q.type === 'ask' && (q.st === 'done' || q.st === 'no'));
+  const pend = S.ask.mine.filter((e) => e.ref === ref && e.type === 'ask' && !qaOf(e.id));
+  if (!items.length && !pend.length) return '';
+  return `<section class="qa-box"><h3 class="tape-h y">${ICON.radio}你問過 Claude <small>${items.length} 則已回覆${pend.length ? `・${pend.length} 則排隊中` : ''}</small></h3>
+    ${pend.map((e) => `<div class="qa-mini wait"><b>Q</b><p>${esc(e.q)}</p><span>排隊中，下一班 ${esc(nextShift('ask').at)}</span></div>`).join('')}
+    ${items.map((q) => `<div class="qa-mini"><b>Q</b><p>${esc(q.q)}</p>${qaBody(q)}</div>`).join('')}</section>`;
 }
 
 /* ---- main.js ---- */
@@ -3979,6 +5031,7 @@ function setTabs(name) {
   const pd = $('.tab[data-go="picks"] .dot'); if (pd) { pd.textContent = pnew; pd.classList.toggle('hide', !pnew); }
   const sn = shNewCount(); const sd = $('.tab[data-go="shorts"] .dot'); if (sd) { sd.textContent = sn; sd.classList.toggle('hide', !sn); }
   const hn = huntSaleCount(); const hd = $('.tab[data-go="hunt"] .dot'); if (hd) { hd.textContent = hn; hd.classList.toggle('hide', !hn); }
+  askLamp();
 }
 function tapeText() {
   const it = S.index ? S.index.items : []; const last = it[0] && it[0].date;
@@ -3995,7 +5048,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
@@ -4014,6 +5067,9 @@ async function route() {
       afterFeature();
       scrollTo(0, 0);
     } else if (name === 'hunt') { setTabs('hunt'); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
+    else if (name === 'board') { setTabs('home'); if (!S.board || Date.now() - Date.parse(S.board.at) > 15 * 6e4) { try { const b = await getJSON('board.json'); if (b && b.rows) S.board = b; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderBoard(); restoreScroll(h); boardFx(); }
+    else if (name === 'tga') { setTabs('home'); if (!S.tgaD || tgaPhase() === 'live') { try { const t = await getJSON('tga.json'); if (t && t.cats) S.tgaD = t; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderTga(); if (prev && prev.startsWith('tga') && prev === h) restoreScroll(h); else scrollTo(0, 0); tgaFx(); }
+    else if (name === 'ask') { setTabs('home'); await loadAsk(); v.innerHTML = renderAsk(); scrollTo(0, 0); askFx(); askFlush(); }
     else if (name === 'cal') { setTabs('hunt'); v.innerHTML = await renderCal(); scrollTo(0, 0); calFx(); }
     else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
     else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); }
@@ -4322,6 +5378,24 @@ document.addEventListener('click', async (ev) => {
     if (a === 'calall') { const L = S.calEv || []; if (L.length) { calSave(L, 'unpacked-calendar.ics'); sfx.stamp(); toast(`${L.length} 筆一次加入`); } return; }
     if (a === 'calcopy') { if (await copyText(CAL_URL)) { sfx.stamp(); toast('訂閱網址已複製'); } return; }
     if (a === 'hinfo') { ev.stopPropagation(); huntInfo(act.dataset.k); return; }
+    // 行情板
+    if (a === 'mkf' || a === 'mks' || a === 'mktag') { if (a === 'mkf') MK.f = act.dataset.v; else if (a === 'mks') MK.sort = act.dataset.v; else MK.tag = MK.tag === act.dataset.v ? '' : act.dataset.v; sfx.click(); const y = scrollY; VIEW().innerHTML = renderBoard(); scrollTo(0, y); if (a === 'mktag' && MK.tag) { const l = $('.mk-tagon'); if (l) l.scrollIntoView({ behavior: 'smooth', block: 'center' }); } return; }
+    if (a === 'mkinfo') { mkInfo(act.dataset.a); return; }
+    // TGA 預測戰
+    if (a.startsWith('tga') && tgaAct(a, act)) return;
+    // 點播台
+    if (a === 'askmode') { const pre = ASK.pre; ASK.mode = act.dataset.v; ASK.pre = pre && pre.mode === ASK.mode ? pre : null; sfx.click(); VIEW().innerHTML = renderAsk(); askFx(); return; }
+    if (a === 'askchip') { const ta = $('#askq'); if (ta) { const q = QUICK[+act.dataset.i]; ta.value = ta.value.trim() ? ta.value.trim() + ' ' + q : q; ta.focus(); } sfx.pop(); return; }
+    if (a === 'asksend') { askSend(); return; }
+    if (a === 'askq') { closeSheet(); ASK.pre = { mode: 'ask', q: act.dataset.q || '', ref: act.dataset.ref || '', ctx: act.dataset.ctx || '' }; ASK.mode = 'ask'; NAVN++; if (ROUTE === 'ask') route(); else location.hash = 'ask'; return; }
+    if (a === 'askreq') { closeSheet(); ASK.pre = { mode: 'req', game: act.dataset.g || '', appid: act.dataset.a || '' }; ASK.mode = 'req'; NAVN++; if (ROUTE === 'ask') route(); else location.hash = 'ask'; return; }
+    if (a === 'askthis') { askSheet(act.dataset.k, S.curId); return; }
+    if (a === 'asksheet') { const q = ($('#askq') || {}).value || ''; if (q.trim().length < 4) { toast('問題寫長一點點', 'warn'); return; } askEmit('ask', { q: q.trim().slice(0, 600), ref: act.dataset.ref, ctx: (act.dataset.ctx || '').slice(0, 120) }); sfx.radio(); burstAt(act, [PINK, YEL, BLK], 18, 9); closeSheet(); const nx = nextShift('ask'); toast(`送出了！下一班 ${nx.at} ${nx.name}會回答`); const box = $('.qa-box'); const html = askBoxFor(act.dataset.ref); if (box) box.outerHTML = html; else { const br = $('.askthis'); if (br) br.closest('.btnrow').insertAdjacentHTML('afterend', html); } setTabs(ROUTE.startsWith('p/') ? 'picks' : ''); return; }
+    if (a === 'askpack') { askPack(act.dataset.k, act.dataset.id); return; }
+    if (a === 'askchat') { askChat(act.dataset.id); return; }
+    // 免費補給站
+    if (a === 'frgo') { ev.stopPropagation(); S.freeSeen[act.dataset.id] = 1; LS.set('freeSeen', S.freeSeen); sfx.coin(); window.open(act.getAttribute('href'), '_blank', 'noopener'); return; }
+    if (a === 'frgot') { const id = act.dataset.id; if (S.freeGot[id]) delete S.freeGot[id]; else { S.freeGot[id] = todayTW(); sfx.coin(); burstAt(act, [YEL, PINK], 16, 9); } LS.set('freeGot', S.freeGot); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); setTabs('hunt'); return; }
     if (a === 'hunwant') { delete S.marks[act.dataset.id]; save('marks'); closeSheet(); sfx.scratch(); toast('已經從獵物移除'); if (ROUTE.startsWith('hunt')) route(); return; }
     if (a === 'ha-go' || a === 'ha-x') { huntAlertClose(a === 'ha-go'); return; }
     if (a === 'jump') { const el = document.getElementById(act.dataset.to); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); sfx.click(); return; }
@@ -4431,7 +5505,7 @@ async function boot() {
   fxInit();
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
-    <button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
+    <button class="ib askb" data-go="ask" aria-label="點播台">${ICON.radio}<i class="dot hide"></i></button><button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
   $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
@@ -4456,9 +5530,12 @@ async function boot() {
   };
   gate.addEventListener('click', (e) => { e.stopPropagation(); enter(!!e.target.closest('.gm')); }, { once: true });
   addEventListener('hashchange', route);
+  addEventListener('online', () => askFlush());
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) askFlush(); });
+  setTimeout(() => askFlush(), 2500);
   if ('serviceWorker' in navigator && /github\.io$/.test(location.hostname)) navigator.serviceWorker.register('sw.js').catch(() => {});
   // 每 20 分鐘看一次有沒有新資料（App 開著的時候）
-  setInterval(async () => { try { const old = S.index && S.index.at; await loadIndex(); if (S.index.at !== old) { tapeText(); if (ROUTE === 'home' || ROUTE === '') route(); toast('有新的解包！'); } setTabs(ROUTE.split('/')[0]); } catch (e) { /* */ } }, 20 * 60e3);
+  setInterval(async () => { try { const old = S.index && S.index.at; const unread = askUnread(); await loadIndex(); if (S.index.at !== old) { tapeText(); if (ROUTE === 'home' || ROUTE === '') route(); toast('有新的解包！'); } else if (askUnread() > unread) toast('點播台有新的回覆！'); setTabs(ROUTE.split('/')[0]); } catch (e) { /* */ } }, 20 * 60e3);
   // 自動測試用：?enter=1 直接進
   if (/[?&]enter=1/.test(location.search)) gate.click();
 }

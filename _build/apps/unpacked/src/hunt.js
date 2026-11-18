@@ -80,7 +80,7 @@ function huntStatus(t) {
     : t.soon ? 100 - Math.min(99, t.relDays == null ? 99 : t.relDays) : (t.rv || 0) / 10;
   return t;
 }
-function huntSaleCount() { try { return huntTargets().filter((t) => t.newSale || t.newHit).length; } catch (e) { return 0; } }
+function huntSaleCount() { try { return huntTargets().filter((t) => t.newSale || t.newHit).length + freeNewCount(); } catch (e) { return 0; } }
 
 /* ---- 文字 ---- */
 function leftTxt(ms) {
@@ -177,6 +177,7 @@ function renderHunt() {
   const sync = w.ok ? `願望單 ${w.n || 0} 款・同步於 ${esc(ago(w.at))}` : '';
   return `<div class="sec-h"><h2 class="spray-h y">獵價</h2><span class="date-stk">PRICE HUNT</span><button class="btn sm k hcal" data-go="cal">${ICON.cal}<span>出擊日曆</span></button></div>
     <p class="sub-note">Steam 願望單＋你在 App 裡標「想玩」的遊戲，每小時對一次台灣區價格。${sync ? `<b class="hsync">${sync}</b>` : ''}${w.state === 'stale' ? '<span class="hwarn">（這一輪沒讀到，先顯示上一次）</span>' : ''}</p>
+    ${saleHtml()}
     <section class="radarw">
       <div class="radar" id="radar"><div class="rd-grid"></div><div class="rd-sweep" id="rdsweep"></div>${radarBlips(all)}
         <span class="rd-tl">TARGETS<b>${all.length}</b></span><span class="rd-br">${sale.length ? 'LOCK ON' : 'SCANNING'}<i>…</i></span></div>
@@ -188,6 +189,7 @@ function renderHunt() {
         <div class="hlegend"><i class="lg-low"></i>史低<i class="lg-sale"></i>特價（越靠中心折越多）<i class="lg-soon"></i>未上市<i class="lg-n"></i>等降價</div>
       </div>
     </section>
+    ${freeHtml()}
     ${st !== 'ok' && st !== 'stale' ? connectHtml(st) : ''}
     ${huntQueueNote(all)}
     <div class="filters hf">${fl('all', '全部')}${fl('sale', '特價中')}${hits.length ? fl('hit', '到價') : ''}${fl('low', '史低')}${fl('soon', '未上市')}${fl('tc', '有繁中')}${fl('cheap', 'NT$300 內')}${fl('want', '我想玩')}</div>
@@ -284,6 +286,7 @@ function huntFx() {
   huntStop();
   const sw = $('#rdsweep'); if (!sw) return;
   countUp($('.hstats'));
+  dealsFx();
   // 第一次進來：懸賞單一張張拍上牆
   const bs = $$('.bounty');
   if (fxOn()) dropIn(bs, 'hunt');
@@ -310,7 +313,7 @@ function huntFx() {
   setTimeout(() => {
     if (!ROUTE.startsWith('hunt')) return;
     for (const t of huntTargets()) { if (t.onSale) S.huntSeen[t.key + ':' + t.final] = 1; if (t.hit) S.huntSeen['hit:' + t.key + ':' + t.final] = 1; }
-    LS.set('huntSeen', S.huntSeen); setTabs('hunt');
+    LS.set('huntSeen', S.huntSeen); freeSeenAll(); setTabs('hunt');
   }, 1500);
 }
 function huntStop() { if (HUNT.raf) cancelAnimationFrame(HUNT.raf); HUNT.raf = 0; }

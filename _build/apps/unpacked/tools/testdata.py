@@ -125,3 +125,93 @@ if '--hunt' in sys.argv:
                                                 'top': ['f:gta-vi', 'p:balatro', 'f:phantom-blade-zero', 'p:octopath-traveler-2'], 'updated': wk['updated']}]}
         json.dump(idx, open(os.path.join(d, 'weekly.json'), 'w'), ensure_ascii=False)
         print('test weekly', wid, '→', d)
+
+
+# ---------------------------------------------------------------- 行情板、免費補給站、點播台、TGA（測試用）
+if '--board' in sys.argv:
+    T = time.time(); tm = int(T // 60)
+    try:
+        cand = json.load(open(os.path.join(d, 'candidates.json'), encoding='utf-8'))
+    except Exception:  # noqa: BLE001
+        cand = {}
+    mp = (cand.get('most_played') or [])[:100]
+    ix = json.load(open(os.path.join(d, 'index.json'), encoding='utf-8'))
+    cov = {int(x['steam']): 'f:' + x['id'] for x in ix['items'] if x.get('steam')}
+    R = random.Random(11)
+    Tt = [tm - (29 - i) * 60 for i in range(30)]
+    Ts = [tm - (41 - i) * 240 for i in range(42)]
+    rows = []
+    for i, c in enumerate(mp):
+        a = c['appid']; base = max(800, int(1_100_000 / (i + 1) ** 1.05))
+        trend = R.choice([1.0, 1.0, 1.0, 1.08, 0.94, 1.6, 0.6]) if i not in (3, 7) else (2.1 if i == 3 else 0.55)
+        h = [int(base * (1 + 0.22 * math.sin((k + a % 9) / 3.8)) * (1 + (trend - 1) * k / 29)) for k in range(30)]
+        sp = [int(base * (1 + 0.25 * math.sin((k + a % 5) / 2.6)) * (0.85 + 0.3 * k / 41)) for k in range(42)]
+        sp[-1] = h[-1]
+        n = h[-1]; prev = h[5]
+        d1 = round((n - prev) * 100 / prev, 1); d7 = round((n - sp[0]) * 100 / sp[0], 1)
+        lw = c.get('last_week') if (c.get('last_week') or 0) > 0 else None
+        f = []
+        if not lw: f.append('new')
+        if d1 >= 40 and n >= 3000: f.append('surge')
+        elif lw and lw - (c.get('rank') or i + 1) >= 25: f.append('jump')
+        if d1 <= -35: f.append('crash')
+        if i in (1, 12): f.append('ath')
+        r = {'a': a, 'n': n, 'h': h, 'sp': sp, 'd1': d1, 'd7': d7, 'pk': int(max(h) * 1.05), 'r': i + 1, 'rp': c.get('rank'), 'lw': lw, 'f': f or None,
+             'ath': [max(h), time.strftime('%Y-%m-%d', time.gmtime(T))] if i in (1, 12) else None, 'nm': c.get('name') or f'App {a}', 'tags': (c.get('tags') or [])[:3] or None,
+             'rv': [c['rv']['pct'], c['rv']['n']] if c.get('rv') and c['rv'].get('n') else None, 'free': True if c.get('free') else None,
+             'img': f'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{a}/header.jpg', 'zh': c.get('zh'), 'cov': cov.get(a)}
+        rows.append({k: v for k, v in r.items() if v is not None})
+    rows.sort(key=lambda r: -r['n'])
+    for i, r in enumerate(rows):
+        r['r'] = i + 1
+    tot = sum(r['n'] for r in rows)
+    ih = [sum(r['h'][k] for r in rows) for k in range(30)]
+    isp = [sum(r['sp'][k] for r in rows) for k in range(42)]
+    up = sum(1 for r in rows if r['d1'] > 1); dn = sum(1 for r in rows if r['d1'] < -1)
+    agg = {}
+    for r in rows:
+        for t in (r.get('tags') or [])[:3]:
+            g = agg.setdefault(t, {'t': t, 'n': 0, 'k': 0, 'cn': 0, 'pv': 0}); g['n'] += r['n']; g['k'] += 1; g['cn'] += r['n']; g['pv'] += r['h'][5]
+    tags = [{'t': g['t'], 'n': g['n'], 'k': g['k'], 'd1': round((g['cn'] - g['pv']) * 100 / g['pv'], 1)} for g in sorted((g for g in agg.values() if g['k'] >= 3), key=lambda g: -g['n'])[:12]]
+    board = {'at': iso(T - 1200), 'src': 'concurrent', 'since': time.strftime('%Y-%m-%d', time.gmtime(T - 9 * 86400)), 't': Tt, 's': Ts,
+             'idx': {'n': tot, 'd1': round((ih[-1] - ih[5]) * 100 / ih[5], 2), 'up': up, 'dn': dn, 'fl': len(rows) - up - dn, 'h': ih, 'sp': isp}, 'rows': rows, 'tags': tags}
+    json.dump(board, open(os.path.join(d, 'board.json'), 'w'), ensure_ascii=False)
+    days = [time.strftime('%Y-%m-%d', time.gmtime(T - (12 - k) * 86400)) for k in range(12)]
+    json.dump({'days': days, 'pk': {str(r['a']): [int(r['n'] * (0.8 + 0.4 * random.random())) for _ in days] for r in rows}, 'ath': {}, 'nm': {}, 'last': days[-1], 'since': days[0]},
+              open(os.path.join(d, 'board-d.json'), 'w'), ensure_ascii=False)
+    print('test board →', d, len(rows), 'rows')
+
+if '--free' in sys.argv:
+    T = time.time()
+    free = {'at': iso(T - 900), 'ok': ['epic', 'steam', 'gog'], 'items': [
+        {'id': 'steam:268500', 'store': 'steam', 'title': 'XCOM 2（測試）', 'img': 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/268500/header.jpg', 'url': 'https://store.steampowered.com/app/268500/', 'orig': 89900, 'end': iso(T + 30 * 3600), 'appid': 268500, 'rv': [87, 120000], 'zh': 'tc', 'seen': iso(T - 600)},
+        {'id': 'epic:ns1:o1', 'store': 'epic', 'title': 'Hogwarts Legacy（測試）', 'img': 'https://cdn1.epicgames.com/offer/test/wide.jpg', 'url': 'https://store.epicgames.com/zh-Hant/p/test', 'orig_t': 'NT$1,490', 'start': iso(T - 2 * 86400), 'end': iso(T + 5 * 86400), 'seen': iso(T - 3 * 86400)},
+        {'id': 'gog:1', 'store': 'gog', 'title': 'Sunless Sea（測試）', 'img': 'https://images.gog-statics.com/test.jpg', 'url': 'https://www.gog.com/', 'orig_t': 'NT$560', 'seen': iso(T - 3600)},
+        {'id': 'epic:ns2:o2', 'store': 'epic', 'title': 'Next Week Game（測試）', 'img': 'https://cdn1.epicgames.com/offer/test/next.jpg', 'url': 'https://store.epicgames.com/', 'orig_t': 'NT$799', 'start': iso(T + 5 * 86400), 'end': iso(T + 12 * 86400), 'up': True, 'seen': iso(T)}],
+        'past': []}
+    json.dump(free, open(os.path.join(d, 'free.json'), 'w'), ensure_ascii=False)
+    print('test free →', d)
+
+if '--ask' in sys.argv:
+    T = time.time()
+    qa = {'at': iso(T - 3600), 'items': [
+        {'id': 'dtest01-aaaa1111', 'type': 'ask', 't': iso(T - 9 * 3600), 'q': '（測試）影之刃零跟仁王 3 比，哪個比較適合不擅長拼手速的人？', 'ref': 'f:phantom-blade-zero', 'st': 'done', 'at': iso(T - 2 * 3600), 'by': '推坑編輯',
+         'a': '（測試資料）先講結論：兩款都要反應，但影之刃零的招式取消和閃避判定比較寬，失手的代價也比較小。\n仁王 3 的數值和裝備系統比較深，喜歡研究配裝的會更有感；如果你想要的是爽快的連段手感，影之刃零比較友善。',
+         'pts': ['影之刃零：閃避判定寬、Boss 戰節奏明快', '仁王 3：配裝深、難度曲線陡'], 'src': [{'t': '（測試）來源 A', 'u': 'https://example.com/a'}, {'t': '（測試）來源 B', 'u': 'https://example.com/b'}]},
+        {'id': 'dtest01-bbbb2222', 'type': 'req', 't': iso(T - 30 * 3600), 'q': 'Probably Stolen', 'st': 'done', 'at': iso(T - 20 * 3600), 'by': '寫稿編輯', 'a': '（測試資料）寫好了：當鋪經營加上一點偵探推理，價格不貴、評價穩定。完整專題在今日牆，也附了買不買判定和目標價。', 'link': 'f:probably-stolen', 'src': []},
+        {'id': 'dtest02-cccc3333', 'type': 'ask', 't': iso(T - 50 * 3600), 'q': '（測試）幫我改一下 App 的程式', 'st': 'no', 'at': iso(T - 40 * 3600), 'by': '寫稿編輯', 'a': '（測試資料）點播台只回答遊戲相關的問題，App 的修改要另外開工。'}]}
+    json.dump(qa, open(os.path.join(d, 'qa.json'), 'w'), ensure_ascii=False)
+    inbox = {'v': 1, 'at': iso(T - 1800), 'cursor': 'x', 'events': [
+        {'id': 'dtest01-aaaa1111', 'type': 'ask', 't': iso(T - 9 * 3600), 'dev': 'dtest01', 'q': '…'}, {'id': 'dtest01-bbbb2222', 'type': 'req', 't': iso(T - 30 * 3600), 'dev': 'dtest01', 'game': 'Probably Stolen'},
+        {'id': 'dtest01-dddd4444', 'type': 'ask', 't': iso(T - 2 * 3600), 'dev': 'dtest01', 'q': '（測試）GTA VI 的 PC 版有消息了嗎？', 'ref': 'f:gta-vi'}]}
+    json.dump(inbox, open(os.path.join(d, 'inbox.json'), 'w'), ensure_ascii=False)
+    print('test qa/inbox →', d)
+
+if '--tgares' in sys.argv:
+    p = os.path.join(d, 'tga.json'); t = json.load(open(p, encoding='utf-8'))
+    R = random.Random(3)
+    for c in t['cats']:
+        c['win'] = c['claude']['c'] if R.random() < 0.55 else R.randrange(len(c['nom']))
+    t['result_at'] = iso(time.time() - 3600); t['show'] = iso(time.time() - 5 * 3600); t['vote_end'] = iso(time.time() - 30 * 3600)
+    json.dump(t, open(p, 'w', encoding='utf-8'), ensure_ascii=False)
+    print('test tga results →', d)

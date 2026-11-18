@@ -1,0 +1,1195 @@
+{
+ "id": "tga-2026",
+ "name": "The Game Awards 2026",
+ "zh": "TGA 2026 年度遊戲大獎",
+ "show": "2026-12-11T00:30:00Z",
+ "vote_end": "2026-12-10T02:00:00Z",
+ "venue": "洛杉磯 Peacock Theater",
+ "vote_url": "https://thegameawards.com/",
+ "sealed": "2026-11-18T05:00:00Z",
+ "result_at": null,
+ "intro": "台灣時間 12/11（五）早上 8:30 開播，30 個獎一起開獎。你先押，Claude 的預測 11/18 就寫好、封存在 GitHub 上，你鎖定以後才拆封。開獎當天排程會把得獎名單填進來，App 自動對答案算分。",
+ "rules": "年度最佳遊戲 5 分，六項製作大獎（指導、敘事、美術、配樂、音效、演出）各 2 分，其他各 1 分；加倍卡 3 張，押中翻倍。",
+ "cats": [
+  {
+   "id": "goty",
+   "zh": "年度最佳遊戲",
+   "en": "Game of the Year",
+   "pt": 5,
+   "grp": "main",
+   "nom": [
+    {
+     "n": "007 First Light"
+    },
+    {
+     "n": "CONTROL Resonant"
+    },
+    {
+     "n": "Grand Theft Auto VI",
+     "zh": "俠盜獵車手 VI",
+     "ref": "f:gta-vi"
+    },
+    {
+     "n": "Phantom Blade Zero",
+     "zh": "影之刃零",
+     "ref": "f:phantom-blade-zero"
+    },
+    {
+     "n": "Resident Evil Requiem",
+     "zh": "惡靈古堡 安魂曲"
+    },
+    {
+     "n": "The Legend of Zelda: Ocarina of Time",
+     "zh": "薩爾達傳說 時之笛"
+    }
+   ],
+   "claude": {
+    "c": 2,
+    "conf": 2,
+    "why": "GTA VI 入圍 8 項，是今年最多的一款（照入圍名單數）。TGA 從 2014 年開辦到現在，年度遊戲還沒頒給過重製作，所以就算時之笛重製版拿下今年最高的 Metacritic 96 分，Claude 也押它在「動作冒險」拿獎。風險：GTA VI 11/19 才上市，評審玩的時間最短。",
+    "s": [
+     0,
+     4,
+     1
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "direction",
+   "zh": "最佳遊戲指導",
+   "en": "Best Game Direction",
+   "pt": 2,
+   "grp": "main",
+   "nom": [
+    {
+     "n": "CONTROL Resonant"
+    },
+    {
+     "n": "Grand Theft Auto VI",
+     "zh": "俠盜獵車手 VI",
+     "ref": "f:gta-vi"
+    },
+    {
+     "n": "Phantom Blade Zero",
+     "zh": "影之刃零",
+     "ref": "f:phantom-blade-zero"
+    },
+    {
+     "n": "Pragmata"
+    },
+    {
+     "n": "Resident Evil Requiem",
+     "zh": "惡靈古堡 安魂曲"
+    }
+   ],
+   "claude": {
+    "c": 1,
+    "conf": 2,
+    "why": "遊戲指導常常跟年度遊戲是同一款。最大的對手是 Remedy：CONTROL Resonant 一口氣入圍 6 項，評審顯然很欣賞它的整體設計。",
+    "s": [
+     0,
+     6
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "narrative",
+   "zh": "最佳敘事",
+   "en": "Best Narrative",
+   "pt": 2,
+   "grp": "main",
+   "nom": [
+    {
+     "n": "007 First Light"
+    },
+    {
+     "n": "CONTROL Resonant"
+    },
+    {
+     "n": "Grand Theft Auto VI",
+     "zh": "俠盜獵車手 VI",
+     "ref": "f:gta-vi"
+    },
+    {
+     "n": "Resident Evil Requiem",
+     "zh": "惡靈古堡 安魂曲"
+    },
+    {
+     "n": "The Blood of Dawnwalker"
+    }
+   ],
+   "claude": {
+    "c": 2,
+    "conf": 1,
+    "why": "劇本一直是 Rockstar 的招牌。不過這項變數最大：007 First Light（Metacritic 88）和安魂曲的故事都很受好評，Claude 只有一顆星的把握。",
+    "s": [
+     0,
+     7,
+     5
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "art",
+   "zh": "最佳美術指導",
+   "en": "Best Art Direction",
+   "pt": 2,
+   "grp": "main",
+   "nom": [
+    {
+     "n": "CONTROL Resonant"
+    },
+    {
+     "n": "Grand Theft Auto VI",
+     "zh": "俠盜獵車手 VI",
+     "ref": "f:gta-vi"
+    },
+    {
+     "n": "Mouse: P.I. For Hire"
+    },
+    {
+     "n": "Phantom Blade Zero",
+     "zh": "影之刃零",
+     "ref": "f:phantom-blade-zero"
+    },
+    {
+     "n": "The Legend of Zelda: Ocarina of Time",
+     "zh": "薩爾達傳說 時之笛"
+    }
+   ],
+   "claude": {
+    "c": 0,
+    "conf": 2,
+    "why": "超現實的建築與光影是 Remedy 的招牌，初代 CONTROL 在 2019 年就拿過這個獎。對手是畫面全面翻新的時之笛，和水墨武俠風的影之刃零。",
+    "s": [
+     0,
+     6
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "score",
+   "zh": "最佳配樂",
+   "en": "Best Score & Music",
+   "pt": 2,
+   "grp": "main",
+   "nom": [
+    {
+     "n": "Ace Combat 8: Wings of Theve",
+     "zh": "空戰奇兵 8"
+    },
+    {
+     "n": "Grand Theft Auto VI",
+     "zh": "俠盜獵車手 VI",
+     "ref": "f:gta-vi"
+    },
+    {
+     "n": "Mixtape"
+    },
+    {
+     "n": "Phantom Blade Zero",
+     "zh": "影之刃零",
+     "ref": "f:phantom-blade-zero"
+    },
+    {
+     "n": "The Legend of Zelda: Ocarina of Time",
+     "zh": "薩爾達傳說 時之笛"
+    }
+   ],
+   "claude": {
+    "c": 1,
+    "conf": 1,
+    "why": "這個獎連授權歌曲一起算：Rockstar 的電台選曲加上原創配樂，量體最大。最大的對手是重新編曲的時之笛。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "audio",
+   "zh": "最佳音效設計",
+   "en": "Best Audio Design",
+   "pt": 2,
+   "grp": "main",
+   "nom": [
+    {
+     "n": "Ace Combat 8: Wings of Theve",
+     "zh": "空戰奇兵 8"
+    },
+    {
+     "n": "CONTROL Resonant"
+    },
+    {
+     "n": "Grand Theft Auto VI",
+     "zh": "俠盜獵車手 VI",
+     "ref": "f:gta-vi"
+    },
+    {
+     "n": "Resident Evil Requiem",
+     "zh": "惡靈古堡 安魂曲"
+    },
+    {
+     "n": "Star Wars: Galactic Racer"
+    }
+   ],
+   "claude": {
+    "c": 3,
+    "conf": 2,
+    "why": "恐怖遊戲最吃音效：腳步聲、喘息、遠處的動靜都是玩法的一部分。安魂曲是今年評價最好的恐怖大作（Metacritic 88）。",
+    "s": [
+     0,
+     5
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "performance",
+   "zh": "最佳演出",
+   "en": "Best Performance",
+   "pt": 2,
+   "grp": "main",
+   "nom": [
+    {
+     "n": "Angela Sant'Albano",
+     "sub": "Grace Ashcroft｜惡靈古堡 安魂曲"
+    },
+    {
+     "n": "Liam McIntyre",
+     "sub": "Wolverine｜漫威金鋼狼"
+    },
+    {
+     "n": "Manni L. Perez",
+     "sub": "Lucia Caminos｜俠盜獵車手 VI"
+    },
+    {
+     "n": "Patrick Gibson",
+     "sub": "James Bond｜007 First Light"
+    },
+    {
+     "n": "Rahul Kohli",
+     "sub": "Arjun Devraj｜Saros"
+    }
+   ],
+   "claude": {
+    "c": 0,
+    "conf": 1,
+    "why": "葛蕾絲是安魂曲的新主角、整部戲的情緒核心；這款的玩家評分 9.5 還創下 Metacritic 紀錄。五位實力接近，這項 Claude 把握不高。",
+    "s": [
+     0,
+     14
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "indie",
+   "zh": "最佳獨立遊戲",
+   "en": "Best Independent Game",
+   "pt": 1,
+   "grp": "indie",
+   "nom": [
+    {
+     "n": "Big Walk"
+    },
+    {
+     "n": "Cairn"
+    },
+    {
+     "n": "Denshattack"
+    },
+    {
+     "n": "Mewgenics"
+    },
+    {
+     "n": "Mina the Hollower"
+    }
+   ],
+   "claude": {
+    "c": 0,
+    "conf": 2,
+    "why": "Big Walk 的 Metacritic 91，是今年分數最高的新作之一，而且一口氣入圍獨立、影響力、家庭、多人四個獎，評審明顯很愛。",
+    "s": [
+     9,
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "debut",
+   "zh": "最佳獨立遊戲處女作",
+   "en": "Best Debut Indie Game",
+   "pt": 1,
+   "grp": "indie",
+   "nom": [
+    {
+     "n": "Dressmaker"
+    },
+    {
+     "n": "Esoteric Ebb"
+    },
+    {
+     "n": "Orbitals"
+    },
+    {
+     "n": "Replaced"
+    },
+    {
+     "n": "Silver Pines"
+    }
+   ],
+   "claude": {
+    "c": 1,
+    "conf": 2,
+    "why": "Metacritic 85、38 篇評論裡 37 篇是好評，被拿來跟《極樂迪斯可》相提並論的劇情角色扮演遊戲。",
+    "s": [
+     11
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "impact",
+   "zh": "最具影響力遊戲",
+   "en": "Games for Impact",
+   "pt": 1,
+   "grp": "indie",
+   "nom": [
+    {
+     "n": "Big Walk"
+    },
+    {
+     "n": "Cairn"
+    },
+    {
+     "n": "Forever Ago"
+    },
+    {
+     "n": "Life is Strange: Reunion",
+     "zh": "奇異人生：Reunion"
+    },
+    {
+     "n": "Lily's World XD"
+    },
+    {
+     "n": "Mixtape"
+    }
+   ],
+   "claude": {
+    "c": 5,
+    "conf": 1,
+    "why": "講青春和友情的音樂冒險，也同時入圍最佳配樂。這個獎偏好有情感重量的故事，但六款都有理由拿，信心不高。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "action",
+   "zh": "最佳動作遊戲",
+   "en": "Best Action Game",
+   "pt": 1,
+   "grp": "genre",
+   "nom": [
+    {
+     "n": "Ace Combat 8: Wings of Theve",
+     "zh": "空戰奇兵 8"
+    },
+    {
+     "n": "Gears of War: E-Day",
+     "zh": "戰爭機器：E-Day"
+    },
+    {
+     "n": "Onimusha: Way of the Sword",
+     "zh": "鬼武者 Way of the Sword"
+    },
+    {
+     "n": "Phantom Blade Zero",
+     "zh": "影之刃零",
+     "ref": "f:phantom-blade-zero"
+    },
+    {
+     "n": "Saros"
+    }
+   ],
+   "claude": {
+    "c": 3,
+    "conf": 2,
+    "why": "Metacritic 88、沒有負評，媒體幾乎一致誇戰鬥手感，是這組評價最好的純動作遊戲。",
+    "s": [
+     8
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "actadv",
+   "zh": "最佳動作冒險遊戲",
+   "en": "Best Action/Adventure Game",
+   "pt": 1,
+   "grp": "genre",
+   "nom": [
+    {
+     "n": "007 First Light"
+    },
+    {
+     "n": "CONTROL Resonant"
+    },
+    {
+     "n": "Grand Theft Auto VI",
+     "zh": "俠盜獵車手 VI",
+     "ref": "f:gta-vi"
+    },
+    {
+     "n": "Pragmata"
+    },
+    {
+     "n": "Resident Evil Requiem",
+     "zh": "惡靈古堡 安魂曲"
+    },
+    {
+     "n": "The Legend of Zelda: Ocarina of Time",
+     "zh": "薩爾達傳說 時之笛"
+    }
+   ],
+   "claude": {
+    "c": 5,
+    "conf": 2,
+    "why": "今年 Metacritic 最高分（96）。如果評審沒把年度遊戲給重製作，最可能在這裡補給它。",
+    "s": [
+     4
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "rpg",
+   "zh": "最佳角色扮演遊戲",
+   "en": "Best Role-Playing Game",
+   "pt": 1,
+   "grp": "genre",
+   "nom": [
+    {
+     "n": "Final Fantasy Resonance",
+     "ref": "f:final-fantasy-resonance"
+    },
+    {
+     "n": "Fire Emblem: Fortune's Weave"
+    },
+    {
+     "n": "Monster Hunter Stories 3: Twisted Reflection"
+    },
+    {
+     "n": "The Blood of Dawnwalker"
+    },
+    {
+     "n": "Trails in the Sky 2nd Chapter"
+    }
+   ],
+   "claude": {
+    "c": 1,
+    "conf": 1,
+    "why": "Metacritic 89，今年分數最高的新作角色扮演遊戲之一。Trails in the Sky 2nd Chapter 評價也很好，但它是重製作。",
+    "s": [
+     10
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "sim",
+   "zh": "最佳模擬／策略遊戲",
+   "en": "Best Sim/Strategy Game",
+   "pt": 1,
+   "grp": "genre",
+   "nom": [
+    {
+     "n": "Mewgenics"
+    },
+    {
+     "n": "Planet Zoo 2",
+     "zh": "動物園之星 2"
+    },
+    {
+     "n": "Pokémon Pokopia"
+    },
+    {
+     "n": "Slay the Spire II",
+     "zh": "殺戮尖塔 2"
+    },
+    {
+     "n": "Star Wars Zero Company"
+    }
+   ],
+   "claude": {
+    "c": 0,
+    "conf": 1,
+    "why": "Metacritic 88，策略深度是最大賣點。最大變數是 Pokopia（89），它同時入圍家庭遊戲，評審可能讓它拿兩座。",
+    "s": [
+     13,
+     10
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "fighting",
+   "zh": "最佳格鬥遊戲",
+   "en": "Best Fighting Game",
+   "pt": 1,
+   "grp": "genre",
+   "nom": [
+    {
+     "n": "2XKO"
+    },
+    {
+     "n": "Avatar Legends: The Fighting Game"
+    },
+    {
+     "n": "Invincible VS"
+    },
+    {
+     "n": "Marvel Tōkon: Fighting Souls"
+    },
+    {
+     "n": "My Hero Academia: All's Justice",
+     "zh": "我的英雄學院 All's Justice"
+    }
+   ],
+   "claude": {
+    "c": 3,
+    "conf": 1,
+    "why": "Claude 看好 Arc System Works 的格鬥手感加上漫威的號召力。格鬥獎常常爆冷，信心不高。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "family",
+   "zh": "最佳家庭遊戲",
+   "en": "Best Family Game",
+   "pt": 1,
+   "grp": "genre",
+   "nom": [
+    {
+     "n": "Big Walk"
+    },
+    {
+     "n": "Lego Batman: Legacy of the Dark Knight"
+    },
+    {
+     "n": "Nintendo Switch Sports Resort"
+    },
+    {
+     "n": "Pokémon Pokopia"
+    },
+    {
+     "n": "Yoshi and the Mysterious Book"
+    }
+   ],
+   "claude": {
+    "c": 3,
+    "conf": 2,
+    "why": "Metacritic 89，系列評價最好的一作之一；近年的家庭遊戲獎多半頒給任天堂陣營的作品。",
+    "s": [
+     10
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "sports",
+   "zh": "最佳運動／競速遊戲",
+   "en": "Best Sports/Racing Game",
+   "pt": 1,
+   "grp": "genre",
+   "nom": [
+    {
+     "n": "EA Sports FC 27"
+    },
+    {
+     "n": "Forza Horizon 6",
+     "zh": "極限競速：地平線 6"
+    },
+    {
+     "n": "Nintendo Switch Sports Resort"
+    },
+    {
+     "n": "Screamer"
+    },
+    {
+     "n": "Star Wars: Galactic Racer"
+    }
+   ],
+   "claude": {
+    "c": 1,
+    "conf": 3,
+    "why": "Metacritic 90，今年上半年分數最高的新作；前作《地平線 5》2021 年也拿過這個獎。這是 Claude 最有把握的一項。",
+    "s": [
+     9,
+     10
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "multi",
+   "zh": "最佳多人遊戲",
+   "en": "Best Multiplayer",
+   "pt": 1,
+   "grp": "genre",
+   "nom": [
+    {
+     "n": "Big Walk"
+    },
+    {
+     "n": "Call of Duty: Modern Warfare 4",
+     "zh": "決勝時刻：現代戰爭 4"
+    },
+    {
+     "n": "Gears of War: E-Day",
+     "zh": "戰爭機器：E-Day"
+    },
+    {
+     "n": "Marathon"
+    },
+    {
+     "n": "Meccha Chameleon"
+    },
+    {
+     "n": "Orbitals"
+    }
+   ],
+   "claude": {
+    "c": 0,
+    "conf": 1,
+    "why": "主打跟朋友一起走的合作玩法，評價（Metacritic 91）遠高於同組；但射擊大作的玩家基數大得多，這項是在賭評審的口味。",
+    "s": [
+     9
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "ongoing",
+   "zh": "最佳持續營運遊戲",
+   "en": "Best Ongoing Game",
+   "pt": 1,
+   "grp": "more",
+   "nom": [
+    {
+     "n": "Arc Raiders"
+    },
+    {
+     "n": "Final Fantasy XIV Online"
+    },
+    {
+     "n": "Fortnite",
+     "zh": "要塞英雄"
+    },
+    {
+     "n": "No Man's Sky",
+     "zh": "無人深空"
+    },
+    {
+     "n": "The Witcher 3: Wild Hunt",
+     "zh": "巫師 3：狂獵"
+    }
+   ],
+   "claude": {
+    "c": 0,
+    "conf": 2,
+    "why": "Claude 的判斷：Arc Raiders 是這組最新、討論度最熱的一款；要塞英雄是常客，但新鮮感輸它。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "community",
+   "zh": "最佳社群支援",
+   "en": "Best Community Support",
+   "pt": 1,
+   "grp": "more",
+   "nom": [
+    {
+     "n": "Crimson Desert",
+     "zh": "紅色沙漠"
+    },
+    {
+     "n": "Helldivers 2",
+     "zh": "絕地戰兵 2"
+    },
+    {
+     "n": "No Man's Sky",
+     "zh": "無人深空"
+    },
+    {
+     "n": "The Witcher 3: Wild Hunt",
+     "zh": "巫師 3：狂獵"
+    },
+    {
+     "n": "Warframe",
+     "zh": "星際戰甲"
+    }
+   ],
+   "claude": {
+    "c": 2,
+    "conf": 1,
+    "why": "無人深空 2016 年上市，十年來的大更新全部免費，是這個獎的代名詞。最大變數是巫師 3：今年同時入圍持續營運和社群兩項。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "vr",
+   "zh": "最佳 VR／AR 遊戲",
+   "en": "Best VR/AR Game",
+   "pt": 1,
+   "grp": "more",
+   "nom": [
+    {
+     "n": "Into the Radius 2"
+    },
+    {
+     "n": "Little Nightmares VR: Altered Echoes",
+     "zh": "小小夢魘 VR"
+    },
+    {
+     "n": "Teenage Mutant Ninja Turtles: Empire City"
+    },
+    {
+     "n": "Thief VR: Legacy of Shadow"
+    }
+   ],
+   "claude": {
+    "c": 3,
+    "conf": 1,
+    "why": "經典潛行系列做成 VR，最符合「要用 VR 才玩得到」的評審口味。VR 組資訊最少，這項信心最低。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "mobile",
+   "zh": "最佳手機遊戲",
+   "en": "Best Mobile Game",
+   "pt": 1,
+   "grp": "more",
+   "nom": [
+    {
+     "n": "Arknights: Endfield",
+     "zh": "明日方舟：終末地"
+    },
+    {
+     "n": "Monster Hunter Outlanders",
+     "zh": "魔物獵人 Outlanders"
+    },
+    {
+     "n": "Neverness to Everness",
+     "zh": "異環"
+    },
+    {
+     "n": "Pokémon Champions"
+    },
+    {
+     "n": "Where Winds Meet",
+     "zh": "燕雲十六聲"
+    }
+   ],
+   "claude": {
+    "c": 0,
+    "conf": 1,
+    "why": "Claude 押今年最受矚目的大型手遊之一。這組彼此差距很小。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "access",
+   "zh": "無障礙創新",
+   "en": "Innovation in Accessibility",
+   "pt": 1,
+   "grp": "more",
+   "nom": [
+    {
+     "n": "Assassin's Creed Black Flag Resynced"
+    },
+    {
+     "n": "Forza Horizon 6",
+     "zh": "極限競速：地平線 6"
+    },
+    {
+     "n": "Gears of War: E-Day",
+     "zh": "戰爭機器：E-Day"
+    },
+    {
+     "n": "Marvel's Wolverine",
+     "zh": "漫威金鋼狼"
+    },
+    {
+     "n": "Rhythm Heaven Groove"
+    }
+   ],
+   "claude": {
+    "c": 1,
+    "conf": 2,
+    "why": "Playground 的無障礙設計一直是業界標竿，前作《地平線 5》2021 年就拿過這個獎。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "ugc",
+   "zh": "最佳玩家創作（新獎項）",
+   "en": "Best User Creation",
+   "pt": 1,
+   "grp": "more",
+   "nom": [
+    {
+     "n": "A Dream of Silence: Revamped",
+     "sub": "Baldur's Gate 3 模組"
+    },
+    {
+     "n": "Create Aeronautics",
+     "sub": "Minecraft 模組"
+    },
+    {
+     "n": "NoPixel V",
+     "sub": "GTA Online 角色扮演伺服器"
+    },
+    {
+     "n": "Star Wars Droid Tycoon",
+     "sub": "Fortnite 島嶼"
+    },
+    {
+     "n": "TTK Testing",
+     "sub": "Roblox"
+    }
+   ],
+   "claude": {
+    "c": 1,
+    "conf": 1,
+    "why": "新獎項沒有前例。Create 是 Minecraft 最有名的機械模組系列之一，Aeronautics 讓玩家打造會飛的機械，作品感最強。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "adapt",
+   "zh": "最佳改編作品",
+   "en": "Best Adaptation",
+   "pt": 1,
+   "grp": "more",
+   "nom": [
+    {
+     "n": "Cyberpunk: Edgerunners Season 2",
+     "zh": "電馭叛客：邊緣行者 第二季"
+    },
+    {
+     "n": "Fallout Season 2",
+     "zh": "異塵餘生 第二季"
+    },
+    {
+     "n": "Mortal Kombat II"
+    },
+    {
+     "n": "Resident Evil",
+     "zh": "惡靈古堡（電影）"
+    },
+    {
+     "n": "The Super Mario Galaxy Movie",
+     "zh": "超級瑪利歐銀河電影版"
+    }
+   ],
+   "claude": {
+    "c": 1,
+    "conf": 2,
+    "why": "第一季在 2024 年就拿過這個獎，第二季口碑延續；對手裡邊緣行者第二季也很強。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "anticipated",
+   "zh": "最受期待遊戲",
+   "en": "Most Anticipated Game",
+   "pt": 1,
+   "grp": "more",
+   "nom": [
+    {
+     "n": "Fable",
+     "zh": "神鬼寓言"
+    },
+    {
+     "n": "Final Fantasy VII Revelation"
+    },
+    {
+     "n": "God of War Laufey"
+    },
+    {
+     "n": "Resident Evil Veronica"
+    },
+    {
+     "n": "The Witcher IV",
+     "zh": "巫師 4"
+    }
+   ],
+   "claude": {
+    "c": 4,
+    "conf": 2,
+    "why": "CD PROJEKT RED 的下一部大作，期待度是頂級；GTA VI 上市之後，這個獎最可能落在它身上。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "esgame",
+   "zh": "最佳電競遊戲",
+   "en": "Best Esports Game",
+   "pt": 1,
+   "grp": "extra",
+   "nom": [
+    {
+     "n": "Counter-Strike 2"
+    },
+    {
+     "n": "Dota 2"
+    },
+    {
+     "n": "League of Legends",
+     "zh": "英雄聯盟"
+    },
+    {
+     "n": "Mobile Legends: Bang Bang"
+    },
+    {
+     "n": "Valorant",
+     "zh": "特戰英豪"
+    }
+   ],
+   "claude": {
+    "c": 0,
+    "conf": 1,
+    "why": "電競組 Claude 也押了，但這組最難猜：賽事規模和觀賽熱度都在第一梯隊。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "esathlete",
+   "zh": "最佳電競選手",
+   "en": "Best Esports Athlete",
+   "pt": 1,
+   "grp": "extra",
+   "nom": [
+    {
+     "n": "Chovy",
+     "sub": "英雄聯盟"
+    },
+    {
+     "n": "donk",
+     "sub": "Counter-Strike 2"
+    },
+    {
+     "n": "erde"
+    },
+    {
+     "n": "Yatoro",
+     "sub": "Dota 2"
+    },
+    {
+     "n": "ZywOo",
+     "sub": "Counter-Strike 2"
+    }
+   ],
+   "claude": {
+    "c": 4,
+    "conf": 1,
+    "why": "五位都是頂尖選手，Claude 押穩定度最高的老牌王者。電競組變數大。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "esteam",
+   "zh": "最佳電競隊伍",
+   "en": "Best Esports Team",
+   "pt": 1,
+   "grp": "extra",
+   "nom": [
+    {
+     "n": "Gen.G",
+     "sub": "英雄聯盟"
+    },
+    {
+     "n": "LOUD",
+     "sub": "特戰英豪"
+    },
+    {
+     "n": "Team Falcons",
+     "sub": "Counter-Strike 2"
+    },
+    {
+     "n": "Team Falcons",
+     "sub": "火箭聯盟"
+    },
+    {
+     "n": "Team Spirit",
+     "sub": "Dota 2"
+    },
+    {
+     "n": "Team Vitality",
+     "sub": "Counter-Strike 2"
+    }
+   ],
+   "claude": {
+    "c": 5,
+    "conf": 1,
+    "why": "Claude 押 CS2 的 Vitality；同一個組織有兩隊入圍的 Falcons 也是大熱門。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  },
+  {
+   "id": "creator",
+   "zh": "年度內容創作者",
+   "en": "Content Creator of the Year",
+   "pt": 1,
+   "grp": "extra",
+   "nom": [
+    {
+     "n": "CDawgVA"
+    },
+    {
+     "n": "Cellbit"
+    },
+    {
+     "n": "IShowSpeed"
+    },
+    {
+     "n": "lilsimsie"
+    },
+    {
+     "n": "ohnePixel"
+    }
+   ],
+   "claude": {
+    "c": 2,
+    "conf": 1,
+    "why": "五位裡知名度最高、話題最多的一位；這個獎很看粉絲聲量，但評審票還是占九成。",
+    "s": [
+     0
+    ]
+   },
+   "win": null
+  }
+ ],
+ "sources": [
+  {
+   "t": "Game Informer：TGA 2026 全部入圍名單",
+   "u": "https://gameinformer.com/2026/11/17/here-are-the-nominees-for-the-game-awards-2026",
+   "d": "2026-11-17"
+  },
+  {
+   "t": "KeenGamer：年度遊戲六強與 GTA VI 上市日",
+   "u": "https://www.keengamer.com/articles/news/the-game-awards-2026-all-game-of-the-year-nominees-revealed/",
+   "d": "2026-11-17"
+  },
+  {
+   "t": "GuruGamer：頒獎時間與粉絲投票截止",
+   "u": "https://gurugamer.com/pc-console/the-game-awards-2026-nominees-arrive-november-17-full-date-time-and-viewing-guide-27579/amp",
+   "d": "2026-11"
+  },
+  {
+   "t": "Laughing Place：Disney+ 直播 TGA 2026（美東 12/10 晚上 7:30）",
+   "u": "https://www.laughingplace.com/disney-entertainment/the-game-awards-2026-disney-plus/",
+   "d": "2026-11"
+  },
+  {
+   "t": "GamesRadar：時之笛重製版 Metacritic 96，今年最高",
+   "u": "https://www.gamesradar.com/games/the-legend-of-zelda/the-legend-of-zelda-ocarina-of-time-remakes-metacritic-score-makes-it-the-highest-rated-game-of-2026-but-even-it-cant-reach-the-originals-near-perfect-score/",
+   "d": "2026-11-04"
+  },
+  {
+   "t": "OpenCritic／TheGamer：惡靈古堡 安魂曲 OpenCritic 90、Metacritic 88",
+   "u": "https://opencritic.com/news/26947/resident-evil-requiem-is-the-highest-rated-original-game-in-the-series-in-over-20-years",
+   "d": "2026-03"
+  },
+  {
+   "t": "GamesRadar：CONTROL Resonant Metacritic 84",
+   "u": "https://www.gamesradar.com/games/action-rpg/control-resonant-metacritic-score-places-it-higher-than-its-predecessor-but-it-cant-touch-2026s-top-20-bangers-like-resident-evil-requiem-and-pokemon-pokopia/",
+   "d": "2026-09-18"
+  },
+  {
+   "t": "GamesRadar：007 First Light Metacritic 88",
+   "u": "https://www.gamesradar.com/games/action/007-first-lights-metacritic-score-might-make-the-james-bond-romp-io-interactives-highest-rated-game-yet-but-goldeneye-remains-king/",
+   "d": "2026-05"
+  },
+  {
+   "t": "The Shortcut：影之刃零 Metacritic 88、沒有負評",
+   "u": "https://www.theshortcut.com/p/phantom-blade-zero-review-roundup",
+   "d": "2026-10"
+  },
+  {
+   "t": "Wikipedia：2026 年 Metacritic 90 分以上的遊戲",
+   "u": "https://en.wikipedia.org/wiki/2026_in_video_games",
+   "d": "2026-11"
+  },
+  {
+   "t": "Game Rant：2026 年 Metacritic 前十名",
+   "u": "https://gamerant.com/best-games-2026-so-far-metacritic-opencritic/",
+   "d": "2026-10"
+  },
+  {
+   "t": "Metacritic：Esoteric Ebb",
+   "u": "https://legacy.prod.metacritic.com/game/pc/esoteric-ebb",
+   "d": "2026"
+  },
+  {
+   "t": "OfZen and Computing：GTA VI 評測傳 11/18 解禁（Rockstar 未證實）",
+   "u": "https://www.ofzenandcomputing.com/gta-6-review-embargo-date-revealed/",
+   "d": "2026-10"
+  },
+  {
+   "t": "PCGamesN：安魂曲與 Mewgenics 同為 Metacritic 88",
+   "u": "https://www.pcgamesn.com/resident-evil-requiem/expedition-33-metacritic-user-score",
+   "d": "2026-03"
+  },
+  {
+   "t": "VGC：安魂曲玩家評分 9.5，Metacritic 史上最高",
+   "u": "https://www.videogameschronicle.com/news/resident-evil-requiem-currently-has-the-highest-user-score-of-all-time-on-metacritic",
+   "d": "2026-03"
+  }
+ ]
+}

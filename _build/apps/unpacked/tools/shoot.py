@@ -81,7 +81,9 @@ with sync_playwright() as p:
             return route.fulfill(status=200, content_type='text/html', body=FAKE_YT)
         if '.mp4' in u or '.m3u8' in u:
             return route.fulfill(status=404, body=b'')
-        if any(h in u for h in ('i.ytimg.com', 'steamstatic.com', 'images.weserv.nl', 'gmedia.playstation.com', 'nflximg.net')):
+        if 'ntfy.sh' in u:      # 點播台的轉發站：假裝送到了
+            return route.fulfill(status=200, content_type='application/json', body=b'{}', headers={'Access-Control-Allow-Origin': '*'})
+        if any(h in u for h in ('i.ytimg.com', 'steamstatic.com', 'images.weserv.nl', 'gmedia.playstation.com', 'nflximg.net', 'epicgames.com', 'gog-statics.com')):
             return route.fulfill(status=200, content_type='image/jpeg', body=fake_img(u), headers={'Access-Control-Allow-Origin': '*'})
         if '127.0.0.1' in u:
             return route.continue_()
