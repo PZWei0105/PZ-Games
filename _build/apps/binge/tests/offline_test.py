@@ -137,7 +137,7 @@ def main():
         first = vids[s['eps'][0]]
         ok(first[9] == 1, '新到舊排的清單要倒過來（第 1 集在前），現在是第 %s 集' % first[9])
         ok(s['n'] == '九陽武神', '作品名要從各集標題找共同的名字，現在是「%s」' % s['n'])
-        ok(first[2].startswith('EP01'), '作品裡的單集標題要拿掉作品名，現在是「%s」' % first[2])
+        ok('九陽武神' not in first[2] and len(first[2]) >= 2, '作品裡的單集標題要拿掉作品名，現在是「%s」' % first[2])
     if 'p:' + pl_a in shows:
         ok(shows['p:' + pl_a]['n'].startswith('Re:從零開始的異世界生活 第四季'), 'Re:Zero 作品名：%s' % shows['p:' + pl_a]['n'])
     ok(not any('会员' in v[2] or '會員' in v[2] for v in vids), '會員限定影片不收')

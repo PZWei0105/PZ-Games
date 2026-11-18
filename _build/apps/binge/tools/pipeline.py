@@ -23,6 +23,7 @@ import hashlib
 import html as htmlmod
 import http.client
 import json
+import math
 import os
 import random
 import re
@@ -61,7 +62,6 @@ PL_EVERY = 52 * 3600        # 播放清單內容（頻道有新片時會提早�
 SHORTS_EVERY = 12 * 3600
 WATCH_PER_RUN = 60
 KEEP_DAYS = 150             # 沒有被作品收進去的影片留多久
-CAPS = {'ai': 90, 'sd': 90, 'mc': 110, 'cn': 520, 'jp': 520, 'toon': 180}       # 每個頻道收進片庫幾支
 SHOW_CAPS = {'ai': 40, 'sd': 30, 'mc': 40, 'cn': 45, 'jp': 140, 'toon': 30}      # 每個頻道收幾部作品
 EPS_PER_SHOW = 260
 API_DAY_CAP = 4000          # 金鑰每天最多用幾點（觀戰也用同一把）
@@ -1020,152 +1020,233 @@ def prune(cache, chans):
 _OCC = [None]
 
 
+_FIX = str.maketrans({'臺': '台', '産': '產', '壹': '一'})
+_OCC_CH = [None]
+
+
+def nice_ch(n):
+    """頻道名稱：拿掉英文副標、「歡迎訂閱」「Get the APP」之類的尾巴。"""
+    if not n:
+        return n
+    if _OCC_CH[0] is None:
+        try:
+            from opencc import OpenCC
+            _OCC_CH[0] = (OpenCC('s2t'), OpenCC('t2tw'))
+        except Exception:  # noqa: BLE001
+            _OCC_CH[0] = False
+    n0 = n = (_OCC_CH[0][1].convert(_OCC_CH[0][0].convert(n)) if _OCC_CH[0] else n).translate(_FIX)
+    n = re.sub(r'\s*[(（][^)）]*[)）]', ' ', n)
+    parts = [x.strip() for x in re.split(r'\s+[-–—|｜]\s+|\s*-\s*(?=Get the|APP|歡迎)|\s*[|｜]\s*', n) if x.strip()]
+    n = parts[0] if parts else n
+    if len(parts) > 1 and re.fullmatch(r'[\u4e00-\u9fff]{1,4}', parts[1]):
+        n += parts[1]
+    n = re.sub(r'Anime Made By Bilibili|iQIYI Animation|Get the iQIYI APP|歡迎訂閱|APP搶先看|天天看動漫', ' ', n, flags=re.I)
+    n = re.sub(r'\s+', ' ', n).strip(' -–—|｜')
+    return n if len(n) >= 2 else n0
+
+
 def s2t(s):
-    if not s or not X.is_simplified(s):
+    """簡體 → 台灣繁體（s2twp），再統一異體字（爲→為、裏→裡、壹口氣→一口氣）。對本來就是繁體的字幾乎不動。"""
+    if not s:
         return s
     if _OCC[0] is None:
         try:
             from opencc import OpenCC
-            _OCC[0] = OpenCC('s2twp')
+            _OCC[0] = (OpenCC('s2twp'), OpenCC('t2tw'))
         except Exception:  # noqa: BLE001
             _OCC[0] = False
-    return _OCC[0].convert(s) if _OCC[0] else s
+    if _OCC[0]:
+        try:
+            s = _OCC[0][1].convert(_OCC[0][0].convert(s))
+        except Exception:  # noqa: BLE001
+            pass
+    return s.translate(_FIX)
+
+
+BUDGET = {'ai': 100, 'sd': 100, 'mc': 200, 'cn': 420, 'jp': 700, 'toon': 220}   # 每個頻道收進片庫幾支（含作品裡的集數）
+KIDS_BUDGET = 90
+EP_CAP = 100              # 一部作品最多收幾集
+TITLE_MAX = 56
 
 
 def build_catalog(cache, chans, me):
-    """片庫：頻道、影片（壓縮陣列）、作品、章節。"""
+    """片庫：頻道、影片（壓縮陣列）、作品、章節。每個頻道有預算，挑最值得看的作品與影片。"""
     pool = {c: r for c, r in chans.items() if r.get('seed') or r.get('src') == 'add'}
-    # 每支影片的顯示資料
     info = {}
     for vid, v in cache['v'].items():
         r = pool.get(v.get('c'))
         if not r or v.get('mem') or v.get('gone') or not v.get('t'):
             continue
-        chname = r.get('n') or r.get('seed') or ''
-        raw = v['t']
-        t = s2t(X.clean_title(raw, chname)) or s2t(raw)[:96]
+        chname = s2t(r.get('n') or r.get('seed') or '')
+        raw = s2t(v['t'])
+        t = X.clean_title(raw, chname) or raw[:96]
         kind = r.get('k') or 'toon'
         lv = v.get('lv')
         f = X.fmt_of(raw, v.get('d'), bool(v.get('sh')), {'live': 'live', 'upcoming': 'upcoming'}.get(lv))
         f = {'live': 'l', 'short': 's', 'comp': 'c', 'movie': 'm', 'ep': 'e', 'pv': 'p', 'clip': 'x'}[f]
         if kind in ('ai', 'sd', 'mc') and f == 'e' and (v.get('d') or 0) >= 25 * 60:
             f = 'c'
-        info[vid] = {
-            'v': v, 'r': r, 'kind': kind, 't': t, 'f': f,
-            'ai': kind == 'ai' or X.is_ai(raw), 'zh': X.lang_of(t) == 'zh',
-            'ep': X.ep_num(raw), 'rg': X.ep_range(raw), 'show': X.show_name(raw),
-        }
-    # 頻道的觀看中位數（熱度用）
+        info[vid] = {'v': v, 'kind': kind, 't': t, 'f': f, 'ai': kind == 'ai' or X.is_ai(raw), 'zh': X.lang_of(t) == 'zh',
+                     'ep': X.ep_num(raw), 'rg': X.ep_range(raw), 'show': X.show_name(raw, strict=True)}
     views = collections.defaultdict(list)
     for vid, x in info.items():
         if x['v'].get('v') and x['f'] in ('c', 'e', 'm'):
             views[x['v']['c']].append(x['v']['v'])
     vm = {c: sorted(a)[len(a) // 2] for c, a in views.items() if a}
 
-    # ---- 作品：播放清單
-    shows = []
-    used = set()
-    by_ch_pl = collections.defaultdict(list)
+    def vscore(vid):
+        x = cache['v'][vid]
+        med = vm.get(x['c']) or 1000
+        age = (NOW - x['p']) / 86400 if x.get('p') else 90
+        return math.log2(1 + (x.get('v') or 0) / med) + (1.6 if age < 7 else 0.9 if age < 30 else 0.3 if age < 120 else 0)
+
+    # ---- 作品候選：播放清單（要找得到各集共同的作品名；AI 頻道的「題材清單」不是作品）
+    cands = collections.defaultdict(list)       # 頻道 → [作品]
     for pid, p in cache['pl'].items():
-        if p.get('keep') and p.get('eps') and p.get('c') in pool:
-            by_ch_pl[p['c']].append(pid)
-    for cid, pids in by_ch_pl.items():
+        cid = p.get('c')
+        if not (p.get('keep') and p.get('eps') and cid in pool):
+            continue
         r = pool[cid]
         kind = r.get('k') or 'toon'
-        order = {pid: i for i, pid in enumerate((cache['ch'].get(cid) or {}).get('pls') or [])}
-        groups = {}
-        for pid in sorted(pids, key=lambda x: order.get(x, 999)):
-            p = cache['pl'][pid]
-            eps = [vid for vid in p['eps'] if vid in info and info[vid]['f'] in ('e', 'c', 'm', 'l') or
-                   (vid in info and info[vid]['f'] == 'x' and info[vid]['ep'])]
-            if len(eps) < 2 and not (eps and info[eps[0]]['f'] in ('c', 'm')):
-                continue
-            # 清單由新到舊排的：倒過來（第 1 集在前）
-            nums = [info[v]['ep'] for v in eps if info[v]['ep']]
-            if len(nums) >= 3 and nums[0] > nums[-1]:
-                eps = eps[::-1]
-            titles = [info[v]['t'] for v in eps[:40]]
-            name = X.common_name(titles)
-            pname = s2t(X.clean_playlist(p.get('n') or '', r.get('n') or ''))
-            if not name or (pname and X.lang_of(pname) == 'zh' and len(pname) <= 40 and not X.lang_of(name) == 'zh'):
-                name = pname or name
-            name = X.nice_show(s2t(name or ''))
-            if not name:
-                continue
-            key = X.norm(name)
-            if key in groups and len(groups[key]['eps']) >= len(eps):
-                continue
-            groups[key] = {'id': 'p:' + pid, 'n': name, 'c': cid, 'k': kind, 'pl': pid, 'eps': eps[:EPS_PER_SHOW], 'upd': p.get('upd') or 0, 'ord': order.get(pid, 999)}
-        lst = sorted(groups.values(), key=lambda s: s['ord'])[:SHOW_CAPS.get(kind, 30)]
-        for s in lst:
-            shows.append(s)
-            used.update(s['eps'])
-    # ---- 作品：同名的合輯、單集（沒有播放清單的）
+        eps = [vid for vid in p['eps'] if vid in info and (info[vid]['f'] in ('e', 'c', 'm', 'l') or (info[vid]['f'] == 'x' and info[vid]['ep']))]
+        if len(eps) < 2 and not (eps and info[eps[0]]['f'] in ('c', 'm')):
+            continue
+        if (r.get('l') or 'zh') == 'zh' and sum(1 for v in eps if info[v]['zh']) < len(eps) * 0.5:
+            continue          # 中文頻道裡的外語配音清單
+        nums = [info[v]['ep'] for v in eps if info[v]['ep']]
+        if len(nums) >= 3 and nums[0] > nums[-1]:
+            eps = eps[::-1]
+        numbered = [v for v in eps if info[v]['ep'] or info[v]['rg']]
+        if len(numbered) >= 3 and len(numbered) >= len(eps) * 0.7:
+            # 大多有集數：單集照（季、集數）排在前、合輯排在後；沒集數的跟著前一支
+            keyv, lastk = {}, (0, 1, 0)
+            for i, v in enumerate(eps):
+                rg = info[v]['rg']
+                n = info[v]['ep'] or (rg[0] if rg else 0)
+                if n:
+                    lastk = (1 if rg else 0, X.season_of(cache['v'][v].get('t')) or 1, n)
+                    keyv[v] = lastk + (0, i)
+                else:
+                    keyv[v] = lastk + (1, i)
+            eps = sorted(eps, key=keyv.get)
+        name = X.common_name([info[v]['t'] for v in eps[:40]])
+        if not name:
+            if kind in ('ai', 'sd', 'mc') or len(eps) > 40:
+                continue        # 題材合集、雜燴清單
+            name = s2t(X.clean_playlist(p.get('n') or '', r.get('n') or ''))
+            if not X._name_ok(X.nice_show(name)):
+                continue        # 「限時免費」「搶先看」這種清單名不是作品
+        name = X.nice_show(s2t(name or ''))
+        if not name or len(name) < 2:
+            continue
+        cands[cid].append({'id': 'p:' + pid, 'n': name, 'c': cid, 'k': kind, 'pl': pid, 'eps': eps, 'upd': p.get('upd') or 0})
+    in_pl = set(v for lst in cands.values() for s in lst for v in s['eps'])
+    # ---- 作品候選：同名的合輯、單集（第 1、2 季分開上傳的）
     grp = collections.defaultdict(list)
     for vid, x in info.items():
-        if vid in used or x['f'] not in ('c', 'e', 'm') or not x['show']:
+        if vid in in_pl or x['f'] not in ('c', 'e', 'm') or not x['show']:
             continue
         grp[(x['v']['c'], X.norm(x['show']))].append(vid)
+    dupe_in_group = set()
     for (cid, key), vids in grp.items():
         if len(vids) < 2 or not key:
             continue
-        kind = pool[cid].get('k') or 'toon'
+        vids.sort(key=lambda v: -(cache['v'][v].get('v') or 0))
+        keep = []
+        for v in vids:
+            d = cache['v'][v].get('d') or 0
+            rv = info[v]['rg']
+
+            def near(k):
+                if (X.season_of(cache['v'][k].get('t')) or 1) != (X.season_of(cache['v'][v].get('t')) or 1):
+                    return False      # 不同季
+                rk = info[k]['rg']
+                if rk and rv and rk[0] == rv[0] and abs(rk[1] - rv[1]) <= max(rk[1], rv[1]) * 0.2:
+                    return True      # 同一部的完整合輯，重複上傳（1~38 集、1~41 集）
+                return (rk == rv or info[k]['t'] == info[v]['t']) and d and abs((cache['v'][k].get('d') or 0) - d) / d < 0.12
+            same = [k for k in keep if near(k)]
+            if same:
+                dupe_in_group.add(v)
+                continue
+            keep.append(v)
+        vids = keep
+        if len(vids) < 2:
+            continue
         vids.sort(key=lambda v: ((X.season_of(cache['v'][v].get('t')) or 1), (info[v]['rg'] or (info[v]['ep'] or 0, 0))[0], cache['v'][v].get('p') or 0))
         name = X.nice_show(s2t(info[vids[0]]['show']))
-        shows.append({'id': 'g:%s:%s' % (cid[2:10], hashlib.sha1(key.encode()).hexdigest()[:10]), 'n': name, 'c': cid, 'k': kind, 'eps': vids[:EPS_PER_SHOW], 'upd': 0})
-        used.update(vids)
+        if name and X._name_ok(name):
+            cands[cid].append({'id': 'g:%s:%s' % (cid[2:10], hashlib.sha1(key.encode()).hexdigest()[:10]), 'n': name, 'c': cid,
+                               'k': pool[cid].get('k') or 'toon', 'eps': vids, 'upd': 0})
+    # 同一個頻道裡同名的作品（全部集數＋分季清單）：留集數多的
+    for cid, lst in cands.items():
+        best = {}
+        for sh in lst:
+            k = X.norm(sh['n'])
+            if k not in best or len(sh['eps']) > len(best[k]['eps']):
+                best[k] = sh
+        cands[cid] = list(best.values())
 
-    # ---- 跨頻道的重複合輯（同一部被好幾台搬）：留觀看最多的
-    dups = set()
+    # ---- 跨頻道重複的合輯（同一部被好幾台搬）：留觀看最多的
+    dups = set(dupe_in_group)
     comp_key = collections.defaultdict(list)
     for vid, x in info.items():
-        if x['f'] in ('c', 'm') and x['show'] and vid not in used:
+        if x['f'] in ('c', 'm') and x['show']:
             comp_key[X.norm(x['show'])].append(vid)
     for key, vids in comp_key.items():
         if len(vids) < 2:
             continue
         vids.sort(key=lambda v: -(cache['v'][v].get('v') or 0))
-        best = vids[0]
-        bd = cache['v'][best].get('d') or 0
+        bd = cache['v'][vids[0]].get('d') or 0
         for v in vids[1:]:
             d = cache['v'][v].get('d') or 0
-            if bd and d and abs(d - bd) / bd < 0.12 and cache['v'][v]['c'] != cache['v'][best]['c']:
+            same_ch = cache['v'][v]['c'] == cache['v'][vids[0]]['c']
+            if bd and d and abs(d - bd) / bd < (0.03 if same_ch else 0.12) and (not same_ch or info[v]['f'] == 'm'):
                 dups.add(v)
 
-    # ---- 每個頻道挑要收的影片
+    # ---- 每個頻道照預算挑：先挑作品（熱度、新舊、份量），再補單支的新片與熱門
     per_ch = collections.defaultdict(list)
     for vid, x in info.items():
-        if vid in dups:
-            continue
-        per_ch[x['v']['c']].append(vid)
-    chosen = set(used)
-    for cid, vids in per_ch.items():
+        if vid not in dups:
+            per_ch[x['v']['c']].append(vid)
+    shows, chosen = [], set()
+    for cid in pool:
         r = pool[cid]
         kind = r.get('k') or 'toon'
-        cap = CAPS.get(kind, 120)
-        rest = [v for v in vids if v not in used]
-        shorts = [v for v in rest if info[v]['f'] == 's']
-        lives = [v for v in rest if info[v]['f'] == 'l' or cache['v'][v].get('lv') in ('live', 'upcoming')]
-        main = [v for v in rest if info[v]['f'] in ('c', 'e', 'm')]
-        med = vm.get(cid) or 1000
+        budget = KIDS_BUDGET if r.get('kids') else BUDGET.get(kind if kind != 'auto' else 'ai', 120)
+        used = 0
 
-        def score(v):
-            x = cache['v'][v]
-            age = (NOW - (x.get('p') or x.get('fs') or NOW)) / 86400 if x.get('p') else 60
-            return (x.get('v') or 0) / med * (1.6 if age < 7 else 1.0 if age < 30 else 0.6) + (0.5 if x.get('p') and age < 3 else 0)
-        main.sort(key=score, reverse=True)
-        n_in_shows = sum(1 for v in vids if v in used)
-        room = max(30, cap - n_in_shows) if kind in ('ai', 'sd', 'mc') else max(40, cap - n_in_shows)
-        chosen.update(main[:room])
-        chosen.update(sorted(shorts, key=lambda v: -(cache['v'][v].get('v') or 0))[:30])
+        def sscore(sh):
+            sc = [vscore(v) for v in sh['eps'][:EP_CAP]]
+            latest = max([cache['v'][v].get('p') or 0 for v in sh['eps']] + [sh.get('upd') or 0])
+            age = (NOW - latest) / 86400 if latest else 120
+            return max(sc) + sum(sorted(sc)[-5:]) / 10 + (1.4 if age < 14 else 0.7 if age < 60 else 0) + min(1, len(sh['eps']) / 24) * 0.5
+        for sh in sorted(cands.get(cid, []), key=sscore, reverse=True):
+            eps = [v for v in sh['eps'] if v not in dups][:EP_CAP]
+            if not eps:
+                continue
+            n = len([v for v in eps if v not in chosen])
+            if used + n > budget * 0.8 and used > 0:
+                continue
+            sh['eps'] = eps
+            shows.append(sh)
+            chosen.update(eps)
+            used += n
+        rest = [v for v in per_ch.get(cid, []) if v not in chosen]
+        main_ = sorted([v for v in rest if info[v]['f'] in ('c', 'e', 'm')], key=vscore, reverse=True)
+        room = max(24, budget - used)
+        chosen.update(main_[:room])
+        shorts = sorted([v for v in rest if info[v]['f'] == 's'], key=lambda v: -(cache['v'][v].get('v') or 0))
+        chosen.update(shorts[:20])
+        lives = [v for v in rest if info[v]['f'] == 'l' or cache['v'][v].get('lv') in ('live', 'upcoming')]
         chosen.update([v for v in lives if cache['v'][v].get('lv') in ('live', 'upcoming') or NOW - (cache['v'][v].get('p') or 0) < 3 * 86400][:6])
+
     # ---- 輸出
     chs = sorted({info[v]['v']['c'] for v in chosen})
     ci = {c: i for i, c in enumerate(chs)}
     ch_out = []
     for c in chs:
         r = pool[c]
-        o = {'n': r.get('n') or r.get('seed') or c, 'a': r.get('a'), 'k': r.get('k') if r.get('k') != 'auto' else 'ai', 'l': r.get('l') or 'zh', 'vm': vm.get(c)}
+        o = {'n': nice_ch(r.get('n') or r.get('seed') or c), 'a': r.get('a'), 'k': r.get('k') if r.get('k') != 'auto' else 'ai', 'l': r.get('l') or 'zh', 'vm': vm.get(c)}
         for f in ('h', 'geo', 'live', 'kids', 'official'):
             if r.get(f):
                 o[f] = r[f]
@@ -1174,10 +1255,9 @@ def build_catalog(cache, chans, me):
         ch_out.append({k: v for k, v in o.items() if v is not None})
     vid_list = sorted(chosen, key=lambda v: (ci[info[v]['v']['c']], -(cache['v'][v].get('p') or 0)))
     vi = {v: i for i, v in enumerate(vid_list)}
-    show_out = []
-    show_of = {}
-    for s in shows:
-        eps = [v for v in s['eps'] if v in vi]
+    show_out, show_of = [], {}
+    for sh in shows:
+        eps = [v for v in sh['eps'] if v in vi]
         if not eps:
             continue
         k = len(show_out)
@@ -1185,47 +1265,82 @@ def build_catalog(cache, chans, me):
             show_of.setdefault(v, k)
         ts = [cache['v'][v].get('p') or (cache['v'][v].get('newep') or 0) for v in eps]
         cover = max(eps[:30], key=lambda v: cache['v'][v].get('v') or 0)
-        o = {'id': s['id'], 'n': s['n'][:60], 'c': ci[s['c']], 'k': s['k'] if s['k'] != 'auto' else 'ai', 'eps': [vi[v] for v in eps], 't': max(ts + [s.get('upd') or 0]), 'cv': vi[cover]}
-        if s.get('pl'):
-            o['pl'] = s['pl']
+        o = {'id': sh['id'], 'n': sh['n'][:60], 'c': ci[sh['c']], 'k': sh['k'] if sh['k'] != 'auto' else 'ai', 'eps': [vi[v] for v in eps], 't': max(ts + [sh.get('upd') or 0]), 'cv': vi[cover]}
+        if sh.get('pl'):
+            o['pl'] = sh['pl']
         show_out.append(o)
     vids_out, chap = [], {}
     for v in vid_list:
         x = info[v]
         c = cache['v'][v]
         fl = (1 if x['ai'] else 0) | (2 if x['zh'] else 0) | (4 if c.get('chap') else 0) | (8 if c.get('lv') == 'upcoming' else 0) | (16 if c.get('lv') == 'live' else 0)
-        p = c.get('p')
-        if not p and c.get('newep'):
-            p = c['newep']
+        p = c.get('p') or c.get('newep') or 0
         if c.get('lv') == 'upcoming' and c.get('st'):
             p = c['st']
         t = x['t']
         sk = show_of.get(v, -1)
         if sk >= 0:
-            sn = show_out[sk]['n']
-            short = shorten(t, sn)
+            short = shorten(t, show_out[sk]['n'], x['ep'])
             if short:
                 t = short
         rg = x['rg'] or (0, 0)
-        vids_out.append([v, ci[c['c']], t[:72], c.get('d') or 0, p or 0, c.get('v') or 0, x['f'], fl, sk, x['ep'] or 0, rg[0], rg[1]])
+        t = cut(t, TITLE_MAX)
+        vids_out.append([v, ci[c['c']], t, c.get('d') or 0, p, c.get('v') or 0, x['f'], fl, sk, x['ep'] or 0, rg[0], rg[1]])
         if c.get('chap'):
             chap[v] = c['chap']
     return {'v': 1, 'at': stamp(), 'key': bool(KEY), 'chs': chs, 'ch': ch_out, 'vids': vids_out, 'shows': show_out, 'chap': chap}
 
 
-def shorten(t, show):
-    """作品裡的單集標題：拿掉開頭的作品名，只留這一集的資訊（第 12 話【標題】）。"""
+def shorten(t, show, ep=None):
+    """作品裡的單集標題：拿掉作品名（連同包住它的《》【】），只留這一集的資訊（第 12 話【標題】）。"""
+    r = _shorten(t, show)
+    if r and ep:
+        r2 = re.sub(r'^(?:EP|E|Ep|第)\s*0*%d(?![\d季部~～\-])\s*[集話话回]?(?:\s*[｜|:：\-–—]\s*|\s+)' % ep, '', r)
+        r2 = re.sub(r'\s*[｜|]\s*S\d{1,2}$', '', r2).strip()
+        if len(r2) >= 2:
+            r = r2
+    return r
+
+
+def cut(t, n):
+    """截斷標題；截到一半的括號整段拿掉。"""
+    if len(t) <= n:
+        return t
+    t = t[:n]
+    t = re.sub(r'\s*[\[【《(（「][^\]】》)）」]{0,16}$', '', t)
+    return t.rstrip(' ｜|,，、:：-–—')
+
+
+def _shorten(t, show):
     if not show:
         return None
+    base0 = re.sub(r'（[^）]*）$', '', show)
+    tail_cut = None
+    for cand in (show, base0):
+        if len(cand) >= 2:
+            t2 = re.sub(r'\s*[《【「『]\s*' + re.escape(cand) + r'\s*[》】」』]\s*$', '', t)      # 結尾的【作品名】
+            if t2 != t and len(t2) >= 2:
+                t = tail_cut = t2
+                break
     base = re.sub(r'（[^）]*）$', '', show)
     for cand in (show, base):
+        if len(cand) < 2:
+            continue
         k = t.find(cand)
-        if 0 <= k <= 4 and len(cand) >= 2:
-            rest = (t[:k] + t[k + len(cand):]).strip(' ｜|:：-–—《》')
-            rest = re.sub(r'^[《》「」]+|[《》「」]+$', '', rest).strip(' ｜|:：-–—')
-            if len(rest) >= 2:
-                return rest
-    return None
+        if k < 0 or k > 16 or (k > 6 and t[k - 1] not in '《【「『'):
+            continue
+        # 整組括號一起拿掉：《作品名/English》、【作品名】
+        m = re.search(r'[《【「『][^》】」』]*' + re.escape(cand) + r'[^》】」』]*[》】」』]', t)
+        rest = (t[:m.start()] + ' ' + t[m.end():]) if m else (t[:k] + ' ' + t[k + len(cand):])
+        rest = re.sub(r'【\s*】|《\s*》|「\s*」|\(\s*\)|（\s*）', ' ', rest)
+        for lang in ('國語', '粵語', '日語'):
+            if lang in show:
+                rest = rest.replace('【' + lang + '】', ' ')
+        rest = re.sub(r'^[\s｜|丨:：\-–—/》】」』]+|[\s｜|丨:：\-–—/《【「『]+$', '', rest)
+        rest = re.sub(r'\s+', ' ', rest).strip()
+        if len(rest) >= 2:
+            return rest
+    return tail_cut.strip(' ｜|丨:：-–—') if tail_cut else None
 
 
 if __name__ == '__main__':
