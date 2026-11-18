@@ -1,6 +1,18 @@
 {
  "apps": [
   {
+   "appid": 238960,
+   "id": "path-of-exile-covens-of-umbra",
+   "date": "2026-11-19",
+   "watch": true
+  },
+  {
+   "appid": 4459590,
+   "id": "slotbound",
+   "date": "2026-11-19",
+   "watch": true
+  },
+  {
    "appid": 2406770,
    "id": "bodycam",
    "date": "2026-11-18",

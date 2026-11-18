@@ -1,0 +1,523 @@
+{
+  "id": "gta-vi-2",
+  "date": "2026-11-19",
+  "rank": 1,
+  "kind": "hot",
+  "kind_label": "評測解禁・今天上市",
+  "game": {
+    "zh": "俠盜獵車手 VI",
+    "en": "Grand Theft Auto VI",
+    "steam": null,
+    "dev": "Rockstar North",
+    "pub": "Rockstar Games",
+    "platforms": [
+      "PS5（PS5 Pro 強化）",
+      "Xbox Series X|S"
+    ],
+    "genres": [
+      "開放世界",
+      "動作冒險",
+      "犯罪"
+    ],
+    "release": "2026-11-19",
+    "release_text": "2026/11/19（四）上市，Rockstar 說各地區當地午夜解鎖",
+    "price_text": "標準版 NT$2,320／終極版 NT$2,900（PS Store 台灣）",
+    "site": "https://www.rockstargames.com/VI"
+  },
+  "headline": "評測解禁拿下 Metacritic 99、追平史上最高分；但全平台只有 30fps",
+  "hook": "你等了 13 年的那一刻，是看著評論網站的分數一路刷新。上百篇評測幾乎清一色滿分，罪惡市的霓虹燈今晚就亮在你的電視上——只是車子開快的時候，畫面還是那個 30 格。",
+  "verdict": {
+    "stamp": "推薦",
+    "label": "有主機就衝",
+    "summary": "上次解包時最大的變數是「還沒有評測」，現在答案出來了：Metacritic 99、OpenCritic 99，媒體幾乎一致給滿分。有 PS5 或 Xbox Series 就可以放心首發；真正要考慮的只剩兩件事——你能不能接受 30fps，以及你是不是非等 PC 版不可。",
+    "for": [
+      "已經有 PS5 或 PS5 Pro（Pro 版畫質最穩、多了光追陰影）",
+      "想要電影級劇情和細節塞到滿的開放世界，願意花 60 小時以上",
+      "能接受英文語音、看繁中字幕"
+    ],
+    "against": [
+      "對畫面流暢度很敏感、玩慣 60fps 的人（全主機只有 30fps）",
+      "手上只有 Xbox Series S（解析度和幀數都是最弱的一台）",
+      "只用 PC 玩——PC 版到現在還沒公布"
+    ]
+  },
+  "facts": [
+    {
+      "k": "上市",
+      "v": "2026/11/19 登上 PS5、Xbox Series X|S；Rockstar 表示各地區在當地時間午夜解鎖",
+      "s": [
+        11,
+        19
+      ]
+    },
+    {
+      "k": "評測解禁",
+      "v": "11/18 解禁；媒體轉述的時間是太平洋時間凌晨 3 點（約台灣時間 11/18 晚上 7 點），Rockstar 沒有正式公布",
+      "s": [
+        0,
+        4
+      ]
+    },
+    {
+      "k": "Metacritic",
+      "v": "媒體總分 99；11/18 晚間讀取時 PS5 版 148 則評論全部是正評，沒有任何普通或負評",
+      "s": [
+        2,
+        1
+      ]
+    },
+    {
+      "k": "追平紀錄",
+      "v": "99 分追平《薩爾達傳說 時之笛》保持的 Metacritic 史上最高分，而且評論數是它的好幾倍",
+      "s": [
+        1,
+        4
+      ]
+    },
+    {
+      "k": "OpenCritic",
+      "v": "頂尖評論平均 99、推薦率 99～100%，最高等級「Mighty」",
+      "s": [
+        3,
+        0
+      ]
+    },
+    {
+      "k": "主要媒體",
+      "v": "IGN、GameSpot、Eurogamer、The Guardian、Game Informer、GamesRadar+、Edge 都給滿分；TheSixthAxis 9 分、德國 GameStar 97 分，Metacritic 上最低的是 ScreenHub 80 分",
+      "s": [
+        0,
+        7,
+        6,
+        2
+      ]
+    },
+    {
+      "k": "使用者評分",
+      "v": "Metacritic 要上市 36 小時後才開放玩家評分；11/16 那則「評價兩極」的新聞，指的是評測解禁前只有 5 則的玩家評分",
+      "s": [
+        4,
+        5
+      ]
+    },
+    {
+      "k": "畫面與幀數",
+      "v": "Digital Foundry 實測：所有主機都鎖 30fps、沒有 60fps 模式；PS5 內部 1440p 放大到 4K，壓力測試最低掉到 23fps",
+      "s": [
+        9,
+        10
+      ]
+    },
+    {
+      "k": "PS5 Pro",
+      "v": "同樣內部 1440p，用 PSSR 放大、接近原生 4K 的觀感，幾乎穩定 30fps，另外多了光線追蹤陰影",
+      "s": [
+        9,
+        10
+      ]
+    },
+    {
+      "k": "Xbox",
+      "v": "Series X 內部 1440p，激烈槍戰會掉到約 20fps；Series S 是 720p 放大到 1080p（FSR 4），常跌破 30fps",
+      "s": [
+        9,
+        10
+      ]
+    },
+    {
+      "k": "上市前更新",
+      "v": "11/13、11/16 各推一次更新檔（11/16 的 PS5 版約 602.5MB），都沒有更新說明；Xbox 安裝容量約 211.9GB",
+      "s": [
+        12
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "PS Store 台灣標準版 NT$2,320、終極版 NT$2,900（與上次解包相同）",
+      "s": [
+        17,
+        23
+      ]
+    },
+    {
+      "k": "中文",
+      "v": "介面與字幕有繁體中文，語音只有英文",
+      "s": [
+        18
+      ]
+    },
+    {
+      "k": "線上模式與 PC 版",
+      "v": "新的 GTA Online 沒有跟著上市、也沒有公布日期；PC 版到上市當天仍未公布",
+      "s": [
+        15,
+        0
+      ]
+    },
+    {
+      "k": "預購",
+      "v": "Rockstar 沒有公布數字；市調公司 Sensor Tower 估計預購營收超過 16.5 億美元",
+      "s": [
+        16
+      ]
+    }
+  ],
+  "money": {
+    "level": 1,
+    "model": "買斷制＋可選的遊戲內購",
+    "notes": [
+      "首發是單人遊戲，內購目前沒有實際內容；PlayStation 商店頁標示的「可選購遊戲內項目」，多半要等新的線上模式才會出現。",
+      "終極版多 NT$580 換故事模式的車、武器、據點任務與服裝，不影響主線；想省錢先買標準版，之後也能補差價。",
+      "上次解包提到的預購特典是 11/20 前購買才有，要拿就趁這兩天。"
+    ],
+    "flags": [
+      "買斷 NT$2,320 起",
+      "語音只有英文",
+      "全主機 30fps"
+    ]
+  },
+  "zh": {
+    "ui": true,
+    "sub": true,
+    "voice": false,
+    "note": "介面與字幕有繁體中文，語音只有英文。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "台灣 PlayStation Store 與 Xbox 商店同步上市，有繁中字幕；Rockstar 說各地區當地午夜解鎖，台灣是否同樣在 19 日零點開放，以你商店頁顯示為準。"
+  },
+  "rig": {
+    "verdict": "首發用不上",
+    "note": "評測解禁了、PC 版還是沒消息。PC Gamer 在評測裡說它到了 PC 上大致會更好——你的 RTX 5090 筆電能跑的高幀數，正是主機版最被挑剔的地方。但要首發玩，還是只能靠主機接 4K 大電視；如果手上是 PS5 Pro，畫面會是目前最好的版本。"
+  },
+  "time": {
+    "text": "主線約 60 小時（評測估計）",
+    "note": "媒體報導評測者的主線時數約 60 小時；開發者 Rob Nelson 自己玩主線加劇情支線約 80 小時。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "oFwB6gZLRmc",
+        "title": "上市預告"
+      },
+      {
+        "id": "VQRLujxTm3c",
+        "title": "預告 2"
+      },
+      {
+        "id": "QdBZY2fkU-0",
+        "title": "預告 1"
+      }
+    ],
+    "images": [
+      "https://gmedia.playstation.com/is/image/SIEPDC/Grand-Theft-Auto-VI-pre-order-hero-desktop-03-19jun25$en?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-10-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-08-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-09-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-07-en-06may25?$1600px$",
+      "https://gmedia.playstation.com/is/image/SIEPDC/grand-theft-auto-vi-screenshot-02-en-06may25?$1600px$"
+    ]
+  },
+  "watch": [
+    "Metacritic 開放玩家評分後的分數（上市 36 小時後）",
+    "Rockstar 會不會用更新檔加 60fps 或效能模式",
+    "PC 版與新 GTA Online 的正式公布"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "接任務",
+        "勘查與計畫搶案",
+        "傑森／露西亞雙主角切換執行",
+        "甩掉通緝",
+        "花錢經營、升級",
+        "探索雷歐奈達州"
+      ],
+      "body": [
+        "上次解包已經把玩法講過一輪：雙主角傑森和露西亞、回到罪惡市、通緝六顆星。評測解禁後最常被點名的強項，是這個世界的「密度」——路人、店家、天氣、廣播，每一條街都像真的有人在過日子，很多媒體說他們花在亂逛的時間比主線還多。",
+        "搶案是另一個被大誇的段落：先勘查、再計畫、最後兩個人分頭執行，結果會照你的準備程度不同。這是系列一直想做好、這次被普遍認為做到位的部分。",
+        "但也不是全面勝利。Kotaku 說後段章節節奏拖、操作偏繁瑣；The Guardian 和 The Verge 都提到按鍵組合複雜、選武器笨重，容易誤觸打起來；GameSpot 認為有些推進關卡會打斷節奏；IGN 則點出主線任務完成後不能單獨重玩。",
+        "最大的技術爭議是幀數：Digital Foundry 測出全主機都鎖 30fps，PS5 在大場面會掉到 23、Series X 激烈槍戰約 20。對多數人不至於影響遊玩，但在一款被稱為「這個世代代表作」的遊戲上，這成了討論最多的一點。"
+      ]
+    },
+    "hour": [
+      "先更新：PS5 要先裝好最新系統軟體，遊戲本體上市前已經推過兩次更新檔，開機前確定都下載完。",
+      "畫面設定：主機沒有效能模式可選，與其糾結幀數，不如先把動態模糊、鏡頭晃動照自己的習慣調好，大場面會舒服很多。",
+      "操作：多家評測都說按鍵組合容易誤觸，第一個小時花幾分鐘看一下操作設定、調整武器輪盤和瞄準輔助，會少很多「不小心開槍」的尷尬。",
+      "別急著衝主線：媒體一致誇的是城市本身，開頭先開車把罪惡市繞一圈，比直接趕劇情更能感受這一代的差別。"
+    ],
+    "compare": [
+      {
+        "name": "俠盜獵車手 V",
+        "same": "同一個系列的開放世界犯罪、多主角切換、搶案任務",
+        "diff": "V 有 PC 版和 GTA Online；VI 首發只有主機、單人，但世界的細節與密度被評測認為高出一個世代"
+      },
+      {
+        "name": "碧血狂殺 2",
+        "same": "Rockstar 的電影級敘事、超慢工細活的世界細節",
+        "diff": "碧血狂殺 2 節奏更慢、更寫實；VI 回到現代都市，步調快得多，但評測也提到同樣的「操作偏笨重」老問題"
+      },
+      {
+        "name": "薩爾達傳說 時之笛",
+        "same": "Metacritic 99，並列史上最高分",
+        "diff": "時之笛 1998 年的 99 分只有 22 則評論；VI 是在上百則評論的樣本下拿到 99"
+      }
+    ],
+    "story": {
+      "safe": [
+        "舞台是以佛羅里達為原型的雷歐奈達州與罪惡市；傑森和露西亞這對搭檔，因為一次失手被捲進更大的犯罪陰謀。",
+        "評測解禁後，多數媒體把兩位主角的關係列為劇情最大亮點；這裡不談後續發展，避免劇透。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "Rockstar North 主導開發，從 2023 年 12 月公開第一支預告，到今天上市，中間兩度延期（原訂 2025 年，先延到 2026/5/26，再延到 11/19）。",
+      "評測解禁前，各大媒體都已拿到評測版本，但分數一直壓到 11/18 才一起公開；解禁前流傳的「評價兩極」，其實只是 5 則玩家評分。",
+      "商業上，它是近年最受矚目的娛樂產品之一：Sensor Tower 估計預購營收超過 16.5 億美元，但 Rockstar 和母公司 Take-Two 都還沒公布正式數字。"
+    ],
+    "voices": {
+      "pros": [
+        "開放世界的密度與生活細節，被多家媒體形容為前所未見",
+        "搶案從計畫到執行的設計、兩位主角的互動與劇情",
+        "畫面、音樂與廣播電台的整體氛圍"
+      ],
+      "cons": [
+        "全主機只有 30fps，大場面掉幀，Series S 最明顯",
+        "開頭慢熱、後段節奏拖，部分主線任務限制多",
+        "按鍵組合複雜、選武器笨重，寫實駕駛和系統有時讓人覺得不公平",
+        "主線任務完成後不能單獨重玩"
+      ],
+      "debate": [
+        "一款被評為世代代表作的遊戲只有 30fps，你在不在意？",
+        "要現在就在主機玩，還是忍著劇透等 PC 版的高幀數？"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2023-12-05",
+        "t": "預告 1 公開"
+      },
+      {
+        "d": "2025-11-06",
+        "t": "第二次延期，改為 2026/11/19"
+      },
+      {
+        "d": "2026-11-10",
+        "t": "數位版開放預載"
+      },
+      {
+        "d": "2026-11-13",
+        "t": "上市前第一次更新檔"
+      },
+      {
+        "d": "2026-11-16",
+        "t": "上市前第二次更新檔；本站第一篇解包"
+      },
+      {
+        "d": "2026-11-18",
+        "t": "評測解禁：Metacritic 99、OpenCritic 99"
+      },
+      {
+        "d": "2026-11-19",
+        "t": "正式上市（PS5、Xbox Series X|S）"
+      },
+      {
+        "d": "2026-11-20",
+        "t": "預購特典截止（11/20 前購買）"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "Metacritic 99 是實至名歸，還是光環加持？",
+        "why": "上百篇評測沒有一篇普通分，追平時之笛的紀錄。但連最低分的媒體都給 80，也有人質疑大作的評分越來越像「不敢打低」。拿來做影片，可以比對幾家扣分媒體到底在扣什麼。"
+      },
+      {
+        "q": "30fps 會是你不買的理由嗎？",
+        "why": "Digital Foundry 的結論是「可以接受但有點失望」。這題能直接分出主機玩家和 PC 玩家兩派，留言一定熱鬧。"
+      },
+      {
+        "q": "等 PC 版值得嗎？",
+        "why": "PC Gamer 認為 PC 版會更好，但 PC 版連日期都沒有。照 GTA V 的前例，等待期可能超過一年——你忍得住劇透嗎？"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "等了 13 年，評分網站上跳出來的數字是：99。\n\n《俠盜獵車手 VI》11/18 評測解禁，Metacritic 媒體總分 99，追平《時之笛》保持的史上最高分；OpenCritic 也是 99。IGN、GameSpot、Eurogamer 這些大媒體幾乎都給滿分，被誇最多的是罪惡市的生活細節，還有傑森和露西亞一起規劃搶案的段落。\n\n不過也有扣分的地方：Digital Foundry 實測所有主機都鎖 30fps，PS5 大場面會往下掉，Series S 最吃虧；也有媒體嫌操作繁瑣、後段節奏拖。\n\n今天 11/19 正式上市，PS5、Xbox Series X|S，台灣 PS Store 標準版 NT$2,320 起、有繁中字幕；PC 版和新的 GTA Online 都還沒公布。\n\n看到 99 分，你會今天就衝，還是等 PC 版的高幀數？",
+    "titles": [
+      "GTA VI 評測解禁：Metacritic 99，追平史上最高分",
+      "上百篇評測沒有一篇普通分，GTA VI 唯一被扣在哪？",
+      "99 分但只有 30fps：GTA VI 你今天衝還是等 PC 版？"
+    ],
+    "card": {
+      "kicker": "評測解禁｜Metacritic 99",
+      "title": "罪惡市 99 分\n追平史上最高分",
+      "sub": "《俠盜獵車手 VI》11/19 上市",
+      "tags": [
+        "繁中字幕",
+        "NT$2,320 起",
+        "全主機30fps"
+      ],
+      "points": [
+        {
+          "h": "幾乎全是滿分",
+          "t": "IGN、GameSpot 等大媒體多給滿分。"
+        },
+        {
+          "h": "只有 30fps",
+          "t": "DF 實測：PS5 大場面最低掉到 23 格。"
+        },
+        {
+          "h": "PC 版仍未公布",
+          "t": "新的 GTA Online 也還沒有日期。"
+        }
+      ]
+    },
+    "tags": [
+      "#GTA6",
+      "#俠盜獵車手6",
+      "#GTAVI",
+      "#遊戲評測",
+      "#PS5",
+      "#遊戲狂想曲"
+    ],
+    "script": "99 分。GTA VI 評測昨天解禁，Metacritic 媒體總分 99，直接追平《時之笛》保持了快三十年的史上最高分。OpenCritic 也是 99。\nIGN、GameSpot、Eurogamer 這些大媒體幾乎清一色滿分，誇最多的是罪惡市本身：路人、店家、廣播，整座城像真的有人在過日子；還有傑森跟露西亞一起計畫搶案的段落。\n那扣分扣在哪？第一個是幀數。Digital Foundry 實測，所有主機都鎖 30 格，PS5 大場面會掉到 23，Series S 解析度最低、最吃虧。第二個是操作，好幾家媒體說按鍵太繁瑣、後段節奏拖。\n今天 11 月 19 號正式上市，PS5 跟 Xbox Series，台灣 PS Store 兩千三百二十塊起，有繁中字幕。PC 版跟新的 GTA Online，到現在都還沒公布。\n99 分但只有 30 格，你今天就衝，還是等 PC 版？留言告訴我。",
+    "credit": "圖片／影片：PlayStation 官方頁、Rockstar 官方預告",
+    "threads": {
+      "post": "GTA VI 評測解禁，Metacritic 媒體總分 99，直接追平《時之笛》的史上最高分。\n\n大媒體幾乎都給滿分，唯一一致被挑的是幀數：Digital Foundry 實測全主機鎖 30fps，PS5 大場面會往下掉。今天正式上市，PS5、Xbox Series，台灣標準版 NT$2,320，有繁中字幕，PC 版還沒消息。\n\n99 分配 30 格，你今天衝，還是等 PC 版？",
+      "topic": "GTA6"
+    }
+  },
+  "sources": [
+    {
+      "t": "Tom's Guide：GTA VI 評測整理即時更新（解禁時間、各家分數）",
+      "u": "https://www.tomsguide.com/news/live/gta-6-review-roundup-live-updates",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Forbes：GTA VI Metacritic 分數出爐，追平史上紀錄",
+      "u": "https://www.forbes.com/sites/paultassi/2026/11/18/the-gta-6-metacritic-review-score-is-in-and-ties-an-all-time-record/",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Metacritic：Grand Theft Auto VI",
+      "u": "https://www.metacritic.com/game/grand-theft-auto-vi/",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "OpenCritic：Grand Theft Auto VI 評測",
+      "u": "https://opencritic.com/game/15398/grand-theft-auto-vi/reviews",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Notebookcheck：GTA VI 拿下 Metacritic 99，超越 GTA IV",
+      "u": "https://www.notebookcheck.net/GTA-6-reviews-award-99-Metacritic-score-topping-GTA-4-to-become-Rockstar-s-top-rated.1453363.0.html",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Men's Journal：GTA VI Metacritic 初期玩家評分兩極（解禁前）",
+      "u": "https://www.mensjournal.com/entertainment/gta-6-debuts-to-a-shockingly-mixed-reception-on-metacritic",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "4Gamers：GTA 6 Metacritic 99 分，超過百篇評測",
+      "u": "https://www.4gamers.com.tw/news/detail/83395/gta-6-scores-99-on-metacritic-with-over-100-reviews",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Vice：GTA VI 評測整理",
+      "u": "https://www.vice.com/en/article/gta-6-review-roundup/",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "TheWrap：GTA VI 評測整理（Kotaku 等）",
+      "u": "https://www.thewrap.com/industry-news/tech/gta-vi-review-roundup/",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "MobiDevices（引用 Digital Foundry）：GTA VI 主機效能分析",
+      "u": "https://mobidevices.com/en/gta-6-digital-foundry",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "AltChar：Digital Foundry 測出 GTA VI 在 PS5 最低 23fps",
+      "u": "https://www.altchar.com/game-news/gta-vi-dips-as-low-as-23fps-on-base-ps5-in-heavy-action-digital-foundry-finds-aJybE7x7IsZa",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Forbes：GTA VI 上市時間、下載容量與首日更新",
+      "u": "https://www.forbes.com/sites/erikkain/2026/11/16/gta-6-release-date-time-ps5-xbox-series-x-download-size-day-one-update/",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Tech Times：GTA VI 上市前第二次更新（PS5 602MB、Xbox 1.6GB）",
+      "u": "https://www.techtimes.com/articles/330886/20261117/gta-6-gets-second-pre-launch-update-602-mb-ps5-16-gb-xbox-still-no-patch-notes.htm",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "ComicBook：GTA VI 上市前 PSN 登入問題",
+      "u": "https://comicbook.com/gaming/news/psn-playstation-network-down-gta-6-release/",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Output Lag：GTA VI 評測整理（主線時數）",
+      "u": "https://outputlag.com/featured-slider/gta-6-review-roundup/",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Just Jared：GTA VI 線上模式上市時間未定",
+      "u": "https://www.justjared.com/2026/11/17/gta-6-online-release-date-multiplayer-launch/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Yahoo Finance：Sensor Tower 估 GTA VI 預購超過 16.5 億美元",
+      "u": "https://finance.yahoo.com/technology/article/grand-theft-auto-vi-could-be-the-biggest-entertainment-launch-in-history-preorders-top-165-billion-143427744.html",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "NOWnews：GTA 6 台灣售價、實體版沒光碟、容量",
+      "u": "https://www.nownews.com/news/6891025",
+      "d": ""
+    },
+    {
+      "t": "PlayStation 支援：GTA VI 支援語言",
+      "u": "https://www.playstation.com/en-th/support/games/gta-vi-support/",
+      "d": ""
+    },
+    {
+      "t": "PlayStation 官方：Grand Theft Auto VI 遊戲頁",
+      "u": "https://www.playstation.com/games/grand-theft-auto-vi",
+      "d": ""
+    },
+    {
+      "t": "Everything Edinburgh：Rob Nelson 談 GTA VI 遊玩時數",
+      "u": "https://everythingedinburgh.com/?p=24159",
+      "d": "2026-09-25"
+    },
+    {
+      "t": "電玩幫：GTA 6 評測解禁整理",
+      "u": "https://www.vgover.com/news/246682",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "The PC Enthusiast：GTA VI 評測分數與媒體反應",
+      "u": "https://thepcenthusiast.com/gta-6-reviews-metascore-critic-reactions/",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "玩具人：GTA 6 台灣預購、版本內容與預載日",
+      "u": "https://www.toy-people.com/?p=114506",
+      "d": ""
+    },
+    {
+      "t": "TechRadar：GTA VI 再延期到 2026/11/19",
+      "u": "https://www.techradar.com/gaming/grand-theft-auto-6-delayed-again-but-itll-still-ship-in-2026",
+      "d": "2025-11-06"
+    }
+  ],
+  "pending": [
+    "台灣解鎖時間：Rockstar 只說各地區當地午夜，沒有單獨列出台灣",
+    "上市前 PSN 登入問題：原因不明，Sony 沒有說明",
+    "OpenCritic 最終評論數還在增加"
+  ],
+  "updated": "2026-11-19T06:20:00+08:00"
+}

@@ -29,7 +29,7 @@
   "verdict": {
     "stamp": "推薦",
     "label": "有主機就衝",
-    "summary": "系列正傳、Rockstar 的招牌級細節，有 PS5 或 Xbox Series 的人幾乎沒有不買的理由；但 PC 版還沒公布，你的筆電首發玩不到。還沒有評測，想穩一點就等 19 號前後評測解禁再下單——11/20 前買都還有預購特典。",
+    "summary": "系列正傳、Rockstar 的招牌級細節，有 PS5 或 Xbox Series 的人幾乎沒有不買的理由；但 PC 版還沒公布，你的筆電首發玩不到。評測已在 11/18 解禁，Metacritic 媒體總分 99（詳見追蹤篇）；11/20 前買都還有預購特典。",
     "for": [
       "已經有 PS5／PS5 Pro 或 Xbox Series X|S",
       "喜歡電影級劇情、超大開放世界和滿滿的生活細節",
@@ -163,6 +163,13 @@
       "s": [
         19
       ]
+    },
+    {
+      "k": "評測",
+      "v": "11/18 評測解禁，Metacritic 媒體總分 99，追平史上最高分",
+      "s": [
+        26
+      ]
     }
   ],
   "money": {
@@ -226,7 +233,7 @@
     ]
   },
   "watch": [
-    "評測解禁時間與媒體分數",
+    "Metacritic 開放玩家評分後的分數",
     "PC 版正式公布",
     "新 GTA Online 的消息"
   ],
@@ -334,6 +341,10 @@
       {
         "d": "2026-11-12",
         "t": "盒裝序號上架"
+      },
+      {
+        "d": "2026-11-18",
+        "t": "評測解禁：Metacritic 媒體總分 99"
       },
       {
         "d": "2026-11-19",
@@ -531,11 +542,21 @@
       "t": "mp1st（引用 GamesBeat）：傳聞 GTA VI PC 版 2027 年第一季",
       "u": "https://mp1st.com/news/rumor-gta-6-pc-release-planned-q1-2027",
       "d": "2026"
+    },
+    {
+      "t": "Forbes：GTA VI Metacritic 分數出爐，追平史上紀錄",
+      "u": "https://www.forbes.com/sites/paultassi/2026/11/18/the-gta-6-metacritic-review-score-is-in-and-ties-an-all-time-record/",
+      "d": "2026-11-18"
     }
   ],
   "pending": [
-    "評測解禁時間：未公布",
     "PC 版：Rockstar 未公布；2027 年第一季是 GamesBeat 引述的傳聞"
   ],
-  "updated": "2026-11-16T16:40:00+08:00"
+  "updated": "2026-11-19T06:50:00+08:00",
+  "rev": [
+    {
+      "d": "2026-11-19",
+      "t": "評測解禁、Metacritic 99，結論補上評測；已寫追蹤篇"
+    }
+  ]
 }
