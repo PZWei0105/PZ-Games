@@ -1041,7 +1041,7 @@ def nice_ch(n):
     if len(parts) > 1 and re.fullmatch(r'[\u4e00-\u9fff]{1,4}', parts[1]):
         n += parts[1]
     n = re.sub(r'Anime Made By Bilibili|iQIYI Animation|Get the iQIYI APP|歡迎訂閱|APP搶先看|天天看動漫', ' ', n, flags=re.I)
-    n = re.sub(r'\s+', ' ', n).strip(' -–—|｜')
+    n = re.sub(r'\s+', ' ', n).strip(' -–—|｜_')
     return n if len(n) >= 2 else n0
 
 
