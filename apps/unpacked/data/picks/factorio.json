@@ -1,0 +1,509 @@
+{
+ "id": "factorio",
+ "date": "2026-11-18",
+ "rank": 1,
+ "game": {
+  "zh": "Factorio",
+  "zh_note": "沒有官方中文名，華文玩家常叫它《異星工廠》",
+  "en": "Factorio",
+  "steam": 427520,
+  "dev": "Wube Software（捷克布拉格）",
+  "pub": "Wube Software",
+  "platforms": [
+   "PC（Steam）",
+   "Mac",
+   "Linux",
+   "Switch",
+   "Switch 2"
+  ],
+  "genres": [
+   "自動化工廠",
+   "模擬經營",
+   "策略"
+  ],
+  "release": "2020-08-14",
+  "year": 2020,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "必玩",
+ "label": "燒腦經營控的終極工廠",
+ "pitch": "從手挖第一塊鐵礦，到整片星球都是你設計的生產線：越蓋越停不下來的自動化工廠",
+ "why": "痞子葳，這款我想了很久要不要推，因為它很危險。《Factorio》開場只給你一把十字鎬，你得先手挖礦、手做機器，然後慢慢讓輸送帶、機械手臂把這些事接過去；最爽的一刻，是你看著自己畫的生產線第一次全自動跑起來，礦石從這頭進去、電路板從那頭出來，全部是你想出來的。這就是你喜歡的那種「結果由自己的決策長出來」：沒有標準答案，同一個問題每個人蓋出來的工廠都不一樣，卡住了就是重新規劃。完全不考驗手速，敵人也可以在開地圖時調成和平。要老實講的是時間：主線火箭約五十多小時，而且它很會偷走你的晚上，最好挑能分段的週末開；還有它在 Steam 上從來不打折，別等特價。",
+ "reasons": [
+  {
+   "h": "沒有標準答案的燒腦",
+   "t": "每條生產線都是你自己規劃的，蓋出瓶頸、拆掉重來，都是在解你自己出的題。"
+  },
+  {
+   "h": "可以跟朋友一起蓋",
+   "t": "支援線上與區網合作，每人各買一份；電腦和 Switch 還能跨平台一起玩。"
+  },
+  {
+   "h": "評價穩到不行",
+   "t": "Metacritic 90，Steam 英文評論 98% 好評；資料片《Space Age》也拿到 PC Gamer 92 分。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡模擬經營、享受把一團亂整理成高效率系統的人",
+   "想要不考驗手速、可以慢慢想的策略遊戲的人",
+   "有 2～3 個朋友想一起長期經營同一個存檔的人"
+  ],
+  "against": [
+   "只想輕鬆玩一下：前幾個小時要學的東西很多，節奏偏慢",
+   "很在意畫面漂不漂亮的人：本體色調偏土黃、偏工業",
+   "想等特價的人：Steam 商店頁明說近期沒有打折計畫"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic（PC）",
+   "v": "90",
+   "s": [
+    10
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "82（92% 評論推薦）",
+   "s": [
+    11
+   ]
+  },
+  {
+   "k": "PC Gamer《Space Age》評測",
+   "v": "92",
+   "s": [
+    21
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "捷克 Wube Software 自行開發發行",
+   "s": [
+    0,
+    1
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2016/2/25 Steam 搶先體驗，2020/8/14 推出 1.0 正式版",
+   "s": [
+    1,
+    2
+   ]
+  },
+  {
+   "k": "主機版",
+   "v": "Switch 版 2022/10/28 上市；Switch 2 版 2025/12/22 推出，Switch 舊版玩家免費升級",
+   "s": [
+    6,
+    5
+   ]
+  },
+  {
+   "k": "資料片",
+   "v": "《Space Age》2024/10/21 上市，同天推出免費的 2.0 大更新；要先有本體",
+   "s": [
+    3,
+    4
+   ]
+  },
+  {
+   "k": "最後一次大更新",
+   "v": "2.1 版 2026/10/23 轉為正式版，官方說這是最後一次大型更新",
+   "s": [
+    7,
+    8,
+    9
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "Steam 標示介面支援繁體中文；遊戲沒有語音",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "價格政策",
+   "v": "官方明說近期沒有參加特價或降價的計畫；2023 年 1 月因通膨把美國售價從 30 美元調到 35 美元",
+   "s": [
+    0,
+    13
+   ]
+  },
+  {
+   "k": "多人",
+   "v": "支援線上與區網合作；每位玩家都要有自己的一份",
+   "s": [
+    0,
+    15
+   ]
+  },
+  {
+   "k": "跨平台",
+   "v": "電腦和 Switch 可以跨平台連線，版本要一致；Switch 線上要 Nintendo Switch Online",
+   "s": [
+    5,
+    6
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：主線約 53.5 小時、含額外內容約 91 小時、全收集約 227 小時",
+   "s": [
+    12
+   ]
+  },
+  {
+   "k": "銷量",
+   "v": "2022 年底累計 350 萬套；《Space Age》首週賣出超過 40 萬套",
+   "s": [
+    14,
+    19
+   ]
+  },
+  {
+   "k": "同時在線紀錄",
+   "v": "《Space Age》上市後 Steam 同時在線衝到約 11.8 萬人，刷新紀錄",
+   "s": [
+    19
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": false,
+  "voice": false,
+  "note": "Steam 標示介面有繁體中文（也有簡中）；遊戲本身沒有語音，也幾乎沒有劇情對白，所以只有介面翻譯並不影響。資料片《Space Age》同樣有繁中介面。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到，單機、多人都不鎖區；Switch 版以任天堂台灣商店為準。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷制＋付費資料片",
+  "notes": [
+   "本體買斷，沒有遊戲內購；資料片《Space Age》另外買，價格跟本體差不多。",
+   "官方長年不參加特價，Steam 商店頁直接寫近期沒有降價計畫。"
+  ],
+  "flags": [
+   "買斷",
+   "付費資料片",
+   "Steam 不打折"
+  ]
+ },
+ "rig": {
+  "verdict": "綽綽有餘",
+  "note": "官方建議需求是 2020 年後的 4GHz 四核心、16GB 記憶體、4GB 顯示卡、10GB 硬碟；你的 SCAR 18 遠遠超過，接 4K 電視也沒問題。"
+ },
+ "time": {
+  "text": "主線約 53 小時",
+  "note": "HowLongToBeat：發射第一枚火箭的主線約 53.5 小時、含額外內容約 91 小時、全收集約 227 小時；加上資料片《Space Age》還會再多很多。"
+ },
+ "howto": [
+  "第一次玩先打內建教學，再開一般地圖；怕被蟲子打斷思路，開地圖時可以把敵人調成和平模式。",
+  "不用一開始就追求漂亮：先讓鐵、銅、齒輪自動化，手做的時間越少，後面越快。",
+  "新手最常卡在「越蓋越亂」：留一條寬一點的主幹道輸送帶，之後擴建才不用整片拆。",
+  "跟朋友玩可以分工：一個人顧礦場和電力、一個人蓋科研、一個人修防線，比各自亂蓋有效率多了。",
+  "打完本體再上《Space Age》；PC Gamer 評測建議別先去 Gleba，那顆星球的作物會腐爛，最難上手。"
+ ],
+ "deals": "它在 Steam 上不打折，等特價沒有意義。先買本體就夠玩五十小時以上；確定愛上了再補《Space Age》。",
+ "talk": [
+  {
+   "q": "從來不打折，反而賣得更好？",
+   "why": "多數遊戲靠特價衝銷量，Factorio 反其道而行、還在 2023 年漲價，評價卻一直維持極度好評。這套定價哲學在台灣玩家眼裡划不划算？"
+  },
+  {
+   "q": "「工廠必須擴張」為什麼這麼讓人上癮？",
+   "why": "它沒有劇情推你，只有越來越大的生產目標。是什麼讓人自願熬夜整理輸送帶？很適合拿來聊「好玩比能玩重要」。"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "BqaAjgpsoW8",
+    "title": "1.0 正式版上市預告"
+   },
+   {
+    "id": "OiczN-8QKDA",
+    "title": "資料片《Space Age》預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：Factorio（語言、需求、多人、價格政策）",
+   "u": "https://store.steampowered.com/app/427520/Factorio/",
+   "d": ""
+  },
+  {
+   "t": "Wikipedia：Factorio（開發歷史、Indiegogo、銷量、設定）",
+   "u": "https://en.wikipedia.org/wiki/Factorio",
+   "d": ""
+  },
+  {
+   "t": "Factorio 官方 Friday Facts #360：1.0 正式上市",
+   "u": "https://direct.factorio.com/blog/post/fff-360",
+   "d": "2020-08-14"
+  },
+  {
+   "t": "Factorio 官方 Friday Facts #418：Space Age 上市日公布",
+   "u": "https://factorio.com/blog/post/fff-418",
+   "d": "2024-07-05"
+  },
+  {
+   "t": "Steam 商店頁：Factorio: Space Age",
+   "u": "https://store.steampowered.com/app/645390",
+   "d": ""
+  },
+  {
+   "t": "Factorio 官方：Switch 2 版上市，舊版免費升級、可跨平台",
+   "u": "https://direct.factorio.com/blog/post/factorio-switch-2-release",
+   "d": "2025-12-22"
+  },
+  {
+   "t": "Factorio Wiki：Nintendo Switch 版",
+   "u": "https://wiki.factorio.com/Nintendo_Switch_version",
+   "d": ""
+  },
+  {
+   "t": "Factorio 官方 Friday Facts #440：2.1 將是最後一次大更新",
+   "u": "https://factorio.com/blog/post/fff-440",
+   "d": "2026-05-29"
+  },
+  {
+   "t": "PC Gamer：開發 14 年後，Factorio 最後一次大更新上線",
+   "u": "https://pcgamer.com/games/survival-crafting/after-14-years-of-development-factorios-final-major-update-is-out-now",
+   "d": "2026-10-24"
+  },
+  {
+   "t": "GamesRadar：Factorio 2.1 正式上線",
+   "u": "https://gamesradar.com/games/simulation/factorio-2-1-the-last-big-update-to-the-sim-icon-that-got-234-000-glowing-steam-reviews-without-ever-going-on-sale-is-officially-out",
+   "d": "2026-10-23"
+  },
+  {
+   "t": "Metacritic：Factorio（PC）",
+   "u": "https://legacy.prod.metacritic.com/game/pc/factorio",
+   "d": ""
+  },
+  {
+   "t": "OpenCritic：Factorio",
+   "u": "https://opencritic.com/game/10005/factorio",
+   "d": ""
+  },
+  {
+   "t": "Deku Deals：Factorio 的 HowLongToBeat 時數",
+   "u": "https://www.dekudeals.com/items/factorio-switch",
+   "d": ""
+  },
+  {
+   "t": "GameSpot：Factorio 因通膨漲價",
+   "u": "https://gamespot.com/articles/factorio-price-increase-steam-inflation-years-after-release/1100-6510750/",
+   "d": "2023-01"
+  },
+  {
+   "t": "PC Gamer：Factorio 賣出 350 萬套、從不打折",
+   "u": "https://www.pcgamer.com/factorio-has-sold-35-million-copies",
+   "d": "2022-12-31"
+  },
+  {
+   "t": "Factorio Wiki：多人模式",
+   "u": "https://wiki.factorio.com/Multiplayer",
+   "d": ""
+  },
+  {
+   "t": "GameServerKings：Space Age 存檔多人連線，每位玩家都要有資料片",
+   "u": "https://www.gameserverkings.com/knowledge-base/factorio/factorio-multiplayer/",
+   "d": ""
+  },
+  {
+   "t": "Factorio 官方：Space Age 內容介紹",
+   "u": "https://direct.factorio.com/space-age/content",
+   "d": ""
+  },
+  {
+   "t": "Factorio Wiki：地圖產生器（和平模式、無敵人模式）",
+   "u": "https://wiki.factorio.com/Map_generator",
+   "d": ""
+  },
+  {
+   "t": "GamingOnLinux：Space Age 首週賣破 40 萬套、刷新在線紀錄",
+   "u": "https://www.gamingonlinux.com/2024/10/factorio-space-age-sold-over-400000-copies-and-sets-a-new-player-count-record",
+   "d": "2024-10"
+  },
+  {
+   "t": "PC Gamer 評測：Factorio 1.0（91 分）",
+   "u": "https://www.pcgamer.com/factorio-review/",
+   "d": "2020-08-24"
+  },
+  {
+   "t": "PC Gamer 評測：Factorio: Space Age（92 分）",
+   "u": "https://www.pcgamer.com/games/sim/factorio-space-age-review",
+   "d": "2024-10-24"
+  },
+  {
+   "t": "Nintendo Life 評測：Factorio Switch 版（8 分）",
+   "u": "http://www.nintendolife.com/reviews/switch-eshop/factorio",
+   "d": "2022-10-28"
+  },
+  {
+   "t": "Paste 評測：Factorio 1.0",
+   "u": "https://www.pastemagazine.com/games/factorio/factorio-10-review/",
+   "d": "2020"
+  },
+  {
+   "t": "Vaporlens：Factorio Steam 評論整理",
+   "u": "https://vaporlens.app/app/427520",
+   "d": ""
+  },
+  {
+   "t": "Vaporlens：Space Age Steam 評論整理",
+   "u": "https://vaporlens.app/app/645390/factorio_space_age",
+   "d": ""
+  },
+  {
+   "t": "Factorio 模組平台",
+   "u": "https://mods.factorio.com/downloaded",
+   "d": ""
+  },
+  {
+   "t": "Nintendo Life：Factorio Switch 2 版公布",
+   "u": "https://www.nintendolife.com/news/2025/12/factorio-nintendo-switch-2-edition-announced-free-upgrade-for-existing-owners",
+   "d": "2025-12"
+  }
+ ],
+ "pending": [
+  "《Space Age》的 HowLongToBeat 時數還沒查到。"
+ ],
+ "updated": "2026-11-18",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "手挖礦、手做第一批機器",
+    "用輸送帶和機械手臂把生產自動化",
+    "生產科研包、解鎖新科技",
+    "擴建工廠，同時防守被污染激怒的外星蟲",
+    "蓋出火箭、發射升空"
+   ],
+   "body": [
+    "一開始你只有十字鎬：手挖鐵礦和銅礦、丟進熔爐燒成金屬板，再手做齒輪、電線和第一台組裝機。接下來的每一步都是在「把自己的手解放出來」：鑽頭自動挖礦、輸送帶把礦送進熔爐、機械手臂把成品夾進下一台機器。等到生產線自己會跑，你就能把時間拿去規劃下一段。",
+    "研究要靠工廠生產的科研包，越高階的科技需要越複雜的科研包，生產線也就越長：從石油加工、塑膠、電路板，一路到鐵路運輸和無人機物流。真正燒腦的是比例與瓶頸：一台機器做太快、另一台跟不上，整條線就塞住；你得算清楚幾台熔爐配幾台組裝機，或乾脆整區重蓋。",
+    "工廠會排放污染，污染飄到外星蟲的巢穴就會引來攻擊，蟲子還會隨時間進化。你要蓋砲塔和城牆守住邊界，或者主動去清巢穴。不想打仗的人，開地圖時可以選和平模式（蟲子不主動攻擊、不擴張），甚至完全沒有敵人。蓋出火箭並發射就算通關，但很多人發射後還會繼續擴張。",
+    "資料片《Space Age》把舞台搬上太空：你要蓋太空平台，在航行途中攔截小行星當燃料和彈藥，再飛去四顆規則完全不同的星球——火山星 Vulcanus 用熔岩直接煉鐵、雷暴星 Fulgora 靠閃電發電和回收廢墟、沼澤星 Gleba 的作物會腐爛、冰凍星 Aquilo 要靠熱能管線保溫。另外還加入高架鐵路和五個等級的品質系統。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "Against the Storm",
+    "same": "都是要你把資源鏈理順的經營策略，結果完全由自己的規劃決定",
+    "diff": "Against the Storm 一局兩小時就結束；Factorio 一個存檔可以蓋上百小時，而且重點是自動化的生產線"
+   },
+   {
+    "name": "Satisfactory",
+    "same": "同樣是自動化工廠、同樣靠輸送帶和機器把原料一路加工上去",
+    "diff": "Satisfactory 是 3D 第一人稱，蓋起來像在逛工地；Factorio 是俯視 2D，能一眼看清整個工廠，規劃更像在畫電路圖"
+   },
+   {
+    "name": "模擬城市",
+    "same": "都是看著自己規劃的系統慢慢長大、哪裡塞車就去哪裡改",
+    "diff": "模擬城市是在管市民與城市；Factorio 沒有市民可討好，只有冷冰冰的產量，還有會來拆你工廠的外星蟲"
+   }
+  ],
+  "story": {
+   "safe": [
+    "你是一名在陌生外星球墜機的工程師，身邊只有一點殘骸和工具。這顆星球資源豐富，但也住著會攻擊入侵者的原生生物。",
+    "目標很簡單：利用這裡的礦產，從零開始建立工業，最後蓋出一枚火箭離開。整個遊戲幾乎沒有劇情對白，故事是你自己的工廠寫出來的。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "Factorio 由 Michal Kovařík 在 2012 年中於捷克布拉格開始開發，靈感來自 Minecraft 的工業模組（IndustrialCraft、BuildCraft）。2013 年他在 Indiegogo 募資，目標 1.7 萬歐元、最後募到約 2.16 萬歐元；2014 年 9 月和 Tomáš Kozelek 成立 Wube Software，2024 年團隊約 31 人。",
+   "它在 Steam 搶先體驗了四年半，開發團隊每週五在官網寫開發日誌「Friday Facts」，把設計思考公開給玩家看。1.0 原定 2020 年 9 月 25 日，因為《電馭叛客 2077》當時的上市日太近，他們把 1.0 提前到 8 月 14 日。2022 年底累計賣出 350 萬套，而且從來沒打過折。",
+   "2024 年 10 月的資料片《Space Age》首週就賣出超過 40 萬套，Steam 同時在線衝上約 11.8 萬人。2026 年 10 月推出的 2.1 版被官方定位為最後一次大型更新，之後以長期維護為主；模組平台上已有六千多個支援 2.1 的模組，玩家社群會繼續把它玩下去。"
+  ],
+  "timeline": [
+   {
+    "d": "2013-01-31",
+    "t": "Indiegogo 募資開跑，最後募到約 2.16 萬歐元"
+   },
+   {
+    "d": "2014-09",
+    "t": "Wube Software 正式成立"
+   },
+   {
+    "d": "2016-02-25",
+    "t": "登上 Steam 搶先體驗"
+   },
+   {
+    "d": "2020-08-14",
+    "t": "1.0 正式版上市（為了避開《電馭叛客 2077》而提前）"
+   },
+   {
+    "d": "2022-10-28",
+    "t": "Switch 版上市"
+   },
+   {
+    "d": "2023-01",
+    "t": "因通膨漲價，美國售價從 30 美元調到 35 美元"
+   },
+   {
+    "d": "2024-10-21",
+    "t": "資料片《Space Age》與免費 2.0 更新同步上市"
+   },
+   {
+    "d": "2025-12-22",
+    "t": "Switch 2 版推出，舊版玩家免費升級"
+   },
+   {
+    "d": "2026-10-23",
+    "t": "最後一次大型更新 2.1 版轉為正式版"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "PC Gamer 給 91 分、稱它是製造業傑作：複雜度一層一層加上來，不會一開始就把人嚇跑",
+    "生產線第一次順暢跑起來的成就感無可取代，評測和玩家都說它極度耐玩",
+    "《Space Age》每顆星球玩法都不一樣，PC Gamer 認為它有資格角逐史上最好的資料片",
+    "多人合作好玩、模組生態龐大，打完原版還有幾千個模組可以玩"
+   ],
+   "cons": [
+    "很吃時間：玩家最常說的抱怨就是它偷走睡眠",
+    "學習曲線陡、開局慢，剛開始要學的東西很多",
+    "畫面偏土黃色、工業感重；一個方向放錯的機械手臂很難一眼找到",
+    "《Space Age》讓系統變得更複雜，太空平台的教學說明不夠清楚"
+   ],
+   "debate": [
+    "從不打折還漲價：支持者認為品質撐得起定價，反對者覺得本體加資料片的總價對新玩家門檻太高。",
+    "Gleba 的腐爛機制：有人覺得是最有新意的星球，也有很多玩家嫌它太難、太煩。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "Factorio（本體）",
+   "what": "完整的原版遊戲，目標是發射火箭；2.0 以後的大量改良都是免費更新。",
+   "tip": "先買這個就夠玩五十小時以上，確定喜歡再補資料片。",
+   "best": true
+  },
+  {
+   "name": "Factorio: Space Age（資料片）",
+   "what": "加入太空平台、四顆新星球、高架鐵路與品質系統；要先有本體。",
+   "tip": "打完原版、想要新挑戰再買；跟朋友連 Space Age 存檔時，每個人都要有資料片。"
+  },
+  {
+   "name": "Switch／Switch 2 版",
+   "what": "Switch 版可以跟電腦跨平台連線；Switch 2 版畫面更好、Switch 舊版玩家免費升級，資料片只在 Switch 2 上提供。",
+   "tip": "你有 SCAR 18，用電腦玩就好：有模組，操作也比搖桿順手。"
+  }
+ ],
+ "multi": {
+  "ok": true,
+  "text": "支援線上和區網合作，你和 2～3 個朋友一起蓋同一座工廠完全沒問題。每個人都要各買一份；連《Space Age》的存檔，每個人也都要有資料片。電腦和 Switch 可以跨平台連線，但版本要一致。"
+ }
+}

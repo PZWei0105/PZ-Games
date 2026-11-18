@@ -1,0 +1,578 @@
+{
+ "id": "grim-dawn",
+ "date": "2026-11-18",
+ "rank": 2,
+ "game": {
+  "zh": "Grim Dawn",
+  "zh_note": "沒有官方中文名，華文玩家常叫它《恐怖黎明》",
+  "en": "Grim Dawn",
+  "steam": 219990,
+  "dev": "Crate Entertainment",
+  "pub": "Crate Entertainment",
+  "platforms": [
+   "PC（Steam、GOG）",
+   "Xbox Series X|S",
+   "Xbox One"
+  ],
+  "genres": [
+   "動作角色扮演",
+   "刷寶",
+   "多人合作"
+  ],
+  "release": "2016-02-25",
+  "year": 2016,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "必玩",
+ "label": "暗黑 2 老玩家的刷寶必玩",
+ "pitch": "兩個職業自由混搭、滿地裝備等你撿：最像當年《暗黑破壞神 2》的那一款刷寶 RPG",
+ "why": "痞子葳，你小時候玩《暗黑 2》那種「再刷一次 Boss 看會不會掉」的心情，《Grim Dawn》幾乎原封不動還給你。它最迷人的地方是組角色：每個角色挑兩個職業混搭，資料片全裝有十個職業、四十五種組合，再加上一張讓你點星座、換被動技能的「信仰星圖」，同一把傳說武器在不同組合手上會變成完全不同的玩法。這就是你喜歡的撿寶加看角色長大，而且是你自己的配點決策長出來的，不是靠課金堆數值。最多四人連線，你們幾個可以一起刷。要老實講兩點：它沒有官方繁中，Steam 上的簡中是玩家社群翻的；畫面是 2016 年的老引擎，乍看有點舊。但刷起來的手感，到現在還是同類型裡數一數二。",
+ "reasons": [
+  {
+   "h": "雙職業混搭",
+   "t": "每個角色選兩個職業組合，資料片全裝共 45 種組法，配點和星座讓同職業也能玩出完全不同的流派。"
+  },
+  {
+   "h": "撿寶撿到停不下來",
+   "t": "從白裝到傳說、套裝，加上派系聲望、競技場和隨機祕境，練滿 100 級還有一大堆東西可以刷。"
+  },
+  {
+   "h": "最多四人連線",
+   "t": "支援線上與區網合作，你和 2～3 個朋友剛好一隊；完全離線也能自己玩。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "玩過《暗黑破壞神 2》、懷念撿寶和慢慢配點那種感覺的人",
+   "喜歡研究技能搭配、自己摸索流派的人",
+   "想找一款能和 2～3 個朋友長期一起刷的合作遊戲"
+  ],
+  "against": [
+   "看不習慣簡中或英文的人：沒有官方繁中，Steam 的簡中是社群翻譯",
+   "很在意畫面的人：2016 年的引擎，比起新作明顯舊",
+   "完全不想動手的人：它還是即時動作戰鬥，只是不需要格鬥遊戲那種反應"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic（PC）",
+   "v": "83",
+   "s": [
+    23
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "82（83% 評論推薦）",
+   "s": [
+    24
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "Crate Entertainment（《泰坦之旅》開發商 Iron Lore 的前成員成立）",
+   "s": [
+    0,
+    3
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2013/5/15 Steam 搶先體驗，2016/2/25 推出 1.0 正式版",
+   "s": [
+    2,
+    0
+   ]
+  },
+  {
+   "k": "Xbox 版",
+   "v": "2021/12/3 以終極版登上 Xbox One、Xbox Series X|S",
+   "s": [
+    4
+   ]
+  },
+  {
+   "k": "資料片",
+   "v": "《Ashes of Malmouth》2017/10/11、《Forgotten Gods》2019/3/27、最終資料片《Fangs of Asterkarn》2026/7/23（PC）",
+   "s": [
+    2,
+    5,
+    6,
+    7
+   ]
+  },
+  {
+   "k": "職業",
+   "v": "本體 6 個職業，資料片全裝共 10 個；每個角色選兩個，共 45 種組合",
+   "s": [
+    16,
+    6
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "沒有官方中文；Steam 列出的簡體中文是玩家社群翻譯，可在遊戲選單下載。語音只有英文",
+   "s": [
+    0,
+    15
+   ]
+  },
+  {
+   "k": "多人",
+   "v": "線上、區網合作，最多 4 人；沒有跨平台",
+   "s": [
+    0,
+    27
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 83（PC）、OpenCritic 82",
+   "s": [
+    23,
+    24
+   ]
+  },
+  {
+   "k": "Steam 評價",
+   "v": "英文評論 94% 好評，標示「非常好評」；全語言約 9 萬篇評論、93% 好評",
+   "s": [
+    0,
+    38
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：主線約 21.5 小時、含額外內容約 49.5 小時、全收集約 244.5 小時",
+   "s": [
+    25
+   ]
+  },
+  {
+   "k": "銷量",
+   "v": "2022/2 宣布含 DLC 累計賣出 700 萬套",
+   "s": [
+    29
+   ]
+  },
+  {
+   "k": "群眾募資",
+   "v": "2012 年 Kickstarter 目標 28 萬美元，最後募到約 53.8 萬美元",
+   "s": [
+    28,
+    2
+   ]
+  },
+  {
+   "k": "大型免費更新",
+   "v": "2026/7 的 1.3 版全面翻新介面、倉庫，加入 WASD 操作和詞條數值範圍提示",
+   "s": [
+    14
+   ]
+  }
+ ],
+ "zh": {
+  "ui": false,
+  "sub": false,
+  "voice": false,
+  "note": "沒有官方繁中，也沒有官方簡中。Steam 頁面列出的簡體中文是玩家社群志願者翻譯，可以在遊戲選項裡下載切換；語音只有英文。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到，單機可完全離線，連線只有安裝和線上配對時需要。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷制＋付費資料片",
+  "notes": [
+   "本體買斷，沒有遊戲內購；三部資料片和競技場模式 Crucible 是付費 DLC。",
+   "Loyalist 系列只是外觀包，不影響強度。"
+  ],
+  "flags": [
+   "買斷",
+   "付費資料片",
+   "外觀 DLC"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "官方建議需求只要 6GB 記憶體和 GeForce 500 系列等級的顯示卡；你的 SCAR 18 開滿特效、接 4K 電視都輕鬆。"
+ },
+ "time": {
+  "text": "主線約 22 小時",
+  "note": "HowLongToBeat：主線約 21.5 小時、含額外內容約 49.5 小時、全收集約 244.5 小時；這還沒算三部資料片和更高難度的重刷。"
+ },
+ "howto": [
+  "第一隻角色挑好上手的組合，例如本體的軍人（Soldier）配任一個職業，近戰耐打、容錯高。",
+  "2 級選第一個職業、10 級選第二個；技能點要集中，兩邊都想點滿是做不到的。",
+  "到處修復神殿換信仰點數，信仰星圖是後期強度的關鍵，早點開始研究。",
+  "第一輪先用一般難度把故事打完，菁英、終極難度要打倒本體最終 Boss 後才解鎖，真正的好裝也在後面。",
+  "跟朋友連線前先確認大家的資料片一樣；擁有資料片的人可以用啟動參數關掉資料片，配合沒買的人。"
+ ],
+ "deals": "最划算是等特價買「終極版」（本體＋前兩部資料片＋Crucible），Steam 上它常打到七折以下，本體甚至打過一折。想玩最終資料片《Fangs of Asterkarn》要另外買，而且要先有前兩部資料片。",
+ "talk": [
+  {
+   "q": "十年老遊戲，憑什麼還被叫「暗黑 2 精神續作」？",
+   "why": "畫面老、沒有官方中文，Steam 卻累積了約九萬篇評論、九成以上好評。刷寶遊戲最核心的魅力到底是畫面還是配點？"
+  },
+  {
+   "q": "等了快七年的最終資料片值不值？",
+   "why": "《Fangs of Asterkarn》從 2023 年公布延到 2026 年才上，Steam 評價卻比前作低。老玩家的期待和新內容之間的落差，很適合拿來聊。"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "03VZ9cUB3vg",
+    "title": "資料片《Ashes of Malmouth》預告"
+   },
+   {
+    "id": "4NlahpvZ2hY",
+    "title": "資料片《Forgotten Gods》預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：Grim Dawn（語言、多人、需求、評價）",
+   "u": "https://store.steampowered.com/app/219990/Grim_Dawn/",
+   "d": ""
+  },
+  {
+   "t": "SteamDB：Grim Dawn（上市時間、價格歷史）",
+   "u": "https://steamdb.info/app/219990",
+   "d": ""
+  },
+  {
+   "t": "Wikipedia：Grim Dawn",
+   "u": "https://en.wikipedia.org/wiki/Grim_Dawn",
+   "d": ""
+  },
+  {
+   "t": "Wikipedia：Crate Entertainment",
+   "u": "https://en.wikipedia.org/wiki/Crate_Entertainment",
+   "d": ""
+  },
+  {
+   "t": "RPG Site：Grim Dawn 終極版 12/3 登上 Xbox",
+   "u": "https://www.rpgsite.net/news/12043-isometric-action-rpg-grim-dawn-launches-for-xbox-one-and-xbox-series-xs-on-december-3",
+   "d": "2021-11-30"
+  },
+  {
+   "t": "Steam 商店頁：Grim Dawn - Forgotten Gods",
+   "u": "https://store.steampowered.com/app/897670/Grim_Dawn__Forgotten_Gods_Expansion/",
+   "d": ""
+  },
+  {
+   "t": "Steam 商店頁：Grim Dawn - Fangs of Asterkarn",
+   "u": "https://store.steampowered.com/app/2699230/Grim_Dawn__Fangs_of_Asterkarn/",
+   "d": ""
+  },
+  {
+   "t": "Steam 官方公告：Fangs of Asterkarn 7/23 上市",
+   "u": "https://steamcommunity.com/games/219990/announcements/detail/716784848176416216",
+   "d": "2026-07-19"
+  },
+  {
+   "t": "PC Gamer：Grim Dawn 最終資料片 7 月推出",
+   "u": "https://pcgamer.com/games/rpg/grim-dawns-gigantic-final-expansion-will-be-out-in-july",
+   "d": "2026-05-28"
+  },
+  {
+   "t": "Worthplaying：Fangs of Asterkarn 內容一覽",
+   "u": "https://worthplaying.com/article/2026/5/28/news/149981-grim-dawn-to-get-final-fangs-of-asterkarn-expansion-adds-new-region-game-mode-factions-dungeons-and-more-coincides-with-free-update-trailer/",
+   "d": "2026-05-28"
+  },
+  {
+   "t": "Crate 官方論壇：Fangs of Asterkarn 的 Xbox 版進度",
+   "u": "https://forums.crateentertainment.com/t/any-news-on-fangs-of-asterkarn-for-xbox/161570",
+   "d": "2026-11"
+  },
+  {
+   "t": "PC Gamer：Grim Dawn 十週年",
+   "u": "https://www.pcgamer.com/games/rpg/grim-dawn-marks-its-10th-anniversary-with-a-triumphal-update-on-its-final-expansion-grim-dawn-will-not-be-going-out-with-a-bang-it-will-be-a-tremendous-roar",
+   "d": "2026-02-26"
+  },
+  {
+   "t": "Crate 官方論壇：終極版上架 Steam",
+   "u": "https://forums.crateentertainment.com/t/grim-dawn-definitive-edition-now-available-on-steam/92829",
+   "d": "2019-11-27"
+  },
+  {
+   "t": "GamingBolt：1.2 版更新內容",
+   "u": "https://gamingbolt.com/grim-dawn-patch-v-1-2-0-0-launches-november-16th-overhauls-loot-tables-level-scaling-and-more",
+   "d": "2023-11-12"
+  },
+  {
+   "t": "Crate 官方論壇：1.3 版更新內容",
+   "u": "https://forums.crateentertainment.com/t/grim-dawn-version-v1-3-0-0/155979",
+   "d": "2026-07"
+  },
+  {
+   "t": "Steam 社群：語言翻譯由社群志願者製作",
+   "u": "https://steamcommunity.com/app/219990/discussions/0/3338745825902835325",
+   "d": "2018"
+  },
+  {
+   "t": "Grim Dawn 官方指南：職業（Masteries）",
+   "u": "https://grimdawn.com/guide/character/masteries",
+   "d": ""
+  },
+  {
+   "t": "Grim Dawn 官方指南：角色基礎（技能點、等級上限）",
+   "u": "https://www.grimdawn.com/guide/character/character-basics/",
+   "d": ""
+  },
+  {
+   "t": "Grim Dawn 官方指南：信仰（Devotion）",
+   "u": "https://www.grimdawn.com/guide/character/devotion",
+   "d": ""
+  },
+  {
+   "t": "Grim Dawn 官方指南：裝備稀有度",
+   "u": "https://www.grimdawn.com/guide/items/the-hunt-for-loot",
+   "d": ""
+  },
+  {
+   "t": "Grim Dawn 官方指南：派系",
+   "u": "https://www.grimdawn.com/guide/character/factions",
+   "d": ""
+  },
+  {
+   "t": "Grim Dawn 官方指南：難度",
+   "u": "https://www.grimdawn.com/guide/game-settings/game-difficulties",
+   "d": ""
+  },
+  {
+   "t": "Grim Dawn 官方指南：Crucible 競技場",
+   "u": "https://www.grimdawn.com/guide/game-settings/crucible",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：Grim Dawn（PC）",
+   "u": "https://legacy.prod.metacritic.com/game/pc/grim-dawn",
+   "d": ""
+  },
+  {
+   "t": "OpenCritic：Grim Dawn",
+   "u": "https://opencritic.com/game/2179/grim-dawn",
+   "d": ""
+  },
+  {
+   "t": "Deku Deals：Grim Dawn 的 HowLongToBeat 時數",
+   "u": "https://www.dekudeals.com/items/grim-dawn",
+   "d": ""
+  },
+  {
+   "t": "Crate 官方論壇：沒買資料片也能和朋友連線",
+   "u": "https://forums.crateentertainment.com/t/play-with-friends-although-not-everybody-has-the-expansion-s/86357",
+   "d": "2019-07-28"
+  },
+  {
+   "t": "Wccftech：Grim Dawn 不打算支援跨平台",
+   "u": "https://wccftech.com/grim-dawn-wont-have-xb1x-enhancements/",
+   "d": "2018-07-27"
+  },
+  {
+   "t": "GameBanshee：Kickstarter 募得 53.7 萬美元",
+   "u": "https://gamebanshee.com/dc3a",
+   "d": "2012-05-18"
+  },
+  {
+   "t": "GamingBolt：Grim Dawn 賣出 700 萬套",
+   "u": "https://gamingbolt.com/grim-dawn-has-sold-7-million-copies",
+   "d": "2022-02-28"
+  },
+  {
+   "t": "GameSpot 評測：Grim Dawn（8 分）",
+   "u": "http://www.gamespot.com/reviews/grim-dawn-review/1900-6416401/",
+   "d": "2016-04-07"
+  },
+  {
+   "t": "PC Gamer 評測：Grim Dawn（83 分）",
+   "u": "https://www.pcgamer.com/grim-dawn-review/",
+   "d": "2016-03-12"
+  },
+  {
+   "t": "TechRaptor 評測：Grim Dawn",
+   "u": "https://techraptor.net/content/grim-dawn-review",
+   "d": "2016"
+  },
+  {
+   "t": "FullCleared 評測：Fangs of Asterkarn",
+   "u": "https://fullcleared.com/reviews/grim-dawn-fangs-of-asterkarn-review/",
+   "d": "2026-08-03"
+  },
+  {
+   "t": "Vaporlens：Fangs of Asterkarn Steam 評論整理",
+   "u": "https://vaporlens.app/app/2699230/grim_dawn_fangs_of_asterkarn",
+   "d": "2026-07-24"
+  },
+  {
+   "t": "Notebookcheck：Grim Dawn Steam 特價兩折",
+   "u": "https://www.notebookcheck.net/The-spiritual-successor-to-Diablo-2-that-fans-have-been-pining-about-for-years-ARPG-with-vivid-art-style-and-fully-offline-functionality-gets-80-discount-on-Steam.1051098.0.html",
+   "d": "2025-07-04"
+  },
+  {
+   "t": "Grim Dawn 官方 FAQ（離線、連線方式）",
+   "u": "https://www.grimdawn.com/guide/about/faq/",
+   "d": ""
+  },
+  {
+   "t": "Deku Deals：Grim Dawn 終極版價格紀錄",
+   "u": "https://www.dekudeals.com/items/grim-dawn-definitive-edition",
+   "d": ""
+  },
+  {
+   "t": "AUTOMATON：Grim Dawn 全語言約 9 萬篇評論、93% 好評",
+   "u": "https://automaton-media.com/articles/newsjp/20260529-445851/",
+   "d": "2026-05-29"
+  },
+  {
+   "t": "TV Tropes：Grim Dawn 開場設定",
+   "u": "https://www.tvtropes.org/pmwiki/pmwiki.php/VideoGame/GrimDawn",
+   "d": ""
+  },
+  {
+   "t": "Wikipedia 引述 IGN 評測 8.7 分",
+   "u": "https://en.wikipedia.org/wiki/Grim_Dawn",
+   "d": ""
+  }
+ ],
+ "pending": [
+  "《Fangs of Asterkarn》的 Xbox 版還沒上市，官方 11 月初說「可能今年內」。",
+  "多人連線是否每人都要各買一份，官方沒有明文寫出。"
+ ],
+ "updated": "2026-11-18",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "選兩個職業、分配技能點",
+    "在凱恩大陸清怪、解任務",
+    "撿裝備、比詞條、換流派",
+    "修神殿點信仰星圖、刷派系聲望",
+    "挑戰更高難度和競技場、祕境"
+   ],
+   "body": [
+    "俯視角的即時戰鬥，滑鼠點哪打哪，跟《暗黑 2》的操作很像，1.3 版之後也能用 WASD 走路。角色 2 級時選第一個職業、10 級選第二個，例如軍人配祕術師就是能扛又能放法術的戰鬥法師。每升一級拿技能點和屬性點，但點數不夠把兩個職業都點滿，要取捨。",
+    "信仰系統是它最有深度的部分：在地圖上修復被污染的神殿，每座換一點信仰，拿去點亮星圖上的星座。星座分五種屬性，要先點小星座湊條件才能點大星座；大星座附帶的「天界之力」要掛在你的某個技能上，打怪時機率觸發、還會隨使用升級。同一個職業組合，星圖選不同路線就是另一種流派。",
+    "裝備從白色普通、黃色魔法、綠色稀有、藍色史詩到紫色傳說，還有套裝；傳說裝大約 50 級後開始掉。派系系統讓你替不同陣營解任務、提升聲望換強化道具，選邊站還會讓敵對派系派英雄來追殺你。",
+    "通關一般難度後解鎖菁英和終極難度，等級上限一路到 100。付費 DLC Crucible 是打波次的競技場，《Forgotten Gods》加入隨機拼接、有時間限制的祕境模式，最終資料片又加入給 100 級角色挑戰的 Ascendant 模式和兩個 roguelike 地城。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "暗黑破壞神 2",
+    "same": "俯視角刷寶、點擊戰鬥、技能點分配，連那種黑暗陰鬱的氣氛都很像",
+    "diff": "Grim Dawn 每個角色能混搭兩個職業，還多了信仰星圖；地圖不是隨機產生，而是固定設計的大世界"
+   },
+   {
+    "name": "泰坦之旅",
+    "same": "Crate 的成員就是《泰坦之旅》團隊，Grim Dawn 用的也是授權的泰坦之旅引擎，雙職業系統一脈相承",
+    "diff": "泰坦之旅是希臘神話的明亮世界；Grim Dawn 換成被異界生物入侵、維多利亞時代風格的末日世界，系統也更複雜"
+   },
+   {
+    "name": "神界：原罪 2",
+    "same": "都能四人連線一起闖、都是自己配技能組流派的 RPG",
+    "diff": "神界：原罪 2 是回合制、重劇情與選擇；Grim Dawn 是即時刷寶，重點在裝備和配點，劇情比較淡"
+   }
+  ],
+  "story": {
+   "safe": [
+    "故事發生在一個叫凱恩（Cairn）的世界，風格有點像維多利亞時代。異界生物 Aetherial 能附身在人類身上，另一股勢力 Chthonian 則想把人類整個抹除，夾在中間的人類文明幾乎崩潰，這場浩劫就叫「Grim Dawn」。",
+    "開場你被 Aetherial 附身、在惡魔十字路口的據點被吊上絞架；附身的東西在你斷氣前離開，你被放了下來，從此成為少數被附身過還活著的「被奪者」。",
+    "劇情主要透過任務對話和散落的日誌、筆記交代，喜歡挖設定的人可以慢慢讀，只想刷的人也能直接跳過。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "Crate Entertainment 是《泰坦之旅》開發商 Iron Lore 倒閉後，前成員在 2008 年成立的小工作室；他們向 THQ 授權了泰坦之旅的引擎，2010 年公布 Grim Dawn。2012 年在 Kickstarter 募資，目標 28 萬美元，最後募到約 53.8 萬美元。",
+   "遊戲在 2013 年進入 Steam 搶先體驗，2016 年 2 月推出正式版。之後陸續推出 Crucible 競技場（2016）、《Ashes of Malmouth》（2017，等級上限從 85 拉到 100）、《Forgotten Gods》（2019）；2022 年宣布含 DLC 累計賣出 700 萬套，十週年時已經推出 82 次更新。",
+   "最終資料片《Fangs of Asterkarn》2023 年公布，原本預計 2024 年，一路延到 2026 年 7 月 23 日才在 PC 上市，加入第十個職業「狂戰士」（能變身）和一整片新區域；同時推出的免費 1.3 版全面翻新介面。Xbox 版的資料片到 11 月都還在等。"
+  ],
+  "timeline": [
+   {
+    "d": "2010-01-21",
+    "t": "Crate 公布 Grim Dawn"
+   },
+   {
+    "d": "2012-04-17",
+    "t": "Kickstarter 募資開跑，最後募到約 53.8 萬美元"
+   },
+   {
+    "d": "2013-05-15",
+    "t": "登上 Steam 搶先體驗"
+   },
+   {
+    "d": "2016-02-25",
+    "t": "1.0 正式版上市"
+   },
+   {
+    "d": "2017-10-11",
+    "t": "第一部資料片《Ashes of Malmouth》，等級上限拉到 100"
+   },
+   {
+    "d": "2019-03-27",
+    "t": "第二部資料片《Forgotten Gods》，加入祕境模式"
+   },
+   {
+    "d": "2021-12-03",
+    "t": "終極版登上 Xbox One、Xbox Series X|S"
+   },
+   {
+    "d": "2022-02",
+    "t": "宣布含 DLC 累計賣出 700 萬套"
+   },
+   {
+    "d": "2023-11-16",
+    "t": "免費 1.2 版：加入閃避技能、重做掉寶表"
+   },
+   {
+    "d": "2026-07-23",
+    "t": "最終資料片《Fangs of Asterkarn》與免費 1.3 版在 PC 推出"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "雙職業混搭自由度高，評測一致稱讚組角色的樂趣，IGN 給 8.7 分",
+    "戰鬥打擊感扎實、血花四濺，PC Gamer 和 TechRaptor 都特別提到手感",
+    "內容量非常大，GameSpot 認為主線分量足、節奏安排得當",
+    "信仰星圖讓配點深度又多一層，愛研究流派的玩家可以玩好幾百小時"
+   ],
+   "cons": [
+    "老引擎畫面過時，TechRaptor 也提到效能吃單核心",
+    "劇情和配音偏弱，PC Gamer 覺得故事沒什麼記憶點",
+    "沒用的裝備太多，PC Gamer 嫌常常要跑回城整理",
+    "最終資料片 Steam 評價只有「大多好評」，有人嫌等太久、內容不夠"
+   ],
+   "debate": [
+    "最終資料片值不值：有人愛新職業和 100 級後的挑戰，也有人抱怨新介面的橘色光暈、上市初期當機，和「等了這麼久就這樣」。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "Grim Dawn 終極版（Definitive Edition）",
+   "what": "本體＋《Ashes of Malmouth》＋《Forgotten Gods》＋Crucible 競技場，十個職業裡的九個都在這。",
+   "tip": "一次拿齊大部分內容，等 Steam 特價買最划算。",
+   "best": true
+  },
+  {
+   "name": "Grim Dawn（本體）",
+   "what": "6 個職業、完整主線，特價時常常非常便宜。",
+   "tip": "想先試試手感可以只買本體，喜歡再補資料片。"
+  },
+  {
+   "name": "Fangs of Asterkarn（最終資料片）",
+   "what": "第十個職業狂戰士、新區域阿斯特卡恩、Ascendant 模式；要先有前兩部資料片。",
+   "tip": "玩完前面的內容、還想繼續刷再買，不急著一次收。"
+  }
+ ],
+ "multi": {
+  "ok": true,
+  "text": "支援線上和區網合作，最多 4 人，你和 2～3 個朋友剛好一隊。大家開的資料片要一樣，有買資料片的人可以用啟動參數暫時關掉來配合沒買的人。專家模式（死了就沒）的角色只能跟專家模式角色連線，也沒有跟 Xbox 跨平台。"
+ }
+}

@@ -1,0 +1,545 @@
+{
+ "id": "brotato",
+ "date": "2026-11-18",
+ "rank": 3,
+ "game": {
+  "zh": "Brotato",
+  "zh_note": "沒有官方中文名，華文玩家常叫它《土豆兄弟》",
+  "en": "Brotato",
+  "steam": 1942280,
+  "dev": "Blobfish（Thomas Gervraud 一人開發；2025 年起由 Evil Empire 接手更新）",
+  "pub": "Blobfish（Steam）",
+  "platforms": [
+   "PC（Steam、Epic、GOG）",
+   "Switch",
+   "Switch 2",
+   "PS5",
+   "PS4",
+   "Xbox Series X|S",
+   "Xbox One",
+   "手機"
+  ],
+  "genres": [
+   "倖存者類",
+   "Roguelite",
+   "射擊"
+  ],
+  "release": "2023-06-23",
+  "year": 2023,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "閉眼入",
+ "label": "倖存者類的燒腦升級版",
+ "pitch": "帶著六把武器的馬鈴薯：一局不到半小時、每波之間都在商店燒腦組流派的倖存者類",
+ "why": "痞子葳，如果你喜歡《吸血鬼倖存者》那種看著角色越變越強、滿畫面怪被清空的爽感，《Brotato》是我覺得更適合你的版本。它把一局切成二十波，每波最多一分半鐘，打完就進商店：鎖住想要的武器、刷新貨架、把兩把一樣的武器合成更高級的，每一次都在想「這局要走近戰、元素還是工程師炮台」。武器預設自動攻擊，你只要專心走位，真正決勝負的是商店裡的選擇。一局不到三十分鐘，下班開一局剛好；本體只要一份便當錢。要老實講的是：畫面很陽春，玩久了會覺得重複；四人合作只有本機同畫面，遠端要靠 Steam 的同樂功能，有時會延遲。",
+ "reasons": [
+  {
+   "h": "商店才是主戰場",
+   "t": "每波打完都要決定買什麼、鎖什麼、刷不刷新，同一個角色換一套選擇就是另一種流派。"
+  },
+  {
+   "h": "一局不到半小時",
+   "t": "官方說明一局不到 30 分鐘，每波 20～90 秒，時間零碎也能玩完一整局。"
+  },
+  {
+   "h": "Steam 極度好評",
+   "t": "Steam 英文評論 96% 好評，累計玩家超過一千萬；本體價格很低，兩部 DLC 也都很便宜。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡《吸血鬼倖存者》，但想要更多組裝決策的人",
+   "時間零碎、想要隨時能開一局又能玩完的人",
+   "想找便宜、能和朋友坐在同一台電腦前一起玩的遊戲的人"
+  ],
+  "against": [
+   "完全不想動手的人：武器自動打，但走位閃怪還是要靠你",
+   "很在意美術的人：畫面和場地都很簡單",
+   "想要劇情的人：它沒有故事，只有一波又一波的怪"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic（PC）",
+   "v": "76",
+   "s": [
+    20
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "76",
+   "s": [
+    21
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "法國獨立開發者 Thomas Gervraud 的一人工作室 Blobfish；Steam 版自行發行",
+   "s": [
+    2,
+    0,
+    1
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2022/9/27 Steam 搶先體驗，2023/6/23 推出 1.0 正式版",
+   "s": [
+    0,
+    3
+   ]
+  },
+  {
+   "k": "主機版",
+   "v": "Switch 2023/8/3；PS5、PS4、Xbox 2024/1/30（首發加入 Game Pass）；Switch 2 版 2025/11/20",
+   "s": [
+    5,
+    6,
+    7
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "Steam 標示介面支援繁體中文（也有簡中）；沒有語音",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "玩法",
+   "v": "操作一顆馬鈴薯，最多同時帶 6 把武器，預設自動攻擊；一局 20 波，波與波之間進商店",
+   "s": [
+    0,
+    17
+   ]
+  },
+  {
+   "k": "一局長度",
+   "v": "官方說明一局不到 30 分鐘；第一波 20 秒、之後每波加 5 秒到 60 秒，第 20 波 Boss 戰 90 秒",
+   "s": [
+    0,
+    17
+   ]
+  },
+  {
+   "k": "合作",
+   "v": "2024/10/25 免費更新加入最多 4 人本機合作；沒有內建線上連線",
+   "s": [
+    9,
+    10
+   ]
+  },
+  {
+   "k": "DLC",
+   "v": "《Abyssal Terrors》2024/10/25（14 個角色、16 種武器）；《Primal Dread》2026/11/2 在 PC 推出（10 個角色、17 種武器）",
+   "s": [
+    8,
+    16,
+    15
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 76（PC，4 篇評論）、OpenCritic 76",
+   "s": [
+    20,
+    21
+   ]
+  },
+  {
+   "k": "Steam 評價",
+   "v": "英文評論 96% 好評、標示「極度好評」",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：主線約 6 小時、含額外內容約 23 小時、全收集約 67.5 小時",
+   "s": [
+    5
+   ]
+  },
+  {
+   "k": "玩家數",
+   "v": "1.0 上市時 Steam 賣出超過 200 萬套；2025 年 9 月全平台玩家超過 1000 萬人",
+   "s": [
+    2,
+    12
+   ]
+  },
+  {
+   "k": "接手開發",
+   "v": "2025 年 9 月起由《死亡細胞》DLC 團隊 Evil Empire 接手更新，原作者轉去做新遊戲、仍保留監督",
+   "s": [
+    12,
+    13
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": false,
+  "voice": false,
+  "note": "Steam 標示介面有繁體中文（也有簡中）；遊戲沒有語音，也沒有劇情對白，介面看得懂就能玩。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到，純單機或本機合作，不需要連線。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷制＋付費 DLC",
+  "notes": [
+   "PC 版買斷，另有兩部付費 DLC 和原聲帶，Steam 頁面沒有遊戲內購。",
+   "手機版另外有免費加廣告的版本，跟電腦版無關。"
+  ],
+  "flags": [
+   "買斷",
+   "付費 DLC"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "官方最低需求只要 4GB 記憶體、128MB 顯示記憶體、200MB 硬碟；你的 SCAR 18 怎麼開都不會有感，接電視和朋友一起玩也沒問題。"
+ },
+ "time": {
+  "text": "一局不到 30 分鐘",
+  "note": "官方說明一局不到 30 分鐘；HowLongToBeat：主線約 6 小時、含額外內容約 23 小時、全收集約 67.5 小時。"
+ },
+ "howto": [
+  "第一局先用一開始就有的 Well Rounded（全能）或 Brawler（鬥士），熟悉武器合成和商店節奏。",
+  "商店裡看到好東西就先鎖起來，鎖住是免費的，下一波還會留著；刷新會越刷越貴，別亂刷。",
+  "兩把同等級的同款武器會合成更高一級，前期集中買同一種武器，成長最快。",
+  "打完一局就用新解鎖的角色試試，每個角色都有很極端的特性，換角色就是換玩法。",
+  "怕太難可以在設定裡調低敵人的血量、傷害和速度；熟練以後再一路往危險等級 5、甚至惡夢難度爬。"
+ ],
+ "deals": "本體原價就很便宜，直接買就好。想要更多變化再補 DLC：先買《Abyssal Terrors》，它連同免費更新一起把內容大幅擴充；最新的《Primal Dread》等玩膩了再收也不遲。",
+ "talk": [
+  {
+   "q": "一顆馬鈴薯憑什麼賣破千萬？",
+   "why": "畫面陽春、一人開發，卻在 Steam 拿到極度好評。倖存者類到底是靠畫面，還是靠每一波之間那幾秒的選擇讓人上癮？"
+  },
+  {
+   "q": "原作者把遊戲交給別的團隊，是好事嗎？",
+   "why": "2025 年起改由 Evil Empire 接手，之後的更新和新 DLC 評價有好有壞。獨立遊戲交棒經營，對玩家來說代表什麼？"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "oLxQQU6gTTk",
+    "title": "1.0 正式版上市預告"
+   },
+   {
+    "id": "rn_9djqZZVg",
+    "title": "DLC《Abyssal Terrors》與本機合作更新公布預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：Brotato（語言、玩法說明、需求、評價）",
+   "u": "https://store.steampowered.com/app/1942280/Brotato/",
+   "d": ""
+  },
+  {
+   "t": "Wikipedia：Brotato",
+   "u": "https://en.wikipedia.org/wiki/Brotato",
+   "d": ""
+  },
+  {
+   "t": "Gamespress：Brotato 1.0 上市新聞稿",
+   "u": "https://www.gamespress.com/Brotato-10-Release",
+   "d": "2023-06-23"
+  },
+  {
+   "t": "Bleeding Cool：Brotato 1.0 正式上市",
+   "u": "https://bleedingcool.com/games/brotato-officially-releases-version-1-0-this-morning",
+   "d": "2023-06-23"
+  },
+  {
+   "t": "TouchArcade：Brotato 手機版上市",
+   "u": "https://toucharcade.com/2023/03/28/top-down-roguelite-shooter-brotato-is-out-now-on-ios-and-android-as-a-premium-release/",
+   "d": "2023-03-28"
+  },
+  {
+   "t": "Deku Deals：Brotato（Switch 上市日、HowLongToBeat 時數）",
+   "u": "https://www.dekudeals.com/items/brotato",
+   "d": ""
+  },
+  {
+   "t": "Gematsu：Brotato 1/30 登上 PS5、PS4、Xbox",
+   "u": "https://gematsu.com/2024/01/brotato-coming-to-ps5-xbox-series-ps4-and-xbox-one-on-january-30",
+   "d": "2024-01-22"
+  },
+  {
+   "t": "Nintendo 官方：Brotato Switch 2 版",
+   "u": "https://www.nintendo.com/us/store/products/brotato-nintendo-switch-2-edition-switch-2/",
+   "d": ""
+  },
+  {
+   "t": "Steam 商店頁：Brotato - Abyssal Terrors",
+   "u": "https://store.steampowered.com/app/2868390/",
+   "d": ""
+  },
+  {
+   "t": "GamingOnLinux：四人本機合作與 Abyssal Terrors 上線",
+   "u": "https://gamingonlinux.com/2024/10/thats-the-weekend-sorted-brotato-adds-4-player-local-co-op-and-abyssal-terrors-dlc-out-now",
+   "d": "2024-10-25"
+  },
+  {
+   "t": "PCGamesN：Brotato 合作更新（只有本機或 Remote Play Together）",
+   "u": "https://www.pcgamesn.com/brotato/coop-update-dlc",
+   "d": "2024-10"
+  },
+  {
+   "t": "Gematsu：New Dawn 免費更新",
+   "u": "https://www.gematsu.com/2025/10/brotato-new-dawn-update-now-available-for-pc-coming-to-consoles-and-mobile-in-one-month",
+   "d": "2025-10-27"
+  },
+  {
+   "t": "GamingTrend：Evil Empire 接手，玩家破千萬",
+   "u": "https://gamingtrend.com/news/evil-empire-set-to-bring-spud-packing-punches-to-10-million-strong-brotato-across-pc-consoles-mobile-teases-october-content-update-with-new-mob-the-gobbler",
+   "d": "2025-09-29"
+  },
+  {
+   "t": "GamingOnLinux：Evil Empire 接手 Brotato",
+   "u": "https://gamingonlinux.com/2025/09/evil-empire-dead-cells-the-rogue-prince-of-persia-take-over-brotato-with-a-plan-for-more-updates",
+   "d": "2025-09"
+  },
+  {
+   "t": "GamingOnLinux：Paws & Claws 更新加入寵物",
+   "u": "https://www.gamingonlinux.com/2026/02/brotato-gets-a-major-update-with-paws-claws-adding-pets/",
+   "d": "2026-02"
+  },
+  {
+   "t": "PlayNews：Primal Dread 11/2 在 PC 推出",
+   "u": "https://www.playnews.gg/en/dlcs/brotato-primal-dread-dlc-launches-november-2-2026-on-pc-with-a-dual-path-evolution-stat",
+   "d": "2026-10-09"
+  },
+  {
+   "t": "Rogueliker：Primal Dread 上線",
+   "u": "https://rogueliker.com/brotato-primal-dread-is-out-now/",
+   "d": "2026-11"
+  },
+  {
+   "t": "Brotato Wiki：波次",
+   "u": "https://brotato.wiki.spellsandguns.com/Waves",
+   "d": ""
+  },
+  {
+   "t": "Brotato Wiki：危險等級",
+   "u": "https://brotato.wiki.spellsandguns.com/Dangers",
+   "d": ""
+  },
+  {
+   "t": "Brotato Wiki：商店（鎖定、刷新、合成）",
+   "u": "https://brotato.wiki.spellsandguns.com/Shop",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：Brotato",
+   "u": "https://www.metacritic.com/game/brotato/",
+   "d": ""
+  },
+  {
+   "t": "OpenCritic：Brotato 評論列表",
+   "u": "https://opencritic.com/game/15137/-/reviews",
+   "d": ""
+  },
+  {
+   "t": "GamesRadar：Brotato 正式版上市",
+   "u": "https://www.gamesradar.com/one-of-the-highest-rated-roguelikes-of-all-time-is-now-officially-out-and-its-only-gotten-better/",
+   "d": "2023-07-01"
+  },
+  {
+   "t": "Pure Xbox：Brotato 上 Game Pass 一個月破百萬安裝",
+   "u": "https://purexbox.com/news/2024/02/xbox-game-pass-indie-brotato-proves-popular-on-microsofts-subscription-service",
+   "d": "2024-02-20"
+  },
+  {
+   "t": "Niche Gamer 評測：Brotato（9 分）",
+   "u": "https://nichegamer.com/reviews/brotato-review/",
+   "d": "2024-02"
+  },
+  {
+   "t": "PlayStation Country 評測：Brotato PS5 版（9 分）",
+   "u": "https://www.playstationcountry.com/brotato-ps5-review/",
+   "d": "2024-02-21"
+  },
+  {
+   "t": "Rogueliker 評測：Brotato",
+   "u": "https://rogueliker.com/brotato-review/",
+   "d": "2024-02-02"
+  },
+  {
+   "t": "Screen Rant 評測：Brotato（6 分）",
+   "u": "https://screenrant.com/brotato-pc-review/",
+   "d": "2023-06-26"
+  },
+  {
+   "t": "PC Gamer：Brotato DLC 與免費四人本機合作公布",
+   "u": "https://www.pcgamer.com/games/roguelike/brotato-has-a-dlc-and-a-free-4-player-local-co-op-expansion-incoming/",
+   "d": "2024-04-21"
+  },
+  {
+   "t": "Vaporlens：Brotato Steam 評論整理",
+   "u": "https://vaporlens.app/app/1942280/brotato",
+   "d": ""
+  },
+  {
+   "t": "Steam 社群：玩家詢問線上合作",
+   "u": "https://steamcommunity.com/app/1942280/discussions/0/4360122114355856078",
+   "d": "2024"
+  },
+  {
+   "t": "The Atlantic（inkl 轉載）：為什麼百萬人在玩 Brotato",
+   "u": "https://www.inkl.com/news/why-are-a-million-people-playing-brotato",
+   "d": "2023-03"
+  },
+  {
+   "t": "PC Gamer：Steam Remote Play Together 只需要主機玩家擁有遊戲",
+   "u": "https://www.pcgamer.com/reminder-remote-play-together-is-one-of-steams-best-features",
+   "d": "2020-12-19"
+  },
+  {
+   "t": "Gematsu：Abyssal Terrors 與免費合作更新公布",
+   "u": "https://gematsu.com/2024/04/brotato-dlc-abyssal-terrors-and-free-local-co-op-update-announced",
+   "d": "2024-04-10"
+  },
+  {
+   "t": "Brotato Wiki：角色",
+   "u": "https://brotato.wiki.spellsandguns.com/Characters",
+   "d": ""
+  }
+ ],
+ "pending": [
+  "官方預告片的 YouTube 頻道歸屬沒能直接打開確認。"
+ ],
+ "updated": "2026-11-18",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "選角色和起始武器",
+    "在場地裡走位閃怪，武器自動開火",
+    "撿怪物掉的材料升級",
+    "波次結束進商店買武器和道具",
+    "撐過第 20 波的 Boss"
+   ],
+   "body": [
+    "你操作一顆馬鈴薯，在一個方形場地裡被怪物圍攻。武器預設會自動瞄準開火（也可以改成手動瞄準），你要做的是走位：拉開距離、繞著怪物跑、躲開會衝撞或吐子彈的敵人。怪物死掉會掉材料，撿起來就能升級，每升一級從幾個屬性加成裡挑一個。",
+    "每一波結束直接進商店，這裡才是遊戲的核心。貨架上有 4 樣東西：武器或道具。喜歡的可以免費鎖住留到下一波，刷新貨架要花材料、而且越刷越貴；兩把同等級的同款武器會合成成更高一級，最高到第 4 級。道具會改屬性，有的大幅加傷害卻扣血量，有的讓你越有錢越強，取捨很多。",
+    "角色是另一層變化：一開始只有 5 個角色，靠完成條件陸續解鎖，最後有幾十個，每個都有很極端的規則，例如只能用近戰、或靠工程炮台打怪。危險等級從 0 開始，通關後一路往上挑戰到 5，每升一級敵人更多更強，危險 5 的第 20 波會出兩隻 Boss；2026 年的 All Pain No Gain 更新又在危險 5 之上加了惡夢難度。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "吸血鬼倖存者",
+    "same": "同樣是自動攻擊、滿畫面怪物、越打越強的倖存者類",
+    "diff": "吸血鬼倖存者一局 30 分鐘不停打；Brotato 切成 20 波，每波之間都在商店做決策，策略比重更高"
+   },
+   {
+    "name": "以撒的結合",
+    "same": "評論常說它像吸血鬼倖存者加上以撒：道具疊加、會互相影響，一局一個樣",
+    "diff": "以撒要自己瞄準、探索房間；Brotato 只有一個場地，重點全放在走位和組裝"
+   },
+   {
+    "name": "Balatro",
+    "same": "都是在商店裡挑東西、讓組合越滾越大的 Roguelite，一局短、適合「再一局」",
+    "diff": "Balatro 完全回合制、不用動手；Brotato 還是要你即時走位閃怪"
+   }
+  ],
+  "story": null,
+  "studio": [
+   "Brotato 是法國開發者 Thomas Gervraud 以「Blobfish」名義一個人做的遊戲，用的是開源的 Godot 引擎。新聞稿說它的靈感是吸血鬼倖存者類，也混合了自走棋的元素；搶先體驗前就有 4 萬人加入願望清單。",
+   "2022 年 9 月登上 Steam 搶先體驗後一路爆紅，2023 年 3 月就賣破百萬套，同年 6 月正式版上市時 Steam 已經賣出超過 200 萬套。之後陸續上了手機、Switch、PS、Xbox，在 Game Pass 上一個月就破百萬安裝；2025 年 9 月宣布全平台玩家超過 1000 萬人。",
+   "2024 年 10 月推出第一部 DLC《Abyssal Terrors》，同天的免費更新加入四人本機合作。2025 年 9 月起原作者轉去做新遊戲，改由做過《死亡細胞》DLC 的 Evil Empire 接手，陸續推出 New Dawn、Paws & Claws、All Pain No Gain 等免費更新，2026 年 11 月 2 日在 PC 推出第二部 DLC《Primal Dread》。"
+  ],
+  "timeline": [
+   {
+    "d": "2022-09-27",
+    "t": "登上 Steam 搶先體驗"
+   },
+   {
+    "d": "2023-03-28",
+    "t": "iOS、Android 手機版上市"
+   },
+   {
+    "d": "2023-06-23",
+    "t": "1.0 正式版上市，Steam 已賣出超過 200 萬套"
+   },
+   {
+    "d": "2023-08-03",
+    "t": "Switch 版上市"
+   },
+   {
+    "d": "2024-01-30",
+    "t": "PS5、PS4、Xbox 版上市，首發加入 Game Pass"
+   },
+   {
+    "d": "2024-10-25",
+    "t": "DLC《Abyssal Terrors》與免費四人本機合作更新"
+   },
+   {
+    "d": "2025-09",
+    "t": "Evil Empire 接手開發，宣布玩家破千萬"
+   },
+   {
+    "d": "2025-10-27",
+    "t": "免費更新 New Dawn：加入禁用道具系統、多個存檔欄位"
+   },
+   {
+    "d": "2025-11-20",
+    "t": "Switch 2 版推出"
+   },
+   {
+    "d": "2026-11-02",
+    "t": "第二部 DLC《Primal Dread》在 PC 推出"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "操作簡單、深度在商店決策，Niche Gamer 和 PlayStation Country 都給 9 分，後者認為它比吸血鬼倖存者更好玩",
+    "內容量多，角色、武器、道具組合非常多，耐玩度高",
+    "一局短、節奏快，Rogueliker 稱讚手感流暢",
+    "價格便宜，CP 值高是玩家最常提到的優點"
+   ],
+   "cons": [
+    "畫面和場地陽春，幾乎每篇評測都提到美術普通",
+    "玩久了重複感重，有些角色和武器強弱差很多",
+    "沒有內建線上合作，玩家一直敲碗",
+    "部分成就和全收集被綁在付費 DLC"
+   ],
+   "debate": [
+    "線上合作：官方只做本機合作，遠端只能靠 Steam Remote Play Together，玩家反映延遲吃主機端網路。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "Brotato（本體）",
+   "what": "完整遊戲，含免費更新加入的本機四人合作、New Dawn、Paws & Claws、All Pain No Gain 等內容。",
+   "tip": "先買本體就夠玩幾十小時。",
+   "best": true
+  },
+  {
+   "name": "DLC《Abyssal Terrors》",
+   "what": "新的海洋地圖、14 個角色、16 種武器和 30 多個道具。",
+   "tip": "本體玩順了再加，價格很低。"
+  },
+  {
+   "name": "DLC《Primal Dread》",
+   "what": "2026 年 11 月 2 日在 PC 推出的史前叢林地圖，10 個角色、17 種武器、40 個道具；主機和手機版預計 2027 年初。",
+   "tip": "最新的 DLC，等想要更多變化再收。"
+  }
+ ],
+ "multi": {
+  "ok": "partial",
+  "text": "最多 4 人本機合作（同一台電腦、同一個畫面），你們可以接 4K 電視拿手把一起玩。沒有內建線上連線；遠端要用 Steam 的 Remote Play Together，只要你有買、朋友不用買就能加入，但畫面是從你電腦串流過去，網路不好會延遲。"
+ }
+}

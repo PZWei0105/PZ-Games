@@ -19,6 +19,27 @@
    "watch": true
   },
   {
+   "appid": 1942280,
+   "id": "brotato",
+   "date": "2026-11-18",
+   "watch": false,
+   "pick": true
+  },
+  {
+   "appid": 427520,
+   "id": "factorio",
+   "date": "2026-11-18",
+   "watch": false,
+   "pick": true
+  },
+  {
+   "appid": 219990,
+   "id": "grim-dawn",
+   "date": "2026-11-18",
+   "watch": false,
+   "pick": true
+  },
+  {
    "appid": 1904480,
    "id": "absolum",
    "date": "2026-11-17",
