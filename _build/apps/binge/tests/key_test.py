@@ -68,7 +68,8 @@ def fake_http(url, headers=None, timeout=25, tries=3, json_out=False, data=None)
             ids = ['xlive000001', 'xlive000002', 'xlive000003']
         else:
             ids = ['xcomp000001', 'xcomp000002', 'xcomp000003']
-        return 200, {'items': [{'id': {'videoId': i}, 'snippet': VIDS[i]['snippet']} for i in ids]}
+        # 跟真的 API 一樣：沒帶 part=snippet 就只回 ID（2026-11-19 踩過）
+        return 200, {'items': [dict({'id': {'videoId': i}}, **({'snippet': VIDS[i]['snippet']} if 'snippet' in q.get('part', '') else {})) for i in ids]}
     if path == 'channels':
         return 200, {'items': [{'id': c, 'snippet': {'title': '頻道' + c[-1], 'thumbnails': {'default': {'url': 'https://yt3/a.jpg'}}}, 'statistics': {'subscriberCount': '88000'}}
                                for c in q['id'].split(',')]}

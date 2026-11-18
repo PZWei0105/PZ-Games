@@ -1031,8 +1031,8 @@ def api_fill(pool, chans, cache, prev_ids):
     due.sort()
     spent, n_pl, n_new = 0, 0, 0
     for _, _, pid in due:
-        if spent >= API_PL_PER_RUN:
-            break
+        if spent >= API_PL_PER_RUN or cache['api'].get('units', 0) > API_DAY_CAP - 900:
+            break                  # 留 900 點給全天放送、全網熱補
         p = cache['pl'][pid]
         eps, token, pages = [], None, 0
         while pages < 6:
@@ -1103,6 +1103,8 @@ def api_fill(pool, chans, cache, prev_ids):
     need = [vid for _, _, vid in need[:50 * API_VID_CALLS]]
     n_ne = 0
     for i in range(0, len(need), 50):
+        if i and cache['api'].get('units', 0) > API_DAY_CAP - 700:
+            break
         ids = need[i:i + 50]
         j = api('videos', cache, part=VPARTS, id=','.join(ids), maxResults=50, hl='zh-TW')
         if not j:
@@ -1140,7 +1142,7 @@ ANIME_RX = re.compile(r'動畫|动画|動漫|动漫|卡通|番劇|番剧|新番|
 XBAD_RX = re.compile(r'vtuber|V皇|歌回|遊戲|游戏|實況|实况|ASMR|新聞|新闻|電影解說|电影解说|解說|解说|講解|讲解|reaction|反應|反应|預告|预告', re.I)
 OK_CATS = {'1', '24', '23', '22'}     # 動畫、娛樂、喜劇、人物與網誌（很多頻道上傳時沒改分類，停在預設的 22）
 LIVE_HINT = re.compile(r'24\s*小[時时]|24H|24/7|連播|连播|全集|馬拉松|马拉松', re.I)
-XVER = 3                     # 名單外的規則改了就加一：下一次立刻重搜
+XVER = 4                     # 名單外的規則改了就加一：下一次立刻重搜
 
 
 def web_extras(cache, chans):
@@ -1161,7 +1163,7 @@ def web_extras(cache, chans):
         x[kind + '_ts'] = int(NOW)
         ids, raw_n, drop, mine = [], 0, [], 0
         for q in qs:
-            j = api_search(cache, q=q, type='video', regionCode='TW', relevanceLanguage='zh-Hant', maxResults=50, safeSearch='moderate', **extra)
+            j = api_search(cache, part='snippet', q=q, type='video', regionCode='TW', relevanceLanguage='zh-Hant', maxResults=50, safeSearch='moderate', **extra)
             for it in (j or {}).get('items') or []:
                 sn = it.get('snippet') or {}
                 vid, cid = (it.get('id') or {}).get('videoId'), sn.get('channelId')
