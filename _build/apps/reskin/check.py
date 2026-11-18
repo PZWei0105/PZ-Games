@@ -29,7 +29,7 @@ import argparse, functools, http.server, json, os, shutil, socketserver, struct,
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
-SKINS = ['neon', 'rhythm', 'drum', 'blackhole', 'particles', 'neoncity', 'ridge', 'woofer', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'chladni', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'tube', 'cassette', 'ink', 'scope', 'glass']
+SKINS = ['neon', 'rhythm', 'drum', 'blackhole', 'particles', 'neoncity', 'ridge', 'woofer', 'forge', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'abyss', 'chladni', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'comic', 'arcade', 'vinyl', 'tube', 'cassette', 'ink', 'paper', 'rain', 'scope', 'glass']
 GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']  # WebGL in headless Chromium (the 3D skins, the bloom)
 PHONE = {'viewport': {'width': 390, 'height': 844}, 'device_scale_factor': 2, 'has_touch': True, 'is_mobile': True}
 DESK = {'viewport': {'width': 1280, 'height': 800}}

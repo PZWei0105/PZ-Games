@@ -1,0 +1,47 @@
+/* ---------- 深海 ABYSS ---------- */
+.skin-abyss { color: #dff8ff; font-family: "Exo 2", var(--sans); background: #010811; }
+.skin-abyss .ab-cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: manipulation; }
+.skin-abyss .ab-hud { position: absolute; left: calc(var(--sl) + 18px); top: calc(var(--st) + 13px); pointer-events: none; }
+.skin-abyss .ab-hud b { display: block; font-family: "Share Tech Mono", monospace; font-weight: 400; font-size: 15px; letter-spacing: .16em; color: #9ff0ff; text-shadow: 0 0 12px rgba(79,227,255,.6); white-space: nowrap; }
+.skin-abyss .ab-hud b em { font-style: normal; color: #fff; display: inline-block; min-width: 3.6em; text-align: right; }
+.skin-abyss .ab-hud span { display: block; margin-top: 5px; font-family: "Share Tech Mono", monospace; font-size: 10.5px; letter-spacing: .2em; color: rgba(190,240,255,.45); white-space: nowrap; }
+.skin-abyss .ab-hud i { font-style: normal; }
+.skin-abyss .ab-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px calc(var(--sr) + 22px) calc(var(--sb) + 12px) calc(var(--sl) + 22px);
+  background: linear-gradient(to bottom, rgba(0,4,9,0), rgba(0,4,9,.6) 38%, rgba(0,3,7,.9)); pointer-events: none; }
+.skin-abyss .ab-panel > * { pointer-events: auto; max-width: 580px; margin-left: auto; margin-right: auto; }
+.skin-abyss .ab-row { display: flex; align-items: center; gap: 14px; }
+.skin-abyss .ab-art { flex: none; width: 60px; height: 60px; border-radius: 50%; overflow: hidden; background: #062238;
+  box-shadow: 0 0 0 1.5px rgba(127,240,255,.55), 0 0 calc(14px + var(--rp, 0) * 14px) rgba(79,227,255,.55), 0 8px 22px rgba(0,0,0,.6); }
+.skin-abyss .ab-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-abyss .ab-art img.blank { opacity: 0; }
+.skin-abyss .ab-tx { min-width: 0; flex: 1; }
+.skin-abyss .ab-t { font-weight: 600; font-size: 21px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f0fcff; text-shadow: 0 0 16px rgba(79,227,255,.35); }
+.skin-abyss .ab-a { margin-top: 3px; font-size: 12.5px; font-weight: 600; letter-spacing: .18em; color: #8fe9ff; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-abyss .ab-seek { margin-top: 14px; padding: 10px 0 2px; }
+.skin-abyss .ab-seek .seek-track { height: 3px; border-radius: 3px; background: rgba(127,240,255,.14); }
+.skin-abyss .ab-seek .seek-fill { border-radius: 3px; background: linear-gradient(90deg, #2a7bff, #4fe3ff, #c77dff); box-shadow: 0 0 10px rgba(79,227,255,.6); }
+.skin-abyss .ab-seek .seek-knob { width: 13px; height: 13px; border-radius: 50%; background: #e6fcff; box-shadow: 0 0 14px #4fe3ff, 0 0 4px #fff; }
+.skin-abyss .ab-seek .seek-times { margin-top: 8px; font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: .14em; color: rgba(190,240,255,.5); }
+.skin-abyss .ab-ctrl { margin-top: 4px; justify-content: space-between; }
+.skin-abyss .ab-ctrl button { width: 52px; height: 52px; border-radius: 50%; font-size: 21px; color: #c9f4ff; background: none; }
+.skin-abyss .ab-ctrl button:active { transform: scale(.9); }
+.skin-abyss .ab-ctrl .c-shuf, .skin-abyss .ab-ctrl .c-rep { font-size: 17px; color: rgba(190,240,255,.5); }
+.skin-abyss .ab-ctrl .c-play { width: 70px; height: 70px; font-size: 26px; color: #eafcff; background: radial-gradient(circle at 50% 40%, rgba(79,227,255,.35), rgba(20,60,110,.35) 60%, rgba(5,20,40,.5));
+  box-shadow: inset 0 0 0 1.5px rgba(127,240,255,.6), 0 0 calc(18px + var(--rp, 0) * 18px) rgba(79,227,255,.45); }
+.skin-abyss.is-shuffle .ab-ctrl .c-shuf, .skin-abyss:not([data-repeat="off"]) .ab-ctrl .c-rep { color: #4fe3ff; text-shadow: 0 0 10px rgba(79,227,255,.9); }
+.skin-abyss.enter .ab-hud { animation: ab-in 1.6s ease .8s both; }
+.skin-abyss.enter .ab-panel > * { animation: ab-in 1.4s ease 1.2s both; }
+@keyframes ab-in { from { opacity: 0; transform: translateY(10px); filter: blur(5px); } to { opacity: 1; transform: none; filter: none; } }
+.skin-abyss.swap .ab-t, .skin-abyss.swap .ab-a { animation: ab-in 1s ease both; }
+.skin-abyss.swap .ab-a { animation-delay: .12s; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-abyss .ab-hud span { display: none; }
+  .skin-abyss .ab-panel { padding-top: 22px; padding-bottom: calc(var(--sb) + 6px); }
+  .skin-abyss .ab-panel > * { max-width: 600px; }
+  .skin-abyss .ab-art { width: 46px; height: 46px; }
+  .skin-abyss .ab-t { font-size: 17px; }
+  .skin-abyss .ab-seek { margin-top: 6px; }
+  .skin-abyss .ab-ctrl { margin-top: 0; }
+  .skin-abyss .ab-ctrl button { width: 44px; height: 44px; }
+  .skin-abyss .ab-ctrl .c-play { width: 56px; height: 56px; }
+}

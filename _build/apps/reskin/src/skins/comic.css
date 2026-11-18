@@ -1,0 +1,41 @@
+/* ---------- 美漫分鏡 COMIC PANEL ---------- */
+.skin-comic { color: #141414; font-family: -apple-system, "PingFang TC", "Noto Sans TC", var(--sans); background: #f3ead3; }
+.skin-comic .cm-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-comic .cm-hud { position: absolute; left: calc(var(--sl) + 14px); top: calc(var(--st) + 14px); pointer-events: none; }
+.skin-comic .cm-hud b { display: inline-block; padding: 5px 11px 4px; font-size: 15px; font-weight: 900; letter-spacing: .08em; color: #fff; background: #ff3b30; border: 2.5px solid #141414; box-shadow: 3px 3px 0 #141414; transform: rotate(-2deg); }
+.skin-comic .cm-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 4px calc(var(--sr) + 16px) calc(var(--sb) + 10px) calc(var(--sl) + 16px); }
+.skin-comic .cm-panel > * { max-width: 600px; margin-left: auto; margin-right: auto; }
+.skin-comic .cm-box { padding: 11px 14px 6px; background: #ffe14d; border: 3px solid #141414; box-shadow: 5px 5px 0 #141414; }
+.skin-comic .cm-row { display: flex; align-items: center; gap: 12px; }
+.skin-comic .cm-art { flex: none; width: 56px; height: 56px; overflow: hidden; background: #fff; border: 3px solid #141414; transform: rotate(-3deg); }
+.skin-comic .cm-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-comic .cm-art img.blank { opacity: 0; }
+.skin-comic .cm-tx { min-width: 0; flex: 1; }
+.skin-comic .cm-t { font-family: "Bungee", -apple-system, "PingFang TC", sans-serif; font-weight: 900; font-size: 21px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #141414; }
+.skin-comic .cm-a { margin-top: 2px; font-family: "Permanent Marker", -apple-system, sans-serif; font-size: 14px; letter-spacing: .04em; color: #d62a20; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-comic .cm-seek { margin-top: 8px; padding: 8px 0 0; }
+.skin-comic .cm-seek .seek-track { height: 10px; background: #fff; border: 2.5px solid #141414; }
+.skin-comic .cm-seek .seek-fill { background: repeating-linear-gradient(-45deg, #ff3b30 0 6px, #ff5a4f 6px 12px); }
+.skin-comic .cm-seek .seek-knob { width: 18px; height: 18px; border-radius: 50%; background: #2ad4ff; border: 3px solid #141414; }
+.skin-comic .cm-seek .seek-times { margin-top: 5px; font-family: "Bungee", sans-serif; font-size: 11px; color: #141414; }
+.skin-comic .cm-ctrl { margin-top: 12px; justify-content: space-between; }
+.skin-comic .cm-ctrl button { width: 50px; height: 50px; border-radius: 50%; font-size: 20px; color: #141414; background: #fff; border: 3px solid #141414; box-shadow: 3px 3px 0 #141414; transition: transform .08s, box-shadow .08s; }
+.skin-comic .cm-ctrl button:active { transform: translate(3px, 3px); box-shadow: 0 0 0 #141414; }
+.skin-comic .cm-ctrl .c-shuf, .skin-comic .cm-ctrl .c-rep { width: 42px; height: 42px; font-size: 16px; }
+.skin-comic .cm-ctrl .c-play { width: 70px; height: 70px; font-size: 26px; color: #fff; background: #ff3b30; box-shadow: 5px 5px 0 #141414; }
+.skin-comic.is-shuffle .cm-ctrl .c-shuf, .skin-comic:not([data-repeat="off"]) .cm-ctrl .c-rep { background: #2ad4ff; }
+.skin-comic.enter .cm-box { animation: cm-slam .5s cubic-bezier(.3,1.6,.5,1) .5s both; }
+.skin-comic.enter .cm-ctrl { animation: cm-slam .5s cubic-bezier(.3,1.6,.5,1) .65s both; }
+@keyframes cm-slam { from { opacity: 0; transform: scale(1.4) rotate(-4deg); } to { opacity: 1; transform: none; } }
+.skin-comic.swap .cm-t, .skin-comic.swap .cm-a { animation: cm-slam .45s cubic-bezier(.3,1.6,.5,1) both; }
+@media (orientation: landscape) {
+  .skin-comic .cm-panel { left: auto; width: min(42vw, 440px); padding-left: 6px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-comic .cm-hud { display: none; }
+  .skin-comic .cm-art { width: 42px; height: 42px; }
+  .skin-comic .cm-t { font-size: 16px; }
+  .skin-comic .cm-ctrl { margin-top: 8px; }
+  .skin-comic .cm-ctrl button { width: 42px; height: 42px; }
+  .skin-comic .cm-ctrl .c-play { width: 56px; height: 56px; }
+}

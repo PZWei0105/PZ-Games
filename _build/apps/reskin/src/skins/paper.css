@@ -1,0 +1,45 @@
+/* ---------- 立體紙雕 PAPER STAGE ---------- */
+.skin-paper { color: #2d2433; font-family: -apple-system, "PingFang TC", "Noto Sans TC", var(--sans); background: #f4ead8; }
+.skin-paper .pp-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-paper .pp-hud { position: absolute; left: calc(var(--sl) + 16px); top: calc(var(--st) + 12px); pointer-events: none; padding: 7px 13px 8px; background: #fbf4e6; border-radius: 3px; box-shadow: 2px 4px 10px rgba(40,20,40,.25); transform: rotate(-2deg); }
+.skin-paper .pp-hud b { display: block; font-family: "Playfair Display", serif; font-weight: 700; font-size: 16px; letter-spacing: .06em; color: #2d2433; }
+.skin-paper .pp-hud span { display: block; margin-top: 1px; font-size: 11px; font-weight: 700; letter-spacing: .3em; color: #c0496c; }
+.skin-paper .pp-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 calc(var(--sr) + 14px) calc(var(--sb) + 10px) calc(var(--sl) + 14px); }
+.skin-paper .pp-card { max-width: 600px; margin: 0 auto; padding: 14px 18px 4px; background: #fbf4e6; border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 3px 8px 22px rgba(40,20,40,.32), 1px 2px 4px rgba(40,20,40,.2);
+  background-image: radial-gradient(rgba(120,90,60,.06) 1px, transparent 1.2px); background-size: 6px 6px; }
+.skin-paper .pp-row { display: flex; align-items: center; gap: 14px; }
+.skin-paper .pp-art { flex: none; width: 58px; height: 58px; padding: 4px; background: #fff; box-shadow: 2px 4px 10px rgba(40,20,40,.3); transform: rotate(-3deg); }
+.skin-paper .pp-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-paper .pp-art img.blank { opacity: 0; }
+.skin-paper .pp-tx { min-width: 0; flex: 1; }
+.skin-paper .pp-t { font-family: "Playfair Display", -apple-system, "PingFang TC", serif; font-weight: 700; font-size: 21px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #2d2433; }
+.skin-paper .pp-a { margin-top: 3px; font-size: 12px; font-weight: 700; letter-spacing: .22em; color: #c0496c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-paper .pp-seek { margin-top: 10px; padding: 10px 0 2px; }
+.skin-paper .pp-seek .seek-track { height: 4px; border-radius: 2px; background: rgba(45,36,51,.12); }
+.skin-paper .pp-seek .seek-fill { border-radius: 2px; background: linear-gradient(90deg, #f2b84b, #e0567a); }
+.skin-paper .pp-seek .seek-knob { width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 1px 3px 6px rgba(40,20,40,.35); }
+.skin-paper .pp-seek .seek-times { margin-top: 7px; font-family: "Playfair Display", serif; font-size: 12px; color: rgba(45,36,51,.55); }
+.skin-paper .pp-ctrl { margin-top: 2px; justify-content: space-between; }
+.skin-paper .pp-ctrl button { width: 50px; height: 50px; border-radius: 50%; font-size: 20px; color: #2d2433; background: none; }
+.skin-paper .pp-ctrl button:active { transform: scale(.9) rotate(-6deg); }
+.skin-paper .pp-ctrl .c-shuf, .skin-paper .pp-ctrl .c-rep { font-size: 17px; color: rgba(45,36,51,.45); }
+.skin-paper .pp-ctrl .c-play { width: 64px; height: 64px; font-size: 24px; color: #fff; background: #e0567a; box-shadow: 2px 5px 12px rgba(150,40,80,.4), inset 0 -3px 0 rgba(0,0,0,.12); }
+.skin-paper.is-shuffle .pp-ctrl .c-shuf, .skin-paper:not([data-repeat="off"]) .pp-ctrl .c-rep { color: #e0567a; }
+.skin-paper.enter .pp-card { animation: pp-up .9s cubic-bezier(.2,1.3,.4,1) .7s both; transform-origin: 50% 100%; }
+.skin-paper.enter .pp-hud { animation: pp-up .8s cubic-bezier(.2,1.3,.4,1) .5s both; }
+@keyframes pp-up { from { opacity: 0; transform: perspective(600px) rotateX(80deg); } to { opacity: 1; } }
+.skin-paper.swap .pp-t, .skin-paper.swap .pp-a { animation: pp-fade .8s ease both; }
+@keyframes pp-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (orientation: landscape) {
+  .skin-paper .pp-panel { left: auto; width: min(42vw, 440px); padding-left: 6px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-paper .pp-hud { display: none; }
+  .skin-paper .pp-card { padding: 8px 14px 2px; }
+  .skin-paper .pp-art { width: 42px; height: 42px; }
+  .skin-paper .pp-t { font-size: 16px; }
+  .skin-paper .pp-seek { margin-top: 4px; }
+  .skin-paper .pp-ctrl button { width: 42px; height: 42px; }
+  .skin-paper .pp-ctrl .c-play { width: 52px; height: 52px; }
+}
