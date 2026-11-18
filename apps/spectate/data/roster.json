@@ -1,18 +1,5 @@
 {
  "channels": {
-  "UC3nTeCzwHrqU9GLbEXRILAA": {
-   "n": "鳥屎",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_kXuMsUkF5nXX1uvs3on4GFTg4j8_Y-D38FIH2C6Mdopg=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@鳥屎",
-   "seed": "鳥屎",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "實況"
-   ],
-   "got": 1794977325
-  },
   "UCjBp_7RuDBUYbd1LegWEJ8g": {
    "n": "XBOX",
    "a": "https://yt3.googleusercontent.com/t1D8mEDqHIguuhdzqX2XmpkaChbw8z2szDzkXjhyD9XOmQXGsZRGzQJh2Hdto6k-7aoTnsDN7Q=s176-c-k-c0x00ffffff-no-rj",
@@ -37,20 +24,6 @@
    "k": "official",
    "tags": [
     "官方"
-   ],
-   "got": 1794977325
-  },
-  "UCima5NUUV6xApnmshz1EUfA": {
-   "n": "NintendoHK",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_kg5DjMa78av-9BYmN7YIWF3O9o6H80WylmzG-gbIE=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@NintendoHK",
-   "seed": "Nintendo HK 任天堂香港",
-   "l": "zh",
-   "k": "official",
-   "tags": [
-    "官方",
-    "任天堂"
    ],
    "got": 1794977325
   },
@@ -120,20 +93,6 @@
    ],
    "got": 1794977325
   },
-  "UCMyV0UhIKVbZ00cUml9JRCA": {
-   "n": "敖廠長",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nQSwqwOmWYVXiNRdHMxdOaV7iPPtmnSNKPGExLHd_7Lw=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@敖廠長",
-   "seed": "敖廠長",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "懷舊",
-    "深度"
-   ],
-   "got": 1794977325
-  },
   "UCaghC0OZwAdidMrbvxkcrPg": {
    "n": "PlayStation Japan",
    "a": "https://yt3.googleusercontent.com/qmElWNGdTcitSz5xVnMg98Pt4s4OugI3YCp3cPdNTuLufUBR4pvJ6ah4FFml89hKZdavK4Ygt9s=s176-c-k-c0x00ffffff-no-rj",
@@ -176,20 +135,6 @@
    ],
    "got": 1794977325
   },
-  "UCFJyTtHmOrKbG3g5EIhwcSw": {
-   "n": "Nayan",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_lHITjs6d6E4-wxwDXO9esCQdEVtBaX9mAsUx-OGh8=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@Nayan",
-   "seed": "那岩",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "深度",
-    "歷史"
-   ],
-   "got": 1794977325
-  },
   "UC9sbkOLjDXRdxhF7VpHG-cQ": {
    "n": "PlayStation Taiwan",
    "a": "https://yt3.googleusercontent.com/ytc/AIdro_lfzX3_W2rm9QussCD3IZiKNMAV1M6L7M9NAV5Y0Noqko4u=s176-c-k-c0x00ffffff-no-rj",
@@ -201,19 +146,6 @@
    "tags": [
     "官方",
     "PlayStation"
-   ],
-   "got": 1794977325
-  },
-  "UCx3AqOZh-MtLGJp4apRssow": {
-   "n": "Bandai Namco Asia",
-   "a": "https://yt3.googleusercontent.com/tI6s7GpaC_vl6N6SXvOeJCzUvNUDRDyB7RCBCQsKyr_nMSvD85iVpYg_kMcmUP1tc4yHvZ7G=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "歡迎來到Bandai Namco Asia官方頻道!!\n我們將會持續更新各種動漫周邊商品相關影片!\n立即按下訂閱，密切留意我們的最新消息！\n\nPREMIUM BANDAI官方網上商店 \n銷售限時限量動漫周邊商品及潮流飾品\n ⏩https://p-bandai.com/hk\n\n立即追蹤以下Facebook及IG專頁，全面掌握各方玩具資訊！\nPREMIUM BANDAI Hong Kong ⏩http",
-   "h": "@BandaiNamcoAsia",
-   "seed": "萬代南夢宮娛樂 亞洲",
-   "l": "zh",
-   "k": "official",
-   "tags": [
-    "官方"
    ],
    "got": 1794977325
   },
@@ -255,20 +187,6 @@
    "tags": [
     "官方",
     "Xbox"
-   ],
-   "got": 1794977325
-  },
-  "UCr_U4qxwXsNFe8viZX_FBSA": {
-   "n": "MrQuin",
-   "a": "https://yt3.googleusercontent.com/c6ark5H2utvcBd7SU8ELAeYILVYyKSHlnH6QRMOwgvE_v2-sd3Ba9PwbOA5Iot5MiLHzO2bQRbk=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@MrQuin",
-   "seed": "Mr.Quin",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "評測",
-    "搞笑"
    ],
    "got": 1794977325
   },
@@ -380,19 +298,6 @@
    ],
    "got": 1794977325
   },
-  "UCMDhaOG3fEipNu7zGiGXs7Q": {
-   "n": "Gamker攻壳游戏",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nAMe3B4RGXVaA14b8LK0TBL6jlqgl-b0eJVu2I6OXZ=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@Gamker",
-   "seed": "Gamker攻殼",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "評測"
-   ],
-   "got": 1794977325
-  },
   "UC9PBzalIcEQCsiIkq36PyUA": {
    "n": "Digital Foundry",
    "a": "https://yt3.googleusercontent.com/PBh4giP5yBGdq6OxwdAW32ZvLI-uy_kzMAlV7sQ-jTaWK3q4f3euUJL8lFX3onIkHlc6OBCTpQ=s176-c-k-c0x00ffffff-no-rj",
@@ -489,33 +394,6 @@
    ],
    "got": 1794978305
   },
-  "UCKx9fycSal6edp34DQXt3lw": {
-   "n": "Noclip",
-   "a": "https://yt3.googleusercontent.com/5g5lvRenvFGP225Zt-m2etP6qCEDavEw9xg3y3B8v7HqHvYnXy3LR6ZZNq4h0sYeVRZzEG6VeA=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "Zdravo, dobro došli na moj kanal.\n\nNadam se da će Vam se svideti moj sadržaj i molim Vas da me ne shvatate previše ozbiljno. Ovde će te sigurno pronaći zabavne i kvalitetne trenutke igranja.\n\n",
-   "h": "@Noclip",
-   "seed": "Noclip",
-   "l": "en",
-   "k": "media",
-   "tags": [
-    "紀錄片",
-    "深度"
-   ],
-   "got": 1794978305
-  },
-  "UCp1myXRBlU5Weud3bjPKavw": {
-   "n": "皮卡嚕",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nxVsg2YYziQ9V-yCVAEH_nxaFMNy2IQL09WwXX0TsTNrq88oE=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@皮卡嚕",
-   "seed": "皮卡嚕",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "評測"
-   ],
-   "got": 1794978305
-  },
   "UClOGLGPOqlAiLmOvXW5lKbw": {
    "n": "MandaloreGaming",
    "a": "https://yt3.googleusercontent.com/bPFsgXfL1iPr-nyqDvkbrTcueZUg5cLfhP3vYMBwmfUYBOATiac6E9kOJOScf6dopN30jPlSYQ=s176-c-k-c0x00ffffff-no-rj",
@@ -554,20 +432,6 @@
    "k": "official",
    "tags": [
     "官方"
-   ],
-   "got": 1794978305
-  },
-  "UCyH9xrhAliMGBrnoox5UJuQ": {
-   "n": "柚子木字幕组",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_n_0FkoYhNbmVZptvaHTKUmuxW6NP2NYiZhbipjnDQUJA=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@柚子木字幕组",
-   "seed": "柚子木字幕組",
-   "l": "zh",
-   "k": "media",
-   "tags": [
-    "中文字幕",
-    "新聞"
    ],
    "got": 1794978305
   },
@@ -613,19 +477,6 @@
    ],
    "got": 1794978305
   },
-  "UCIW0FBZ55C4lQPMMo7VusDQ": {
-   "n": "LAOPI",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_lTVeac9TBBd07-AHzhpJtJaLgoqVGs9xKCtVA_W9cscirrK8ltE9feTCBKXtWrgp2aHQ=s176-c-k-c0x00ffffff-no-rj",
-   "ds": "",
-   "h": "@laopi",
-   "seed": "老皮",
-   "l": "zh",
-   "k": "creator",
-   "tags": [
-    "實況"
-   ],
-   "got": 1794978305
-  },
   "UCNvzD7Z-g64bPXxGzaQaa4g": {
    "n": "gameranx",
    "a": "https://yt3.googleusercontent.com/ytc/AIdro_mT3hsjvr0yyS6bW4inz3956572zV_j4t7TLsEOkK0G1VM=s176-c-k-c0x00ffffff-no-rj",
@@ -654,20 +505,544 @@
    ],
    "got": 1794978305
   },
-  "UC5Ilyp8IqjvNfaI1V0KPS7A": {
-   "n": "逍遙散人",
-   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nf8HDSFflaSNTKwup4Mnpk2_Kr8TlXPrH9QGYjmb0fDA=s176-c-k-c0x00ffffff-no-rj",
+  "UCussVYe84vFbFfK9m9Znp6A": {
+   "seed": "IGN China",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "新聞",
+    "評測"
+   ],
+   "n": "IGN China",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nboFKS-5n9ukePL1XycqsgsOLDC3VzeBKEfOr6LUo7nDg=s176-c-k-c0x00ffffff-no-rj",
    "ds": "",
-   "h": "@逍遙散人",
-   "seed": "逍遙散人",
+   "h": "@IGN_China"
+  },
+  "UCZXq0idbQ8HCcqiRi06Q6Ww": {
+   "seed": "遊戲新視界",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "繁中預告"
+   ],
+   "n": "遊戲新視界",
+   "a": "https://yt3.googleusercontent.com/RrZ7G-q3IWoCdjp-UYSjNandgXYemfE0tJmFHzBie-PItH-URwqn-Nneru_32wL9SYDO2kKnyw=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "你好！歡迎來到 遊戲新視界 GNV。\n\n我們是一群熱愛動腦的玩家。在這裡，遊戲不只是消遣，更是一場智力的較量和對世界的觀察。\n\nGNV 代表 Game New Vision。我們希望能跳脫傳統框架，帶給大家更有深度的遊戲內容。如果你喜歡需要在地圖上深思熟慮的《全軍破敵 Total War》，《戰錘40K遊戲》，《博得之門3》這裡就是你的大本營。\n\n我們頻道專注於：\n\n策略深度遊玩： 分享我們在各類",
+   "h": "@遊戲新視界-GNV"
+  },
+  "UCmtmIF-u0ojej0y9i9STuIw": {
+   "seed": "GamerSecret 玩家機密",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "產業新聞"
+   ],
+   "n": "GamerSecret 玩家機密",
+   "a": "https://yt3.googleusercontent.com/9Mx5SZA_TmhLVBH9PyinqbSy2YjFruJnu3koY7CJ9nLXKeF3IOmtBXPzIlAqbYX1nzXfqHFU5bE=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "我們是【GamerSecret 玩家機密】，一家自媒體公司。致力於分享精彩遊戲內容，激發更多人對遊戲的熱愛。無論您是電競選手、遊戲開發者、遊戲主播、或熱愛遊戲的玩家，我們致力於助您實現夢想，成就遊戲事業。我們的內容可能並非完美無瑕，但我們誠摯歡迎各位以理性的態度分享意見和建議，讓我們攜手共進。\n\nWe are GamerSecret, a self funded organisation from",
+   "h": "@GamerSecret"
+  },
+  "UCk25FUc8pLiP3A6Zniknxbg": {
+   "seed": "希治閣【遊戲情報科】",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "新聞"
+   ],
+   "n": "希治閣【遊戲情報科】",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nWCBli9LUnrUiuL96_tROgE2k2ignZwe0b5QNyBac8etI=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "遊戲情報科會將當星期最新最熱的遊戲新聞及遊戲推介用幾分鐘講曬你知,\n雖然講唔上係最專業, 但一定係貼地。\n\nFor everyone who received an code request via Email,\nThat was an fake account (the email address only with single T \"scaryplaytv@gmail.com\" ) who ",
+   "h": "@ScaryplayTTV"
+  },
+  "UCGHBL3Yo96noSvlbsDbEJmA": {
+   "seed": "遊戲狂人",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "新聞",
+    "雜談"
+   ],
+   "n": "遊戲狂人",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_mIZhMonbJwq2K907IGWvig0NHLV4ylSVPxEmaExQmmxuk=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "「遊戲狂人」是一個成立多年的台灣遊戲資訊頻道，致力於以幽默、深入且具前瞻性的角度，帶給觀眾最具價值的遊戲體驗與思考 。\n\n我們追求「實用至上×娛樂加值」：\n\n1. 實時分析——用第一手的遊戲畫面與數據，讓你在攻防決策、角色培育上少走冤枉路；\n\n\n2. 精選推薦——兼顧大作與獨立佳作，從 AAA 到小眾精品，都能在這裡找到值得一試的理由；\n\n\n3. 社群互動——聽見玩家聲音，討論最新話題、解答遊戲疑",
+   "h": "@GameManiacstw"
+  },
+  "UC-eoXVXWKQ3T7UeUbSPHRvg": {
+   "seed": "Uwants 遊戲講",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "新聞",
+    "評測"
+   ],
+   "n": "Uwants 遊戲講 ",
+   "a": "https://yt3.googleusercontent.com/FdOoVFCRa8z3v4uAb0AxobmcJJ2gvNZdk2kLX0fdKGumR712wizk5ujRsp0lg-qKXt93Q-7htw=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "Uwants 遊戲講 由熱愛玩遊戲的本土 Gamers 組成，我們的節目包括遊戲攻略、每月遊戲精選、遊戲評測及各種遊戲專題等等。務求將對遊戲的熱愛傳達給更多的人。 立即加入我們的Discord群組，一起玩遊戲吧！\n\n如有任何廣告及業務合作查詢，歡迎將你的計劃或想法電郵至 marketing@uwants.com，我們的團隊將盡快回覆。\n\n#Uwants #遊戲講 #遊戲新聞 #每週遊戲 #十大講 ",
+   "h": "@UwantsGameharbour"
+  },
+  "UCnq0zNFkSa8YFc3f1-7Q3mg": {
+   "seed": "游研社",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "深度"
+   ],
+   "n": "游研社YYSTV",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_n_KeTRyOel1rKmBlNFpzPlB2NMZCAtPMqzHYSr7nWpQkc=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "游研社是一个泛游戏新媒体，会不定时更新一些有意思的内容，基本都是游戏相关。无论你是游戏死忠，还是轻度的休闲玩家，在这里都能找到感兴趣的东西。",
+   "h": "@YYSTV"
+  },
+  "UCLgGLSFMZQB8c0WGcwE49Gw": {
+   "seed": "Gamker攻殼",
+   "l": "zh",
+   "k": "media",
+   "tags": [
+    "評測"
+   ],
+   "n": "Gamker攻壳官方频道",
+   "a": "https://yt3.googleusercontent.com/RIxhtEbJnH6t24CpHIjMKKLqRDa0WzeE-9lGYVn11u6oZnn5ZkX2IcGDgTgR8b82HcEjYVloHQ=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "用开发者的角度分享游戏文化，做最走心的中文游戏频道。",
+   "h": "@Gamker-YT"
+  },
+  "UCtCVuBYmsRVHzT2z2G3PxUA": {
+   "seed": "阿斯",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "評測",
+    "恐怖"
+   ],
+   "n": "阿斯",
+   "a": "https://yt3.googleusercontent.com/OQQ5jCiusDa1VfffVL5ln0anuw67eYRPl1IzAK1gM4Z5owUg5Xfq90NHp436X27ba8yLh1hBXb8=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "陪伴你的好笑有趣長影片，睡覺工作發呆都能聽\n我是阿斯，會日文，這是第二遊戲頻道\n為了能做出自已能享受 大家都看得開心的影片順便混生活活著\n有麥塊頻道叫『阿斯asu』\n再其他影片請看『阿斯asu的後室』\n\n因為太難得的經歷所以寫一下好了\n2020/7/25 創建第一部影片\n2022/1/17 頻道被盜8萬人同時觀看直播全台最大台\n2022/1/25 頻道復活\n下略\n\n※發片頻率：目標3日一更，來不及",
+   "h": "@asuhosus2"
+  },
+  "UC4D6eg7KWWiXNJVTXtuyZfA": {
+   "seed": "Sky game",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "評測"
+   ],
+   "n": "Sky game",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_k8heddcVSXOQ8_eu61Y7hz8tDz7RG6HsP3oGLJhqzNEWk=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "一個為了遊戲 燃燒生命的玩家\n\n工商/合作請洽詢 ► fritgc0204@gmail.com\n如有商案也可經由信箱或FB粉絲團私密。\n",
+   "h": "@Sky_game"
+  },
+  "UC9WiXJEyHMGRqL-__3FIBEw": {
+   "seed": "Lice萊斯",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "評測",
+    "推薦"
+   ],
+   "n": "Lice萊斯",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nVk0_ftyEEo34NSS2hfkGkIG54wMOCM3UuGQyzEwvO-w=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "哈囉，你好，我是萊斯\n目前以遊戲介紹、攻略和評論為主的頻道。\n\n如果有商案／非商案的合作，還請寄信到下列信箱，或是FB粉絲團。\n■ 合作信箱：lice.moo@hotmail.com\n■ FB粉絲團：https://www.facebook.com/Lice0424/\n\n有在Twitch實況遊戲，歡迎來找我聊天\n也會在IG分享活動、開箱、工作日常\n目前Podcast 夜電玩咖上架到五季\n有興趣的歡",
+   "h": "@LiceMoo"
+  },
+  "UCo-H6e_lJBNWLmshxcUNW6A": {
+   "seed": "阿揚 Arjen Play",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "評測"
+   ],
+   "n": "阿揚 Arjen Play",
+   "a": "https://yt3.googleusercontent.com/FNTfAOHqRhJM2zdQtBuwuUIJY7cDjNprdoRT1TlkneFFQtQAhBNnQeAaFztTwRZeqrEJxjnSpw=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "本來是旅遊類的頻道，結果因為自己宅加上電玩類影片比較受歡迎\n被半強迫轉型，自詡為薩爾達傳說的薩學家，被人說是海拉魯的幹話王，還有魔物獵人的舒適獵人說書人\n除了薩爾達傳說、魔物獵人是兩大固定班底之外\n主要Focus在4個節目主題\n遊戲老實說：遊戲評測，但一不小心常常在KB\n遊戲人遊戲事：針對新聞的雜談，不過大多是在講幹話\n遊戲那些人：聊遊戲人物及劇情，不過我更喜歡看人物的迷因傳說\n遊戲的軌跡：就是介",
+   "h": "@ArjenPlay"
+  },
+  "UCV4mpMSInbFxAIAGFk8e_JQ": {
+   "seed": "狐狸牧場 foxranch",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "任天堂",
+    "評測"
+   ],
+   "n": "狐狸牧場 foxranch",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_ntznt7o1zRCiUNEAd87L1njw6Vkh6O5ntJRk1S0on-GCQ=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "哈囉，歡迎來到專注遊戲的 狐狸牧場foxranch\n\n我是赤狐。\n\n狐狸牧場foxranch主要內容\n\n介紹各種遊戲、探討遊戲生態專題\n\n如果有什麼希望我拍的影片也可以跟我說\n\n有要合作的也歡迎聯絡我喔。\nfoxranch1216@mesports.tw\n\nFB粉絲專頁：https://goo.gl/KXBHdP\n",
+   "h": "@foxranch"
+  },
+  "UC2RS19DCBQ_xX-0BeL6o-sA": {
+   "seed": "Tdogegg",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "評測"
+   ],
+   "n": "Tdogegg",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_mcWqqxLa4Op5bLADWDUCYvrXDSNZW0mhSJkl8uiwZZTw=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "玩点好玩的~\n喜欢我的影片请点击关注\n打开小铃铛收看我的最新影片 谢谢~\n",
+   "h": "@Tdogegg"
+  },
+  "UCAQmUESq4GxO1b_iBCrYlTA": {
+   "seed": "Dio Chan",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "評測"
+   ],
+   "n": "Dio Chan",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nFgmq4SjHua8MvOdz0Qp0bu7QHQONgT00x5Xyh-_weTlc=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "",
+   "h": "@diochan1055"
+  },
+  "UCUY1g1TB6QIslRcL9eoGz3A": {
+   "seed": "我是ONE老司",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "獨立",
+    "評測"
+   ],
+   "n": "我是ONE老司",
+   "a": "https://yt3.googleusercontent.com/XODMC-tJSMaGU3eb8mtdAyKswcs9g7Vr1yMpIJnYPCnYsCuGamYK3095GiaCHlmsHUHTldTq=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "bilibili one老司本人。其他均为盗窃和冒充",
+   "h": "@我是ONE老司"
+  },
+  "UCjIZT41JtgaYmCwYTZrdSIQ": {
+   "seed": "傑笙講遊戲",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "特價",
+    "推薦"
+   ],
+   "n": "傑笙講遊戲",
+   "a": "https://yt3.googleusercontent.com/OpbKkyWFWwdcwaaIhVMrOIisnsGVHhT943tY2_uAaHMXqWUa8EFKRV0XcrsHwfmFjFfyV7AcDg=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "你好！我是傑笙！來自馬來西亞，一個愛玩遊戲的男生❤️\n\n頻道主要分享，史低折扣的遊戲、即將發售的遊戲、好評遊戲，還有沒被人注意到的寶藏遊戲😲\n\n所有遊戲鏈接都在影片的說明區，社群還會不定時發送免費遊戲領取提醒，記得留意哦！😍\n\n有什麼意見和建議都歡迎你告訴我，因為你的留言是讓我快速成長學習的幫助😄\n\n希望影片可以幫助到你！找到那簡單的快樂！😁\n\n合作推廣可郵：jacksongame888@gmai",
+   "h": "@JacksonGame"
+  },
+  "UCpa10CkG5snpKfyF4LZdXcA": {
+   "seed": "阿路的精神時光屋",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "獨立",
+    "推薦"
+   ],
+   "n": "阿路的精神時光屋",
+   "a": "https://yt3.googleusercontent.com/Qx39UqQ2-rkdAGOHqjqwUEynszzPnx8d_X_V9TVddeWmUqwPJq1r6rl9yObFtwjLsmDhOKyp=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "小心，裡面很多介紹的遊戲都有毒，玩了會停不下來。",
+   "h": "@rusiru87time"
+  },
+  "UC7HVoyJt7IeIUTZQXlJsrZg": {
+   "seed": "独立游戏蜥蜴君",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "獨立",
+    "推薦"
+   ],
+   "n": "独立游戏蜥蜴君",
+   "a": "https://yt3.googleusercontent.com/-h6ButBPDx-x-0h_IMDgUi-e2ESLxoLOy8Vn1QEu4c2HwcAQiCLhmQbmsclE0AkvNt_lGFU_=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "喜欢玩独立游戏，希望尽自己一点微薄之力让更多人知道好玩冷门的独游",
+   "h": "@独立游戏蜥蜴君"
+  },
+  "UCwcoUHjftGY9v2WaAZovzbw": {
+   "seed": "玫玫物語",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "推薦",
+    "攻略"
+   ],
+   "n": "玫玫物語",
+   "a": "https://yt3.googleusercontent.com/xjufc9QjAydMzOkt64Q-8JX3gpPAJFlKvW17iQYztB5DDjAPXNdZWt-2vuJG7CTHoYsY9SYL=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "大家好~我是玫玫❤ 致力於製作最詳細的遊戲攻略，歡迎大家跟我一起快樂玩遊戲😆\n\n工商合作聯繫➔ meimeigaming0831@gmail.com\n\n\n",
+   "h": "@maymei_gaming"
+  },
+  "UCeRe3UYkP_daH6yNlXXVHPg": {
+   "seed": "咖咖 Channel",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "推薦"
+   ],
+   "n": "咖咖 Channel",
+   "a": "https://yt3.googleusercontent.com/_crsFF9SDo-7F3liSaL_9l1kmR_JjKQniDMsRD7zV5CZf6zmaweM8064-B5aNlCCdIj3jjR1LA=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "每月分享全平台的遊戲發售介紹\n/\n懷舊遊戲介紹影片，未來將於副頻道更新，\n有興趣的玩家，請前往下方連結\n/\n有任何建議都歡迎提出!!\n小小頻道努力提供優質影片中 ٩(ˊᗜˋ )و\nもしKAKAチャンネルに興味がある方は、\nぜひチャンネル登録をよろしくお願いします \n\n\n",
+   "h": "@kakahahahaha"
+  },
+  "UCJfB133ZwpD3fpUde2C9k7w": {
+   "seed": "Kim和Nana的遊戲世界",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "合作遊戲",
+    "推薦"
+   ],
+   "n": "Kim和Nana的遊戲世界",
+   "a": "https://yt3.googleusercontent.com/_5OqIpnfrQ0SG76QaZ3do6pEEBKMePQFdMyuoj5eJd4gZO6ZyWqQ_9QvjTrSLSAiRqd4WBnRHlQ=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "歡迎來我們的論壇玩耍!\nhttps://discord.gg/v7C8jH5Dc6\n在論壇大家可以了解關於我們頻道更多的信息, 有更多的互動!\n",
+   "h": "@Kim和Nana的遊戲世界"
+  },
+  "UCBXB7gDbfRYdbEGAyvgpv4A": {
+   "seed": "東哥與Rocky遊戲台",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "PlayStation",
+    "評測"
+   ],
+   "n": "東哥與Rocky遊戲台",
+   "a": "https://yt3.googleusercontent.com/sKRbtKyLwImxBd4xLWvv8nuQlICgPf0erBSLbjXE7YhB_eBuDlpoE3TFXmK58hjQnX13hypNPg=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "專業遊戲評測人🎮 愛狗實況主 × 黃金獵犬 Rocky 🐕\nBusiness，Review & Preview Inquiries\nGame developers, publishers and PR agencies are welcome to contact me for game coverage opportunities.\nI accept Review keys, preview b",
+   "h": "@PS5Game123"
+  },
+  "UC7Zlf-FsnpP428NCLg8v05A": {
+   "seed": "NS遊戲官",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "Switch",
+    "特價"
+   ],
+   "n": "Switch遊戲官",
+   "a": "https://yt3.googleusercontent.com/GvmmDq3s7OFCCfd3ioIhpo2MadyYQKRzbKGZDN1T8vZtz0iSzIG07DONBZ97z2wig3rAmTI0=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "積極為大家帶來新鮮有趣的switch遊戲資訊，歡迎訂閱我的頻道，感謝支持！",
+   "h": "@NS遊戲官"
+  },
+  "UCkQMrI3g9wV2F5CsIi6odmQ": {
+   "seed": "羅卡Rocca",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "新聞",
+    "開箱"
+   ],
+   "n": "羅卡Rocca",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_mJFDaTwNagENqhELtee3X2rokxQMw9mH3JBF2WsKnOU4M=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "「玩」出人生新高度！\n\n也許你是初次拜訪這個頻道\n但我把「它」定位為完成男人(兒時)夢想的頻道\n所以在這邊看到的主題\n會從男人小時候喜歡的東西\n一路到長大、到成家立業，全部都會一一紀錄...\n\n頻道目前週一至週六固定更新影片\n時間約略在18:00~20:00間(盡量準時)\n週一至週五多為*遊戲、3C開箱、相關新聞話題\n週六或偶爾更新的週日多為生活Vlog、旅遊、親子\n\n*以Switch、PS5、X",
+   "h": "@roccarocca45"
+  },
+  "UCU6nhA37pbvzw-JXhAB87Mg": {
+   "seed": "大閒者",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "新聞",
+    "雜談"
+   ],
+   "n": "大閒者",
+   "a": "https://yt3.googleusercontent.com/5hGQFk3IuQuwO5Q5ouR2tUBiA6T8ALhVOmMpKpNPZnqBE757uqBLAKk9OVzv_MIo1nJHjIWmVXA=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "錢多事少離家近，每天開機玩遊戲。\n大家好歡迎來到大閒者。\n大閒者是一個群體、一個概念、一個目標。\n每週固定更新，整理分析分享遊戲，還有跟遊戲相關的情報。\n喜歡我們的頻道的話，歡迎訂閱頻道，我們會努力更新。\n如果有任何感想與建議，也歡迎留言給我們！",
+   "h": "@大閒者"
+  },
+  "UCe0cARjsYdy4Tin5rcZ_WEg": {
+   "seed": "息焉遊焉 Ludology",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "深度"
+   ],
+   "n": "息焉遊焉 Ludology",
+   "a": "https://yt3.googleusercontent.com/rS6y8fJwkPDP__Mvu8R57oL6Exc4NSl92ZDHqlUD0mqKTUp9ejkMvY4jg2gZO2kG5V2oPNOb=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "大家好，這裡是息焉遊焉，一個從各種角度研究、體驗與遊戲相關一切的頻道，我是 Tony。\n每周五晚上7點定期發布影片\n短影片與貼文不定期發布\n合作請洽聯絡資訊\n",
+   "h": "@ludology7882"
+  },
+  "UCKPflKAE2Y1tm8VSi32iboQ": {
+   "seed": "老孫聊遊戲",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "懷舊",
+    "深度"
+   ],
+   "n": "老孫聊遊戲",
+   "a": "https://yt3.googleusercontent.com/l8Llu-BHs0U8ff6gKgxZshwPbX8eklWkPS0FeFEFbOq5bneqdezM4sYMT_GPp4Txn6t3_4uvZxs=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "天下玩友是一家:）商務合作或建议suntuwei@gmail.com（或116336740@qq.com）\n\n",
+   "h": "@oldsungame"
+  },
+  "UCiXJjvsRQEyT06x3YUwueVw": {
+   "seed": "Leya蕾雅",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "劇情",
+    "深度"
+   ],
+   "n": "Leya蕾雅",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_lnZOgcNeGfv3U9zLHZ_nIXRnB_S8OOXkNCAYP2TLdq4fE=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "遊戲愛好者/碼字狂人/現居丹麥\nVideo game enthusiast / Can't stop writing / Living in DK\n",
+   "h": "@Leya蕾雅"
+  },
+  "UCDNeEBgigHHGtJJOpHSnadA": {
+   "seed": "森纳映画",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "劇情"
+   ],
+   "n": "森纳映画",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_mBOEe327m2ptZagP_TowpX75V5H3l60tkV7rD6jrik_g=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "如果您喜歡我們的視頻，開啟小鈴鐺🔔通知，第一時間觀看#森納映畫 精彩視頻哦！\n\ncopyright © 森納映畫\n独家版权  |   盗版必究\n",
+   "h": "@SONAR606"
+  },
+  "UC4eZoc_r3Kp41qaHREO99qg": {
+   "seed": "歪理飯飯飯",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "劇情"
+   ],
+   "n": "歪理飯飯飯",
+   "a": "https://yt3.googleusercontent.com/j-G23x0CI773CQTPZIZ75YNT0JLhz0qvv2nnKelDCxGg03fcW6xpKl2eQUN4on_MT3Ipmux4yR0=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "恐怖遊戲劇情愛好者，感謝你的關注，我會努力更新噠~每周固定更新",
+   "h": "@WailiFan"
+  },
+  "UCApOZopSIse5XHTX-cnMacw": {
+   "seed": "第九頻道",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "產業",
+    "深度"
+   ],
+   "n": "第九頻道",
+   "a": "https://yt3.googleusercontent.com/EwlfstC2xDjimFQ5k7KBcc_9ohfr-LlYUi7_QL0O8074JUYA2aql6_eMerp8sE4vx3dFtUQQswo=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "頻道上升期, 排期已定好, 暫不進行任何合作, 謝謝您的理解!\n\n\n",
+   "h": "@第九頻道"
+  },
+  "UCIUYqpXe7yok4x3VkK67B3Q": {
+   "seed": "芒果冰OL",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "遊戲史"
+   ],
+   "n": "芒果冰OL",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_nukT2OJ1nOH2W-zMNRcvjod0GgzMjzpH4n9IkVqsAvVA=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "前游戏行业从业者，现全职up主，专注于网游及游戏行业评论。可以在Bilibili，Youtube，Acfun，西瓜视频，知乎，微博等主流媒体平台关注我\n\n欢迎订阅【芒果冰OL】唯一官方账号☞http://t.cn/AiYr1o0T​\n\n每周更新《中国网游史》讲述国内网络游戏发展史，揭露网游谜团，喜欢我的视频请按赞、分享！\n\n开启小铃铛第一时间接收最新资讯！\n\nWelcome to subscrib",
+   "h": "@Mangguobing"
+  },
+  "UCtRbs-wLyPxy9rB8nqQKX8Q": {
+   "seed": "不負責任熱血君",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "懷舊",
+    "劇情"
+   ],
+   "n": "不負責任熱血君",
+   "a": "https://yt3.googleusercontent.com/m2f7XSjIkSbdvJZaVzoUpP8RfTHpxwSiF8kOqHmFrPdxbdPGf8unCK0M4WBhCREv81M4oFOv=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "介紹超級機器人以及特攝系列還有懷舊影集故事之頻道\n@工商合作信箱 :nekketsukimi@gmail.com\n",
+   "h": "@user-crazy-passionate"
+  },
+  "UCpoBhxCk3KCwVTcoRyvAjgA": {
+   "seed": "瓜哥聊游戏",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "雜談"
+   ],
+   "n": "瓜哥聊游戏",
+   "a": "https://yt3.googleusercontent.com/DI50aJrfkHFc-bWC9IcdtFfwi6GZ3KEe8XbgPmPA4-Nf9Vhp-EOvVL8ZryiodWoegd1L-Axpsy0=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "遊戲經歷40年的摳腳油膩大叔\n商務合作（business cooperation）：guojason1102@gmail.com\n\n",
+   "h": "@GuageGame"
+  },
+  "UC6yxPVu2b52UVJQEwCTzivQ": {
+   "seed": "老皮",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "實況"
+   ],
+   "n": "老皮（Opchannel）",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_mB6XdTosrzQ4LC7D__rfxV1JCB6vjgF8dqUak8Kk8B5bU=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "哈嚕各位觀眾朋友大家好！我是實況主 老皮 YA~YO~。\n\n本頻道以遊戲實況與快樂夥伴間的互動為主！\n如果您想要更了解快樂夥伴的動向！請趕快訂閱我們的頻道吧！\n\n\n節目類型 :\n『連載實況』\n以長篇連載為主，盡量呈現整個遊戲的過程。\n\n『專題實況』\n以剪輯精華版本為主，好實況不看嗎?\n\n『快樂老皮與他的好朋友系列』\nCOOP類型的遊戲實況，與老皮的好碰友們一起進行精華實況歐Yayo~",
+   "h": "@tolocat"
+  },
+  "UC6DsD2j3K3nJkO0ZuGwsIUA": {
+   "seed": "阿津",
    "l": "zh",
    "k": "creator",
    "tags": [
     "實況",
-    "獨立"
+    "恐怖"
    ],
-   "got": 1794978305
+   "n": "阿津",
+   "a": "https://yt3.googleusercontent.com/85lBuYLsfmDkupudMs0wRKgcbEoGRWMTMkSkqUwIbRA8gaAbku5-Woh6vj26R_tVVYzZ7ZFESA=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "你好啊，我是阿津🙂，台灣實況主\n頻道提供恐怖遊戲與其它有趣主題的影片\n歡迎來觀看我的遊戲實況頻道\n\n⭐️每個禮拜的二六會在twitch開台直播\n有興趣追隨的話可以在下方找到網址連結\n👉👉直播台👉👉 https://www.twitch.tv/kamiyu666\ntwitter👉https://twitter.com/FatsoAjin\n👉FB粉絲頁👉https://www.facebook.com",
+   "h": "@ajin"
+  },
+  "UCMBjiwogQmKjBfZfbagjetg": {
+   "seed": "DK2.0",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "實況",
+    "恐怖"
+   ],
+   "n": "DK2.0",
+   "a": "https://yt3.googleusercontent.com/pqcgay0r_mAj2eOm52gTli33rpabzjqbzViNYlf5K-RzjUn_ybITtlzUDs2t0ljXPpDz93Tv=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "大家好~ 我是DK\n是一位台灣Youtube創作者\n近期頻道主要系列有：深夜觀看、恐怖遊戲、非恐怖遊戲等系列\n\n如果喜歡我的影片的話\n也歡迎訂閱一下並打開小鈴鐺喔😉\n\n⭐頻道里程碑⭐\n2020/10/06 - 頻道成立\n2021/01/28 - 10000訂閱達成\n2021/07/18 - 50000訂閱達成\n2021/12/18 - 100000訂閱達成\n2022/12/28 - 200000訂",
+   "h": "@DK2.0"
+  },
+  "UCjzelMo2UzgQKXdxyPD15Gg": {
+   "seed": "阿杰GAME實況",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "實況"
+   ],
+   "n": "阿杰GAME實況",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_lZBvblMzuvlGoEK_RES41dSYNPxzLRLgRnGXI49az07Bo=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "Hello大家好~我是阿杰\n我喜歡玩電玩、音樂以及戶外生活直播!!\n所以把影片分享在這邊~\n如果你有喜歡，歡迎訂閱我唷!\n如果你有要建議的~也能跟我留言告知唷!!\n謝謝大家收看!!\n\nFB粉絲團頻道：https://www.facebook.com/profile.php?id=61579628610175\n工作/合作聯絡信箱： jay740420@gmail.com",
+   "h": "@Jayplaygame0420"
+  },
+  "UCcfoqLvUfPPE5Llcio5Y0Yw": {
+   "seed": "夏恩遊戲實況",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "實況"
+   ],
+   "n": "夏恩遊戲實況",
+   "a": "https://yt3.googleusercontent.com/4pGq3zyV_8OMj1WwYP7i2ZBoLg3E2PLokSCZsA6JExcbvxc1TSn1lD-A6_N2FVFiRWFVBv_yIw=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "頻道影片主要以switch游戲爲主",
+   "h": "@shawnstream"
+  },
+  "UCLUA5xPUeBairwsxsbGWw5A": {
+   "seed": "GamePlayHK短片攻略",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "攻略"
+   ],
+   "n": "GamePlayHK短片攻略",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_kVR5_3HtI6jfwpOuKMa0opNkRdhS5GP5jivnDJ02DjYMg=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "一個香港普普通通的遊戲頻道，因為熱愛遊戲，所以創立了 http://envything.com，設計精美的遊戲機保護貼紙，讓遊戲玩家玩樂得更時尚。\n\nGameplayHK 成員是一班鐘意打機的 80 後，短片攻略主要想同網友交流心得同分享攻略，請多多支持我們 ! 立即訂閱啦~~~~!\n　\n成員\nEli : 一名設計師, 熱愛打機, 特別係多人合作遊戲, 可以邊玩邊吹水勁開心過一天\n阿俊: 資深機迷",
+   "h": "@GamePlayHK"
+  },
+  "UCzIq3FGf6n8EHWcZMvzrlhg": {
+   "seed": "AMU Game Channel",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "攻略"
+   ],
+   "n": "AMU Game Channel",
+   "a": "https://yt3.googleusercontent.com/ytc/AIdro_kvyyqniyLF5XIAm2eklo6KZk68J6_RH2NHFSHR4iDth8k=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "喜歡這影片嗎? 點擊這裡訂閱 AMU Game Channel 頻道給予支持鼓勵。\n歡迎來到 AMU Game Channel ，本頻道專門分享個人喜好的遊戲過關、劇情影片。\n\n【贊助本頻道】\n如何贊助本頻道? \n1.【加入本頻道會員】: 點選訂閱旁的\"加入\"連結即可利用信用卡刷卡，每月花費75元贊助本頻道(可隨時退出)。\n2.【超級感謝】: 點擊Youtube內建【超級感謝】購買超級感謝來贊助本",
+   "h": "@amugame"
+  },
+  "UCsLqXe1htLMc6jLGEbaH-SA": {
+   "seed": "達爾 daerr",
+   "l": "zh",
+   "k": "creator",
+   "tags": [
+    "攻略"
+   ],
+   "n": "達爾 daerr",
+   "a": "https://yt3.googleusercontent.com/3PJjpmewycIiIQHiaw76WYFWv7dBQWyk2MEuUjuxVWQb-za3QnW_zR1Qds8gkMN4xf8lSVjg=s176-c-k-c0x00ffffff-no-rj",
+   "ds": "一個喜歡玩各類遊戲的玩家，也喜歡做攻略分享給大家! 希望大家多多支持~謝謝",
+   "h": "@daerr"
   }
  },
- "at": "2026-11-18T05:05:33Z"
+ "at": "2026-11-18T05:25:19Z"
 }
