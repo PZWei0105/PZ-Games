@@ -107,6 +107,7 @@ function vHome() {
     const names = ws.rows.slice(0, 3).map(([c]) => chOf(c).n).join('、');
     h += `<a class="cta warn" href="#rookies"><span class="cta-tag">破圈</span><span class="cta-t"><b>這週 ${Math.round(ws.top3 * 100)}% 的時間都在看 ${esc(names)}</b><span>去新秀區看看別的台？</span></span><span class="cta-go">新秀 ›</span></a>`;
   }
+  h += questStripHtml();
   if (live.length) {
     const ctx = ctxOf('live', live);
     h += `<section class="sec live-sec">${secHead('直播中', 'ON AIR', '#live')}<div class="row big">${live.slice(0, 8).map((it) => card(it, ctx, { big: 1 })).join('')}</div></section>`;
@@ -394,6 +395,7 @@ function vMe() {
       <div class="dl-t"><b>${ws.total ? ws.explore + '%' : '--'}</b><span>破圈度</span></div>
       <p>${!ws.total ? '開始看片之後，這裡會算你這週的時間分給了多少個頻道。' : ws.explore >= 50 ? '分得很開，沒有被同幾台綁住。' : ws.explore >= 25 ? '有點集中在固定幾台，可以去新秀區逛逛。' : '這週幾乎都在看同幾台，去新秀區破個圈吧。'}${ws.fresh ? ` 其中 ${ws.fresh} 台是最近一個月才選進來的。` : ''}</p></div>
   </section>`;
+  h += questPanelHtml();
   h += `<section class="sec">${secHead('我的頻道', 'MY CHANNELS', '', `<a class="sh-more" href="#pick">選台<span>›</span></a>`)}
     ${subs.length ? `<div class="cc-list">${subs.sort((a, b) => (chOf(a).n || '').localeCompare(chOf(b).n || '')).map((c) => chanChip(c)).join('')}</div>` : empty('還沒訂閱任何頻道', '先到選台挑幾個。', '<a class="btn red" href="#pick">選台</a>')}
     <div class="addch"><input id="addQ" type="text" placeholder="貼上 YouTube 頻道網址、@代號或影片網址" autocomplete="off"><button class="btn red" data-act="add-ch">加入</button></div>

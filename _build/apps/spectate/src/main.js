@@ -80,6 +80,7 @@ function ctxLabel(name) {
 }
 function onPlayerTake(it) { history.replaceState(null, '', '#watch/' + it.i); }
 function onPlayerClosed() {
+  try { questCheck(); } catch (e) { /* 任務不影響播放 */ }
   if (parse().startsWith('watch/')) {
     if (history.length > 1 && ROUTE) history.back(); else history.replaceState(null, '', '#' + BASE);
   }
@@ -371,6 +372,7 @@ async function start() {
     document.addEventListener('keydown', unlock, { once: true });
   }
   await loading;
+  try { questCheck(); } catch (e) { /* */ }
   if (!Player.isOpen()) softRefresh();
   sendNow();
   setInterval(() => { if (!document.hidden) refreshData().then((ch) => { if (ch && !Player.isOpen() && ROUTE === 'home' && scrollY < 80) softRefresh(); }); }, 5 * 60e3);

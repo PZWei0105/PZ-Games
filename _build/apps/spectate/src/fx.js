@@ -125,10 +125,14 @@ const Fx = (() => {
             numEl.classList.add('air');
             gate.classList.add('air');
             Snd.play('go');
+            // 2026/11/18：ON AIR 之後先播「今晚節目單」（真實數字＋三款焦點遊戲），再斜帶轉場
             setTimeout(() => {
-              Snd.play('onair');
-              stinger(() => { gate.hidden = true; gate.innerHTML = ''; gate.className = ''; }, false).then(res);
-              Snd.play('whoosh');
+              const card = typeof playMatchCard === 'function' ? playMatchCard(gate).catch(() => {}) : Promise.resolve();
+              card.then(() => {
+                Snd.play('onair');
+                stinger(() => { gate.hidden = true; gate.innerHTML = ''; gate.className = ''; }, false).then(res);
+                Snd.play('whoosh');
+              });
             }, 520);
           }
         };
