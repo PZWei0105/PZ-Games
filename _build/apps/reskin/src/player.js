@@ -51,7 +51,10 @@ R.player = (() => {
      blob: links normally; data: links once a blob: link has failed and the same song then played (some iPhone
      web views, the Claude app among them, refuse blob: links for music) */
   const srcMode = () => settings.get('srcMode') || 'blob';
+  // with a sound effect on (R.sound), a song already rendered with it plays from that file instead
+  const fxUrl = (id) => (R.sound ? R.sound.urlFor(id) : null);
   async function urlFor(id) {
+    const fx = fxUrl(id); if (fx) return fx;
     if (urls.has(id)) return urls.get(id);
     const blob = await R.db.getAudio(id);
     if (!blob) throw new Error('missing audio');
@@ -208,7 +211,7 @@ R.player = (() => {
     const hidden = document.hidden;
     if (hidden) diag.begin(id, engine(), why);
     S.i = j;
-    const u = urls.get(id);
+    const u = fxUrl(id) || urls.get(id);
     if (!u) { urlFor(id).then((x) => handoff(id, x)).catch((e) => { if (failed(id, e, true)) advance('skip'); }); setTrack(id); return; }
     setTrack(id);
     handoff(id, u);
@@ -243,8 +246,8 @@ R.player = (() => {
     if (engine() === 'dual') {
       const j = nextIndex(true);
       if (j != null) {
-        const id = S.ids[j]; const b = idle();
-        if (b.dataset.tid !== id && urls.has(id) && b.paused) { b.src = urls.get(id); b.dataset.tid = id; b.preload = 'auto'; try { b.load(); } catch (e) { /* ignore */ } }
+        const id = S.ids[j]; const b = idle(), u = fxUrl(id) || urls.get(id);
+        if (u && (b.dataset.tid !== id || b.src !== u) && b.paused) { b.src = u; b.dataset.tid = id; b.preload = 'auto'; try { b.load(); } catch (e) { /* ignore */ } }
       }
     }
     trimUrls();
@@ -267,6 +270,7 @@ R.player = (() => {
     const el = cur(); const d = el.duration || S.dur;
     if (!isFinite(t)) return;
     t = Math.max(0, d ? Math.min(t, d - 0.05) : t);
+    if (hold != null) { hold = null; clearSeek(el); }
     try { el.currentTime = t; } catch (e) { /* ignore */ }
     bus.emit('seek', t); updatePos();
   }
@@ -311,10 +315,36 @@ R.player = (() => {
     bus.emit('queue'); saveSession();
   }
 
+  /* ---------- sound effects: the song's rendered file is ready (or the effect changed) ----------
+     The deck switches to the matching file at the same spot. The moment of silence while it opens is covered by
+     holding the clock (time() stays put), so the visuals do not jump. Never done with the screen off. */
+  let hold = null, holdAt = 0;
+  function useSource() {
+    if (document.hidden || !S.tid) return;
+    const el = cur();
+    if (el.dataset.tid !== S.tid || !el.getAttribute('src') || el.src === SILENT) return;
+    // switching from one effect to another: the old one keeps playing until the new one is ready (one change, not two)
+    const keep = R.sound && R.sound.mode() !== 'off' && R.sound.owns(el.src);
+    const want = fxUrl(S.tid) || (keep ? el.src : urls.get(S.tid));
+    if (!want) { urlFor(S.tid).then(() => { if (urls.has(S.tid)) useSource(); }).catch(() => {}); return; }
+    if (el.src === want) return;
+    const at = hold != null ? hold : el.currentTime || 0, go = S.playing && (!el.paused || hold != null);
+    hold = at; holdAt = performance.now();
+    markSwitch(); clearSeek(el);
+    el.src = want;
+    seekWhenReady(el, at);
+    if (go) tryPlay(el);
+    prepare();
+  }
+  const held = () => hold != null && performance.now() - holdAt < 2500;
+  function release(el) { if (hold != null && el === cur() && Math.abs((el.currentTime || 0) - hold) < 0.6) hold = null; }
+
   /* ---------- events from both decks ---------- */
   els.forEach((el, k) => {
+    el.addEventListener('seeked', () => release(el));
     el.addEventListener('playing', () => {
       if (el.src === SILENT) return;
+      release(el);
       el._blessed = true;
       if (k !== act) return;
       S.playing = true; diag.ok(el.dataset.tid); emitState(); updatePos();
@@ -331,6 +361,7 @@ R.player = (() => {
     el.addEventListener('ended', () => { if (k !== act || el.src === SILENT) return; if (sleepEnd) { sleepNow(); return; } if (S.repeat === 'one') { el.currentTime = 0; tryPlay(el); return; } advance('ended'); });
     el.addEventListener('timeupdate', () => {
       if (k !== act || el.src === SILENT) return;
+      if (hold != null && !el.paused) release(el);
       // the sleep timer is checked here: timeupdate keeps coming while the screen is locked, timers may not
       if (sleepAt && Date.now() >= sleepAt) { sleepNow(); return; }
       const d = el.duration;
@@ -349,6 +380,8 @@ R.player = (() => {
     el.addEventListener('error', () => {
       if (k !== act || !el.dataset.tid || el.src === SILENT || !el.getAttribute('src')) return;
       const id = el.dataset.tid;
+      // a rendered file that will not play: back to the original, from the same spot
+      if (R.sound && R.sound.owns(el.src)) { const at = hold != null ? hold : el.currentTime || 0; R.sound.failed(el.src); hold = at; holdAt = performance.now(); useSource(); return; }
       if (el.src.startsWith('blob:') && !viaData.has(id)) { viaData.add(id); retryAsData(el, id); return; }
       if (!S.playing) { failed(id, el.error, false); return; }
       if (failed(id, el.error, true)) setTimeout(() => advance('error'), 800);
@@ -391,7 +424,7 @@ R.player = (() => {
     try {
       ms.playbackState = S.playing ? 'playing' : 'paused';
       const d = cur().duration || S.dur;
-      if (d && isFinite(d) && ms.setPositionState) ms.setPositionState({ duration: d, playbackRate: 1, position: Math.max(0, Math.min(cur().currentTime || 0, d)) });
+      if (d && isFinite(d) && ms.setPositionState) ms.setPositionState({ duration: d, playbackRate: 1, position: Math.max(0, Math.min(held() ? hold : cur().currentTime || 0, d)) });
     } catch (e) { /* ignore */ }
   }
 
@@ -469,11 +502,14 @@ R.player = (() => {
     refreshMeta: () => msMeta(R.lib.get(S.tid)),
     engine, diag, SILENT,
     current: () => R.lib.get(S.tid),
-    time: () => cur().currentTime || 0,
+    time: () => (held() ? hold : cur().currentTime || 0),
     duration: () => { const d = cur().duration; return d && isFinite(d) ? d : S.dur || 0; },
-    isPlaying: () => S.playing && !cur().paused,
+    isPlaying: () => S.playing && (!cur().paused || held()),
     wants: () => S.playing,
     queue: () => S.ids.slice(), index: () => S.i, source: () => S.source,
     upNext: () => { const j = nextIndex(true); return j == null ? null : R.lib.get(S.ids[j]); },
+    // the songs that will play after this one (for rendering sound effects ahead)
+    ahead: (k) => { const out = []; if (S.repeat === 'one' || !S.ids.length) return out; let i = S.i; for (let n = 0; n < k; n++) { i = i + 1 < S.ids.length ? i + 1 : S.repeat === 'all' ? 0 : -1; if (i < 0 || S.ids[i] === S.tid) break; out.push(S.ids[i]); } return out; },
+    useSource, playingFx: () => !!(R.sound && R.sound.owns(cur().src)),
   };
 })();

@@ -525,6 +525,23 @@ body.deep #dock, body.deep #sleepPill { opacity: 0; pointer-events: none; }
 @keyframes scEq { 0%,100% { height: 3px; } 50% { height: 12px; } }
 @keyframes scIn { from { opacity: 0; transform: translateY(-6px) scale(.9); } to { opacity: 1; transform: none; } }
 body.party #syncChip, body.rec #syncChip, body.deep #syncChip { opacity: 0; }
+/* sound effect pill: which effect is on, and how far the song playing is from having it */
+#soundPill { position: fixed; z-index: 30; top: calc(var(--st) + 60px); left: calc(var(--sl, 0px) + 14px); display: flex; align-items: center; gap: 6px; max-width: min(320px, calc(100vw - 130px)); padding: 5px 12px 5px 9px; border-radius: 999px; font: 700 12.5px/1.25 inherit; font-variant-numeric: tabular-nums; color: var(--dockfg); background: var(--dock); border: 1px solid rgba(255,255,255,.14); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); overflow: hidden; cursor: pointer; transition: max-width .5s cubic-bezier(.2,.8,.2,1), padding .4s, border-color .3s, box-shadow .3s, opacity .3s; }
+#soundPill svg { font-size: 15px; flex: none; }
+#soundPill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .3s; }
+#soundPill .spb { position: absolute; left: 11px; right: 11px; bottom: 2px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.14); opacity: 0; transition: opacity .3s; }
+#soundPill .spb b { display: block; height: 100%; border-radius: inherit; background: var(--accent); transform-origin: left center; transform: scaleX(0); transition: transform .35s; }
+#soundPill.sp-work .spb { opacity: 1; }
+#soundPill.sp-work svg { animation: spBreath 1.1s ease-in-out infinite; }
+#soundPill.sp-on { border-color: rgba(var(--accent-rgb), .6); box-shadow: 0 0 18px rgba(var(--accent-rgb), .3); }
+#soundPill.sp-on svg { color: var(--accent); filter: drop-shadow(0 0 5px rgba(var(--accent-rgb), .8)); }
+#soundPill.sp-skip, #soundPill.sp-na { opacity: .8; }
+#soundPill.mini { max-width: 35px; padding: 5px 9px; }
+#soundPill.mini span { opacity: 0; }
+@keyframes spBreath { 50% { opacity: .4; } }
+#app:has(#syncChip:not([hidden])) #soundPill { top: calc(var(--st) + 98px); }
+body.party #soundPill, body.rec #soundPill, body.deep #soundPill { opacity: 0; pointer-events: none; }
+body.party.peek #soundPill { opacity: 1; pointer-events: auto; }
 .sy-open { margin-top: 10px; align-self: flex-start; }
 .sy { display: flex; flex-direction: column; align-items: stretch; gap: 14px; }
 .sy-tip { font-size: 14px; line-height: 1.65; color: rgba(255,255,255,.82); }

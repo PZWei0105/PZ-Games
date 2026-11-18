@@ -29,7 +29,7 @@ import argparse, functools, http.server, json, os, shutil, socketserver, struct,
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
-SKINS = ['neon', 'rhythm', 'blackhole', 'particles', 'neoncity', 'woofer', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
+SKINS = ['neon', 'rhythm', 'drum', 'blackhole', 'particles', 'neoncity', 'ridge', 'woofer', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'chladni', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'tube', 'cassette', 'ink', 'scope', 'glass']
 GL = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']  # WebGL in headless Chromium (the 3D skins, the bloom)
 PHONE = {'viewport': {'width': 390, 'height': 844}, 'device_scale_factor': 2, 'has_touch': True, 'is_mobile': True}
 DESK = {'viewport': {'width': 1280, 'height': 800}}
@@ -341,6 +341,7 @@ def run_features(url, out, folder):
         # chorus: found, every skin goes all out; beats can be read ahead
         ev('RESKIN.lib.addDemo()'); pg.wait_for_function('RESKIN.analysis.left() === 0 && RESKIN.lib.count() === 4', timeout=60000)
         ev('() => { const t = RESKIN.lib.list().find(t => t.demo); RESKIN.player.playFrom([t.id], t.id, { type: "library" }); }'); pg.wait_for_timeout(1200)
+        pg.wait_for_function('RESKIN.viz.has()', timeout=15000)   # the song's analysis loads asynchronously
         spans = ev('RESKIN.viz.hotSpans')
         ok(bool(spans), '副歌偵測：示範曲找得到副歌（%s）' % spans)
         ev('RESKIN.player.seek(20)'); pg.wait_for_timeout(500)
@@ -367,6 +368,7 @@ def run_features(url, out, folder):
         A = ev('RESKIN.lib.all().filter(t => t.an === 1).map(t => ({ av: t.av, k: t.mkey, loud: t.loud }))')
         ok(A and all(x['av'] == 3 and x['loud'] is not None for x in A) and sum(1 for x in A if x['k']) >= len(A) - 1, '分析第 3 版：每首都量出節拍格線、調性、響度、亮度（%s）' % [x['k'] for x in A])
         check_beat_clock(pg, ev, out)
+        check_sound(pg, ev, out)
         ev('() => { const t = RESKIN.lib.list().find(t => t.demo); RESKIN.player.playFrom([t.id], t.id, { type: "library" }); }'); pg.wait_for_timeout(900)
         ev('RESKIN.insight.open()'); pg.wait_for_timeout(1200)
         ok(pg.is_visible('.in-grid') and 'BPM' in pg.inner_text('.in-grid'), '歌曲情報：BPM、調性、能量一目了然')
@@ -515,6 +517,132 @@ def run_beats(analysis_js=None):
            '節拍引擎（%s）：速度 %.1f、每一拍 F=%.0f%%、每小節第一拍 %d/%d' % (names[kind], r['bpm'], F * 100, good, tot))
 
 
+SOUND_JS = r"""
+const fs = require('fs'); const src = fs.readFileSync(process.argv[2], 'utf8');
+const X = new Function(src.slice(src.indexOf('function fxCore'), src.indexOf('\nR.sound')) + ';return fxCore')()(null);
+const SR = 44100, out = {};
+let sd = 7; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647 - 0.5; };
+// a 40-second stereo song: kick, snare, hats (right), bass, chords spread left/right, a voice in the middle
+function song(secs) {
+  const n = Math.round(secs * SR), L = new Float32Array(n), R = new Float32Array(n), bl = 0.5;
+  for (let b = 0; b * bl < secs; b++) { const t0 = Math.round(b * bl * SR);
+    for (let i = 0; i < 0.35 * SR && t0 + i < n; i++) { const t = i / SR, v = 0.55 * Math.sin(2 * Math.PI * (45 * t + (75 * (1 - Math.exp(-t * 30))) / 30)) * Math.exp(-t * 7); L[t0 + i] += v; R[t0 + i] += v; }
+    if (b % 2) for (let i = 0; i < 0.2 * SR && t0 + i < n; i++) { const t = i / SR, v = (rnd() * 0.5 + 0.2 * Math.sin(2 * Math.PI * 190 * t)) * Math.exp(-t * 18); L[t0 + i] += v * 0.9; R[t0 + i] += v * 0.9; }
+    for (let i = 0; i < 0.05 * SR && t0 + i < n; i++) { const v = rnd() * Math.exp((-i / SR) * 70) * 0.25; L[t0 + i] += v * 0.6; R[t0 + i] += v; } }
+  for (let i = 0; i < n; i++) { const t = i / SR, f = [55, 55, 73.4, 82.4][Math.floor(t / 2) % 4], bs = 0.22 * (Math.sin(2 * Math.PI * f * t) + 0.3 * Math.sin(4 * Math.PI * f * t));
+    let pl = 0, pr = 0; for (const c of [220, 277, 330]) pl += Math.sin(2 * Math.PI * c * t) / 3; for (const c of [165, 247, 392]) pr += Math.sin(2 * Math.PI * c * t + 1) / 3;
+    const vo = 0.16 * (Math.sin(2 * Math.PI * 440 * t) + 0.5 * Math.sin(2 * Math.PI * 880 * t)) * (0.5 + 0.5 * Math.sin(Math.PI * t) ** 2);
+    L[i] += bs + 0.12 * pl + vo; R[i] += bs + 0.12 * pr + vo; }
+  let pk = 0; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i])); for (let i = 0; i < n; i++) { L[i] *= 0.95 / pk; R[i] *= 0.95 / pk; }
+  return { L, R, n };
+}
+const loud = (L, R) => { const b = X.kEnergy(L, R, 0, L.length, SR); let s = 0, c = 0; for (const e of b) if (e > 2e-7) { s += e; c++; } return 10 * Math.log10(s / c); };
+const en = (x, a, b) => { let s = 0; for (let i = a; i < b; i++) s += x[i] * x[i]; return s; };
+function band(x, lo, hi) { const N = 1 << 14, f = X.fft(N); let tot = 0; for (let st = 0; st + N <= x.length; st += N) { const re = new Float64Array(N), im = new Float64Array(N); for (let i = 0; i < N; i++) re[i] = x[st + i]; f(re, im, false); for (let k = Math.round((lo * N) / SR); k <= Math.round((hi * N) / SR); k++) tot += re[k] * re[k] + im[k] * im[k]; } return tot; }
+function run(mode, L, R) {
+  let r; const t0 = Date.now();
+  X.handle({ cmd: 'est', mode, sr: SR, parts: [{ L: L.slice(), R: R.slice(), pre: 0 }] }, (m) => { r = m; });
+  const gain = r.gain;
+  X.handle({ cmd: 'begin', job: 1, mode, sr: SR, n: L.length, gain }, () => {});
+  for (let a = 0; a < L.length; a += X.BLOCK * 27) X.handle({ cmd: 'chunk', job: 1, L: L.slice(a, a + X.BLOCK * 27), R: R.slice(a, a + X.BLOCK * 27) }, () => {});
+  X.handle({ cmd: 'end', job: 1 }, (m) => { r = m; });
+  const s16 = new Int16Array(r.wav, 44), OL = new Float32Array(L.length), OR = new Float32Array(L.length);
+  for (let i = 0; i < L.length; i++) { OL[i] = s16[2 * i] / 32768; OR[i] = s16[2 * i + 1] / 32768; }
+  return { OL, OR, ms: Date.now() - t0, head: Buffer.from(r.wav.slice(0, 4)).toString('latin1') };
+}
+const S = song(40), lo = loud(S.L, S.R);
+for (const mode of ['3d', 'bass', 'live']) {
+  const r = run(mode, S.L, S.R);
+  let pk = 0, bad = 0; for (let i = 0; i < S.n; i++) { const a = Math.abs(r.OL[i]), b = Math.abs(r.OR[i]); if (!isFinite(a) || !isFinite(b)) bad++; pk = Math.max(pk, a, b); }
+  const mo = new Float32Array(S.n), mp = new Float32Array(S.n); for (let i = 0; i < S.n; i++) { mo[i] = S.L[i] + S.R[i]; mp[i] = r.OL[i] + r.OR[i]; }
+  let lag = 0, bv = -1e9; for (let d = -200; d <= 200; d++) { let s = 0; for (let i = SR * 10; i < SR * 12; i++) s += mo[i] * mp[i + d]; if (s > bv) { bv = s; lag = d; } }
+  out[mode] = { loud: loud(r.OL, r.OR) - lo, peak: pk, bad, lag, perMin: (r.ms / 40) * 60, wav: r.head, low: 10 * Math.log10(band(mp, 35, 100) / band(mp, 500, 2000)) - 10 * Math.log10(band(mo, 35, 100) / band(mo, 500, 2000)) };
+}
+// 3D: left-only noise reaches the right ear (crossfeed); mono noise is no longer identical in both ears; the tone is kept
+{ const n = SR * 6, w1 = new Float32Array(n); for (let i = 0; i < n; i++) w1[i] = rnd();
+  const p = new Float32Array(n); { let a = 0, b = 0, c = 0; for (let i = 0; i < n; i++) { a = 0.997 * a + 0.03 * w1[i]; b = 0.96 * b + 0.1 * w1[i]; c = 0.6 * c + 0.3 * w1[i]; p[i] = a + b + c + 0.2 * w1[i]; } }
+  const ears = (l, r) => { const L = Float32Array.from(l), R = Float32Array.from(r), fx = X.effect('3d', SR); for (let s = 0; s < n; s += X.BLOCK) fx.run(L, R, s, Math.min(X.BLOCK, n - s)); return [L, R]; };
+  let [a, b] = ears(w1, new Float32Array(n)); out.cross = 10 * Math.log10(en(b, SR, 5 * SR) / en(a, SR, 5 * SR));
+  [a, b] = ears(p, p); let best = 0; const ea = en(a, 2 * SR, 3 * SR), eb = en(b, 2 * SR, 3 * SR); for (let d = -44; d <= 44; d++) { let s = 0; for (let i = 2 * SR; i < 3 * SR; i++) s += a[i] * b[i + d]; best = Math.max(best, Math.abs(s) / Math.sqrt(ea * eb)); } out.iacc = best;
+  const third = (x) => { const N = 1 << 14, f = X.fft(N), P = new Float64Array(N / 2); for (let st = SR; st + N <= x.length - SR / 2; st += N / 2) { const re = new Float64Array(N), im = new Float64Array(N); for (let i = 0; i < N; i++) re[i] = x[st + i] * (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N)); f(re, im, false); for (let k = 0; k < N / 2; k++) P[k] += re[k] * re[k] + im[k] * im[k]; } const o = []; for (let fc = 125; fc <= 12000; fc *= Math.pow(2, 1 / 3)) { let s = 0; for (let k = Math.round(((fc / 1.12) * N) / SR); k <= Math.round(((fc * 1.12) * N) / SR); k++) s += P[k]; o.push(s); } return o; };
+  const i1 = third(p), o1 = third(a), o2 = third(b), d = i1.map((x, k) => 10 * Math.log10((o1[k] + o2[k]) / (2 * x))), m = d.reduce((s, x) => s + x, 0) / d.length;
+  out.tone = Math.max(...d.map((x) => Math.abs(x - m))); }
+// the hall: how long it rings, how loud it is against the dry sound
+{ const n = SR * 4, L = new Float32Array(n), R = new Float32Array(n); L[SR] = 1; R[SR] = 1; const fx = X.effect('live', SR); for (let s = 0; s < n; s += X.BLOCK) fx.run(L, R, s, Math.min(X.BLOCK, n - s));
+  const sch = new Float64Array(n); let acc = 0; for (let k = n - 1; k >= SR + 40; k--) { acc += L[k] * L[k] + R[k] * R[k]; sch[k] = acc; }
+  const t = (lv) => { for (let k = SR + 40; k < n; k++) if (10 * Math.log10(sch[k] / sch[SR + 40]) < lv) return (k - SR) / SR; return 9; };
+  out.rt60 = (t(-25) - t(-5)) * 3; }
+{ const n = SR * 6, L = new Float32Array(n); let s2 = 0; for (let i = 0; i < n; i++) { const w = rnd(); s2 = 0.85 * s2 + w; L[i] = s2 * 0.3; } const R = L.slice(), D = L.slice(), fx = X.effect('live', SR); for (let s = 0; s < n; s += X.BLOCK) fx.run(L, R, s, Math.min(X.BLOCK, n - s));
+  X.chain([X.biquad('ls', 100, SR, 0.8, 1.5), X.biquad('peak', 500, SR, 0.8, -1), X.biquad('peak', 3000, SR, 0.9, 1.2), X.biquad('hs', 11000, SR, 0.7, -2)])(D, 0, n);
+  let w = 0, d = 0; for (let i = 3 * SR; i < n; i++) { w += (L[i] - D[i]) ** 2; d += D[i] ** 2; } out.wet = 10 * Math.log10(w / d); }
+console.log(JSON.stringify(out));
+"""
+
+PROCESS_JS = """(async () => { const c = new (window.AudioContext || window.webkitAudioContext)(); const b = c.createBuffer(2, 44100 * 3, 44100); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.sin(i * 0.05) * 0.5 * (i % 22050 < 4000 ? 1 : 0.2); b.getChannelData(1).set(d);
+  const o = await RESKIN.sound.processBuffer(c, b); let e = 0, s = 0; const x = o.getChannelData(0); for (let i = 0; i < x.length; i++) { e += x[i] * x[i]; s += Math.abs(x[i] - d[i]); } return { n: o.length, e: e, diff: s / x.length }; })()"""
+
+
+def run_sound():
+    """The sound effects on their own (Node runs the DSP in sound.js on a made-up stereo song): loudness kept, peaks
+    under the ceiling, the timeline kept (the beat grid still fits), and each effect doing what its name says."""
+    node = shutil.which('node')
+    if not node:
+        print('（略過音效離線測試：這台沒有 node）'); return
+    os.makedirs('/tmp/reskin-sound', exist_ok=True)
+    jf = '/tmp/reskin-sound/run.js'; open(jf, 'w').write(SOUND_JS)
+    r = json.loads(subprocess.check_output([node, jf, os.path.join(HERE, 'src', 'sound.js')], timeout=600))
+    names = {'3d': '3D 環繞', 'bass': '重低音', 'live': '演唱會現場'}
+    for m in ('3d', 'bass', 'live'):
+        x = r[m]; want = 1.0 if m == 'bass' else 0.0
+        ok(x['wav'] == 'RIFF' and x['bad'] == 0 and abs(x['loud'] - want) < 0.6 and x['peak'] <= 0.946 and abs(x['lag']) <= 220,
+           '音效「%s」：音量跟原曲一樣（%+.2f dB）、最大值壓在 −0.5 dB 以下（%.3f）、時間軸只差 %.1f 毫秒（一格畫面是 16.7）' % (names[m], x['loud'], x['peak'], abs(x['lag']) / 44.1))
+        ok(x['perMin'] < 4000, '音效「%s」：一分鐘的歌算 %.1f 秒（這台雲端主機）' % (names[m], x['perMin'] / 1000))
+    ok(r['bass']['low'] >= 4, '重低音：低音（35–100 Hz）比中音多出 %.1f dB' % r['bass']['low'])
+    ok(-12 < r['cross'] < -2 and 0.55 < r['iacc'] < 0.95 and r['tone'] < 3,
+       '3D 環繞：只在左聲道的聲音右耳也聽得到（%.1f dB，像真的喇叭）、兩耳不再一模一樣（相關 %.2f）、音色只差 %.1f dB' % (r['cross'], r['iacc'], r['tone']))
+    ok(1.5 < r['rt60'] < 2.6 and -14 < r['wet'] < -4, '演唱會現場：殘響 %.1f 秒、回音比原音小 %.1f dB' % (r['rt60'], -r['wet']))
+
+
+def check_sound(pg, ev, out):
+    """The sound effects in the app: the song playing is rendered and swapped in at the same spot without stopping;
+    switching effects keeps the old one until the new one is ready; off brings the original back; the menu, the
+    pill, the amp skin's knob, and the music video's sound."""
+    ev('() => { const t = RESKIN.lib.list().find(t => t.demo); RESKIN.player.playFrom([t.id], t.id, { type: "library" }, { at: 12 }); }'); pg.wait_for_timeout(1200)
+    ev('RESKIN.sound.set("3d")'); t0 = ev('RESKIN.player.time()')
+    pg.wait_for_function('RESKIN.player.playingFx()', timeout=60000)
+    pg.wait_for_timeout(800)
+    st = ev('({ t: RESKIN.player.time(), on: RESKIN.player.isPlaying(), src: RESKIN.player.els.find(e => e.dataset.tid === RESKIN.player.current().id).src, pill: document.getElementById("soundPill").className })')
+    ok(st['on'] and st['src'].startswith('blob:') and 'sp-on' in st['pill'] and t0 < st['t'] < t0 + 30,
+       '音效 3D 環繞：這首算好就在同一個地方換上、沒有停（%.1f → %.1f 秒）' % (t0, st['t']))
+    pg.screenshot(path=os.path.join(out, 'ui-sound-pill.png'))
+    a = ev('RESKIN.player.els.find(e => !e.paused).src')
+    ev('RESKIN.sound.set("bass")'); pg.wait_for_timeout(150)
+    kept = ev('RESKIN.player.playingFx() && RESKIN.player.els.find(e => !e.paused).src') == a
+    pg.wait_for_function('RESKIN.player.playingFx() && RESKIN.sound.state().kind === "on"', timeout=60000)
+    b = ev('RESKIN.player.els.find(e => !e.paused).src')
+    ok(kept and b != a and ev('RESKIN.player.isPlaying()'), '換成重低音：新的算好之前照樣聽 3D，算好才換（只換一次）')
+    ev('RESKIN.sound.set("off")'); pg.wait_for_timeout(1500)
+    ok(not ev('RESKIN.player.playingFx()') and ev('RESKIN.player.isPlaying()') and ev('document.getElementById("soundPill").hidden'), '換回原音：馬上換回原本的檔案，音效標籤收起來')
+    pg.wait_for_timeout(2800)
+    ok(ev('RESKIN.sound.stats().kept') == 0, '換回原音：算好的音檔放掉，不佔記憶體')
+    ev('() => { RESKIN.extras.moreMenu(); }'); pg.wait_for_timeout(500)   # not awaited: the menu waits for a choice
+    has = ev('Array.from(document.querySelectorAll(".md-i")).some(b => b.textContent.includes("音效"))')
+    ev('() => { const b = Array.from(document.querySelectorAll(".md-i")).find(b => b.textContent.includes("音效")); b && b.click(); }'); pg.wait_for_timeout(600)
+    opts = ev('Array.from(document.querySelectorAll(".md-i")).map(b => b.textContent)')
+    pg.screenshot(path=os.path.join(out, 'ui-sound-menu.png'))
+    ev('() => { const b = Array.from(document.querySelectorAll(".md-i")).find(b => b.textContent.includes("演唱會現場")); b && b.click(); }'); pg.wait_for_timeout(400)
+    ok(has and any('3D 環繞' in o for o in opts) and any('重低音' in o for o in opts) and ev('RESKIN.sound.mode()') == 'live', '「更多」選單：音效 → 3D 環繞、重低音、演唱會現場，點了就換')
+    ev('RESKIN.stage.show("tube", { instant: true, silent: true })'); pg.wait_for_timeout(900)
+    pg.click('.skin-tube .tb-sel'); pg.wait_for_timeout(300)
+    ok(ev('RESKIN.sound.mode()') == 'off', '真空管 Skin：轉輸入旋鈕就換音效（現場 → 原音）')
+    pg.click('.skin-tube .tb-sel'); pg.wait_for_timeout(1200)
+    pg.screenshot(path=os.path.join(out, 'ui-tube-warming.png'))
+    ok(ev('RESKIN.sound.mode()') == '3d' and ev('RESKIN.sound.state().kind') in ('work', 'on'), '真空管 Skin：換成 3D 時管子先暗下來再暖起來（準備中）')
+    v = ev(PROCESS_JS)
+    ok(v['n'] == 44100 * 3 and v['e'] > 1 and v['diff'] > 0.005, '音樂短片：開著音效時，短片的聲音也套上音效')
+    ev('RESKIN.sound.set("off")'); pg.wait_for_timeout(800)
+
+
 def check_beat_clock(pg, ev, out, new_skins=True):
     """The beat clock in the app: the demo's grid, beats firing on time, the latency setting, the sync test, the chip
     (and, in the main edition, the rhythm-game and particle skins)."""
@@ -555,6 +683,13 @@ def check_beat_clock(pg, ev, out, new_skins=True):
     ok(sc > 0 and lv.startswith('LV ') and lv != 'LV --', '節奏大師：音符照這首的鼓聲寫成譜，打中就計分（%s、%d 分）' % (lv, sc))
     ev('RESKIN.stage.show("particles", { instant: true, silent: true })'); pg.wait_for_timeout(1200)
     ok(not ev('RESKIN.stage.root().classList.contains("pa-flat")'), '粒子封面：WebGL 粒子啟動（不是退回靜態封面）')
+    ev('RESKIN.stage.show("drum", { instant: true, silent: true })'); ev('RESKIN.player.seek(24)'); pg.wait_for_timeout(1500)
+    n = ev('+RESKIN.stage.root().dataset.cells || 0')
+    pg.screenshot(path=os.path.join(out, 'ui-drum.png'))
+    ok(n >= 6, '鼓機：十六格照這首的鼓聲排好（這一小節 %d 格有鼓）' % n)
+    ev('RESKIN.stage.show("chladni", { instant: true, silent: true })'); pg.wait_for_timeout(3500)
+    calm = ev('+RESKIN.stage.root().dataset.calm || 0')
+    ok(calm > 0.45, '音紋：沙子被震到節線上排出圖紋（%.0f%% 停在節線附近）' % (calm * 100))
     ev('RESKIN.stage.show("neon", { instant: true, silent: true })'); pg.wait_for_timeout(300)
 
 
@@ -609,9 +744,12 @@ def run_folders(url, out, fd, fx):
         ok(pg.is_visible('#empty [data-act="import-folder"]'), '空歌庫：有「整個資料夾」按鈕')
         pg.screenshot(path=os.path.join(out, 'ui-empty.png'))
         pg.set_input_files('#fileIn', [os.path.join(fx, 't1.mp3')]); done()
-        pg.set_input_files('#folderIn', os.path.join(fd, 'album', '專輯資料夾')); done(); pg.wait_for_timeout(300)
+        pg.set_input_files('#folderIn', os.path.join(fd, 'album', '專輯資料夾'))
+        # the picker hands the files over a moment later: wait for the import to start (or be over) before waiting for it to end
+        pg.wait_for_function('!document.getElementById("busy").hidden || RESKIN.lib.count() >= 4', timeout=30000); done(); pg.wait_for_timeout(300)
         L = ev('RESKIN.lib.list().map(t => ({ title: t.title, name: t.name, cover: t.cover }))')
-        msg = last()
+        # the import's summary (a later "press play" toast may already sit on top of it)
+        msg = ev('(() => { const t = Array.from(document.querySelectorAll("#toasts .toast > span")).map(x => x.textContent); return t.find(x => x.includes("加入")) || t[t.length - 1] || ""; })()')
         ok(len(L) == 4 and '加入 3 首' in msg and '1 首已經在歌庫' in msg, '資料夾：子資料夾的歌也進來，已在歌庫的跳過（%s）' % msg)
         ok('WMA' in msg and not any(x['name'].startswith('.') or x['name'].endswith(('.txt', '.wma')) for x in L), '資料夾：略過 ._ 檔、.DS_Store、文字檔，WMA 說明這台不能播')
         ok([x['title'] for x in L[:3]] == ['夜行', '中場', '尾聲'], '資料夾：照資料夾順序，去掉檔名前的曲序（%s）' % [x['title'] for x in L[:3]])
@@ -788,6 +926,7 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     fx = fixtures('/tmp/reskin-fixtures')
     run_beats()
+    run_sound()
     srv = serve(REPO)
     s2 = serve(a.claude) if a.claude else None
     run_fallbacks(f'http://127.0.0.1:{srv.server_address[1]}/apps/reskin/', f'http://127.0.0.1:{s2.server_address[1]}/' if s2 else None, a.out, fx)

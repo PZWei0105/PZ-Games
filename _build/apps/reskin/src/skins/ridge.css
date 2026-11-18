@@ -1,0 +1,50 @@
+/* ---------- 聲紋山脈 SPECTRAL RIDGE ---------- */
+.skin-ridge { color: #fdf0ff; font-family: "Exo 2", var(--sans); background: #0b0420; }
+.skin-ridge .rg-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.skin-ridge .rg-scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 46%; background: linear-gradient(rgba(11,4,32,0), rgba(11,4,32,.72) 42%, rgba(11,4,32,.9)); pointer-events: none; }
+.skin-ridge .rg-hud { position: absolute; left: calc(var(--sl) + 18px); top: calc(var(--st) + 15px); pointer-events: none; }
+.skin-ridge .rg-hud b { display: block; font-family: "Orbitron", sans-serif; font-weight: 900; font-size: 13px; letter-spacing: .24em; color: #fdf0ff; text-shadow: 0 0 12px rgba(255,63,209,.7); }
+.skin-ridge .rg-hud b i { font-style: normal; color: #3ff2ff; margin: 0 .08em; }
+.skin-ridge .rg-hud span { display: block; margin-top: 6px; font-family: "Share Tech Mono", monospace; font-size: 10.5px; letter-spacing: .14em; color: rgba(253,240,255,.5); white-space: nowrap; }
+.skin-ridge .rg-hud em { font-style: normal; color: #ff9ce8; }
+.skin-ridge .rg-panel { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 calc(var(--sr) + 22px) calc(var(--sb) + 12px) calc(var(--sl) + 22px); max-width: 620px; margin: 0 auto; }
+.skin-ridge .rg-row { display: flex; align-items: center; gap: 13px; }
+.skin-ridge .rg-art { flex: none; width: 54px; height: 54px; border-radius: 50%; overflow: hidden; background: #2a0a4a; box-shadow: 0 0 0 2px #ff3fd1, 0 0 calc(10px + var(--rp, 0) * 22px) rgba(255,63,209,.6); }
+.skin-ridge .rg-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.skin-ridge .rg-art img.blank { opacity: 0; }
+.skin-ridge .rg-tx { min-width: 0; flex: 1; }
+.skin-ridge .rg-t { font-weight: 600; font-size: 19px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: 0 0 14px rgba(255,63,209,.55); }
+.skin-ridge .rg-a { margin-top: 3px; font-size: 12.5px; letter-spacing: .12em; color: #3ff2ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skin-ridge .rg-bpm { flex: none; text-align: center; padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(63,242,255,.45); background: rgba(11,4,32,.5); }
+.skin-ridge .rg-bpm b { display: block; font-family: "Orbitron", sans-serif; font-weight: 900; font-size: 17px; color: #3ff2ff; text-shadow: 0 0 10px rgba(63,242,255,calc(.3 + var(--rp, 0) * .6)); }
+.skin-ridge .rg-bpm small { display: block; font-family: "Share Tech Mono", monospace; font-size: 9px; letter-spacing: .2em; color: rgba(253,240,255,.5); }
+.skin-ridge .rg-seek { margin-top: 14px; padding: 10px 0 2px; }
+.skin-ridge .rg-seek .seek-track { height: 3px; background: rgba(253,240,255,.14); }
+.skin-ridge .rg-seek .seek-fill { background: linear-gradient(90deg, #3ff2ff, #ff3fd1); box-shadow: 0 0 10px rgba(255,63,209,.7); }
+.skin-ridge .rg-seek .seek-knob { width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px #ff3fd1; }
+.skin-ridge .rg-seek .seek-times { margin-top: 8px; font-family: "Share Tech Mono", monospace; font-size: 11px; letter-spacing: .12em; color: rgba(253,240,255,.55); }
+.skin-ridge .rg-ctrl { margin-top: 6px; justify-content: space-between; }
+.skin-ridge .rg-ctrl button { width: 50px; height: 50px; border-radius: 12px; font-size: 20px; color: #fdf0ff; background: rgba(42,10,74,.55); border: 1px solid rgba(255,63,209,.45); transform: skewX(-10deg); transition: transform .12s; }
+.skin-ridge .rg-ctrl button > * { transform: skewX(10deg); }
+.skin-ridge .rg-ctrl button:active { transform: skewX(-10deg) scale(.9); }
+.skin-ridge .rg-ctrl .c-shuf, .skin-ridge .rg-ctrl .c-rep { font-size: 17px; background: none; border-color: transparent; }
+.skin-ridge .rg-ctrl .c-play { width: 76px; height: 60px; font-size: 25px; color: #fff; background: linear-gradient(135deg, #ff3fd1, #7a2cff); border: none; box-shadow: 0 0 calc(12px + var(--rp, 0) * 26px) rgba(255,63,209,.7); }
+.skin-ridge.is-shuffle .rg-ctrl .c-shuf, .skin-ridge:not([data-repeat="off"]) .rg-ctrl .c-rep { color: #3ff2ff; text-shadow: 0 0 8px rgba(63,242,255,.9); }
+.skin-ridge.enter .rg-hud { animation: rg-in .6s steps(4) .5s both; }
+.skin-ridge.enter .rg-panel { animation: rg-up .8s cubic-bezier(.2,.8,.2,1) .8s both; }
+@keyframes rg-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rg-up { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+.skin-ridge.swap .rg-t, .skin-ridge.swap .rg-a { animation: rg-chroma .7s ease both; }
+@keyframes rg-chroma { 0% { opacity: 0; transform: translateX(-14px); text-shadow: -6px 0 #3ff2ff, 6px 0 #ff3fd1; } 100% { opacity: 1; transform: none; } }
+@media (max-width: 430px) { .skin-ridge .rg-hud b { font-size: 11px; letter-spacing: .14em; } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .skin-ridge .rg-scrim { height: 52%; }
+  .skin-ridge .rg-panel { max-width: 560px; padding-bottom: calc(var(--sb) + 6px); }
+  .skin-ridge .rg-art { width: 42px; height: 42px; }
+  .skin-ridge .rg-t { font-size: 16px; }
+  .skin-ridge .rg-bpm { display: none; }
+  .skin-ridge .rg-seek { margin-top: 4px; }
+  .skin-ridge .rg-ctrl { margin-top: 0; }
+  .skin-ridge .rg-ctrl button { height: 42px; }
+  .skin-ridge .rg-ctrl .c-play { width: 64px; height: 48px; }
+}

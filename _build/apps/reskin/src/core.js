@@ -178,6 +178,7 @@ const I = {
   fullscreen: sv('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),
   exit: sv('<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'),
   volume: sv('<path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.6 7.6 0 0 1 0 11"/>'),
+  phones: sv('<path d="M4 15.5V12a8 8 0 0 1 16 0v3.5"/><rect x="3.3" y="13.6" width="4.6" height="7" rx="1.7"/><rect x="16.1" y="13.6" width="4.6" height="7" rx="1.7"/>'),
   sort: sv('<path d="M7 4v16M3.5 16.5L7 20l3.5-3.5M14 6h7M14 11h5M14 16h3"/>'),
   link: sv('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
 };
@@ -193,7 +194,7 @@ const DEFAULTS = {
   shuffle: false, repeat: 'all', sort: 'added', volume: 1,
   diy: [], vinylCrackle: false, scopeMode: 0, embedHint: false, homeHint: false,
   seenWardrobe: false, demoAdded: false,
-  bloom: true, tilt: true, lockArt: true, transFx: 'auto',
+  bloom: true, tilt: true, lockArt: true, transFx: 'auto', sound: 'off',
 };
 const settings = {
   v: JSON.parse(JSON.stringify(DEFAULTS)),

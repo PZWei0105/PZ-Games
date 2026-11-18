@@ -69,10 +69,16 @@ R.clip = (() => {
     for (let c = 0; c < buf.numberOfChannels; c++) {
       const src = buf.getChannelData(c).subarray(i0, i1), dst = out.getChannelData(c);
       dst.set(src);
+    }
+    // with a sound effect on, the video's sound has it too
+    let fin = out;
+    try { fin = await R.sound.processBuffer(actx, out); } catch (e) { console.warn('clip sound', e); fin = out; }
+    for (let c = 0; c < fin.numberOfChannels; c++) {
+      const dst = fin.getChannelData(c);
       for (let k = 0; k < fi && k < n; k++) dst[k] *= k / fi;
       for (let k = 0; k < fo && k < n; k++) dst[n - 1 - k] *= k / fo;
     }
-    return out;
+    return fin;
   }
   function fail(msg) {
     cleanup();
