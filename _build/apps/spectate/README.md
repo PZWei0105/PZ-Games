@@ -88,3 +88,4 @@ python3 _build/apps/spectate/tests/shoot.py --data <資料夾> --out /tmp/spshot
 - 精選名單換人：改 `apps/spectate/data/channels.json`，推上去會觸發管線（push 路徑過濾）。先看 `status.json` 的 `quiet`、`unresolved`。找新的中文頻道：手動跑 Actions 的 `spectate-research`（輸入關鍵字，用逗號分開），結果在 `spectate-research` 分支的 `research.json`（頻道 ID、名稱、最近更新、觀看數）。
 - 分類規則（車道、遊戲名稱）改了：把 `pipeline.py` 的 `CLS_VER` 加一，下一次執行會把影片庫全部重新判斷（Steam 結果有快取，不多花額度）。
 - 截圖檢查時記得 `?skip=1` 跳過開場。
+- **每週維護排程**（週二晚上 20:17，台灣時間）：巡檢後台與分類、手機直拿／橫拿／電腦三種畫面親眼看、精選名單換血（封鎖的、60 天沒更新的下架；用 `spectate-research` 找合格的中文新頻道，每週最多 5 台，紀錄在 ROADMAP 的「名單換血紀錄」），真加分才加功能。`me.json` 裡痞子葳的封鎖、跳過會被尊重：封鎖的下架、跳過的不再當新人推。
