@@ -196,12 +196,50 @@ def check(f, r):
             r.B(fid, 'buy.why 要寫 40～260 字（為什麼這樣判、目標價怎麼來的）')
         if f['kind'] == 'wish' and not f['game'].get('steam'):
             r.W(fid, '願望單解包沒有 Steam appid：獵價會對不上')
+    check_rev(f, fid, r)
     text_quality(f, fid, r)
     # 貼文不能出現「待確認」的事
     for p in f.get('pending') or []:
         key = re.sub(r'[：:].*$', '', p)[:8]
         if key and key in post and '未' not in post:
             r.W(fid, f'粉專貼文可能提到待確認的事：{key}')
+
+
+def check_rev(f, fid, r):
+    """舊稿回訪（WRITER_GUIDE §回訪、PICKS_GUIDE §回訪）：rev 是改寫紀錄 [{d, t}]，App 會在文章上方和「寫稿之後」顯示。
+    updated 一定要跟著改到回訪那天之後——App 和資料管線都拿 updated 當「這篇最後一次對過資料的時間」。"""
+    rev = f.get('rev')
+    if rev is None:
+        return
+    if not isinstance(rev, list) or not rev:
+        r.B(fid, 'rev 要是非空的清單 [{d, t}]')
+        return
+    today = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=8)).date()
+    last = None
+    for i, x in enumerate(rev):
+        if not isinstance(x, dict) or not x.get('d') or not x.get('t'):
+            r.B(fid, f'rev[{i}] 要有 d（日期）和 t（改了什麼）')
+            continue
+        try:
+            d = dt.date.fromisoformat(x['d'])
+        except ValueError:
+            r.B(fid, f'rev[{i}].d 要是 YYYY-MM-DD')
+            continue
+        if d < dt.date.fromisoformat(f['date']) or d > today + dt.timedelta(days=1):
+            r.B(fid, f'rev[{i}].d 要在寫稿日 {f["date"]} 和今天之間')
+        if last and d < last:
+            r.B(fid, 'rev 要照日期排（舊的在前）')
+        last = d
+        if not 4 <= len(x['t']) <= 60:
+            r.B(fid, f'rev[{i}].t 用 4～60 字講改了什麼（例如：加了繁中，中文段、結論已更新）')
+    if last:
+        u = str(f.get('updated') or '')
+        try:
+            ud = dt.datetime.fromisoformat(u.replace('Z', '+00:00')).date() if 'T' in u else dt.date.fromisoformat(u[:10])
+        except ValueError:
+            ud = None
+        if ud is None or ud < last:
+            r.B(fid, f'回訪改寫後 updated 要改到 {last} 或之後（App 從 updated 開始算「寫稿之後」）')
 
 
 def text_quality(f, fid, r):
@@ -351,6 +389,7 @@ def check_pick(f, r):
     for i, q in enumerate(f.get('talk') or []):
         if not (q.get('q') and q.get('why')):
             r.B(fid, f'talk[{i}] 要有 q、why')
+    check_rev(f, fid, r)
     text_quality(f, fid, r)
 
 

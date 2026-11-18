@@ -104,6 +104,16 @@
 
 （專題頁的時間含解包轉場動畫約 0.8 秒。）
 
+## 寫稿之後（2026-11-18）
+
+專題和推坑寫完就固定了，可是遊戲會變：加了繁中、推出正式版、改價、評價翻盤、開放工作坊（Mod）、官方一直出更新。這一塊讓舊稿不會「看起來還是當時的樣子」：
+- **自動記變化**：`live.py` 每款記一份「上次確認的樣子」（`base`：中文、即將推出、搶先體驗、免費、原價、好評率、工作坊），每次更新那一款就比對。**同一個變化要連續兩輪都看到才算數**（`pend`），Steam 偶爾回傳不完整的資料不會變成假消息；評價小幅波動、特價期間的原價跳動都不算。算數的寫進 `chg`（最多 20 筆）。第一次看到的遊戲只記現況、不算變化。
+- **收官方公告**：Steam 社群公告（`ISteamNews/GetNewsForApp`，開發商自己發的：更新、修正、活動、路線圖），每款約 6 小時看一次（照 appid 雜湊錯開；輪流更新的冷門款每次輪到都看），最新 8 則放 `news`；標題或 Steam 標籤看得出是更新的標「更新」，其他標「公告」。不存「上次看的時間」，沒有新公告就不動檔案。
+- **App 怎麼用**：專題頁、推坑頁頂部有變化或有官方更新就貼一條「寫稿之後」橫幅（點了跳到資訊卡裡的「寫稿之後・自動追蹤」，列出寫稿之後的每個變化和官方公告，點公告開 Steam 全文）；回訪改寫過的顯示「✓ 回訪改寫」。庫存小卡、推坑牆貼「加了繁中」「剛更新」小標；首頁追蹤牆多了「最近 7 天的變化」（同一款一張）和「3 天內的官方更新」（最多兩張）。有 Steam 工作坊的，即時數據下面標「MOD」（沒有工作坊不代表不能裝 Mod，所以只標有的）。
+- **寫稿時間怎麼算**：用文章的 `updated`（回訪改寫、7 天內更正都會改它）；只有日期的當那天（台灣）結束——寧可漏掉當天的變化，也不要把寫稿前就有的事說成「寫稿之後」。
+- **舊稿回訪**：寫稿編輯、推坑編輯每天跑 `tools/revisit.py` 挑 1～2 篇變化大的舊稿改成現在的樣子（`WRITER_GUIDE.md` §5b、`PICKS_GUIDE.md` §4b），`updated` 跟著改、`rev` 記一筆，App 顯示「11/30 回訪改寫：…」。`publish.py` 檢查 `rev` 格式、`updated` 有沒有跟著改。
+- **不拖慢 App**：列表和追蹤牆要的（`live.json` 的 `stale`：寫稿之後的變化、7 天內的更新，3 天內的才帶標題）跟著 `live.json` 一起來，不多開一個檔；完整的（每篇幾則公告、分數）只在 `revisit.py` 算，不塞給 App。一年份的量測：`stale` 約 77 KB（gzip 16 KB）。
+
 ## 聲光
 
 - 開門畫面「點我・聲光全開」（iPhone 的 AudioContext 必須在點擊當下建立；`navigator.audioSession.type='playback'` 讓靜音鍵打開也有聲音）。
@@ -128,7 +138,8 @@
 - `data/weekly/<YYYY-Www>.json`：見 `WEEKLY_GUIDE.md` 第 4 節。`data/weekly.json`：`{at, n, items:[{id, from, to, date, title, mvp, mvp_name, top, updated}]}`（publish.py 產生；`top` 是 Tier 表前 4 名，首頁橫幅用）。
 - `data/candidates.json` 另有 `gems`（Steam 評價最高的遊戲）、`gems_sale`（評價最高又正在特價），推坑選題用；`picked: true` 是推過的；每份清單的 `mine: true` 是在痞子葳的 Steam 願望單上。
 - `data/live.json`：`{at, ok, asked, errs, apps:{appid:{name,appid,free,adult,price{final,orig,disc,fmt,low,end},rv{n,pct,label,recent},rv_tc,players{n,at,peak,d24},rel,langs{tc,sc},tags,at,img{hero,header},micro{mp4,webm}}}}`（清單用的精簡版）；價格單位是「分」（NT$ × 100）。
-- `data/live/<appid>.json`：同一款的其他欄位 `{img{hero,header,wide,box},micro,shots[],trailers[{hls,mp4,webm,poster,name}],short,dev,pub,plat,url}`，App 點開才載（`liveLoad()`），live.py 有變才重寫、不再追蹤的刪掉（`live_load()`／`live_save()` 負責拆和合）。
+- `data/live/<appid>.json`：同一款的其他欄位 `{img{hero,header,wide,box},micro,shots[],trailers[{hls,mp4,webm,poster,name}],short,dev,pub,plat,url,ws,news[{t,d,u,k(patch/news),x}],base{zh,soon,ea,free,orig,rv,ws},pend,chg[{k(zh/rel/ea/free/orig/rv/ws),a,b,d}]}`，App 點開才載（`liveLoad()`），live.py 有變才重寫、不再追蹤的刪掉（`live_load()`／`live_save()` 負責拆和合）。`ws`：有 Steam 工作坊（true／false；沒拿到分類資料就沒有這個欄位）。
+- `data/live.json` 的 `stale`：`{"f:<id>"／"p:<id>": {ch:[寫稿之後的變化], lp:{t?, d}（7 天內最新的官方更新，3 天內才帶標題）}}`（寫稿之後，列表小標和追蹤牆用）。
 - `data/hist/<appid>.json`：`pl` 同上 `[分鐘時間戳, 人數]`、`pr` 價格（有變才記）、`rv`／`rt` 全球與繁中評價 `[時間, 好評數, 總數]`（一天一筆）。
 - `data/board.json`：`{at, src(concurrent/players), since, t:[時間], s:[走勢時間], idx:{n,d1,up,dn,fl,h,sp}, rows:[{a(appid), n, h(30 小時), sp(7 天), d1, d7, pk, r, rp, lw, f:[標記], ath, nm, tags, rv, free, p, img, zh, adult, cov(f:/p:)}], tags:[{t, n, k, d1}]}`；`data/board-d.json`：`{days, pk:{appid:[每天高峰]}, ath, nm, last, since}`。
 - `data/free.json`：`{at, ok, errs, items:[{id(epic:…/steam:…/gog:…), store, title, img, url, orig 或 orig_t, start, end, up(下週才送), mystery, dlc, appid, rv, zh, tags, seen}], past}`。
@@ -145,7 +156,9 @@ python3 _build/apps/unpacked/build.py --icons            # 重畫圖示
 python3 _build/apps/unpacked/tools/publish.py            # 專題檢查＋重建目錄
 # 本機看畫面（雲端沙盒連不到 Steam、YouTube、github.io：外部圖片用假圖代替）
 python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data --hunt   # --hunt：假願望單＋假週報；再加 --noweek 測「本週進行中」
-# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）；只寫進 /tmp，絕不 commit
+# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）；只寫進 /tmp，絕不 commit
+# 舊稿回訪的候選（只讀）：--kind f 專題、--kind p 推坑
+python3 _build/apps/unpacked/tools/revisit.py --kind f
 # 效能：造一年份的資料再量（--legacy 用舊格式比較）；perf.py 也能量現在的
 python3 _build/apps/unpacked/build.py --out /tmp/unp-y1 && python3 _build/apps/unpacked/tools/stress.py /tmp/unp-y1 --days 365
 python3 _build/apps/unpacked/tools/perf.py /tmp/unp-y1 --label 一年後

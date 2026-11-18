@@ -161,6 +161,208 @@ def save_if_changed(path, obj, ignore=('at',)):
     return True
 
 
+# ------------------------------------------------------------------ 寫稿之後（2026-11-18）：官方公告＋變化紀錄
+# 每一款都記下「上次確認的樣子」（base），之後每輪比對：加了繁中、上市、推出正式版、改免費、原價調整、評價大轉向、
+# 開放工作坊（Mod），就在 chg 記一筆（附時間）。同一個變化要連續兩輪都看到才算數，Steam 偶爾回傳不完整的資料不會變成假消息。
+# 官方公告（Steam 社群公告：更新、修正、活動）放 news：每款約 6 小時看一次，沒有新公告就不動檔案。
+# App 拿「寫稿（或回訪改寫）之後」的 chg 和 news 做成「寫稿之後」；stale.json 給列表小標、首頁追蹤牆和排程的舊稿回訪用。
+NEWS = 'https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid={}&count=10&maxlength=600&feeds=steam_community_announcements&format=json'
+NEWS_N = 8            # 每款留最新幾則
+PATCH_RE = re.compile(r'\b(patch(es)?|hot-?fix(es)?|changelog|patch notes)\b|\b(major|big|content|free)\s+update\b|\bv?\d+\.\d+(\.\d+)?\b'
+                      r'|更新內容|更新說明|版本更新|大型更新|改版|修正|補丁', re.I)
+RV_MIN = 200          # 評論數夠多，好評率的變化才算數
+RV_SWING = 8          # 好評率差幾個百分點才算「大轉向」
+
+
+def _clean_news(s):
+    s = re.sub(r'\[(img|video|previewyoutube)\b[^\]]*\].*?\[/\1\]', ' ', s or '', flags=re.I | re.S)
+    s = re.sub(r'\{STEAM_CLAN_IMAGE\}\S*', ' ', s)
+    s = re.sub(r'\[/?[a-zA-Z0-9*]+(?:[= ][^\]]*)?\]', ' ', s)
+    s = re.sub(r'<[^>]+>', ' ', s)
+    s = re.sub(r'https?://\S+', ' ', htmllib.unescape(s))
+    s = re.sub(r'\s+', ' ', s.replace('\u2019', "'").replace('\u2018', "'")).strip()   # 彎引號在中文字型裡是全形，英文縮寫會開天窗
+    return (s[:150].rstrip() + '…') if len(s) > 150 else s
+
+
+def news(appid):
+    """Steam 社群公告（開發商自己發的）最新幾則，新的在前；讀不到回 None（沿用上一輪的）。"""
+    try:
+        d = get_json(NEWS.format(appid), timeout=20, tries=1)
+    except Exception:  # noqa: BLE001
+        return None
+    out = []
+    for n in (d.get('appnews') or {}).get('newsitems') or []:
+        t = re.sub(r'\s+', ' ', htmllib.unescape(n.get('title') or '').replace('\u2019', "'").replace('\u2018', "'")).strip()
+        try:
+            ts = int(n.get('date') or 0)
+        except (TypeError, ValueError):
+            ts = 0
+        if not t or ts <= 0:
+            continue
+        u = n.get('url') or ''
+        out.append(_nonull({'t': t[:140], 'd': iso(dt.datetime.fromtimestamp(ts, UTC)), 'u': u if u.startswith('https://') else None,
+                            'k': 'patch' if ('patchnotes' in (n.get('tags') or []) or PATCH_RE.search(t)) else 'news',
+                            'x': _clean_news(n.get('contents')) or None}))
+    out.sort(key=lambda r: r['d'], reverse=True)
+    return out[:NEWS_N]
+
+
+def news_due(prev, appid, t0):
+    """這一輪要不要看官方公告：沒看過的要；每輪都更新的熱門款每 6 小時一次（照 appid 錯開）；輪流更新的冷門款每次輪到都看。
+    不存「上次看的時間」：存了每幾小時就得改一次檔案，典藏越多越拖。"""
+    if prev.get('news') is None:
+        return True
+    try:
+        gap = (t0 - dt.datetime.strptime(prev.get('at') or '', '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=UTC)).total_seconds()
+    except ValueError:
+        return True
+    import zlib   # appid 大多是 10 的倍數，直接取餘數會擠在同幾個小時：雜湊一下平均分到 6 個時段
+    return gap >= 5 * 3600 or (int(t0.timestamp() // 3600) + zlib.crc32(str(appid).encode())) % 6 == 0
+
+
+def _snap(x):
+    lg, p, rv, rel = x.get('langs') or {}, x.get('price') or {}, x.get('rv') or {}, x.get('rel') or {}
+    return {'zh': 'tc' if 'tc' in lg else 'sc' if 'sc' in lg else 'none',
+            'soon': bool(rel.get('soon')), 'ea': bool(rel.get('ea')), 'free': bool(x.get('free')),
+            # 特價期間 Steam 偶爾把「最划算的買法」換成組合包，原價會跟著跳：特價中不比原價
+            'orig': None if x.get('free') or (p.get('disc') or 0) > 0 else p.get('orig'),
+            'rv': rv.get('pct') if (rv.get('n') or 0) >= RV_MIN else None,
+            'ws': x.get('ws')}            # None＝這輪沒拿到分類資料（不能當成沒有工作坊）
+
+
+def _moved(k, a, b):
+    if a is None or b is None:
+        return False
+    if k == 'rv':
+        return abs(b - a) >= RV_SWING
+    if k == 'orig':
+        return abs(b - a) >= max(1000, a * 0.1)
+    return a != b
+
+
+def _event(k, a, b, now):
+    """確認了的變化裡，值得記下來給人看的。其餘（例如拿掉繁中、免費改付費）只默默更新基準。"""
+    if k == 'zh' and (b == 'tc' or (a == 'none' and b == 'sc')):
+        return {'k': 'zh', 'a': a, 'b': b}
+    if k == 'soon' and a and not b:
+        return {'k': 'rel', 'b': 'ea' if now['ea'] else 'out'}
+    if k == 'ea' and a and not b and not now['soon']:
+        return {'k': 'ea'}
+    if k == 'free' and b and not a:
+        return {'k': 'free'}
+    if k in ('orig', 'rv'):
+        return {'k': k, 'a': a, 'b': b}
+    if k == 'ws' and b and not a:
+        return {'k': 'ws'}
+    return None
+
+
+def track_changes(prev, x, t0):
+    """跟上次確認的樣子（base）比；第一次看到（或還沒有 base 的舊資料）只記現況，不算變化。回傳 (base, pend, chg)。"""
+    now, base, chg = _snap(x), prev.get('base'), list(prev.get('chg') or [])
+    if not base:
+        return now, {}, chg
+    nb, pend = dict(base), dict(prev.get('pend') or {})
+    for k, b in now.items():
+        a = base.get(k)
+        if b is None:                       # 這輪沒拿到：維持原樣
+            continue
+        if a is None:                       # 以前不知道（評論不夠、還沒定價、沒分類）：現在知道了就記下，不算變化
+            nb[k] = b
+            pend.pop(k, None)
+            continue
+        if not _moved(k, a, b):
+            pend.pop(k, None)
+            if k not in ('rv', 'orig'):     # 評價、原價的小幅波動不更新基準（不然慢慢漂移就永遠記不到）
+                nb[k] = b
+            continue
+        p = pend.get(k)
+        same = (_moved(k, a, p) and (b - a) * (p - a) > 0) if k in ('rv', 'orig') and p is not None else p == b
+        if k in pend and same:              # 連兩輪都看到：算數
+            pend.pop(k)
+            nb[k] = b
+            ev = _event(k, a, b, now)
+            if ev:
+                chg.append(_nonull(dict(ev, d=iso(t0))))
+        else:
+            pend[k] = b
+    return nb, pend, chg[-20:]
+
+
+def _chg_w(c):
+    return {'rel': 3, 'ea': 3, 'free': 3, 'zh': 3 if c.get('b') == 'tc' else 2, 'orig': 2, 'rv': 2, 'ws': 2}.get(c.get('k'), 1)
+
+
+def _ts(s):
+    try:
+        t = dt.datetime.fromisoformat(str(s or '').replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    return (t if t.tzinfo else t.replace(tzinfo=TW)).timestamp()
+
+
+def _tw_md(s):
+    t = _ts(s)
+    if not t:
+        return '?'
+    d = dt.datetime.fromtimestamp(t, TW)
+    return f'{d.month}/{d.day}'
+
+
+def _since(it):
+    """這篇最後一次對過資料的時間：updated（回訪改寫、更正都會更新它）有時間就用那個時間；
+    只有日期就當那天（台灣）結束——寧可漏掉當天的變化，也不要把寫稿前就有的事說成「寫稿之後」。"""
+    u = str(it.get('updated') or it.get('date') or '')
+    if 'T' in u:
+        return _ts(u)
+    try:
+        return dt.datetime.combine(dt.date.fromisoformat(u[:10]), dt.time(23, 59, 59), TW).timestamp()
+    except ValueError:
+        return None
+
+
+def stale_items(apps, idx, pk):
+    """每一篇專題、推坑：寫稿（或上次回訪改寫）之後 Steam 上發生了什麼。舊稿回訪（tools/revisit.py）也用這個。"""
+    out = {}
+    for kind, items in (('f', idx.get('items') or []), ('p', pk.get('items') or [])):
+        for it in items:
+            x = apps.get(str(it.get('steam'))) if it.get('steam') else None
+            s = _since(it) if x else None
+            if s is None:
+                continue
+            ch = [c for c in x.get('chg') or [] if (_ts(c.get('d')) or 0) > s]
+            nw = [n for n in x.get('news') or [] if (_ts(n.get('d')) or 0) > s]
+            if not ch and not nw:
+                continue
+            pt = [n for n in nw if n.get('k') == 'patch']
+            e = {'since': dt.datetime.fromtimestamp(s, TW).strftime('%Y-%m-%d'), 'last': max([c['d'] for c in ch] + [n['d'] for n in nw]),
+                 'score': sum(_chg_w(c) for c in ch) + min(3, len(pt)) + (1 if len(nw) > len(pt) else 0), 'nw': len(nw), 'np': len(pt)}
+            if ch:
+                e['ch'] = ch
+            if pt:
+                e['lp'] = {'t': pt[0]['t'], 'd': pt[0]['d']}
+            out[f'{kind}:{it["id"]}'] = e
+    return out
+
+
+def stale_app(apps, idx, pk, t0):
+    """App 用的（放進 live.json 的 stale，不多開一個檔＝開 App 不多等一趟網路）：只放列表小標和首頁追蹤牆用得到的——
+    寫稿之後的變化（少見）、7 天內的官方更新。完整的（分數、幾則公告）給舊稿回訪用，跑 tools/revisit.py 就有，
+    不塞給 App：典藏一年後完整版會變成每次開 App 都要多載幾百 KB。"""
+    full, out, cut, cut3 = stale_items(apps, idx, pk), {}, t0.timestamp() - 7 * 86400, t0.timestamp() - 3 * 86400
+    for ref, e in full.items():
+        v = {}
+        if e.get('ch'):
+            v['ch'] = e['ch']
+        lt = _ts((e.get('lp') or {}).get('d')) or 0
+        if lt > cut:      # 7 天內的更新：列表標「剛更新」；3 天內的連標題一起（追蹤牆用）
+            v['lp'] = e['lp'] if lt > cut3 else {'d': e['lp']['d']}
+        if v:
+            out[ref] = v
+    print(f'寫稿之後：{len(full)} 篇有新動態（{sum(1 for v in full.values() if v.get("ch"))} 篇有變化），列表／追蹤牆用的 {len(out)} 篇')
+    return out
+
+
 # ------------------------------------------------------------------ 即時資料分兩層（典藏升級，2026-11-18）
 # live.json 只放每次開 App 都要的（價格、同上、評價、語言、主視覺、動態預告）；預告清單、截圖、介紹、開發商
 # 放 live/<appid>.json，App 點開那一款（專題、推坑、短影音、情報卡、圖卡）才載。累積幾千款，開 App 還是一樣快。
@@ -355,6 +557,7 @@ def norm(it, tagnames):
         'short': short[:300],
         'plat': [k for k, v in (('win', plats.get('windows')), ('mac', plats.get('mac')), ('linux', plats.get('steamos_linux')), ('deck', (plats.get('steam_deck_compat_category') or 0) >= 3)) if v],
         'adult': bool(ADULT & set(it.get('content_descriptorids') or [])),
+        'ws': (30 in (it['categories'].get('feature_categoryids') or [])) if isinstance(it.get('categories'), dict) else None,   # Steam 工作坊（可以裝 Mod）
         'img': {k: v for k, v in (('hero', pic('library_hero')), ('header', pic('header')), ('wide', pic('main_capsule')),
                                   ('box', pic('library_capsule')), ('bg', pic('page_background'))) if v},
         'shots': [_join(ASSET, '', s['filename']) for s in shots[:10]],
@@ -363,6 +566,8 @@ def norm(it, tagnames):
         x['micro'] = micro
     if full:
         x['trailers'] = full
+    if x['ws'] is None:
+        del x['ws']
     return x
 
 
@@ -1147,6 +1352,7 @@ def main():
     tagn = tagnames()
     items = get_items(apps, media=True) if apps else {}
     out_apps = dict(live_old.get('apps') or {})
+    NSTAT = {'ok': 0, 'cat': 0, 'ws': 0}
     ok = 0
     for appid in apps:
         it = items.get(appid)
@@ -1184,6 +1390,22 @@ def main():
             x['rv']['recent'] = s['recent']
         if rtc:
             x['rv_tc'] = {'n': rtc['n'], 'pct': rtc['pct'], 'label': rtc['label']}
+        prev = out_apps.get(str(appid)) or {}
+        nw = news(appid) if news_due(prev, appid, t0) else None
+        if nw is not None:
+            time.sleep(0.15)
+            NSTAT['ok'] += 1
+        if nw is None and prev.get('news') is not None:
+            nw = prev['news']
+        if nw is not None:
+            x['news'] = nw
+        x['base'], pend, chg = track_changes(prev, x, t0)
+        if pend:
+            x['pend'] = pend
+        if chg:
+            x['chg'] = chg
+        NSTAT['cat'] += x.get('ws') is not None
+        NSTAT['ws'] += bool(x.get('ws'))
         x['at'] = iso(t0)
         out_apps[str(appid)] = x
         ok += 1
@@ -1197,8 +1419,14 @@ def main():
         ERRS.append(f'wish: {type(e).__name__}')
         mine = set()
     live = {'at': iso(t0), 'ok': ok, 'asked': len(apps), 'errs': ERRS[:20], 'apps': out_apps}
+    try:
+        live['stale'] = stale_app(out_apps, idx, pk, t0)
+    except Exception as e:  # noqa: BLE001  寫稿之後壞掉不能拖垮整輪
+        import traceback
+        traceback.print_exc()
+        ERRS.append(f'stale: {type(e).__name__}')
     wrote, nx = live_save(D, live)
-    print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}, live/ 更新 {nx} 款')
+    print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}, live/ 更新 {nx} 款；官方公告看了 {NSTAT["ok"]} 款；分類資料 {NSTAT["cat"]} 款（有工作坊 {NSTAT["ws"]}）')
 
     if not a.no_candidates:
         c = candidates(covered, tagn, picked, mine)

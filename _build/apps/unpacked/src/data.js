@@ -15,6 +15,7 @@ async function loadIndex() {
   const [idx, live, picks, wish, weekly, skip, board, free, events, tga, qa, inbox] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })),
     getJSON('picks.json').catch(() => ({ items: [] })), getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] })), getJSON('wish-skip.json').catch(() => ({})),
     ...['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json'].map((p) => getJSON(p).catch(() => null))]);
+  S.stale = (live && live.stale) || {};       // 寫稿之後（列表小標、追蹤牆）：跟著 live.json 一起來，不多等一趟
   S.wishSkip = skip || {};
   if (board && board.rows) S.board = board;
   if (free && free.items) S.free = free;

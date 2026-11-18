@@ -32,7 +32,7 @@ function miniHtml(it, i, cmp = false) {
   const lv = liveOf(it.steam); const img = headerOf(it, lv);
   const mk = S.marks[it.id]; const MK = { want: '想玩', playing: '在玩', done: '玩過', no: '沒興趣' };
   return `<div class="mini" data-go="f/${esc(it.id)}" style="--rot:${rot(it.id, i, 1.2)}deg">
-    <div class="pimg">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div></div>
+    <div class="pimg">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div>${afterChip('f', it.id)}</div>
     ${mk ? `<span class="mk">${MK[mk]}</span>` : ''}<span class="mstamp ${STAMP_CLS[it.stamp] || ''}">${esc(it.stamp)}</span>
     <div class="mb"><h4>${esc(it.zh)}</h4><div class="md">${esc(it.date.slice(5).replace('-', '.'))} · ${esc(it.kind_label)}</div></div>
     ${cmp ? `<button class="cmpbtn ${S.cmp.includes(it.id) ? 'on' : ''}" data-act="cmp" data-id="${esc(it.id)}" aria-label="加入比較">${S.cmp.includes(it.id) ? '✓' : '+'}</button>` : ''}</div>`;
@@ -58,6 +58,7 @@ function watchNotes() {
     const rv = lv.rv;
     if (rv && rv.recent && rv.pct != null && Math.abs(rv.recent.pct - rv.pct) >= 5) notes.push({ w: 60, id: it.id, t: it.zh, v: rv.recent.pct, unit: '%', d: `近 ${rv.recent.days} 天好評率（整體 ${rv.pct}%）`, c: 'w' });
   }
+  notes.push(...afterNotes());
   return notes.sort((a, b) => b.w - a.w).slice(0, 8);
 }
 
@@ -79,7 +80,7 @@ function renderHome() {
     ${picksTeaser()}
     ${marketStrip()}
     <h3 class="tape-h">追蹤牆</h3>
-    ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="f/${esc(n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
+    ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="${esc(n.go || 'f/' + n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
     <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="board">${ICON.chart}<span>行情板</span></button><button class="btn y" data-go="tga">${ICON.star}<span>TGA 預測戰</span></button><button class="btn p" data-go="ask">${ICON.radio}<span>點播台</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
@@ -194,7 +195,93 @@ function liveHtml(f, lv, h) {
     <div class="lc wide"><div class="ll">目前同上人數</div><div class="lv">${p.n != null ? `<span class="cu" data-n="${p.n}">${esc(fmtN(p.n))}</span>` : '—'}<small>${p.peak ? `追蹤以來最高 ${esc(fmtN(p.peak.n))}` : ''}</small></div><div class="ld">${d24}</div>${h ? sparkSvg(h.pl, 7) : ''}</div>
     <div class="lc"><div class="ll">繁中玩家評價</div><div class="lv">${tc && tc.pct != null ? `<span class="cu" data-n="${tc.pct}" data-f="i">${tc.pct}</span><small>%</small>` : '—'}</div><div class="ld">${!tc ? '這一輪沒抓到，下次更新再補' : tc.n ? `${fmtN(tc.n)} 則繁中評論` : '還沒有繁中評論'}</div></div>
     <div class="lc"><div class="ll">語言（Steam）</div><div class="lv" style="font-size:24px">${lv.langs && lv.langs.tc ? '有繁中' : lv.langs && lv.langs.sc ? '只有簡中' : '無中文'}</div><div class="ld">${lv.langs && lv.langs.tc ? (lv.langs.tc.audio ? '含中文語音' : '介面／字幕') : ''}</div></div>
-  </div></div>`;
+  </div>${lv.ws ? '<div class="lfl"><b>MOD</b><span>有 Steam 工作坊：玩家做的 Mod 一鍵訂閱就能裝</span></div>' : ''}</div>`;
+}
+/* ---------- 寫稿之後：寫完以後 Steam 上變了什麼、官方發了什麼（資料管線每小時比對，連兩輪看到才算數） ---------- */
+const CHG_RANK = { zh: 0, rel: 1, ea: 1, free: 2, ws: 3, orig: 4, rv: 5 };
+const twOf = (ms) => new Date(ms + 8 * 3600e3).toISOString().slice(0, 10);
+const twDay = (iso) => twOf(Date.parse(iso));
+function chgText(c) {   // [短標、一句話、補充]
+  const pc = (a, b) => Math.round(Math.abs(b - a) / a * 100);
+  switch (c.k) {
+    case 'zh': return c.b === 'tc' ? ['加了繁中', '加了繁體中文', c.a === 'sc' ? '原本只有簡中' : '原本沒有中文'] : ['加了簡中', '加了簡體中文', '還沒有繁中'];
+    case 'rel': return ['上市了', c.b === 'ea' ? '開賣了（搶先體驗）' : '正式上市', ''];
+    case 'ea': return ['正式版', '結束搶先體驗，推出正式版', ''];
+    case 'free': return ['改免費', '改成免費遊玩', ''];
+    case 'orig': return [`${c.b < c.a ? '降價' : '漲價'} ${pc(c.a, c.b)}%`, `原價${c.b < c.a ? '調降' : '調漲'}：${fmtNT(c.a)} → ${fmtNT(c.b)}`, '不是特價，是定價改了'];
+    case 'rv': return [c.b > c.a ? '好評回升' : '評價下滑', `Steam 好評率 ${c.a}% → ${c.b}%`, c.b > c.a ? '玩家口碑變好了' : '玩家最近不太買單'];
+    case 'ws': return ['開放 Mod', '開放 Steam 工作坊', '玩家做的 Mod 一鍵訂閱就能裝'];
+  }
+  return ['有變化', '有變化', ''];
+}
+const chgSort = (a) => a.slice().sort((x, y) => (CHG_RANK[x.k] ?? 9) - (CHG_RANK[y.k] ?? 9) || (x.d < y.d ? 1 : -1));
+/* 這篇最後一次對過資料的時間：updated 有時間就用；只有日期就當那天結束（跟資料管線 _since 一樣） */
+function sinceTs(f) {
+  const u = String(f.updated || f.date || '');
+  if (u.includes('T')) { const t = Date.parse(u); if (!isNaN(t)) return t; }
+  return Date.parse(u.slice(0, 10) + 'T23:59:59+08:00');
+}
+function afterOf(kind, f, lv) {
+  const t = sinceTs(f); const e = (S.stale || {})[kind + ':' + f.id];
+  const ch = ((lv && lv.chg) || (e && e.ch) || []).filter((c) => Date.parse(c.d) > t);
+  const nw = ((lv && lv.news) || []).filter((n) => Date.parse(n.d) > t);
+  return { t, day: twOf(t), ch, nw, np: nw.filter((n) => n.k === 'patch').length };
+}
+function afterBanner(kind, f, lv) {
+  if (!f.game.steam) return '';
+  const A = afterOf(kind, f, lv); const rv = (f.rev || []).slice(-1)[0];
+  const ch = chgSort(A.ch);
+  if (!ch.length && !A.np) return rv ? `<div class="after ok" data-act="jump" data-to="s-after"><div class="af-h"><b>✓ 回訪改寫</b><span>${esc(mdDay(rv.d))}：${esc(rv.t)}</span></div></div>` : '';
+  return `<div class="after" data-act="jump" data-to="s-after"><div class="af-h"><b>寫稿之後</b><span>${esc(mdDay(A.day))} ${rv ? '改寫' : '寫完'}之後，Steam 上有新動態</span></div>
+    <div class="af-c">${ch.slice(0, 4).map((c) => `<span class="af-k">${esc(chgText(c)[0])}</span>`).join('')}${A.np ? `<span class="af-k p">${A.np} 則官方更新</span>` : ''}<i class="af-go">看詳情 ↓</i></div>
+    ${rv ? `<div class="af-rev">✎ ${esc(mdDay(rv.d))} 回訪改寫：${esc(rv.t)}</div>` : ''}</div>`;
+}
+function afterHtml(kind, f, lv) {
+  if (!f.game.steam) return '';
+  const A = afterOf(kind, f, lv); const days = Math.max(0, dayDiff(A.day, todayTW()));
+  const ch = A.ch.slice().sort((x, y) => (x.d < y.d ? 1 : -1));
+  const rows = ch.map((c) => { const [, l, s] = chgText(c); return `<div class="ac"><span class="ad">${esc(mdDay(twDay(c.d)))}</span><div><b>${esc(l)}</b>${s ? `<small>${esc(s)}</small>` : ''}</div></div>`; }).join('');
+  const news = A.nw.map((n) => `<a class="an"${n.u ? ` href="${esc(n.u)}" target="_blank" rel="noopener noreferrer"` : ''}><span class="ad">${esc(mdDay(twDay(n.d)))}</span><div><span class="ak ${n.k === 'patch' ? 'p' : ''}">${n.k === 'patch' ? '更新' : '公告'}</span><b>${esc(n.t)}</b>${n.x ? `<p>${esc(n.x)}</p>` : ''}</div></a>`).join('');
+  const revs = (f.rev || []).slice().reverse().map((r) => `<div class="af-rev">✎ ${esc(mdDay(r.d))} 回訪改寫：${esc(r.t)}</div>`).join('');
+  const none = !lv ? '這款剛加入追蹤，下一輪更新後開始比對。'
+    : !liveReady(f.game.steam) ? '追蹤紀錄還沒載完（網路慢的時候會這樣），重新整理就會出現。'
+    : lv.base === undefined && lv.news === undefined ? '剛開始追蹤：之後 Steam 上的變化和官方公告會自動記在這裡。'
+    : `${(f.rev || []).length ? '上次改寫' : '寫稿'}到現在${days ? ` ${days} 天` : ''}，Steam 上沒有新變化${lv.news !== undefined ? '，官方也還沒發新公告' : ''}。這篇的資訊還是最新的。`;
+  return `<div class="live aft" id="s-after"><div class="lh"><span>寫稿之後 · 自動追蹤</span><small>${esc(mdDay(A.day))} 到現在${days ? ` · ${days} 天` : ''}</small></div>
+    ${revs}${rows ? `<div class="aft-ch">${rows}</div>` : ''}
+    ${news ? `<h4 class="aft-h">官方公告<small>Steam 社群公告・點開看全文</small></h4><div class="aft-nw">${news}</div>` : ''}
+    ${!rows && !news ? `<div class="empty aft-0">${none}</div>` : ''}
+    <p class="aft-f">每小時比對 Steam 商店：中文、上市、正式版、免費、原價、評價大轉向、工作坊有變就記下；官方公告每 6 小時收一次。</p></div>`;
+}
+function afterTag(kind, id) {   // 列表用：寫稿之後最重要的那個變化 [字, +幾項, 樣式]；只有官方更新的話，7 天內標「剛更新」
+  const e = S.stale && S.stale[kind + ':' + id]; if (!e) return null;
+  const ch = chgSort(e.ch || []);
+  if (ch.length) return [chgText(ch[0])[0], ch.length > 1 ? `+${ch.length - 1}` : '', ''];
+  return e.lp && Date.now() - Date.parse(e.lp.d) < 7 * 864e5 ? ['剛更新', '', 'k'] : null;
+}
+function afterChip(kind, id) { const a = afterTag(kind, id); return a ? `<span class="mchg ${a[2]}">${esc(a[0])}${a[1] ? `<small>${a[1]}</small>` : ''}</span>` : ''; }
+const IDX = new WeakMap();
+function byId(list) {   // 目錄的 id 索引：建一次就好（資料重新載入換了陣列就重建）
+  let m = IDX.get(list);
+  if (!m || m.size !== list.length) { m = new Map(list.map((x) => [x.id, x])); IDX.set(list, m); }
+  return m;
+}
+function afterNotes() {   // 追蹤牆：最近 7 天的變化（同一款一張）、最近 3 天的官方更新（最多兩張）。只看有動態的那幾篇，不掃整個目錄
+  const out = []; const pt = []; const now = Date.now(); const st = S.stale || {};
+  const F = byId(S.index.items); const P = byId((S.picks && S.picks.items) || []);
+  for (const ref in st) {
+    const e = st[ref]; if (!e.ch && !(e.lp && e.lp.t)) continue;
+    const k = ref[0]; const it = (k === 'p' ? P : F).get(ref.slice(2)); if (!it) continue;
+    const ch = chgSort((e.ch || []).filter((c) => { const age = (now - Date.parse(c.d)) / 864e5; return age >= 0 && age < 7; }));
+    if (ch.length) {      // 最重要的變化當大字，其他的接在後面
+      const c = ch[0]; const age = (now - Date.parse(c.d)) / 864e5;
+      const V = { zh: [c.b === 'tc' ? '繁中' : '簡中', ''], rel: ['上市', ''], ea: ['1.0', ''], free: ['免費', ''], ws: ['MOD', ''],
+        orig: [(c.b < c.a ? '-' : '+') + Math.round(Math.abs(c.b - c.a) / c.a * 100), '%'], rv: [c.b, '%'] }[c.k] || [chgText(c)[0], ''];
+      out.push({ w: 90 - age, id: it.id, go: `${k}/${it.id}`, t: it.zh, v: V[0], unit: V[1], d: `${mdDay(twDay(c.d))} ${chgText(c)[1]}${ch.length > 1 ? '・還有' + ch.slice(1).map((x) => chgText(x)[0]).join('、') : ''}`, c: 'k' });
+    }
+    if (e.lp && e.lp.t && now - Date.parse(e.lp.d) < 3 * 864e5) pt.push({ w: 56 - (now - Date.parse(e.lp.d)) / 864e5, id: it.id, go: `${k}/${it.id}`, t: it.zh, v: '更新', unit: '', d: `${mdDay(twDay(e.lp.d))} 官方更新：${e.lp.t.length > 42 ? e.lp.t.slice(0, 41) + '…' : e.lp.t}`, c: 'w' });
+  }
+  return out.concat(pt.sort((a, b) => b.w - a.w).slice(0, 2));
 }
 function moneyHtml(m) {
   const L = m.level;
@@ -312,6 +399,7 @@ async function renderFeature(id) {
       <div class="f-en">${esc(f.game.en)}${f.game.zh_note ? `<span class="f-zhnote">（${esc(f.game.zh_note)}）</span>` : ''}</div>
       <p class="f-headline">${esc(f.headline)}</p></div>
     ${glanceHtml(f, it, lv)}
+    ${afterBanner('f', f, lv)}
     <p class="hook">${esc(f.hook)}</p>
     <div class="verdict"><div class="vl">三秒結論 · ${esc(V.label)}</div><div class="vt">${esc(V.stamp === '推薦' ? '值得玩' : V.stamp === '觀望' ? '先觀望' : '先跳過')}</div>
       <p class="vs">${esc(V.summary)}</p>${sealHtml(V.stamp, V.label, 'seal wait')}
@@ -320,7 +408,7 @@ async function renderFeature(id) {
     <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn sm askthis" data-act="askthis" data-k="feature">${ICON.radio}<span>問 Claude</span></button><button class="btn p sm" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
     ${askBoxFor('f:' + id)}
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
-    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源；粉紅色問號是還沒查證的。</p><div class="facts">${facts}</div>${liveHtml(f, lv, h)}${infoCards(f, lv)}`)}
+    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源；粉紅色問號是還沒查證的。</p><div class="facts">${facts}</div>${liveHtml(f, lv, h)}${afterHtml('f', f, lv)}${infoCards(f, lv)}`)}
     ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>${M.vids.length ? `<div class="btnrow"><button class="btn sm k" data-go="shorts/f:${esc(id)}">${ICON.shorts}<span>用短影音直式滑著看</span></button></div>` : ''}
       ${M.shots.length ? `<h3 class="tape-h">相簿 <small class="shot-n">${M.shots.length} 張・點開可以左右滑</small></h3><div class="shots">${M.shots.map((s, i) => `<div class="shot" data-act="lb" data-i="${i}" style="--rot:${rot(id + s, i, 1)}deg"><img src="${esc(s)}" alt="" loading="lazy" decoding="async" onerror="shotFail(this)" onload="if(this.naturalWidth<=120)shotFail(this)"></div>`).join('')}</div>` : ''}`)}
     ${sec('s-play', 'PLAY', '玩法拆解', `<div class="loop">${Sx.gameplay.loop.map((x, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="lp" style="--rot:${rot(id + x, i, 2)}deg">${esc(x)}</span>`).join('')}<span class="back2">↺ 再來一輪</span></div>
@@ -389,13 +477,13 @@ function pickCard(it, i) {
     <div class="pimg"><div class="kb">${img ? `<img class="kbi on" src="${esc(img)}" alt="" loading="${i > 1 ? 'lazy' : 'eager'}" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)"><img class="kbi" alt="" decoding="async">` : ''}</div><div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div><div class="ht"></div>
       <span class="pk-year">${esc(it.year || (it.release || '').slice(0, 4))}</span>${disc ? `<span class="pk-off">特價 -${disc}%</span>` : ''}${mc.mp4 || mc.webm ? '<span class="pv-tag">▶ 動態</span>' : ''}</div>
     <div class="pk-b"><div class="pk-lbl">${esc(it.label)}</div><h3 class="ptitle">${esc(it.zh)}</h3>${it.en && it.en !== it.zh ? `<div class="pen">${esc(it.en)}</div>` : ''}
-      <p class="phead">${esc(it.pitch)}</p><div class="chips">${pickChips(it, lv)}</div></div>
+      <p class="phead">${esc(it.pitch)}</p><div class="chips">${((a) => a ? `<span class="chip af${a[2]}">寫稿後・${esc(a[0])}${a[1] ? ' ' + a[1] : ''}</span>` : '')(afterTag('p', it.id))}${pickChips(it, lv)}</div></div>
     <div class="pk-stamp">${esc(it.stamp)}</div><i class="tp tp1"></i></article>`;
 }
 function pickMini(it, i) {
   const lv = liveOf(it.steam); const img = headerOf(it, lv) || heroOf(it, lv);
   return `<div class="mini pkm ${PICK_CLS[it.stamp] || ''}" data-go="p/${esc(it.id)}" style="--rot:${rot(it.id, i, 1.2)}deg">
-    <div class="pimg">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div></div>
+    <div class="pimg">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)" onload="ytCheck(this)">` : ''}<div class="ph" style="${img ? 'display:none' : ''}">UNPACKED</div>${afterChip('p', it.id)}</div>
     <span class="mstamp pks">${esc(it.stamp)}</span>
     <div class="mb"><h4>${esc(it.zh)}</h4><div class="md">${esc(it.year || '')} · ${esc((it.genres || []).slice(0, 2).join('／'))}</div></div></div>`;
 }
@@ -478,6 +566,7 @@ async function renderPick(id) {
       <div class="f-en">${esc(f.game.en)}${f.game.zh_note ? `<span class="f-zhnote">（${esc(f.game.zh_note)}）</span>` : ''}</div>
       <p class="f-headline">${esc(f.pitch)}</p></div>
     ${pickGlance(f, it, lv)}
+    ${afterBanner('p', f, lv)}
     <div class="letter"><i class="tp tp1"></i><div class="lt-h">為什麼推你</div><p>${esc(f.why)}</p><div class="lt-sign">— Claude</div>
       <div class="seal wait pk-seal ${PICK_CLS[f.stamp] || ''}">${esc(f.stamp)}</div></div>
     <div class="rsns">${f.reasons.map((r, i) => `<div class="rsn" style="--i:${i};--rot:${rot(id + r.h, i, 1.4)}deg"><b class="rn">${i + 1}</b><h4>${esc(r.h)}</h4><p>${esc(r.t)}</p></div>`).join('')}</div>
@@ -498,7 +587,7 @@ async function renderPick(id) {
     ${story ? sec('s-story', 'STORY', '劇情與世界觀', `${(Sx.story.safe || []).map((p) => `<p class="para">${esc(p)}</p>`).join('')}${(Sx.story.spoiler || []).length ? `<div class="spoil"><div class="inner">${Sx.story.spoiler.map((p) => `<p class="para">${esc(p)}</p>`).join('')}</div><div class="cover" data-act="spoil"><b>⚠ 有雷，撕開才看</b><span>tap to rip!</span></div></div>` : ''}`) : ''}
     ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>${M.vids.length ? `<div class="btnrow"><button class="btn sm k" data-go="shorts/p:${esc(id)}">${ICON.shorts}<span>用短影音直式滑著看</span></button></div>` : ''}
       ${M.shots.length ? `<h3 class="tape-h">相簿 <small class="shot-n">${M.shots.length} 張・點開可以左右滑</small></h3><div class="shots">${M.shots.map((s2, i) => `<div class="shot" data-act="lb" data-i="${i}" style="--rot:${rot(id + s2, i, 1)}deg"><img src="${esc(s2)}" alt="" loading="lazy" decoding="async" onerror="shotFail(this)" onload="if(this.naturalWidth<=120)shotFail(this)"></div>`).join('')}</div>` : ''}`)}
-    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源。</p><div class="facts">${factsHtml(f)}</div>${liveHtml(f, lv, h)}${infoCards(f, lv)}`)}
+    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源。</p><div class="facts">${factsHtml(f)}</div>${liveHtml(f, lv, h)}${afterHtml('p', f, lv)}${infoCards(f, lv)}`)}
     ${(Sx.studio || []).length ? sec('s-studio', 'STUDIO', '幕後：誰做的', `${Sx.studio.map((p) => `<p class="para">${esc(p)}</p>`).join('')}${(Sx.timeline || []).length ? `<h3 class="tape-h">時間軸</h3><div class="tl">${Sx.timeline.map((t) => `<div class="tli ${t.d > today ? 'fut' : ''}"><div class="td">${esc(t.d.replace(/-/g, '.'))}</div><div class="tt">${esc(t.t)}</div></div>`).join('')}</div>` : ''}`) : ''}
     ${sec('s-talk', 'TALK', '玩完可以聊', `${(f.talk || []).length ? `<div class="qs">${f.talk.map((q, i) => `<div class="q" style="--rot:${rot(id + q.q, i, 0.9)}deg"><h4>${esc(q.q)}</h4><p>${esc(q.why)}</p><textarea data-act="thought" data-k="${esc(id)}#${i}" placeholder="我的想法（只存在這台裝置）">${esc(S.thoughts[id + '#' + i] || '')}</textarea></div>`).join('')}</div>` : ''}
       <h3 class="tape-h">我的標記</h3><div class="marks">${[['want', '想玩'], ['playing', '在玩'], ['done', '玩過'], ['no', '沒興趣']].map(([k, l], i) => `<button class="mkb ${mk === k ? 'on' : ''}" data-act="mark" data-k="${k}" style="--rot:${rot(id + k, i, 2)}deg">${l}</button>`).join('')}</div>

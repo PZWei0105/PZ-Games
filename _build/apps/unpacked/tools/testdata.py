@@ -215,3 +215,38 @@ if '--tgares' in sys.argv:
     t['result_at'] = iso(time.time() - 3600); t['show'] = iso(time.time() - 5 * 3600); t['vote_end'] = iso(time.time() - 30 * 3600)
     json.dump(t, open(p, 'w', encoding='utf-8'), ensure_ascii=False)
     print('test tga results →', d)
+
+if '--after' in sys.argv:      # 寫稿之後：假的變化紀錄、官方公告、回訪改寫（用 live.py 自己的邏輯產生 stale.json）
+    import datetime as _dt
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import live as L
+    T = time.time(); H = 3600
+    at = lambda h: iso(T - h * H)  # noqa: E731
+    lv = L.live_load(d); A = lv['apps']
+    def N(t, h, k='patch', x='（測試資料）修正連線斷線、調整平衡，新增兩張地圖與一組成就；完整內容請看 Steam 公告。'):
+        return {'t': t, 'd': at(h), 'u': 'https://store.steampowered.com/news/app/0', 'k': k, 'x': x}
+    for a in A.values():
+        a.setdefault('base', L._snap(a)); a.setdefault('news', [])
+    A['4262460'].update(chg=[{'k': 'zh', 'a': 'none', 'b': 'tc', 'd': at(20)}, {'k': 'rv', 'a': 50, 'b': 62, 'd': at(10)}],
+                        news=[N('Patch 0.4.2 – Anti-cheat & Performance', 5), N('Halloween Event Recap & What’s Next', 30, 'news', '（測試資料）萬聖節活動回顧，下一季路線圖預告：新地圖、公會系統、排位賽。'), N('Hotfix 0.4.1', 40)])
+    A['4348910'].update(ws=True, chg=[{'k': 'ws', 'd': at(8)}], news=[N('Update 1.1: Appraisal Rework', 6)])
+    A['1203620']['news'] = [N('Update #6: The Frozen Peaks', 3), N('Winter Sale is live!', 50, 'news', '（測試資料）冬季特賣開跑。')]
+    A['268500'].update(chg=[{'k': 'orig', 'a': 89900, 'b': 59900, 'd': at(15)}], news=[N('XCOM 2 Collection Patch Notes', 12)])
+    A['2379780']['news'] = [N('Balatro 1.0.2 Patch Notes', 12)]
+    L.live_save(d, lv)
+    idx = json.load(open(os.path.join(d, 'index.json'), encoding='utf-8')); pk = json.load(open(os.path.join(d, 'picks.json'), encoding='utf-8'))
+    p = os.path.join(d, 'features', 'absolum.json')
+    if os.path.exists(p):      # 回訪改寫過的樣子
+        f = json.load(open(p, encoding='utf-8'))
+        f['rev'] = [{'d': time.strftime('%Y-%m-%d', time.gmtime(T + 8 * H)), 't': '（測試）加了繁中，中文段、結論已更新'}]
+        f['updated'] = time.strftime('%Y-%m-%dT%H:%M:%S+08:00', time.gmtime(T + 8 * H - 1800))
+        json.dump(f, open(p, 'w', encoding='utf-8'), ensure_ascii=False)
+        for it in idx['items']:
+            if it['id'] == 'absolum':
+                it['updated'] = f['updated']
+        json.dump(idx, open(os.path.join(d, 'index.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+        A['1904480']['chg'] = [{'k': 'zh', 'a': 'sc', 'b': 'tc', 'd': at(26)}]   # 回訪前的變化：不該再出現
+        L.live_save(d, lv)
+    lv['stale'] = L.stale_app(A, idx, pk, _dt.datetime.now(_dt.timezone.utc))
+    L.live_save(d, lv)
+    print('test after →', d)

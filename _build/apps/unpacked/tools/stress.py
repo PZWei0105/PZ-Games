@@ -75,6 +75,7 @@ def main():
             x = copy.deepcopy(t)
             x['id'] = f"{t['id']}-y{nf + k}"
             x['date'], x['rank'] = day, k + 1
+            x['updated'] = day + 'T06:30:00+08:00'
             x['zh'] = f"{t['zh']} #{nf + k}"
             if t.get('steam'):
                 x['steam'] = clone_live(t['steam'])
@@ -86,6 +87,7 @@ def main():
             x = copy.deepcopy(t)
             x['id'] = f"{t['id']}-y{np_ + k}"
             x['date'], x['rank'] = day, k + 1
+            x['updated'] = day
             x['zh'] = f"{t['zh']} #{np_ + k}"
             if t.get('steam'):
                 x['steam'] = clone_live(t['steam'])
@@ -116,6 +118,20 @@ def main():
         import live as L   # noqa: E402
         if os.path.isdir(os.path.join(D, 'live')):
             shutil.rmtree(os.path.join(D, 'live'))
+        # 寫稿之後：每款都有官方公告（活躍度不一）、少數有變化紀錄，跟真的一年後差不多
+        now = dt.datetime.now(dt.timezone.utc)
+        W = ['Patch', 'Hotfix', 'Update', 'Dev Diary', 'Roadmap', 'Season', 'Event', 'Balance', 'Notes', 'Winter', 'Content', 'Community']
+        CK = [('zh', 'none', 'tc'), ('zh', 'sc', 'tc'), ('ea', None, None), ('rel', None, 'ea'), ('orig', 49900, 39900), ('rv', 71, 83), ('ws', None, None)]
+        for x in live['apps'].values():
+            x.setdefault('base', L._snap(x))
+            act = rnd.choice((2, 6, 14, 30, 60, 120))         # 平均幾天發一則公告
+            x['news'] = [{'t': f"{rnd.choice(W)} {rnd.randint(0, 9)}.{rnd.randint(0, 40)}.{rnd.randint(0, 9)} – {rnd.choice(W)} {'%06x' % rnd.getrandbits(24)}",
+                          'd': L.iso(now - dt.timedelta(days=act * i + rnd.random() * act)), 'u': f'https://store.steampowered.com/news/app/{x["appid"]}/view/{rnd.getrandbits(60)}',
+                          'k': rnd.choice(('patch', 'patch', 'news')), 'x': ' '.join('%x' % rnd.getrandbits(28) for _ in range(14))} for i in range(8)]
+            if rnd.random() < 0.06:
+                k, a0, b0 = rnd.choice(CK)
+                x['chg'] = [L._nonull({'k': k, 'a': a0, 'b': b0, 'd': L.iso(now - dt.timedelta(days=rnd.random() * 200))})]
+        live['stale'] = L.stale_app(live['apps'], idx, picks, now)
         L.live_save(D, live)
     dump(os.path.join(D, 'wish.json'), wish)
     sz = lambda n: os.path.getsize(os.path.join(D, n)) / 1e6  # noqa: E731
