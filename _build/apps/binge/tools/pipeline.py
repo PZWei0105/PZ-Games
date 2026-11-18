@@ -1552,6 +1552,16 @@ def build_ext(cache, me):
     if not rows:
         return None
     rows.sort(key=lambda r: (r[1].get('src') != 'live', -(r[1].get('cv') or 0), -(r[1].get('v') or 0)))
+    # 同一個頻道最多兩支、同名的只留一支（2026-11-19：《神獸金剛》一台洗了十幾支）
+    per, names, keep = collections.Counter(), set(), []
+    for vid, v in rows:
+        nk = X.norm(X.clean_title(s2t(v['t']), '') or v['t'])[:24]
+        if per[v['c']] >= 2 or nk in names:
+            continue
+        per[v['c']] += 1
+        names.add(nk)
+        keep.append((vid, v))
+    rows = keep
     chs = sorted({v['c'] for _, v in rows})
     ci = {c: i for i, c in enumerate(chs)}
     ch_out = []
