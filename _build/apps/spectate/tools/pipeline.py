@@ -53,6 +53,7 @@ KEEP_PER_CH = 40          # 每個頻道最多留幾支
 SHORTS_PER_RUN = 320      # 每次最多查幾支是不是 Shorts
 STEAM_PER_RUN = 45        # 每次最多查幾次 Steam
 CLS_VER = 2               # 分類規則改了就加一：舊影片全部重新判斷（Steam 結果有快取，不會多花額度）
+OFFTOPIC = re.compile(r'民眾黨|民众党|國民黨|国民党|民進黨|民进党|時代力量|立委|立法院|總統府|总统府|選舉|选举|罷免|罢免|政論|政论|柯文哲|賴清德|赖清德|侯友宜|鄭麗文|黃國昌|黄国昌')
 NOT_GAMING_CATS = {'10', '15', '17', '19', '26', '29'}   # 音樂、寵物、運動、旅遊、生活風格、公益
 
 NOW = time.time()
@@ -1472,6 +1473,8 @@ def build_feed(cache, roster, me):
             it['ne'] = v['ne']
         if v.get('ext') and v['c'] not in chans:
             it['ext'] = v['ext']
+            if OFFTOPIC.search((v.get('t0') or '') + ' ' + (v.get('t') or '')):
+                it['x'] = 1        # 名單外、掛遊戲分類但其實是政論／時事談話的，收起來
         if v.get('t0') and v.get('t0') != it['t']:
             it['t0'] = v['t0']
         m = med.get(v['c'])
