@@ -216,7 +216,7 @@ def trailers(it):
 _ITEMS = {}   # 這一輪已經問過的（不含預告）：行情板、免費補給站跟選題候選共用，不重複問
 
 
-def get_items(appids, media=True):
+def get_items(appids, media=True, ctx=None):
     dr = {'include_basic_info': True, 'include_assets': True, 'include_release': True, 'include_reviews': True,
           'include_tag_count': 12, 'include_supported_languages': True, 'include_platforms': True}
     if media:
@@ -231,7 +231,7 @@ def get_items(appids, media=True):
             ids.append(a)
     for i in range(0, len(ids), 30):
         part = ids[i:i + 30]
-        url = api(GETITEMS, {'ids': [{'appid': a} for a in part], 'context': CTX, 'data_request': dr})
+        url = api(GETITEMS, {'ids': [{'appid': a} for a in part], 'context': ctx or CTX, 'data_request': dr})
         try:
             d = get_json(url, timeout=50)
         except Exception as e:  # noqa: BLE001
@@ -241,7 +241,8 @@ def get_items(appids, media=True):
         for it in (d.get('response') or {}).get('store_items') or []:
             if it.get('success') == 1 and (it.get('appid') or it.get('id')):
                 out[int(it.get('appid') or it.get('id'))] = it
-                _ITEMS[int(it.get('appid') or it.get('id'))] = it
+                if not ctx:
+                    _ITEMS[int(it.get('appid') or it.get('id'))] = it
         time.sleep(0.4)
     return out
 
@@ -645,6 +646,15 @@ def board(D, t0, tagn, cov):
         return False
     ids = sorted(conc, key=lambda a: -conc[a])[:BOARD_N]
     info = get_items(ids, media=False)
+    miss = [a for a in ids if a not in info]
+    notw = set()
+    if miss:   # 台灣區沒上架的（GetItems 用台灣查不到）：改用美國區查名稱和圖，標「台灣區沒上架」
+        try:
+            more = get_items(miss, media=False, ctx=dict(CTX, country_code='US'))
+            info.update(more)
+            notw = set(more)
+        except Exception as e:  # noqa: BLE001
+            print('board: 美國區補名稱失敗', e)
     oT, oS = old.get('t') or [], old.get('s') or []
     T = [t for t in oT if t >= tm - BOARD_H]
     cut_h = len(oT) - len(T)
@@ -736,6 +746,9 @@ def board(D, t0, tagn, cov):
             r['zh'] = 'tc' if 'tc' in x['langs'] else 'sc' if 'sc' in x['langs'] else None
             if x['adult']:
                 r['adult'] = True
+            if a in notw:
+                r['notw'] = True
+                r.pop('p', None)
         else:
             r['nm'] = hd['nm'].get(k) or f'App {a}'
         r['cov'] = cov.get(a)

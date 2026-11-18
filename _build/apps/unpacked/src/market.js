@@ -45,7 +45,7 @@ function mkRow(r, i) {
   return `<div class="mk-row ${c}" data-act="mkinfo" data-a="${r.a}" style="--i:${Math.min(i, 24)}">
     <div class="mk-r"><b>${r.r}</b>${wk ? `<i class="${wk > 0 ? 'up' : 'dn'}">${wk > 0 ? '↑' : '↓'}${Math.abs(wk)}</i>` : (r.f || []).includes('new') ? '<i class="nw">NEW</i>' : ''}</div>
     <div class="mk-im">${r.img ? `<img src="${esc(r.img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${r.img ? 'display:none' : ''}">STEAM</div></div>
-    <div class="mk-b"><h4>${esc(mkName(r))}</h4><div class="mk-m">${(r.f || []).filter((f) => f !== 'new').map((f) => `<i class="mkf f-${f}">${MK_F[f]}</i>`).join('')}${r.cov ? `<i class="mkf f-cov">${r.cov[0] === 'f' ? '解包過' : '推坑過'}</i>` : ''}<span>${esc((r.tags || []).slice(0, 2).join('・'))}</span></div></div>
+    <div class="mk-b"><h4>${esc(mkName(r))}</h4><div class="mk-m">${(r.f || []).filter((f) => f !== 'new').map((f) => `<i class="mkf f-${f}">${MK_F[f]}</i>`).join('')}${r.cov ? `<i class="mkf f-cov">${r.cov[0] === 'f' ? '解包過' : '推坑過'}</i>` : ''}${r.notw ? '<i class="mkf f-notw">台灣沒上架</i>' : ''}<span>${esc((r.tags || []).slice(0, 2).join('・'))}</span></div></div>
     ${mkSpark(r.sp && r.sp.filter((v) => v != null).length > 2 ? r.sp : r.h, c)}
     <div class="mk-v"><b>${mkNum(r.n)}</b><span class="${c}">${mkPct(r.d1)}</span></div></div>`;
 }
@@ -118,7 +118,7 @@ async function mkInfo(a) {
       <div><span>線上排名</span><b>#${r.r}</b><em>${r.rp ? `每日高峰 #${r.rp}` : ''}${wk ? `・上週 #${r.lw}` : ''}</em></div>
       <div><span>追蹤以來最高</span><b>${r.ath ? esc(mkNum(r.ath[0])) : '—'}</b><em>${r.ath ? esc(mdDay(r.ath[1])) : '追蹤滿 3 天才算'}</em></div>
       <div><span>Steam 評價</span><b>${r.rv && r.rv[0] != null ? r.rv[0] + '%' : '—'}</b><em>${r.rv ? esc(fmtN(r.rv[1])) + ' 則' : ''}</em></div>
-      <div><span>台灣售價</span><b>${r.free ? '免費' : r.p ? esc(fmtNT(r.p[0])) : '—'}</b><em>${r.p && r.p[1] ? '-' + r.p[1] + '% 特價中' : ''}</em></div>
+      <div><span>台灣售價</span><b>${r.notw ? '沒上架' : r.free ? '免費' : r.p ? esc(fmtNT(r.p[0])) : '—'}</b><em>${r.notw ? 'Steam 台灣區買不到' : r.p && r.p[1] ? '-' + r.p[1] + '% 特價中' : ''}</em></div>
     </div>
     ${mkChart(r.h, b.t, '30 小時線上人數')}${mkChart(r.sp, b.s, '7 天走勢')}<div id="mkdays"></div>
     <div class="btnrow">${ref ? `<button class="btn y" data-go="${esc(ref.route)}">${ref.kind === 'f' ? ICON.page : ICON.gem}<span>${ref.kind === 'f' ? '看解包' : '看推坑'}</span></button>` : `<button class="btn y" data-act="askreq" data-g="${esc(nm)}" data-a="${r.a}">${ICON.radio}<span>點播解包這款</span></button>`}
