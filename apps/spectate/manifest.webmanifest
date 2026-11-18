@@ -1,0 +1,30 @@
+{
+ "name": "觀戰 SPECTATE",
+ "short_name": "觀戰",
+ "description": "痞子葳的遊戲轉播台：只有遊戲的 YouTube——預告、直播、評測、實況，中文優先；不跟家裡的帳號混在一起，也不被演算法關進同溫層。",
+ "lang": "zh-Hant-TW",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#06070b",
+ "theme_color": "#06070b",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
