@@ -669,6 +669,7 @@ def main():
     dump(os.path.join(out, 'feed.json'), feed)
     dump(os.path.join(out, 'games.json'), {'v': 1, 'at': stamp(), 'games': games})
     dump(os.path.join(out, 'discover.json'), build_discover(cache))
+    dump(os.path.join(out, 'mine.json'), build_mine(feed))      # 《一集就好》首頁置頂：痞子葳自己的頻道
     dump(os.path.join(out, 'cache.json'), cache)
     quiet = []
     for cid, r in roster['channels'].items():
@@ -698,6 +699,18 @@ def main():
         dump(os.path.join(data_dir, 'roster.json'), roster, pretty=True)
         log('roster.json 有變動')
     log('完成：%d 支影片、%d 個頻道、%.1f 秒、API %d 點' % (len(feed['items']), len(feed['ch']), time.time() - t0, UNITS[0]))
+
+
+def build_mine(feed):
+    """痞子葳自己的頻道（名單上 mine）：頻道資料＋最新 6 支（不含 Shorts、即將直播），給《一集就好》讀。"""
+    out = {'v': 1, 'at': stamp(), 'ch': []}
+    for cid, ch in feed['ch'].items():
+        if not ch.get('mine'):
+            continue
+        vids = [it for it in feed['items'] if it['c'] == cid and not it.get('s') and it.get('lv') != 'upcoming'][:6]
+        out['ch'].append({'c': cid, 'n': ch.get('n'), 'a': ch.get('a'), 'h': ch.get('h'), 'subs': ch.get('subs'),
+                          'items': [{k: it.get(k) for k in ('i', 't', 'tz', 'p', 'd', 'v', 'lv', 'ne') if it.get(k) is not None} for it in vids]})
+    return out
 
 
 def stamp():
