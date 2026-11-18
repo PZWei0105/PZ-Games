@@ -1,10 +1,10 @@
 'use strict';
 /* 補番 BINGE — 聲音：全部 Web Audio 即時合成
    音效走動畫的語彙：キラキラ的閃光、太鼓「咚！」、眼睛貼（Eyecatch）的木琴小段、次回預告的「鏘——」、扭蛋的喀啦聲。
-   背景是 Lo-fi 動畫咖啡廳：電鋼琴七和弦、搖擺的鼓、卡林巴旋律、黑膠底噪；白天輕快一點，深夜慢一點。看片時自動停。 */
+   背景是 Lo-fi 動畫咖啡廳：電鋼琴七和弦、搖擺的鼓、卡林巴旋律（不加黑膠底噪：一直沙沙響聽起來像水聲，痞子葳嫌吵，2026-11-18 拿掉）；白天輕快一點，深夜慢一點。看片時自動停。 */
 
 const Snd = (() => {
-  let ctx = null, master = null, sfxBus = null, bgmBus = null, comp = null, noiseBuf = null, verb = null, hiss = null;
+  let ctx = null, master = null, sfxBus = null, bgmBus = null, comp = null, noiseBuf = null, verb = null;
   let bgmOn = false, bgmTimer = 0, nextT = 0, step = 0, ducked = false, hidden = false, mood = 'day', seedRnd = Math.random;
 
   function init() {
@@ -272,23 +272,7 @@ const Snd = (() => {
         });
       }
     }
-    // 黑膠的爆擦聲
-    if (Math.random() < 0.09) {
-      const sN = ctx.createBufferSource(); sN.buffer = noise();
-      const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500 + Math.random() * 3000;
-      const g = ctx.createGain(); env(g, t + Math.random() * S16, 0.0005, 0.02 + Math.random() * 0.03, 0.012);
-      sN.connect(f); f.connect(g); g.connect(B); sN.start(t, Math.random()); sN.stop(t + 0.05);
-    }
   }
-  function startHiss() {
-    if (hiss) return;
-    const s = ctx.createBufferSource(); s.buffer = noise(); s.loop = true;
-    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = 0.4;
-    const g = ctx.createGain(); g.gain.value = 0.012;
-    s.connect(f); f.connect(g); g.connect(bgmBus); s.start();
-    hiss = s;
-  }
-  function stopHiss() { if (hiss) { try { hiss.stop(); } catch (e) { /* */ } hiss = null; } }
   function bgmTarget() { return SET.bgm && !ducked && !hidden ? 0.34 : 0; }
   function bgmStart() {
     if (!ctx || bgmOn || !SET.bgm || ducked) return;
@@ -299,7 +283,6 @@ const Snd = (() => {
     bgmBus.gain.cancelScheduledValues(ctx.currentTime);
     bgmBus.gain.setValueAtTime(0.0001, ctx.currentTime);
     bgmBus.gain.exponentialRampToValueAtTime(Math.max(bgmTarget(), 0.0001), ctx.currentTime + 2.2);
-    startHiss();
     clearInterval(bgmTimer);
     bgmTimer = setInterval(sched, 30);
   }
@@ -310,7 +293,7 @@ const Snd = (() => {
     bgmBus.gain.cancelScheduledValues(t);
     bgmBus.gain.setValueAtTime(Math.max(bgmBus.gain.value, 0.0001), t);
     bgmBus.gain.exponentialRampToValueAtTime(0.0001, t + fade);
-    setTimeout(() => { if (!bgmOn) { clearInterval(bgmTimer); stopHiss(); } }, fade * 1000 + 80);
+    setTimeout(() => { if (!bgmOn) clearInterval(bgmTimer); }, fade * 1000 + 80);
   }
   function refresh() {
     if (!ctx) return;
