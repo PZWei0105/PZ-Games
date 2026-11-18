@@ -51,6 +51,15 @@ function vsGame(ref) {
   const lv = liveOf(it.steam);
   return { ref: `${k}:${id}`, kind: k, id, it, lv, full: VS.full[`${k}:${id}`] || null, name: it.zh, en: it.en, img: headerOf(it, lv), hero: heroOf(it, lv) };
 }
+/** 首頁「今日對決」：今天最新的兩款直接上擂台（不到兩款就拿最近的兩款）——VS 擂台的正門 */
+function vsStrip(todays) {
+  const items = (S.index && S.index.items) || [];
+  const pool = (todays && todays.length >= 2 ? todays : items).slice(0, 2);
+  const [a, b] = pool.map((it) => vsGame('f:' + it.id));
+  if (!a || !b) return '';
+  const side = (g, s) => `<span class="vst-s ${s}">${g.img ? `<img src="${esc(g.img)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}<b>${esc(g.name)}</b></span>`;
+  return `<div class="vs-strip" data-go="vs/${esc(a.ref)},${esc(b.ref)}" role="button" aria-label="今日對決：${esc(a.name)} 對 ${esc(b.name)}"><span class="vst-k">⚔ 今日對決・VS 擂台</span><div class="vst-row">${side(a, 'l')}<i class="vst-vs">VS</i>${side(b, 'r')}</div><span class="vst-go">上擂台一局一局比 →</span></div>`;
+}
 function vsAll() {
   const out = [];
   for (const it of (S.index && S.index.items) || []) out.push({ ref: 'f:' + it.id, it, k: '專題' });

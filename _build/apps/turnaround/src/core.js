@@ -94,6 +94,7 @@ const DEF = () => ({
   sent: {}, // eventId -> 送出時間
   delivered: 0,
   introDay: '',
+  introRev: 0, // 開場的版本（INTRO_REV）：開場改了之後第一次打開照樣播
   seenDay: '',
   settings: { sfx: true, music: true, announce: true, fx: 'full' },
   at: '',

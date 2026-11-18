@@ -12,11 +12,14 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const u = new URL(req.url);
   if (u.origin !== location.origin) return;
+  if (u.pathname.endsWith('/ver.json')) return;   // 換新版的檢查：直接問網路、不存
   if (/\.(webp|png|jpg|jpeg)$/i.test(u.pathname)) {
     e.respondWith(caches.match(req).then((r) => r || fetch(req).then((res) => { if (res.ok) { const cp = res.clone(); caches.open(C).then((c) => c.put(req, cp)); } return res; })));
     return;
   }
-  e.respondWith(fetch(req).then((res) => {
+  // App 本體不吃瀏覽器的 10 分鐘快取（GitHub Pages），每次都跟網站確認是不是最新的
+  const shell = req.mode === 'navigate' || /\/(index\.html)?$/.test(u.pathname);
+  e.respondWith(fetch(req, shell ? { cache: 'no-cache' } : undefined).then((res) => {
     if (res.ok) { const cp = res.clone(); caches.open(C).then((c) => c.put(req, cp)); }
     return res;
   }).catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || (req.mode === 'navigate' ? caches.match('./index.html') : undefined))));

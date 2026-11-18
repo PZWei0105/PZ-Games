@@ -1,6 +1,7 @@
 /* 解包 — 啟動、路由、互動 */
 const VIEW = () => $('#view');
 let ROUTE = '';
+const INTRO_REV = 2;   // 2026/11/18 開場加了「頭條拍上牆」
 let NAVN = 0;   // App 裡往前走了幾步（「回牆上」才知道能不能用上一頁）
 
 function setTabs(name) {
@@ -532,7 +533,7 @@ async function boot() {
   fxInit();
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
-    <button class="ib askb" data-go="ask" aria-label="點播台">${ICON.radio}<i class="dot hide"></i></button><button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
+    <button class="ib vsb-top" data-go="vs" aria-label="VS 擂台"><b>VS</b></button><button class="ib askb" data-go="ask" aria-label="點播台">${ICON.radio}<i class="dot hide"></i></button><button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
   $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
@@ -545,8 +546,10 @@ async function boot() {
     audioInit(); S.muted = !!muted; topIcons();
     gate.remove();
     const today = todayTW(); const mode = S.settings.intro;
-    const want = mode === 'off' ? null : mode === 'always' ? 'full' : mode === 'short' ? 'short' : (LS.get('introDay', '') === today ? 'short' : 'full');
-    LS.set('introDay', today);
+    let want = mode === 'off' ? null : mode === 'always' ? 'full' : mode === 'short' ? 'short' : (LS.get('introDay', '') === today ? 'short' : 'full');
+    // 開場有新段落時（INTRO_REV），更新後第一次打開照樣播完整版，不用等到明天
+    if (want === 'short' && mode !== 'short' && (+LS.get('introRev', 0) || 0) < INTRO_REV) want = 'full';
+    LS.set('introDay', today); LS.set('introRev', INTRO_REV);
     const nToday = S.index.items.filter((x) => x.date === (S.index.items[0] || {}).date).length;
     S.introPending = !!want;
     route();
@@ -568,3 +571,34 @@ async function boot() {
   if (/[?&]enter=1/.test(location.search)) gate.click();
 }
 boot();
+
+/* ---------- 換新版（2026/11/18）----------
+   加到主畫面的 App 切回來不會重新載入，所以回到 App 時看一下網站上的 ver.json：已經是新版就重新載入
+   （剛切回來、沒在打字、沒開著東西才自動換；不然頂端出一顆「有新版本・點一下更新」）。一分鐘最多看一次；
+   自動重新載入之後 60 秒內不再自動換（網站快取還沒換完時不會一直重整）。 */
+const Fresh = {
+  at: 0, busy: false, shown: false, hid: 0,
+  async check(back) {
+    if (location.protocol === 'file:' || this.busy || !navigator.onLine) return;
+    const now = Date.now(); if (now - this.at < 60e3) return; this.at = now; this.busy = true;
+    try {
+      const r = await fetch('ver.json?t=' + now, { cache: 'no-store' }); if (!r.ok) return;
+      const j = await r.json(); if (!j || !j.v || j.v === VERSION) return;
+      let last = 0; try { last = +sessionStorage.getItem('freshAt') || 0; } catch (e) { /* 無痕模式 */ }
+      const typing = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+      if (back && !typing && (!$('#sheet.on') && !S.introPending && !ROUTE.startsWith('shorts')) && now - last > 60e3) { this.reload(); return; }
+      this.chip();
+    } catch (e) { /* 連不上就下次再看 */ } finally { this.busy = false; }
+  },
+  reload() { try { sessionStorage.setItem('freshAt', String(Date.now())); } catch (e) { /* 無痕模式 */ } location.reload(); },
+  chip() {
+    if (this.shown) return; this.shown = true;
+    const b = document.createElement('button'); b.className = 'fresh-chip'; b.type = 'button'; b.textContent = '有新版本・點一下更新';
+    b.addEventListener('click', (ev) => { ev.stopPropagation(); this.reload(); });
+    document.body.appendChild(b);
+  },
+};
+document.addEventListener('visibilitychange', () => { if (document.hidden) Fresh.hid = Date.now(); else Fresh.check(Fresh.hid > 0 && Date.now() - Fresh.hid > 2000); });
+addEventListener('pageshow', (e) => { if (e.persisted) { Fresh.at = 0; Fresh.check(true); } });
+setTimeout(() => Fresh.check(false), 6000);
+setInterval(() => { if (!document.hidden) Fresh.check(false); }, 10 * 60e3);

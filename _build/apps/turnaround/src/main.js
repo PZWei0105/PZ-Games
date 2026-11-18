@@ -1,3 +1,4 @@
+const INTRO_REV = 2;   // 開場的版本：2026/11/18 加了「今日出發看板」（更新後第一次打開照樣播）
 /* 開機、路由、讀資料、開場 */
 const App = {
   tab: 'dep', ready: false, pushed: false, dirty: {}, entered: false,
@@ -207,7 +208,7 @@ async function boot() {
     route();
     const g = $('#gate'); g.classList.add('out'); setTimeout(() => { g.remove(); Runway.stop(); }, 650);
     const today = D.days[D.index.latest];
-    if (today && S.introDay !== D.index.latest && !skipGate) { S.introDay = D.index.latest; save(); App.intro(today); }
+    if (today && (S.introDay !== D.index.latest || (S.introRev || 0) < INTRO_REV) && !skipGate) { S.introDay = D.index.latest; S.introRev = INTRO_REV; save(); App.intro(today); }
     else { Snd.music(true); }
     App.badges();
     setTimeout(checkFlight, 1500);
@@ -224,3 +225,34 @@ async function boot() {
 }
 window.App = App;
 boot();
+
+/* ---------- 換新版（2026/11/18）----------
+   加到主畫面的 App 切回來不會重新載入，所以回到 App 時看一下網站上的 ver.json：已經是新版就重新載入
+   （剛切回來、沒在打字、沒開著東西才自動換；不然頂端出一顆「有新版本・點一下更新」）。一分鐘最多看一次；
+   自動重新載入之後 60 秒內不再自動換（網站快取還沒換完時不會一直重整）。 */
+const Fresh = {
+  at: 0, busy: false, shown: false, hid: 0,
+  async check(back) {
+    if (!IS_WEB || this.busy || !navigator.onLine) return;
+    const now = Date.now(); if (now - this.at < 60e3) return; this.at = now; this.busy = true;
+    try {
+      const r = await fetch('ver.json?t=' + now, { cache: 'no-store' }); if (!r.ok) return;
+      const j = await r.json(); if (!j || !j.v || j.v === VERSION) return;
+      let last = 0; try { last = +sessionStorage.getItem('freshAt') || 0; } catch (e) { /* 無痕模式 */ }
+      const typing = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+      if (back && !typing && (!$('#pages .page') && $('#sheet').hidden !== false && !$('#intro:not([hidden])')) && now - last > 60e3) { this.reload(); return; }
+      this.chip();
+    } catch (e) { /* 連不上就下次再看 */ } finally { this.busy = false; }
+  },
+  reload() { try { sessionStorage.setItem('freshAt', String(Date.now())); } catch (e) { /* 無痕模式 */ } location.reload(); },
+  chip() {
+    if (this.shown) return; this.shown = true;
+    const b = document.createElement('button'); b.className = 'fresh-chip'; b.type = 'button'; b.textContent = '有新版本・點一下更新';
+    b.addEventListener('click', (ev) => { ev.stopPropagation(); this.reload(); });
+    document.body.appendChild(b);
+  },
+};
+document.addEventListener('visibilitychange', () => { if (document.hidden) Fresh.hid = Date.now(); else Fresh.check(Fresh.hid > 0 && Date.now() - Fresh.hid > 2000); });
+addEventListener('pageshow', (e) => { if (e.persisted) { Fresh.at = 0; Fresh.check(true); } });
+setTimeout(() => Fresh.check(false), 6000);
+setInterval(() => { if (!document.hidden) Fresh.check(false); }, 10 * 60e3);

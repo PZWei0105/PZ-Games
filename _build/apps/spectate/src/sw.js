@@ -25,7 +25,10 @@ self.addEventListener('fetch', (e) => {
   }
   if (url.origin !== location.origin) return;
   if (!url.pathname.includes('/apps/spectate/')) return;
-  e.respondWith(Promise.race([fetch(req).then((r) => {
+  if (url.pathname.endsWith('/ver.json')) return;   // 換新版的檢查：直接問網路、不存
+  // App 本體不吃瀏覽器的 10 分鐘快取（GitHub Pages），每次都跟網站確認是不是最新的
+  const fresh = req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname);
+  e.respondWith(Promise.race([fetch(req, fresh ? { cache: 'no-cache' } : undefined).then((r) => {
     if (r.ok && (req.mode === 'navigate' || SHELL.some((s) => url.pathname.endsWith(s.replace('./', '/'))))) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req.mode === 'navigate' ? './index.html' : req, copy)); }
     return r;
   }), timeout(2500)]).catch(() => caches.match(req.mode === 'navigate' ? './index.html' : req).then((m) => m || fetch(req))));

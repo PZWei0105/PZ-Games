@@ -2,6 +2,7 @@
 /* 觀戰 SPECTATE — 核心：設定、資料、同步、清單 */
 
 const VERSION = '1.0.0';
+const BUILD = 'dev';   // 每次組建不一樣（build.py 填）：回到 App 時跟網站上的 ver.json 比，看有沒有新版
 const NAME = '痞子葳';
 const RAW = 'https://raw.githubusercontent.com/PZWei0105/PZ-Games';
 const QS = new URLSearchParams(location.search);

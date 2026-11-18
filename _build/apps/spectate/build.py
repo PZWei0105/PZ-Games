@@ -11,6 +11,7 @@
   python3 _build/apps/spectate/build.py            # 網頁版
   python3 _build/apps/spectate/build.py --icons    # 重畫圖示（需要 playwright）
 """
+import datetime
 import argparse, base64, json, os, re, shutil
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -58,6 +59,9 @@ def fonts_css():
     return '\n'.join(out)
 
 
+BUILD = datetime.datetime.now(datetime.timezone.utc).strftime('%y%m%d%H%M%S')   # 這次組建的代號（ver.json 也寫這個）
+
+
 def version():
     with open(os.path.join(ROOT, 'VERSION'), encoding='utf-8') as f:
         return f.read().strip()
@@ -72,6 +76,8 @@ def compose(ver):
         assert '</style' not in v.lower(), k + ' contains </style>'
     assert "const VERSION = '1.0.0';" in js
     js = js.replace("const VERSION = '1.0.0';", "const VERSION = '%s';" % ver)
+    assert "const BUILD = 'dev';" in js
+    js = js.replace("const BUILD = 'dev';", "const BUILD = '%s';" % BUILD)
     head = ('<link rel="manifest" href="manifest.webmanifest">\n<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">\n'
             '<link rel="icon" type="image/png" href="icons/icon-192.png">')
     html = html.replace('<!--WEBHEAD-->', head, 1).replace('<!--WEBFLAG-->', '<script>window.SP_WEB = true;</script>', 1)
@@ -125,6 +131,8 @@ def main():
     assert "spectate-%s" % ver in sw
     with open(os.path.join(OUT, 'sw.js'), 'w', encoding='utf-8') as f:
         f.write(sw)
+    with open(os.path.join(OUT, 'ver.json'), 'w', encoding='utf-8') as f:   # App 回到前景時拿來比對有沒有新版
+        json.dump({'v': BUILD}, f)
     if a.icons or not os.path.exists(os.path.join(OUT, 'icons', 'icon-512.png')):
         icons()
     size = os.path.getsize(os.path.join(OUT, 'index.html'))

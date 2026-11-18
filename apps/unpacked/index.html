@@ -2110,6 +2110,23 @@ body.calm .bar-t i{transition:none}
 .btn.vsb{background:var(--k);color:var(--y);border-color:var(--y)}
 body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stage.go .vs-burst{animation:none}
 @media (prefers-reduced-motion:reduce){.vs-stage.go .vs-side,.vs-stage.go .vs-vs,.vs-stage.go .vs-burst,.vs-side.crown::before{animation:none}.vs-row,.vs-score,.vs-verdict,.vs-slot{opacity:1;transform:none}}
+/* 有新版本（2026/11/18） */
+.fresh-chip{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:9999;transform:translateX(-50%) rotate(-1.5deg);font:900 14px/1 var(--cjk);background:var(--y);color:var(--k);padding:11px 16px;border:3px solid var(--k);box-shadow:4px 4px 0 var(--p)}
+/* 首頁「今日對決」：VS 擂台的正門（2026/11/18） */
+.vs-strip{position:relative;display:block;margin:16px 2px 8px;padding:10px 12px 12px;background:#111;border:4px solid var(--y);box-shadow:5px 5px 0 var(--p);transform:rotate(-.6deg);cursor:pointer}
+.vs-strip:active{transform:rotate(-.6deg) scale(.985)}
+.posters .vs-strip{grid-column:1/-1;justify-self:center;width:min(100%,720px);margin:0 2px}
+@media (min-width:720px){.posters .vs-strip{order:1}.posters .vs-strip~.poster{order:2}.posters .vs-strip+.poster{order:0}}   /* 大螢幕第一張整排、後面兩兩一排：對決條放在第二排之後，不會留一個空格 */
+.ib.vsb-top b{font:400 21px/1 var(--drip);color:var(--y);text-shadow:2px 2px 0 var(--p);letter-spacing:.02em}
+.vs-strip .vst-k{display:inline-block;font:900 14px/1 var(--cjk);background:var(--y);color:var(--k);padding:6px 9px;transform:rotate(-2deg)}
+.vs-strip .vst-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;margin-top:10px}
+.vs-strip .vst-s{display:grid;gap:6px;min-width:0}
+.vs-strip .vst-s img{display:block;width:100%;aspect-ratio:460/215;object-fit:cover;border:3px solid var(--p);background:#222}
+.vs-strip .vst-s.r img{border-color:var(--y)}
+.vs-strip .vst-s b{font:900 14px/1.25 var(--cjk);color:var(--w);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vs-strip .vst-s.r b{text-align:right}
+.vs-strip .vst-vs{font:400 38px/1 var(--drip);font-style:normal;color:var(--y);text-shadow:3px 3px 0 var(--p)}
+.vs-strip .vst-go{display:block;margin-top:10px;text-align:right;font:900 14px/1 var(--cjk);color:var(--y)}
 
 </style>
 </head>
@@ -2138,7 +2155,7 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611181316';
+const VERSION = '1.0.2611181332';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2803,7 +2820,7 @@ function renderHome() {
       <span class="date-stk">${esc(lastDate.slice(5).replace('-', '.'))} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</span></div>
     ${lastDate !== today ? `<p class="sub-note">今天的專題還在寫，先看 ${mdDay(lastDate)} 這批。</p>` : ''}
     ${weekBanner()}${tgaBanner()}${huntStrip()}
-    <div class="posters">${todays.map(posterHtml).join('')}</div>
+    <div class="posters">${todays.slice(0, 2).map(posterHtml).join('')}${vsStrip(todays)}${todays.slice(2).map((it, i) => posterHtml(it, i + 2)).join('')}</div>
     ${picksTeaser()}
     ${marketStrip()}
     <h3 class="tape-h">追蹤牆</h3>
@@ -6912,6 +6929,15 @@ function vsGame(ref) {
   const lv = liveOf(it.steam);
   return { ref: `${k}:${id}`, kind: k, id, it, lv, full: VS.full[`${k}:${id}`] || null, name: it.zh, en: it.en, img: headerOf(it, lv), hero: heroOf(it, lv) };
 }
+/** 首頁「今日對決」：今天最新的兩款直接上擂台（不到兩款就拿最近的兩款）——VS 擂台的正門 */
+function vsStrip(todays) {
+  const items = (S.index && S.index.items) || [];
+  const pool = (todays && todays.length >= 2 ? todays : items).slice(0, 2);
+  const [a, b] = pool.map((it) => vsGame('f:' + it.id));
+  if (!a || !b) return '';
+  const side = (g, s) => `<span class="vst-s ${s}">${g.img ? `<img src="${esc(g.img)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ''}<b>${esc(g.name)}</b></span>`;
+  return `<div class="vs-strip" data-go="vs/${esc(a.ref)},${esc(b.ref)}" role="button" aria-label="今日對決：${esc(a.name)} 對 ${esc(b.name)}"><span class="vst-k">⚔ 今日對決・VS 擂台</span><div class="vst-row">${side(a, 'l')}<i class="vst-vs">VS</i>${side(b, 'r')}</div><span class="vst-go">上擂台一局一局比 →</span></div>`;
+}
 function vsAll() {
   const out = [];
   for (const it of (S.index && S.index.items) || []) out.push({ ref: 'f:' + it.id, it, k: '專題' });
@@ -7101,6 +7127,7 @@ async function vsAct(a, act) {
 /* 解包 — 啟動、路由、互動 */
 const VIEW = () => $('#view');
 let ROUTE = '';
+const INTRO_REV = 2;   // 2026/11/18 開場加了「頭條拍上牆」
 let NAVN = 0;   // App 裡往前走了幾步（「回牆上」才知道能不能用上一頁）
 
 function setTabs(name) {
@@ -7632,7 +7659,7 @@ async function boot() {
   fxInit();
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
-    <button class="ib askb" data-go="ask" aria-label="點播台">${ICON.radio}<i class="dot hide"></i></button><button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
+    <button class="ib vsb-top" data-go="vs" aria-label="VS 擂台"><b>VS</b></button><button class="ib askb" data-go="ask" aria-label="點播台">${ICON.radio}<i class="dot hide"></i></button><button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
   $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
@@ -7645,8 +7672,10 @@ async function boot() {
     audioInit(); S.muted = !!muted; topIcons();
     gate.remove();
     const today = todayTW(); const mode = S.settings.intro;
-    const want = mode === 'off' ? null : mode === 'always' ? 'full' : mode === 'short' ? 'short' : (LS.get('introDay', '') === today ? 'short' : 'full');
-    LS.set('introDay', today);
+    let want = mode === 'off' ? null : mode === 'always' ? 'full' : mode === 'short' ? 'short' : (LS.get('introDay', '') === today ? 'short' : 'full');
+    // 開場有新段落時（INTRO_REV），更新後第一次打開照樣播完整版，不用等到明天
+    if (want === 'short' && mode !== 'short' && (+LS.get('introRev', 0) || 0) < INTRO_REV) want = 'full';
+    LS.set('introDay', today); LS.set('introRev', INTRO_REV);
     const nToday = S.index.items.filter((x) => x.date === (S.index.items[0] || {}).date).length;
     S.introPending = !!want;
     route();
@@ -7668,6 +7697,37 @@ async function boot() {
   if (/[?&]enter=1/.test(location.search)) gate.click();
 }
 boot();
+
+/* ---------- 換新版（2026/11/18）----------
+   加到主畫面的 App 切回來不會重新載入，所以回到 App 時看一下網站上的 ver.json：已經是新版就重新載入
+   （剛切回來、沒在打字、沒開著東西才自動換；不然頂端出一顆「有新版本・點一下更新」）。一分鐘最多看一次；
+   自動重新載入之後 60 秒內不再自動換（網站快取還沒換完時不會一直重整）。 */
+const Fresh = {
+  at: 0, busy: false, shown: false, hid: 0,
+  async check(back) {
+    if (location.protocol === 'file:' || this.busy || !navigator.onLine) return;
+    const now = Date.now(); if (now - this.at < 60e3) return; this.at = now; this.busy = true;
+    try {
+      const r = await fetch('ver.json?t=' + now, { cache: 'no-store' }); if (!r.ok) return;
+      const j = await r.json(); if (!j || !j.v || j.v === VERSION) return;
+      let last = 0; try { last = +sessionStorage.getItem('freshAt') || 0; } catch (e) { /* 無痕模式 */ }
+      const typing = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+      if (back && !typing && (!$('#sheet.on') && !S.introPending && !ROUTE.startsWith('shorts')) && now - last > 60e3) { this.reload(); return; }
+      this.chip();
+    } catch (e) { /* 連不上就下次再看 */ } finally { this.busy = false; }
+  },
+  reload() { try { sessionStorage.setItem('freshAt', String(Date.now())); } catch (e) { /* 無痕模式 */ } location.reload(); },
+  chip() {
+    if (this.shown) return; this.shown = true;
+    const b = document.createElement('button'); b.className = 'fresh-chip'; b.type = 'button'; b.textContent = '有新版本・點一下更新';
+    b.addEventListener('click', (ev) => { ev.stopPropagation(); this.reload(); });
+    document.body.appendChild(b);
+  },
+};
+document.addEventListener('visibilitychange', () => { if (document.hidden) Fresh.hid = Date.now(); else Fresh.check(Fresh.hid > 0 && Date.now() - Fresh.hid > 2000); });
+addEventListener('pageshow', (e) => { if (e.persisted) { Fresh.at = 0; Fresh.check(true); } });
+setTimeout(() => Fresh.check(false), 6000);
+setInterval(() => { if (!document.hidden) Fresh.check(false); }, 10 * 60e3);
 
 </script>
 </body>

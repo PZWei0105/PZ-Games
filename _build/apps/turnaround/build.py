@@ -155,6 +155,8 @@ def main():
         json.dump(MANIFEST, f, ensure_ascii=False, indent=1)
     with open(os.path.join(OUT, 'sw.js'), 'w', encoding='utf-8') as f:
         f.write(read('sw.js').replace('__VER__', version))
+    with open(os.path.join(OUT, 'ver.json'), 'w', encoding='utf-8') as f:   # App 回到前景時拿來比對有沒有新版
+        json.dump({'v': version}, f)
     print('網頁版 →', OUT, '(%d KB)' % (os.path.getsize(os.path.join(OUT, 'index.html')) // 1024))
     if a.claude_out:
         os.makedirs(a.claude_out, exist_ok=True)

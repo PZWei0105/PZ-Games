@@ -722,3 +722,5 @@ textarea:focus,input[type=text]:focus{border-color:var(--sign)}
 @media (orientation:landscape) and (max-height:560px) and (max-width:760px){
   #intro .ixr{grid-template-columns:auto auto minmax(0,1fr) auto auto}#intro .ixr .ixt{display:none}
 }
+/* 有新版本（2026/11/18） */
+.fresh-chip{position:fixed;left:50%;top:calc(var(--st) + 10px);z-index:200;transform:translateX(-50%);padding:10px 16px;border-radius:999px;background:var(--sign);color:var(--ink);font-weight:900;font-size:14px;box-shadow:0 0 0 2px #050607,0 8px 20px rgba(0,0,0,.5)}

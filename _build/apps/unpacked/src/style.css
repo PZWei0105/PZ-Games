@@ -2087,3 +2087,20 @@ body.calm .bar-t i{transition:none}
 .btn.vsb{background:var(--k);color:var(--y);border-color:var(--y)}
 body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stage.go .vs-burst{animation:none}
 @media (prefers-reduced-motion:reduce){.vs-stage.go .vs-side,.vs-stage.go .vs-vs,.vs-stage.go .vs-burst,.vs-side.crown::before{animation:none}.vs-row,.vs-score,.vs-verdict,.vs-slot{opacity:1;transform:none}}
+/* 有新版本（2026/11/18） */
+.fresh-chip{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:9999;transform:translateX(-50%) rotate(-1.5deg);font:900 14px/1 var(--cjk);background:var(--y);color:var(--k);padding:11px 16px;border:3px solid var(--k);box-shadow:4px 4px 0 var(--p)}
+/* 首頁「今日對決」：VS 擂台的正門（2026/11/18） */
+.vs-strip{position:relative;display:block;margin:16px 2px 8px;padding:10px 12px 12px;background:#111;border:4px solid var(--y);box-shadow:5px 5px 0 var(--p);transform:rotate(-.6deg);cursor:pointer}
+.vs-strip:active{transform:rotate(-.6deg) scale(.985)}
+.posters .vs-strip{grid-column:1/-1;justify-self:center;width:min(100%,720px);margin:0 2px}
+@media (min-width:720px){.posters .vs-strip{order:1}.posters .vs-strip~.poster{order:2}.posters .vs-strip+.poster{order:0}}   /* 大螢幕第一張整排、後面兩兩一排：對決條放在第二排之後，不會留一個空格 */
+.ib.vsb-top b{font:400 21px/1 var(--drip);color:var(--y);text-shadow:2px 2px 0 var(--p);letter-spacing:.02em}
+.vs-strip .vst-k{display:inline-block;font:900 14px/1 var(--cjk);background:var(--y);color:var(--k);padding:6px 9px;transform:rotate(-2deg)}
+.vs-strip .vst-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;margin-top:10px}
+.vs-strip .vst-s{display:grid;gap:6px;min-width:0}
+.vs-strip .vst-s img{display:block;width:100%;aspect-ratio:460/215;object-fit:cover;border:3px solid var(--p);background:#222}
+.vs-strip .vst-s.r img{border-color:var(--y)}
+.vs-strip .vst-s b{font:900 14px/1.25 var(--cjk);color:var(--w);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vs-strip .vst-s.r b{text-align:right}
+.vs-strip .vst-vs{font:400 38px/1 var(--drip);font-style:normal;color:var(--y);text-shadow:3px 3px 0 var(--p)}
+.vs-strip .vst-go{display:block;margin-top:10px;text-align:right;font:900 14px/1 var(--cjk);color:var(--y)}

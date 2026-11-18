@@ -126,6 +126,8 @@ def main():
         json.dump(MANIFEST, f, ensure_ascii=False, indent=1)
     with open(os.path.join(out, 'sw.js'), 'w', encoding='utf-8') as f:
         f.write(read('sw.js').replace('__VERSION__', version))
+    with open(os.path.join(out, 'ver.json'), 'w', encoding='utf-8') as f:   # App 回到前景時拿來比對有沒有新版
+        json.dump({'v': version}, f)
     os.makedirs(os.path.join(out, 'vendor'), exist_ok=True)
     # 完整版 hls.js（不是 hls.light）：Steam 預告的聲音是獨立音軌，輕量版播出來會沒有聲音
     shutil.copy(os.path.join(SRC, 'vendor', 'hls.min.mjs'), os.path.join(out, 'vendor', 'hls.min.mjs'))

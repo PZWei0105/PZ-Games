@@ -694,3 +694,5 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
   .mc-top b { font-size: clamp(19px, 7vh, 30px); }
 }
 @media (prefers-reduced-motion: reduce) { .mc-wrap, .mc-team { transition: none !important; opacity: 1 !important; transform: none !important; } }
+/* 有新版本（2026/11/18） */
+.fresh-chip { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 10px); z-index: 9999; transform: translateX(-50%) skewX(-10deg); padding: 10px 16px 9px; background: var(--red); color: #fff; border: 0; font-weight: 900; font-size: 14px; letter-spacing: 1px; box-shadow: 0 0 0 2px #07080d, 0 6px 18px rgba(0, 0, 0, .5); }
