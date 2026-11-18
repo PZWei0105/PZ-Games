@@ -1,6 +1,14 @@
 {
 "v": 1,
-"at": "",
-"cursor": "",
-"events": []
+"at": "2026-11-18T12:40:52+08:00",
+"cursor": "O2cqzyxGpJ1W",
+"events": [
+{
+"id": "dselftest-976849",
+"type": "ping",
+"t": "2026-11-18T04:40:49Z",
+"dev": "dselftest",
+"note": "actions selftest"
+}
+]
 }
