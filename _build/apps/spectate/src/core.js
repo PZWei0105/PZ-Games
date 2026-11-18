@@ -302,8 +302,21 @@ function dedupeLang(list) {
     byCh.get(it.c).push(it.p);
     if (it.g && it.l === 'trailer') { if (!byGame.has(it.g)) byGame.set(it.g, []); byGame.get(it.g).push(it.p); }
   }
+  // 不同官方頻道（例如 PlayStation 台灣、PlayStation Asia）兩天內都發了同一款的中文預告：只留觀看最多的
+  const zhOff = new Map();
+  for (const it of list) {
+    if (!zf(it) || !it.g || it.l !== 'trailer' || chOf(it.c).k !== 'official') continue;
+    const best = zhOff.get(it.g);
+    if (!best || (it.v || 0) > (best.v || 0)) zhOff.set(it.g, it);
+  }
   return list.filter((it) => {
-    if (zf(it)) return true;
+    if (zf(it)) {
+      if (it.g && it.l === 'trailer' && chOf(it.c).k === 'official') {
+        const best = zhOff.get(it.g);
+        if (best && best !== it && best.c !== it.c && Math.abs(best.p - it.p) < 2 * 86400) return false;
+      }
+      return true;
+    }
     const a = byCh.get(it.c);
     if (a && a.some((p) => Math.abs(p - it.p) < 3 * 3600)) return false;
     if (it.g && it.l === 'trailer') { const b = byGame.get(it.g); if (b && b.some((p) => Math.abs(p - it.p) < 3 * 86400)) return false; }

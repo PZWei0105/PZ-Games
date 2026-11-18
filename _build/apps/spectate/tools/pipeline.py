@@ -546,12 +546,15 @@ def steam_match(name, lang, cache):
         rec['zh'] = clean_title(nm)
     elif l == 'english':
         rec['en'] = clean_title(nm)
-    if not (rec.get('zh') or g.get('zh')):
+    if not g.get('imgok'):
+        # 新上架的遊戲只有帶雜湊的圖片網址：用 appdetails 拿正確的橫幅，順便拿繁中名稱
         d = steam_name(appid, 'tchinese')
-        if d and d.get('n'):
-            rec['zh'] = clean_title(d['n'])
+        if d:
+            if d.get('n') and not rec.get('zh'):
+                rec['zh'] = clean_title(d['n'])
             if d.get('img'):
-                rec['img'] = d['img'].split('?')[0]
+                rec['img'] = d['img']
+                g['imgok'] = 1
     if not (rec.get('en') or g.get('en')):
         d = steam_name(appid, 'english')
         if d and d.get('n'):
@@ -613,6 +616,7 @@ def main():
             enrich_api(cache)
             refresh_channel_stats(roster, cache)
         classify(cache, roster)
+        repair_images(cache, {v.get('g') for v in cache['videos'].values() if v.get('g') and NOW - (v.get('p') or 0) < 14 * 86400})
         games = build_games(cache, roster)
         # ---- 5. 新秀（有金鑰、每天一次）
         if KEY:
@@ -666,8 +670,9 @@ def resolve_roster(seed, roster, me, cache):
     chans = roster['channels']
     # 名單上拿掉的頻道：不再算精選（訂閱的照留）
     names = {s['name'] for s in seed}
+    by_id = {s['name']: s['id'] for s in seed if s.get('id')}
     for cid, r in list(chans.items()):
-        if r.get('seed') and r['seed'] not in names:
+        if r.get('seed') and (r['seed'] not in names or (r['seed'] in by_id and by_id[r['seed']] != cid)):
             log('精選名單拿掉：%s（%s）' % (r['seed'], r.get('n')))
             r.pop('seed', None)
             if cid not in me['subs']:
@@ -757,7 +762,7 @@ def resolve_roster(seed, roster, me, cache):
             log('新增頻道：%s → %s' % (a['q'][:40], rec.get('n')))
         else:
             a.update({'st': 'fail', 'why': '找不到這個頻道'})
-    # 缺頭像的補一下（不用金鑰時一次最多 15 個）
+    # 缺頭像的補一下（不用金鑰時一次最多 60 個）
     miss = [cid for cid, r in chans.items() if not r.get('a') and not r.get('noa')]
     if miss:
         if KEY:
@@ -765,15 +770,20 @@ def resolve_roster(seed, roster, me, cache):
             for cid, g in got.items():
                 chans[cid].update({k: v for k, v in g.items() if k != 'id' and v is not None})
         else:
-            for cid in miss[:15]:
+            def meta(cid):
                 try:
-                    g = page_meta('/channel/' + cid)
+                    return cid, page_meta('/channel/' + cid)
                 except RuntimeError:
-                    g = None
-                if g:
-                    chans[cid].update({k: v for k, v in g.items() if k != 'id' and v is not None})
-                else:
-                    chans[cid]['noa'] = 1
+                    return cid, None
+            with cf.ThreadPoolExecutor(max_workers=6) as ex:
+                for cid, g in ex.map(meta, miss[:60]):
+                    if g:
+                        keep_n = chans[cid].get('n')
+                        chans[cid].update({k: v for k, v in g.items() if k != 'id' and v is not None})
+                        if keep_n and chans[cid].get('seed'):
+                            chans[cid]['n'] = g.get('n') or keep_n
+                    else:
+                        chans[cid]['noa'] = 1
 
 
 def build_pool(roster, me, cache, max_rss):
@@ -1020,6 +1030,20 @@ def classify(cache, roster):
                     break
             else:
                 v['g'] = None
+
+
+def repair_images(cache, used):
+    """之前存的 Steam 橫幅網址沒有雜湊（新遊戲會 404）：有額度就補拿正確的。"""
+    for k in [k for k in used if k.startswith('s')]:
+        g = cache['games'].get(k) or {}
+        if g.get('imgok') or STEAM_LEFT[0] <= 0:
+            continue
+        d = steam_name(int(k[1:]), 'tchinese')
+        if d and d.get('img'):
+            g['img'] = d['img']
+            g['imgok'] = 1
+            if d.get('n') and not g.get('zh'):
+                g['zh'] = clean_title(d['n'])
 
 
 def build_games(cache, roster):

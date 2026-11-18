@@ -996,8 +996,21 @@ function dedupeLang(list) {
     byCh.get(it.c).push(it.p);
     if (it.g && it.l === 'trailer') { if (!byGame.has(it.g)) byGame.set(it.g, []); byGame.get(it.g).push(it.p); }
   }
+  // 不同官方頻道（例如 PlayStation 台灣、PlayStation Asia）兩天內都發了同一款的中文預告：只留觀看最多的
+  const zhOff = new Map();
+  for (const it of list) {
+    if (!zf(it) || !it.g || it.l !== 'trailer' || chOf(it.c).k !== 'official') continue;
+    const best = zhOff.get(it.g);
+    if (!best || (it.v || 0) > (best.v || 0)) zhOff.set(it.g, it);
+  }
   return list.filter((it) => {
-    if (zf(it)) return true;
+    if (zf(it)) {
+      if (it.g && it.l === 'trailer' && chOf(it.c).k === 'official') {
+        const best = zhOff.get(it.g);
+        if (best && best !== it && best.c !== it.c && Math.abs(best.p - it.p) < 2 * 86400) return false;
+      }
+      return true;
+    }
     const a = byCh.get(it.c);
     if (a && a.some((p) => Math.abs(p - it.p) < 3 * 3600)) return false;
     if (it.g && it.l === 'trailer') { const b = byGame.get(it.g); if (b && b.some((p) => Math.abs(p - it.p) < 3 * 86400)) return false; }
@@ -1886,11 +1899,12 @@ function empty(msg, sub = '', act = '') {
   return `<div class="empty"><div class="empty-ic"><i></i><i></i><i></i></div><b>${msg}</b>${sub ? `<p>${sub}</p>` : ''}${act}</div>`;
 }
 function gameTile(g, i) {
-  const cover = g.img || (g.cover ? thumb(g.cover, 'hqdefault') : '');
+  const yt = g.cover ? thumb(g.cover, 'mqdefault') : '';
+  const cover = g.img || yt;
   const lanes = Object.entries(g.lanes || {}).sort((a, b) => b[1] - a[1]);
   const tot = lanes.reduce((s, x) => s + x[1], 0) || 1;
   return `<a class="gt" href="#g/${encodeURIComponent(g.k)}">
-    <span class="gt-img">${cover ? `<img loading="lazy" src="${esc(cover)}" alt="">` : ''}<i class="gt-rank">${String(i + 1).padStart(2, '0')}</i></span>
+    <span class="gt-img">${cover ? `<img loading="lazy" src="${esc(cover)}" ${g.img && yt ? `data-fb="${yt}"` : ''} alt="">` : ''}<i class="gt-rank">${String(i + 1).padStart(2, '0')}</i></span>
     <span class="gt-name">${esc(gameName(g))}</span>
     ${g.zh && g.en && g.zh !== g.en ? `<span class="gt-en">${esc(g.en)}</span>` : ''}
     <span class="gt-stat"><b>${g.chs || 0}</b> 台在聊 · <b>${g.n || 0}</b> 支新片</span>
@@ -2082,9 +2096,10 @@ function vGame(k) {
   vids.forEach((it) => { chans[it.c] = (chans[it.c] || 0) + 1; });
   const order = Object.entries(chans).sort((a, b) => (!!VIEW.subs[b[0]] - !!VIEW.subs[a[0]]) || b[1] - a[1]);
   const cover = g.img || (g.cover ? thumb(g.cover, 'maxresdefault') : (vids[0] ? thumb(vids[0].i, 'maxresdefault') : ''));
+  const coverFb = g.cover ? thumb(g.cover, 'hqdefault') : (vids[0] ? thumb(vids[0].i, 'hqdefault') : '');
   let h = backBar('遊戲');
   h += `<section class="gh">
-    <div class="gh-img">${cover ? `<img src="${esc(cover)}" data-fb="${vids[0] ? thumb(vids[0].i, 'hqdefault') : ''}" alt="">` : ''}<span class="gh-shade"></span></div>
+    <div class="gh-img">${cover ? `<img src="${esc(cover)}" data-fb="${coverFb}" alt="">` : ''}<span class="gh-shade"></span></div>
     <div class="gh-txt"><span class="gh-kick">GAME FILE</span><h1>${esc(gameName(g))}</h1>${g.zh && g.en && g.zh !== g.en ? `<div class="gh-en">${esc(g.en)}</div>` : ''}
       <div class="gh-stats"><span><b>${vids.length}</b>支影片</span><span><b>${order.length}</b>個頻道</span>${vids.filter((x) => x.l === 'trailer').length ? `<span><b>${vids.filter((x) => x.l === 'trailer').length}</b>支預告</span>` : ''}</div>
       <div class="gh-acts" id="ghActs">${vids.length ? `<button class="go-btn sm" data-act="play-list" data-ctx="${ctxOf('g:' + k, vids)}"><b>▶</b>連播這款</button>` : ''}${g.id ? `<a class="chip" href="https://store.steampowered.com/app/${g.id}/" target="_blank" rel="noopener">Steam 頁面</a>` : ''}</div>
@@ -2140,7 +2155,9 @@ function draftCard(r, k) {
   </div>`;
 }
 function rosterGroups(compact) {
-  const ids = Object.keys(IDX.ch).filter((c) => IDX.ch[c].seed);
+  // 精選名單裡最近沒片的台先不列（管線的 status.json 會列出來給維護的人換掉）
+  const active = memo('activeCh', () => new Set(IDX.items.filter((it) => nowS() - it.p < 60 * 86400).map((it) => it.c)));
+  const ids = Object.keys(IDX.ch).filter((c) => IDX.ch[c].seed && (active.has(c) || VIEW.subs[c]));
   const groups = [
     ['中文創作者', (ch) => ch.l === 'zh' && ch.k !== 'official' && ch.k !== 'media'],
     ['中文官方與媒體', (ch) => ch.l === 'zh' && (ch.k === 'official' || ch.k === 'media')],
@@ -2302,7 +2319,7 @@ function renderSearch(q) {
   if (!box) return;
   if (!q.trim()) { box.innerHTML = searchTips(); return; }
   let h = '';
-  if (r.games.length) h += `<div class="sr-sec"><b>遊戲</b><div class="sr-games">${r.games.map((g) => `<a class="sr-g" href="#g/${encodeURIComponent(g.k)}" data-act="sheet-close-nav">${g.img ? `<img src="${esc(g.img)}" alt="">` : ''}<span>${esc(gameName(g))}</span></a>`).join('')}</div></div>`;
+  if (r.games.length) h += `<div class="sr-sec"><b>遊戲</b><div class="sr-games">${r.games.map((g) => `<a class="sr-g" href="#g/${encodeURIComponent(g.k)}" data-act="sheet-close-nav">${g.img || g.cover ? `<img src="${esc(g.img || thumb(g.cover))}" ${g.img && g.cover ? `data-fb="${thumb(g.cover)}"` : ''} alt="">` : ''}<span>${esc(gameName(g))}</span></a>`).join('')}</div></div>`;
   if (r.chans.length) h += `<div class="sr-sec"><b>頻道</b><div class="cc-list">${r.chans.map((c) => chanChip(c.c)).join('')}</div></div>`;
   if (r.vids.length) h += `<div class="sr-sec"><b>影片 ${r.vids.length}</b>${grid('search', r.vids, { limit: 30 })}</div>`;
   box.innerHTML = h || empty('找不到「' + esc(q) + '」', '只搜得到精選名單和你訂閱的頻道最近 30 天的片。');

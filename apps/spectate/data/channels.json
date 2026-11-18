@@ -1,24 +1,9 @@
 {
- "_說明": "觀戰 SPECTATE 的精選頻道名單（手寫）。try 是要試的 @代號（照順序試，第一個解析得到的就用）；id 有寫就直接用。管線解析後的結果在 roster.json。lang：zh 中文、en 英文、ja 日文。kind：official 官方、media 媒體節目、creator 創作者、stream 實況主。",
+ "_說明": "觀戰 SPECTATE 的精選頻道名單（手寫，中文為主）。id 是頻道 ID（UC 開頭）；沒有 ID 時可以改寫 try:[\"@代號\", …] 讓管線去解析。lang：zh 中文、en 英文、ja 日文。kind：official 官方、media 媒體節目、creator 創作者。換人前先看 spectate-data 分支 status.json 的 quiet（很久沒更新）和 unresolved（解析不到）；找新頻道可以手動跑 Actions 的 spectate-research。",
  "channels": [
   {
-   "name": "PlayStation Asia",
-   "try": [
-    "@PlayStationAsia"
-   ],
-   "lang": "zh",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "PlayStation"
-   ]
-  },
-  {
    "name": "PlayStation 台灣",
-   "try": [
-    "@PlayStationTaiwan",
-    "@PlayStationTW"
-   ],
+   "id": "UC9sbkOLjDXRdxhF7VpHG-cQ",
    "lang": "zh",
    "kind": "official",
    "tags": [
@@ -27,38 +12,18 @@
    ]
   },
   {
-   "name": "Nintendo HK 任天堂香港",
-   "try": [
-    "@NintendoHK",
-    "@NintendoHongKong"
-   ],
+   "name": "PlayStation Asia",
+   "id": "UCR6vFk2rgmwIkGEPR-xY8xg",
    "lang": "zh",
    "kind": "official",
    "tags": [
     "官方",
-    "任天堂"
-   ]
-  },
-  {
-   "name": "Nintendo 台灣",
-   "try": [
-    "@NintendoTaiwan",
-    "@NintendoTW"
-   ],
-   "lang": "zh",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "任天堂"
+    "PlayStation"
    ]
   },
   {
    "name": "Xbox 台灣",
-   "try": [
-    "@XboxTaiwan",
-    "@XboxTW",
-    "@XboxAsia"
-   ],
+   "id": "UCAXp2IInMEZi3CiqyzOJxug",
    "lang": "zh",
    "kind": "official",
    "tags": [
@@ -68,24 +33,7 @@
   },
   {
    "name": "CAPCOM 亞洲",
-   "try": [
-    "@CapcomAsia",
-    "@CAPCOMAsiaOfficial",
-    "@capcom_asia"
-   ],
-   "lang": "zh",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "萬代南夢宮娛樂 亞洲",
-   "try": [
-    "@BandaiNamcoAsia",
-    "@BANDAINAMCOEntAsia",
-    "@bandainamcoentertainmentasia"
-   ],
+   "id": "UCiZwoCzO419_V2SbYGFQKdg",
    "lang": "zh",
    "kind": "official",
    "tags": [
@@ -94,11 +42,7 @@
   },
   {
    "name": "SEGA 亞洲",
-   "try": [
-    "@SEGAAsia",
-    "@SEGAAsiaOfficial",
-    "@SEGA_Asia"
-   ],
+   "id": "UCigX4U_7bh8UwQLncUYhFrQ",
    "lang": "zh",
    "kind": "official",
    "tags": [
@@ -107,23 +51,7 @@
   },
   {
    "name": "SQUARE ENIX 亞洲",
-   "try": [
-    "@SquareEnixAsia",
-    "@SQUAREENIXAsiaOfficial",
-    "@SquareEnixChinese"
-   ],
-   "lang": "zh",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "Ubisoft 台灣",
-   "try": [
-    "@UbisoftTW",
-    "@UbisoftTaiwan"
-   ],
+   "id": "UCfNpnEBQhfGOZ2nh7LlTUlg",
    "lang": "zh",
    "kind": "official",
    "tags": [
@@ -132,48 +60,16 @@
   },
   {
    "name": "光榮特庫摩 台灣",
-   "try": [
-    "@KOEITECMOTAIWAN",
-    "@koeitecmotw",
-    "@KoeiTecmoTaiwan"
-   ],
+   "id": "UCD9chutvV9AZ3Fc-5VGS0Tg",
    "lang": "zh",
    "kind": "official",
    "tags": [
     "官方"
-   ]
-  },
-  {
-   "name": "ATLUS 亞洲",
-   "try": [
-    "@AtlusAsia",
-    "@ATLUSAsiaOfficial"
-   ],
-   "lang": "zh",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "台北國際電玩展",
-   "try": [
-    "@TaipeiGameShow"
-   ],
-   "lang": "zh",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "展會"
    ]
   },
   {
    "name": "4Gamers",
-   "try": [
-    "@4Gamers",
-    "@4GamersTW",
-    "@4gamerstw"
-   ],
+   "id": "UCb6QDBuxtoIP8kT4cO5BX0A",
    "lang": "zh",
    "kind": "media",
    "tags": [
@@ -182,128 +78,93 @@
    ]
   },
   {
-   "name": "機核 GCORES",
-   "try": [
-    "@gcores",
-    "@GCORES",
-    "@机核GCORES"
-   ],
+   "name": "IGN China",
+   "id": "UCussVYe84vFbFfK9m9Znp6A",
    "lang": "zh",
    "kind": "media",
    "tags": [
-    "深度",
-    "電台"
+    "新聞",
+    "評測"
    ]
   },
   {
-   "name": "游研社",
-   "try": [
-    "@yysaag",
-    "@游研社"
-   ],
+   "name": "遊戲新視界",
+   "id": "UCZXq0idbQ8HCcqiRi06Q6Ww",
    "lang": "zh",
    "kind": "media",
    "tags": [
-    "深度"
+    "繁中預告"
    ]
   },
   {
-   "name": "柚子木字幕組",
-   "try": [
-    "@柚子木字幕组",
-    "@柚子木字幕組",
-    "@youzimu"
-   ],
+   "name": "GamerSecret 玩家機密",
+   "id": "UCmtmIF-u0ojej0y9i9STuIw",
    "lang": "zh",
    "kind": "media",
    "tags": [
-    "中文字幕",
+    "產業新聞"
+   ]
+  },
+  {
+   "name": "希治閣【遊戲情報科】",
+   "id": "UCk25FUc8pLiP3A6Zniknxbg",
+   "lang": "zh",
+   "kind": "media",
+   "tags": [
     "新聞"
    ]
   },
   {
-   "name": "頑GAME",
-   "try": [
-    "@頑GAME",
-    "@WANGAME",
-    "@wangame",
-    "@wangametv"
-   ],
+   "name": "遊戲狂人",
+   "id": "UCGHBL3Yo96noSvlbsDbEJmA",
    "lang": "zh",
-   "kind": "creator",
+   "kind": "media",
    "tags": [
-    "實況",
-    "短片"
+    "新聞",
+    "雜談"
    ]
   },
   {
-   "name": "老皮",
-   "try": [
-    "@老皮",
-    "@laopi",
-    "@LaoPi"
-   ],
+   "name": "Uwants 遊戲講",
+   "id": "UC-eoXVXWKQ3T7UeUbSPHRvg",
    "lang": "zh",
-   "kind": "creator",
+   "kind": "media",
    "tags": [
-    "實況"
+    "新聞",
+    "評測"
    ]
   },
   {
-   "name": "巧克力",
-   "try": [
-    "@巧克力",
-    "@chocolatetw"
-   ],
+   "name": "游研社",
+   "id": "UCnq0zNFkSa8YFc3f1-7Q3mg",
    "lang": "zh",
-   "kind": "creator",
+   "kind": "media",
    "tags": [
-    "實況"
-   ]
-  },
-  {
-   "name": "黑羽",
-   "try": [
-    "@黑羽",
-    "@heiyu"
-   ],
-   "lang": "zh",
-   "kind": "creator",
-   "tags": [
-    "實況",
-    "恐怖"
-   ]
-  },
-  {
-   "name": "鳥屎",
-   "try": [
-    "@鳥屎",
-    "@birdpoo"
-   ],
-   "lang": "zh",
-   "kind": "creator",
-   "tags": [
-    "實況"
-   ]
-  },
-  {
-   "name": "TG講遊戲",
-   "try": [
-    "@TG講遊戲",
-    "@TGgames"
-   ],
-   "lang": "zh",
-   "kind": "creator",
-   "tags": [
-    "評測",
     "深度"
    ]
   },
   {
-   "name": "皮卡嚕",
-   "try": [
-    "@皮卡嚕"
-   ],
+   "name": "Gamker攻殼",
+   "id": "UCLgGLSFMZQB8c0WGcwE49Gw",
+   "lang": "zh",
+   "kind": "media",
+   "tags": [
+    "評測"
+   ]
+  },
+  {
+   "name": "阿斯",
+   "id": "UCtCVuBYmsRVHzT2z2G3PxUA",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "評測",
+    "恐怖"
+   ]
+  },
+  {
+   "name": "Sky game",
+   "id": "UC4D6eg7KWWiXNJVTXtuyZfA",
    "lang": "zh",
    "kind": "creator",
    "tags": [
@@ -311,10 +172,164 @@
    ]
   },
   {
-   "name": "余渣",
-   "try": [
-    "@余渣"
-   ],
+   "name": "Lice萊斯",
+   "id": "UC9WiXJEyHMGRqL-__3FIBEw",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "評測",
+    "推薦"
+   ]
+  },
+  {
+   "name": "阿揚 Arjen Play",
+   "id": "UCo-H6e_lJBNWLmshxcUNW6A",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "評測"
+   ]
+  },
+  {
+   "name": "狐狸牧場 foxranch",
+   "id": "UCV4mpMSInbFxAIAGFk8e_JQ",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "任天堂",
+    "評測"
+   ]
+  },
+  {
+   "name": "Tdogegg",
+   "id": "UC2RS19DCBQ_xX-0BeL6o-sA",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "評測"
+   ]
+  },
+  {
+   "name": "Dio Chan",
+   "id": "UCAQmUESq4GxO1b_iBCrYlTA",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "評測"
+   ]
+  },
+  {
+   "name": "我是ONE老司",
+   "id": "UCUY1g1TB6QIslRcL9eoGz3A",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "獨立",
+    "評測"
+   ]
+  },
+  {
+   "name": "傑笙講遊戲",
+   "id": "UCjIZT41JtgaYmCwYTZrdSIQ",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "特價",
+    "推薦"
+   ]
+  },
+  {
+   "name": "阿路的精神時光屋",
+   "id": "UCpa10CkG5snpKfyF4LZdXcA",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "獨立",
+    "推薦"
+   ]
+  },
+  {
+   "name": "独立游戏蜥蜴君",
+   "id": "UC7HVoyJt7IeIUTZQXlJsrZg",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "獨立",
+    "推薦"
+   ]
+  },
+  {
+   "name": "玫玫物語",
+   "id": "UCwcoUHjftGY9v2WaAZovzbw",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "推薦",
+    "攻略"
+   ]
+  },
+  {
+   "name": "咖咖 Channel",
+   "id": "UCeRe3UYkP_daH6yNlXXVHPg",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "推薦"
+   ]
+  },
+  {
+   "name": "Kim和Nana的遊戲世界",
+   "id": "UCJfB133ZwpD3fpUde2C9k7w",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "合作遊戲",
+    "推薦"
+   ]
+  },
+  {
+   "name": "東哥與Rocky遊戲台",
+   "id": "UCBXB7gDbfRYdbEGAyvgpv4A",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "PlayStation",
+    "評測"
+   ]
+  },
+  {
+   "name": "NS遊戲官",
+   "id": "UC7Zlf-FsnpP428NCLg8v05A",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "Switch",
+    "特價"
+   ]
+  },
+  {
+   "name": "羅卡Rocca",
+   "id": "UCkQMrI3g9wV2F5CsIi6odmQ",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "新聞",
+    "開箱"
+   ]
+  },
+  {
+   "name": "大閒者",
+   "id": "UCU6nhA37pbvzw-JXhAB87Mg",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "新聞",
+    "雜談"
+   ]
+  },
+  {
+   "name": "息焉遊焉 Ludology",
+   "id": "UCe0cARjsYdy4Tin5rcZ_WEg",
    "lang": "zh",
    "kind": "creator",
    "tags": [
@@ -322,38 +337,8 @@
    ]
   },
   {
-   "name": "Rui嚕伊",
-   "try": [
-    "@Rui嚕伊",
-    "@ruiluyi"
-   ],
-   "lang": "zh",
-   "kind": "creator",
-   "tags": [
-    "實況"
-   ]
-  },
-  {
-   "name": "那岩",
-   "try": [
-    "@那岩Nayan",
-    "@nayan",
-    "@那岩"
-   ],
-   "lang": "zh",
-   "kind": "creator",
-   "tags": [
-    "深度",
-    "歷史"
-   ]
-  },
-  {
-   "name": "敖廠長",
-   "try": [
-    "@敖厂长",
-    "@敖廠長",
-    "@aochangzhang"
-   ],
+   "name": "老孫聊遊戲",
+   "id": "UCKPflKAE2Y1tm8VSi32iboQ",
    "lang": "zh",
    "kind": "creator",
    "tags": [
@@ -362,11 +347,74 @@
    ]
   },
   {
+   "name": "Leya蕾雅",
+   "id": "UCiXJjvsRQEyT06x3YUwueVw",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "劇情",
+    "深度"
+   ]
+  },
+  {
+   "name": "森纳映画",
+   "id": "UCDNeEBgigHHGtJJOpHSnadA",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "劇情"
+   ]
+  },
+  {
+   "name": "歪理飯飯飯",
+   "id": "UC4eZoc_r3Kp41qaHREO99qg",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "劇情"
+   ]
+  },
+  {
+   "name": "第九頻道",
+   "id": "UCApOZopSIse5XHTX-cnMacw",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "產業",
+    "深度"
+   ]
+  },
+  {
+   "name": "芒果冰OL",
+   "id": "UCIUYqpXe7yok4x3VkK67B3Q",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "遊戲史"
+   ]
+  },
+  {
+   "name": "不負責任熱血君",
+   "id": "UCtRbs-wLyPxy9rB8nqQKX8Q",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "懷舊",
+    "劇情"
+   ]
+  },
+  {
+   "name": "瓜哥聊游戏",
+   "id": "UCpoBhxCk3KCwVTcoRyvAjgA",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "雜談"
+   ]
+  },
+  {
    "name": "黑桐谷歌",
-   "try": [
-    "@黑桐谷歌",
-    "@heitongguge"
-   ],
+   "id": "UCd9PeBRPrbNaAsqIkFGUiUg",
    "lang": "zh",
    "kind": "creator",
    "tags": [
@@ -375,48 +423,8 @@
    ]
   },
   {
-   "name": "老番茄",
-   "try": [
-    "@老番茄official"
-   ],
-   "lang": "zh",
-   "kind": "creator",
-   "tags": [
-    "實況",
-    "搞笑"
-   ]
-  },
-  {
-   "name": "Gamker攻殼",
-   "try": [
-    "@Gamker",
-    "@gamker攻壳",
-    "@GamkerTV"
-   ],
-   "lang": "zh",
-   "kind": "creator",
-   "tags": [
-    "評測"
-   ]
-  },
-  {
-   "name": "Mr.Quin",
-   "try": [
-    "@MrQuin",
-    "@mrquin"
-   ],
-   "lang": "zh",
-   "kind": "creator",
-   "tags": [
-    "評測",
-    "搞笑"
-   ]
-  },
-  {
-   "name": "王老菊",
-   "try": [
-    "@王老菊"
-   ],
+   "name": "老皮",
+   "id": "UC6yxPVu2b52UVJQEwCTzivQ",
    "lang": "zh",
    "kind": "creator",
    "tags": [
@@ -424,36 +432,197 @@
    ]
   },
   {
-   "name": "逍遙散人",
-   "try": [
-    "@逍遥散人",
-    "@逍遙散人"
-   ],
+   "name": "阿津",
+   "id": "UC6DsD2j3K3nJkO0ZuGwsIUA",
    "lang": "zh",
    "kind": "creator",
    "tags": [
     "實況",
+    "恐怖"
+   ]
+  },
+  {
+   "name": "DK2.0",
+   "id": "UCMBjiwogQmKjBfZfbagjetg",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "實況",
+    "恐怖"
+   ]
+  },
+  {
+   "name": "阿杰GAME實況",
+   "id": "UCjzelMo2UzgQKXdxyPD15Gg",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "實況"
+   ]
+  },
+  {
+   "name": "夏恩遊戲實況",
+   "id": "UCcfoqLvUfPPE5Llcio5Y0Yw",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "實況"
+   ]
+  },
+  {
+   "name": "GamePlayHK短片攻略",
+   "id": "UCLUA5xPUeBairwsxsbGWw5A",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "攻略"
+   ]
+  },
+  {
+   "name": "AMU Game Channel",
+   "id": "UCzIq3FGf6n8EHWcZMvzrlhg",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "攻略"
+   ]
+  },
+  {
+   "name": "達爾 daerr",
+   "id": "UCsLqXe1htLMc6jLGEbaH-SA",
+   "lang": "zh",
+   "kind": "creator",
+   "tags": [
+    "攻略"
+   ]
+  },
+  {
+   "name": "PlayStation",
+   "id": "UC-2Y8dQb0S6DtpxNgAKoJKA",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方",
+    "PlayStation"
+   ]
+  },
+  {
+   "name": "Xbox",
+   "id": "UCjBp_7RuDBUYbd1LegWEJ8g",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方",
+    "Xbox"
+   ]
+  },
+  {
+   "name": "Nintendo of America",
+   "id": "UCGIY_O-8vW4rfX98KlMkvRg",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方",
+    "任天堂"
+   ]
+  },
+  {
+   "name": "Ubisoft",
+   "id": "UC0KU8F9jJqSLS11LRXvFWmg",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方"
+   ]
+  },
+  {
+   "name": "CAPCOM USA",
+   "id": "UCW7h-1mymnJ96akzjrmiIgA",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方"
+   ]
+  },
+  {
+   "name": "Bandai Namco US",
+   "id": "UC_ntXHv-XdKCD7CPynVvnQw",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方"
+   ]
+  },
+  {
+   "name": "Bethesda",
+   "id": "UCvZHe-SP3xC7DdOk4Ri8QBw",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方"
+   ]
+  },
+  {
+   "name": "Rockstar Games",
+   "id": "UC6VcWc1rAoWdBCM0JxrRQ3A",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方"
+   ]
+  },
+  {
+   "name": "Devolver Digital",
+   "id": "UCSc6s-ZJXKlSQr51dsox34g",
+   "lang": "en",
+   "kind": "official",
+   "tags": [
+    "官方",
     "獨立"
    ]
   },
   {
-   "name": "大谷Spitzer",
-   "try": [
-    "@大谷Spitzer",
-    "@spitzer"
-   ],
-   "lang": "zh",
-   "kind": "creator",
+   "name": "The Game Awards",
+   "id": "UCqDS7KWjAPKv-7ZSlro9OiQ",
+   "lang": "en",
+   "kind": "official",
    "tags": [
-    "深度",
-    "設計"
+    "官方",
+    "展會"
+   ]
+  },
+  {
+   "name": "PlayStation Japan",
+   "id": "UCaghC0OZwAdidMrbvxkcrPg",
+   "lang": "ja",
+   "kind": "official",
+   "tags": [
+    "官方",
+    "PlayStation"
+   ]
+  },
+  {
+   "name": "任天堂 日本",
+   "id": "UCkH3CcMfqww9RsZvPRPkAJA",
+   "lang": "ja",
+   "kind": "official",
+   "tags": [
+    "官方",
+    "任天堂"
+   ]
+  },
+  {
+   "name": "Square Enix",
+   "id": "UC6SmH9mR82nj28_NNg_rZvA",
+   "lang": "ja",
+   "kind": "official",
+   "tags": [
+    "官方"
    ]
   },
   {
    "name": "IGN",
-   "try": [
-    "@IGN"
-   ],
+   "id": "UCKy1dAqELo0zrOtPkf0eTMw",
    "lang": "en",
    "kind": "media",
    "tags": [
@@ -464,9 +633,7 @@
   },
   {
    "name": "GameSpot",
-   "try": [
-    "@GameSpot"
-   ],
+   "id": "UCbu2SsF-Or3Rsn3NxqODImw",
    "lang": "en",
    "kind": "media",
    "tags": [
@@ -475,167 +642,18 @@
    ]
   },
   {
-   "name": "PlayStation",
-   "try": [
-    "@PlayStation"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "PlayStation"
-   ]
-  },
-  {
-   "name": "Xbox",
-   "try": [
-    "@Xbox"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "Xbox"
-   ]
-  },
-  {
-   "name": "Nintendo of America",
-   "try": [
-    "@NintendoAmerica"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "任天堂"
-   ]
-  },
-  {
-   "name": "Ubisoft",
-   "try": [
-    "@Ubisoft"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "CAPCOM USA",
-   "try": [
-    "@capcomusa",
-    "@CapcomUSA_"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "Bandai Namco US",
-   "try": [
-    "@BandaiNamcoEntertainmentAmerica",
-    "@BandaiNamcoAmerica"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "Square Enix",
-   "try": [
-    "@SquareEnix",
-    "@SquareEnixNA",
-    "@SQUAREENIXNA"
-   ],
-   "lang": "ja",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "Bethesda",
-   "try": [
-    "@Bethesda",
-    "@BethesdaSoftworks"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "Rockstar Games",
-   "try": [
-    "@RockstarGames"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方"
-   ]
-  },
-  {
-   "name": "Devolver Digital",
-   "try": [
-    "@DevolverDigital"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "獨立"
-   ]
-  },
-  {
-   "name": "The Game Awards",
-   "try": [
-    "@thegameawards",
-    "@TheGameAwards"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "展會"
-   ]
-  },
-  {
-   "name": "Summer Game Fest",
-   "try": [
-    "@SummerGameFest",
-    "@summergamefest"
-   ],
-   "lang": "en",
-   "kind": "official",
-   "tags": [
-    "官方",
-    "展會"
-   ]
-  },
-  {
-   "name": "Wholesome Games",
-   "try": [
-    "@WholesomeGames",
-    "@wholesomegames"
-   ],
+   "name": "Game Informer",
+   "id": "UCK-65DO2oOxxMwphl2tYtcw",
    "lang": "en",
    "kind": "media",
    "tags": [
-    "獨立"
+    "新聞",
+    "評測"
    ]
   },
   {
    "name": "Digital Foundry",
-   "try": [
-    "@DigitalFoundry"
-   ],
+   "id": "UC9PBzalIcEQCsiIkq36PyUA",
    "lang": "en",
    "kind": "media",
    "tags": [
@@ -645,96 +663,7 @@
   },
   {
    "name": "gameranx",
-   "try": [
-    "@gameranxTV",
-    "@gameranx"
-   ],
-   "lang": "en",
-   "kind": "media",
-   "tags": [
-    "新聞",
-    "評測"
-   ]
-  },
-  {
-   "name": "Skill Up",
-   "try": [
-    "@SkillUp"
-   ],
-   "lang": "en",
-   "kind": "creator",
-   "tags": [
-    "評測"
-   ]
-  },
-  {
-   "name": "ACG",
-   "try": [
-    "@ACGreviews",
-    "@ACG"
-   ],
-   "lang": "en",
-   "kind": "creator",
-   "tags": [
-    "評測"
-   ]
-  },
-  {
-   "name": "MinnMax",
-   "try": [
-    "@MinnMax"
-   ],
-   "lang": "en",
-   "kind": "media",
-   "tags": [
-    "評測",
-    "深度"
-   ]
-  },
-  {
-   "name": "Noclip",
-   "try": [
-    "@NoclipVideo",
-    "@noclip",
-    "@Noclip"
-   ],
-   "lang": "en",
-   "kind": "media",
-   "tags": [
-    "紀錄片",
-    "深度"
-   ]
-  },
-  {
-   "name": "People Make Games",
-   "try": [
-    "@PeopleMakeGames"
-   ],
-   "lang": "en",
-   "kind": "media",
-   "tags": [
-    "深度",
-    "紀錄片"
-   ]
-  },
-  {
-   "name": "Mandalore Gaming",
-   "try": [
-    "@MandaloreGaming"
-   ],
-   "lang": "en",
-   "kind": "creator",
-   "tags": [
-    "評測",
-    "懷舊"
-   ]
-  },
-  {
-   "name": "Game Informer",
-   "try": [
-    "@gameinformer",
-    "@GameInformer"
-   ],
+   "id": "UCNvzD7Z-g64bPXxGzaQaa4g",
    "lang": "en",
    "kind": "media",
    "tags": [
@@ -744,9 +673,7 @@
   },
   {
    "name": "Kinda Funny Games",
-   "try": [
-    "@KindaFunnyGames"
-   ],
+   "id": "UCT6QFE3peNry9PdO5uGj96g",
    "lang": "en",
    "kind": "media",
    "tags": [
@@ -756,10 +683,7 @@
   },
   {
    "name": "Nintendo Life",
-   "try": [
-    "@nintendolife",
-    "@NintendoLife"
-   ],
+   "id": "UCl7ZXbZUCWI2Hz--OrO4bsA",
    "lang": "en",
    "kind": "media",
    "tags": [
@@ -769,10 +693,7 @@
   },
   {
    "name": "Push Square",
-   "try": [
-    "@pushsquare",
-    "@PushSquare"
-   ],
+   "id": "UCbI-X9F07inmxYvQKDBOU7Q",
    "lang": "en",
    "kind": "media",
    "tags": [
@@ -781,39 +702,65 @@
    ]
   },
   {
-   "name": "PlayStation Japan",
-   "try": [
-    "@PlayStationJapan",
-    "@PlayStation_jp",
-    "@playstationjp"
-   ],
-   "lang": "ja",
-   "kind": "official",
+   "name": "Wholesome Games",
+   "id": "UCKMkV9T20tUOBqwsi5xh7HA",
+   "lang": "en",
+   "kind": "media",
    "tags": [
-    "官方",
-    "PlayStation"
+    "獨立"
    ]
   },
   {
-   "name": "任天堂 日本",
-   "try": [
-    "@NintendoJP",
-    "@nintendo_jp"
-   ],
-   "lang": "ja",
-   "kind": "official",
+   "name": "MinnMax",
+   "id": "UCiUhKqsBH-Is2VeC2sykEfg",
+   "lang": "en",
+   "kind": "media",
    "tags": [
-    "官方",
-    "任天堂"
+    "評測",
+    "深度"
+   ]
+  },
+  {
+   "name": "People Make Games",
+   "id": "UCZB6V9fUov0Mx_us3MWWILg",
+   "lang": "en",
+   "kind": "media",
+   "tags": [
+    "深度",
+    "紀錄片"
+   ]
+  },
+  {
+   "name": "Skill Up",
+   "id": "UCZ7AeeVbyslLM_8-nVy2B8Q",
+   "lang": "en",
+   "kind": "creator",
+   "tags": [
+    "評測"
+   ]
+  },
+  {
+   "name": "ACG",
+   "id": "UCK9_x1DImhU-eolIay5rb2Q",
+   "lang": "en",
+   "kind": "creator",
+   "tags": [
+    "評測"
+   ]
+  },
+  {
+   "name": "Mandalore Gaming",
+   "id": "UClOGLGPOqlAiLmOvXW5lKbw",
+   "lang": "en",
+   "kind": "creator",
+   "tags": [
+    "評測",
+    "懷舊"
    ]
   },
   {
    "name": "ファミ通",
-   "try": [
-    "@famitsu",
-    "@FamitsuTube",
-    "@famitsu_tube"
-   ],
+   "id": "UCtPyU9cJgvvgH03PQKgaucA",
    "lang": "ja",
    "kind": "media",
    "tags": [
