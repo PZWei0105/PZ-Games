@@ -12,7 +12,7 @@
 - 短影音牆很長以後（幾百款），考慮「全部」只放最近 60 天、更舊的靠篩選或庫存。
 - 願望單的 Steam 代號目前在公開的 `data/wish-cfg.json`（痞子葳同意的）；他想改成不公開，就放 Actions 密碼 `UNP_STEAM`，再把 wish-cfg.json 的 `steam` 清掉。
 - 行情板：等 board-d.json 累積兩三週，看「新高」「崩跌」「爆量」的門檻會不會太吵；Steam 的 `GetGamesByConcurrentPlayers` 哪天不能用了，live.py 會自動改用每款 `GetNumberOfCurrentPlayers`（`board.json` 的 `src` 會變成 `players`）。
-- 免費補給站：Epic 偶爾把神秘遊戲的 API 欄位改掉；`free.json` 的 `errs` 有東西就去看。GOG 的限時免費很少，抓不到不一定是壞了。
+- 免費補給站：Epic 偶爾把神秘遊戲的 API 欄位改掉；`free.json` 的 `errs` 有東西就去看，每輪的 Actions 紀錄也會印 `free diag`（每家抓到幾筆、Epic 每個優惠的折扣）。GOG、Steam 的限時免費很少，抓不到不一定是壞了。
 - 點播台：第一批真的問題進來後，看三班的回答品質、長度、等候時間；轉發站被濫用（大量垃圾）時，改成 App 送出前先算一個簡單的工作量證明，或換主題名稱。
 - TGA 2026：12/11 13:17 單次排程開獎（19:17 有一次備援，已開過就不動）。開獎後一週首頁橫幅自動收起；明年要辦 TGA 2027 時，`tga.json` 換新、publish.py 的 `TGA_SEAL` 改成新指紋、App 的年份字樣一起改。
 - 「史低」目前是自己追蹤以來的最低價（追蹤滿 14 天才叫史低）；之後想要真正的歷史最低，要申請 IsThereAnyDeal 的金鑰。
@@ -22,6 +22,8 @@
 - 第一份真的週報（W47，11/22 晚上）出來後，親眼看結算畫面和三張圖卡，調 Tier 方塊大小和圖卡排版。
 
 ## 已知問題
+
+- Epic 的免費遊戲清單用 `country=US`：2026-11-18 實測 `country=TW` 的回傳會漏掉每週送的遊戲（Knightica、Mark of the Deep 只出現在 US 的清單），標題用 `locale=zh-Hant` 拿中文名，原價顯示美元（US$）。台灣帳號照常可以領 Epic 每週送的遊戲。
 
 - Steam 以外的遊戲（主機獨佔、Netflix）沒有自動即時資料，圖片只能靠 YouTube 縮圖或專題裡寫的 `media.images`。
 - 圖卡的遊戲圖靠 Steam／YouTube 的 CORS 或 images.weserv.nl 代理；兩個都失敗時圖卡只畫塗鴉底（不會壞，但沒有遊戲圖）。

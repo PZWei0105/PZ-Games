@@ -54,7 +54,8 @@ BOARD_SP = 7.2 * 1440      # 走勢線留 7 天多一點
 BOARD_SP_GAP = 210         # 走勢線的樣本至少隔 3.5 小時
 BOARD_DAYS = 120           # 每日高峰留 120 天
 # 免費補給站：三家官方商店的「限時免費領」
-EPIC_FREE = 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=zh-Hant&country=TW&allowCountries=TW'
+# Epic：country=TW 的回傳會漏掉每週送的遊戲（2026-11-18 實測：Knightica、Mark of the Deep 只出現在 US），所以用 US 的清單、中文標題
+EPIC_FREE = 'https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?locale=zh-Hant&country=US&allowCountries=US'
 STEAM_FREE = 'https://store.steampowered.com/search/results/?maxprice=free&specials=1&category1=998&json=1&cc=TW&l=tchinese'
 GOG_FREE = 'https://catalog.gog.com/v1/catalog?limit=48&order=desc:trending&discounted=eq:true&price=between:0,0&productType=in:game,pack&page=1&countryCode=TW&locale=zh-Hant&currencyCode=TWD'
 ASSET = 'https://shared.akamai.steamstatic.com/store_item_assets/'
@@ -781,6 +782,11 @@ def _iso_any(s):
         return None
 
 
+def _usd(s):
+    s = (s or '').strip()
+    return ('US' + s) if s.startswith('$') else (s or None)
+
+
 def freebies(D, t0, tagn):
     """三家官方商店現在（和 Epic 下週）限時免費領的遊戲 → data/free.json。哪一家這輪讀不到，就先留那一家上一輪的。"""
     path = os.path.join(D, 'free.json')
@@ -821,7 +827,7 @@ def freebies(D, t0, tagn):
                         items.append(_nonull({
                             'id': f'epic:{e.get("namespace")}:{e.get("id")}', 'store': 'epic', 'title': title, 'img': img,
                             'url': f'https://store.epicgames.com/zh-Hant/p/{slug}' if slug else 'https://store.epicgames.com/zh-Hant/free-games',
-                            'orig_t': (tp.get('fmtPrice') or {}).get('originalPrice') if (tp.get('originalPrice') or 0) > 0 else None,
+                            'orig_t': _usd((tp.get('fmtPrice') or {}).get('originalPrice')) if (tp.get('originalPrice') or 0) > 0 else None,
                             'start': start, 'end': end, 'up': True if up else None,
                             'mystery': True if (not slug or 'mystery' in title.lower() or '神秘' in title) else None,
                             'dlc': True if e.get('offerType') in ('ADD_ON', 'DLC') else None}))
@@ -895,21 +901,6 @@ def freebies(D, t0, tagn):
     wrote = save_if_changed(path, _nonull(out), ignore=('at', 'errs', 'diag'))
     print(f'free: {len([x for x in items if not x.get("up")])} 款現在免費、{len([x for x in items if x.get("up")])} 款預告，來源 {ok}，wrote={wrote}', errs or '')
     print('free diag:', json.dumps(diag, ensure_ascii=False)[:2000])
-    if not any(x.get('store') == 'epic' for x in items) and OFFLINE is None:   # Epic 這輪一款都沒有：印出不同地區參數的回傳，方便查原因
-        for q in ('locale=zh-Hant&country=TW&allowCountries=TW', 'locale=en-US&country=TW&allowCountries=TW', 'locale=en-US&country=US&allowCountries=US'):
-            try:
-                d = get_json('https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?' + q, timeout=30, tries=1)
-                els = ((((d.get('data') or {}).get('Catalog') or {}).get('searchStore') or {}).get('elements')) or []
-                rows = []
-                for e in els:
-                    pr = e.get('promotions') or {}
-                    now = [o.get('discountSetting', {}).get('discountPercentage') for g in pr.get('promotionalOffers') or [] for o in g.get('promotionalOffers') or []]
-                    up = [o.get('discountSetting', {}).get('discountPercentage') for g in pr.get('upcomingPromotionalOffers') or [] for o in g.get('promotionalOffers') or []]
-                    tp = (e.get('price') or {}).get('totalPrice') or {}
-                    rows.append([(e.get('title') or '')[:22], e.get('offerType'), now, up, tp.get('discountPrice'), tp.get('originalPrice'), str(e.get('effectiveDate'))[:10]])
-                print('probe', q, len(els), json.dumps(rows, ensure_ascii=False)[:1800])
-            except Exception as ex:  # noqa: BLE001
-                print('probe', q, 'fail', ex)
 
 
 # ------------------------------------------------------------------ 出擊日曆（可訂閱的 .ics）
