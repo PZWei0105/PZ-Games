@@ -17,6 +17,15 @@ DESCRIPTION:PS5（PS5 Pro 強化）、Xbox Series X|S\n解包 UNPACKED
 URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/gta-vi
 END:VEVENT
 BEGIN:VEVENT
+UID:unpacked-rel-gtavi2-20261119@pzwei0105.github.io
+DTSTAMP:20261119T000000Z
+DTSTART;VALUE=DATE:20261119
+DTEND;VALUE=DATE:20261120
+SUMMARY:上市｜俠盜獵車手 VI
+DESCRIPTION:PS5（PS5 Pro 強化）、Xbox Series X|S\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/gta-vi-2
+END:VEVENT
+BEGIN:VEVENT
 UID:unpacked-free-epic02d659f31e1c43a78c43fd9fd9edc0899975548b6d404a94b8a9bdb34cad49e9-20261119@pzwei0105.github.io
 DTSTAMP:20261119T000000Z
 DTSTART;VALUE=DATE:20261119
@@ -42,6 +51,15 @@ DTEND;VALUE=DATE:20261128
 SUMMARY:特價截止｜Against the Storm
 DESCRIPTION:-14%，NT$597，最後到 03:00\n解包 UNPACKED
 URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#p/against-the-storm
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-end-4459590-20261127@pzwei0105.github.io
+DTSTAMP:20261127T000000Z
+DTSTART;VALUE=DATE:20261127
+DTEND;VALUE=DATE:20261128
+SUMMARY:特價截止｜Slotbound
+DESCRIPTION:-10%，NT$178，最後到 02:00\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/slotbound
 END:VEVENT
 BEGIN:VEVENT
 UID:unpacked-end-5200620-20261201@pzwei0105.github.io
