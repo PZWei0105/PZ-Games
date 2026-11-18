@@ -895,6 +895,21 @@ def freebies(D, t0, tagn):
     wrote = save_if_changed(path, _nonull(out), ignore=('at', 'errs', 'diag'))
     print(f'free: {len([x for x in items if not x.get("up")])} 款現在免費、{len([x for x in items if x.get("up")])} 款預告，來源 {ok}，wrote={wrote}', errs or '')
     print('free diag:', json.dumps(diag, ensure_ascii=False)[:2000])
+    if not any(x.get('store') == 'epic' for x in items) and OFFLINE is None:   # Epic 這輪一款都沒有：印出不同地區參數的回傳，方便查原因
+        for q in ('locale=zh-Hant&country=TW&allowCountries=TW', 'locale=en-US&country=TW&allowCountries=TW', 'locale=en-US&country=US&allowCountries=US'):
+            try:
+                d = get_json('https://store-site-backend-static-ipv4.ak.epicgames.com/freeGamesPromotions?' + q, timeout=30, tries=1)
+                els = ((((d.get('data') or {}).get('Catalog') or {}).get('searchStore') or {}).get('elements')) or []
+                rows = []
+                for e in els:
+                    pr = e.get('promotions') or {}
+                    now = [o.get('discountSetting', {}).get('discountPercentage') for g in pr.get('promotionalOffers') or [] for o in g.get('promotionalOffers') or []]
+                    up = [o.get('discountSetting', {}).get('discountPercentage') for g in pr.get('upcomingPromotionalOffers') or [] for o in g.get('promotionalOffers') or []]
+                    tp = (e.get('price') or {}).get('totalPrice') or {}
+                    rows.append([(e.get('title') or '')[:22], e.get('offerType'), now, up, tp.get('discountPrice'), tp.get('originalPrice'), str(e.get('effectiveDate'))[:10]])
+                print('probe', q, len(els), json.dumps(rows, ensure_ascii=False)[:1800])
+            except Exception as ex:  # noqa: BLE001
+                print('probe', q, 'fail', ex)
 
 
 # ------------------------------------------------------------------ 出擊日曆（可訂閱的 .ics）
