@@ -166,22 +166,36 @@ def save_if_changed(path, obj, ignore=('at',)):
 # 開放工作坊（Mod），就在 chg 記一筆（附時間）。同一個變化要連續兩輪都看到才算數，Steam 偶爾回傳不完整的資料不會變成假消息。
 # 官方公告（Steam 社群公告：更新、修正、活動）放 news：每款約 6 小時看一次，沒有新公告就不動檔案。
 # App 拿「寫稿（或回訪改寫）之後」的 chg 和 news 做成「寫稿之後」；stale.json 給列表小標、首頁追蹤牆和排程的舊稿回訪用。
-NEWS = 'https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid={}&count=10&maxlength=600&feeds=steam_community_announcements&format=json'
+# maxlength=0 拿原文（BBCode）：有設長度的話 Steam 會先把標記拿掉、段落直接黏在一起（「1.0.1.2Version is…」）
+NEWS = 'https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid={}&count=8&maxlength=0&feeds=steam_community_announcements&format=json'
 NEWS_N = 8            # 每款留最新幾則
-PATCH_RE = re.compile(r'\b(patch(es)?|hot-?fix(es)?|changelog|patch notes)\b|\b(major|big|content|free)\s+update\b|\bv?\d+\.\d+(\.\d+)?\b'
-                      r'|更新內容|更新說明|版本更新|大型更新|改版|修正|補丁', re.I)
+NEWS_V = 2            # 公告的整理方式改了就加一：下一輪每款重抓一次
+# 版本號要有 v 或三段（1.0.3），或跟 update／patch 連在一起才算更新：「1.0 Livestream」「2.1 Stable」這種是公告
+PATCH_RE = re.compile(r'\b(patch(es)?|hot-?fix(es)?|changelog|patch notes|bug ?fix(es)?|balancing|balance changes)\b|\b(major|big|content|free)\s+update\b'
+                      r'|\bv\d+(\.\d+)+|\b\d+\.\d+\.\d+|\b(update|patch)\s*#?v?\d|更新內容|更新說明|版本更新|大型更新|改版|修正|補丁', re.I)
+NEWSY_RE = re.compile(r'\b(dev(elopment)?|community|progress|monthly|weekly|studio)\s+(update|news)\b', re.I)   # 開發日誌不是更新
 RV_MIN = 200          # 評論數夠多，好評率的變化才算數
 RV_SWING = 8          # 好評率差幾個百分點才算「大轉向」
 
 
-def _clean_news(s):
+def _clean_news(s, title=''):
     s = re.sub(r'\[(img|video|previewyoutube)\b[^\]]*\].*?\[/\1\]', ' ', s or '', flags=re.I | re.S)
     s = re.sub(r'\{STEAM_CLAN_IMAGE\}\S*', ' ', s)
     s = re.sub(r'\[/?[a-zA-Z0-9*]+(?:[= ][^\]]*)?\]', ' ', s)
     s = re.sub(r'<[^>]+>', ' ', s)
     s = re.sub(r'https?://\S+', ' ', htmllib.unescape(s))
     s = re.sub(r'\s+', ' ', s.replace('\u2019', "'").replace('\u2018', "'")).strip()   # 彎引號在中文字型裡是全形，英文縮寫會開天窗
+    if title and s.lower().startswith(title.lower()):     # 內文開頭常常再寫一次標題
+        s = s[len(title):].lstrip(' :：-–—|!').strip()
     return (s[:150].rstrip() + '…') if len(s) > 150 else s
+
+
+def _is_patch(t, tags):
+    if 'patchnotes' in (tags or []):      # 開發商在 Steam 選了「更新說明」
+        return True
+    if NEWSY_RE.search(t) and not re.search(r'patch|hot-?fix|changelog', t, re.I):
+        return False
+    return bool(PATCH_RE.search(t))
 
 
 def news(appid):
@@ -201,8 +215,8 @@ def news(appid):
             continue
         u = n.get('url') or ''
         out.append(_nonull({'t': t[:140], 'd': iso(dt.datetime.fromtimestamp(ts, UTC)), 'u': u if u.startswith('https://') else None,
-                            'k': 'patch' if ('patchnotes' in (n.get('tags') or []) or PATCH_RE.search(t)) else 'news',
-                            'x': _clean_news(n.get('contents')) or None}))
+                            'k': 'patch' if _is_patch(t, n.get('tags')) else 'news',
+                            'x': _clean_news(n.get('contents'), t) or None}))
     out.sort(key=lambda r: r['d'], reverse=True)
     return out[:NEWS_N]
 
@@ -210,7 +224,7 @@ def news(appid):
 def news_due(prev, appid, t0):
     """這一輪要不要看官方公告：沒看過的要；每輪都更新的熱門款每 6 小時一次（照 appid 錯開）；輪流更新的冷門款每次輪到都看。
     不存「上次看的時間」：存了每幾小時就得改一次檔案，典藏越多越拖。"""
-    if prev.get('news') is None:
+    if prev.get('news') is None or prev.get('news_v') != NEWS_V:
         return True
     try:
         gap = (t0 - dt.datetime.strptime(prev.get('at') or '', '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=UTC)).total_seconds()
@@ -1395,8 +1409,11 @@ def main():
         if nw is not None:
             time.sleep(0.15)
             NSTAT['ok'] += 1
-        if nw is None and prev.get('news') is not None:
+            x['news_v'] = NEWS_V
+        elif prev.get('news') is not None:
             nw = prev['news']
+            if prev.get('news_v'):
+                x['news_v'] = prev['news_v']
         if nw is not None:
             x['news'] = nw
         x['base'], pend, chg = track_changes(prev, x, t0)
