@@ -1,0 +1,76 @@
+# 《觀戰 SPECTATE》轉播資料：每 20 分鐘抓精選頻道與痞子葳訂閱頻道的新片（YouTube 官方 RSS），
+# 收轉發站（ntfy.sh）上 App 送來的訂閱／封鎖／稍後觀看，判斷 Shorts、遊戲名稱、黑馬；
+# 有 YouTube 金鑰（Actions 密碼 YT_KEY，Settings → Secrets and variables → Actions）時再加：直播雷達、片長、中文標題、每天的新秀探勘。
+# 影片資料推到 spectate-data 分支（強制推送、只留最新一版，不會讓 repo 越長越大）；訂閱狀態 me.json 與頻道名冊 roster.json 有變動才 commit 進 main。
+name: spectate-feed
+
+on:
+  schedule:
+    - cron: '7,27,47 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/spectate/data/channels.json'
+      - '_build/apps/spectate/tools/**'
+      - '.github/workflows/spectate-feed.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spectate-feed
+  cancel-in-progress: false
+
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 安裝簡轉繁
+        run: pip install -q opencc-python-reimplemented
+      - name: 取上一版轉播資料
+        run: |
+          mkdir -p /tmp/prev
+          if git fetch -q --depth=1 origin spectate-data 2>/dev/null; then
+            git archive FETCH_HEAD | tar -x -C /tmp/prev && echo '有上一版'
+          else
+            echo '第一次跑'
+          fi
+      - name: 轉播資料
+        env:
+          YT_KEY: ${{ secrets.YT_KEY }}
+        run: python3 _build/apps/spectate/tools/pipeline.py --repo . --prev /tmp/prev --out /tmp/out
+      - name: 推 spectate-data 分支（只留最新一版）
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd /tmp/out
+          git init -q -b spectate-data
+          git config user.name 'spectate-bot'
+          git config user.email 'spectate-bot@users.noreply.github.com'
+          git add -A
+          git commit -q -m '觀戰：轉播資料'
+          for i in 1 2 3; do
+            git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:spectate-data && exit 0
+            echo "推送失敗，重試 $i"; sleep $((i * 5))
+          done
+          exit 1
+      - name: 訂閱狀態、頻道名冊有變動才 commit
+        run: |
+          git config user.name 'spectate-bot'
+          git config user.email 'spectate-bot@users.noreply.github.com'
+          git add apps/spectate/data/me.json apps/spectate/data/roster.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi
+          git commit -q -m '觀戰：訂閱與頻道名冊'
+          for i in 1 2 3 4 5; do
+            git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0
+            echo "push 失敗，重試 $i"; sleep $((i * 7))
+          done
+          exit 1
