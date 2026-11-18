@@ -41,7 +41,7 @@
 
 `tools/pipeline.py`：
 1. **轉發站收件**：App 把訂閱／取消／封鎖／跳過／新增頻道／稍後觀看送到 `https://ntfy.sh/pz-spectate-e4431fca8fc4498df14a`（no-cors POST，`{v:1, dev, evs:[…]}`），管線收白名單事件寫進 `apps/spectate/data/me.json`（main 分支）。主題在公開程式裡，所以收件一律當不可信資料（頻道 ID、影片 ID 格式檢查、截長度）。
-2. **頻道解析**：`apps/spectate/data/channels.json`（手寫的精選名單，`try` 是要試的 @代號）→ `roster.json`（main 分支）。沒金鑰時讀頻道頁的 canonical 連結；有金鑰用 `channels.list?forHandle=`。解析失敗的一天重試一次（記在 cache 的 `tries`）。名單上拿掉的頻道，下一次執行會從精選移除。
+2. **頻道解析**：`apps/spectate/data/channels.json`（手寫的精選名單，目前 80 台、52 台中文；優先寫 `id`（UC 開頭的頻道 ID），沒有 ID 才寫 `try` 要試的 @代號）→ `roster.json`（main 分支）。同名頻道換了 ID，會自動換掉舊的。沒金鑰時讀頻道頁的 canonical 連結；有金鑰用 `channels.list?forHandle=`。解析失敗的一天重試一次（記在 cache 的 `tries`）。名單上拿掉的頻道，下一次執行會從精選移除。
 3. **RSS**：YouTube 官方的 `feeds/videos.xml?channel_id=`（不用金鑰，最新 15 支＋觀看數）。抓的是精選＋訂閱＋新增＋這兩週的新秀候選；封鎖的不抓。
 4. **整理**：Shorts（RSS 連結是 `/shorts/` 就是；其他用 `youtube.com/shorts/<id>` 是否直接打得開判斷）、簡體標題轉繁體（OpenCC s2twp，原標題留在 `t0`）、語言、車道（`ytextract.lane_of`，官方頻道只分預告／新聞）、遊戲名稱（書名號、英文「名稱 - Trailer」、別名表）→ Steam 搜尋對成同一款（`s<appid>`，一次最多 45 次查詢，查不到的記 14 天），沒上 Steam 但兩台以上都在聊的用 `n:<名稱>`。
 5. **有金鑰（Actions 密碼 `YT_KEY`）才做**：`videos.list`（片長、直播中／即將直播、同時觀看、分類、官方給的中文標題 `tz`、觀看數）、頻道訂閱數（每天）、**新秀探勘**（每天台灣時間 5 點後一次：熱門遊戲 4 個＋類型輪替 3 個＋黑馬 2 個搜尋，`relevanceLanguage=zh-Hant`、`regionCode=TW`、遊戲分類；濾掉搬運、兌換碼、抽卡、Shorts 頻道；選 5 位）。一天大約 2,000～3,000 點（免費額度 1 萬）。
@@ -85,5 +85,6 @@ python3 _build/apps/spectate/tests/shoot.py --data <資料夾> --out /tmp/spshot
 
 - **中文優先**是核心：焦點先排中文預告；同一台 3 小時內的多語版本、同一款遊戲 3 天內的預告，有中文版就收掉外文版（設定可關）。
 - 不要做成「看你點過什麼就推什麼」：新秀和黑馬都不看痞子葳的觀看紀錄，觀看紀錄只用來標 REPLAY、續播和破圈度。
-- 精選名單換人：改 `apps/spectate/data/channels.json`，推上去會觸發管線（push 路徑過濾）。先看 `status.json` 的 `quiet`、`unresolved`。
+- 精選名單換人：改 `apps/spectate/data/channels.json`，推上去會觸發管線（push 路徑過濾）。先看 `status.json` 的 `quiet`、`unresolved`。找新的中文頻道：手動跑 Actions 的 `spectate-research`（輸入關鍵字，用逗號分開），結果在 `spectate-research` 分支的 `research.json`（頻道 ID、名稱、最近更新、觀看數）。
+- 分類規則（車道、遊戲名稱）改了：把 `pipeline.py` 的 `CLS_VER` 加一，下一次執行會把影片庫全部重新判斷（Steam 結果有快取，不多花額度）。
 - 截圖檢查時記得 `?skip=1` 跳過開場。
