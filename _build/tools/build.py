@@ -524,6 +524,10 @@ def main():
     now = datetime.now(TZ)
     ver = now.strftime('%Y.%m.%d-%H%M')
     cat = {'version': ver, 'updated': now.strftime('%Y-%m-%d'), 'genres': base['genres'], 'games': games, 'archive': archive, 'apps': apps}
+    # which Claude plan each App needs to keep running as it does now (PZ 2026-11-18): the App page shows it
+    plp = os.path.join(ROOT, 'data/plans.json')
+    if os.path.exists(plp):
+        cat['plans'] = json.load(open(plp, encoding='utf-8'))
     # update notes (newest first): the app shows the newest one once in its toast bubble
     clp = os.path.join(ROOT, 'data/changelog.json')
     if os.path.exists(clp):

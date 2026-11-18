@@ -1,0 +1,49 @@
+{
+  "updated": "2026-11-18",
+  "verdict": "現在整套要原樣跑，最少要 Max 5 倍；而且 5 倍也偏緊，因為這些排程跟你寫小說、做遊戲用的是同一份額度。",
+  "tiers": {
+    "free": { "tag": "免費", "name": "免費就夠", "desc": "停訂也照常打開，資料靠 GitHub 自動更新，不花 Claude；只會少掉每週的巡檢打磨。" },
+    "pro": { "tag": "PRO", "name": "至少 Pro", "desc": "有一塊核心功能要靠 Claude 排程或 Claude 幫忙才會動，但用量不大。" },
+    "max": { "tag": "MAX", "name": "最少 Max 5 倍", "desc": "每天靠 Claude 大量研究、寫稿、查核；停訂後內容就停在最後一天。" }
+  },
+  "apps": {
+    "coldeye": { "tier": "free", "text": "盤中資料、新聞、觀點全靠 GitHub 自動更新，停訂照常用；只少了每週一、三、五的巡檢打磨。" },
+    "omniscient": { "tier": "free", "text": "只讀冷眼的公開資料，冷眼在更新，它就在更新。" },
+    "forreal": { "tier": "free", "text": "每小時自動抓新聞；外文翻譯是 GitHub 上的開源模型做的，不花 Claude。只少了週二巡檢。" },
+    "unpacked": { "tier": "max", "text": "每天三班排程寫專題、推坑、願望單解包，加週日懶人包和點播台回答，是用量最大的一個。停訂後 Steam 特價、行情板、免費補給站照常更新，但不會再有新文章。" },
+    "spectate": { "tier": "free", "text": "每 20 分鐘由 GitHub 收新片，不靠 Claude。" },
+    "turnaround": { "tier": "max", "text": "每天清晨一班排程開題、進廠檢修，全靠 Claude。單獨跑 Pro 勉強撐得住，和解包一起就要 Max。停訂後你的表態還收得到，但不會有新航班。" },
+    "sandtable": { "tier": "free", "text": "吃冷眼的真實行情，停訂照常練；只少了巡檢。" },
+    "echo-radar": { "tier": "free", "text": "每小時自動更新；只少了週六巡檢。" },
+    "ai-meta": { "tier": "free", "text": "每小時自動抓資料、自動翻譯；只少了週日那次查證官方價格和打磨。" },
+    "before-checkout": { "tier": "pro", "text": "自動追價靠 GitHub，停訂照跑；但「派秘書去查」新商品要靠 Claude 排程，至少 Pro。" },
+    "local-dojo": { "tier": "free", "text": "課程內容是固定的，停訂照常學；只少了週四巡檢（例如把過期的安裝步驟改新）。" },
+    "reignite": { "tier": "free", "text": "紀錄存在手機裡，完全不靠 Claude。" },
+    "next-chapter": { "tier": "pro", "text": "看書、說書照常；要繼續連載新章節和每天的小說巡查，至少 Pro。同時連寫好幾本，建議 Max。" },
+    "reskin": { "tier": "free", "text": "播你自己的音樂檔，完全不靠 Claude。" },
+    "engine-lab": { "tier": "free", "text": "引擎展示間，內容固定。" },
+    "pz-host": { "tier": "free", "text": "放在 Claude 上的頁面，免費帳號登入也打得開。" },
+    "ai-game-class": { "tier": "free", "text": "放在 Claude 上的頁面，免費帳號登入也打得開。" },
+    "video-skills": { "tier": "free", "text": "放在 Claude 上的頁面，免費帳號登入也打得開。" },
+    "chat-rename": { "tier": "free", "text": "放在 Claude 上的頁面，免費帳號登入也打得開。" },
+    "maintenance": { "tier": "free", "text": "這份指令本身免費打得開；但它說的維護排程要 Pro 以上才會跑。" }
+  },
+  "games": "全部是網頁檔，免費就能玩；Claude 版免費帳號登入也打得開。只有要繼續做新遊戲、改版，才需要 Claude。",
+  "load": [
+    { "name": "解包", "min": 592, "tier": "max", "note": "每天 3 班＋週報" },
+    { "name": "轉機", "min": 154, "tier": "max", "note": "每天 1 班" },
+    { "name": "小說巡查", "min": 70, "tier": "pro", "note": "每天看一次，寫滿 5 回才真的巡" },
+    { "name": "冷眼與沙盤", "min": 60, "tier": "pro", "note": "週一、三、五" },
+    { "name": "版本答案", "min": 27, "tier": "pro", "note": "週日" },
+    { "name": "PZ 遊戲收藏", "min": 15, "tier": "pro", "note": "週六" },
+    { "name": "回波", "min": 14, "tier": "pro", "note": "週六" },
+    { "name": "玩真的", "min": 10, "tier": "pro", "note": "週二" },
+    { "name": "本機道場", "min": 10, "tier": "pro", "note": "週四" },
+    { "name": "下單前", "min": 5, "tier": "pro", "note": "週四" }
+  ],
+  "facts": [
+    "這是排程實際跑的時間（照最近一次估），不含你在對話裡寫小說、做遊戲的用量。",
+    "11/12 本機道場、下單前兩個排程因為「用量到頂」沒跑成；那時解包、轉機都還沒開始。",
+    "停訂期間 Claude 排程只會暫停，續訂後自動恢復；已經做好的東西都不會消失。"
+  ]
+}

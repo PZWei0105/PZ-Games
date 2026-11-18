@@ -1560,3 +1560,43 @@ html.dragging .slot-ghost { border-color: rgba(255, 255, 255, .45); color: var(-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ───────────── 訂閱方案盤點（2026-11-18） ─────────────
+   plan tags on the cartridges stay flat (solid fill + a 1px inset ring, no blur, no offset) so twenty of them cost Safari nothing extra */
+:root { --pl-free: #6fe3a8; --pl-pro: #7ad7ff; --pl-max: #ffc04d; }
+.pl-free { --pl: var(--pl-free); } .pl-pro { --pl: var(--pl-pro); } .pl-max { --pl: var(--pl-max); }
+.cart .ct-plan { position: absolute; right: 5px; bottom: 5px; height: 16px; padding: 0 5px; border-radius: 5px; display: grid; place-items: center; font-size: 9px; font-weight: 900; letter-spacing: .08em; line-height: 1; color: #06070c; background: var(--pl); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35); }
+.console.mini .cart .ct-plan { display: none; }
+.plans-card { display: grid; gap: 12px; width: auto; text-align: left; margin: 22px calc(var(--pad) + var(--safe-r)) 6px calc(var(--pad) + var(--safe-l)); padding: 16px; border-radius: 20px; color: inherit;
+  background: linear-gradient(90deg, rgba(111, 227, 168, .10), rgba(122, 215, 255, .08) 50%, rgba(255, 192, 77, .12)), rgba(255, 255, 255, .035); border: 1px solid var(--line); }
+.plans-card .pc-h b { display: block; font-family: var(--serif); font-weight: 900; font-size: 18px; letter-spacing: .04em; }
+.plans-card .pc-h small { display: block; margin-top: 3px; font-size: 12px; color: var(--mute); }
+.plans-card .pc-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.plans-card .pc-t { display: grid; justify-items: start; gap: 2px; padding: 10px 10px 9px; border-radius: 14px; background: rgba(0, 0, 0, .28); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pl) 45%, transparent); }
+.plans-card .pc-t i { font-style: normal; font-size: 9.5px; font-weight: 900; letter-spacing: .1em; padding: 2px 6px; border-radius: 5px; color: #06070c; background: var(--pl); }
+.plans-card .pc-t b { font-size: 26px; font-weight: 900; line-height: 1.05; color: var(--pl); font-variant-numeric: tabular-nums; }
+.plans-card .pc-t small { font-size: 11px; color: var(--text2); }
+.plans-card .pc-v { font-size: 13px; line-height: 1.65; color: var(--text2); }
+.plans-card .pc-go { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 800; color: #fff; }
+.plans-card .pc-go svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; }
+.sheet .pl-verdict { padding: 12px 14px; border-radius: 14px; font-size: 14px; line-height: 1.7; font-weight: 700; color: #fff; background: rgba(255, 192, 77, .12); box-shadow: inset 0 0 0 1px rgba(255, 192, 77, .4); }
+.sheet .pl-sec, .sheet .pl-load { margin-top: 20px; }
+.sheet .pl-sec h4, .sheet .pl-load h4 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 900; }
+.sheet .pl-sec h4 i { font-style: normal; font-size: 10px; letter-spacing: .1em; padding: 3px 7px; border-radius: 6px; color: #06070c; background: var(--pl); }
+.sheet .pl-sec h4 em { margin-left: auto; font-style: normal; font-size: 12px; font-weight: 700; color: var(--pl); }
+.sheet .pl-d { margin: 4px 0 8px; font-size: 12.5px; line-height: 1.7; color: var(--mute); }
+.sheet .pl-it { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.sheet .pl-it .pl-gl { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-family: var(--serif); font-weight: 900; font-size: 15px; color: #fff; background: linear-gradient(160deg, var(--c0, #2a2d3a), var(--c1, #0a0b10)); box-shadow: inset 0 0 0 1px rgba(var(--c-rgb, 200, 200, 220), .55); }
+.sheet .pl-games .pl-gl { box-shadow: inset 0 0 0 1px rgba(111, 227, 168, .55); }
+.sheet .pl-it b { display: block; font-size: 14.5px; }
+.sheet .pl-it span:not(.pl-gl) { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.65; color: var(--text2); }
+.sheet .pl-bar { display: grid; grid-template-columns: 7.2em 1fr 3.6em; align-items: center; gap: 10px; padding: 6px 0; }
+.sheet .pl-bn { font-size: 13px; font-weight: 700; line-height: 1.25; }
+.sheet .pl-bn small { display: block; font-size: 10.5px; font-weight: 500; color: var(--mute); }
+.sheet .pl-bt { height: 10px; border-radius: 5px; background: rgba(255, 255, 255, .06); }
+.sheet .pl-bt i { display: block; height: 100%; min-width: 4px; border-radius: 5px; background: var(--pl); }
+.sheet .pl-bm { font-size: 12.5px; font-weight: 800; text-align: right; color: var(--pl); font-variant-numeric: tabular-nums; }
+.sheet .pl-facts { margin: 18px 0 0; padding-left: 18px; font-size: 12.5px; line-height: 1.8; color: var(--mute); }
+/* a plugged-in cartridge sinks into its slot and hides its corner, so the console face carries its plan tag instead */
+.slot .cart .ct-plan { display: none; }
+.cs-ch .cs-plan { display: inline-block; margin-top: 4px; padding: 2px 5px; border-radius: 5px; font-size: 8.5px; font-weight: 900; letter-spacing: .08em; line-height: 1.1; color: #06070c; background: var(--pl); }

@@ -619,6 +619,7 @@ function prep(cat) {
   S.games = (cat.games || []).map((g) => { fixColor(g); g.kind = 'game'; return g; });
   S.archive = (cat.archive || []).map((g) => { fixColor(g); g.kind = 'archive'; return g; });
   S.apps = (cat.apps || []).map((a) => { fixColor(a); a.type = a.type || a.kind; a.kind = 'app'; return a; });
+  S.plans = cat.plans && cat.plans.apps ? cat.plans : null;
   S.byId = {}; S.byBuild = {};
   for (const g of [...S.games, ...S.archive, ...S.apps]) S.byId[g.id] = g;
   for (const g of S.games) for (const b of g.builds || []) S.byBuild[b.id] = { game: g, build: b };
@@ -1092,7 +1093,7 @@ function cartHtml(a, where, i = 0) {
     : where === 'dock' ? `<span class="ct-act out" data-act="dock-out" data-id="${esc(a.id)}" role="button" aria-label="從主機拔出">${I.eject}</span>` : '';
   return `${open} data-cart="${esc(a.id)}" data-drag="${where}" style="${cssVars(a)};--i:${i}" aria-label="${esc(a.title)}" draggable="false">`
     + `<span class="ct-body"><span class="ct-grip"></span>`
-    + `<span class="ct-lbl"><span class="ct-gl${long ? ' long' : ''}">${esc(g)}</span>${cl ? '<span class="ct-ext">Claude</span>' : ''}${fresh ? '<span class="ct-new">新</span>' : ''}</span>`
+    + `<span class="ct-lbl"><span class="ct-gl${long ? ' long' : ''}">${esc(g)}</span>${cl ? '<span class="ct-ext">Claude</span>' : ''}${fresh ? '<span class="ct-new">新</span>' : ''}${planTag(a.id)}</span>`
     + `<span class="ct-nm${[...a.title].length > 6 ? ' long' : ''}"><b>${esc(a.title)}</b>${a.en ? `<small>${esc(a.en)}</small>` : ''}</span>`
     + `${where === 'rack' && a.tagline ? `<span class="ct-tag">${esc(a.tagline)}</span>` : ''}</span>`
     + `<span class="ct-pins"></span>${badge}</${link ? 'a' : 'button'}>`;
@@ -1104,7 +1105,7 @@ function consoleHtml(dock, opts = {}) {
   const apps = dock.map((id) => (isApp(id) ? S.byId[id] : null));
   const slots = apps.map((a, k) => `<div class="slot${a ? ' on' : ''}" data-slot="${k}"${a ? ` style="${cssVars(a)}"` : ''}>`
     + (a ? cartHtml(a, where, k) : `<div class="slot-ghost"${opts.mini ? ' data-act="tab" data-arg="apps"' : ''}><span>${I.plus}</span><small>${opts.mini ? '去插卡匣' : '空插槽'}</small></div>`) + `</div>`).join('');
-  const face = apps.map((a, k) => `<div class="cs-ch${a ? ' on' : ''}"${a ? ` style="${cssVars(a)}"` : ''}><i class="led"></i><b>${a ? esc(a.title) : '插槽 ' + (k + 1)}</b></div>`).join('');
+  const face = apps.map((a, k) => `<div class="cs-ch${a ? ' on' : ''}"${a ? ` style="${cssVars(a)}"` : ''}><i class="led"></i><b>${a ? esc(a.title) : '插槽 ' + (k + 1)}</b>${a && !opts.mini ? planTag(a.id).replace('ct-plan', 'cs-plan') : ''}</div>`).join('');
   const cols = apps.map((a) => (a ? a.accent : '#262b3a'));
   const strip = `linear-gradient(90deg, ${cols.map((c, k) => `${c} ${(((k + 0.5) / cols.length) * 100).toFixed(1)}%`).join(', ')})`;
   const id = opts.mini ? ' id="minicon"' : opts.preview ? '' : ' id="console"';
@@ -1122,10 +1123,54 @@ function renderApps() {
     ${consoleHtml(dock)}
     <div class="sec-title rk-h"><h2>卡匣架</h2><p>${rack.length} 片卡匣・拖進上面的主機，就是你的最愛</p></div>
     <div class="rack" id="rack">${rack.map((id, i) => cartHtml(S.byId[id], 'rack', i + DOCK_N)).join('')}</div>
-    ${anyClaude ? '<p class="rk-note">標著 Claude 的卡匣要登入 Claude 才能開，會在新視窗打開。</p>' : ''}</div>`;
+    ${anyClaude ? '<p class="rk-note">標著 Claude 的卡匣要登入 Claude 才能開，會在新視窗打開。</p>' : ''}
+    ${plansCard()}</div>`;
   // the 「新」 sticker is for the first time this device sees an App here
   const ids = S.apps.map((a) => a.id);
   if (!S.appSeen || ids.some((id) => !S.appSeen.includes(id))) { S.appSeen = ids; Store.set('appSeen', ids); }
+}
+/* ───────────── 訂閱方案盤點（PZ 2026-11-18：哪些免費就夠、哪些要 Pro、哪些最少要 Max 5 倍） ─────────────
+   The data is data/plans.json (carried into catalog.json by build). Each cartridge gets a small plan tag in the
+   bottom corner of its label; the card under the rack opens the full breakdown in a sheet. */
+const PLAN_ORDER = ['free', 'pro', 'max'];
+const planOf = (id) => (S.plans && S.plans.apps[id] && S.plans.tiers[S.plans.apps[id].tier]) ? S.plans.apps[id] : null;
+function planTag(id) {
+  const p = planOf(id); if (!p) return '';
+  return `<span class="ct-plan pl-${p.tier}">${esc(S.plans.tiers[p.tier].tag)}</span>`;
+}
+function planCounts() {
+  const n = { free: 0, pro: 0, max: 0 };
+  for (const a of S.apps) { const p = planOf(a.id); if (p) n[p.tier]++; }
+  return n;
+}
+function plansCard() {
+  if (!S.plans) return '';
+  const n = planCounts(), T = S.plans.tiers;
+  return `<button type="button" class="plans-card" data-act="plans"><span class="pc-h"><b>訂閱方案盤點</b><small>停訂會怎樣？每片卡匣右下角都標了</small></span>`
+    + `<span class="pc-row">${PLAN_ORDER.map((t) => `<span class="pc-t pl-${t}"><i>${esc(T[t].tag)}</i><b>${n[t]}</b><small>${esc(T[t].name)}</small></span>`).join('')}</span>`
+    + `<span class="pc-v">${esc(S.plans.verdict || '')}</span><span class="pc-go">看完整盤點${I.chev}</span></button>`;
+}
+function openPlans() {
+  if (!S.plans) return;
+  const P = S.plans, T = P.tiers;
+  const games = S.games.length;
+  const tiers = PLAN_ORDER.map((t) => {
+    const list = S.apps.filter((a) => { const p = planOf(a.id); return p && p.tier === t; });
+    if (!list.length) return '';
+    return `<section class="pl-sec pl-${t}"><h4><i>${esc(T[t].tag)}</i>${esc(T[t].name)}<em>${list.length} 個</em></h4><p class="pl-d">${esc(T[t].desc)}</p>`
+      + list.map((a) => `<div class="pl-it" style="${cssVars(a)}"><span class="pl-gl">${esc(a.glyph || a.title.slice(0, 1))}</span><div><b>${esc(a.title)}</b><span>${esc(P.apps[a.id].text)}</span></div></div>`).join('')
+      + (t === 'free' && P.games ? `<div class="pl-it pl-games"><span class="pl-gl">遊</span><div><b>${games} 款遊戲</b><span>${esc(P.games)}</span></div></div>` : '')
+      + `</section>`;
+  }).join('');
+  const load = P.load || [], total = load.reduce((s, x) => s + (x.min || 0), 0), top = Math.max(1, ...load.map((x) => x.min || 0));
+  const bars = load.length ? `<section class="pl-load"><h4>Claude 排程一週大約跑多久</h4><p class="pl-d">合計約 ${Math.round(total / 60)} 小時／週</p>`
+    + load.map((x) => `<div class="pl-bar pl-${x.tier}"><span class="pl-bn">${esc(x.name)}<small>${esc(x.note || '')}</small></span><span class="pl-bt"><i style="width:${((x.min / top) * 100).toFixed(1)}%"></i></span><span class="pl-bm">${x.min >= 60 ? (x.min / 60).toFixed(1) + ' 時' : x.min + ' 分'}</span></div>`).join('')
+    + `</section>` : '';
+  const facts = (P.facts || []).map((f) => `<li>${esc(f)}</li>`).join('');
+  openSheet(`<h3>訂閱方案盤點</h3><p class="sub">${esc(P.updated || '')} 盤點・要原樣運作，最少要哪個方案</p>`
+    + `<div class="pl-verdict">${esc(P.verdict || '')}</div>${tiers}${bars}${facts ? `<ul class="pl-facts">${facts}</ul>` : ''}`
+    + `<div class="menu-list" style="margin-top:16px"><button data-act="sheet-close">${I.check}知道了</button></div>`);
+  Sound.play.tap();
 }
 const edBtn = () => `<button class="ed-btn${S.editing ? ' on' : ''}" data-act="${S.editing ? 'ed-done' : 'ed-on'}">${S.editing ? I.check + '完成' : I.grid + '整理'}</button>`;
 
@@ -2791,6 +2836,7 @@ function onClick(e) {
     case 'search-close': Sound.play.back(); closeSearch(); break;
     case 'settings': Sound.play.tap(); openSettings(); break;
     case 'sheet-close': closeSheet(); break;
+    case 'plans': openPlans(); break;
     case 'set': {
       const k = arg; S.settings[k] = !S.settings[k]; save.settings(); t.classList.toggle('on', S.settings[k]);
       Sound.play.toggle(S.settings[k]);
