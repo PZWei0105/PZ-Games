@@ -454,6 +454,25 @@ html.dark .gm-dome { background: #2c3a6e; }
 .th-stage { flex: none; }
 .th-frame { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-top: 3px solid #000; border-bottom: 3px solid #000; overflow: hidden; }
 .th-frame iframe, .th-frame > div:first-child { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* 橫放全螢幕：iPhone 把播放器轉 90 度鋪滿（手機鎖直向也能橫著看）；Android 是真的全螢幕。位置由 Land.layout() 算好放在 --fx-* */
+.fsx-rail, .fsx-tip { display: none; }
+#theater.fsx .th-frame { position: fixed; left: 50%; top: 50%; z-index: 50; width: var(--fx-w, 100vw); height: var(--fx-h, 100vh); max-width: none; max-height: none; aspect-ratio: auto; border: 0; transform: translate(-50%, -50%) rotate(var(--fx-rot, 0deg)); background: #000; }
+#theater.fsx .th-frame > iframe, #theater.fsx .th-frame > #ytp { inset: auto; left: var(--fx-vl); top: var(--fx-vt); width: var(--fx-vw); height: var(--fx-vh); }
+#theater.fsx .fsx-rail { display: flex; position: absolute; z-index: 8; right: var(--fx-rr); top: var(--fx-rt); bottom: var(--fx-rb); width: 52px; flex-direction: column; justify-content: space-between; align-items: center; transition: opacity .35s; }
+.fsx-rail .fr-g { display: flex; flex-direction: column; gap: 12px; }
+.fsx-rail button { width: 46px; height: 46px; display: grid; place-items: center; align-content: center; gap: 2px; padding: 0; border-radius: 12px; background: #241c46; border: 2.5px solid #000; box-shadow: 3px 3px 0 #000; color: #fff; touch-action: manipulation; }
+.fsx-rail button svg { width: 22px; height: 22px; }
+.fsx-rail button b { font-size: 11px; font-weight: 900; line-height: 1; letter-spacing: .5px; }
+.fsx-rail #fxSkip, .fsx-rail #fxComp, .fsx-rail #fxNext { height: 58px; }
+.fsx-rail #fxSkip svg, .fsx-rail #fxComp svg, .fsx-rail #fxNext svg { width: 16px; height: 16px; }
+.fsx-rail #fxComp, .fsx-rail #fxNext { background: var(--sakura); color: #17112a; }
+.fsx-rail #fxSkip { background: var(--sun); color: #17112a; }
+.fsx-rail.dim { opacity: .3; }
+.fsx-rail.dim button { pointer-events: none; }
+#theater.fsx:not(.fsx-rot) #fxFlip { display: none; }
+#theater.fsx .fsx-tip { display: block; position: absolute; z-index: 9; left: calc(var(--fx-vl) + 14px); top: calc(var(--fx-vt) + 14px); max-width: calc(var(--fx-vw) - 28px); padding: 7px 14px; border-radius: 10px; background: #fff6e8; color: #17112a; border: 2.5px solid #000; box-shadow: 3px 3px 0 var(--sakura); font-size: 14px; font-weight: 900; opacity: 0; transform: translate3d(0, -6px, 0); transition: opacity .25s, transform .3s cubic-bezier(.2, 1.4, .4, 1); pointer-events: none; }
+#theater.fsx .fsx-tip.on { opacity: 1; transform: none; }
+html.fsx #toast { visibility: hidden; }
 .th-deck { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 8px; padding: 12px 12px 4px; }
 .th-deck::-webkit-scrollbar { display: none; }
 .dk { flex: none; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: #241c46; border: 2.5px solid #000; box-shadow: 2px 2px 0 var(--kc); color: #fff; }

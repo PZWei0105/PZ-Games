@@ -17,7 +17,7 @@ FAKE_YT = r"""
     var el = document.getElementById(id);
     var d = document.createElement('div');
     d.id = id; d.className = 'fake-yt';
-    d.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:800 20px sans-serif;letter-spacing:2px;background:linear-gradient(135deg,#3a1d5c,#13405e)';
+    d.style.cssText = (id === 'ytp' ? '' : 'position:absolute;inset:0;') + 'display:grid;place-items:center;color:#fff;font:800 20px sans-serif;letter-spacing:2px;background:linear-gradient(135deg,#3a1d5c,#13405e)';
     d.textContent = '▶ ' + opts.videoId;
     el.replaceWith(d);
     this._d = d; this._o = opts; this._s = -1; this._t = (opts.playerVars && opts.playerVars.start) || 0; var self = this;
@@ -95,6 +95,98 @@ def serve(root, port):
     srv = socketserver.ThreadingTCPServer(('127.0.0.1', port), functools.partial(Quiet, directory=root))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
+
+
+IPHONE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1'
+ANDROID_UA = 'Mozilla/5.0 (Linux; Android 15; ASUS_AI2501) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36'
+TILT = """async (seq) => { for (const [b, g, ms] of seq) { window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: 0, beta: b, gamma: g })); await new Promise((r) => setTimeout(r, ms)); } }"""
+
+
+def fsx_checks(b, base, route, out, shots, errors):
+    """橫放全螢幕：iPhone（轉 90 度）、Android（真的全螢幕）、陀螺儀自動進出、合輯的「下一集」鍵。"""
+    res = []
+
+    def ok(name, cond):
+        res.append(('PASS ' if cond else 'FAIL ') + name)
+
+    def open_comp(pg):
+        # 找一支有章節或集數範圍的合輯（才有「下一集」）
+        mc = pg.evaluate("() => { const v = [...IDX.byId.values()].find((x) => x.f === 'c' && ((x.chap && x.chap.length) || x.r)); return v ? v.i : null; }")
+        pg.evaluate("() => { window.__dur = 25000; }")
+        pg.evaluate("h => { location.hash = h; }", 'watch/' + (mc or ''))
+        pg.wait_for_timeout(2600)
+        return mc
+
+    ctx = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA)
+    # 模擬 iPhone 之前已經允許過「動作與方向」
+    ctx.add_init_script("window.DeviceOrientationEvent && (DeviceOrientationEvent.requestPermission = () => Promise.resolve('granted')); localStorage.setItem('binge.v1.motion', JSON.stringify('granted'));")
+    ctx.route('**/*', route)
+    pg = ctx.new_page()
+    pg.on('pageerror', lambda e: errors.append('fsx pageerror: %s' % e))
+    pg.goto(base + '&skip=1')
+    pg.wait_for_timeout(2200)
+    mc = open_comp(pg)
+    ok('有長片合輯可以測', bool(mc))
+    st = lambda: pg.evaluate("() => ({ mode: Land.mode, dir: Land.dir, cls: document.getElementById('theater').className, tf: getComputedStyle(document.getElementById('thFrame')).transform })")
+    pg.evaluate(TILT, [[90, 0, 60]] * 3 + [[0, -90, 250]] * 3)
+    s = st()
+    ok('iPhone 從直的轉成橫的 → 自動橫放、轉 90 度', s['mode'] == 'rot' and s['dir'] == 90 and 'fsx' in s['cls'] and s['tf'].startswith('matrix(0'))
+    vis = pg.evaluate("() => ['fxComp', 'fxNext', 'fxFlip'].map((i) => getComputedStyle(document.getElementById(i)).display !== 'none')")
+    ok('合輯：右邊有「下一集」、沒有「下一支」、有「反過來」', vis == [True, False, True])
+    pg.wait_for_timeout(900)
+    path = os.path.join(out, 'iphone-26-fsx.png'); pg.screenshot(path=path); shots.append(path)
+    pg.click('#fxComp')
+    pg.wait_for_timeout(300)
+    tip = pg.evaluate("() => { const t = document.getElementById('thTip'); return [t.textContent, t.classList.contains('on')]; }")
+    ok('按「下一集」→ 提示寫在播放器裡（%s）' % tip[0], tip[1] and '跳到' in tip[0])
+    pg.evaluate(TILT, [[0, -90, 120]] * 3 + [[90, 0, 250]] * 4)
+    ok('很快轉回直的 → 自動退出', st()['mode'] == '')
+    pg.wait_for_timeout(2600)
+    pg.click('#thFull')
+    pg.wait_for_timeout(400)
+    ok('按全螢幕鍵 → 橫放', st()['mode'] == 'rot')
+    pg.evaluate(TILT, [[0, -90, 250]] * 3 + [[90, 0, 250]] * 4)
+    ok('按鍵進來的 → 轉回直的不會自己退出', st()['mode'] == 'rot')
+    pg.click('#fxExit')
+    pg.wait_for_timeout(300)
+    ok('按 ✕ → 退出', st()['mode'] == '' and 'fsx' not in st()['cls'])
+    pg.click('#thClose')
+    pg.wait_for_timeout(600)
+    # 直式短劇不受影響
+    pg.evaluate("h => { location.hash = h; }", 'ai')
+    pg.wait_for_timeout(1200)
+    if pg.evaluate("() => !!document.querySelector('.swipe-entry')"):
+        pg.click('.swipe-entry')
+        pg.wait_for_timeout(1500)
+        pg.evaluate(TILT, [[90, 0, 60]] * 3 + [[0, -90, 250]] * 3)
+        ok('直式短劇：轉手機不會橫放', st()['mode'] == '')
+    ctx.close()
+
+    ctx = b.new_context(viewport={'width': 412, 'height': 915}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=ANDROID_UA)
+    ctx.route('**/*', route)
+    pg = ctx.new_page()
+    pg.on('pageerror', lambda e: errors.append('fsx-android pageerror: %s' % e))
+    pg.goto(base + '&skip=1')
+    pg.wait_for_timeout(2200)
+    open_comp(pg)
+    pg.click('#thFull')
+    pg.wait_for_timeout(1300)
+    s = pg.evaluate("() => ({ mode: Land.mode, fs: (document.fullscreenElement || {}).id || '' })")
+    ok('Android 按全螢幕鍵 → 放映機真的全螢幕、系統不給轉就轉 90 度（%s）' % s['mode'], s['fs'] == 'theater' and s['mode'] in ('rot', 'fill'))
+    path = os.path.join(out, 'android-26-fsx.png'); pg.screenshot(path=path); shots.append(path)
+    pg.click('#fxExit')
+    pg.wait_for_timeout(500)
+    ok('Android 按 ✕ → 退出全螢幕', pg.evaluate("() => Land.mode === '' && !document.fullscreenElement"))
+    ctx.close()
+
+    ctx = b.new_context(viewport={'width': 1440, 'height': 900})
+    ctx.route('**/*', route)
+    pg = ctx.new_page()
+    pg.goto(base + '&skip=1')
+    pg.wait_for_timeout(1500)
+    ok('電腦不用橫放模式', pg.evaluate("() => TOUCH === false"))
+    ctx.close()
+    return res
 
 
 def main():
@@ -269,6 +361,9 @@ def main():
             pg.wait_for_timeout(900)
             shot('25-search')
             ctx.close()
+        fsx = []
+        if not a.only or 'fsx' in a.only.split(','):
+            fsx = fsx_checks(b, base, route, a.out, shots, errors)
         b.close()
     srv.shutdown()
     print('\n'.join(shots))
@@ -280,6 +375,9 @@ def main():
         print(''.join(miss) or '（沒有）')
     except Exception as e:  # noqa: BLE001
         print('字型檢查失敗', e)
+    if fsx:
+        print('--- 橫放全螢幕 ---')
+        print('\n'.join(fsx))
     print('--- console ---')
     print('\n'.join(e for e in errors if 'ERR_FAILED' not in e and 'net::' not in e) or '（沒有錯誤）')
 

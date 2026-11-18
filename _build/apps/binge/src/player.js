@@ -47,6 +47,7 @@ const Player = (() => {
       document.documentElement.classList.add('watching');
       requestAnimationFrame(() => box.classList.add('in'));
       Snd.duck(true);
+      Land.watch(true);
     }
     hideMsg(); hideNext();
     render();
@@ -79,7 +80,7 @@ const Player = (() => {
       yt = new YT.Player('ytp', {
         videoId: v.i, width: '100%', height: '100%',
         playerVars: {
-          autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, fs: 1, enablejsapi: 1,
+          autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, fs: TOUCH ? 0 : 1, enablejsapi: 1,
           origin: location.origin, hl: 'zh-TW', cc_lang_pref: 'zh-Hant', cc_load_policy: zhSub ? 1 : 0, start: Math.floor(start) || undefined,
         },
         events: {
@@ -271,6 +272,8 @@ const Player = (() => {
 
   function close(silent) {
     if (!open_) return;
+    Land.exit(true);
+    Land.watch(false);
     open_ = false;
     stopTick(true);
     push(true);
@@ -443,6 +446,7 @@ const Player = (() => {
     seekTo(clamp((ev.clientX - r.left) / r.width, 0, 1) * len);
   }
   function fullscreen() {
+    if (TOUCH) { Land.toggle(); return; }   // 手機：橫放全螢幕（下面的 Land）
     const f = $('#thFrame');
     if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
     const req = f.requestFullscreen || f.webkitRequestFullscreen;
@@ -464,8 +468,213 @@ const Player = (() => {
   }
   return {
     open, close, isOpen, take, next, prev, toggle, refresh, cancelNext, fullscreen, seekBy, seekTo, skipOp, cycleRate, nextInComp,
-    setSleep, sleepMore, fromStart, tlSeek, chapterSheet, sleepSheet, get cur() { return cur; },
+    setSleep, sleepMore, fromStart, tlSeek, chapterSheet, sleepSheet, hasNext: () => !!nextItem(), get cur() { return cur; },
   };
+})();
+
+/* ================================================================ 橫放全螢幕
+   手機鎖了直向，放映機照樣能橫著看。
+   - iPhone：網頁不能自己轉螢幕、也不能整頁全螢幕，所以把播放器整個轉 90 度鋪滿，手機轉橫看就是滿版。
+   - Android：整個放映機真的全螢幕（藏掉瀏覽器和系統列），再請系統轉橫；系統不給轉，就一樣把播放器轉 90 度。
+   - 電腦：照舊（Player.fullscreen 的舊做法）。直式短劇（Swipe）本來就是直的，不管它。
+   「轉手機自動橫放」看陀螺儀：手機從直的「很快地」轉成橫的就自動進來，再很快轉回直的就退出（怎麼進來就怎麼出去：
+   按鍵進來的只用 ✕ 退出，跟 YouTube App 鎖直向時一樣）。躺著側看手機、或慢慢躺下這種身體在動的，
+   轉的過程超過 1.5 秒，不會誤觸。 */
+const Land = (() => {
+  const CAN_FS = !IS_IPHONE && !!(Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen);
+  const QUICK = 1500;     // 從直的到橫的（或反過來）在這麼短的時間內完成，才算「轉手機」
+  let mode = '';          // ''、rot（轉 90 度）、fill（畫面本來就是橫的，鋪滿）
+  let real = false;       // 有沒有開真的全螢幕（Android）
+  let why = '';           // tilt（轉手機進來的）、btn（按鍵進來的）
+  let dir = SET.landDir === -90 ? -90 : 90;   // 90：手機頂端朝左；-90：頂端朝右
+  let uprightAt = 0, landAt = 0, cand = null, candT = 0;
+  let watching = false, sensing = false, asked = false, dimT = 0, tipT = 0, probe = null;
+  const frame = () => $('#thFrame');
+  const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const VARS = ['--fx-w', '--fx-h', '--fx-rot', '--fx-vl', '--fx-vt', '--fx-vw', '--fx-vh', '--fx-rr', '--fx-rt', '--fx-rb'];
+
+  function safe() {
+    if (!probe) {
+      probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;' +
+        'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+      document.body.appendChild(probe);
+    }
+    const cs = getComputedStyle(probe);
+    return { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+  }
+  /* 算位置：影片保持 16:9、避開瀏海和底部橫條；右邊一定留一條放按鈕（不蓋到 YouTube 播放器自己的字幕、設定鍵） */
+  function layout() {
+    if (!mode) return;
+    const port = innerHeight > innerWidth;
+    if (mode === 'rot' && !port) mode = 'fill';            // 解開直向鎖定、手機真的轉橫了：不用再轉
+    else if (mode === 'fill' && port) { exit(); return; }  // 沒鎖直向、手機轉回直的：退出
+    const rot = mode === 'rot' ? dir : 0;
+    const W = rot ? innerHeight : innerWidth, H = rot ? innerWidth : innerHeight;
+    const s = safe();
+    // 轉 90 度時，畫面的左邊是手機的上緣（瀏海），右邊是手機的下緣（底部橫條）
+    const [L, R, T, B] = rot === 90 ? [s.t, s.b, s.r, s.l] : rot === -90 ? [s.b, s.t, s.l, s.r] : [s.l, s.r, s.t, s.b];
+    const RAIL = 58;
+    const aw = Math.max(160, W - L - R), ah = Math.max(80, H - T - B);
+    const vw = Math.min(aw - RAIL, ah * 16 / 9), vh = vw * 9 / 16;
+    const spare = aw - vw, bar = Math.max(RAIL, spare / 2);   // 黑邊夠寬就置中，不夠就把影片往左推、右邊留一條
+    const vl = L + spare - bar, vt = T + (ah - vh) / 2;
+    const f = frame(), set = (k, v) => f.style.setProperty(k, Math.round(v * 10) / 10 + (k === '--fx-rot' ? 'deg' : 'px'));
+    set('--fx-w', W); set('--fx-h', H); set('--fx-rot', rot);
+    set('--fx-vl', vl); set('--fx-vt', vt); set('--fx-vw', vw); set('--fx-vh', vh);
+    set('--fx-rr', R + (bar - 52) / 2);
+    set('--fx-rt', Math.max(T, vt) + 6); set('--fx-rb', Math.max(B, H - vt - vh) + 6);
+    $('#theater').classList.toggle('fsx-rot', !!rot);
+  }
+
+  function on(src) {
+    $('#theater').classList.add('fsx');
+    document.documentElement.classList.add('fsx');
+    layout();
+    wake();
+    if (+store.get('landTips', 0) < 4) { store.set('landTips', (+store.get('landTips', 0) || 0) + 1); say(src === 'tilt' ? '橫放全螢幕｜手機轉回直的就退出' : '橫放全螢幕｜按右邊的 ✕ 退出'); }
+    Snd.play('iris');
+  }
+  function enter(src, d) {
+    if (mode || !Player.isOpen()) return;
+    if (d) dir = d;
+    mode = innerHeight > innerWidth ? 'rot' : 'fill';
+    why = src;
+    on(src);
+  }
+  async function enterReal() {
+    const box = $('#theater'), req = box.requestFullscreen || box.webkitRequestFullscreen;
+    try { await req.call(box); } catch (e) { /* 不給全螢幕：照樣轉 90 度 */ }
+    real = isFs();
+    if (real) { try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) { /* 系統不給轉：下面就轉 90 度 */ } }
+    enter('btn');
+  }
+  function exit(silent) {
+    if (!mode) return;
+    mode = ''; why = ''; cand = null;
+    clearTimeout(dimT); clearTimeout(tipT);
+    if (real) {
+      real = false;
+      try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { /* */ }
+      if (isFs()) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) { /* */ } }
+    }
+    $('#theater').classList.remove('fsx', 'fsx-rot');
+    document.documentElement.classList.remove('fsx');
+    const f = frame();
+    VARS.forEach((k) => f.style.removeProperty(k));
+    const t = $('#thTip'); if (t) t.classList.remove('on');
+    if (!silent) Snd.play('back');
+  }
+  function toggle() {
+    if (mode) { exit(); return; }
+    if (CAN_FS) enterReal(); else enter('btn');
+  }
+  /* 全螢幕時的提示（跳到第幾集、跳過片頭⋯）：寫在播放器裡，跟著轉 */
+  function say(msg) {
+    const t = $('#thTip');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
+    clearTimeout(tipT);
+    tipT = setTimeout(() => t.classList.remove('on'), 2600);
+  }
+  /* 右邊的按鈕：進來 3.5 秒後變淡；變淡時第一下只是叫醒（橫拿時拇指常常碰到邊邊） */
+  function wake() {
+    const r = $('#thRail');
+    if (!r) return;
+    r.classList.remove('dim');
+    const v = Player.cur;
+    const comp = !!(v && ((v.chap && v.chap.length) || v.r));
+    const sk = $('#thSkip');
+    $('#fxSkip').hidden = !(sk && !sk.hidden);
+    $('#fxComp').hidden = !comp;
+    $('#fxNext').hidden = comp || !Player.hasNext();
+    clearTimeout(dimT);
+    dimT = setTimeout(() => r.classList.add('dim'), 3500);
+  }
+
+  /* 陀螺儀 */
+  function onTilt(e) {
+    if (e.beta == null || e.gamma == null) return;
+    if (!watching || !SET.autoLand || !Player.isOpen()) return;
+    const b = e.beta * Math.PI / 180, g = e.gamma * Math.PI / 180;
+    // 「上方」在手機座標裡的方向：x 朝手機右緣、y 朝手機頂端、z 朝螢幕外
+    const ux = -Math.cos(b) * Math.sin(g), uy = Math.sin(b), uz = Math.cos(b) * Math.cos(g);
+    let st = null;   // 0：直立；90：頂端朝左；-90：頂端朝右；null：平放或斜的，不算
+    if (Math.abs(uz) < 0.62) { if (ux > 0.78) st = 90; else if (ux < -0.78) st = -90; else if (uy > 0.78) st = 0; }
+    const now = Date.now();
+    if (st === null) { cand = null; return; }
+    if (st !== cand) { cand = st; candT = now; }
+    const held = now - candT;
+    if (st === 0) {
+      // 轉手機進來的：很快轉回直的、停 0.65 秒 → 退出
+      if (mode && why === 'tilt' && held > 650 && candT - landAt < QUICK) exit();
+      uprightAt = now;
+      return;
+    }
+    if (held < 400) { if (mode) landAt = now; return; }
+    if (!mode) {
+      if (candT - uprightAt < QUICK) enter('tilt', st);
+      landAt = now;
+      return;
+    }
+    landAt = now;
+    if (mode === 'rot' && st !== dir) { dir = st; layout(); }   // 翻到另一邊：跟著轉
+  }
+  function sense() {
+    if (sensing || !TOUCH || !SET.autoLand || !window.DeviceOrientationEvent) return;
+    if (IS_IOS && typeof DeviceOrientationEvent.requestPermission === 'function' && store.get('motion') !== 'granted') return;   // iPhone：要先在點擊裡問過
+    sensing = true;
+    addEventListener('deviceorientation', onTilt);
+  }
+  function unsense() { sensing = false; removeEventListener('deviceorientation', onTilt); }
+  // iPhone 要在點擊裡問「動作與方向」權限：點影片、按全螢幕的那一下順便問（同一次打開 App 只問一次）
+  function ask() {
+    if (!TOUCH || !SET.autoLand || asked || !window.DeviceOrientationEvent) return;
+    if (!IS_IOS || typeof DeviceOrientationEvent.requestPermission !== 'function') { sense(); return; }   // Android 不用問
+    if (store.get('motion') === 'denied') return;
+    asked = true;
+    try {
+      DeviceOrientationEvent.requestPermission().then((r) => { store.set('motion', r); if (r === 'granted') sense(); }).catch(() => {});
+    } catch (e) { /* */ }
+  }
+  function watch(v) {
+    watching = v;
+    cand = null; uprightAt = 0; landAt = 0;
+    if (v) sense();
+  }
+  function onSetting() {
+    if (SET.autoLand) { asked = false; if (store.get('motion') === 'denied') store.del('motion'); ask(); sense(); }
+    else { unsense(); }
+  }
+
+  function init() {
+    if (!TOUCH) return;
+    document.addEventListener('click', (e) => {
+      if (e.target.closest && e.target.closest('a[href^="#watch/"], [data-act="hero-play"], [data-act="gacha-play"], [data-act="sw-full"], [data-act="next"], [data-act="prev"], #thFull')) ask();
+    }, true);
+    const r = $('#thRail');
+    if (r) r.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (r.classList.contains('dim')) { wake(); return; }
+      const bt = e.target.closest('button');
+      if (!bt) { wake(); return; }
+      if (bt.id === 'fxExit') { exit(); return; }
+      if (bt.id === 'fxFlip') { dir = -dir; SET.landDir = dir; saveSet(); layout(); Snd.play('tick'); }
+      else if (bt.id === 'fxSkip') Player.skipOp();
+      else if (bt.id === 'fxComp') { if (!Player.nextInComp()) Player.next(); }
+      else if (bt.id === 'fxNext') Player.next();
+      wake();
+    });
+    const re = () => { if (mode) layout(); };
+    addEventListener('resize', re);
+    addEventListener('orientationchange', () => setTimeout(re, 250));
+    if (window.visualViewport) visualViewport.addEventListener('resize', re);
+    const fsc = () => { if (real && !isFs()) exit(true); };
+    document.addEventListener('fullscreenchange', fsc);
+    document.addEventListener('webkitfullscreenchange', fsc);
+  }
+  return { init, toggle, enter, exit, watch, ask, onSetting, say, get mode() { return mode; }, get dir() { return dir; } };
 })();
 
 /* ================================================================ 直式滑看：AI 漫劇的 Shorts，一滑一集（紅果那種） */

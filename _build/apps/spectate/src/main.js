@@ -207,6 +207,7 @@ document.addEventListener('change', (e) => {
   saveSet();
   if (k === 'bgm' || k === 'sfx' || k === 'vol') { Snd.init(); Snd.refresh(); }
   if (['zhFirst', 'shorts', 'filtered', 'gacha'].includes(k)) { MEMO.clear(); renderTicker(); }
+  if (k === 'autoLand') Land.onSetting();
   Snd.play('tick');
 });
 document.addEventListener('input', (e) => { if (e.target.dataset && e.target.dataset.set === 'vol') { SET.vol = +e.target.value; Snd.refresh(); } });
@@ -293,6 +294,7 @@ function draftDecide(kind, card) {
 /* ------------------------------------------------------------ 其他 */
 let toastT = 0;
 function toast(msg) {
+  if (typeof Land !== 'undefined' && Land.mode) { Land.say(msg); return; }   // 橫放全螢幕時寫在播放器裡（跟著轉）
   const t = $('#toast');
   t.textContent = msg;
   t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
@@ -358,6 +360,7 @@ async function start() {
   $('#sync').addEventListener('click', () => { Snd.play('tick'); location.hash = 'me'; setTimeout(() => { const s = $('.sys'); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 450); });
   $('#pgmClose').addEventListener('click', () => Player.close());
   $('#pgmFull').addEventListener('click', () => Player.fullscreen());
+  Land.init();
   const lastVisit = store.get('visit', 0);
   // 開場有新段落時（INTRO_REV：2026/11/18 加了今晚節目單），更新後第一次打開照樣播，不用等到明天
   const showIntro = SET.intro === 'every' || (SET.intro === 'daily' && (store.get('boot') !== dayKey() || (+store.get('introRev', 0) || 0) < INTRO_REV));

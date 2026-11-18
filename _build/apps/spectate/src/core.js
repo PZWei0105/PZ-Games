@@ -12,6 +12,9 @@ const RELAY = 'https://ntfy.sh/pz-spectate-e4431fca8fc4498df14a';
 const PFX = 'spectate.v1.';
 const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const STANDALONE = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const IS_IPHONE = /iPhone|iPod/.test(navigator.userAgent);
+// 手機、平板（主要用手指點）：全螢幕改用「橫放全螢幕」；電腦照舊
+const TOUCH = matchMedia('(hover: none) and (pointer: coarse)').matches;
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem(PFX + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -19,7 +22,7 @@ const store = {
   del(k) { try { localStorage.removeItem(PFX + k); } catch (e) { /* */ } },
 };
 
-const DEFAULT_SET = { bgm: true, sfx: true, vol: 0.7, intro: 'daily', fx: 'full', zhFirst: true, zhSubs: true, shorts: false, filtered: false, auto: true, play: 'app', gacha: false };
+const DEFAULT_SET = { bgm: true, sfx: true, vol: 0.7, intro: 'daily', fx: 'full', zhFirst: true, zhSubs: true, shorts: false, filtered: false, auto: true, play: 'app', gacha: false, autoLand: true, landDir: 90 };
 const SET = Object.assign({}, DEFAULT_SET, store.get('set', {}));
 function saveSet() { store.set('set', SET); }
 

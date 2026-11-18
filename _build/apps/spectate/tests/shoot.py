@@ -16,7 +16,7 @@ FAKE_YT = r"""
     var el = document.getElementById(id);
     var d = document.createElement('div');
     d.id = id; d.className = 'fake-yt';
-    d.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:800 22px sans-serif;letter-spacing:2px;background:linear-gradient(135deg,#2a1830,#14304a)';
+    d.style.cssText = 'display:grid;place-items:center;color:#fff;font:800 22px sans-serif;letter-spacing:2px;background:linear-gradient(135deg,#2a1830,#14304a)';
     d.textContent = '▶ ' + opts.videoId;
     el.replaceWith(d);
     this._d = d; this._o = opts; this._s = -1; this._t = 0; var self = this;
@@ -70,6 +70,116 @@ def serve(root, port):
     srv = socketserver.ThreadingTCPServer(('127.0.0.1', port), h)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
+
+
+IPHONE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1'
+ANDROID_UA = 'Mozilla/5.0 (Linux; Android 15; ASUS_AI2501) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36'
+TILT = """async (seq) => { for (const [b, g, ms] of seq) { window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: 0, beta: b, gamma: g })); await new Promise((r) => setTimeout(r, ms)); } }"""
+
+
+def fsx_checks(b, base, route, out, shots, errors):
+    """橫放全螢幕：iPhone（轉 90 度）、Android（真的全螢幕）、陀螺儀自動進出、躺著側看不誤觸。"""
+    res = []
+
+    def ok(name, cond):
+        res.append(('PASS ' if cond else 'FAIL ') + name)
+
+    # iPhone：沒有整頁全螢幕 → 轉 90 度
+    ctx = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA)
+    # 模擬 iPhone 按了「允許」動作與方向
+    ctx.add_init_script("window.DeviceOrientationEvent && (DeviceOrientationEvent.requestPermission = () => Promise.resolve('granted'));")
+    ctx.route('**/*', route)
+    pg = ctx.new_page()
+    pg.on('pageerror', lambda e: errors.append('fsx pageerror: %s' % e))
+    pg.goto(base + '&skip=1')
+    pg.wait_for_timeout(1800)
+    pg.click('.hero .go-btn')
+    pg.wait_for_timeout(1500)
+    st = lambda: pg.evaluate("() => ({ mode: Land.mode, dir: Land.dir, cls: document.getElementById('pgm').className, tf: getComputedStyle(document.getElementById('pgmFrame')).transform })")
+    pg.evaluate(TILT, [[90, 0, 60]] * 3 + [[0, -90, 250]] * 3)   # 拿直的，再把頂端轉向左邊
+    s = st()
+    ok('iPhone 點影片時問過「動作與方向」並記住允許', pg.evaluate("() => store.get('motion')") == 'granted')
+    ok('iPhone 從直的轉成橫的（頂端朝左）→ 自動橫放、轉 90 度', s['mode'] == 'rot' and s['dir'] == 90 and 'fsx' in s['cls'] and s['tf'].startswith('matrix(0') )
+    pg.wait_for_timeout(1300)
+    path = os.path.join(out, 'iphone-17-fsx.png'); pg.screenshot(path=path); shots.append(path)
+    box = pg.evaluate("() => { const r = document.getElementById('ytp').getBoundingClientRect(); return [r.width, r.height]; }")
+    ok('影片轉過來後是直的長條（%dx%d）' % (box[0], box[1]), box[1] > box[0] * 1.5)
+    pg.evaluate(TILT, [[0, 90, 250]] * 3)                      # 整支翻過來（頂端朝右）
+    s = st()
+    ok('翻到另一邊 → 跟著轉成 -90 度', s['mode'] == 'rot' and s['dir'] == -90)
+    pg.evaluate(TILT, [[90, 0, 250]] * 4)                      # 很快轉回直的
+    ok('很快轉回直的 → 自動退出', st()['mode'] == '')
+    # 看到一半慢慢躺下：先轉橫進來，中間斜斜的 2 秒，最後變成「直的」→ 不該退出
+    pg.evaluate(TILT, [[90, 0, 60]] * 3 + [[0, -90, 250]] * 3)
+    pg.evaluate(TILT, [[45, -45, 250]] * 8 + [[90, 0, 250]] * 4)
+    ok('慢慢躺下（轉超過 1.5 秒）→ 不會退出', st()['mode'] == 'rot')
+    pg.click('#fxExit') if not pg.evaluate("() => document.getElementById('pgmRail').classList.contains('dim')") else pg.evaluate("() => Land.exit()")
+    pg.wait_for_timeout(300)
+    pg.click('#pgmClose')
+    pg.wait_for_timeout(600)
+    # 躺著側看：一打開就是橫的，沒先看到直立 → 不該自己跳進來
+    pg.click('.hero .go-btn')
+    pg.wait_for_timeout(1200)
+    pg.evaluate(TILT, [[0, -90, 250]] * 6)
+    ok('一直橫著（躺著側看）→ 不會自己橫放', st()['mode'] == '')
+    # 按全螢幕鍵
+    pg.wait_for_timeout(2600)
+    pg.click('#pgmFull')
+    pg.wait_for_timeout(400)
+    s = st()
+    ok('按全螢幕鍵 → 橫放（照上次的方向）', s['mode'] == 'rot')
+    pg.evaluate(TILT, [[0, -90, 250]] * 3 + [[90, 0, 250]] * 4)   # 按鍵進來的：轉橫再轉直也不會退出
+    ok('按鍵進來的 → 轉回直的不會自己退出（跟 YouTube App 鎖直向一樣）', st()['mode'] == 'rot')
+    pg.wait_for_timeout(2600)
+    flip_ok = pg.evaluate("() => getComputedStyle(document.getElementById('fxFlip')).display !== 'none'")
+    ok('沒有陀螺儀資料時有「反過來」鍵', flip_ok)
+    pg.wait_for_timeout(3800)
+    dim = pg.evaluate("() => document.getElementById('pgmRail').classList.contains('dim')")
+    ok('按鈕 3.5 秒後變淡', dim)
+    bb = pg.evaluate("() => { const r = document.getElementById('fxExit').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }")
+    pg.mouse.click(bb[0], bb[1])
+    pg.wait_for_timeout(200)
+    s = st()
+    ok('變淡時點一下只是叫醒、不會退出', s['mode'] == 'rot' and not pg.evaluate("() => document.getElementById('pgmRail').classList.contains('dim')"))
+    before = s['dir']
+    pg.click('#fxFlip')
+    pg.wait_for_timeout(200)
+    s = st()
+    ok('「反過來」→ 方向換邊並記住', s['dir'] == -before and pg.evaluate("() => SET.landDir") == -before)
+    pg.click('#fxFlip')
+    pg.click('#fxExit')
+    pg.wait_for_timeout(300)
+    ok('按 ✕ → 退出', st()['mode'] == '' and 'fsx' not in st()['cls'])
+    ctx.close()
+
+    # Android（ROG Phone）：真的全螢幕
+    ctx = b.new_context(viewport={'width': 412, 'height': 915}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=ANDROID_UA)
+    ctx.route('**/*', route)
+    pg = ctx.new_page()
+    pg.on('pageerror', lambda e: errors.append('fsx-android pageerror: %s' % e))
+    pg.goto(base + '&skip=1')
+    pg.wait_for_timeout(1800)
+    pg.click('.hero .go-btn')
+    pg.wait_for_timeout(1500)
+    pg.click('#pgmFull')
+    pg.wait_for_timeout(1300)
+    s = pg.evaluate("() => ({ mode: Land.mode, fs: (document.fullscreenElement || {}).id || '' })")
+    ok('Android 按全螢幕鍵 → 導播台真的全螢幕、系統不給轉就轉 90 度（%s）' % s['mode'], s['fs'] == 'pgm' and s['mode'] in ('rot', 'fill'))
+    path = os.path.join(out, 'android-17-fsx.png'); pg.screenshot(path=path); shots.append(path)
+    pg.click('#fxExit') if pg.evaluate("() => !document.getElementById('pgmRail').classList.contains('dim')") else None
+    pg.wait_for_timeout(500)
+    ok('Android 按 ✕ → 退出全螢幕', pg.evaluate("() => Land.mode === '' && !document.fullscreenElement"))
+    ctx.close()
+
+    # 電腦：照舊（YouTube 自己的全螢幕鍵留著）
+    ctx = b.new_context(viewport={'width': 1440, 'height': 900})
+    ctx.route('**/*', route)
+    pg = ctx.new_page()
+    pg.goto(base + '&skip=1')
+    pg.wait_for_timeout(1500)
+    ok('電腦不顯示「轉手機自動橫放」、不用橫放模式', pg.evaluate("() => TOUCH === false"))
+    ctx.close()
+    return res
 
 
 def main():
@@ -193,9 +303,15 @@ def main():
             pg.wait_for_timeout(700)
             shot('16-search')
             ctx.close()
+        fsx = []
+        if not a.only or 'fsx' in a.only.split(','):
+            fsx = fsx_checks(b, base, route, a.out, shots, errors)
         b.close()
     srv.shutdown()
     print('\n'.join(shots))
+    if fsx:
+        print('--- 橫放全螢幕 ---')
+        print('\n'.join(fsx))
     print('--- console ---')
     print('\n'.join(errors) if errors else '（沒有錯誤）')
 

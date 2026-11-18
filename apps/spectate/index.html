@@ -449,6 +449,7 @@ img.noimg { opacity: 0; }
 .pgm-frame iframe, #ytp { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .pgm-frame::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 2px rgba(255, 45, 85, .65); }
 .pgm-wipe { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
+.pgm-wipe:not(.go) { visibility: hidden; }   /* 沒在切換時收起來（斜帶的角會露在畫面邊邊） */
 .pgm-wipe i { position: absolute; top: -20%; bottom: -20%; width: 70%; left: -90%; transform: skewX(-22deg); }
 .pgm-wipe i:nth-child(1) { background: var(--red); } .pgm-wipe i:nth-child(2) { background: #fff; width: 22%; } .pgm-wipe i:nth-child(3) { background: #0b0d14; width: 90%; }
 .pgm-wipe.go i { animation: pwipe .62s cubic-bezier(.65, 0, .35, 1) both; }
@@ -467,6 +468,25 @@ img.noimg { opacity: 0; }
 .nx-t { grid-area: t; display: flex; flex-direction: column; } .nx-t b { font-size: 14px; } .nx-t span { font-size: 12px; color: var(--dim); }
 .nx-go { grid-area: go; height: 40px; background: var(--red); font-family: var(--f-num); font-size: 20px; letter-spacing: 2px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
 .nx-x { grid-area: x; height: 40px; padding: 0 14px; color: var(--dim); font-size: 13px; }
+/* 橫放全螢幕：iPhone 把播放器轉 90 度鋪滿（手機鎖直向也能橫著看）；Android 是真的全螢幕。位置由 Land.layout() 算好放在 --fx-* */
+.fsx-rail, .fsx-tip { display: none; }
+#pgm.fsx .pgm-stage { container-type: normal; }
+#pgm.fsx .pgm-frame { position: fixed; left: 50%; top: 50%; z-index: 50; width: var(--fx-w, 100vw); height: var(--fx-h, 100vh); max-width: none; max-height: none; aspect-ratio: auto; transform: translate(-50%, -50%) rotate(var(--fx-rot, 0deg)); background: #000; }
+#pgm.fsx .pgm-frame::after { display: none; }
+#pgm.fsx .pgm-frame iframe, #pgm.fsx #ytp { inset: auto; left: var(--fx-vl); top: var(--fx-vt); width: var(--fx-vw); height: var(--fx-vh); }
+#pgm.fsx .fsx-rail { display: flex; position: absolute; z-index: 6; right: var(--fx-rr); top: var(--fx-rt); bottom: var(--fx-rb); width: 52px; flex-direction: column; justify-content: space-between; align-items: center; transition: opacity .35s; }
+.fsx-rail .fr-g { display: flex; flex-direction: column; gap: 10px; }
+.fsx-rail button { width: 46px; height: 46px; display: grid; place-items: center; padding: 0; background: rgba(7, 8, 13, .82); border: 1px solid #2b3245; color: #fff; touch-action: manipulation; }
+.fsx-rail button svg { width: 22px; height: 22px; }
+.fsx-rail #fxNext { height: 66px; align-content: center; gap: 4px; background: var(--red); border-color: var(--red); }
+.fsx-rail #fxNext b { font-family: var(--f-num); font-size: 15px; letter-spacing: 1px; line-height: 1; font-weight: 600; }
+.fsx-rail #fxNext svg { width: 16px; height: 16px; }
+.fsx-rail.dim { opacity: .3; }
+.fsx-rail.dim button { pointer-events: none; }
+#pgm.fsx:not(.fsx-rot) #fxFlip { display: none; }
+#pgm.fsx .fsx-tip { display: block; position: absolute; z-index: 7; left: calc(var(--fx-vl) + 14px); top: calc(var(--fx-vt) + 14px); padding: 5px 14px 3px; background: var(--red); color: #fff; font-size: 14px; font-weight: 800; letter-spacing: .5px; transform: skewX(-12deg); opacity: 0; transition: opacity .3s; pointer-events: none; }
+#pgm.fsx .fsx-tip.on { opacity: 1; }
+html.fsx #toast { visibility: hidden; }
 .pgm-side { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(14px + var(--sb)); background: linear-gradient(180deg, #0a0c13, #06070b); }
 .pgm-info { padding: 12px var(--pad) 4px; display: flex; flex-direction: column; gap: 8px; }
 .pi-lane { align-self: flex-start; display: flex; align-items: stretch; height: 24px; transform: skewX(-12deg); }
@@ -759,7 +779,7 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
     <button class="ico-btn" id="pgmClose" aria-label="關閉"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
   </div>
   <div class="pgm-main">
-    <div class="pgm-stage"><div class="pgm-frame" id="pgmFrame"><div id="ytp"></div><div class="pgm-wipe" id="pgmWipe"><i></i><i></i><i></i></div><div class="pgm-msg" id="pgmMsg" hidden></div><div class="pgm-next" id="pgmNext" hidden></div></div></div>
+    <div class="pgm-stage"><div class="pgm-frame" id="pgmFrame"><div id="ytp"></div><div class="pgm-wipe" id="pgmWipe"><i></i><i></i><i></i></div><div class="pgm-msg" id="pgmMsg" hidden></div><div class="pgm-next" id="pgmNext" hidden></div><div class="fsx-tip" id="pgmTip"></div><div class="fsx-rail" id="pgmRail"><div class="fr-g"><button id="fxExit" aria-label="退出全螢幕"><svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></button><button id="fxFlip" aria-label="反過來"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.6h-4.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="fr-g"><button id="fxNext" aria-label="下一支"><b>TAKE</b><svg viewBox="0 0 24 24"><path d="M7 5l11 7-11 7z" fill="currentColor"/></svg></button></div></div></div></div>
     <div class="pgm-side">
       <div class="pgm-info" id="pgmInfo"></div>
       <div class="pgm-pvw" id="pgmPvw"></div>
@@ -778,8 +798,8 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
 'use strict';
 /* 觀戰 SPECTATE — 核心：設定、資料、同步、清單 */
 
-const VERSION = '1.2.0';
-const BUILD = '261118180522';   // 每次組建不一樣（build.py 填）：回到 App 時跟網站上的 ver.json 比，看有沒有新版
+const VERSION = '1.3.0';
+const BUILD = '261118231001';   // 每次組建不一樣（build.py 填）：回到 App 時跟網站上的 ver.json 比，看有沒有新版
 const NAME = '痞子葳';
 const RAW = 'https://raw.githubusercontent.com/PZWei0105/PZ-Games';
 const QS = new URLSearchParams(location.search);
@@ -789,6 +809,9 @@ const RELAY = 'https://ntfy.sh/pz-spectate-e4431fca8fc4498df14a';
 const PFX = 'spectate.v1.';
 const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const STANDALONE = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const IS_IPHONE = /iPhone|iPod/.test(navigator.userAgent);
+// 手機、平板（主要用手指點）：全螢幕改用「橫放全螢幕」；電腦照舊
+const TOUCH = matchMedia('(hover: none) and (pointer: coarse)').matches;
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem(PFX + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -796,7 +819,7 @@ const store = {
   del(k) { try { localStorage.removeItem(PFX + k); } catch (e) { /* */ } },
 };
 
-const DEFAULT_SET = { bgm: true, sfx: true, vol: 0.7, intro: 'daily', fx: 'full', zhFirst: true, zhSubs: true, shorts: false, filtered: false, auto: true, play: 'app', gacha: false };
+const DEFAULT_SET = { bgm: true, sfx: true, vol: 0.7, intro: 'daily', fx: 'full', zhFirst: true, zhSubs: true, shorts: false, filtered: false, auto: true, play: 'app', gacha: false, autoLand: true, landDir: 90 };
 const SET = Object.assign({}, DEFAULT_SET, store.get('set', {}));
 function saveSet() { store.set('set', SET); }
 
@@ -1710,6 +1733,7 @@ const Player = (() => {
       document.documentElement.classList.add('watching');
       requestAnimationFrame(() => box.classList.add('in'));
       Snd.duck(true);
+      Land.watch(true);
     }
     hideMsg();
     hideNext();
@@ -1740,7 +1764,7 @@ const Player = (() => {
         videoId: it.i,
         width: '100%', height: '100%',
         playerVars: {
-          autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, fs: 1, enablejsapi: 1,
+          autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, fs: TOUCH ? 0 : 1, enablejsapi: 1,
           origin: location.origin, hl: 'zh-TW', cc_lang_pref: 'zh-Hant', cc_load_policy: zhSub ? 1 : 0, start: Math.floor(start) || undefined,
         },
         events: {
@@ -1815,6 +1839,8 @@ const Player = (() => {
 
   function close() {
     if (!open_) return;
+    Land.exit(true);
+    Land.watch(false);
     open_ = false;
     stopTick(true);
     hideNext();
@@ -1845,9 +1871,8 @@ const Player = (() => {
     if (!it) return;
     hideNext();
     stopTick(true);
-    const wipeEl = $('#pgmWipe');
     Snd.play('take');
-    if (!Fx.lite()) { wipeEl.classList.remove('go'); void wipeEl.offsetWidth; wipeEl.classList.add('go'); }
+    wipe();
     if (mode !== 'next' && !ctxIds.includes(id)) {
       // 從同遊戲／同頻道切過去：之後的 PVW 改用那份清單
       ctxIds = pvwList().map((x) => x.i);
@@ -1954,14 +1979,231 @@ const Player = (() => {
     if (k > 0) take(ctxIds[k - 1]);
   }
   function cancelNext() { hideNext(); }
+  // 切換的斜帶：播完就收回（不然紅色斜帶會停在畫面右邊）
+  let wipeT = 0;
+  function wipe() {
+    const w = $('#pgmWipe');
+    if (!w || Fx.lite()) return;
+    w.classList.remove('go'); void w.offsetWidth; w.classList.add('go');
+    clearTimeout(wipeT);
+    wipeT = setTimeout(() => w.classList.remove('go'), 950);
+  }
   function fullscreen() {
+    if (TOUCH) { Land.toggle(); return; }   // 手機：橫放全螢幕（下面的 Land）
     const f = $('#pgmFrame');
     const req = f.requestFullscreen || f.webkitRequestFullscreen;
     if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
     if (req) req.call(f).catch(() => toast('這台裝置不支援全螢幕：請用播放器右下角的全螢幕鍵'));
     else toast('請用播放器右下角的全螢幕鍵');
   }
-  return { open, close, isOpen, take, next, prev, toggle, setMode, refresh, cancelNext, fullscreen, get cur() { return cur; } };
+  return { open, close, isOpen, take, next, prev, toggle, setMode, refresh, cancelNext, fullscreen, wipe, hasNext: () => !!nextItem(), get cur() { return cur; } };
+})();
+
+/* ------------------------------------------------------------ 橫放全螢幕
+   手機鎖了直向，影片照樣能橫著看。
+   - iPhone：網頁不能自己轉螢幕、也不能整頁全螢幕，所以把播放器整個轉 90 度鋪滿，手機轉橫看就是滿版。
+   - Android：整個導播台真的全螢幕（藏掉瀏覽器和系統列），再請系統轉橫；系統不給轉，就一樣把播放器轉 90 度。
+   - 電腦：照舊（Player.fullscreen 的舊做法）。
+   「轉手機自動橫放」看陀螺儀：手機從直的「很快地」轉成橫的就自動進來，再很快轉回直的就退出（怎麼進來就怎麼出去：
+   按鍵進來的只用 ✕ 退出，跟 YouTube App 鎖直向時一樣）。躺著側看手機、或慢慢躺下這種身體在動的，
+   轉的過程超過 1.5 秒，不會誤觸。 */
+const Land = (() => {
+  const CAN_FS = !IS_IPHONE && !!(Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen);
+  let mode = '';          // ''、rot（轉 90 度）、fill（畫面本來就是橫的，鋪滿）
+  let real = false;       // 有沒有開真的全螢幕（Android）
+  let dir = SET.landDir === -90 ? -90 : 90;   // 90：手機頂端朝左；-90：頂端朝右
+  let why = '';           // tilt（轉手機進來的）、btn（按鍵進來的）
+  let uprightAt = 0, landAt = 0, cand = null, candT = 0, gotTilt = 0;
+  const QUICK = 1500;     // 從直的到橫的（或反過來）在這麼短的時間內完成，才算「轉手機」
+  let watching = false, sensing = false, asked = false, dimT = 0, tipT = 0, probe = null;
+  const frame = () => $('#pgmFrame');
+  const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+  function safe() {
+    if (!probe) {
+      probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;' +
+        'padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+      document.body.appendChild(probe);
+    }
+    const cs = getComputedStyle(probe);
+    return { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+  }
+
+  /* 算位置：影片保持 16:9、避開瀏海和底部橫條；右邊一定留一條放按鈕（不蓋到 YouTube 播放器自己的字幕、設定鍵） */
+  function layout() {
+    if (!mode) return;
+    const port = innerHeight > innerWidth;
+    if (mode === 'rot' && !port) mode = 'fill';            // 解開直向鎖定、手機真的轉橫了：不用再轉
+    else if (mode === 'fill' && port) { exit(); return; }  // 沒鎖直向、手機轉回直的：退出
+    const rot = mode === 'rot' ? dir : 0;
+    const W = rot ? innerHeight : innerWidth, H = rot ? innerWidth : innerHeight;
+    const s = safe();   // 瀏海、底部橫條（真的全螢幕時也算，避開挖孔鏡頭）
+    // 轉 90 度時，畫面的左邊是手機的上緣（瀏海），右邊是手機的下緣（底部橫條）
+    const [L, R, T, B] = rot === 90 ? [s.t, s.b, s.r, s.l] : rot === -90 ? [s.b, s.t, s.l, s.r] : [s.l, s.r, s.t, s.b];
+    const RAIL = 56;
+    const aw = Math.max(160, W - L - R), ah = Math.max(80, H - T - B);
+    const vw = Math.min(aw - RAIL, ah * 16 / 9), vh = vw * 9 / 16;
+    const spare = aw - vw, bar = Math.max(RAIL, spare / 2);   // 黑邊夠寬就置中，不夠就把影片往左推、右邊留一條
+    const vl = L + spare - bar, vt = T + (ah - vh) / 2;
+    const f = frame(), set = (k, v) => f.style.setProperty(k, Math.round(v * 10) / 10 + (k === '--fx-rot' ? 'deg' : 'px'));
+    set('--fx-w', W); set('--fx-h', H); set('--fx-rot', rot);
+    set('--fx-vl', vl); set('--fx-vt', vt); set('--fx-vw', vw); set('--fx-vh', vh);
+    set('--fx-rr', R + (bar - 52) / 2);
+    set('--fx-rt', Math.max(T, vt) + 6); set('--fx-rb', Math.max(B, H - vt - vh) + 6);
+    $('#pgm').classList.toggle('fsx-rot', !!rot);
+  }
+  const VARS = ['--fx-w', '--fx-h', '--fx-rot', '--fx-vl', '--fx-vt', '--fx-vw', '--fx-vh', '--fx-rr', '--fx-rt', '--fx-rb'];
+
+  function on(src) {
+    $('#pgm').classList.add('fsx');
+    document.documentElement.classList.add('fsx');
+    layout();
+    wake();
+    tip(src);
+    Snd.play('whoosh');
+    Player.wipe();
+  }
+  function enter(src, d) {
+    if (mode || !Player.isOpen()) return;
+    if (d) dir = d;
+    mode = innerHeight > innerWidth ? 'rot' : 'fill';
+    why = src;
+    on(src);
+  }
+  async function enterReal() {
+    const box = $('#pgm'), req = box.requestFullscreen || box.webkitRequestFullscreen;
+    try { await req.call(box); } catch (e) { /* 不給全螢幕：照樣轉 90 度 */ }
+    real = isFs();
+    if (real) { try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) { /* 系統不給轉：下面就轉 90 度 */ } }
+    enter('btn');
+  }
+  function exit(silent) {
+    if (!mode) return;
+    mode = ''; why = ''; cand = null;
+    clearTimeout(dimT); clearTimeout(tipT);
+    if (real) {
+      real = false;
+      try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { /* */ }
+      if (isFs()) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) { /* */ } }
+    }
+    $('#pgm').classList.remove('fsx', 'fsx-rot');
+    document.documentElement.classList.remove('fsx');
+    const f = frame();
+    VARS.forEach((k) => f.style.removeProperty(k));
+    const t = $('#pgmTip'); if (t) t.classList.remove('on');
+    if (!silent) Snd.play('back');
+  }
+  function toggle() {
+    if (mode) { exit(); return; }
+    if (CAN_FS) enterReal(); else enter('btn');
+  }
+
+  /* 右邊黑邊的按鈕：進來 3.5 秒後變淡；變淡時第一下只是叫醒（橫拿時拇指常常碰到邊邊） */
+  function wake() {
+    const r = $('#pgmRail');
+    if (!r) return;
+    r.classList.remove('dim');
+    const nx = $('#fxNext'); if (nx) nx.hidden = !Player.hasNext();
+    clearTimeout(dimT);
+    dimT = setTimeout(() => r.classList.add('dim'), 3500);
+  }
+  function tip(src) {
+    const n = +store.get('landTips', 0) || 0;
+    if (n >= 4) return;
+    store.set('landTips', n + 1);
+    say(src === 'tilt' ? '橫放全螢幕｜手機轉回直的就退出' : '橫放全螢幕｜按右邊的 ✕ 退出');
+  }
+  /* 全螢幕時的提示：寫在播放器裡，跟著轉 */
+  function say(msg) {
+    const t = $('#pgmTip');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
+    clearTimeout(tipT);
+    tipT = setTimeout(() => t.classList.remove('on'), 2800);
+  }
+
+  /* 陀螺儀 */
+  function onTilt(e) {
+    if (e.beta == null || e.gamma == null) return;
+    gotTilt = Date.now();
+    if (!watching || !SET.autoLand || !Player.isOpen()) return;
+    const b = e.beta * Math.PI / 180, g = e.gamma * Math.PI / 180;
+    // 「上方」在手機座標裡的方向：x 朝手機右緣、y 朝手機頂端、z 朝螢幕外
+    const ux = -Math.cos(b) * Math.sin(g), uy = Math.sin(b), uz = Math.cos(b) * Math.cos(g);
+    let st = null;   // 0：直立；90：頂端朝左；-90：頂端朝右；null：平放或斜的，不算
+    if (Math.abs(uz) < 0.62) { if (ux > 0.78) st = 90; else if (ux < -0.78) st = -90; else if (uy > 0.78) st = 0; }
+    const now = Date.now();
+    if (st === null) { cand = null; return; }
+    if (st !== cand) { cand = st; candT = now; }
+    const held = now - candT;
+    if (st === 0) {
+      // 轉手機進來的：很快轉回直的、停 0.65 秒 → 退出
+      if (mode && why === 'tilt' && held > 650 && candT - landAt < QUICK) exit();
+      uprightAt = now;
+      return;
+    }
+    if (held < 400) { if (mode) landAt = now; return; }
+    if (!mode) {
+      if (candT - uprightAt < QUICK) enter('tilt', st);
+      landAt = now;
+      return;
+    }
+    landAt = now;
+    if (mode === 'rot' && st !== dir) { dir = st; layout(); }   // 翻到另一邊：跟著轉
+  }
+  function sense() {
+    if (sensing || !TOUCH || !SET.autoLand || !window.DeviceOrientationEvent) return;
+    if (IS_IOS && typeof DeviceOrientationEvent.requestPermission === 'function' && store.get('motion') !== 'granted') return;   // iPhone：要先在點擊裡問過
+    sensing = true;
+    addEventListener('deviceorientation', onTilt);
+  }
+  function unsense() { sensing = false; removeEventListener('deviceorientation', onTilt); }
+  // iPhone 要在點擊裡問「動作與方向」權限：點影片、按全螢幕的那一下順便問（同一次打開 App 只問一次）
+  function ask() {
+    if (!TOUCH || !SET.autoLand || asked || !window.DeviceOrientationEvent) return;
+    if (!IS_IOS || typeof DeviceOrientationEvent.requestPermission !== 'function') { sense(); return; }   // Android 不用問
+    if (store.get('motion') === 'denied') return;
+    asked = true;
+    try {
+      DeviceOrientationEvent.requestPermission().then((r) => { store.set('motion', r); if (r === 'granted') sense(); }).catch(() => {});
+    } catch (e) { /* */ }
+  }
+  function watch(v) {
+    watching = v;
+    cand = null; uprightAt = 0; landAt = 0;
+    if (v) sense();
+  }
+  function onSetting() {
+    if (SET.autoLand) { asked = false; if (store.get('motion') === 'denied') store.del('motion'); ask(); sense(); }
+    else { unsense(); }
+  }
+
+  function init() {
+    if (!TOUCH) return;
+    document.addEventListener('click', (e) => {
+      if (e.target.closest && e.target.closest('a[href^="#watch/"], [data-act="hero-play"], [data-act="play-list"], [data-act="take"], #pgmFull')) ask();
+    }, true);
+    const r = $('#pgmRail');
+    if (r) r.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (r.classList.contains('dim')) { wake(); return; }
+      const bt = e.target.closest('button');
+      if (!bt) { wake(); return; }
+      if (bt.id === 'fxExit') exit();
+      else if (bt.id === 'fxFlip') { dir = -dir; SET.landDir = dir; saveSet(); layout(); Snd.play('tick'); wake(); }
+      else if (bt.id === 'fxNext') { Player.next(); wake(); }
+    });
+    const re = () => { if (mode) layout(); };
+    addEventListener('resize', re);
+    addEventListener('orientationchange', () => setTimeout(re, 250));
+    if (window.visualViewport) visualViewport.addEventListener('resize', re);
+    const fsc = () => { if (real && !isFs()) exit(true); };
+    document.addEventListener('fullscreenchange', fsc);
+    document.addEventListener('webkitfullscreenchange', fsc);
+  }
+  return { init, toggle, enter, exit, watch, ask, onSetting, say, get mode() { return mode; }, get dir() { return dir; } };
 })();
 
 /* ---- views.js ---- */
@@ -2401,6 +2643,7 @@ function settingsHtml() {
     ${tg('zhFirst', '中文優先', '中文片排前面；同一支預告有中文版就收掉外文版')}
     ${tg('zhSubs', '外語片自動開中文字幕', '影片有中文字幕時自動打開')}
     ${tg('auto', '連播（AUTO）', '播完倒數 5 秒接下一支')}
+    ${TOUCH ? tg('autoLand', '轉手機自動橫放', '影片播放時把手機轉橫，就自動橫放全螢幕、轉回直的就退出；手機鎖直向也可以' + (IS_IOS ? '（第一次會問「動作與方向」，按允許）' : '')) : ''}
     ${tg('shorts', '顯示 Shorts 短片', '預設收起來')}
     ${tg('gacha', '顯示抽卡手遊', '原神、崩壞這類預設收起來')}
     ${tg('filtered', '顯示被濾掉的影片', '搬運、兌換碼、非遊戲類')}
@@ -2849,6 +3092,7 @@ document.addEventListener('change', (e) => {
   saveSet();
   if (k === 'bgm' || k === 'sfx' || k === 'vol') { Snd.init(); Snd.refresh(); }
   if (['zhFirst', 'shorts', 'filtered', 'gacha'].includes(k)) { MEMO.clear(); renderTicker(); }
+  if (k === 'autoLand') Land.onSetting();
   Snd.play('tick');
 });
 document.addEventListener('input', (e) => { if (e.target.dataset && e.target.dataset.set === 'vol') { SET.vol = +e.target.value; Snd.refresh(); } });
@@ -2935,6 +3179,7 @@ function draftDecide(kind, card) {
 /* ------------------------------------------------------------ 其他 */
 let toastT = 0;
 function toast(msg) {
+  if (typeof Land !== 'undefined' && Land.mode) { Land.say(msg); return; }   // 橫放全螢幕時寫在播放器裡（跟著轉）
   const t = $('#toast');
   t.textContent = msg;
   t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
@@ -3000,6 +3245,7 @@ async function start() {
   $('#sync').addEventListener('click', () => { Snd.play('tick'); location.hash = 'me'; setTimeout(() => { const s = $('.sys'); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 450); });
   $('#pgmClose').addEventListener('click', () => Player.close());
   $('#pgmFull').addEventListener('click', () => Player.fullscreen());
+  Land.init();
   const lastVisit = store.get('visit', 0);
   // 開場有新段落時（INTRO_REV：2026/11/18 加了今晚節目單），更新後第一次打開照樣播，不用等到明天
   const showIntro = SET.intro === 'every' || (SET.intro === 'daily' && (store.get('boot') !== dayKey() || (+store.get('introRev', 0) || 0) < INTRO_REV));

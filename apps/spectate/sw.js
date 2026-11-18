@@ -1,5 +1,5 @@
 /* 觀戰 SPECTATE — 離線外殼：App 本體 network-first（2.5 秒等不到就先用存好的）、轉播資料 network-first（斷線時用上一份） */
-const CACHE = 'spectate-1.2.0';
+const CACHE = 'spectate-1.3.0';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 const DATA = /^https:\/\/raw\.githubusercontent\.com\/PZWei0105\/PZ-Games\/(spectate-data|main\/apps\/spectate\/data)\//;
 

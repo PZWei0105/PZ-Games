@@ -218,6 +218,7 @@ document.addEventListener('change', (e) => {
   saveSet();
   if (k === 'bgm' || k === 'sfx' || k === 'vol') { Snd.init(); Snd.refresh(); }
   if (['zhFirst', 'kids', 'west'].includes(k)) MEMO.clear();
+  if (k === 'autoLand') Land.onSetting();
   Snd.play('tick');
 });
 document.addEventListener('input', (e) => { if (e.target.dataset && e.target.dataset.set === 'vol') { SET.vol = +e.target.value; Snd.refresh(); } });
@@ -251,6 +252,7 @@ addEventListener('scroll', () => {
   if (on !== scrolledOn) { scrolledOn = on; document.documentElement.classList.toggle('scrolled', on); }
 }, { passive: true });
 function toast(msg) {
+  if (typeof Land !== 'undefined' && Land.mode) { Land.say(msg); return; }   // 橫放全螢幕時寫在播放器裡（跟著轉）
   const t = $('#toast');
   t.textContent = msg;
   t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
@@ -373,6 +375,7 @@ async function start() {
   $('#sync').addEventListener('click', () => { Snd.play('tick'); location.hash = 'mine'; setTimeout(() => { const s = $('.sys'); if (s) s.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500); });
   $('#thClose').addEventListener('click', () => Player.close());
   $('#thFull').addEventListener('click', () => Player.fullscreen());
+  Land.init();
   const lastVisit = store.get('visit', 0);
   const showIntro = SET.intro === 'every' || (SET.intro === 'daily' && store.get('boot') !== dayKey());
   const loading = refreshData();

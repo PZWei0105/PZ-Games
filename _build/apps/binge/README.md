@@ -80,6 +80,14 @@
 - 跳過片頭（85／90／120 秒，設定）、速度 0.75～2 倍、睡前定時（15／30／45／60／90 分或「這支看完」：時間到音量慢慢轉小再停，記住看到哪）。
 - 播完：同一部作品接下一集、不然照這一排接下一支；次回預告倒數 6 秒（連播可關）。
 - 直式短劇：一個常駐的播放器＋上下兩張海報，滑動只動 transform，不會重建 iframe；「看完整版」會找同一部的長片合輯。
+- **橫放全螢幕**（2026-11-19，痞子葳：「手機固定不會自動旋轉，但全螢幕時影片依然能橫放」）：手機上按全螢幕鍵不再交給 YouTube 自己的全螢幕（iPhone 那個會照直向鎖定，一直是直的），改用自己的 `Land`（`player.js`，在 `Swipe` 前面）：
+  - iPhone：網頁不能轉螢幕、也不能整頁全螢幕（Safari 不支援 `screen.orientation.lock`、iPhone 只有影片元素能全螢幕），所以把 ``#thFrame`` 整個用 CSS 轉 90 度鋪滿（`--fx-*` 變數由 `Land.layout()` 算：影片保持 16:9、避開瀏海和底部橫條，右邊一定留 56 px 放按鈕，不蓋到 YouTube 播放器自己的字幕、設定鍵）。iframe 不搬家、只改 CSS，所以不會重新載入。
+  - Android：`整個放映機 `#theater`` 真的全螢幕（藏掉瀏覽器和系統列），再 `screen.orientation.lock('landscape')`；系統不給轉，就一樣轉 90 度。電腦照舊。
+  - 手機上 YouTube 播放器的全螢幕鍵藏起來（`fs: TOUCH ? 0 : 1`），免得按到那個又變直的。
+  - 「轉手機自動橫放」（設定，預設開）：看 `deviceorientation` 算出手機哪邊朝上。從直的**很快**（1.5 秒內）轉成橫的、停 0.4 秒 → 自動進來；轉手機進來的，很快轉回直的、停 0.65 秒 → 退出；**按鍵進來的只用 ✕ 退出**（跟 YouTube App 鎖直向時一樣）。一直橫著（躺著側看）、慢慢躺下（轉超過 1.5 秒）都不會誤觸。橫著時翻到另一邊會跟著轉。
+  - iPhone 要「動作與方向」權限：只能在點擊裡問，所以點影片、按全螢幕那一下順便問（同一次打開只問一次，答案記在 localStorage 的 `motion`；拒絕就不再自己問，到設定把開關關掉再打開會再問）。
+  - 右邊的按鈕：✕ 退出、⟲ 反過來（轉 90 度時才有，方向記在設定 `landDir`）、片頭（跳過片頭出現時）、下一集（合輯有章節或集數範圍）或下一支。進來 3.5 秒後變淡，變淡時第一下只是叫醒（橫拿時拇指常常碰到邊邊）。全螢幕時的提示（toast）改寫在播放器裡、跟著轉。
+  - 直式短劇本來就是直的，不受影響。
 
 ## 組建與測試
 
@@ -87,7 +95,7 @@
 python3 _build/apps/binge/build.py               # 網頁版 → apps/binge/（不碰 data/）；畫面上新用到的顯示字會自動重做字型子集
 python3 _build/apps/binge/build.py --icons       # 重畫圖示
 python3 _build/apps/binge/tests/offline_test.py  # 管線離線測試（假 RSS、假清單、假轉發站）；--keep <資料夾> 留下假片庫
-python3 _build/apps/binge/tests/shoot.py --data <資料夾> --out /tmp/bshots [--only phone,land,desk] [--sky night]
+python3 _build/apps/binge/tests/shoot.py --data <資料夾> --out /tmp/bshots [--only phone,land,desk,fsx] [--sky night]   # fsx：橫放全螢幕檢查（12 項 PASS／FAIL）
 ```
 `shoot.py`：手機直拿、橫拿、電腦三種截圖＋開場、扭蛋、作品頁、放映機（過場卡、次回預告、定時）、直式短劇、搜尋的流程；縮圖換成色塊、播放器換成假的。最後會列出**顯示字型缺的字**（畫面上用 Dela Gothic 卻沒在子集裡的字）和 console 錯誤。
 沙盒連不到 YouTube／raw.githubusercontent.com：拿真資料用 `gh api "repos/PZWei0105/PZ-Games/contents/catalog.json?ref=binge-data" -H "Accept: application/vnd.github.raw"`；要用最新程式重算片庫，抓 `binge-data` 的 `cache.json` 跟 main 的 `roster.json`，直接呼叫 `pipeline.build_catalog(cache, roster['channels'], {})`。

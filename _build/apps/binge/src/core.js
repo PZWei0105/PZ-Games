@@ -10,6 +10,9 @@ const MAIN_URL = QS.get('main') || RAW + '/main/apps/binge/data/';
 const RELAY = 'https://ntfy.sh/pz-binge-7e3572039bf2097cf2bf';
 const PFX = 'binge.v1.';
 const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IS_IPHONE = /iPhone|iPod/.test(navigator.userAgent);
+// 手機、平板（主要用手指點）：全螢幕改用「橫放全螢幕」；電腦照舊
+const TOUCH = matchMedia('(hover: none) and (pointer: coarse)').matches;
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem(PFX + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -19,7 +22,7 @@ const store = {
 
 const DEFAULT_SET = {
   bgm: true, sfx: true, vol: 0.7, intro: 'daily', fx: 'full', sky: 'auto', zhFirst: true, zhSubs: true,
-  auto: true, skipOp: 85, rate: 1, play: 'app', kids: false, west: true,
+  auto: true, skipOp: 85, rate: 1, play: 'app', kids: false, west: true, autoLand: true, landDir: 90,
 };
 const SET = Object.assign({}, DEFAULT_SET, store.get('set', {}));
 function saveSet() { store.set('set', SET); }

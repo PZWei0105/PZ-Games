@@ -76,6 +76,14 @@
 - 外語片會嘗試自動開中文字幕（`cc_lang_pref=zh-Hant`，再用字幕清單挑 zh-Hant／zh-TW／zh）。
 - 不能嵌入的影片（錯誤 101／150，常見於有年齡限制的預告）會顯示「這支要到 YouTube 看」。
 - 看過的進度存在這台裝置，下次從上次停的地方接著播；看超過 90% 算看完（REPLAY）。
+- **橫放全螢幕**（2026-11-19，痞子葳：「手機固定不會自動旋轉，但全螢幕時影片依然能橫放」）：手機上按全螢幕鍵不再交給 YouTube 自己的全螢幕（iPhone 那個會照直向鎖定，一直是直的），改用自己的 `Land`（`player.js` 最後面）：
+  - iPhone：網頁不能轉螢幕、也不能整頁全螢幕（Safari 不支援 `screen.orientation.lock`、iPhone 只有影片元素能全螢幕），所以把 ``#pgmFrame`` 整個用 CSS 轉 90 度鋪滿（`--fx-*` 變數由 `Land.layout()` 算：影片保持 16:9、避開瀏海和底部橫條，右邊一定留 56 px 放按鈕，不蓋到 YouTube 播放器自己的字幕、設定鍵）。iframe 不搬家、只改 CSS，所以不會重新載入。
+  - Android：`整個導播台 `#pgm`` 真的全螢幕（藏掉瀏覽器和系統列），再 `screen.orientation.lock('landscape')`；系統不給轉，就一樣轉 90 度。電腦照舊。
+  - 手機上 YouTube 播放器的全螢幕鍵藏起來（`fs: TOUCH ? 0 : 1`），免得按到那個又變直的。
+  - 「轉手機自動橫放」（設定，預設開）：看 `deviceorientation` 算出手機哪邊朝上。從直的**很快**（1.5 秒內）轉成橫的、停 0.4 秒 → 自動進來；轉手機進來的，很快轉回直的、停 0.65 秒 → 退出；**按鍵進來的只用 ✕ 退出**（跟 YouTube App 鎖直向時一樣）。一直橫著（躺著側看）、慢慢躺下（轉超過 1.5 秒）都不會誤觸。橫著時翻到另一邊會跟著轉。
+  - iPhone 要「動作與方向」權限：只能在點擊裡問，所以點影片、按全螢幕那一下順便問（同一次打開只問一次，答案記在 localStorage 的 `motion`；拒絕就不再自己問，到設定把開關關掉再打開會再問）。
+  - 右邊的按鈕：✕ 退出、⟲ 反過來（轉 90 度時才有，方向記在設定 `landDir`）、TAKE ▶（下一支）。進來 3.5 秒後變淡，變淡時第一下只是叫醒（橫拿時拇指常常碰到邊邊）。全螢幕時的提示（toast）改寫在播放器裡、跟著轉。
+- 切換的斜帶（`#pgmWipe`）播完 0.95 秒就收回、平常隱藏（不然紅色斜帶會停在畫面右邊、深色斜帶的角露在左上）。
 
 ## 組建與測試
 
@@ -84,7 +92,8 @@ python3 _build/apps/spectate/build.py               # 網頁版 → apps/spectat
 python3 _build/apps/spectate/build.py --icons       # 重畫圖示
 python3 _build/apps/spectate/tests/test_extract.py  # 車道、遊戲名稱、語言判斷
 python3 _build/apps/spectate/tests/offline_test.py  # 管線離線測試（假 RSS、假頻道頁、假轉發站）
-python3 _build/apps/spectate/tests/shoot.py --data <資料夾> --out /tmp/spshots   # 手機直、橫、電腦截圖＋導播台流程（縮圖換色塊、播放器換假的）
+python3 _build/apps/spectate/tests/shoot.py --data <資料夾> --out /tmp/spshots   # 手機直、橫、電腦截圖＋導播台流程（縮圖換色塊、播放器換假的）＋橫放全螢幕檢查
+python3 _build/apps/spectate/tests/shoot.py --data <資料夾> --only fsx         # 只跑橫放全螢幕：iPhone 轉 90 度、陀螺儀自動進出、躺著不誤觸、Android 真的全螢幕（17 項 PASS／FAIL）
 ```
 沙盒連不到 YouTube／raw.githubusercontent.com：拿真資料測試時，用 `gh api "repos/PZWei0105/PZ-Games/contents/feed.json?ref=spectate-data" -H "Accept: application/vnd.github.raw"` 抓下來放進 `--data` 的資料夾。
 
