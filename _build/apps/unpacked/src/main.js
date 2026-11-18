@@ -5,7 +5,7 @@ let NAVN = 0;   // App 裡往前走了幾步（「回牆上」才知道能不能
 
 function setTabs(name) {
   $$('.tab').forEach((t) => t.classList.toggle('on', t.dataset.go === name));
-  const wait = (S.index ? fanWait() : 0) + weekUnposted();
+  const wait = opsBadge();   // 粉專：今天還沒發的任務
   const dot = $('.tab[data-go="fan"] .dot'); if (dot) { dot.textContent = wait; dot.classList.toggle('hide', !wait); }
   const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
   const pnew = pi.filter((x) => x.date === pl && !S.seen['p:' + x.id]).length;
@@ -29,7 +29,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop(); opsStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
@@ -57,8 +57,13 @@ async function route() {
     else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
     else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); moreFx(); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); moreFx(); }
     else if (name === 'fan' && arg && arg.startsWith('w:')) { setTabs('fan'); v.innerHTML = await renderWeekFan(arg.slice(2)); scrollTo(0, 0); weekCardRender(); }
+    else if (name === 'fan' && arg && arg[0] === '~') {   // 粉專作戰台：排程、出稿、成效、教學、上架流程、影片三連發
+      const sub = arg.slice(1); const sn = sub.split(':')[0]; setTabs('fan'); v.innerHTML = await renderOps(sub);
+      if (sn === 'plan' || sn === 'drafts' || sn === 'stats' || sn === 'learn') restoreScroll(h); else scrollTo(0, 0);
+      if (sn === 'drafts') moreFx(); opsFx(sn);
+    }
     else if (name === 'fan' && arg) { setTabs('fan'); v.innerHTML = await renderFanDetail(arg); scrollTo(0, 0); cardRender(await loadFeature(arg)); }
-    else if (name === 'fan') { setTabs('fan'); v.innerHTML = renderFanList(); restoreScroll(h); moreFx(); }
+    else if (name === 'fan') { setTabs('fan'); v.innerHTML = await renderOps('today'); restoreScroll(h); opsFx('today'); }
     else { setTabs('home'); v.innerHTML = renderHome(); restoreScroll('home'); homeFx(); }
   } catch (e) {
     console.error(e);
@@ -381,6 +386,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'close') { if (ev.target.closest('.lb button')) return; closeSheet(); return; }
     ev.preventDefault();
     if (a === 'back') { sfx.scratch(); if (NAVN > 0) { NAVN--; history.back(); } else location.hash = ROUTE.startsWith('p/') ? 'picks' : 'home'; return; }
+    if (a.startsWith('op') && await opsAct(a, act)) return;   // 粉專作戰台
     if (a === 'pf') { PICKF.f = act.dataset.v; sfx.click(); motionStop(); MORE_N.pk = MORE_STEP.pk; const y = scrollY; VIEW().innerHTML = renderPicks(); scrollTo(0, y); homeFx('.pks .pk', 'pk'); moreFx(); return; }
     if (a === 'hf' || a === 'hs') { if (a === 'hf') HUNT.f = act.dataset.v; else HUNT.sort = act.dataset.v; sfx.click(); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); return; }
     if (a === 'cday') { const g = document.getElementById('cd-' + act.dataset.d); if (g) { g.scrollIntoView({ behavior: 'smooth', block: 'center' }); g.classList.remove('flash'); void g.offsetWidth; g.classList.add('flash'); } sfx.click(); return; }
@@ -501,9 +507,14 @@ document.addEventListener('input', (ev) => {
     g.outerHTML = libGridHtml(true); moreFx(); return;
   }
   const a = t.dataset && t.dataset.act;
+  if (a && a.startsWith('op') && opsInput(t)) return;
   if (a === 'thought') { S.thoughts[t.dataset.k] = t.value; save('thoughts'); return; }
   if (a === 'note') { S.notes[S.curId] = t.value; save('notes'); return; }
-  if (a === 'postedit') { const fid = ROUTE.split('/')[1]; S.edits[fid] = t.value; save('edits'); const c = $('#postcnt'); if (c) c.textContent = t.value.length + ' 字'; return; }
+  if (a === 'postedit') {
+    const fid = ROUTE.split('/')[1]; S.edits[fid] = t.value; save('edits'); const c = $('#postcnt'); if (c) c.textContent = t.value.length + ' 字';
+    clearTimeout(OPS.pt); OPS.pt = setTimeout(() => opsPfRefresh(fid.startsWith('w:') ? fid : 'f:' + fid), 700);   // 三平台版本跟著原稿更新
+    return;
+  }
   if (a === 'vol') { S.settings[t.dataset.k] = +t.value; save('settings'); audioApply(); if (t.dataset.k === 'vol') sfx.blip(1200); }
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); if (shKeys(e)) return; if ($('#sheet.on .lb')) { if (e.key === 'ArrowRight') openLightbox(LBI + 1); if (e.key === 'ArrowLeft') openLightbox(LBI - 1); } });

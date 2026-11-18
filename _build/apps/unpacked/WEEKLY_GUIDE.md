@@ -14,7 +14,7 @@ App 會把週報做成遊戲的「本週結算」畫面（WEEK 數字砸下、�
    - `index.json`、`picks.json`：這一週（`date` 在週一到週日之間）的專題和推坑——**每一款都要排進 Tier 表**（願望單解包 `kind: wish` 也是專題，一樣要排）；再打開 `features/<id>.json`、`picks/<id>.json` 看結論、評價、風向。
    - `weekly.json`、`weekly/`：之前的週報（語氣、格式照它，不要重複上週的新聞）。
    - `live.json`：Steam 即時數據（同上、評價、特價）。`wish.json`：痞子葳的 Steam 願望單和特價（`p` 是 [現價, 原價, 折扣]，單位「分」＝NT$×100；`sale.end` 是特價結束時間）。`candidates.json`：熱門與即將推出的候選，`mine: true` 是在他願望單上的。
-4. 只能新增或修改 `apps/unpacked/data/weekly/` 和 `weekly.json`。其他一律不動（專題、推坑、live／wish／hist／candidates、App 本體）。
+4. 只能新增或修改 `apps/unpacked/data/weekly/`、`weekly.json`，和第 8 節的 `platforms.json`。其他一律不動（專題、推坑、live／wish／hist／candidates、App 本體）。
 
 ## 1. 要寫什麼
 
@@ -48,6 +48,8 @@ App 會把週報做成遊戲的「本週結算」畫面（WEEK 數字砸下、�
 - `script`：60 秒口播稿，口語、230～300 字，第一句就是鉤子，照 Tier 表從 S 講下來，結尾丟問題。
 - `credit`：素材來源（例：圖片來源：各遊戲官方 Steam 商店頁）。
 - `cover`：封面圖卡的字：`kicker` ≤ 12 字（例：每週遊戲懶人包）、`title` 兩行用 `\n` 分開、每行 ≤ 11 字、`sub` 選填。
+- `threads`：`{post, topic}`，Threads 版（粉專作戰台週日 21:00 發 Threads 時用）。`post` 150～350 字：這週一句話＋S 級是誰＋一則最大的事＋結尾提問；內文**不放 #**。`topic` 一個主題標籤、不含 #（例：遊戲、Steam）。
+- 所有粉專文字都**不放網址**（粉專作戰台會照各平台規則自己加），也**不出現「痞子葳」**。publish.py 會擋。
 
 ## 4. 格式（`apps/unpacked/data/weekly/<id>.json`，檔名就是 id）
 
@@ -61,7 +63,7 @@ App 會把週報做成遊戲的「本週結算」畫面（WEEK 數字砸下、�
   "next": [{"d": "2026-11-25", "name": "……", "t": "……", "s": [3], "ref": "f:……"}],
   "deals": "……",
   "fanpage": {"post": "……", "titles": ["……", "……", "……"], "tags": ["#每週遊戲懶人包", "#遊戲狂想曲"], "script": "……", "credit": "……",
-              "cover": {"kicker": "每週遊戲懶人包", "title": "第一行\n第二行"}},
+              "cover": {"kicker": "每週遊戲懶人包", "title": "第一行\n第二行"}, "threads": {"post": "……", "topic": "遊戲"}},
   "sources": [{"t": "來源標題", "u": "https://……", "d": "2026-11-20"}]
 }
 ```
@@ -80,8 +82,8 @@ App 會把週報做成遊戲的「本週結算」畫面（WEEK 數字砸下、�
 ```bash
 cd /home/claude/pz-games
 python3 _build/apps/unpacked/tools/publish.py      # 週報也會檢查（Tier 表有沒有漏排、來源編號、字數），並重建 weekly.json；BAD 一定要修
-git status                                          # 只該有 weekly/ 和 weekly.json 的變動；別的用 git checkout -- <檔案> 還原
-git add apps/unpacked/data/weekly apps/unpacked/data/weekly.json
+git status                                          # 只該有 weekly/、weekly.json（和 platforms.json）的變動；別的用 git checkout -- <檔案> 還原
+git add apps/unpacked/data/weekly apps/unpacked/data/weekly.json apps/unpacked/data/platforms.json
 git commit -m "解包：W47 每週懶人包（11/16–11/22）"   # 結尾附上當次規定的署名行
 git pull --rebase origin main && git -c push.negotiate=true push origin HEAD:main
 ```
@@ -90,4 +92,18 @@ push 失敗：`git pull --rebase origin main` 再推，最多重試 3 次。
 
 ## 7. 回報
 
-最後用 PushNotification 推播給痞子葳（一行、200 字以內、繁體中文）：開頭「本週懶人包出爐：MVP ○○」，接著一句 S 級有誰、一句下週最值得等的；粉專稿和三張圖卡已經在出稿台準備好也一句帶過。不寫技術細節。沒推上去就照實說原因。
+最後用 PushNotification 推播給痞子葳（一行、200 字以內、繁體中文）：開頭「本週懶人包出爐：MVP ○○」，接著一句 S 級有誰、一句下週最值得等的；粉專稿和三張圖卡已經在出稿台準備好也一句帶過；第 8 節查到平台規則有變，加一句「平台規則有變：○○」。不寫技術細節。沒推上去就照實說原因。
+
+## 8. 平台規則查證（每週一次，上架前做）
+
+粉專作戰台的教學、字數上限、hashtag 數、連結規則、YouTube 營利門檻，都讀 `apps/unpacked/data/platforms.json`。平台常改規則，每週查一次：
+
+1. 用 WebSearch 查這四件事最近有沒有變（只看 Meta、Instagram、Threads、YouTube 的官方說明或公告，和大型科技媒體的報導）：
+   - Threads：一則字數上限、主題標籤（topic）數、連結數、文字附件、排程功能。
+   - Instagram：每篇 hashtag 上限、說明文字字數、個人檔案連結數、說明文字裡的連結能不能點。
+   - Facebook 粉專：帶外部連結的貼文／留言每月幾則、哪些不算。
+   - YouTube 合作夥伴計畫：粉絲贊助與廣告分潤的門檻（訂閱、觀看時數、Shorts 觀看）、生效日。
+2. **有官方或兩個以上可靠來源確認有變**才改：只改變了的那個數字或 `notes` 那一條，`src` 換成新的來源（`{t, u}`），`checked` 改成今天（`YYYY-MM-DD`），`by` 寫「每週懶人包查證」。沒變：只把 `checked` 改成今天。
+3. 只是傳聞、測試中、只有少數地區：不改數字，可以在 `notes` 加一條「（測試中）……」。
+4. `notes` 是給痞子葳看的，一條一句、繁體中文、講「對發文有什麼影響」。不准出現「痞子葳」以外的人名帳號、不放推銷。
+5. publish.py 會檢查 `platforms.json` 的格式；改壞了一定要修到 BAD 0。

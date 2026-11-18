@@ -1,6 +1,6 @@
 # 解包 UNPACKED
 
-痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達（每款都有 Claude 的願望單解包、買不買判定與目標價、到價警報）、出擊日曆（可訂閱到手機行事曆）、每週懶人包（本週結算）、Steam 行情板（線上人數前百名做成股市看盤）、大特賣倒數＋免費補給站（Epic／Steam／GOG 限時免費）、TGA 預測戰（跟 Claude 封存的預測比誰準）、點播台（指定遊戲解包、你問我答），以及「遊戲狂想曲」粉專出稿台（貼文、三個標題、塗鴉圖卡、60 秒口播稿）。
+痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達（每款都有 Claude 的願望單解包、買不買判定與目標價、到價警報）、出擊日曆（可訂閱到手機行事曆）、每週懶人包（本週結算）、Steam 行情板（線上人數前百名做成股市看盤）、大特賣倒數＋免費補給站（Epic／Steam／GOG 限時免費）、TGA 預測戰（跟 Claude 封存的預測比誰準）、點播台（指定遊戲解包、你問我答），以及「遊戲狂想曲」粉專作戰台（Threads／IG／FB 三平台發文排程、每一次上架都附步驟教學、導流成效追蹤、新片的影片三連發；用的是每篇的貼文、Threads 版、三個標題、塗鴉圖卡、60 秒口播稿）。
 網址：https://pzwei0105.github.io/PZ-Games/apps/unpacked/
 
 起因：痞子葳看到 TGP 玩家口袋的 FB 遊戲介紹貼文，想要一個 App「主動抓取並寫成一篇篇遊戲詳細介紹」。他要求：主頁自己看、要詳盡、要有討論，像《玩真的》一樣附影片與圖片預覽，**而且要比玩真的更強、更全面**；粉專分頁照 Claude 建議的格式。全部收（大作、獨立、免費、平台獨佔），**手機遊戲一律排除**（他不喜歡什麼都得課金才能解鎖的遊戲）；每天 2～3 篇深度專題。視覺要呼應頻道的噴漆塗鴉風、聲光效果拉滿。
@@ -16,7 +16,8 @@
 | Steam 願望單（獵價） | 同一個 GitHub Actions：每小時讀痞子葳的公開願望單、對台灣區價格 | `tools/live.py` → `data/wish.json`（價格歷史也記在 `hist/<appid>.json` 的 `pr`）。Steam 代號放 repo 的 Actions 密碼 `UNP_STEAM`（Settings → Secrets and variables → Actions；不公開），沒有才讀 `data/wish-cfg.json` 的 `steam`（會公開）。代號不寫進 log 和輸出檔 |
 | Steam 即時資料與選題候選 | GitHub Actions `.github/workflows/unpacked-live.yml`，每小時＋track.json 一變就跑。最新的 120 款、盯上市的、還沒抓過的每輪更新；其餘每輪輪流更新 40 款（最久沒更新的先），所以專題和推坑再多，每款也至少約一天更新一次 | `tools/live.py` → `data/live.json`（清單用的精簡版）＋`data/live/<appid>.json`（預告、截圖、介紹，點開才載）、`data/hist/<appid>.json`、`data/candidates.json` |
 | Steam 行情板、免費補給站 | 同一個 GitHub Actions（每小時） | `tools/live.py` → `data/board.json`（前百名＋30 小時曲線＋7 天走勢）、`data/board-d.json`（每天高峰，留 120 天）、`data/free.json`（Epic、Steam、GOG 限時免費；某家這一輪抓不到就沿用上一輪還沒過期的） |
-| 點播台（點播解包、你問我答） | App → 轉發站 ntfy.sh → 同一個 GitHub Actions 每小時收件（`tools/inbox.py` → `data/inbox.json`）→ 寫稿（05:23）、推坑（11:43，只接問答）、願望單（16:37）三班排程回答 | 回答寫進 `data/qa.json`，規範在 `QA_GUIDE.md`。轉發站主題寫在公開的程式裡，收件一律當不可信資料 |
+| 點播台（點播解包、你問我答、影片三連發） | App → 轉發站 ntfy.sh → 同一個 GitHub Actions 每小時收件（`tools/inbox.py` → `data/inbox.json`）→ 寫稿（05:23）、推坑（11:43，只接問答）、願望單（16:37）三班排程回答 | 回答寫進 `data/qa.json`，規範在 `QA_GUIDE.md`。影片三連發（粉專作戰台送的新片文案）寫進 `data/videos/<點播 id>.json`（QA_GUIDE 第 7 節），publish.py 產生 `data/videos.json`。轉發站主題寫在公開的程式裡，收件一律當不可信資料 |
+| 平台規則（粉專作戰台的字數、hashtag、連結規則、YouTube 營利門檻） | 每週懶人包排程順便查證（WEEKLY_GUIDE 第 8 節），有官方或兩個可靠來源確認有變才改 | `data/platforms.json`（publish.py 檢查格式）；App 讀不到時用內建的同一份數字 |
 | TGA 預測戰 | Claude 11/18 封存預測（`data/tga.json`，publish.py 記了指紋，之後只准填 `win`／`result_at`）；12/11 的單次排程「解包：TGA 開獎」填得獎名單、推播比分 | 規範在 `TGA_GUIDE.md` |
 | 活動表（大特賣、新品節、主題節、頒獎典禮） | 寫稿排程看到官方公告就更新 | `data/events.json`（只收官方來源；格式見 `WRITER_GUIDE.md`「順手更新活動表」） |
 | App 本體 | 這個資料夾的 `src/`，`build.py` 組成單一 index.html | `apps/unpacked/`（`build.py` 不碰 `data/`） |
@@ -80,7 +81,24 @@
   - 專題頁、推坑頁的「問 Claude」：送到點播台，或「現在就聊」把這款的重點整理好複製、打開 Claude 直接聊；那一款被問過的問答也會出現在專題頁下面。
   - 問答存在公開的 GitHub 上，頁面上有提醒不要寫私人資料。
 - **庫存**：搜尋、結論／平台／類型／中文／課金／我的標記篩選、排序，最多 3 款加入比較（比較表）。
-- **粉專**：每篇的出稿台（稿子如果是前幾天寫的、又有「倒數幾天」這類會過期的字，上方會提醒先改）。塗鴉圖卡產生器（版型 A 黃牆撕紙框、B 黑牆大圖；4:5／1:1；重噴換濺漆與截圖；下載 PNG、手機可直接分享）、可編輯的貼文（只存這台裝置）、三個標題、hashtag、口播稿、素材標註、標記已發佈（分頁上的數字是還沒發的篇數）。
+- **粉專**（粉專作戰台，下一節）：今日／排程／出稿／成效／教學五個分頁，分頁上的數字是今天還沒發的。每篇的出稿頁（稿子如果是前幾天寫的、又有「倒數幾天」這類會過期的字，上方會提醒先改）有塗鴉圖卡產生器（版型 A 黃牆撕紙框、B 黑牆大圖；4:5／1:1；重噴換濺漆與截圖；下載 PNG、手機可直接分享）、可編輯的原稿（只存這台裝置）、三個標題、hashtag、口播稿、素材標註，上面多了 Threads／IG／FB 三個平台各自的版本和「去上架」。
+
+## 粉專作戰台（2026-11-18）
+
+痞子葳問「粉專要開在哪個平台、怎麼經營、能不能賺錢」之後要的：**三平台發文排程＋導流成效追蹤**，而且**每一次上架都有最基礎的步驟教學**。目標只有一個：把 Threads／IG／FB 的人帶回 YouTube 頻道「遊戲狂想曲」（錢來自 YouTube 營利和業配，粉專本身不賺錢）。原始碼：`src/ops.js`（排程、出稿、上架教學、日曆）、`src/opsstats.js`（成效）、`src/opslearn.js`（教學、影片三連發）。
+
+- **今日**（`#fan`）：下一個時段的倒數（TONIGHT 20:00＋HOT 標）、連發天數、本週進度；今天要發的每一篇（哪個平台、幾點、發哪一篇），按「開始上架」進教學流程；發完蓋章（COMBO 連發特效），今天全部發完有「今天收工」。另外：開站任務的進度條、該回填的成績、週日晚上到週二的「本週成績」回填提醒、明天預告。
+- **排程**（`#fan/~plan`）：一週七天 × 三平台的格子。每天 05:23 解包後自動填上當天的專題（Threads 先挑、FB／IG 跟著發同一篇；週日 21:00 那格等 19:43 出爐的週報）；點格子可以換一篇、改時間、跳過。「發文節奏」有起步／標準／衝刺三種（也能自己改每格的時間），「時段加進手機行事曆」下載 .ics（每週重複＋發文前 5 分鐘提醒）。「這些時段怎麼來的？」寫著依據（台灣 Threads 的互動高峰；FB、IG 沒有可靠的台灣數據，先用晚上 8 點，累積成績後看自己的黃金時段）。下面是影片三連發的清單。
+- **上架**（`#fan/~go:<日期>.<平台>`、`#fan/~do:<ref>|<平台>`）：圖卡＋那個平台的文字＋一步一步的教學（可以打勾、精簡／完整切換），最後「我發好了」蓋章。三個平台的文字規則不一樣：
+  - Threads：500 字上限（超過就照段落拆成串文，或提示用文字附件）、只放一個主題標籤、連結直接放內文最後一行（上片文、討論文）。
+  - IG：說明文字裡的網址不能點，改成「連結在個人檔案」；hashtag 最多 5 個（2025-12 起）；上片那天的步驟會提醒把個人檔案連結換成新片。
+  - FB 粉專：部分粉專每月只有 2 則能帶外部連結（留言裡的也算，每月 1 號重算），所以只有上片文放影片連結，其他用「YouTube 搜尋遊戲狂想曲」；成效頁可以設定「有沒有這個限制」，額度用完會提醒。發文步驟提醒切換成粉專身分、可用 Meta Business Suite 同時排 FB 和 IG。
+  - 文字裡還有「＿＿＿」沒填、或出現「痞子葳」都會警告（粉專只用「遊戲狂想曲」）。
+- **出稿**（`#fan/~drafts`）：原本的出稿台清單（專題、週報），從這裡挑一篇多發或換別篇；每篇的出稿頁上方有三個平台的分頁。
+- **成效**（`#fan/~stats`）：導流漏斗（三平台粉絲 → 帶到 YouTube 的觀看 → 訂閱）、每週回填（粉絲數、近 7 天觀看、從 Threads／IG／FB 來的觀看、公開觀看時數；每格都寫著在 YouTube 工作室哪裡看）、各平台帶來的觀看長條、粉絲與訂閱的折線、YouTube 營利進度（粉絲贊助 500 訂閱＋3,000 小時、廣告分潤 1,000＋4,000 小時，2027-02-01 起新申請改 8,000 小時，照 `platforms.json`）、黃金時段熱力圖（用每篇回填的觀看算）、教練建議、發文紀錄（每篇回填觀看／互動／新粉絲）、FB 本月連結額度、備份碼匯出匯入。
+- **教學**（`#fan/~learn`）：開站任務 7 步（開 IG 創作者帳號、開 Threads、開 FB 粉專、個人檔案連結、YouTube 網址、行事曆、發第一篇；每步都有白話步驟和可複製的名稱／簡介）、平台規則（讀 `platforms.json`，附來源和查證日期）、經營觀念、上片清單 8 項。
+- **影片三連發**（`#fan/~vid:<id>`）：上新片時填標題和上片時間，App 自動排「前一天 20:00 預告、當天上片文、隔天 20:30 討論」三平台各一篇（`v:<影片>:pre|up|talk`）。可以勾「請 Claude 照這集內容寫」走點播台（`vid` 事件，寫稿或願望單那一班寫進 `data/videos/<點播 id>.json`），寫好前先用 App 的範本；上片後貼上 YouTube 網址，連結會照各平台規則自動加；說明欄和置頂留言可以一鍵複製。
+- **資料只在這台裝置**：排程、發文紀錄、成績、影片清單都存在 localStorage（`unpacked.v1.ops`），不上傳；換手機用成效頁的備份碼（`GR1:` 開頭）搬。影片三連發如果請 Claude 寫，標題和內容會走點播台、存在公開的 GitHub 上（勾選處有寫）。
 
 ## 累積不變慢（典藏升級，2026-11-18）
 
@@ -145,8 +163,12 @@
 - `data/free.json`：`{at, ok, errs, items:[{id(epic:…/steam:…/gog:…), store, title, img, url, orig 或 orig_t, start, end, up(下週才送), mystery, dlc, appid, rv, zh, tags, seen}], past}`。
 - `data/events.json`：`{at, note, items:[{id, kind(sale/fest/show/vote), name, en, start, end, big, note, src:{t,u}}]}`（時間都是 UTC）。
 - `data/tga.json`：`{show, vote_end, venue, vote_url, sealed, result_at, intro, rules, cats:[{id, zh, en, pt, grp, nom:[{n, zh, sub, ref}], claude:{c, conf, why, s}, win}], sources}`。
-- `data/inbox.json`：`{v, at, cursor, events:[{id, type(ask/req/tga/ping), t, dev, …}]}`（inbox.py 產生，欄位見 `QA_GUIDE.md`）；`data/qa.json`：`{at, items:[{id, type, t, q, ref, st(done/no/wip), at, by, a, pts, src, link}]}`（排程寫）。
+- `data/inbox.json`：`{v, at, cursor, events:[{id, type(ask/req/vid/tga/ping), t, dev, …}]}`（inbox.py 產生，欄位見 `QA_GUIDE.md`；`vid` 是 `{title, when, note?, games?, url?}`，`url` 只收 YouTube 網址）；`data/qa.json`：`{at, items:[{id, type(ask/req/vid), t, q, ref, st(done/no/wip), at, by, a, pts, src, link}]}`（排程寫；`link` 可以是 `f:`／`p:`／`v:<影片三連發 id>`）。
+- `data/videos/<點播 id>.json`：影片三連發 `{id, title, at, updated, by, posts:{pre|up|talk:{post, threads, topic, tags, card?}}, yt:{desc, pin}, sources}`（QA_GUIDE 第 7 節）；`data/videos.json`：`{at, n, items:[{id, title, at, updated}]}`（publish.py 產生，App 靠它知道哪幾支寫好了）。
+- `data/platforms.json`：`{v, checked, by, th:{chars, attach, topics, links, notes, src}, ig:{caption, hashtags, bio_links, caption_links, ratio, notes, src}, fb:{link_free, notes, src}, yt:{fan, ads, ads_new:{from,…}, notes, src}, times:{th:{note, src}, other}}`（每週懶人包排程查證）。
+- 專題和週報的 `fanpage` 可以多一個 `threads: {post, topic}`（Threads 版，120～300 字、不放 #、一個主題標籤）；所有粉專文字不放網址、不出現「痞子葳」（publish.py 擋）。
 - localStorage 前綴 `unpacked.v1.`：`tga`（押注、加倍卡、鎖定時間、偷看過沒）、`ask`（裝置代號、待送、已送、自己的點播、看過的回答）、`freeGot`（領過的免費遊戲）、`freeSeen`、`mkBell`（今天敲過開盤鐘沒）；`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
+- `unpacked.v1.ops`（粉專作戰台）：`{v, since(開始用的那天), cad(發文節奏：th/fb/ig 各 7 格、週日到週六、null＝不發), pin({日期:{平台:{r(內容；'-'＝跳過), at, add}}}), log([{id, ref, pf, d, k(pre/up/talk), at, link, s:{v 觀看, e 互動, f 新粉絲}}]), wk({週 id:{th, ig, fb, yt, ytv, rth, rig, rfb, yth}}), vids([{id, t, at(YYYY-MM-DDTHH:MM), url, note, games, ev(點播 id), made}]), setup(開站任務), prof(個人檔案網址), fbLimit(unknown/yes/no), guide(full/lite), ed({ref|平台: 改過的文字}), vchk(上片清單打勾)}`；內容代號 `f:<專題>`、`w:<週>`、`v:<影片>:<pre|up|talk>`。
 
 ## 組建與測試
 

@@ -173,20 +173,21 @@ function weekBanner() {
 async function renderWeekFan(id) {
   const wk = await loadWeek(id); const fp = wk.fanpage || {}; const key = 'w:' + id;
   const post = S.edits[key] != null ? S.edits[key] : fp.post || '';
-  const C = WEEK.card;
-  return `<div class="fan-detail"><div class="btnrow" style="margin-top:14px"><button class="btn sm k" data-go="fan">← 出稿台</button><button class="btn sm" data-go="week/${esc(id)}">看週報</button></div>
+  const C = WEEK.card; const pfs = await opsPfSection(key);
+  return `<div class="ops">${opsNav('drafts')}<div class="fan-detail"><div class="btnrow" style="margin-top:14px"><button class="btn sm k" data-go="fan/~drafts">← 出稿台</button><button class="btn sm" data-go="week/${esc(id)}">看週報</button></div>
     <h2 class="spray-h" style="margin:16px 0 18px">WEEK ${wkNo(id)} 懶人包</h2><p class="sub-note">${esc(wk.title)}</p>
     <div class="cardwrap"><canvas id="cardcv" width="1080" height="1350"></canvas><div class="cardbusy" id="cardbusy">噴漆中…</div></div>
     <div class="btnrow" style="justify-content:center">${[['cover', '封面'], ['tier', 'Tier 表'], ['next', '下週出擊']].map(([k, l]) => `<button class="btn sm ${C.kind === k ? 'y' : ''}" data-act="wkk" data-v="${k}">${l}</button>`).join('')}<button class="btn sm ${C.ratio === '45' ? 'y' : ''}" data-act="cr" data-v="45">4:5 直式</button><button class="btn sm ${C.ratio === '11' ? 'y' : ''}" data-act="cr" data-v="11">1:1 方形</button></div>
     <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="respray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="cdl">${ICON.dl}<span>下載這張</span></button>${navigator.share ? `<button class="btn" data-act="cshare">${ICON.share}<span>分享這張</span></button>` : ''}<button class="btn" data-act="wkall">${ICON.dl}<span>三張一起下載</span></button></div>
     <p class="sub-note" style="text-align:center">三張依序是封面、Tier 表、下週出擊，適合發成一則多圖貼文。</p>
-    <div class="copybox"><h4>粉專貼文 <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
+    ${pfs}
+    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>改這裡，三個平台一起改</small></h3>
+    <div class="copybox"><h4>粉專貼文（原稿） <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
       <div class="btnrow"><button class="btn y sm" data-act="copy" data-what="post">${ICON.copy}<span>複製貼文</span></button><button class="btn p sm" data-act="copy" data-what="full">${ICON.copy}<span>貼文＋hashtag</span></button>${S.edits[key] != null ? '<button class="btn sm" data-act="postreset">還原原稿</button>' : ''}</div></div>
     <div class="copybox"><h4>三個標題（A/B 測試用）</h4>${(fp.titles || []).map((t, i) => `<div class="tline"><b>${'ABC'[i]}</b><span>${esc(t)}</span><button class="btn sm" data-act="copy" data-what="title" data-i="${i}">複製</button></div>`).join('')}</div>
     <div class="copybox"><h4>Hashtag</h4><div class="htags">${(fp.tags || []).map((t) => `<span>${esc(t)}</span>`).join('')}</div><div class="btnrow"><button class="btn sm" data-act="copy" data-what="tags">${ICON.copy}<span>複製 hashtag</span></button></div></div>
     <div class="copybox"><h4>60 秒口播稿（Shorts／Reels）</h4><div class="txt">${esc(fp.script || '')}</div><div class="btnrow"><button class="btn sm" data-act="copy" data-what="script">${ICON.copy}<span>複製口播稿</span></button></div></div>
-    <div class="copybox"><h4>素材標註</h4><div class="txt">${esc(fp.credit || '')}</div></div>
-    <div class="endcta"><button class="btn ${S.posted[key] ? '' : 'p'}" data-act="posted">${S.posted[key] ? '已發佈（點一下取消）' : '標記為已發佈'}</button></div></div>`;
+    <div class="copybox"><h4>素材標註</h4><div class="txt">${esc(fp.credit || '')}</div></div></div></div>`;
 }
 async function weekCardRender() {
   const cv = $('#cardcv'); if (!cv || !S.curWeek) return;

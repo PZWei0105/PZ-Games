@@ -1,0 +1,77 @@
+{
+ "v": 1,
+ "checked": "2026-11-18",
+ "by": "粉專作戰台上線時查證（之後由每週懶人包排程每週查一次，有變才改）",
+ "th": {
+  "name": "Threads",
+  "chars": 500,
+  "attach": 10000,
+  "topics": 1,
+  "links": 5,
+  "notes": [
+   "一篇最多 500 字；更長的拆成串文，或用「文字附件」（最多 1 萬字）",
+   "主題標籤每篇只能 1 個：點 # 或打「#」再選，發出去不會顯示 # 號",
+   "內建排程：發文畫面右上「…」→「排程」",
+   "貼文裡的連結可以直接點"
+  ],
+  "src": [
+   {"t": "Meta 的 Threads API 說明（整理）：500 字、5 個連結、1 個主題標籤", "u": "https://skedsocial.com/blog/schedule-threads-posts.md"},
+   {"t": "Threads 推出文字附件，可附最多 1 萬字長文（9to5Mac）", "u": "https://9to5mac.com/?p=1016173"},
+   {"t": "Threads 主題標籤：每篇一個、不顯示 # 號（Engadget）", "u": "https://www.engadget.com/metas-threads-is-getting-searchable-topics-just-dont-call-them-hashtags-191915209.html"},
+   {"t": "Threads 排程貼文怎麼用（電腦王阿達）", "u": "https://koc.com.tw/?p=584184"}
+  ]
+ },
+ "ig": {
+  "name": "Instagram",
+  "caption": 2200,
+  "hashtags": 5,
+  "bio_links": 5,
+  "caption_links": false,
+  "ratio": "4:5（1080×1350）",
+  "notes": [
+   "每篇貼文最多 5 個 hashtag（2025 年 12 月起，從 30 個降到 5 個）",
+   "說明文字裡的網址不能點；連結放個人檔案（最多 5 個）",
+   "專業帳號可以排程：發文最後一頁「進階設定」→「排定貼文發布時間」"
+  ],
+  "src": [
+   {"t": "Instagram 把每篇 hashtag 上限改成 5 個（Social Media Today）", "u": "https://www.socialmediatoday.com/news/instagram-implements-new-limits-on-hashtag-use/808309/"},
+   {"t": "Instagram 個人檔案可以放 5 個連結（Engadget）", "u": "https://www.engadget.com/instagram-lets-you-add-five-links-to-your-profile-so-you-can-stop-using-linktree-161957490.html"},
+   {"t": "IG 內建排程：進階設定裡設定時間（INSIDE）", "u": "https://www.inside.com.tw/article/29594-IG-new-schedule-tools-comming-soon"}
+  ]
+ },
+ "fb": {
+  "name": "Facebook 粉專",
+  "link_free": 2,
+  "notes": [
+   "部分粉專每月只能發 2 則帶外部連結的貼文或留言（留言裡的連結也算），每月 1 號重算；不是每個粉專都有這個限制",
+   "不算額度的：已經有連結的那篇底下再留言放連結、連到 Instagram／Threads／WhatsApp 的連結",
+   "排程：Meta Business Suite 的「建立貼文」可以 FB 和 IG 一起排"
+  ],
+  "src": [
+   {"t": "Facebook 說明中心：粉絲專頁的連結限制", "u": "https://www.facebook.com/help/1929252614431792"},
+   {"t": "Meta One 與 Facebook 專頁外部連結配額（unwire.hk）", "u": "https://unwire.hk/2026/08/13/facebook-meta-one-link-limit/fun-tech/"},
+   {"t": "Facebook pages get charged for link posts（Social Media Today）", "u": "https://www.socialmediatoday.com/news/facebook-pages-get-charged-for-link-posts/"}
+  ]
+ },
+ "yt": {
+  "fan": {"subs": 500, "hours": 3000, "shorts": 3000000, "uploads90": 3},
+  "ads": {"subs": 1000, "hours": 4000, "shorts": 10000000},
+  "ads_new": {"from": "2027-02-01", "subs": 1000, "hours": 8000, "shorts": 20000000},
+  "notes": [
+   "500 訂閱＋近一年 3,000 小時公開觀看（或 90 天 300 萬次 Shorts 觀看）＋90 天內 3 支公開影片：開粉絲贊助",
+   "廣告分潤：1,000 訂閱＋近一年 4,000 小時（或 90 天 1,000 萬次 Shorts 觀看）",
+   "2027 年 2 月 1 日起新申請的廣告分潤改成 8,000 小時（或 2,000 萬次 Shorts 觀看）；已經加入的不受影響"
+  ],
+  "src": [
+   {"t": "YouTube 合作夥伴計畫 2027 年 2 月 1 日調整（INSIDE）", "u": "https://www.inside.com.tw/article/42709-youtube-partner-program-feb-2027-8000-watch-hours-20m-shorts-views-accept-terms-jan-31"},
+   {"t": "YouTube 降粉絲贊助資格門檻，首波開放市場包括台灣（INSIDE）", "u": "https://www.inside.com.tw/article/31913-youtube-relaxes-monetization-rule"}
+  ]
+ },
+ "times": {
+  "th": {
+   "note": "台灣 Threads 2025 全年 3,600 萬則貼文：互動高峰在週間晚上 8～10 點，週四晚上 8、9 點最高，其次週三晚上 8 點；週一最冷、最佳在中午 12 點；週末偏冷、週日最低",
+   "src": [{"t": "圖解台灣 Threads 面貌：哪個時段發文最熱鬧（數位時代／QSearch）", "u": "https://www.bnext.com.tw/article/90152/threads-posting-timing-2026"}]
+  },
+  "other": "Facebook、Instagram 沒有可靠的台灣時段數據：先用晚上 8 點，累積兩三週自己的成績，成效頁的「黃金時段」會告訴你哪個時段最好"
+ }
+}

@@ -83,7 +83,7 @@ function renderHome() {
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="${esc(n.go || 'f/' + n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
-    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="board">${ICON.chart}<span>行情板</span></button><button class="btn y" data-go="tga">${ICON.star}<span>TGA 預測戰</span></button><button class="btn p" data-go="ask">${ICON.radio}<span>點播台</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專出稿台</span></button></div>`;
+    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="board">${ICON.chart}<span>行情板</span></button><button class="btn y" data-go="tga">${ICON.star}<span>TGA 預測戰</span></button><button class="btn p" data-go="ask">${ICON.radio}<span>點播台</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專作戰台</span></button></div>`;
 }
 /* 首頁：願望單有特價就貼一條警示膠帶 */
 function huntStrip() {
@@ -603,13 +603,13 @@ function renderFanList() {
   const items = S.index.items;
   const wait = fanWait(); const n = Math.min(items.length, MORE_N.fan);
   return `<div class="brandbar"><h2 class="spray-h">出稿台</h2><div class="brandstk"><b>遊戲狂想曲</b><i>GAME RHAPSODY</i></div></div>
-    <p class="sub-note">每篇專題和每週懶人包都配好一份粉專貼文、三個標題、塗鴉圖卡和 60 秒口播稿。最近兩週還有 ${wait + weekUnposted()} 篇沒發。</p>
-    ${((S.weekly && S.weekly.items) || []).length ? `<h3 class="tape-h y" style="margin-top:6px">每週懶人包</h3><div class="drafts">${S.weekly.items.slice(0, 6).map((w) => `<div class="draft wkd" data-go="fan/w:${esc(w.id)}"><div class="di wk-no sm"><span>WEEK</span><b>${wkNo(w.id)}</b></div><div><h4>${esc(w.title)}</h4><p>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}・封面／Tier 表／下週出擊三張圖卡</p></div><span class="st-chip ${S.posted['w:' + w.id] ? 'done' : ''}">${S.posted['w:' + w.id] ? '已發 ' + esc(mdDay(S.posted['w:' + w.id])) : '待發'}</span></div>`).join('')}</div><h3 class="tape-h" style="margin-top:10px">每日專題</h3>` : ''}
+    <p class="sub-note">每篇專題和每週懶人包都配好粉專貼文、Threads／IG／FB 三個平台的版本、塗鴉圖卡和 60 秒口播稿。排程每天會自動挑一篇；想多發一篇、換別篇，從這裡挑。</p>
+    ${((S.weekly && S.weekly.items) || []).length ? `<h3 class="tape-h y" style="margin-top:6px">每週懶人包</h3><div class="drafts">${S.weekly.items.slice(0, 6).map((w) => `<div class="draft wkd" data-go="fan/w:${esc(w.id)}"><div class="di wk-no sm"><span>WEEK</span><b>${wkNo(w.id)}</b></div><div><h4>${esc(w.title)}</h4><p>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}・封面／Tier 表／下週出擊三張圖卡</p>${pfChips('w:' + w.id, S.posted['w:' + w.id])}</div></div>`).join('')}</div><h3 class="tape-h" style="margin-top:10px">每日專題</h3>` : ''}
     <div class="drafts" id="fandrafts">${items.slice(0, n).map(draftHtml).join('')}</div>${moreS('fan', n, items.length)}`;
 }
-const draftHtml = (x) => { const img = headerOf(x); return `<div class="draft" data-go="fan/${esc(x.id)}"><div class="di" style="background-image:url('${esc(img)}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.headline)}</p></div><span class="st-chip ${S.posted[x.id] ? 'done' : ''}">${S.posted[x.id] ? '已發 ' + esc(mdDay(S.posted[x.id])) : '待發'}</span></div>`; };
-/* 粉專分頁的數字：最近兩週還沒發的（更早的就算了，不然累積幾百篇數字會一直掛著） */
-function fanWait() { const t = todayTW(); return ((S.index && S.index.items) || []).filter((x) => !S.posted[x.id] && dayDiff(x.date, t) <= 14).length; }
+const draftHtml = (x) => { const img = headerOf(x); return `<div class="draft" data-go="fan/${esc(x.id)}"><div class="di" style="background-image:url('${esc(img)}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.headline)}</p>${pfChips('f:' + x.id, S.posted[x.id])}</div></div>`; };
+/* 出稿台的提示：最近兩週一個平台都還沒發的（更早的就算了，不然累積幾百篇數字會一直掛著） */
+function fanWait() { const t = todayTW(); const done = new Set(S.ops.log.map((l) => l.ref)); return ((S.index && S.index.items) || []).filter((x) => !done.has('f:' + x.id) && !S.posted[x.id] && dayDiff(x.date, t) <= 14).length; }
 function fanMore() {
   const g = $('#fandrafts'); if (!g) return false;
   const items = S.index.items; const n0 = g.querySelectorAll('.draft').length; const n1 = Math.min(items.length, n0 + MORE_STEP.fan);
@@ -623,21 +623,23 @@ async function renderFanDetail(id) {
   const f = await loadFeature(id); const fp = f.fanpage;
   const post = S.edits[id] != null ? S.edits[id] : fp.post;
   const full = post + '\n\n' + fp.tags.join(' ');
-  return `<div class="fan-detail"><div class="btnrow" style="margin-top:14px"><button class="btn sm k" data-go="fan">← 出稿台</button><button class="btn sm" data-go="f/${esc(id)}">看完整專題</button></div>
+  const pfs = await opsPfSection('f:' + id);
+  return `<div class="ops">${opsNav('drafts')}<div class="fan-detail"><div class="btnrow" style="margin-top:14px"><button class="btn sm k" data-go="fan/~drafts">← 出稿台</button><button class="btn sm" data-go="f/${esc(id)}">看完整專題</button></div>
     <h2 class="spray-h" style="margin:16px 0 18px">${esc(f.game.zh)}</h2><p class="sub-note">${esc(f.headline)}</p>
     ${f.date < todayTW() && /倒數|今天|明天|本週|這週|這個禮拜/.test([fp.post, fp.script, fp.card.kicker, ...fp.titles].join('')) ? `<div class="stale">這篇稿寫於 ${esc(mdDay(f.date))}，裡面有「倒數幾天」「這個禮拜」這類會過期的說法，發文前記得改成今天的。</div>` : ''}
     <div class="cardwrap"><canvas id="cardcv" width="1080" height="1350"></canvas><div class="cardbusy" id="cardbusy">噴漆中…</div></div>
     <div class="btnrow" style="justify-content:center"><button class="btn sm ${CARD.layout === 'A' ? 'y' : ''}" data-act="cl" data-v="A">版型 A 黃牆</button><button class="btn sm ${CARD.layout === 'B' ? 'y' : ''}" data-act="cl" data-v="B">版型 B 黑牆</button><button class="btn sm ${CARD.ratio === '45' ? 'y' : ''}" data-act="cr" data-v="45">4:5 直式</button><button class="btn sm ${CARD.ratio === '11' ? 'y' : ''}" data-act="cr" data-v="11">1:1 方形</button></div>
     <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="respray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="cdl">${ICON.dl}<span>下載圖卡</span></button>${navigator.share ? `<button class="btn" data-act="cshare">${ICON.share}<span>分享圖卡</span></button>` : ''}</div>
-    <div class="copybox"><h4>粉專貼文 <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
+    ${pfs}
+    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>改這裡，三個平台一起改</small></h3>
+    <div class="copybox"><h4>粉專貼文（原稿） <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
       <div class="btnrow"><button class="btn y sm" data-act="copy" data-what="post">${ICON.copy}<span>複製貼文</span></button><button class="btn p sm" data-act="copy" data-what="full">${ICON.copy}<span>貼文＋hashtag</span></button>${S.edits[id] != null ? '<button class="btn sm" data-act="postreset">還原原稿</button>' : ''}</div></div>
     <div class="copybox"><h4>三個標題（A/B 測試用）</h4>${fp.titles.map((t, i) => `<div class="tline"><b>${'ABC'[i]}</b><span>${esc(t)}</span><button class="btn sm" data-act="copy" data-what="title" data-i="${i}">複製</button></div>`).join('')}</div>
     <div class="copybox"><h4>Hashtag</h4><div class="htags">${fp.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div><div class="btnrow"><button class="btn sm" data-act="copy" data-what="tags">${ICON.copy}<span>複製 hashtag</span></button></div></div>
     <div class="copybox"><h4>60 秒口播稿（Shorts／Reels）</h4><div class="txt">${esc(fp.script)}</div><div class="btnrow"><button class="btn sm" data-act="copy" data-what="script">${ICON.copy}<span>複製口播稿</span></button></div></div>
     <div class="copybox"><h4>素材標註</h4><div class="txt">${esc(fp.credit || '')}</div></div>
     ${(f.pending || []).length ? `<div class="pend"><h4>這些還沒查證，貼文裡已經避開</h4><ul>${f.pending.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
-    <div class="endcta"><button class="btn ${S.posted[id] ? '' : 'p'}" data-act="posted">${S.posted[id] ? '已發佈（點一下取消）' : '標記為已發佈'}</button></div>
-    <textarea class="hide" id="fullpost">${esc(full)}</textarea></div>`;
+    <textarea class="hide" id="fullpost">${esc(full)}</textarea></div></div>`;
 }
 
 /* ---------- 比較 ---------- */

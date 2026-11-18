@@ -78,7 +78,7 @@ function sticker(c, text, x, y, bg, fg, ang, size = 34) {
 function stampSeal(c, x, y, r, stamp, label) {
   c.save(); c.translate(x, y); c.rotate(-0.25);
   c.fillStyle = 'rgba(255,255,255,.86)'; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill();
-  c.strokeStyle = stamp === '推薦' ? '#e3001b' : stamp === '觀望' ? '#111' : '#555'; c.lineWidth = r * 0.13; c.beginPath(); c.arc(0, 0, r * 0.9, 0, 7); c.stroke();
+  c.strokeStyle = stamp === '推薦' || stamp === '新片' ? '#e3001b' : stamp === '觀望' || stamp === '開聊' ? '#111' : stamp === '明天' ? '#FF2E88' : '#555'; c.lineWidth = r * 0.13; c.beginPath(); c.arc(0, 0, r * 0.9, 0, 7); c.stroke();
   c.lineWidth = r * 0.03; c.beginPath(); c.arc(0, 0, r * 0.72, 0, 7); c.stroke();
   c.fillStyle = c.strokeStyle; c.textAlign = 'center'; c.textBaseline = 'middle';
   const t = stamp + (stamp === '推薦' ? '!!' : '');

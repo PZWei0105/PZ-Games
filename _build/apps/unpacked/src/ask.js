@@ -56,7 +56,7 @@ function askState(ev) {
 function nextShift(type) {
   const tw = new Date(Date.now() + 8 * 3600e3); const mins = tw.getUTCHours() * 60 + tw.getUTCMinutes();
   for (let d = 0; d < 2; d++) for (const s of SHIFTS) {
-    if (type === 'req' && !s[3]) continue;
+    if ((type === 'req' || type === 'vid') && !s[3]) continue;
     const m = s[0] * 60 + s[1] + d * 1440;
     if (m > mins + 5) return { name: s[2], at: `${d ? '明天' : '今天'} ${String(s[0]).padStart(2, '0')}:${String(s[1]).padStart(2, '0')}`, inMin: m - mins };
   }
@@ -90,20 +90,21 @@ function qaBody(q) {
     ${src.length ? `<details class="qa-src"><summary>${src.length} 個來源</summary><ol>${src.map((s) => `<li><a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a></li>`).join('')}</ol></details>` : ''}</div>`;
 }
 function askItem(ev) {
-  const st = askState(ev); const isReq = ev.type === 'req'; const nx = nextShift(ev.type);
+  const st = askState(ev); const isReq = ev.type === 'req' || ev.type === 'vid'; const isVid = ev.type === 'vid'; const nx = nextShift(ev.type);
+  const myVid = isVid && (S.ops.vids || []).find((v) => v.ev === ev.id);
   const lab = { out: ['送出中', 'w'], sent: ['已送出・等收件（每小時收一次）', 'w'], queued: [`收到了・排隊中，下一班 ${nx.at} ${nx.name}`, 'y'], wip: ['處理中', 'y'], done: ['已回覆', 'g'], no: ['已回覆', 'k'] }[st.k];
   const ref = refLabel(ev.ref);
   return `<article class="qa ${st.k} ${st.qa && !ev.other && !S.ask.seen[ev.id] ? 'new' : ''}" id="qa-${esc(ev.id)}">
-    <div class="qa-q"><div class="qa-qh"><span class="qa-tag ${isReq ? 'req' : ''}">${isReq ? '點播解包' : '你問我答'}</span>${ref ? `<span class="qa-ref">關於：${esc(ref)}</span>` : ''}<time>${esc(ago(ev.t))}</time></div>
-      <p>${isReq ? `<b>${esc(ev.game)}</b>${ev.note ? `<br>${esc(ev.note)}` : ''}` : esc(ev.q)}</p><div class="qa-st s-${lab[1]}"><i></i>${esc(lab[0])}</div></div>
-    ${st.qa ? qaBody(st.qa) : ''}
+    <div class="qa-q"><div class="qa-qh"><span class="qa-tag ${isReq ? 'req' : ''}">${isVid ? '影片三連發' : isReq ? '點播解包' : '你問我答'}</span>${ref ? `<span class="qa-ref">關於：${esc(ref)}</span>` : ''}<time>${esc(ago(ev.t))}</time></div>
+      <p>${isVid ? `<b>${esc(ev.title || ev.q || '')}</b>` : isReq ? `<b>${esc(ev.game)}</b>${ev.note ? `<br>${esc(ev.note)}` : ''}` : esc(ev.q)}</p><div class="qa-st s-${lab[1]}"><i></i>${esc(lab[0])}</div></div>
+    ${st.qa ? qaBody(st.qa) : ''}${myVid ? `<div class="qa-more"><button class="btn sm y" data-go="fan/~vid:${esc(myVid.id)}">${ICON.film}<span>看三連發</span></button></div>` : ''}
     ${!isReq ? `<div class="qa-more"><button class="btn sm" data-act="askchat" data-id="${esc(ev.id)}">${ICON.copy}<span>現在就聊：複製去問 Claude</span></button></div>` : ''}</article>`;
 }
 function renderAsk() {
   const pre = ASK.pre || {}; if (pre.mode) ASK.mode = pre.mode;
   const mode = ASK.mode; const nx = nextShift(mode === 'req' ? 'req' : 'ask');
   const mine = new Set(S.ask.mine.map((e) => e.id));
-  const others = ((S.qa && S.qa.items) || []).filter((q) => !mine.has(q.id) && q.st === 'done').map((q) => ({ id: q.id, t: q.t || q.at, type: q.type, q: q.q, game: q.q, ref: q.ref, other: true }));
+  const others = ((S.qa && S.qa.items) || []).filter((q) => !mine.has(q.id) && q.st === 'done' && q.type !== 'vid').map((q) => ({ id: q.id, t: q.t || q.at, type: q.type, q: q.q, game: q.q, ref: q.ref, other: true }));
   const list = S.ask.mine.concat(others).sort((a, b) => String(b.t).localeCompare(String(a.t)));
   // 選單只列最近的（專題 60 篇、推坑 40 款）；更早的到那一款的頁面按「問 Claude」就會自動帶進來
   const games = [...((S.index && S.index.items) || []).slice(0, 60).map((x) => ['f:' + x.id, x.zh]), ...((S.picks && S.picks.items) || []).slice(0, 40).map((x) => ['p:' + x.id, x.zh + '（推坑）'])];

@@ -23,6 +23,11 @@ DATA = os.path.join(REPO, 'apps', 'unpacked', 'data')
 FEAT = os.path.join(DATA, 'features')
 PICKS = os.path.join(DATA, 'picks')      # 推坑：已上市、不分新舊的私房推薦（PICKS_GUIDE.md）
 WEEKLY = os.path.join(DATA, 'weekly')    # 每週懶人包（WEEKLY_GUIDE.md）
+VIDS = os.path.join(DATA, 'videos')      # 粉專作戰台的影片三連發（QA_GUIDE.md 第 7 節）：檔名＝App 送來的點播 id
+VID_KEYS = {'pre': '預告', 'up': '上片', 'talk': '討論'}
+URLISH = re.compile(r'https?://|www\.|youtu\.be|youtube\.com', re.I)
+SELF_NAME = '痞子葳'      # 粉專、頻道素材一律只用「遊戲狂想曲」，不出現痞子葳本人的名字
+FAKE_CROWD = ('留言最多', '最多人問', '很多人問', '很多人說', '大家都在', '有人說', '有觀眾', '吵最兇', '吵最凶', '網友說', '觀眾說')
 TIERS = ['S', 'A', 'B', 'C', 'D']
 
 KINDS = {'new': '新作', 'ea': '搶先體驗', 'upcoming': '即將推出', 'update': '大型更新', 'exclusive': '平台獨佔',
@@ -181,6 +186,10 @@ def check(f, r):
         r.W(fid, '60 秒口播稿太短')
     if not fp.get('credit'):
         r.W(fid, '圖卡／貼文沒有寫素材來源（credit）')
+    if URLISH.search(post):
+        r.B(fid, '粉專貼文不要放網址：粉專作戰台會照各平台的連結規則自己加')
+    check_threads(fp.get('threads'), fid, r)
+    check_self_name(fp, fid, r, '粉專素材（fanpage）')
     b = f.get('buy')
     if f['kind'] == 'wish' and not b:
         r.B(fid, '願望單解包一定要有 buy（買不買）')
@@ -423,8 +432,8 @@ def check_qa(qa, r, refs):
         if x.get('id') in seen:
             r.B(k, '重複的 id')
         seen.add(x.get('id'))
-        if x.get('type') not in ('ask', 'req'):
-            r.B(k, 'type 要是 ask（問答）或 req（點播解包）')
+        if x.get('type') not in ('ask', 'req', 'vid'):
+            r.B(k, 'type 要是 ask（問答）、req（點播解包）或 vid（影片三連發）')
         if x.get('st') not in ('done', 'no', 'wip'):
             r.B(k, 'st 要是 done／no／wip')
         if not isinstance(x.get('q'), str) or not x['q'].strip():
@@ -445,11 +454,140 @@ def check_qa(qa, r, refs):
         if x.get('st') == 'done' and x.get('type') == 'ask' and not src and not x.get('link'):
             r.B(k, '回答至少要附 1 個來源（或連到寫好的專題）')
         if x.get('link') and x['link'] not in refs:
-            r.B(k, f'link {x["link"]} 找不到（要是 f:<專題 id> 或 p:<推坑 id>）')
+            r.B(k, f'link {x["link"]} 找不到（要是 f:<專題 id>、p:<推坑 id> 或 v:<影片三連發 id>）')
         if x.get('st') == 'done' and x.get('type') == 'req' and not str(x.get('link') or '').startswith(('f:', 'p:')):
             r.B(k, '點播解包寫好了就要有 link: f:<專題 id>（已經有推坑的就連 p:<推坑 id>）')
+        if x.get('st') == 'done' and x.get('type') == 'vid' and x.get('link') != 'v:' + str(x.get('id')):
+            r.B(k, '影片三連發寫好了就要有 link: v:<這筆的 id>（檔案放 data/videos/<id>.json）')
         if x.get('ref') and not re.match(r'^(f:|p:|a:\d+$|tga$|board$|w:)', str(x['ref'])):
             r.W(k, f'ref 格式看不懂：{x["ref"]}')
+
+
+def check_threads(th, fid, r, what='fanpage.threads'):
+    """Threads 版（選填；沒寫的話 App 直接用 post）：一則 ≤ 480 字、內文不放 #、主題標籤一個。"""
+    if th is None:
+        return
+    if not isinstance(th, dict):
+        r.B(fid, f'{what} 要是 {{"post": ..., "topic": ...}}')
+        return
+    p = th.get('post')
+    if not isinstance(p, str) or not 20 <= len(p.strip()) <= 480:
+        r.B(fid, f'{what}.post 要 20～480 字（Threads 一則上限 500）')
+        p = p if isinstance(p, str) else ''
+    if '#' in p:
+        r.B(fid, f'{what}.post 不要放 #：Threads 一篇只吃一個主題標籤，寫在 topic')
+    if URLISH.search(p):
+        r.B(fid, f'{what}.post 不要放網址（App 發文時會自己加）')
+    t = th.get('topic')
+    if t is not None and (not isinstance(t, str) or not 1 <= len(t.strip()) <= 20 or '#' in t):
+        r.B(fid, f'{what}.topic 要 1～20 字、不含 #（例：遊戲、Steam、獨立遊戲）')
+    simp_check(p, fid, r)
+
+
+def check_self_name(o, fid, r, what):
+    if SELF_NAME in json.dumps(o, ensure_ascii=False):
+        r.B(fid, f'{what}出現「{SELF_NAME}」：粉專和頻道素材一律只用「遊戲狂想曲」')
+
+
+def check_video(v, fid, r):
+    """data/videos/<點播 id>.json：影片三連發（前一天預告、當天上片、隔天討論），寫稿／願望單那一班照點播寫。"""
+    if not isinstance(v, dict):
+        r.B(fid, '要是物件')
+        return
+    for k in ('title', 'at', 'updated', 'by', 'posts'):
+        if not v.get(k):
+            r.B(fid, f'缺 {k}')
+    if not QA_ID.match(str(v.get('id') or '')):
+        r.B(fid, 'id 要照抄 inbox.json 那一筆 vid 點播的 id')
+    if not ISO_ANY.match(str(v.get('at') or '')):
+        r.B(fid, 'at（上片時間）要是 ISO 時間：照抄點播的 when')
+    if not ISO_ANY.match(str(v.get('updated') or '')):
+        r.B(fid, 'updated 要是 ISO 時間')
+    if v.get('by') not in QA_BY:
+        r.B(fid, f'by 要是 {"／".join(sorted(QA_BY))} 其中之一')
+    posts = v.get('posts') if isinstance(v.get('posts'), dict) else {}
+    if set(posts) != set(VID_KEYS):
+        r.B(fid, 'posts 要剛好三篇：pre（預告）、up（上片）、talk（討論）')
+    for k, name in VID_KEYS.items():
+        p = posts.get(k)
+        if not isinstance(p, dict):
+            continue
+        w = f'posts.{k}（{name}）'
+        post = p.get('post') if isinstance(p.get('post'), str) else ''
+        if not 40 <= len(post) <= 600:
+            r.B(fid, f'{w}.post 要 40～600 字（FB、IG 用這段）')
+        if URLISH.search(post):
+            r.B(fid, f'{w}.post 不要放網址：App 會照各平台規則自己加（FB 留給上片文、Threads 放內文、IG 放個人檔案）')
+        if '#' in post:
+            r.B(fid, f'{w}.post 不要放 #：hashtag 寫在 tags')
+        if not post.rstrip().endswith(('？', '?')):
+            r.W(fid, f'{w}.post 最後一句建議是給觀眾的提問')
+        check_threads({'post': p.get('threads'), 'topic': p.get('topic')}, fid, r, f'{w}的 Threads 版')
+        tags = p.get('tags') or []
+        if not isinstance(tags, list) or not 2 <= len(tags) <= 5 or any(not isinstance(t, str) or not t.startswith('#') or ' ' in t or len(t) > 20 for t in tags):
+            r.B(fid, f'{w}.tags 要 2～5 個（IG 一篇最多 5 個）、# 開頭、沒有空格')
+        elif '#遊戲狂想曲' not in tags:
+            r.W(fid, f'{w}.tags 建議放 #遊戲狂想曲')
+        card = p.get('card')
+        if card is not None:
+            if not isinstance(card, dict) or not card.get('kicker') or not card.get('title'):
+                r.B(fid, f'{w}.card 要有 kicker、title（不寫 card 的話 App 會用影片標題自己排）')
+            else:
+                for ln in str(card['title']).split('\n'):
+                    if len(ln) > 13:
+                        r.W(fid, f'{w}.card.title 一行 {len(ln)} 字，可能太長（建議 ≤ 12）：{ln}')
+        simp_check(post, fid, r)
+    talk = posts.get('talk') if isinstance(posts.get('talk'), dict) else {}
+    tt = str(talk.get('post') or '') + str(talk.get('threads') or '')
+    for w in FAKE_CROWD:
+        if w in tt:
+            r.B(fid, f'討論文不能捏造觀眾反應（「{w}」）：寫的時候影片還沒上，改成丟出這集的一個論點讓大家站隊')
+    yt = v.get('yt')
+    if yt is not None:
+        if not isinstance(yt, dict) or not 60 <= len(yt.get('desc') or '') <= 1500 or not 10 <= len(yt.get('pin') or '') <= 300:
+            r.B(fid, 'yt.desc（說明欄）要 60～1500 字、yt.pin（置頂留言）要 10～300 字')
+        elif URLISH.search(yt['desc'] + yt['pin']):
+            r.B(fid, 'yt 說明欄／置頂留言不要放網址：Threads、IG、FB 的連結痞子葳自己貼')
+    check_self_name({'posts': posts, 'yt': yt}, fid, r, '影片三連發的文案')
+    src = v.get('sources') or []
+    if not isinstance(src, list) or any(not isinstance(s, dict) or not s.get('t') or not re.match(r'https?://', s.get('u') or '') for s in src):
+        r.B(fid, 'sources 每一項要有 t（標題）和 u（網址）')
+
+
+def build_videos(vids):
+    items = [{'id': v['id'], 'title': v.get('title'), 'at': v.get('at'), 'updated': v.get('updated')} for v in vids if v.get('id')]
+    items.sort(key=lambda x: x['at'] or '', reverse=True)
+    return {'at': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'n': len(items), 'items': items}
+
+
+def check_platforms(p, r):
+    """data/platforms.json：三平台＋YouTube 的規則（粉專作戰台讀；每週懶人包那一班查證、有變才改）。"""
+    fid = 'platforms.json'
+    if not isinstance(p, dict):
+        r.B(fid, '要是物件')
+        return
+    try:
+        dt.date.fromisoformat(str(p.get('checked')))
+    except ValueError:
+        r.B(fid, 'checked（最後查證日）要是 YYYY-MM-DD')
+    num = lambda o, k, lo, hi: isinstance((o or {}).get(k), int) and lo <= o[k] <= hi   # noqa: E731
+    th, ig, fb, yt = (p.get(k) or {} for k in ('th', 'ig', 'fb', 'yt'))
+    if not (num(th, 'chars', 200, 5000) and num(th, 'links', 0, 50) and num(th, 'topics', 0, 10)):
+        r.B(fid, 'th 要有 chars（一則字數上限）、links、topics（數字）')
+    if not (num(ig, 'caption', 500, 10000) and num(ig, 'hashtags', 1, 60) and num(ig, 'bio_links', 1, 20)):
+        r.B(fid, 'ig 要有 caption、hashtags、bio_links（數字）')
+    if fb.get('link_free') is not None and not num(fb, 'link_free', 0, 1000):
+        r.B(fid, 'fb.link_free 要是數字（每月免費的外部連結則數）或 null（沒有限制）')
+    for k in ('fan', 'ads', 'ads_new'):
+        if k in yt and not (num(yt[k], 'subs', 1, 10 ** 7) and num(yt[k], 'hours', 0, 10 ** 6)):
+            r.B(fid, f'yt.{k} 要有 subs、hours（數字）')
+    for k in ('th', 'ig', 'fb', 'yt'):
+        sec = p.get(k) or {}
+        src = sec.get('src') or []
+        if not src or any(not isinstance(s, dict) or not s.get('t') or not re.match(r'https?://', s.get('u') or '') for s in src):
+            r.B(fid, f'{k}.src 至少 1 個來源，每一項要有 t（標題）和 u（網址）')
+        if any(not isinstance(n, str) or SELF_NAME in n for n in sec.get('notes') or []):
+            r.B(fid, f'{k}.notes 每條要是文字、不放本人名字')
 
 
 TGA_SEAL = 'ed568151dca547e8'   # 2026-11-18 封存時 Claude 的 30 項預測（獎項、入圍、押誰）的指紋：之後只准填 win／result_at
@@ -639,6 +777,10 @@ def check_week(w, r, refs):
     for ln in (cv.get('title') or '').split('\n'):
         if len(ln) > 13:
             r.W(wid, f'封面標題一行 {len(ln)} 字，可能太長（建議 ≤ 12）：{ln}')
+    if URLISH.search(post):
+        r.B(wid, '粉專貼文不要放網址：粉專作戰台會照各平台的連結規則自己加')
+    check_threads(fp.get('threads'), wid, r)
+    check_self_name(fp, wid, r, '粉專素材（fanpage）')
     text_quality(w, wid, r)
 
 
@@ -813,6 +955,28 @@ def main():
             if not a.only or w.get('id') == a.only:
                 check_week(w, r, refs)
             weeks.append(w)
+    vids = []
+    if os.path.isdir(VIDS):
+        for fn in sorted(os.listdir(VIDS)):
+            if not fn.endswith('.json'):
+                continue
+            try:
+                v = json.load(open(os.path.join(VIDS, fn), encoding='utf-8'))
+            except Exception as e:  # noqa: BLE001
+                r.B('videos/' + fn, f'JSON 壞掉：{e}')
+                continue
+            if not isinstance(v, dict) or v.get('id') != fn[:-5]:
+                r.B('videos/' + fn, f'檔名要和 id 一樣（{v.get("id") if isinstance(v, dict) else "?"}）')
+                continue
+            check_video(v, 'videos/' + fn, r)
+            vids.append(v)
+    refs.update({'v:' + v['id']: {'date': str(v.get('at') or '')[:10], 'zh': v.get('title')} for v in vids})
+    pp = os.path.join(DATA, 'platforms.json')
+    if os.path.exists(pp):
+        try:
+            check_platforms(json.load(open(pp, encoding='utf-8')), r)
+        except ValueError as e:
+            r.B('platforms.json', f'JSON 壞掉：{e}')
     skip = {}
     sp = os.path.join(DATA, 'wish-skip.json')
     if os.path.exists(sp):
@@ -839,7 +1003,7 @@ def main():
         print('WARN', w)
     for b in r.bad:
         print('BAD ', b)
-    print(f'{len(feats)} 篇專題、{len(picks)} 款推坑、{len(weeks)} 份週報，BAD {len(r.bad)}，WARN {len(r.warn)}')
+    print(f'{len(feats)} 篇專題、{len(picks)} 款推坑、{len(weeks)} 份週報、{len(vids)} 組影片三連發，BAD {len(r.bad)}，WARN {len(r.warn)}')
     if r.bad:
         sys.exit(1)
     if a.check:
@@ -852,6 +1016,7 @@ def main():
     pk = build_picks(picks)
     write_if_changed(os.path.join(DATA, 'picks.json'), pk)
     write_if_changed(os.path.join(DATA, 'weekly.json'), build_weekly(weeks, refs))
+    write_if_changed(os.path.join(DATA, 'videos.json'), build_videos(vids))
     old_s = json.dumps(old, ensure_ascii=False, sort_keys=True)
     new_s = json.dumps(tr, ensure_ascii=False, sort_keys=True)
     if old_s != new_s:
