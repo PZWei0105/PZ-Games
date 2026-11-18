@@ -1,16 +1,39 @@
 {
  "note": "補番 BINGE 研究用：改這個檔推上去，就會在 GitHub Actions 跑一次 binge-research（結果在 binge-research 分支）",
  "queries": [
-  "AI漫劇", "AI漫剧 一口气看完", "漫劇 一口氣看完 完整版", "漫剧 完整版 已完结", "AI動畫 一口氣看完", "AI动画 合集",
-  "AI短劇 動畫 合集", "動態漫畫 一口氣看完", "动态漫画 完结 合集", "沙雕動畫 一口氣看完", "沙雕动画 一口气看完 完结",
-  "漫剧 修仙 一口气看完", "漫剧 末世 一口气看完", "漫剧 都市 爽文 合集", "AI仿真人 漫剧", "AI 3D動畫 短劇",
-  "AI anime series full", "AI animated series episode", "問蒼生 AI動畫",
-  "木棉花 完整版 動畫", "Ani-One 中文 動畫 完整版", "國漫 全集", "国漫 合集 一口气看完", "斗罗大陆 动画 合集",
-  "凡人修仙传 动画", "完美世界 动画", "仙逆 动画", "吞噬星空 动画", "秦时明月 动画", "日本動畫 中文字幕 完整版",
-  "動畫 馬拉松 直播", "經典卡通 國語 全集", "經典動畫 國語配音 完整版", "卡通 中文 全集 官方", "動畫電影 完整版 中文",
-  "孟德四舅", "我們這一家 動畫", "熊出沒 全集", "喜羊羊 全集", "Tencent Video Animation", "YOUKU Animation",
-  "iQIYI 动漫", "bilibili 国创", "Toei Animation full episode", "TMS Anime full episode", "GundamInfo 中文"
+  "孟德四舅 動畫",
+  "我們這一家 木棉花",
+  "蠟筆小新 木棉花",
+  "哆啦A夢 國語 木棉花",
+  "優酷動漫 YOUKU ANIMATION",
+  "腾讯动漫 合集 官方"
  ],
- "handles": ["@MuseTW", "@MuseAsia", "@AniOneAsia", "@GundamInfo"],
+ "handles": [],
+ "search_top": [
+  "孟德四舅",
+  "YOUKU ANIMATION 优酷动漫",
+  "腾讯视频动漫 英文",
+  "GaragePlay 車庫娛樂 動畫"
+ ],
+ "probe_rss_watch": [
+  "UCgdwtyqBunlRb-i-7PnCssQ",
+  "UCaNJ7uQDxAHXFaRcV8d5eBA",
+  "UC45ONEZZfMDZCnEhgYmVu-A",
+  "UC80ztI40QAXzWL94eoRzWow"
+ ],
+ "probe_playlists": [
+  "PL12UaAf_xzfor6SdQvoC7pr7Hwfowmr5Q",
+  "PL12UaAf_xzfr1wiFH5rlDMACeM8EP2Wdb"
+ ],
+ "probe_playlist_tab": [
+  "UCgdwtyqBunlRb-i-7PnCssQ",
+  "UC45ONEZZfMDZCnEhgYmVu-A",
+  "UCQe8YEJaNoqWQCiw0p6XjXg",
+  "UCVQvZ-qsSF2UWzFhmCv079A",
+  "UCQFyMGc6h30NMCd6HCk0ZPA",
+  "UCYGppeNR9_jV8RzTTufNT6w",
+  "UC0Mn7N3sXOCf5mI0eni3gjQ",
+  "UCexhmwhQ2zmBDt2Q6qM3hdg"
+ ],
  "deep": []
 }

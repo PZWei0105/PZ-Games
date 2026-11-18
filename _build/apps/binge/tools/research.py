@@ -166,6 +166,56 @@ def tab_stats(cid):
     return out
 
 
+def watch_meta(vid):
+    """影片頁：片長、說明欄（章節）、直播狀態、能不能播（美國機房看台灣限定的片）。"""
+    st, body = get('https://www.youtube.com/watch?v=%s&hl=zh-TW&gl=TW' % vid)
+    h = body.decode('utf-8', 'replace')
+    out = {'http': st, 'size': len(h)}
+    m = re.search(r'"lengthSeconds":"(\d+)"', h)
+    out['len'] = int(m.group(1)) if m else None
+    m = re.search(r'"playabilityStatus":\{"status":"([A-Z_]+)"', h)
+    out['play'] = m.group(1) if m else None
+    m = re.search(r'"shortDescription":"((?:[^"\\]|\\.)*)"', h)
+    if m:
+        try:
+            desc = json.loads('"' + m.group(1) + '"')
+        except ValueError:
+            desc = ''
+        out['desc_len'] = len(desc)
+        out['chap'] = len(X.chapters(desc, out['len']))
+        out['pl_links'] = sorted(set(re.findall(r'list=((?:PL|OL)[\w-]{10,40})', desc)))[:6]
+    out['live'] = bool(re.search(r'"isLiveNow":true', h))
+    out['upcoming'] = bool(re.search(r'"isUpcoming":true', h))
+    out['botcheck'] = 'confirm you' in h.lower() and 'bot' in h.lower()
+    return out
+
+
+def probes(q, log):
+    res = {}
+    for cid in q.get('probe_rss_watch', []):
+        r = rss(cid)
+        ids = [x['i'] for x in (r or {}).get('items', [])][:4]
+        res['watch:' + cid] = [[i, watch_meta(i)] for i in ids]
+        log.append('影片頁探測 %s：%s' % (cid, [(i, m.get('len'), m.get('play'), m.get('chap')) for i, m in res['watch:' + cid]]))
+    for pl in q.get('probe_playlists', []):
+        f = X.flat('https://www.youtube.com/playlist?list=' + pl, limit=300)
+        st, body = get('https://www.youtube.com/feeds/videos.xml?playlist_id=' + pl, headers={'User-Agent': 'Mozilla/5.0 pz-binge'})
+        n_rss = body.count(b'<entry>') if st == 200 else None
+        res['pl:' + pl] = {'flat': len((f or {}).get('entries') or []), 'count': (f or {}).get('count'), 'title': (f or {}).get('title'),
+                           'rss': n_rss, 'sample': [[e.get('id'), (e.get('title') or '')[:50], e.get('duration')] for e in ((f or {}).get('entries') or [])[:5]]}
+        log.append('清單探測 %s：flat %s、count %s、RSS %s' % (pl, res['pl:' + pl]['flat'], res['pl:' + pl]['count'], n_rss))
+    for cid in q.get('probe_playlist_tab', []):
+        f = X.flat('https://www.youtube.com/channel/%s/playlists' % cid, limit=400)
+        es = (f or {}).get('entries') or []
+        res['pltab:' + cid] = [[e.get('id'), (e.get('title') or '')[:60]] for e in es]
+        log.append('清單分頁 %s：%d 個' % (cid, len(es)))
+    for kw in q.get('search_top', []):
+        rs = search_channels(kw)[:5]
+        res['top:' + kw] = rs
+        log.append('搜頻道 %s：%s' % (kw, [(r['c'], r['n'], r.get('subs')) for r in rs[:3]]))
+    return res
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--queue', required=True)
@@ -219,6 +269,7 @@ def main():
         log.append('搜尋 %s：頻道 %d、影片 %d（長片 %d）' % (kw, len(found), len((res or {}).get('entries', [])), n_long))
         time.sleep(0.8)
 
+    probe_res = probes(q, log)
     rows = list(found.values())
     for c in q.get('deep', []):
         if c not in found:
@@ -250,7 +301,7 @@ def main():
 
     with cf.ThreadPoolExecutor(max_workers=4) as ex:
         rows = list(ex.map(one, rows))
-    json.dump({'at': dt.datetime.utcnow().isoformat() + 'Z', 'log': log, 'rows': rows}, open(os.path.join(a.out, 'research.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    json.dump({'at': dt.datetime.utcnow().isoformat() + 'Z', 'log': log, 'probe': probe_res, 'rows': rows}, open(os.path.join(a.out, 'research.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     lines = ['# 補番 研究結果', '', '時間：%s' % dt.datetime.utcnow().isoformat(), '']
     lines += ['- ' + x for x in log] + ['']
     for f in rows:
