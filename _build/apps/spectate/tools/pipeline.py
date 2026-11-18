@@ -506,6 +506,16 @@ def steam_name(appid, lang):
         return None
 
 
+def clean_title(n):
+    """Steam 上有些中文名自己帶書名號或空白：顯示時拿掉。"""
+    if not n:
+        return n
+    n = n.strip()
+    if n.startswith('《') and n.endswith('》'):
+        n = n[1:-1].strip()
+    return n
+
+
 def steam_match(name, lang, cache):
     """名稱 → {'id': appid, 'zh': 繁中名, 'en': 英文名, 'img': 橫幅} 或 None（查不到）。結果記在 cache['steam']。"""
     k = X.norm(name)
@@ -533,19 +543,19 @@ def steam_match(name, lang, cache):
     rec = {'id': appid, 'ts': int(NOW), 'img': 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/%d/header.jpg' % appid}
     g = cache['games'].get('s%d' % appid) or {}
     if l == 'tchinese':
-        rec['zh'] = nm
+        rec['zh'] = clean_title(nm)
     elif l == 'english':
-        rec['en'] = nm
+        rec['en'] = clean_title(nm)
     if not (rec.get('zh') or g.get('zh')):
         d = steam_name(appid, 'tchinese')
         if d and d.get('n'):
-            rec['zh'] = d['n']
+            rec['zh'] = clean_title(d['n'])
             if d.get('img'):
                 rec['img'] = d['img'].split('?')[0]
     if not (rec.get('en') or g.get('en')):
         d = steam_name(appid, 'english')
         if d and d.get('n'):
-            rec['en'] = d['n']
+            rec['en'] = clean_title(d['n'])
     cache['steam'][k] = rec
     g.update({kk: vv for kk, vv in rec.items() if kk in ('zh', 'en', 'img') and vv})
     g['id'] = appid
@@ -619,6 +629,15 @@ def main():
     dump(os.path.join(out, 'games.json'), {'v': 1, 'at': stamp(), 'games': games})
     dump(os.path.join(out, 'discover.json'), build_discover(cache))
     dump(os.path.join(out, 'cache.json'), cache)
+    quiet = []
+    for cid, r in roster['channels'].items():
+        cs = cache['chstat'].get(cid) or {}
+        if r.get('seed') and cs.get('rss'):
+            last = cs.get('last')
+            if not last or NOW - last > 30 * 86400:
+                quiet.append('%s（%s）' % (r.get('seed'), '沒有影片' if not last else '%d 天沒更新' % ((NOW - last) // 86400)))
+    stat['quiet'] = quiet
+    stat['unresolved'] = sorted(cache['tries'])
     stat.update({'v': 1, 'at': stamp(), 'run_s': round(time.time() - t0, 1), 'videos': len(feed['items']),
                  'channels': len(feed['ch']), 'units': UNITS[0], 'steam_left': STEAM_LEFT[0], 'errors': ERRS[-40:], 'log': LOG[-160:]})
     dump(os.path.join(out, 'status.json'), stat, pretty=True)
@@ -645,6 +664,14 @@ def stamp():
 def resolve_roster(seed, roster, me, cache):
     """精選名單、訂閱、新增的頻道，都解析成頻道 ID ＋名稱＋頭像。"""
     chans = roster['channels']
+    # 名單上拿掉的頻道：不再算精選（訂閱的照留）
+    names = {s['name'] for s in seed}
+    for cid, r in list(chans.items()):
+        if r.get('seed') and r['seed'] not in names:
+            log('精選名單拿掉：%s（%s）' % (r['seed'], r.get('n')))
+            r.pop('seed', None)
+            if cid not in me['subs']:
+                chans.pop(cid)
     # 精選名單
     want = []
     for s in seed:
@@ -784,7 +811,11 @@ def fetch_all_rss(pool, roster, cache):
             rec = roster['channels'].setdefault(cid, {})
             if name and not rec.get('n'):
                 rec['n'] = name
-            cache['chstat'].setdefault(cid, {})['rss'] = int(NOW)
+            cs = cache['chstat'].setdefault(cid, {})
+            cs['rss'] = int(NOW)
+            cs['rssn'] = len(items)
+            ps = [it['p'] for it in items if it.get('p')]
+            cs['last'] = max(ps) if ps else cs.get('last')
             for it in items:
                 old = vids.get(it['i'])
                 if old:
@@ -813,11 +844,16 @@ def prune(cache, roster, me):
     pool = set(roster['channels']) | {p['c'] for p in cache['disc'].get('picks') or []}
     keep_days = KEEP_DAYS * 86400
     by_ch = {}
+    newest = {}
+    for v in vids.values():
+        newest.setdefault(v['c'], []).append(v.get('p') or 0)
+    keep3 = {c: sorted(ps, reverse=True)[:3] for c, ps in newest.items()}
     for vid, v in list(vids.items()):
         if vid in later:
             continue
         p = v.get('p') or v.get('first') or 0
-        if NOW - p > keep_days or v['c'] not in pool:
+        recent3 = p in keep3.get(v['c'], ()) and NOW - p < 180 * 86400
+        if (NOW - p > keep_days and not recent3) or v['c'] not in pool:
             del vids[vid]
             continue
         by_ch.setdefault(v['c'], []).append(v)
@@ -1005,8 +1041,8 @@ def build_games(cache, roster):
         for v in recent:
             lanes[v.get('l') or 'play'] = lanes.get(v.get('l') or 'play', 0) + 1
         meta = cache['games'].get(k) or {}
-        zh = meta.get('zh')
-        en = meta.get('en')
+        zh = clean_title(meta.get('zh'))
+        en = clean_title(meta.get('en'))
         if not (zh or en):
             continue
         best = max(recent, key=lambda v: ((v.get('l') == 'trailer') * 2 + (v.get('z') == 'zh'), v.get('v') or 0))
