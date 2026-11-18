@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW" data-skin="matcha">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4efe3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="一集就好">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>一集就好 ONE MORE</title>
+<!--WEBHEAD-->
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<div id="paper" aria-hidden="true"><i class="leaf l1"></i><i class="leaf l2"></i><i class="leaf l3"></i></div>
+
+<header id="top">
+  <a class="logo" href="#home" aria-label="回首頁"><b>一集就好</b><span>ONE MORE</span></a>
+  <span class="top-sp"></span>
+  <button class="ico" id="btnMusic" aria-label="音樂"><svg viewBox="0 0 24 24"><path d="M9 17.5a2.5 2.5 0 1 1-2-2.45V5.2l11-2.2v11.5a2.5 2.5 0 1 1-2-2.45V7.4l-7 1.4v8.7z"/></svg></button>
+  <button class="ico" id="btnSkin" aria-label="換顏色"><i class="dot g"></i><i class="dot p"></i></button>
+  <button class="ico" id="btnSearch" aria-label="搜尋"><svg viewBox="0 0 24 24"><path d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.3 4.3-1.4 1.4-4.3-4.3A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/></svg></button>
+</header>
+
+<main id="view"></main>
+
+<nav id="tabs">
+  <a href="#home" data-tab="home"><svg viewBox="0 0 24 24"><path d="M12 3.2 2.8 11h2.7v9h5v-5.5h3V20h5v-9h2.7z"/></svg><b>首頁</b></a>
+  <a href="#browse" data-tab="browse"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z"/></svg><b>分類</b></a>
+  <a href="#saved" data-tab="saved"><svg viewBox="0 0 24 24"><path d="M12 20.5 4.3 13a4.9 4.9 0 0 1 7-6.9l.7.7.7-.7a4.9 4.9 0 1 1 7 6.9z"/></svg><b>收藏</b></a>
+</nav>
+
+<section id="player" hidden>
+  <div class="pl-bar">
+    <button class="pl-x" data-act="close" aria-label="收起"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <b id="plTitle"></b>
+    <a class="pl-yt" id="plYt" target="_blank" rel="noopener">YouTube ↗</a>
+  </div>
+  <div class="pl-frame" id="plFrame"><div id="ytp"></div><div class="pl-msg" id="plMsg" hidden></div><div class="pl-next" id="plNext" hidden></div></div>
+  <div class="pl-body" id="plBody"></div>
+</section>
+
+<div id="sheet" hidden><div class="sh-in" id="sheetIn"></div></div>
+<div id="toast" hidden></div>
+
+<!--WEBFLAG-->
+<script>
+/*JS*/
+</script>
+</body>
+</html>
