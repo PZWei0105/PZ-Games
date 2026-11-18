@@ -51,6 +51,7 @@ KEEP_DAYS = 30            # 影片留幾天
 KEEP_PER_CH = 40          # 每個頻道最多留幾支
 SHORTS_PER_RUN = 320      # 每次最多查幾支是不是 Shorts
 STEAM_PER_RUN = 45        # 每次最多查幾次 Steam
+CLS_VER = 2               # 分類規則改了就加一：舊影片全部重新判斷（Steam 結果有快取，不會多花額度）
 NOT_GAMING_CATS = {'10', '15', '17', '19', '26', '29'}   # 音樂、寵物、運動、旅遊、生活風格、公益
 
 NOW = time.time()
@@ -542,6 +543,7 @@ def steam_match(name, lang, cache):
     appid, nm, l = found
     rec = {'id': appid, 'ts': int(NOW), 'img': 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/%d/header.jpg' % appid}
     g = cache['games'].get('s%d' % appid) or {}
+    had_ok = g.get('imgok') and g.get('img')
     if l == 'tchinese':
         rec['zh'] = clean_title(nm)
     elif l == 'english':
@@ -560,7 +562,7 @@ def steam_match(name, lang, cache):
         if d and d.get('n'):
             rec['en'] = clean_title(d['n'])
     cache['steam'][k] = rec
-    g.update({kk: vv for kk, vv in rec.items() if kk in ('zh', 'en', 'img') and vv})
+    g.update({kk: vv for kk, vv in rec.items() if kk in ('zh', 'en', 'img') and vv and not (kk == 'img' and had_ok)})
     g['id'] = appid
     cache['games']['s%d' % appid] = g
     return rec
@@ -615,8 +617,9 @@ def main():
         if KEY:
             enrich_api(cache)
             refresh_channel_stats(roster, cache)
-        classify(cache, roster)
+        # 先補熱門遊戲的橫幅（上一輪已經對到的遊戲），再拿剩下的 Steam 額度去對新名稱
         repair_images(cache, {v.get('g') for v in cache['videos'].values() if v.get('g') and NOW - (v.get('p') or 0) < 14 * 86400})
+        classify(cache, roster)
         games = build_games(cache, roster)
         # ---- 5. 新秀（有金鑰、每天一次）
         if KEY:
@@ -990,8 +993,9 @@ def classify(cache, roster):
     """標題 → 繁體、語言、車道、遊戲名稱；遊戲名稱拿去 Steam 對。"""
     chans = roster['channels']
     vids = cache['videos']
-    fresh = [v for v in vids.values() if 'cls' not in v]
+    fresh = [v for v in vids.values() if v.get('cls') != CLS_VER]
     for v in fresh:
+        v.pop('g', None)
         t0 = v.get('t0') or v.get('t') or ''
         t = to_trad(t0) if X.lang_of(t0) == 'zh' else t0
         v['t'] = t
@@ -1001,10 +1005,15 @@ def classify(cache, roster):
         names = X.names_in(t) or X.names_in(t0)
         if not names and v.get('tz'):
             names = X.names_in(v['tz'])
-        v['nm'] = list(dict.fromkeys(X.canonical(n) for n in names))[:3]
+        # 「【阿津】」是頻道自己的名字，不是遊戲（Steam 上剛好有一款叫「阿津」的遊戲）
+        cn = X.norm((chans.get(v['c']) or {}).get('n') or '')
+        def own(n):
+            k = X.norm(n)
+            return bool(cn) and (k == cn or (len(k) >= 2 and k in cn) or (len(cn) >= 2 and cn in k))
+        v['nm'] = list(dict.fromkeys(X.canonical(n) for n in names if not own(n)))[:3]
         v['spam'] = 1 if X.SPAM.search(t) else 0
         v['gacha'] = 1 if X.GACHA.search(t) else 0
-        v['cls'] = 1
+        v['cls'] = CLS_VER
     # 遊戲：先用 API 標籤、名稱去 Steam 對；同一個名稱在兩個以上頻道出現也算一款
     name_chs = {}
     for v in vids.values():
@@ -1047,10 +1056,12 @@ def classify(cache, roster):
 
 def repair_images(cache, used):
     """之前存的 Steam 橫幅網址沒有雜湊（新遊戲會 404）：有額度就補拿正確的。"""
-    for k in [k for k in used if k.startswith('s')]:
-        g = cache['games'].get(k) or {}
-        if g.get('imgok') or STEAM_LEFT[0] <= 0:
+    todo = [k for k in used if k.startswith('s') and not (cache['games'].get(k) or {}).get('imgok')]
+    for k in todo[:15]:
+        g = cache['games'].setdefault(k, {'id': int(k[1:])})
+        if STEAM_LEFT[0] <= 0 or NOW - g.get('imgtry', 0) < 6 * 3600:
             continue
+        g['imgtry'] = int(NOW)
         d = steam_name(int(k[1:]), 'tchinese')
         if d and d.get('img'):
             g['img'] = d['img']

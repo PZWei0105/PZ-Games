@@ -323,10 +323,20 @@ function dedupeLang(list) {
     return true;
   });
 }
-/* 中文優先：中文片當作新 10 小時 */
+/* 中文優先：三支中文配一支外語；外語片比下一支中文片新兩天以上，就先排外語，免得舊片壓新片 */
 function rank(list) {
-  const bonus = SET.zhFirst ? 10 * 3600 : 0;
-  return list.slice().sort((a, b) => (b.p + (zf(b) ? bonus : 0)) - (a.p + (zf(a) ? bonus : 0)));
+  const t = list.slice().sort((a, b) => b.p - a.p);
+  if (!SET.zhFirst) return t;
+  const zh = t.filter(zf), xx = t.filter((x) => !zf(x)), out = [];
+  let i = 0, j = 0;
+  while (i < zh.length || j < xx.length) {
+    for (let k = 0; k < 3 && i < zh.length; k++) {
+      if (j < xx.length && xx[j].p - zh[i].p > 2 * 86400) break;
+      out.push(zh[i++]);
+    }
+    if (j < xx.length) out.push(xx[j++]);
+  }
+  return out;
 }
 /* 同一個頻道不要連續洗版 */
 function spread(list, maxRun = 2, win = 6, cap = 260) {

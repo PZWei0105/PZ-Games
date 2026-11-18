@@ -51,7 +51,7 @@ _RX = {
         r'攻略|教學|教学|技巧|配裝|配装|打法|解法|速通|全收集|全成就|白金|新手指南|入門|入门|'
         r'\bGuide\b|\bTips\b|Walkthrough|\bBuild\b|Speedrun|How to (Beat|Get|Unlock)|All Collectibles', re.I),
     'news': re.compile(
-        r'新聞|新闻|週報|周报|快訊|快讯|情報|情报|消息|盤點|盘点|整理|發表會|发布会|直面會|直面会|發佈會|'
+        r'新聞|新闻|週報|周报|快訊|快讯|快報|快报|速報|速报|亂報|乱报|八卦|懶人包|懒人包|情報|情报|消息|盤點|盘点|整理|發表會|发布会|直面會|直面会|發佈會|'
         r'排行|十大|\d+款|本週|本周|每週|每周|\bNews\b|\bDirect\b|State of Play|Showcase|Game Awards|\bTGA\b|'
         r'Nintendo Direct|Xbox Games Showcase|Summer Game Fest|Top ?\d+\b|Everything (We Know|Announced)|Biggest', re.I),
     'deep': re.compile(
@@ -64,6 +64,9 @@ _RX = {
 }
 
 
+_TRAILER_TALK = re.compile(r'分析|解析|逐格|考據|考据|彩蛋|細節|细节|反應|反应|Breakdown|Analysis|Explained|Reaction', re.I)
+
+
 def lane_of(title, kind='creator', live=None):
     """影片屬於哪一條車道。live 是 API 給的直播狀態（live / upcoming / None）。"""
     if live in ('live', 'upcoming'):
@@ -74,9 +77,15 @@ def lane_of(title, kind='creator', live=None):
         # 官方頻道上傳的幾乎都是預告、發表會：不分成實況、攻略
         return 'news' if 'news' in hits and 'trailer' not in hits else 'trailer'
     if 'trailer' in hits:
-        # 「實況 + Trailer」幾乎都是預告；「Gameplay Walkthrough」不是
-        if 'guide' in hits and kind != 'official':
+        # 「Gameplay Walkthrough」是攻略；「新預告情報整理」「宣傳影片被刪？」是在聊預告的新聞；「預告逐格分析」是深度
+        if 'guide' in hits:
             return 'guide'
+        if 'news' in hits or (kind == 'creator' and re.search(r'[?？]', t)):
+            return 'news'
+        if _TRAILER_TALK.search(t):
+            return 'deep'
+        if 'review' in hits and kind == 'creator':
+            return 'review'
         return 'trailer'
     for k in ('review', 'guide', 'news', 'deep', 'play'):
         if k in hits:
