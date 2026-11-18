@@ -1,0 +1,38 @@
+# 《觀戰 SPECTATE》找中文遊戲頻道：手動觸發，照關鍵字搜 YouTube 頻道、看 RSS 活躍度，結果推到 spectate-research 分支。
+# 只給維護精選名單（apps/spectate/data/channels.json）時參考用。
+name: spectate-research
+
+on:
+  workflow_dispatch:
+    inputs:
+      q:
+        description: '關鍵字，用逗號分隔'
+        default: '遊戲評測,遊戲實況,遊戲推薦'
+
+permissions:
+  contents: write
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 搜尋
+        run: python3 _build/apps/spectate/tools/research.py --q "${{ inputs.q }}" --out /tmp/research
+      - name: 推 spectate-research 分支
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd /tmp/research
+          git init -q -b spectate-research
+          git config user.name 'spectate-bot'
+          git config user.email 'spectate-bot@users.noreply.github.com'
+          git add -A
+          git commit -q -m '觀戰：頻道調查'
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:spectate-research
