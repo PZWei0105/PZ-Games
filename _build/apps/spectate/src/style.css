@@ -681,4 +681,16 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
 .qw-d { display: grid; place-items: center; height: 34px; background: #121827; font-style: normal; } .qw-d b { font-family: var(--f-num); font-size: 14px; color: var(--mute); }
 .qw-d.n1 { background: rgba(52, 227, 154, .18); } .qw-d.n2 { background: rgba(52, 227, 154, .38); } .qw-d.n3 { background: var(--green); } .qw-d.n3 b { color: #04130c; }
 .fx-lite .mc-wrap, .fx-lite .mc-team { transition: none !important; }
+/* 手機橫拿：節目單放不下一整欄——數字在左、焦點對戰在右（2026/11/18） */
+@media (orientation: landscape) and (max-height: 560px) {
+  .mc-wrap { padding: 10px 18px; }
+  .mc { width: min(100%, 860px); grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); column-gap: 18px; row-gap: 10px; }
+  .mc-top { grid-column: 1 / -1; }
+  .mc-stats { grid-column: 1; grid-row: 2 / 4; align-self: center; }
+  .mc-vs-h { grid-column: 2; grid-row: 2; }
+  .mc-teams { grid-column: 2; grid-row: 3; }
+  .mc:not(:has(.mc-teams)) .mc-stats { grid-column: 1 / -1; }
+  .mc-s b { font-size: clamp(32px, 11vh, 52px); }
+  .mc-top b { font-size: clamp(19px, 7vh, 30px); }
+}
 @media (prefers-reduced-motion: reduce) { .mc-wrap, .mc-team { transition: none !important; opacity: 1 !important; transform: none !important; } }

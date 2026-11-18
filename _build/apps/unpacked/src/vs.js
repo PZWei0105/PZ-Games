@@ -120,7 +120,7 @@ function vsLobby(A, B) {
   return `<div class="vs-wrap lobby">
     <div class="vs-top"><button class="back" data-act="back">← 回牆上</button><h2 class="vs-title">VS 擂台</h2><span></span></div>
     <p class="sub-note">挑兩款解包過或推坑過的遊戲上擂台：價格、評價、同上人數、中文、課金一局一局比，最後還能出成粉專的「二選一」圖卡。</p>
-    <div class="vs-stage lobby">${slot(A, 'l')}<div class="vs-mid"><b class="vs-vs">VS</b></div>${slot(B, 'r')}</div>
+    <div class="vs-stage lobby" id="vsstage">${slot(A, 'l')}<div class="vs-mid"><b class="vs-vs">VS</b></div>${slot(B, 'r')}</div>
   </div>`;
 }
 /** 選對手：列出全部專題與推坑（可以搜尋），點了就上擂台 */
