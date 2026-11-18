@@ -787,17 +787,23 @@ def freebies(D, t0, tagn):
     old = load(path, {}) or {}
     now_s = iso(t0)
     seen = {x['id']: x.get('seen') for x in (old.get('items') or []) + (old.get('past') or []) if x.get('id')}
-    items, errs, ok = [], [], []
+    items, errs, ok, diag = [], [], [], {}
     try:
         d = get_json(EPIC_FREE, timeout=30, tries=2)
         els = ((((d.get('data') or {}).get('Catalog') or {}).get('searchStore') or {}).get('elements')) or []
+        dg = diag['epic'] = {'keys': sorted(d)[:6] if isinstance(d, dict) else str(type(d)), 'els': len(els), 'promo': 0, 'offers': []}
+        if isinstance(d, dict) and d.get('errors'):
+            dg['err'] = str(d['errors'])[:160]
         for e in els:
             pr = e.get('promotions') or {}
+            dg['promo'] += 1 if pr else 0
             for key, up in (('promotionalOffers', False), ('upcomingPromotionalOffers', True)):
                 for g in pr.get(key) or []:
                     for o in g.get('promotionalOffers') or []:
                         ds = o.get('discountSetting') or {}
                         pct = ds.get('discountPercentage')
+                        if len(dg['offers']) < 10:
+                            dg['offers'].append([(e.get('title') or '')[:24], 'up' if up else 'now', ds.get('discountType'), pct, str(o.get('startDate'))[:20], str(o.get('endDate'))[:20]])
                         if ds.get('discountType') != 'PERCENTAGE' or pct is None or int(pct) != 0:
                             continue
                         start, end = _iso_any(o.get('startDate')), _iso_any(o.get('endDate'))
@@ -830,6 +836,7 @@ def freebies(D, t0, tagn):
             if m and int(m.group(1)) not in ids:
                 ids.append(int(m.group(1)))
         info = get_items(ids, media=False) if ids else {}
+        diag['steam'] = {'items': len(d.get('items') or []), 'ids': len(ids), 'info': len(info), 'sample': [(x.get('name') or '')[:24] for x in (d.get('items') or [])[:4]]}
         for a in ids:
             it = info.get(a)
             if not it:
@@ -853,7 +860,9 @@ def freebies(D, t0, tagn):
                 return float(str((m or {}).get('amount')).replace(',', ''))
             except (TypeError, ValueError):
                 return None
-        for p in d.get('products') or []:
+        prods = d.get('products') or []
+        diag['gog'] = {'products': len(prods), 'sample': [[(p.get('title') or '')[:24], (p.get('price') or {}).get('final'), (p.get('price') or {}).get('base'), str((p.get('price') or {}).get('finalMoney'))[:60]] for p in prods[:3]]}
+        for p in prods:
             pr = p.get('price') or {}
             fin, base = amt(pr.get('finalMoney')), amt(pr.get('baseMoney'))
             if fin is None or base is None or fin > 0 or base <= 0:
@@ -882,9 +891,10 @@ def freebies(D, t0, tagn):
             continue
         pd.add(x['id'])
         past2.append(x)
-    out = {'at': now_s, 'ok': ok, 'errs': errs or None, 'items': items, 'past': past2[:40]}
-    wrote = save_if_changed(path, _nonull(out), ignore=('at', 'errs'))
+    out = {'at': now_s, 'ok': ok, 'errs': errs or None, 'items': items, 'past': past2[:40], 'diag': diag}
+    wrote = save_if_changed(path, _nonull(out), ignore=('at', 'errs', 'diag'))
     print(f'free: {len([x for x in items if not x.get("up")])} 款現在免費、{len([x for x in items if x.get("up")])} 款預告，來源 {ok}，wrote={wrote}', errs or '')
+    print('free diag:', json.dumps(diag, ensure_ascii=False)[:2000])
 
 
 # ------------------------------------------------------------------ 出擊日曆（可訂閱的 .ics）
