@@ -196,6 +196,7 @@ R.stage = (() => {
     }
     const L = { def, root, inst, offs, b: binder(root), dead: false };
     layers.push(L);
+    try { R.nb.attach(root, def); } catch (e) { console.error('nb', e); }
     try { R.tilt.wire(def, root); } catch (e) { console.error(e); }
     const t = R.player.current();
     L.b.track(t); L.b.queue(); L.b.state({ playing: R.player.isPlaying() || R.player.wants(), shuffle: R.player.S.shuffle, repeat: R.player.S.repeat }); L.b.tick(true);

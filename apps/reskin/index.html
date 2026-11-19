@@ -604,6 +604,29 @@ body.party.peek #soundPill { opacity: 1; pointer-events: auto; }
 .skin-glass, .skin-nebula { --hp: .035; }
 .skin-jelly, .skin-gacha { --hp: .055; }
 
+/* ---------- the songs either side (neighbors.js): small, in the skin's own type and colour ---------- */
+.rs-nb { display: flex; gap: 14px; margin-top: 7px; width: 0; min-width: 100%; max-width: 100%; box-sizing: border-box; font-size: 11.5px; line-height: 1.35; letter-spacing: .02em; text-transform: none; }
+.rs-nb[hidden] { display: none; }
+.rs-nb .nb-b { flex: 1 1 0; min-width: 0; display: flex; align-items: baseline; gap: 5px; margin: 0; padding: 4px 0; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; background: none; border: 0; border-radius: 0; box-shadow: none; opacity: .66; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: opacity .15s; }
+.rs-nb .nb-n { justify-content: flex-end; }
+.rs-nb .nb-b[hidden] { display: none; }
+.rs-nb .nb-b i { flex: none; font-style: normal; font-size: .88em; letter-spacing: .1em; opacity: .7; }
+.rs-nb .nb-b b { flex: none; font-weight: 800; }
+.rs-nb .nb-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.rs-nb .nb-b:active { opacity: 1; }
+.rs-nb .nb-b:disabled { cursor: default; opacity: .45; }
+.rs-nb[data-nb="next"] .nb-p { display: none; }
+.rs-nb[data-nb="next"] .nb-n { justify-content: flex-start; }
+.rs-nb.nb-swap .nb-b { animation: nb-in .5s cubic-bezier(.2,.8,.2,1) both; }
+.rs-nb.nb-swap .nb-n { animation-delay: .07s; }
+@keyframes nb-in { from { opacity: 0; transform: translateX(12px); } }
+@media (prefers-reduced-motion: reduce) { .rs-nb.nb-swap .nb-b { animation: none; } }
+
+/* (skins style their title blocks' children freely: keep the row's own parts out of those rules) */
+.skin .rs-nb .nb-b > i, .skin .rs-nb .nb-b > b, .skin .rs-nb .nb-b > .nb-t { display: block !important; position: static !important; margin: 0 !important; padding: 0 !important; width: auto !important; height: auto !important; font-size: 1em !important; line-height: inherit !important; transform: none !important; animation: none !important; background: none !important; border: 0 !important; -webkit-text-stroke: 0 !important; }
+.skin .rs-nb .nb-b > i { font-size: .88em !important; }
+.skin-arcade .rs-nb { font-family: "Press Start 2P", "PingFang TC", sans-serif; font-size: 8px; margin: 0 0 8px; }
+
 /* ---------- 霓虹 HUD ---------- */
 .skin-neon { --lv: 0; --bt: 0; --m: #ff2bd6; --c: #22f3ff; color: #eaf6ff; font-family: "Orbitron", var(--sans); }
 .skin-neon .nx-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -2451,7 +2474,7 @@ body.party.peek #soundPill { opacity: 1; pointer-events: auto; }
 'use strict';
 /* ---- core.js ---- */
 /* ===================== 耳目一新 RESKIN — core ===================== */
-const VERSION = '2026.11.19-0722';
+const VERSION = '2026.11.19-0947';
 const R = { VERSION };
 window.RESKIN = R;
 
@@ -6382,6 +6405,7 @@ R.stage = (() => {
     }
     const L = { def, root, inst, offs, b: binder(root), dead: false };
     layers.push(L);
+    try { R.nb.attach(root, def); } catch (e) { console.error('nb', e); }
     try { R.tilt.wire(def, root); } catch (e) { console.error(e); }
     const t = R.player.current();
     L.b.track(t); L.b.queue(); L.b.state({ playing: R.player.isPlaying() || R.player.wants(), shuffle: R.player.S.shuffle, repeat: R.player.S.repeat }); L.b.tick(true);
@@ -6497,6 +6521,70 @@ R.ui.ctrl = (cls) => {
   </div>`;
 };
 R.ui.seek = (cls) => `<div class="seek ${cls || ''}" data-seek data-ui><div class="seek-track" data-seek-track><div class="seek-fill" data-seek-fill></div><div class="seek-knob" data-seek-knob></div></div><div class="seek-times"><span data-bind="time">0:00</span><span data-bind="dur">0:00</span></div></div>`;
+
+/* ---- neighbors.js ---- */
+/* ===================== the songs either side: 「上一首 ‹ 歌名」「下一首 › 歌名」 under every skin's title =====================
+   Shows exactly what the player will do: shuffle shows the real next song of the shuffled order, single-repeat shows
+   「重播這首」, the end of a list with repeat off shows 「播完就停」. Tap a title to go straight to that song. A skin can
+   set def.nb = 'next' (only the next song, for tight layouts) or 'off'. */
+R.nb = (() => {
+  const live = new Set();
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function state() {
+    const P = R.player, S = P.S, n = S.ids.length;
+    if (!n || S.i < 0) return null;
+    const get = (i) => (i == null || i < 0 ? null : R.lib.get(S.ids[i]));
+    const prev = n > 1 ? get(S.i > 0 ? S.i - 1 : n - 1) : null, pi = n > 1 ? (S.i > 0 ? S.i - 1 : n - 1) : -1;
+    let next = null, ni = -1, kind = 'song';
+    if (S.repeat === 'one') kind = 'one';
+    else if (S.i + 1 < n) { ni = S.i + 1; next = get(ni); }
+    else if (S.repeat === 'all' && n > 1) { ni = 0; next = get(0); }
+    else if (S.repeat === 'all') kind = 'one';                       // a list of one song plays it again
+    else kind = 'end';
+    return { prev, pi, next, ni, kind };
+  }
+  function paint(el) {
+    const st = state(), p = el.querySelector('.nb-p'), q = el.querySelector('.nb-n');
+    if (!st) { el.hidden = true; return; }
+    el.hidden = false;
+    // too narrow for both halves: only the next song
+    const w = el.clientWidth; if (w) el.dataset.nb = el.dataset.want === 'both' && w < 300 ? 'next' : el.dataset.want;
+    const pt = st.prev ? st.prev.title || '' : '', nt = st.kind === 'one' ? '重播這首' : st.kind === 'end' ? '播完就停' : st.next ? st.next.title || '' : '';
+    const key = st.pi + '|' + st.ni + '|' + st.kind + '|' + pt + '|' + nt;
+    if (el.dataset.key === key) return;
+    const changed = !!el.dataset.key; el.dataset.key = key;
+    p.hidden = !st.prev; p.dataset.i = st.pi;
+    p.querySelector('.nb-t').textContent = pt; p.setAttribute('aria-label', '上一首：' + pt);
+    q.dataset.i = st.ni; q.dataset.kind = st.kind; q.disabled = st.kind === 'end';
+    q.querySelector('.nb-t').textContent = nt; q.setAttribute('aria-label', st.kind === 'song' ? '下一首：' + nt : nt);
+    q.querySelector('i').textContent = st.kind === 'one' ? '單曲' : '下一首';
+    if (changed) { el.classList.remove('nb-swap'); void el.offsetWidth; el.classList.add('nb-swap'); }
+  }
+  function attach(root, def) {
+    const mode = def.nb || 'both';
+    if (mode === 'off') return;
+    const want = typeof mode === 'object' ? mode.mode || 'both' : mode;
+    // a skin can name where the row goes (def.nb = { at: '.selector', mode }) when its title is drawn on a canvas
+    const at = typeof mode === 'object' && mode.at ? root.querySelector(mode.at) : null;
+    const title = root.querySelector('[data-bind="title"]'); if (!at && (!title || !title.parentElement)) return;
+    const el = document.createElement('div');
+    el.className = 'rs-nb'; el.dataset.ui = ''; el.dataset.want = want; el.dataset.nb = want;
+    el.innerHTML = `<button type="button" class="nb-b nb-p"><i>上一首</i><b>‹</b><span class="nb-t"></span></button><button type="button" class="nb-b nb-n"><i>下一首</i><b>›</b><span class="nb-t"></span></button>`;
+    if (at) at.insertBefore(el, at.firstChild); else title.parentElement.appendChild(el);
+    el.addEventListener('click', (e) => {
+      const b = e.target.closest('.nb-b'); if (!b) return;
+      e.stopPropagation();
+      if (b.classList.contains('nb-n') && b.dataset.kind === 'one') { R.player.seek(0); R.stage.sfx('prev'); return; }
+      const i = +b.dataset.i; if (!(i >= 0)) return;
+      R.stage.sfx(b.classList.contains('nb-p') ? 'prev' : 'next'); R.player.playIndex(i);
+    });
+    live.add(el); paint(el); requestAnimationFrame(() => { delete el.dataset.key; paint(el); });
+  }
+  function refresh() { for (const el of live) { if (!el.isConnected) { live.delete(el); continue; } paint(el); } }
+  for (const ev of ['track', 'queue', 'state', 'track:update', 'library']) R.bus.on(ev, () => refresh());
+  addEventListener('resize', () => { for (const el of live) delete el.dataset.key; setTimeout(refresh, 60); });
+  return { attach, refresh, state };
+})();
 
 /* ---- snap.js ---- */
 /* ===================== snapshot: paint a skin (canvases, pictures, boxes, gradients, text) onto one canvas =====================
@@ -12825,6 +12913,7 @@ R.skins.def({
   theme: { bg: '#140c33', fg: '#ffffff', accent: '#ff4d8d', accent2: '#5ef1ff', ui: 'rgba(22,15,52,.98)', dock: 'rgba(20,12,51,.62)', dockfg: '#ffffff' },
   enterMs: 1900, swapMs: 1450, hype: false,
   emblem: `<svg class="em" viewBox="0 0 116 150" shape-rendering="crispEdges"><rect width="116" height="150" fill="#140c33"/><rect y="38" width="116" height="16" fill="#2a1252"/><rect y="54" width="116" height="14" fill="#4d1a6e"/><rect y="68" width="116" height="12" fill="#7d2483"/><rect y="80" width="116" height="10" fill="#b8367f"/><rect y="90" width="116" height="10" fill="#ea5a72"/><rect x="58" y="72" width="28" height="4" fill="#ffd75e"/><rect x="54" y="78" width="36" height="4" fill="#ffc35e"/><rect x="52" y="84" width="40" height="3" fill="#ffa25e"/><rect x="52" y="90" width="40" height="3" fill="#ff7f6e"/><rect x="54" y="96" width="36" height="2" fill="#ff5f86"/><g fill="#ffffff"><rect x="10" y="12" width="2" height="2"/><rect x="40" y="22" width="2" height="2"/><rect x="88" y="10" width="2" height="2"/><rect x="104" y="28" width="2" height="2"/><rect x="70" y="30" width="2" height="2"/></g><rect x="0" y="86" width="16" height="32" fill="#1d1438"/><rect x="18" y="74" width="14" height="44" fill="#1d1438"/><rect x="80" y="80" width="16" height="38" fill="#1d1438"/><rect x="98" y="92" width="18" height="26" fill="#1d1438"/><g fill="#ffd75e"><rect x="3" y="104" width="3" height="3"/><rect x="9" y="104" width="3" height="3"/><rect x="3" y="110" width="3" height="3"/><rect x="21" y="96" width="3" height="3"/><rect x="26" y="102" width="3" height="3"/><rect x="21" y="108" width="3" height="3"/></g><g fill="#5ef1ff"><rect x="83" y="100" width="3" height="3"/><rect x="89" y="106" width="3" height="3"/><rect x="101" y="108" width="3" height="3"/><rect x="107" y="102" width="3" height="3"/></g><rect y="118" width="116" height="32" fill="#7a4a2a"/><rect y="118" width="116" height="4" fill="#3ddc84"/><g fill="#5c3520"><rect y="128" width="116" height="2"/><rect y="138" width="116" height="2"/><rect x="14" y="122" width="2" height="6"/><rect x="46" y="122" width="2" height="6"/><rect x="78" y="122" width="2" height="6"/><rect x="30" y="130" width="2" height="8"/><rect x="62" y="130" width="2" height="8"/><rect x="94" y="130" width="2" height="8"/></g><rect x="40" y="88" width="16" height="2" fill="#1b1b2f"/><rect x="38" y="90" width="2" height="4" fill="#1b1b2f"/><rect x="56" y="90" width="2" height="4" fill="#1b1b2f"/><rect x="38" y="94" width="20" height="16" fill="#1b1b2f"/><rect x="40" y="96" width="16" height="12" fill="#ffd75e"/><rect x="35" y="98" width="4" height="7" fill="#ff4d8d"/><rect x="57" y="98" width="4" height="7" fill="#ff4d8d"/><rect x="45" y="99" width="3" height="4" fill="#fff"/><rect x="51" y="99" width="3" height="4" fill="#fff"/><rect x="47" y="100" width="1" height="3" fill="#1b1b2f"/><rect x="53" y="100" width="1" height="3" fill="#1b1b2f"/><rect x="40" y="110" width="5" height="3" fill="#1b1b2f"/><rect x="51" y="110" width="5" height="3" fill="#1b1b2f"/><rect x="66" y="96" width="2" height="9" fill="#ffd75e"/><rect x="63" y="104" width="4" height="3" fill="#ffd75e"/><rect x="68" y="96" width="4" height="2" fill="#ffd75e"/></svg>`,
+  nb: { at: '.ar-panel' },
   sfx: {
     tap(s, t) { s.tone(t, { f: 880, dur: 0.05, v: 0.05, type: 'square' }); },
     tick(s, t) { s.tone(t, { f: 1320, dur: 0.03, v: 0.035, type: 'square' }); },

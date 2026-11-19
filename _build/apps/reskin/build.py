@@ -18,7 +18,7 @@ REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'reskin')
 
 SKINS = ['neon', 'rhythm', 'drum', 'blackhole', 'particles', 'neoncity', 'ridge', 'woofer', 'forge', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'abyss', 'chladni', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'comic', 'arcade', 'vinyl', 'tube', 'cassette', 'ink', 'paper', 'rain', 'scope', 'glass']
-JS_ORDER = ['core.js', 'boot.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'sound.js', 'viz.js', 'sfx.js', 'demo.js', 'glkit.js', 'tilt.js', 'skinkit.js', 'snap.js', 'fx.js', 'trans.js', 'hype.js'] \
+JS_ORDER = ['core.js', 'boot.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'sound.js', 'viz.js', 'sfx.js', 'demo.js', 'glkit.js', 'tilt.js', 'skinkit.js', 'neighbors.js', 'snap.js', 'fx.js', 'trans.js', 'hype.js'] \
     + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'lyrics.js', 'share.js', 'poster.js', 'insight.js', 'stats.js', 'report.js', 'clip.js', 'sync.js', 'extras.js', 'main.js']
 CSS_ORDER = ['style.css'] + ['skins/%s.css' % s for s in SKINS] + ['skins/diy.css']
 FONTS = [  # file, family, weight, style

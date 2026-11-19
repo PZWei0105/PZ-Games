@@ -114,6 +114,22 @@ def run(url, out, fx, web):
         ok(L['痞子葳 - 雨天散步.wav']['title'] == '雨天散步' and L['痞子葳 - 雨天散步.wav']['artist'] == '痞子葳', '沒標籤的 WAV：從檔名分出歌手和歌名')
         ok(all(t['an'] == 1 for t in L.values()), '每首都分析完節奏')
         ok(abs(L['t1.mp3']['bpm'] - 128) < 3 and abs(L['t3.flac']['bpm'] - 150) < 3, 'BPM 抓得準（128、150）')
+        # 上一首／下一首的歌名：照真正的播放順序（含隨機、單曲循環），點了直接跳過去
+        ev('() => { const all = RESKIN.lib.list(); RESKIN.player.playFrom(all.map(t => t.id), all[2].id, {type:"library"}); }'); pg.wait_for_timeout(900)
+        nbq = '() => { const n = document.querySelector("#stage .skin:last-child .rs-nb"); if (!n || n.hidden) return null; const t = (s) => n.querySelector(s + " .nb-t").textContent; const P = RESKIN.player, S = P.S; return { p: t(".nb-p"), n: t(".nb-n"), wp: RESKIN.lib.get(S.ids[S.i - 1]).title, wn: RESKIN.lib.get(S.ids[S.i + 1]).title }; }'
+        r = ev(nbq)
+        ok(r and r['p'] == r['wp'] and r['n'] == r['wn'], '上一首／下一首：歌名下面看得到前後兩首（%s ‹ › %s）' % ((r or {}).get('p'), (r or {}).get('n')))
+        if ev('!RESKIN.player.S.shuffle'): ev('RESKIN.player.setShuffle(true)')
+        pg.wait_for_timeout(300); r = ev('() => { const n = document.querySelector("#stage .skin:last-child .rs-nb .nb-n .nb-t").textContent, S = RESKIN.player.S; return n === RESKIN.lib.get(S.ids[(S.i + 1) % S.ids.length]).title; }')
+        ok(r, '上一首／下一首：隨機播放時顯示的是真正會播的下一首')
+        want = ev('() => { const S = RESKIN.player.S; return S.ids[(S.i + 1) % S.ids.length]; }')
+        pg.click('#stage .skin:last-child .rs-nb .nb-n'); pg.wait_for_timeout(700)
+        ok(ev('RESKIN.player.S.tid') == want, '上一首／下一首：點下一首的歌名就換過去')
+        ev('RESKIN.player.setShuffle(false)')
+        while ev('RESKIN.player.S.repeat') != 'one': ev('RESKIN.player.cycleRepeat()')
+        pg.wait_for_timeout(300)
+        ok(ev('document.querySelector("#stage .skin:last-child .rs-nb .nb-n .nb-t").textContent') == '重播這首', '上一首／下一首：單曲循環時寫「重播這首」')
+        while ev('RESKIN.player.S.repeat') != 'all': ev('RESKIN.player.cycleRepeat()')
         # playback engines
         ev('() => { const all = RESKIN.lib.list(); const t = all.find(x => x.name === "t1.mp3"); RESKIN.player.playFrom(all.map(x => x.id), t.id, {type:"library"}); }')
         pg.wait_for_timeout(1000)

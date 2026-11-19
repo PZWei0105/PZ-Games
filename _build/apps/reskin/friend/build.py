@@ -4,6 +4,7 @@
 朋友那份停在 2026-11-13 的版本（commit 360fb9f）：新功能不加，只放修正。2026-11-18 痞子葳要求把早期做的 Skin 補上：
 現在是二十三套（十五套原有＋節奏大師、粒子封面、重低音、黑洞、霓虹夜城、超跑、格鬥、液態），連同泛光、陀螺儀、轉場；
 最新做的四套（鼓機、聲紋山脈、音紋、真空管）與音效、卡拉 OK、短片、報告等不放。
+2026-11-19 加上「上一首／下一首的歌名」（neighbors.js，跟主版同一份）。
 原始碼是這個資料夾的 src/（字型借用 ../src/fonts，主畫面圖示借用 apps/reskin/icons）；不會寫到 apps/reskin/。
 
 用法：
@@ -26,7 +27,7 @@ FONTDIR = os.path.abspath(os.path.join(ROOT, '..', 'src', 'fonts'))
 ICONS = os.path.join(REPO, 'apps', 'reskin', 'icons')
 
 SKINS = ['neon', 'rhythm', 'blackhole', 'particles', 'neoncity', 'woofer', 'stage', 'supercar', 'mecha', 'fighter', 'nebula', 'liquid', 'fireworks', 'aurora', 'jelly', 'catdj', 'gacha', 'arcade', 'vinyl', 'cassette', 'ink', 'scope', 'glass']
-JS_ORDER = ['core.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'glkit.js', 'tilt.js', 'skinkit.js', 'snap.js', 'fx.js', 'trans.js', 'hype.js'] \
+JS_ORDER = ['core.js', 'db.js', 'meta.js', 'art.js', 'lib.js', 'analysis.js', 'player.js', 'viz.js', 'sfx.js', 'demo.js', 'glkit.js', 'tilt.js', 'skinkit.js', 'neighbors.js', 'snap.js', 'fx.js', 'trans.js', 'hype.js'] \
     + ['skins/%s.js' % s for s in SKINS] + ['skins/diy.js', 'ui.js', 'library.js', 'wardrobe.js', 'settings.js', 'lyrics.js', 'share.js', 'sync.js', 'extras.js', 'main.js']
 CSS_ORDER = ['style.css'] + ['skins/%s.css' % s for s in SKINS] + ['skins/diy.css']
 FONTS = [  # file, family, weight, style

@@ -570,3 +570,26 @@ body.party.peek #soundPill { opacity: 1; pointer-events: auto; }
 .skin-aurora { --hp: .025; }
 .skin-glass, .skin-nebula { --hp: .035; }
 .skin-jelly, .skin-gacha { --hp: .055; }
+
+/* ---------- the songs either side (neighbors.js): small, in the skin's own type and colour ---------- */
+.rs-nb { display: flex; gap: 14px; margin-top: 7px; width: 0; min-width: 100%; max-width: 100%; box-sizing: border-box; font-size: 11.5px; line-height: 1.35; letter-spacing: .02em; text-transform: none; }
+.rs-nb[hidden] { display: none; }
+.rs-nb .nb-b { flex: 1 1 0; min-width: 0; display: flex; align-items: baseline; gap: 5px; margin: 0; padding: 4px 0; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; background: none; border: 0; border-radius: 0; box-shadow: none; opacity: .66; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: opacity .15s; }
+.rs-nb .nb-n { justify-content: flex-end; }
+.rs-nb .nb-b[hidden] { display: none; }
+.rs-nb .nb-b i { flex: none; font-style: normal; font-size: .88em; letter-spacing: .1em; opacity: .7; }
+.rs-nb .nb-b b { flex: none; font-weight: 800; }
+.rs-nb .nb-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.rs-nb .nb-b:active { opacity: 1; }
+.rs-nb .nb-b:disabled { cursor: default; opacity: .45; }
+.rs-nb[data-nb="next"] .nb-p { display: none; }
+.rs-nb[data-nb="next"] .nb-n { justify-content: flex-start; }
+.rs-nb.nb-swap .nb-b { animation: nb-in .5s cubic-bezier(.2,.8,.2,1) both; }
+.rs-nb.nb-swap .nb-n { animation-delay: .07s; }
+@keyframes nb-in { from { opacity: 0; transform: translateX(12px); } }
+@media (prefers-reduced-motion: reduce) { .rs-nb.nb-swap .nb-b { animation: none; } }
+
+/* (skins style their title blocks' children freely: keep the row's own parts out of those rules) */
+.skin .rs-nb .nb-b > i, .skin .rs-nb .nb-b > b, .skin .rs-nb .nb-b > .nb-t { display: block !important; position: static !important; margin: 0 !important; padding: 0 !important; width: auto !important; height: auto !important; font-size: 1em !important; line-height: inherit !important; transform: none !important; animation: none !important; background: none !important; border: 0 !important; -webkit-text-stroke: 0 !important; }
+.skin .rs-nb .nb-b > i { font-size: .88em !important; }
+.skin-arcade .rs-nb { font-family: "Press Start 2P", "PingFang TC", sans-serif; font-size: 8px; margin: 0 0 8px; }
