@@ -48,7 +48,7 @@
   /* 2026-11 的常見模型（大小為估算；以實際檔案為準） */
   const PRESETS = D.PRESETS = [
     { id: 'q38', t: 'Qwen3.8-27B', total: 27.8, active: 27.8, q: 'Q4_K_M', kv: 64, w: 18 },
-    { id: 'q36moe', t: 'Qwen3.6-35B-A3B（MoE）', total: 36, active: 3, q: 'Q4_K_M', kv: 48, moe: 1, w: 20.4 },
+    { id: 'q36moe', t: 'Qwen3.6-35B-A3B（MoE）', total: 36, active: 3, q: 'Q4_K_M', kv: 48, moe: 1, w: 21 },
     { id: 'g4moe', t: 'Gemma 4 26B-A4B（MoE）', total: 25.8, active: 3.8, q: 'Q4_K_M', kv: 64, moe: 1 },
     { id: 'g431', t: 'Gemma 4 31B', total: 31.3, active: 31.3, q: 'Q4_K_M', kv: 96 },
     { id: 'oss20', t: 'gpt-oss-20b（MoE）', total: 21, active: 3.6, q: 'MXFP4', kv: 48, moe: 1, w: 13.5 },
@@ -135,7 +135,7 @@
   W.workbench = (el, api) => {
     const M = [
       { n: '8B', t: 'Qwen3 8B', w: 5.2 }, { n: '14B', t: '14B 級', w: 9 }, { n: '27B', t: 'Qwen3.8-27B', w: 18 },
-      { n: '35B-A3B', t: 'Qwen3.6 MoE', w: 20.4 }, { n: '70B', t: 'Llama 3.3 70B', w: 42.5 }, { n: '120B', t: 'gpt-oss-120b', w: 65 }
+      { n: '35B-A3B', t: 'Qwen3.6 MoE', w: 21 }, { n: '70B', t: 'Llama 3.3 70B', w: 42.5 }, { n: '120B', t: 'gpt-oss-120b', w: 65 }
     ];
     let cur = 2;
     function draw() {
@@ -235,7 +235,7 @@
     const presets = [
       { t: '5090 筆電 · 27B', f: () => est({ total: 27.8, q: 'Q4_K_M', kv: 64, w: 18 }).real },
       { t: 'DGX Spark · 27B', f: () => est({ total: 27.8, q: 'Q4_K_M', kv: 64, w: 18 }).sReal },
-      { t: '5090 筆電 · 35B-A3B', f: () => est({ total: 36, active: 3, q: 'Q4_K_M', kv: 48, moe: 1, w: 20.4 }).real },
+      { t: '5090 筆電 · 35B-A3B', f: () => est({ total: 36, active: 3, q: 'Q4_K_M', kv: 48, moe: 1, w: 21 }).real },
       { t: '5090 筆電 · 70B（溢出）', f: () => est({ total: 70.6, q: 'Q4_K_M', kv: 320 }).real }
     ];
     let tps = presets[0].f(), raf = 0, on = -1;

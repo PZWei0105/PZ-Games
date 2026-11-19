@@ -635,7 +635,8 @@ DOJO.stages.push({
         checks: ['ollama --version 顯示版本號', '瀏覽器打開 http://localhost:11434 看到「Ollama is running」', 'LM Studio 打得開', '知道模型會存在哪個資料夾'],
         stuck: [
           ['localhost:11434 打不開', '看工作列右下角有沒有羊駝圖示；沒有的話請 Claude Code 幫你啟動 Ollama 服務。'],
-          ['安裝被防毒軟體擋下', '確認是從 ollama.com、lmstudio.ai 官方下載的安裝程式，再允許執行。']
+          ['安裝被防毒軟體擋下', '確認是從 ollama.com、lmstudio.ai 官方下載的安裝程式，再允許執行。'],
+          ['C 槽空間不夠放模型', 'Ollama 的模型預設放在 C:/Users/你的帳號/.ollama/models，一個模型動輒十幾 GB。可以請 Claude Code 先說明怎麼用 OLLAMA_MODELS 這個設定把模型改放到別的磁碟，你確認後再做。']
         ]
       },
       quiz: [
@@ -651,7 +652,7 @@ DOJO.stages.push({
       goal: '下載一個中文好的模型，確認它整個在顯存裡、斷網也能聊。',
       cards: [
         { k: 'key', t: '挑模型三原則', b: '① <b>塞得進</b>：模型加上下文，控制在 22GB 內。<br>② <b>中文好</b>：Qwen 系列是中文最強的開源模型之一，Gemma、GLM 也不錯。<br>③ <b>新比大重要</b>：優先挑最近半年推出的。' },
-        { k: 'num', t: '2026 年 11 月，24GB 的熱門選擇', b: '<b>Qwen3.8-27B</b>：Q4 約 18GB，綜合能力和中文都強，最多人推薦的 24GB 首選。<br><b>Qwen3.6-35B-A3B</b>（MoE）：速度怪獸，但 Q4 約 20GB，幾乎吃滿，留給上下文的空間少。<br><b>Gemma 4 26B-A4B</b>（MoE）：Google 出品，長文件友善。<br><b>gpt-oss-20b</b>：OpenAI 的開源模型，約 14GB，留很多空間給長對話。<br>模型每幾個月就換一輪，最新推薦看《版本答案 META》。' },
+        { k: 'num', t: '2026 年 11 月，24GB 的熱門選擇', b: '<b>Qwen3.8-27B</b>：Q4 約 18GB，綜合能力和中文都強，最多人推薦的 24GB 首選。<br><b>Qwen3.6-35B-A3B</b>（MoE）：速度怪獸，但 Q4 的 GGUF 檔約 21GB，幾乎吃滿，上下文要開小；Ollama 官方庫的版本標示 23GB，可能會有一小部分溢出到記憶體。<br><b>Gemma 4 26B-A4B</b>（MoE）：Google 出品，長文件友善。<br><b>gpt-oss-20b</b>：OpenAI 的開源模型，約 14GB，留很多空間給長對話。<br>模型每幾個月就換一輪，最新推薦看《版本答案 META》。' },
         { t: '第一次比較慢是正常的', b: '第一次問問題時，模型要從 SSD 載入顯存，會等幾秒到幾十秒，之後就很快。Ollama 預設閒置 5 分鐘後會自動卸載模型，把顯存還給你。' },
         { k: 'key', t: '用 ollama ps 驗明正身', b: '對話時另外執行 <b>ollama ps</b>，看 PROCESSOR 那一欄：<br><b>100% GPU</b> → 整個在顯存，最快。<br>出現 <b>CPU/GPU 比例</b>（例如 25%/75%）→ 有一部分溢出到記憶體，速度會掉。這是判斷「挑得對不對」的第一個儀表。' }
       ],
@@ -680,7 +681,7 @@ DOJO.stages.push({
       cards: [
         { t: '溫度：保守派還是冒險家', b: 'AI 每次挑下一個字時，手上都有一張機率表。<b>溫度低</b>：幾乎每次挑第一名，穩定、保守，適合查資料、整理數字、寫程式（0.2～0.5）。<b>溫度高</b>：願意挑冷門的字，有創意，但容易胡說（寫小說約 0.8～1.0）。' },
         { k: 'analogy', t: '系統提示：開拍前的角色設定', b: '<b>系統提示</b>是對話開始前偷偷塞給 AI 的「人設＋規則」。例如：「你是嚴格的小說編輯，用繁體中文、台灣用語，只指出問題，不要幫我改寫。」同一個模型換一段系統提示，就像換了一個演員。' },
-        { t: '上下文：AI 的短期記憶', b: '<b>上下文</b>是 AI 一次能「看見」多長的內容（以 token 計）。設越長，能記得越多前文，但會多吃顯存（叫做 <b>KV 快取</b>）。很多工具的預設上下文比你想像的小，要讀長文件，記得在設定裡調大，再用 ollama ps 確認沒有溢出。' },
+        { t: '上下文：AI 的短期記憶', b: '<b>上下文</b>是 AI 一次能「看見」多長的內容（以 token 計）。設越長，能記得越多前文，但會多吃顯存（叫做 <b>KV 快取</b>）。很多工具的預設上下文比你想像的小，例如 Ollama 預設只有 <b>4096 tokens</b>。要讀長文件，記得調大（Ollama 的聊天裡輸入 /set parameter num_ctx 16384，或寫進第 2-4 課的 Modelfile），再用 ollama ps 確認沒有溢出。' },
         { k: 'warn', t: '幻覺：很有自信地亂編', b: '模型不知道答案時，常會一本正經地編造，小模型更嚴重。對策：降低溫度、在系統提示寫「不確定就說不知道」，或用第 4 關的知識庫把資料交給它。' }
       ],
       widget: 'temp',
@@ -1273,6 +1274,7 @@ DOJO.badges = [
    最新的放最前面。App 打開時，用一句提示告訴 PZ 最新這一筆（每筆只出現一次，不另外做大畫面）。
    d：日期（YYYY-MM-DD，同一天有第二筆就加 -2），t：一句白話，說改了什麼、在哪裡。只修小 bug 就合併成一筆「修正」。 */
 DOJO.changelog = [
+  { d: '2026-11-19', t: '第 2 關重新查證：35B-A3B 的大小改成實際的約 21GB；2-3 課補上 Ollama 預設的上下文長度，2-1 課多了「C 槽不夠放模型」的卡關提示。' },
   { d: '2026-11-12', t: '名稱解碼器認得 IQ3、IQ2、Q4_0 了，檔案大小算得更準；顯存計算機的溢出說明也跟速度對得上了。' }
 ];
 
@@ -1328,7 +1330,7 @@ DOJO.changelog = [
   /* 2026-11 的常見模型（大小為估算；以實際檔案為準） */
   const PRESETS = D.PRESETS = [
     { id: 'q38', t: 'Qwen3.8-27B', total: 27.8, active: 27.8, q: 'Q4_K_M', kv: 64, w: 18 },
-    { id: 'q36moe', t: 'Qwen3.6-35B-A3B（MoE）', total: 36, active: 3, q: 'Q4_K_M', kv: 48, moe: 1, w: 20.4 },
+    { id: 'q36moe', t: 'Qwen3.6-35B-A3B（MoE）', total: 36, active: 3, q: 'Q4_K_M', kv: 48, moe: 1, w: 21 },
     { id: 'g4moe', t: 'Gemma 4 26B-A4B（MoE）', total: 25.8, active: 3.8, q: 'Q4_K_M', kv: 64, moe: 1 },
     { id: 'g431', t: 'Gemma 4 31B', total: 31.3, active: 31.3, q: 'Q4_K_M', kv: 96 },
     { id: 'oss20', t: 'gpt-oss-20b（MoE）', total: 21, active: 3.6, q: 'MXFP4', kv: 48, moe: 1, w: 13.5 },
@@ -1415,7 +1417,7 @@ DOJO.changelog = [
   W.workbench = (el, api) => {
     const M = [
       { n: '8B', t: 'Qwen3 8B', w: 5.2 }, { n: '14B', t: '14B 級', w: 9 }, { n: '27B', t: 'Qwen3.8-27B', w: 18 },
-      { n: '35B-A3B', t: 'Qwen3.6 MoE', w: 20.4 }, { n: '70B', t: 'Llama 3.3 70B', w: 42.5 }, { n: '120B', t: 'gpt-oss-120b', w: 65 }
+      { n: '35B-A3B', t: 'Qwen3.6 MoE', w: 21 }, { n: '70B', t: 'Llama 3.3 70B', w: 42.5 }, { n: '120B', t: 'gpt-oss-120b', w: 65 }
     ];
     let cur = 2;
     function draw() {
@@ -1515,7 +1517,7 @@ DOJO.changelog = [
     const presets = [
       { t: '5090 筆電 · 27B', f: () => est({ total: 27.8, q: 'Q4_K_M', kv: 64, w: 18 }).real },
       { t: 'DGX Spark · 27B', f: () => est({ total: 27.8, q: 'Q4_K_M', kv: 64, w: 18 }).sReal },
-      { t: '5090 筆電 · 35B-A3B', f: () => est({ total: 36, active: 3, q: 'Q4_K_M', kv: 48, moe: 1, w: 20.4 }).real },
+      { t: '5090 筆電 · 35B-A3B', f: () => est({ total: 36, active: 3, q: 'Q4_K_M', kv: 48, moe: 1, w: 21 }).real },
       { t: '5090 筆電 · 70B（溢出）', f: () => est({ total: 70.6, q: 'Q4_K_M', kv: 320 }).real }
     ];
     let tps = presets[0].f(), raf = 0, on = -1;
@@ -2188,7 +2190,7 @@ DOJO.changelog = [
   const { esc, fmt } = D.util;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const VERSION = '2026.11.12-1320';
+  const VERSION = '2026.11.19-1234';
 
   /* ───────── 圖示 ───────── */
   const sv = (p, f) => '<svg viewBox="0 0 24 24" fill="' + (f ? 'currentColor' : 'none') + '" stroke="' + (f ? 'none' : 'currentColor') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
