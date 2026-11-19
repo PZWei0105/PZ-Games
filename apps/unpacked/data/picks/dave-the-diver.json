@@ -1,0 +1,487 @@
+{
+ "id": "dave-the-diver",
+ "date": "2026-11-19",
+ "rank": 1,
+ "game": {
+  "zh": "潛水員戴夫",
+  "en": "DAVE THE DIVER",
+  "steam": 1868140,
+  "dev": "MINTROCKET",
+  "pub": "MINTROCKET（NEXON 旗下）",
+  "platforms": [
+   "PC（Steam）",
+   "Mac",
+   "Switch／Switch 2",
+   "PS4／PS5",
+   "Xbox One／Series X|S",
+   "iOS／Android"
+  ],
+  "genres": [
+   "冒險",
+   "模擬經營",
+   "海洋探索"
+  ],
+  "release": "2023-06-28",
+  "year": 2023,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "必玩",
+ "label": "白天潛水、晚上開壽司店的經營控必玩",
+ "pitch": "白天下海抓魚、晚上把漁獲變成壽司賣錢，一天兩種玩法輪流上",
+ "why": "痞子葳，這款最讓人停不下來的，是「今天抓到的魚，今晚就變成菜單上的招牌」那一下：白天在藍洞裡追魚、撿素材，晚上排菜單、派員工、看客人掏錢，賺來的錢再拿去升級潛水裝備，隔天就能潛得更深。前期一趟下潛十幾分鐘就結束，很適合沒什麼時間、想玩一下就收的晚上；後期潛得深，一趟會拉長。它最厲害的是一直塞新東西給你：農場、員工培訓、新海域、小遊戲，幾十個小時都還在解鎖。經營操作很順手，像素美術又細。老實講會卡你的地方：Boss 戰和晚上端盤子要一點手感（Boss 可以重打），中段系統變多後，每晚的經營可能會開始覺得重複。",
+ "reasons": [
+  {
+   "h": "一天兩種玩法",
+   "t": "白天潛水探索、晚上經營壽司店，漁獲直接變營收，營收再變成更好的裝備。"
+  },
+  {
+   "h": "新系統一路送",
+   "t": "農場、員工培訓、新海域、小遊戲接連解鎖，PC Gamer 也特別稱讚這點。"
+  },
+  {
+   "h": "評價和銷量都硬",
+   "t": "Metacritic、OpenCritic 都是 90 分，全平台已經賣破 1000 萬套。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡模擬經營、想看數字一天天變好的人",
+   "喜歡探索和收集、會想把圖鑑補滿的人",
+   "時間零碎、想一次玩一兩天份量就收的人"
+  ],
+  "against": [
+   "完全不想碰任何即時操作（Boss 戰、端盤子）的人",
+   "受不了重複流程、每天都要再跑一次經營的人",
+   "想要燒腦策略深度的人：它比較輕鬆，不是硬派經營"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic",
+   "v": "90（PC）",
+   "s": [
+    7
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "90（99% 推薦）",
+   "s": [
+    8
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "MINTROCKET（NEXON 旗下品牌，2024 年 9 月成為子公司）",
+   "s": [
+    0,
+    2
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2022 年 10 月 Steam 搶先體驗；2023/6/28 電腦正式版",
+   "s": [
+    0,
+    1
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "繁中、簡中都有介面與字幕；所有語言都沒有完整語音",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 90（PC）、OpenCritic 90",
+   "s": [
+    7,
+    8
+   ]
+  },
+  {
+   "k": "媒體評測",
+   "v": "PC Gamer 91、IGN 9、Shacknews 9、Game Informer 8.8、Push Square 8",
+   "s": [
+    9,
+    8,
+    10,
+    11
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：主線約 25 小時、含支線約 34 小時、全收集約 51.5 小時",
+   "s": [
+    3
+   ]
+  },
+  {
+   "k": "平台",
+   "v": "Switch 2023/10/26、PS4／PS5 2024/4/16、Switch 2 版 2025/11/6、Xbox 2025/11/20、手機版 2026/9/17",
+   "s": [
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "k": "資料片",
+   "v": "In the Jungle 2026/6/18 上市（付費），新增叢林村落與淡水湖，約 10 小時內容",
+   "s": [
+    12,
+    6
+   ]
+  },
+  {
+   "k": "銷量",
+   "v": "2023 年 7 月宣布電腦版上市約兩週破 100 萬套；2026 年 9 月宣布全平台破 1000 萬套",
+   "s": [
+    17,
+    6
+   ]
+  },
+  {
+   "k": "得獎",
+   "v": "2024 年英國 BAFTA 遊戲獎「遊戲設計」獎；TGA 2023 入圍最佳獨立遊戲",
+   "s": [
+    2,
+    18
+   ]
+  },
+  {
+   "k": "收費",
+   "v": "買斷制，沒有遊戲內購；聯名內容有免費也有付費 DLC",
+   "s": [
+    0,
+    13
+   ]
+  },
+  {
+   "k": "多人",
+   "v": "純單人遊戲",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "電腦需求",
+   "v": "最低 GTS 450、建議 GTX 1060 3GB；容量約 10GB",
+   "s": [
+    0
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文（也有簡中）；角色講話是含糊的叫聲，沒有任何語言的完整配音，不會有聽不懂的問題。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；Switch、PS、Xbox 版以各平台台灣商店為準。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷＋付費資料片／DLC",
+  "notes": [
+   "本體買斷，沒有遊戲內購。",
+   "資料片 In the Jungle 和部分聯名 DLC 另外賣；也有免費的聯名更新。"
+  ],
+  "flags": [
+   "買斷",
+   "資料片另售"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "建議配備只要 GTX 1060，容量約 10GB；你的 SCAR 18 接 4K 電視玩都很輕鬆。"
+ },
+ "time": {
+  "text": "主線約 25～34 小時",
+  "note": "HowLongToBeat：主線約 25 小時、含支線約 34 小時、全收集約 51.5 小時；資料片 In the Jungle 再加約 10 小時。"
+ },
+ "howto": [
+  "前期把錢優先砸在潛水裝備（氧氣、可下潛深度、負重），能潛多深決定你能抓到什麼魚、晚上能賣什麼菜。",
+  "晚上的菜單要看庫存排：先把手上最多的魚做成菜，貴的菜升級後利潤差很多。",
+  "員工別只看便宜：每個人有料理、服務等數值，花錢培訓後營收會明顯上去。",
+  "水下別貪：揹太重會游很慢，再超過就撿不了東西，先想好這趟要什麼。",
+  "Boss 戰是即時射擊，打輸可以重來，不用怕卡關；真的手忙腳亂就多升級武器再打。"
+ ],
+ "deals": "Steam 史低曾到五折（SteamDB），大特賣常見折扣，沒急可以等。想玩到資料片就直接買含 In the Jungle 的組合包，比分開買划算（現價看下方即時數據）。",
+ "talk": [
+  {
+   "q": "NEXON 出錢的遊戲，算不算獨立遊戲？",
+   "why": "它入圍 TGA 最佳獨立遊戲吵很大，連導演都說它「一點都不獨立」。獨立遊戲該看團隊規模、資金，還是精神？"
+  },
+  {
+   "q": "一直加新系統，是驚喜還是負擔？",
+   "why": "有人愛它每幾小時就丟新玩法，也有人覺得中段變成每天跑流程。你覺得什麼時候該收手？"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "p85VHMpE0to",
+    "title": "正式版上市日預告"
+   },
+   {
+    "id": "-4T8UAdWhtk",
+    "title": "資料片 In the Jungle 預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：DAVE THE DIVER（語言、DLC、系統需求、單人）",
+   "u": "https://store.steampowered.com/app/1868140/",
+   "d": ""
+  },
+  {
+   "t": "SteamDB：DAVE THE DIVER（搶先體驗日、史低價）",
+   "u": "https://steamdb.info/app/1868140/",
+   "d": ""
+  },
+  {
+   "t": "Wikiwand（維基百科）：Dave the Diver（平台、銷量、得獎）",
+   "u": "https://www.wikiwand.com/en/articles/Dave_the_Diver",
+   "d": ""
+  },
+  {
+   "t": "Deku Deals：DAVE THE DIVER（HowLongToBeat 時數、平台）",
+   "u": "https://www.dekudeals.com/items/dave-the-diver",
+   "d": ""
+  },
+  {
+   "t": "Game Informer：DAVE THE DIVER 登上 Xbox",
+   "u": "https://gameinformer.com/xbox-partner-preview/2025/11/20/dave-the-diver-comes-to-xbox-today-next-expansion-arrives-early",
+   "d": "2025-11-20"
+  },
+  {
+   "t": "Gematsu：DAVE THE DIVER 9/17 上架 iOS、Android",
+   "u": "https://www.gematsu.com/2026/08/dave-the-diver-coming-to-ios-android-on-september-17",
+   "d": "2026-08"
+  },
+  {
+   "t": "Gamespress：DAVE THE DIVER 全球銷量破 1000 萬套（官方新聞稿）",
+   "u": "https://www.gamespress.com/DAVE-THE-DIVER-Surpasses-10-Million-Sales-Worldwide",
+   "d": "2026-09-09"
+  },
+  {
+   "t": "Metacritic：DAVE THE DIVER（PC）",
+   "u": "https://legacy.prod.metacritic.com/game/pc/dave-the-diver/critic-reviews",
+   "d": ""
+  },
+  {
+   "t": "OpenCritic：DAVE THE DIVER",
+   "u": "https://opencritic.com/game/15151/dave-the-diver",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer 評測（91 分）",
+   "u": "https://www.pcgamer.com/dave-the-diver-review/",
+   "d": "2023-07-12"
+  },
+  {
+   "t": "Shacknews 評測（9 分）",
+   "u": "https://www.shacknews.com/article/136261/dave-the-diver-review-score",
+   "d": "2023-07-14"
+  },
+  {
+   "t": "Push Square 評測（PS5，8 分）",
+   "u": "https://pushsquare.com/reviews/ps5/dave-the-diver",
+   "d": "2024-04-16"
+  },
+  {
+   "t": "Gamespress：資料片 In the Jungle 6/18 上市（官方新聞稿）",
+   "u": "https://www.gamespress.com/DAVE-THE-DIVER-In-the-Jungle-DLC-Launches-June-18th-for-PC-and-Console",
+   "d": "2026-03"
+  },
+  {
+   "t": "4Gamers：《潛水員戴夫》製作人公布手機版",
+   "u": "https://www.4gamers.com.tw/news/detail/69363/dave-the-diver-developer-mintrocket-ceo-announced-mobile-version",
+   "d": "2025-01-03"
+  },
+  {
+   "t": "TheGamer：新手技巧（下潛次數、氧氣、負重、武器）",
+   "u": "https://www.thegamer.com/dave-the-diver-beginner-tips-tricks/",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer：員工招募與培訓攻略",
+   "u": "https://pcgamer.com/dave-the-diver-best-staff",
+   "d": ""
+  },
+  {
+   "t": "Epilogue Gaming：對 DAVE THE DIVER 節奏的批評",
+   "u": "https://epiloguegaming.com/the-shallow-depths-of-dave-the-diver/",
+   "d": "2025-07"
+  },
+  {
+   "t": "Hitmarker：電腦版上市約兩週賣破 100 萬套",
+   "u": "https://hitmarker.net/news/indie-title-dave-the-diver-sells-one-million-copies-in-10-days-520838",
+   "d": "2023-07"
+  },
+  {
+   "t": "VGC：導演黃載皓談 TGA 獨立遊戲入圍爭議",
+   "u": "https://www.videogameschronicle.com/news/dave-the-diver-director-says-theres-nothing-indie-about-it-and-he-didnt-apply-for-its-controversial-game-awards-nod/",
+   "d": "2025-07-02"
+  },
+  {
+   "t": "Terminals.io：正式版上市日預告（官方新聞稿）",
+   "u": "https://terminals.io/games/dave-the-diver/news/4091",
+   "d": "2023-06-09"
+  },
+  {
+   "t": "Gamespress：Xbox 版上市新聞稿",
+   "u": "https://www.gamespress.com/DAVE-THE-DIVER-Launches-on-Xbox-Consoles-and-Unveils-Sneak-Peek-of-Int",
+   "d": "2025-11-20"
+  },
+  {
+   "t": "Xbox Wire：資料片 In the Jungle 公布（含官方預告）",
+   "u": "https://news.xbox.com/en-us/2026/03/12/dave-the-diver-jungle-dlc",
+   "d": "2026-03-12"
+  }
+ ],
+ "pending": [],
+ "updated": "2026-11-19",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "白天出海到藍洞，限時下潛",
+    "用魚叉、槍和無人機抓魚、撿素材",
+    "回岸上看漁獲，排今晚的菜單",
+    "晚上開壽司店：端菜、派員工、收錢",
+    "用賺的錢升級裝備、培訓員工、解鎖新設施",
+    "隔天潛得更深，遇到新魚和新劇情"
+   ],
+   "body": [
+    "白天是 2D 下潛：一天能潛兩次，後期再解鎖第三次。氧氣就是你的血量，超過裝備的深度限制會掉得更快，要靠沿途的氧氣補充撐住；身上的東西有重量上限，太重就游不快，再超過就撿不起來。你拿魚叉射魚，寶箱裡還會開出麻醉槍、網槍這些武器，大型魚先麻醉，再派回收無人機拖回船上。",
+    "晚上是壽司店：菜單用白天抓回來的漁獲排，菜可以花錢升級，賣價跟著上去。員工靠打廣告招募，每個人有料理、服務、採購、魅力等數值，花錢培訓會變強；店的人氣跟一個美食社群 App 的評價連動，評價上去客人和收入就跟著變多。開店時你自己也要端菜、倒茶，忙起來節奏很快。",
+    "它最大的特色是「一直加東西」：遊戲推進後會陸續開放魚和稻米、蔬菜等農場、海馬賽跑、料理對決、手機裡的各種 App，還有新的武器和潛艇。每多一個系統，就多一條賺錢或變強的路，很多人就是被「再一天就好，看看明天又開放什麼」黏住。",
+    "要注意的是它偶爾會切成即時動作：Boss 戰要邊閃邊射擊，打輸可以重打；還有節奏遊戲這類加碼小關卡。整體不難，但不是完全不用手感。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "Stardew Valley",
+    "same": "都是「一天一個循環、系統一直變多」的經營，越玩越停不下來",
+    "diff": "Stardew 主力是種田和人際，還能多人合作；潛水員戴夫有下潛動作和開餐廳，只能單人",
+    "steam": 413150
+   },
+   {
+    "name": "Moonlighter",
+    "same": "白天出去冒險撿東西，晚上回店裡賣錢",
+    "diff": "Moonlighter 是地城戰鬥加開商店；潛水員戴夫是海底探索加壽司餐廳，氣氛輕鬆很多",
+    "steam": 606150
+   },
+   {
+    "name": "DREDGE",
+    "same": "一樣是抓魚、收容量、升級船的循環，兩款還有官方聯名",
+    "diff": "DREDGE 是陰森的克蘇魯風格、在船上抓魚，沒有經營；潛水員戴夫明亮搞笑、重點在開店",
+    "steam": 1562430
+   }
+  ],
+  "story": {
+   "safe": [
+    "主角戴夫是個有點發福、愛睡覺的潛水員，被老朋友眼鏡蛇拉到一個叫「藍洞」的神祕海域：這裡的海底地形會變，魚種多到不合理。",
+    "眼鏡蛇和壽司師傅班丘合夥開了一間壽司店，戴夫的工作就是白天下海幫店裡抓魚。",
+    "潛得越深，戴夫越常碰到奇怪的事：神祕的地震、住在海底的「海人族」，還有各路覬覦藍洞的勢力，主線就這樣一步步把謎團打開。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "MINTROCKET 是韓國 NEXON 底下的品牌，主打規模較小、創意優先的作品，2024 年 9 月正式改成 NEXON 的全資子公司。工作室負責人兼導演是黃載皓。遊戲 2022 年 10 月先在 Steam 搶先體驗，2023 年 6 月 28 日推出正式版。",
+   "電腦版上市約兩週就賣破 100 萬套，之後陸續推出 Switch、PS、Switch 2、Xbox 和手機版，2026 年 9 月官方宣布全平台破 1000 萬套；同一份公告也說資料片 In the Jungle 賣破 100 萬套，並公布了外傳《Bancho The Chef》。",
+   "它拿下 2024 年 BAFTA 的遊戲設計獎，但入圍 TGA 2023 最佳獨立遊戲時引起爭議：背後是 NEXON 這種大廠，算不算獨立？導演後來受訪時直說它「一點都不獨立」，也說他們從沒主動報名。這個獎最後由《星之海》拿下。"
+  ],
+  "timeline": [
+   {
+    "d": "2022-10",
+    "t": "Steam 搶先體驗開跑"
+   },
+   {
+    "d": "2023-06-28",
+    "t": "電腦正式版上市"
+   },
+   {
+    "d": "2023-07",
+    "t": "電腦版上市約兩週賣破 100 萬套"
+   },
+   {
+    "d": "2023-10-26",
+    "t": "Switch 版上市"
+   },
+   {
+    "d": "2024-04-16",
+    "t": "PS4／PS5 版上市"
+   },
+   {
+    "d": "2025-11-06",
+    "t": "Switch 2 版上市"
+   },
+   {
+    "d": "2025-11-20",
+    "t": "Xbox 版上市"
+   },
+   {
+    "d": "2026-06-18",
+    "t": "資料片 In the Jungle 上市"
+   },
+   {
+    "d": "2026-09-09",
+    "t": "宣布全平台銷量破 1000 萬套"
+   },
+   {
+    "d": "2026-09-17",
+    "t": "iOS／Android 版全球上架"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "潛水和開店兩個循環互相推動，很容易一天接一天停不下來",
+    "新系統一路加，玩了幾十小時還有新東西",
+    "像素美術、角色和音樂都很有個性，搞笑演出很討喜",
+    "評測幾乎一面倒地好，Metacritic、OpenCritic 都是 90"
+   ],
+   "cons": [
+    "釣魚、小遊戲這類操作玩久了會覺得單調",
+    "有些系統沒有講清楚，要自己摸",
+    "Boss 戰射擊角度受限，有點手忙腳亂",
+    "也有人覺得回饋來得慢，中段每晚的經營變成例行公事"
+   ],
+   "debate": [
+    "它算不算獨立遊戲？支持入圍的人看的是小團隊和創意，反對的人說背後就是大廠 NEXON，對真正的小團隊不公平。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "本體",
+   "what": "完整主線和歷次免費更新、免費聯名內容，單買就能玩好幾十小時；Deluxe 版只是本體加數位特典（Digital Extra）。",
+   "tip": "先試試胃口的話買本體就夠。"
+  },
+  {
+   "name": "In the Jungle 組合包",
+   "what": "本體＋付費資料片 In the Jungle（叢林村落、淡水湖、新武器），資料片約 10 小時。",
+   "tip": "喜歡就直接買組合包，比分開買划算。",
+   "best": true
+  },
+  {
+   "name": "Switch／PS5／Xbox 版",
+   "what": "主機版內容同電腦版，Xbox 版支援 Play Anywhere。",
+   "tip": "用電腦玩，買 Steam 版就好。"
+  }
+ ],
+ "multi": {
+  "ok": false,
+  "text": "純單人遊戲，沒有連線或合作模式。"
+ }
+}

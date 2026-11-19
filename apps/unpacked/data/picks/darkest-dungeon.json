@@ -1,0 +1,534 @@
+{
+ "id": "darkest-dungeon",
+ "date": "2026-11-19",
+ "rank": 3,
+ "game": {
+  "zh": "Darkest Dungeon",
+  "zh_note": "沒有繁中官方名；簡中商店名是《暗黑地牢》",
+  "en": "Darkest Dungeon",
+  "steam": 262060,
+  "dev": "Red Hook Studios",
+  "pub": "Red Hook Studios",
+  "platforms": [
+   "PC（Steam、GOG）",
+   "Mac／Linux",
+   "PS4／PS Vita",
+   "Switch",
+   "Xbox One",
+   "iPad"
+  ],
+  "genres": [
+   "回合制角色扮演",
+   "Roguelike",
+   "隊伍經營"
+  ],
+  "release": "2016-01-19",
+  "year": 2016,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "必玩",
+ "label": "帶隊下地城、壓力爆表也停不了",
+ "pitch": "帶四人小隊下地城，怪物會殺人、壓力會逼瘋人，回村再把傷兵養回來",
+ "why": "痞子葳，這款我想推給你，因為它是我知道最「活」的隊伍經營之一。你雇一批冒險者、配四人隊下地城，回合制的戰鬥要算站位：誰站第一排擋刀、誰在後排補血，技能只能在特定位置放。但真正讓人上癮的是壓力：隊員會害怕、會崩潰，崩潰的人開始亂罵隊友、拒絕治療，偶爾也會在絕境裡爆發成英雄。每一趟都在算要不要再往前一間房、要不要回頭，結果全是你自己的決定長出來的。出一趟短任務很快，很適合一次玩一點。老實講要先說清楚：它只有簡體中文，難度很兇、後期要反覆刷，隊員會永久死亡；吃不消的話可以開「Radiant」模式，少刷很多。",
+ "reasons": [
+  {
+   "h": "壓力比血量更致命",
+   "t": "隊員壓力滿了會崩潰、亂罵隊友，爆到頂還可能心臟病發，每趟都要管人心。"
+  },
+  {
+   "h": "站位就是策略",
+   "t": "四個位置、每個技能限定站位，敵人還會打亂你的隊形，回合制慢慢算。"
+  },
+  {
+   "h": "十年後還在更新",
+   "t": "2016 年上市，2026 年 8 月還推出新資料片，銷量破 600 萬。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡回合制、愛研究隊伍搭配的人",
+   "喜歡經營一群角色、看他們成長也接受他們會死的人",
+   "喜歡黑暗奇幻、克蘇魯式恐怖氣氛的人"
+  ],
+  "against": [
+   "讀簡體中文會不舒服的人：沒有繁中",
+   "受不了機率作弄、辛苦養的角色一下就沒了的人",
+   "不想重複刷地城的人：後期要反覆練隊伍"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic",
+   "v": "84（PC）",
+   "s": [
+    2
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "84（93% 推薦）",
+   "s": [
+    3
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "Red Hook Studios（自己發行）",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "工作室",
+   "v": "2024 年 9 月被 Behaviour Interactive（《黎明死線》開發商）收購，仍獨立運作",
+   "s": [
+    28
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2015 年初 Steam 搶先體驗；2016/1/19 電腦正式版",
+   "s": [
+    0,
+    7
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "只有簡體中文（介面與字幕），沒有繁中、沒有中文語音",
+   "s": [
+    0,
+    1
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 84（PC）、OpenCritic 84",
+   "s": [
+    2,
+    3
+   ]
+  },
+  {
+   "k": "媒體評測",
+   "v": "Game Informer 9.3、IGN 9.1、GameSpot 9、PC Gamer 88",
+   "s": [
+    3
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：主線約 58 小時、含支線約 82.5 小時、全收集約 124 小時",
+   "s": [
+    4
+   ]
+  },
+  {
+   "k": "Radiant 模式",
+   "v": "2017 年 2 月加入，升級快、花費低，後期內容約 40 小時就能碰到（原本約 80 小時）",
+   "s": [
+    20
+   ]
+  },
+  {
+   "k": "資料片",
+   "v": "The Crimson Court 2017/6/19、The Color of Madness 2018/6/19、The Fire's Edge 2026/8/18",
+   "s": [
+    13,
+    15,
+    5
+   ]
+  },
+  {
+   "k": "銷量",
+   "v": "2016 年 11 月破 100 萬套；2022 年 12 月本體破 600 萬套",
+   "s": [
+    9,
+    8
+   ]
+  },
+  {
+   "k": "平台",
+   "v": "PS4／PS Vita 2016/9/27、iPad 2017/8/24、Switch 2018/1/18、Xbox One 2018/2/28",
+   "s": [
+    11,
+    12,
+    25,
+    24
+   ]
+  },
+  {
+   "k": "收費",
+   "v": "買斷＋付費資料片，沒有遊戲內購",
+   "s": [
+    0,
+    16
+   ]
+  },
+  {
+   "k": "電腦需求",
+   "v": "最低 2GB 記憶體、支援 OpenGL 3.2 的顯示卡、2GB 空間",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "史低",
+   "v": "2024/11/27 曾打到 0.8 折（-92%）",
+   "s": [
+    1
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "只有簡體中文的介面與字幕，沒有繁體中文；旁白和語音是英文。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；也能在 GOG 買。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷＋付費資料片",
+  "notes": [
+   "本體買斷，沒有遊戲內購。",
+   "三個主要資料片和幾個小 DLC 另外賣，也有免費的角色和對戰模式。"
+  ],
+  "flags": [
+   "買斷",
+   "資料片另售"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "2016 年的 2D 遊戲，最低只要 2GB 記憶體；你的 SCAR 18 接 4K 電視玩完全不會有感。"
+ },
+ "time": {
+  "text": "一輪約 58～82 小時",
+  "note": "HowLongToBeat：主線約 58 小時、含支線約 82.5 小時、全收集約 124 小時；開 Radiant 模式會少刷很多。單趟任務分短、中、長，短任務很快就能收工。"
+ },
+ "howto": [
+  "第一輪直接開 Radiant 模式：升級快、花費少，少刷很多，體驗一樣完整。",
+  "出發前買夠火把和食物，鏟子也帶幾把；火把亮度越低越危險，但戰利品也越多。",
+  "先學會看站位：每個技能都寫了能從哪個位置放、能打到哪個位置，組隊時把前排坦、後排補排好。",
+  "壓力跟血量一樣重要：回村後送去酒館或修道院紓壓，別讓壓力太高的人連續出任務。",
+  "別太執著某個角色：陣亡是常態，多養幾隊輪流出，主力倒了才不會全盤崩掉。"
+ ],
+ "deals": "史低曾打到 0.8 折，常常大特價，沒必要原價買。先買本體；喜歡再補資料片，特價時買 Ancestral Edition 組合包（含三個舊資料片）最划算，2026 年的 The Fire's Edge 要另外買（現價看下方即時數據）。",
+ "talk": [
+  {
+   "q": "角色會「心態崩潰」，是好設計還是折磨？",
+   "why": "壓力系統讓這款像在帶一群真人，也讓很多人中途棄坑。你覺得遊戲該不該讓你的角色不聽話？"
+  },
+  {
+   "q": "Radiant 模式算不算「簡單模式」？",
+   "why": "官方為了減少刷而加，硬派玩家覺得失去原味。降低重複勞動跟降低難度，是同一件事嗎？"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "h-mXN3akTPU",
+    "title": "正式版上市預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：Darkest Dungeon（語言、DLC、系統需求、單人）",
+   "u": "https://store.steampowered.com/app/262060/Darkest_Dungeon/",
+   "d": ""
+  },
+  {
+   "t": "SteamDB：Darkest Dungeon（語言、史低價）",
+   "u": "https://steamdb.info/app/262060/",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：Darkest Dungeon（PC）",
+   "u": "https://legacy.prod.metacritic.com/game/pc/darkest-dungeon",
+   "d": ""
+  },
+  {
+   "t": "OpenCritic：Darkest Dungeon（評分與各家評測）",
+   "u": "https://opencritic.com/game/1567/view",
+   "d": ""
+  },
+  {
+   "t": "HowLongToBeat：Darkest Dungeon",
+   "u": "https://howlongtobeat.com/game/22535",
+   "d": ""
+  },
+  {
+   "t": "Darkest Dungeon 官方新聞：The Fire's Edge 上市",
+   "u": "https://www.darkestdungeon.com/news/the-fire-s-edge-available-now-/",
+   "d": "2026-08-18"
+  },
+  {
+   "t": "Gematsu：Darkest Dungeon II 5/8 正式上市",
+   "u": "https://www.gematsu.com/2023/02/darkest-dungeon-ii-launches-may-8",
+   "d": "2023-02-06"
+  },
+  {
+   "t": "Kotaku：Darkest Dungeon 搶先體驗時期的風波",
+   "u": "https://kotaku.com/darkest-dungeons-harrowing-journey-through-early-access-1766723866",
+   "d": "2016-03-23"
+  },
+  {
+   "t": "Game World Observer：Darkest Dungeon 銷量破 600 萬",
+   "u": "https://gameworldobserver.com/2022/12/26/darkest-dungeon-sales-6-million-copies-red-hook",
+   "d": "2022-12-26"
+  },
+  {
+   "t": "PC Gamer：Darkest Dungeon 銷量破 100 萬、官方模組支援將推出",
+   "u": "https://www.pcgamer.com/darkest-dungeon-breaks-1-million-units-sold-official-mod-support-is-on-the-way/",
+   "d": "2016-11-03"
+  },
+  {
+   "t": "Game Developer：Darkest Dungeon 募資檢討（上）",
+   "u": "https://www.gamedeveloper.com/business/a-darkest-dungeon-kickstarter-post-mortem-part-1-",
+   "d": "2014-03-05"
+  },
+  {
+   "t": "PlayStation Blog：PS4、PS Vita 版 9/27 上市",
+   "u": "https://blog.playstation.com/archive/2016/08/02/darkest-dungeon-creeps-onto-ps4-and-ps-vita-on-27-september/",
+   "d": "2016-08-02"
+  },
+  {
+   "t": "TouchArcade：iPad 版上市",
+   "u": "https://toucharcade.com/2017/08/24/darkest-dungeon-ipad-out-now/",
+   "d": "2017-08-24"
+  },
+  {
+   "t": "GamingOnLinux：資料片 The Crimson Court 6/19 上市",
+   "u": "https://www.gamingonlinux.com/2017/05/darkest-dungeons-expansion-the-crimson-court-set-to-release-june-19th/",
+   "d": "2017-05-26"
+  },
+  {
+   "t": "PC Gamer：The Shieldbreaker 即將推出",
+   "u": "https://www.pcgamer.com/uk/the-shieldbreaker-joins-darkest-dungeon-later-this-week/",
+   "d": "2017-10-24"
+  },
+  {
+   "t": "PC Gamer：The Color of Madness 上市日",
+   "u": "https://www.pcgamer.com/darkest-dungeon-the-color-of-madness-dlc-release-date-set/",
+   "d": "2018-05-10"
+  },
+  {
+   "t": "PC Gamer：免費對戰模式 The Butcher's Circus 上線",
+   "u": "https://www.pcgamer.com/darkest-dungeons-pvp-mode-comes-out-tomorrow-and-its-free-for-everyone/",
+   "d": "2020-05-27"
+  },
+  {
+   "t": "CGMagazine 評測",
+   "u": "https://www.cgmagonline.com/review/darkest-dungeon-pc-review/",
+   "d": "2016-02-15"
+  },
+  {
+   "t": "Game Informer：Darkest Dungeon 生存指南",
+   "u": "https://www.gameinformer.com/b/features/archive/2016/01/21/darkest-dungeon-survival-guide.aspx",
+   "d": "2016-01-21"
+  },
+  {
+   "t": "Gamepressure：壓力系統說明",
+   "u": "https://www.gamepressure.com/darkestdungeon/stress/za759e",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer：減少重複刷的 Radiant 模式",
+   "u": "https://www.pcgamer.com/darkest-dungeons-grind-reducing-radiant-update-enters-public-beta/",
+   "d": "2017-02-08"
+  },
+  {
+   "t": "PC Gamer：Darkest Dungeon 支援 Steam 工作坊",
+   "u": "https://www.pcgamer.com/darkest-dungeon-now-has-full-mod-support-through-the-steam-workshop/",
+   "d": "2017-04-06"
+  },
+  {
+   "t": "IGF 2016 入圍名單新聞稿",
+   "u": "https://ubm-tech.mediaroom.com/2016-01-06-2016-Independent-Games-Festival-Announces-List-Of-Awards-Finalists",
+   "d": "2016-01-06"
+  },
+  {
+   "t": "YouTube：Darkest Dungeon 正式版上市預告（Red Hook 官方頻道）",
+   "u": "https://www.youtube.com/watch?v=h-mXN3akTPU",
+   "d": "2016-01-18"
+  },
+  {
+   "t": "DualShockers：Xbox One 版上市日",
+   "u": "https://www.dualshockers.com/darkest-dungeon-release-date-xbox-one-deal/",
+   "d": "2018"
+  },
+  {
+   "t": "Gematsu：Switch 版 1/18 上市",
+   "u": "https://www.gematsu.com/2018/01/darkest-dungeon-switch-launches-january-18",
+   "d": "2018-01"
+  },
+  {
+   "t": "Deku Deals：Ancestral Edition 內容",
+   "u": "https://www.dekudeals.com/items/darkest-dungeon-ancestral-edition-new?platform=all",
+   "d": ""
+  },
+  {
+   "t": "Georgia Straight：Darkest Dungeon 募資結束約 31.3 萬美元",
+   "u": "https://www.straight.com/node/1101291",
+   "d": "2014"
+  },
+  {
+   "t": "Gematsu：Behaviour Interactive 收購 Red Hook Studios",
+   "u": "https://www.gematsu.com/2024/09/behaviour-interactive-acquires-red-hook-studios",
+   "d": "2024-09"
+  }
+ ],
+ "pending": [
+  "免費對戰模式 The Butcher's Circus 現在是否還有伺服器、配對得到人",
+  "Bloodmoon 難度的實際規則"
+ ],
+ "updated": "2026-11-19",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "在村莊雇冒險者、配四人小隊",
+    "買補給：火把、食物、鏟子、藥",
+    "下地城探索房間，回合制戰鬥、紮營",
+    "管血量也管壓力，決定要不要撤退",
+    "回村治療、紓壓、升級技能和裝備",
+    "用帶回來的傳家寶升級村莊建築"
+   ],
+   "body": [
+    "戰鬥是橫向回合制：四名隊員站成一排，位置一到四。每個技能都限定在某些位置才能放、只能打到敵人某幾個位置，敵人也會把你的隊形打亂。所以組隊不只看職業強弱，還要看誰站哪裡都還用得上。本體 15 種職業，加上免費的火槍手共 16 種可以搭。",
+    "血量之外還有壓力：被暴擊、看到恐怖的東西、在黑暗裡走太久，壓力都會上升。超過 100 會觸發一次「意志考驗」，多半變成恐懼、偏執這類失控狀態，偶爾會爆發成振奮全隊的美德；壓力衝到 200 會心臟病發。失控的隊員會亂講話讓隊友壓力更大，所以帶隊其實是在管人心。",
+    "地城裡要管火把：光越亮越不容易被偷襲；光越暗，敵人越兇、越容易偷襲，戰利品也越多，壓力跟著漲。任務分短、中、長，中、長任務可以紮營恢復。隊員會長出好壞怪癖、染上疾病，死了就是真的死了。",
+    "回到村莊，你要花錢送人去酒館、修道院紓壓、治病、練技能、升級裝備，再用地城帶回來的傳家寶升級建築，讓之後的隊伍更強。整個戰役就是一次次「派誰去、帶什麼、什麼時候撤」的取捨，最後挑戰最深處的那座地城。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "Darkest Dungeon II",
+    "same": "同一個團隊，一樣的壓力系統、站位戰鬥和黑暗畫風",
+    "diff": "二代改成駕馬車一路往前的 Roguelike，沒有可以長期經營的村莊和角色名冊；一代比較像帶一整個傭兵團",
+    "steam": 1940340
+   },
+   {
+    "name": "XCOM 2",
+    "same": "都是帶小隊出任務、隊員永久陣亡，回基地經營",
+    "diff": "XCOM 2 是 3D 格子地圖、要找掩體；Darkest Dungeon 是橫向排隊站位，多了壓力系統",
+    "steam": 268500
+   },
+   {
+    "name": "Loop Hero",
+    "same": "一樣陰暗的氣氛，一樣有營地建設和一輪一輪的冒險",
+    "diff": "Loop Hero 只有一個自動戰鬥的英雄，你負責擺地圖卡；Darkest Dungeon 是完整的四人隊回合制",
+    "steam": 1282730
+   }
+  ],
+  "story": {
+   "safe": [
+    "你繼承了祖先留下的家族莊園。祖先為了追求禁忌的力量往地底深處挖掘，結果放出了不可名狀的恐怖，整片土地都被腐化。",
+    "你得招募一批走投無路的冒險者，清理莊園周圍的廢墟、地窖、樹林與海灣，重建山腳下的小村莊，最後往祖先挖開的最深處前進。",
+    "整段故事由一位低沉的旁白娓娓道來，他會在你暴擊、崩潰、陣亡時插一句評語，氣氛就是它最大的魅力之一。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "Red Hook Studios 是加拿大的小團隊，由美術出身的 Chris Bourassa 和設計師 Tyler Sigman 創立。2014 年在 Kickstarter 募資，目標 7.5 萬美元，最後募到約 31 萬美元。",
+   "遊戲 2015 年初進入 Steam 搶先體驗；那年夏天加入屍體、心臟病發等設計時引來玩家強烈反彈，甚至出現騷擾開發者的情況，團隊後來加了開關讓玩家自己選。2016 年 1 月 19 日正式上市，入圍 IGF 2016 首獎等三項，同年 11 月銷量破 100 萬。",
+   "之後陸續推出資料片、Radiant 模式、Steam 工作坊支援和免費對戰模式，2022 年底本體銷量破 600 萬；續作《Darkest Dungeon II》2023 年 5 月 8 日正式上市。2026 年 8 月，一代還推出新資料片 The Fire's Edge，把二代的兩名英雄搬了回來。另外，2024 年 9 月《黎明死線》的開發商 Behaviour Interactive 收購了 Red Hook，工作室仍獨立運作。"
+  ],
+  "timeline": [
+   {
+    "d": "2014-03",
+    "t": "Kickstarter 募資大幅超標"
+   },
+   {
+    "d": "2015-02",
+    "t": "Steam 搶先體驗開跑"
+   },
+   {
+    "d": "2016-01-19",
+    "t": "電腦正式版上市"
+   },
+   {
+    "d": "2016-09-27",
+    "t": "PS4、PS Vita 版上市"
+   },
+   {
+    "d": "2017-02",
+    "t": "加入減少重複刷的 Radiant 模式"
+   },
+   {
+    "d": "2017-04-06",
+    "t": "支援 Steam 工作坊"
+   },
+   {
+    "d": "2017-06-19",
+    "t": "資料片 The Crimson Court 上市"
+   },
+   {
+    "d": "2018-01-18",
+    "t": "Switch 版上市"
+   },
+   {
+    "d": "2018-06-19",
+    "t": "資料片 The Color of Madness 上市"
+   },
+   {
+    "d": "2022-12",
+    "t": "本體銷量破 600 萬"
+   },
+   {
+    "d": "2024-09",
+    "t": "Behaviour Interactive 收購 Red Hook"
+   },
+   {
+    "d": "2026-08-18",
+    "t": "新資料片 The Fire's Edge 上市"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "緊張、無情的回合制戰鬥，每一步都要想清楚",
+    "壓力和怪癖系統讓角色像真人，每支隊伍都有自己的故事",
+    "手繪美術、旁白和音效把陰森氣氛做得很足",
+    "隨機地城加上模組支援，可以玩很久"
+   ],
+   "cons": [
+    "後期要反覆刷地城練隊伍，很多評測都提到",
+    "機率很兇，辛苦養大的主力可能一下就沒了",
+    "學習曲線陡，前幾小時容易被打得很慘",
+    "最後一段的難度門檻被批評有點刻意拉長"
+   ],
+   "debate": [
+    "它到底是「難」還是「刷」？支持的人說懲罰就是樂趣、每次失敗都是故事；反對的人說後期的重複練功只是在拖時間，官方後來也用 Radiant 模式回應了這點。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "本體",
+   "what": "完整戰役與 15 種職業，另外免費送火槍手（共 16 種）。",
+   "tip": "先買本體試胃口，常常大特價。"
+  },
+  {
+   "name": "Ancestral Edition 組合包",
+   "what": "本體＋The Crimson Court、The Shieldbreaker、The Color of Madness；不含 2026 年的新資料片 The Fire's Edge。",
+   "tip": "喜歡這個世界就等特價一次收齊，最划算。",
+   "best": true
+  },
+  {
+   "name": "Switch／PS4／Xbox One 版",
+   "what": "主機和掌機都有移植版本。",
+   "tip": "用電腦玩，買 Steam 版就好，還能裝工作坊模組。"
+  }
+ ],
+ "multi": {
+  "ok": false,
+  "text": "戰役是純單人，沒有合作模式。2020 年推出過免費的線上對戰模式 The Butcher's Circus（各帶四名英雄對打），目前還有沒有人在玩沒有查到；跟朋友一起玩的話，這款不適合。"
+ }
+}

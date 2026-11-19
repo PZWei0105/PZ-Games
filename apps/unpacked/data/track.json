@@ -13,6 +13,27 @@
    "watch": true
   },
   {
+   "appid": 262060,
+   "id": "darkest-dungeon",
+   "date": "2026-11-19",
+   "watch": false,
+   "pick": true
+  },
+  {
+   "appid": 1868140,
+   "id": "dave-the-diver",
+   "date": "2026-11-19",
+   "watch": false,
+   "pick": true
+  },
+  {
+   "appid": 2742830,
+   "id": "monster-train-2",
+   "date": "2026-11-19",
+   "watch": false,
+   "pick": true
+  },
+  {
    "appid": 2406770,
    "id": "bodycam",
    "date": "2026-11-18",
@@ -147,7 +168,17 @@
    "pick": true
   }
  ],
- "cmp": [],
+ "cmp": [
+  268500,
+  413150,
+  606150,
+  646570,
+  1102190,
+  1282730,
+  1562430,
+  1940340,
+  2379780
+ ],
  "names": [
   "Against the Storm",
   "Astro Looter: Survivor",

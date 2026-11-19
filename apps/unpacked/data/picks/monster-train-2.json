@@ -1,0 +1,472 @@
+{
+ "id": "monster-train-2",
+ "date": "2026-11-19",
+ "rank": 2,
+ "game": {
+  "zh": "怪物列車 2",
+  "en": "Monster Train 2",
+  "steam": 2742830,
+  "dev": "Shiny Shoe",
+  "pub": "Big Fan（Devolver Digital 旗下）",
+  "platforms": [
+   "PC（Steam）",
+   "Mac",
+   "Switch",
+   "PS5",
+   "Xbox Series X|S"
+  ],
+  "genres": [
+   "Roguelike",
+   "牌組構築",
+   "策略"
+  ],
+  "release": "2025-05-21",
+  "year": 2025,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "閉眼入",
+ "label": "愛燒腦組牌的閉眼入",
+ "pitch": "三層車廂守住頂樓火爐：放怪物、下法術，兩個氏族的牌互相疊出爆炸連鎖",
+ "why": "痞子葳，如果你喜歡組牌時「這兩張搭起來會不會爆」的那種腦內推演，這款就是那個感覺放大好幾倍。它不是一個英雄自己打，而是你要把一隊怪物排進三層車廂，敵人一層一層往上爬，你決定誰擋前排、哪層放法術、哪隻要疊裝備。每一輪挑兩個氏族搭配，同一張牌換了夥伴就完全是另一套打法，結果全是你自己的判斷長出來的。比起前作，開戰前可以先佈陣，還能悔一步，比較少輸得莫名其妙；全部回合制，不用拚手速。會卡你的地方：剛開始的牌組教得不太清楚，介面資訊很滿，前幾個小時要有點耐心摸規則。",
+ "reasons": [
+  {
+   "h": "每一輪都不一樣",
+   "t": "上市就有 5 個氏族，兩兩搭配出 20 種組合，之後的更新又陸續加了新氏族。"
+  },
+  {
+   "h": "策略比運氣多",
+   "t": "開戰前能先佈陣，還有悔一步，輸了多半是自己算錯，不是被抽牌坑。"
+  },
+  {
+   "h": "評價硬、還在更新",
+   "t": "Metacritic 87、OpenCritic 88，上市後連出兩次免費更新和兩個付費 DLC。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡牌組構築、愛研究卡牌連鎖的人",
+   "喜歡回合制、想慢慢算每一步的人",
+   "想要一款能打幾百小時、難度一路往上加的人"
+  ],
+  "against": [
+   "討厭畫面資訊很滿、要記一堆關鍵字的人",
+   "想要劇情帶著走的人：故事只是點綴",
+   "只想跟朋友一起玩的人：沒有合作或對戰"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic",
+   "v": "87",
+   "s": [
+    4,
+    0
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "88（93% 推薦）",
+   "s": [
+    3
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "Shiny Shoe／Big Fan（Devolver Digital 旗下的發行品牌）",
+   "s": [
+    0,
+    2
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2025/5/21，電腦、Switch、PS5、Xbox Series X|S 同步，首發加入 Xbox Game Pass",
+   "s": [
+    2,
+    11
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "繁中、簡中都有介面與字幕；沒有中文語音（完整配音只有英文）",
+   "s": [
+    0,
+    1
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 87、OpenCritic 88",
+   "s": [
+    4,
+    3
+   ]
+  },
+  {
+   "k": "媒體評測",
+   "v": "PC Gamer 91、IGN 9、Game Informer 9.3、Gaming Trend 85",
+   "s": [
+    5,
+    3,
+    7
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：主線約 5.5 小時、含支線約 37.5 小時、全收集約 134 小時",
+   "s": [
+    17
+   ]
+  },
+  {
+   "k": "氏族",
+   "v": "上市時 5 個全新氏族，每一輪挑 2 個搭配",
+   "s": [
+    2,
+    5,
+    6
+   ]
+  },
+  {
+   "k": "免費更新",
+   "v": "2025/9/10 Lost Arsenal（新卡）、2025/11/5 Echoes From the Void（新 Boss、新挑戰）",
+   "s": [
+    12,
+    13
+   ]
+  },
+  {
+   "k": "付費 DLC",
+   "v": "2026/2/2 Destiny of the Railforged（新氏族＋新模式，同日另送免費氏族）；2026/11/10 The Punished（官方說是最後一批上市後內容）",
+   "s": [
+    14,
+    15,
+    16
+   ]
+  },
+  {
+   "k": "玩家數",
+   "v": "2026/10/28 宣布玩家突破 100 萬",
+   "s": [
+    15
+   ]
+  },
+  {
+   "k": "多人",
+   "v": "單人遊戲；線上只有每日挑戰排行榜和跟好友比成績",
+   "s": [
+    0,
+    10
+   ]
+  },
+  {
+   "k": "電腦需求",
+   "v": "最低 GTX 760、建議 GTX 1080；容量 3GB",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "接下來",
+   "v": "Switch 2 與手機版預計 2026 年內推出（還沒有確切日期）",
+   "s": [
+    15,
+    16
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文（也有簡中）；語音只有英文，但卡牌遊戲幾乎不靠語音。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；主機版以各平台台灣商店為準。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷＋付費 DLC",
+  "notes": [
+   "本體買斷，沒有遊戲內購。",
+   "兩個付費 DLC 各加一個氏族和新內容，另有原聲帶、設定集；免費更新送了新卡、新 Boss，還有一個免費氏族。"
+  ],
+  "flags": [
+   "買斷",
+   "DLC 另售"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "建議配備是 GTX 1080、容量只要 3GB；你的 SCAR 18 開到最高、接 4K 電視都不會有感。"
+ },
+ "time": {
+  "text": "第一次通關約 5.5 小時，耐玩度很高",
+  "note": "HowLongToBeat：主線約 5.5 小時、含支線約 37.5 小時、全收集約 134 小時；一輪一輪打，隨時能停。"
+ },
+ "howto": [
+  "一開始先用預設的兩個氏族熟悉規則，別急著研究全部卡；每解鎖一個新氏族再換搭配。",
+  "開戰前的佈陣階段很重要：把耐打的怪放前排，輸出放後面，想清楚每一層要擋什麼。",
+  "樓層卡和裝備卡是二代的新東西：樓層卡影響整層，裝備卡讓一隻怪永久變強，挑一隻主力集中疊最有效。",
+  "牌組不要貪多，刪掉弱牌、讓關鍵牌更常抽到，比一直加牌更穩。",
+  "打贏後再慢慢往上開盟約等級（難度），到第 5 級會開始塞負面卡，要有心理準備。"
+ ],
+ "deals": "先買本體就好，內容已經很多；玩上癮再補 DLC。Deluxe 組合包含本體、原聲帶、設定集和第一個 DLC，特價時一次買比較划算（現價看下方即時數據）。",
+ "talk": [
+  {
+   "q": "續作「改良」就夠，還是要「改革」？",
+   "why": "評論普遍說它是前作的全面強化，而不是全新玩法。對 Roguelike 續作來說，你要的是熟悉的好玩，還是新鮮感？"
+  },
+  {
+   "q": "悔一步算不算作弊？",
+   "why": "二代加了悔棋按鈕，有人覺得少了緊張感，有人覺得終於不會手滑輸掉。策略遊戲該不該給後悔藥？"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "9um2KbFwHq8",
+    "title": "上市預告"
+   },
+   {
+    "id": "NrgUCBJbBlI",
+    "title": "公布預告"
+   }
+  ],
+  "images": []
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：Monster Train 2（語言、DLC、系統需求、功能）",
+   "u": "https://store.steampowered.com/app/2742830/",
+   "d": ""
+  },
+  {
+   "t": "Steam 商店頁（繁中）：怪物列車 2",
+   "u": "https://store.steampowered.com/app/2742830?l=tchinese",
+   "d": ""
+  },
+  {
+   "t": "Game Developer：Monster Train 2 上市新聞稿",
+   "u": "https://www.gamedeveloper.com/press-release/monster-train-2-pulls-into-the-station-with-a-locomotive-sized-helping-of-heavenly-mayhem-today-now-available-on-pc-consoles",
+   "d": "2025-05-21"
+  },
+  {
+   "t": "OpenCritic：Monster Train 2 評測彙整",
+   "u": "https://opencritic.com/game/18503/monster-train-2/reviews",
+   "d": ""
+  },
+  {
+   "t": "Metacritic：Monster Train 2",
+   "u": "https://legacy.prod.metacritic.com/game/pc/monster-train-2/critic-reviews",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer 評測（91 分）",
+   "u": "https://pcgamer.com/games/roguelike/monster-train-2-review",
+   "d": "2025-05"
+  },
+  {
+   "t": "AV Club 評測",
+   "u": "https://www.avclub.com/monster-train-2-review-familiar-but-thrilling",
+   "d": "2025-05"
+  },
+  {
+   "t": "Gaming Trend 評測（85 分）",
+   "u": "https://gamingtrend.com/reviews/monster-train-2-review-a-monstrous-leap-forward-for-turn-based-deck-builders",
+   "d": "2025-05"
+  },
+  {
+   "t": "Cosmocover：Monster Train 2 公布新聞稿（同日開放試玩）",
+   "u": "https://www.cosmocover.com/newsroom/monster-train-2-announced-for-2025-launch-on-pc-and-consoles-play-the-debut-demo-today-for-a-heavenly-successor-to-the-acclaimed-million-selling-hit",
+   "d": "2025-02-19"
+  },
+  {
+   "t": "Cosmocover：初代 Monster Train 上市新聞稿",
+   "u": "https://cosmocover.com/newsroom/good-shepherd-entertainment-shiny-shoes-roguelike-card-battler-monster-train-launches-may-21-on-steam",
+   "d": "2020"
+  },
+  {
+   "t": "PlayStation 官方頁：Monster Train 2（人數、線上功能）",
+   "u": "https://www.playstation.com/en-us/games/monster-train-2/",
+   "d": ""
+  },
+  {
+   "t": "Pure Xbox：Monster Train 2 首發加入 Game Pass",
+   "u": "https://www.purexbox.com/news/2025/05/monster-train-2-launches-on-xbox-game-pass-to-phenomenal-reviews",
+   "d": "2025-05-22"
+  },
+  {
+   "t": "Cosmocover：免費更新 Lost Arsenal",
+   "u": "https://www.cosmocover.com/newsroom/full-steam-ahead-monster-train-2-draws-new-cards-more-in-first-free-content-update-lost-arsenal-arriving-today/",
+   "d": "2025-09-10"
+  },
+  {
+   "t": "Cosmocover：免費更新 Echoes From the Void",
+   "u": "https://www.cosmocover.com/newsroom/monster-train-2-adding-free-content-update-echoes-from-the-void-to-deck-of-tricks-on-nov-5-for-pc-and-consoles/",
+   "d": "2025-10-22"
+  },
+  {
+   "t": "Cosmocover：第一個 DLC Destiny of the Railforged 與免費氏族",
+   "u": "https://www.cosmocover.com/newsroom/monster-train-2-gaining-massive-game-mode-with-new-structure-playable-clan-bosses-more-in-biggest-content-update-yet-first-dlc-launches-feb-2/",
+   "d": "2026-01"
+  },
+  {
+   "t": "Worth Playing：玩家破 100 萬、DLC The Punished 公布",
+   "u": "https://worthplaying.com/article/2026/10/28/news/151297-monster-train-2-reaches-1-million-players-celebrates-with-the-punished-dlc-in-november-nintendo-switch-2mobile-later-this-year/",
+   "d": "2026-10-28"
+  },
+  {
+   "t": "Inven Global：DLC The Punished 上市",
+   "u": "https://www.invenglobal.com/articles/28495/monster-train-2-officially-releases-the-punished-dlc",
+   "d": "2026-11"
+  },
+  {
+   "t": "Deku Deals：Monster Train 2（HowLongToBeat 時數）",
+   "u": "https://www.dekudeals.com/items/monster-train-2",
+   "d": ""
+  },
+  {
+   "t": "Gematsu：Monster Train 2 公布",
+   "u": "https://www.gematsu.com/2025/02/monster-train-2-announced-for-ps5-xbox-series-switch-and-pc",
+   "d": "2025-02-19"
+  },
+  {
+   "t": "Dot Esports：Monster Train 2 成就一覽（盟約等級、泰坦）",
+   "u": "https://dotesports.com/indies/news/all-monster-train-2-achievements",
+   "d": ""
+  }
+ ],
+ "pending": [
+  "一輪的平均時間（查不到可靠數字）",
+  "Steam 史低價",
+  "盟約難度的最高等級"
+ ],
+ "updated": "2026-11-19",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "挑兩個氏族、選一位冠軍出發",
+    "一路選路線：戰鬥、商店、事件、升級",
+    "每場戰鬥先佈陣，再出怪物和法術守三層車廂",
+    "敵人每回合往上爬一層，守住最上面的火爐",
+    "打贏拿卡、升級卡、拿神器，牌組越養越怪",
+    "打倒最後的大 Boss，解鎖新卡和更高難度"
+   ],
+   "body": [
+    "列車有三層戰鬥樓層，最上面是火爐，火爐被打爆就輸。敵人從最下層上車，沒被打死的每回合往上爬一層。你要把怪物卡放進各層當守軍，用法術卡打傷害、加狀態，所以每一回合都在算：這層擋得住嗎？哪一層該集中火力？",
+    "每一輪挑一個主氏族、一個副氏族，兩邊的卡混在一起用。上市時有 5 個全新氏族：靠英勇和重型裝備的天使、愛黃金的龍族、月亮女巫、靠腐敗與重生的真菌軍團，還有調配危險藥劑的瘋狂科學家。同一張卡換一個夥伴氏族，用法就會完全不同。",
+    "二代的新東西：樓層卡會影響整層、裝備卡能永久裝在怪物身上（後來的免費更新又加了不分氏族的樓層卡和裝備卡）。開戰前多了佈陣階段，也能悔一步；輪與輪之間有據點可以推進劇情、選加成。",
+    "通關後是長線內容：盟約等級一級一級加難度（第 5 級開始會塞負面卡）、無盡模式、加了各種變異規則的次元挑戰，還有每日挑戰排行榜。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "Monster Train（初代）",
+    "same": "同一個團隊、同樣是多層車廂守火爐、雙氏族搭配",
+    "diff": "初代有最多 8 人的即時競速模式 Hell Rush；二代沒有，但多了樓層卡、裝備卡、佈陣和悔一步",
+    "steam": 1102190
+   },
+   {
+    "name": "殺戮尖塔（Slay the Spire）",
+    "same": "Roguelike 牌組構築的經典，一樣是選路線、打怪、養牌組",
+    "diff": "殺戮尖塔是一個英雄往上爬；怪物列車 2 是指揮一整隊怪物守樓層，同時要管位置",
+    "steam": 646570
+   },
+   {
+    "name": "Balatro",
+    "same": "都是一輪一輪打、靠組合爆分的 Roguelike",
+    "diff": "Balatro 是撲克牌型算分，沒有戰鬥和單位；怪物列車 2 是真正的攻防",
+    "steam": 2379780
+   }
+  ],
+  "story": {
+   "safe": [
+    "泰坦奪下了天堂的控制權，還要毀滅整個世界。原本勢不兩立的天使和惡魔只好結盟，搭上一列從地獄出發的列車，一路穿過天堂，殺進泰坦的老家「深淵」。",
+    "故事在輪與輪之間推進：在據點選「火爐之心」加成時會跟著往下講，比初代多了不少過場。它是點綴，不是主菜，喜歡劇情的人別期待太多。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "開發商 Shiny Shoe 在美國舊金山。初代《Monster Train》2020 年 5 月 21 日由 Good Shepherd 發行，賣出超過 150 萬套，是牌組構築熱潮裡的代表作之一。",
+   "二代改由 Devolver Digital 旗下的 Big Fan 發行，2025 年 2 月 19 日公布並同步開放 Steam 試玩，5 月 21 日在電腦和三大主機同步上市，首發就進 Xbox Game Pass。",
+   "上市後更新很勤：兩次免費大更新加新卡、新 Boss 和挑戰，2026 年 2 月推出第一個付費 DLC，同日送一個免費氏族；10 月宣布玩家破 100 萬，11 月推出第二個 DLC The Punished，官方表示這是最後一批上市後內容，接下來還有 Switch 2 和手機版。"
+  ],
+  "timeline": [
+   {
+    "d": "2020-05-21",
+    "t": "初代 Monster Train 上市"
+   },
+   {
+    "d": "2025-02-19",
+    "t": "二代公布，同日開放 Steam 試玩"
+   },
+   {
+    "d": "2025-05-21",
+    "t": "電腦與三大主機同步上市，首發進 Game Pass"
+   },
+   {
+    "d": "2025-09-10",
+    "t": "免費更新 Lost Arsenal"
+   },
+   {
+    "d": "2025-11-05",
+    "t": "免費更新 Echoes From the Void"
+   },
+   {
+    "d": "2026-02-02",
+    "t": "付費 DLC Destiny of the Railforged，同日送免費新氏族"
+   },
+   {
+    "d": "2026-10-28",
+    "t": "宣布玩家突破 100 萬"
+   },
+   {
+    "d": "2026-11-10",
+    "t": "付費 DLC The Punished 上市"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "新增的佈陣階段和悔一步，讓輸贏更靠策略、少靠運氣",
+    "兩個氏族自由搭配，組合多到玩不完，還能湊出誇張的連鎖",
+    "樓層卡、裝備卡讓每一場多了實在的選擇",
+    "獎勵給得大方，每一輪都有變強的爽感"
+   ],
+   "cons": [
+    "起始牌組沒把新系統教清楚，前幾小時容易摸不著頭緒",
+    "介面資訊很滿，畫面有時不好讀",
+    "比較像前作的全面強化，新鮮感不如初代",
+    "高難度會塞負面卡，有人覺得綁手綁腳"
+   ],
+   "debate": [
+    "它是「最好的初代」還是「真正的續作」？喜歡的人說每個系統都更順，挑剔的人覺得骨架跟初代幾乎一樣。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "本體",
+   "what": "上市內容加兩次免費更新和免費氏族，單買就能玩上百小時。",
+   "tip": "先買本體，上癮再補 DLC。",
+   "best": true
+  },
+  {
+   "name": "Deluxe Edition 組合包",
+   "what": "本體＋原聲帶＋數位設定集＋第一個 DLC Destiny of the Railforged（新氏族和新模式）。",
+   "tip": "特價時想一次收齊再考慮。"
+  },
+  {
+   "name": "DLC The Punished",
+   "what": "2026 年 11 月的新氏族 DLC，官方說是最後一批上市後內容。",
+   "tip": "玩到想要新氏族再買。"
+  }
+ ],
+ "multi": {
+  "ok": false,
+  "text": "單人遊戲，沒有合作或即時對戰；線上只有每日挑戰的全球與好友排行榜。初代的 8 人競速模式 Hell Rush 在二代沒有。"
+ }
+}
