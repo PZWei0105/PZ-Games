@@ -6,7 +6,8 @@
    只有名字的用 data/names.json 查 appid（Steam 商店搜尋、名字完全一樣才算）。都沒有：簡單的卡＋點播解包、問 Claude、去商店找。 */
 const INFO = { got: {}, names: null, seq: 0 };
 /* 名字比對：跟資料管線 live.py 的 name_key 一模一樣（先拿掉 ™®©，全形半形統一、小寫、標點空白都當成一個空格） */
-const nameKey = (s) => String(s || '').replace(/[™®©]/g, '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const ROMAN = { ii: '2', iii: '3', iv: '4', vi: '6', vii: '7', viii: '8', ix: '9', xi: '11', xii: '12', xiii: '13', xiv: '14', xv: '15', xvi: '16' };
+const nameKey = (s) => String(s || '').replace(/[™®©]/g, '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(' ').map((w) => ROMAN[w] || w).join(' ');
 function namesLoad() {
   if (INFO.names) return Promise.resolve(INFO.names);
   return once('names', () => getJSON('names.json').then((d) => (INFO.names = (d && d.names) || {})).catch(() => (INFO.names = {})));

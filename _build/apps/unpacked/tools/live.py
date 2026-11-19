@@ -1212,10 +1212,14 @@ INFO_KEEP = 14               # 不再出現在 App 裡的，留幾天再刪
 TGA_SKIP = {'performance', 'adapt', 'ugc', 'esathlete', 'esteam', 'creator'}   # 演員、影視、模組、選手、隊伍、實況主：不是 Steam 遊戲
 
 
+ROMAN = {'ii': '2', 'iii': '3', 'iv': '4', 'vi': '6', 'vii': '7', 'viii': '8', 'ix': '9', 'xi': '11', 'xii': '12', 'xiii': '13', 'xiv': '14', 'xv': '15', 'xvi': '16'}
+
+
 def name_key(s):
-    """名字比對用：全形半形統一、小寫、拿掉 ™®©、標點空白都當成一個空格（App 的 nameKey 一模一樣）。"""
+    """名字比對用：全形半形統一、小寫、拿掉 ™®©、標點空白都當成一個空格、羅馬數字變阿拉伯數字（Slay the Spire II＝Slay the Spire 2）。
+    App 的 nameKey 一模一樣。"""
     s = unicodedata.normalize('NFKC', re.sub(r'[™®©]', '', s or '')).lower()     # 先拿掉 ™：NFKC 會把它變成 TM
-    return re.sub(r'[\W_]+', ' ', s).strip()
+    return ' '.join(ROMAN.get(w, w) for w in re.sub(r'[\W_]+', ' ', s).split())
 
 
 def resolve_names(D, wanted, t0, budget=NAME_BUDGET):
@@ -1271,9 +1275,9 @@ def _free_names(x):
         out.append(re.sub(r'-[0-9a-f]{6}$', '', m.group(1)).replace('-', ' ').replace('_', ' '))
     t = (x.get('title') or '').strip()
     out.append(t)
-    lat = re.sub(r'^[^A-Za-z0-9]+', '', t)
-    if lat and lat != t:
-        out.append(lat)
+    m = re.search(r'\s([A-Za-z0-9][A-Za-z0-9\s:\'&!.,-]{4,})$', t)     # 「鬥陣騎士 Knightica」後面那段英文名（要夠長，「…點擊RPG」那種不算）
+    if m and m.group(1).strip() != t:
+        out.append(m.group(1).strip())
     return [c for i, c in enumerate(out) if c and c not in out[:i]]
 
 
