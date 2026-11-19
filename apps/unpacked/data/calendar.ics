@@ -17,6 +17,15 @@ DESCRIPTION:-20%，NT$452，最後到 05:00\n解包 UNPACKED
 URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/bodycam
 END:VEVENT
 BEGIN:VEVENT
+UID:unpacked-end-2321960-20261124@pzwei0105.github.io
+DTSTAMP:20261124T000000Z
+DTSTART;VALUE=DATE:20261124
+DTEND;VALUE=DATE:20261125
+SUMMARY:特價截止｜Spirit Crossing
+DESCRIPTION:-10%，NT$505，最後到 02:00\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/spirit-crossing
+END:VEVENT
+BEGIN:VEVENT
 UID:unpacked-free-epic3d6441ab9d4246208bc97d7babf664b51f9a12b06b4f437790b6913ad136a08c-20261126@pzwei0105.github.io
 DTSTAMP:20261126T000000Z
 DTSTART;VALUE=DATE:20261126
@@ -87,6 +96,16 @@ DTEND;VALUE=DATE:20261205
 SUMMARY:特價截止｜戰鎚 40\,000：破曉之戰 IV
 DESCRIPTION:-10%，NT$1574，最後到 00:00\n解包 UNPACKED
 URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/dawn-of-war-iv
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-rel-3384600-20261210@pzwei0105.github.io
+DTSTAMP:20261210T000000Z
+DTSTART;VALUE=DATE:20261210
+DTEND;VALUE=DATE:20261211
+SUMMARY:上市｜雷頓教授與蒸氣新世界
+DESCRIPTION:PC（Steam）、PS5、Nintendo Switch 2、Nintendo Switch\n
+ 解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/professor-layton-new-world-of-steam
 END:VEVENT
 BEGIN:VEVENT
 UID:unpacked-vote-tga2026vote-20261210@pzwei0105.github.io
