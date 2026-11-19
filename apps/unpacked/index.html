@@ -2282,7 +2282,7 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611190511';
+const VERSION = '1.0.2611191911';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -7042,8 +7042,8 @@ const BIO = {
   bio: '🎮 每天解包一款 PC／主機遊戲\n新作值不值得買・私房神作推坑・限免特價情報\n好遊戲不錯過，雷遊戲不踩過\n▼ YouTube「遊戲狂想曲」完整影片',
   fbabout: '遊戲狂想曲 GAME RHAPSODY｜PC／主機遊戲推坑、新作解包、特價情報，每天一款。好遊戲不錯過，雷遊戲不踩過。完整影片在 YouTube「遊戲狂想曲」。',
 };
-/* 帳號代號（@ 後面那串）：IG、Threads 只能用英文小寫、數字、底線、句點，最多 30 字；YouTube 的 Gaming-Rhapsody 有連字號，要換寫法 */
-const HANDLES = ['gaming.rhapsody', 'gaming_rhapsody', 'gamingrhapsody.tw'];
+/* 帳號代號（@ 後面那串）：2026-11-20 定案 gaming.rhapsody105（gaming.rhapsody 等寫法都被用走了）。Threads、IG、FB 粉專共用 */
+const HANDLE = 'gaming.rhapsody105';
 /* 自我介紹（置頂用）：三個口味，都不放網址、不出現本人名字 */
 const INTROS = [
   { k: 'intro1', t: '直白版', text: '大家好，這裡是「遊戲狂想曲」🎮\n\n只聊 PC 和主機遊戲。每天在這裡解包一款：\n・新作值不值得買：價格、中文、評價、要玩多久，一次講清楚\n・已上市的私房神作：好玩但你可能錯過的\n・限時免費和特價情報：領了就是你的\n\n不碰抽卡手遊、不下農場標題。好遊戲不錯過，雷遊戲不踩過。\n\n先來認識一下：你最近在玩哪一款？留言丟一款，我們聊聊。' },
@@ -7058,18 +7058,18 @@ const PHASES = [
 ];
 const PH_OF = { th: 1, thig: 2, all: 3 };
 const QUESTS = [
-  { id: 'name', ph: 1, t: '想好帳號代號', why: '代號（@ 後面那串英文）就是你的門牌：Threads 跟 IG 共用同一個，之後改了別人會找不到你，一開始就選好。', steps: [
+  { id: 'name', ph: 1, t: '帳號代號：@gaming.rhapsody105', why: '代號（@ 後面那串英文）就是你的門牌：Threads、IG、FB 粉專都用同一個，觀眾搜這串就找得到你。已經定案，之後不要再改，改了別人會找不到你。', steps: [
     '名稱（大字那一行）一律用「遊戲狂想曲」，不放你本人的名字。',
-    '代號只能用英文小寫、數字、底線「_」和句點「.」，不能有連字號：YouTube 的 Gaming-Rhapsody 要換個寫法。下面有三個建議，先想好 2～3 個備案，註冊時被用走了就換下一個。',
+    '代號定案是 gaming.rhapsody105：YouTube 的 Gaming-Rhapsody 有連字號，Threads、IG 不能用；gaming.rhapsody 這類寫法也都被用走了，所以後面加 105。',
     '準備一個新的 email（例如開一個新的 Gmail）專門給遊戲狂想曲用：粉專跟你個人的帳號完全分開，以後交接、找回密碼都乾淨。',
-    'Threads、IG、之後的 FB 粉專、YouTube 都用同一個名稱和同一張大頭貼（頻道的噴漆 Logo），觀眾在哪裡看到都認得出是你。'], handles: true, copy: ['name'] },
+    'Threads、IG、之後的 FB 粉專、YouTube 都用同一個名稱和同一張大頭貼（頻道吉祥物「蒙面兜帽」），觀眾在哪裡看到都認得出是你。'], handles: true, copy: ['name'] },
   { id: 'ig0', ph: 1, t: '開 Instagram 帳號（Threads 的鑰匙）', why: 'Threads 要用 IG 帳號登入。現在只是拿它開門，IG 本身等第二階段再經營。大約 5 分鐘。', steps: [
     '下載 Instagram，打開後點「建立新帳號」。',
     '選用電子郵件註冊，填剛剛準備的新 email，輸入寄來的驗證碼。',
     '設定密碼（記進手機的密碼管理）。生日填你本人的：不會公開，平台只用來確認年齡。',
-    '名字填「遊戲狂想曲」，用戶名稱填你選好的代號；被用走就換備案。',
+    '名字填「遊戲狂想曲」，用戶名稱填 gaming.rhapsody105。',
     '接下來問你要不要找聯絡人、加入 Facebook 帳號管理中心、追蹤推薦的人：一律先「略過」或「稍後」，粉專跟你的個人帳號分開比較乾淨。',
-    '大頭貼先換成頻道的噴漆 Logo（等一下 Threads 可以一鍵匯入）。',
+    '大頭貼先換成頻道吉祥物「蒙面兜帽」（等一下 Threads 可以一鍵匯入）。',
     '補充：Threads 現在也能直接用 email 註冊，但用 IG 登入的話，第二階段就不用再開一次，兩邊代號也會一樣。'], copy: ['name'] },
   { id: 'th', ph: 1, t: '用 IG 帳號登入 Threads', why: '台灣聊遊戲最熱的地方，這是遊戲狂想曲的主力平台。', steps: [
     '下載 Threads（黑底白色「@」的圖示），打開後選「使用 Instagram 繼續」，選剛剛開的遊戲狂想曲帳號。',
@@ -7082,7 +7082,7 @@ const QUESTS = [
     '簡介貼下面準備好的那段（上限 150 字，這段大約 75 字）。',
     '「連結」→「新增連結」貼 YouTube 頻道網址（最多 5 個，之後開了 IG、FB 再補上）。',
     '編輯畫面如果有「興趣」或「主題」可以掛在個人檔案上，選遊戲、PC 遊戲、Steam 這類，別人一看就知道你聊什麼。',
-    '大頭貼確認是頻道的噴漆 Logo，跟 YouTube 一模一樣。'], copy: ['bio'], yt: true },
+    '大頭貼確認是頻道吉祥物「蒙面兜帽」，跟 YouTube 一模一樣。'], copy: ['bio'], yt: true },
   { id: 'thfeed', ph: 1, t: '把首頁養成「遊戲版」', why: '首頁推什麼，你海巡就看到什麼。先讓 Threads 知道這個帳號只想看遊戲。', steps: [
     '點下面的放大鏡（搜尋），打「遊戲」或你常玩的遊戲名稱。',
     '主題標籤旁邊有「⋯」的是社群：點進去按右上角「加入」。遊戲相關的挑 1～3 個就好；加入的社群會掛在你的個人檔案上，別人一看就知道你是聊遊戲的。',
@@ -7179,7 +7179,7 @@ function questHtml(q, i, firstOpen) {
   const ok = !!S.ops.setup[q.id]; const pr = S.ops.prof;
   return `<details class="quest ${ok ? 'ok' : ''} ${q.opt ? 'q-opt' : ''}" ${firstOpen ? 'open' : ''}><summary><i>${ok ? '✓' : i + 1}</i><b>${esc(q.t)}</b>${ok ? '<em>完成</em>' : q.opt ? '<em class="o">選做</em>' : ''}</summary>
       <p class="q-why">${esc(q.why)}</p><ol>${q.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
-      ${q.handles ? `<div class="q-handles"><b>代號建議（點一下複製）</b>${HANDLES.map((h) => `<button class="hchip" data-act="opcopyx" data-t="${esc(h)}">@${esc(h)}</button>`).join('')}</div>` : ''}
+      ${q.handles ? `<div class="q-handles"><b>你的代號（點一下複製）</b><button class="hchip" data-act="opcopyx" data-t="${esc(HANDLE)}">@${esc(HANDLE)}</button></div>` : ''}
       ${(q.copy || []).map((k) => `<div class="cpx"><pre>${esc(BIO[k])}</pre><button class="btn sm y" data-act="opcopyx" data-k="${k}">${ICON.copy}<span>複製</span></button></div>`).join('')}
       ${q.yt ? (pr.yt ? `<div class="cpx"><pre>${esc(pr.yt)}</pre><button class="btn sm" data-act="opcopyx" data-k="yt">${ICON.copy}<span>複製頻道網址</span></button></div>` : '<p class="sub-note q-note">在這頁最上面填了 YouTube 頻道網址，這裡就能一鍵複製。</p>') : ''}
       ${q.intro ? `<div class="intros">${INTROS.map((x) => `<div class="intro"><div class="intro-h"><b>${esc(x.t)}</b><span>${x.text.length} 字</span></div><div class="pftxt">${nl2br(x.text)}</div><div class="btnrow"><a class="btn sm y thgo" href="${esc(thIntent(x.text, '遊戲'))}" target="_blank" rel="noopener">${ICON.mega}<span>帶到 Threads</span></a><button class="btn sm" data-act="opcopyx" data-k="${x.k}">${ICON.copy}<span>複製</span></button></div></div>`).join('')}</div>` : ''}
