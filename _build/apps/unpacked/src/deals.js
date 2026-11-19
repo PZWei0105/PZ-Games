@@ -60,12 +60,13 @@ function freeNewCount() { return freeNow().filter((x) => !S.freeSeen[x.id] && !S
 function freeCard(x, i) {
   const [sn, sc] = STORE[x.store] || [x.store, ''];
   const left = x.end ? Date.parse(x.end) - Date.now() : null; const got = !!S.freeGot[x.id];
-  return `<article class="fr ${got ? 'got' : ''} ${x.up ? 'up' : ''}" style="--i:${i};--rot:${rot(x.id, i, 1.2)}deg">
-    <div class="fr-im">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${x.img ? 'display:none' : ''}">FREE</div><span class="fr-st ${sc}">${esc(sn)}</span>${!x.up && !S.freeSeen[x.id] && !got ? '<span class="bnew">NEW</span>' : ''}</div>
+  const info = !x.mystery;      // 神秘遊戲還沒揭曉，沒有東西可看
+  return `<article class="fr ${got ? 'got' : ''} ${x.up ? 'up' : ''}" ${info ? `data-act="gameinfo" data-k="free:${esc(x.id)}" role="button"` : ''} style="--i:${i};--rot:${rot(x.id, i, 1.2)}deg">
+    <div class="fr-im">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${x.img ? 'display:none' : ''}">FREE</div><span class="fr-st ${sc}">${esc(sn)}</span>${!x.up && !S.freeSeen[x.id] && !got ? '<span class="bnew">NEW</span>' : ''}${info ? '<span class="gi-tag">ⓘ 看介紹</span>' : ''}</div>
     <div class="fr-b"><h4>${x.mystery ? '神秘遊戲（開放時才揭曉）' : esc(x.title)}</h4>
       <div class="fr-p">${x.orig_t || x.orig ? `<s>${esc(x.orig_t || fmtNT(x.orig))}</s>` : ''}<b>${x.up ? '下週免費' : '免費領'}</b></div>
       <div class="fr-t">${x.up ? `${esc(twWhen(x.start))} 開放` : left != null ? `⏱ ${esc(leftTxt(left))}・${esc(twWhen(x.end))} 截止` : '限時，截止時間看商店頁'}</div>
-      ${x.rv && x.rv[0] != null ? `<div class="fr-t">Steam 評價 ${x.rv[0]}%（${esc(fmtN(x.rv[1]))} 則）${x.zh === 'tc' ? '・繁中' : ''}</div>` : ''}
+      ${x.rv && x.rv[0] != null ? `<div class="fr-t">Steam 評價 ${x.rv[0]}%（${esc(fmtN(x.rv[1]))} 則）${x.zh === 'tc' ? '・繁中' : x.zh === 'sc' ? '・只有簡中' : ''}</div>` : x.zh === 'tc' ? '<div class="fr-t">有繁中</div>' : ''}
       <div class="btnrow">${x.up ? '' : `<a class="btn sm ${got ? '' : 'y'}" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer" data-act="frgo" data-id="${esc(x.id)}">${ICON.gift}<span>${got ? '再看一次' : '去領'}</span></a><button class="btn sm ${got ? 'k' : ''}" data-act="frgot" data-id="${esc(x.id)}">${got ? '✓ 領過了' : '標記領過'}</button>`}</div></div>
     ${got ? '<i class="fr-stamp">GET!</i>' : ''}</article>`;
 }

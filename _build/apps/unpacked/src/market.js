@@ -65,7 +65,7 @@ function mkTicker(b) {
   const rows = b.rows.filter((r) => !r.adult);
   const mv = rows.filter((r) => r.d1 != null).sort((x, y) => Math.abs(y.d1) - Math.abs(x.d1)).slice(0, 12);
   const list = (mv.length >= 4 ? mv : rows.slice(0, 12));
-  const one = list.map((r) => `<b>${esc(mkName(r))}</b> ${esc(mkNum(r.n))} <em class="${mkCls(r.d1)}">${mkPct(r.d1)}</em>`).join('<i>◆</i>');
+  const one = list.map((r) => `<span class="tk-i" data-act="mkinfo" data-a="${r.a}"><b>${esc(mkName(r))}</b> ${esc(mkNum(r.n))} <em class="${mkCls(r.d1)}">${mkPct(r.d1)}</em></span>`).join('<i>◆</i>');   // 跑馬燈上的也點得開
   return `<div class="mk-tk"><div class="in">${one}<i>◆</i>${one}<i>◆</i></div></div>`;
 }
 function mkHeat(b) {
@@ -120,12 +120,13 @@ async function mkInfo(a) {
       <div><span>Steam 評價</span><b>${r.rv && r.rv[0] != null ? r.rv[0] + '%' : '—'}</b><em>${r.rv ? esc(fmtN(r.rv[1])) + ' 則' : ''}</em></div>
       <div><span>台灣售價</span><b>${r.notw ? '沒上架' : r.free ? '免費' : r.p ? esc(fmtNT(r.p[0])) : '—'}</b><em>${r.notw ? 'Steam 台灣區買不到' : r.p && r.p[1] ? '-' + r.p[1] + '% 特價中' : ''}</em></div>
     </div>
-    ${mkChart(r.h, b.t, '30 小時線上人數')}${mkChart(r.sp, b.s, '7 天走勢')}<div id="mkdays"></div>
+    <div id="mkabout"></div>${mkChart(r.h, b.t, '30 小時線上人數')}${mkChart(r.sp, b.s, '7 天走勢')}<div id="mkdays"></div>
     <div class="btnrow">${ref ? `<button class="btn y" data-go="${esc(ref.route)}">${ref.kind === 'f' ? ICON.page : ICON.gem}<span>${ref.kind === 'f' ? '看解包' : '看推坑'}</span></button>` : `<button class="btn y" data-act="askreq" data-g="${esc(nm)}" data-a="${r.a}">${ICON.radio}<span>點播解包這款</span></button>`}
       <button class="btn p" data-act="askq" data-q="${esc(nm + '：' + why)}" data-ref="${ref ? esc(r.cov) : 'a:' + r.a}" data-ctx="${esc(nm)}">${ICON.radio}<span>問 Claude：${esc(why.replace('？', ''))}</span></button>
       <a class="btn" href="https://store.steampowered.com/app/${r.a}/" target="_blank" rel="noopener noreferrer">${ICON.cart}<span>Steam 商店頁</span></a></div>
     <p class="sub-note" style="margin-top:10px">線上人數來自 Steam 官方，每小時一筆；排程偶爾會晚，24 小時漲跌找前後 90 分鐘內最接近的一筆來比。</p></div>`, 'hsheet');
   sfx.lock();
+  giAboutInto($('#mkabout'), r.a);
   const d = await loadBoardD(); const box = $('#mkdays'); if (!box || !d) return;
   const k = String(r.a); const pk = (d.pk || {})[k];
   if (!pk || pk.filter((v) => v != null).length < 2) return;

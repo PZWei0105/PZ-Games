@@ -2104,3 +2104,30 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 .vs-strip .vst-s.r b{text-align:right}
 .vs-strip .vst-vs{font:400 38px/1 var(--drip);font-style:normal;color:var(--y);text-shadow:3px 3px 0 var(--p)}
 .vs-strip .vst-go{display:block;margin-top:10px;text-align:right;font:900 14px/1 var(--cjk);color:var(--y)}
+/* ---------- 遊戲情報卡（2026-11-19）：每一款遊戲都點得進去看介紹 ---------- */
+.fr[data-act]{cursor:pointer}
+.gi-tag{position:absolute;left:8px;bottom:8px;z-index:2;font:900 12px/1 var(--cjk);background:var(--k);color:var(--y);padding:5px 7px;border:2px solid var(--y);transform:rotate(-2deg)}
+.hinfo.gi .hi-img .ph{position:absolute;inset:0;display:grid;place-items:center;font:400 40px/1 var(--num);color:#555;letter-spacing:3px}
+.gi-ctx{margin:12px 0 4px;background:var(--y);color:var(--k);border:2px solid var(--k);box-shadow:4px 4px 0 var(--p);padding:10px 12px;display:grid;gap:4px}
+.gi-ctx b{display:flex;align-items:center;gap:6px;font:900 14.5px/1.3 var(--cjk)}
+.gi-ctx b svg{width:18px;height:18px;flex:none}
+.gi-ctx span{font:700 13.5px/1.55 var(--cjk)}
+.gi-ctx small{font:700 12px/1.5 var(--cjk);color:#5a5000}
+.gi-ctx a{color:var(--k);text-decoration:underline;text-underline-offset:2px}
+.gi-shots{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:12px 0 4px;padding:2px 0 8px;-webkit-overflow-scrolling:touch}
+.gi-shots img{flex:none;width:min(78%,420px);aspect-ratio:16/9;object-fit:cover;border:2px solid #333;scroll-snap-align:start;background:#222}
+.gi-src{margin-top:10px}
+.gi-wait{margin-top:12px}
+.gi-about{margin-top:14px;border-top:2px dashed #444;padding-top:12px}
+.gi-about h4{font:900 14px/1 var(--cjk);color:var(--y);letter-spacing:1px}
+.gi-about .hi-p{margin-top:8px}
+.gi-i{font:900 11px/1 var(--cjk);font-style:normal;color:var(--k);background:var(--y);padding:3px 5px;margin-left:6px;vertical-align:3px;white-space:nowrap}
+.cmpc[data-act]{cursor:pointer}
+.cmpc[data-act]:active{transform:rotate(var(--rot,0deg)) scale(.98)}
+.wx[data-act]{cursor:pointer;border-color:#555}
+.tg-n.hasi{padding-right:32px}
+.tg-i{position:absolute;right:5px;bottom:5px;z-index:2;width:23px;height:23px;display:grid;place-items:center;border-radius:50%;background:#000;color:var(--y);border:2px solid var(--y);font:italic 900 14px/1 Georgia,"Times New Roman",serif;cursor:pointer}
+.tg-n.me .tg-i{background:var(--y);color:#000;border-color:#000}
+.hinfo.gi h3.gi-top{margin-top:30px!important;padding-right:44px}
+@media (max-height:500px) and (orientation:landscape){.hinfo .hi-img{aspect-ratio:auto;height:54vh}}   /* 手機橫拿：情報卡的圖不要整個畫面都是 */
+.mk-tk .tk-i{cursor:pointer}

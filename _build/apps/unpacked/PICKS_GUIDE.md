@@ -74,7 +74,7 @@
 | `deals` | 「怎麼買最划算」1～3 句：買哪個版本、等不等特價、組合包 |
 | `talk` | 選填，「玩完可以聊」1～3 題 `{q, why}` |
 | `sections.gameplay` | `loop` 4～6 步核心循環；`body` 3～4 段，講「你在遊戲裡實際會做什麼」，機制要講到具體（數字、規則、例子） |
-| `sections.compare` | 2～3 款相似作 `{name, same, diff}`，優先挑痞子葳可能玩過或聽過的 |
+| `sections.compare` | 2～3 款相似作 `{name, same, diff, steam?}`，優先挑痞子葳可能玩過或聽過的；在 Steam 上的填 `steam`（appid），App 點卡片會打開那款的情報卡 |
 | `sections.story` | `{safe: [...], spoiler: []}`：不劇透的世界觀、開場、主角動機 2～3 段；**沒有劇情的遊戲填 `null`** |
 | `sections.studio` | 幕後 2～3 段：誰做的、前作、開發故事、銷量、後續更新 |
 | `sections.timeline` | 4～12 個時間點 `{d, t}`，`d` 用 YYYY-MM-DD（只知道月份就 YYYY-MM），每個都要能在來源找到 |

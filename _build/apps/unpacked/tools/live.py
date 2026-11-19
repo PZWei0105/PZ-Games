@@ -26,7 +26,9 @@ import os
 import re
 import sys
 import time
+import unicodedata
 import urllib.parse
+import zlib
 import urllib.request
 
 UTC = dt.timezone.utc
@@ -1111,13 +1113,17 @@ def freebies(D, t0, tagn):
                         img = next((imgs[t] for t in ('OfferImageWide', 'DieselStoreFrontWide', 'featuredMedia', 'Thumbnail', 'OfferImageTall') if imgs.get(t)), None)
                         title = (e.get('title') or '').strip()
                         tp = (e.get('price') or {}).get('totalPrice') or {}
+                        ca = {c.get('key'): c.get('value') for c in e.get('customAttributes') or [] if isinstance(c, dict)}
+                        desc = re.sub(r'\s+', ' ', htmllib.unescape(e.get('description') or '')).strip()
                         items.append(_nonull({
                             'id': f'epic:{e.get("namespace")}:{e.get("id")}', 'store': 'epic', 'title': title, 'img': img,
                             'url': f'https://store.epicgames.com/zh-Hant/p/{slug}' if slug else 'https://store.epicgames.com/zh-Hant/free-games',
                             'orig_t': _usd((tp.get('fmtPrice') or {}).get('originalPrice')) if (tp.get('originalPrice') or 0) > 0 else None,
                             'start': start, 'end': end, 'up': True if up else None,
                             'mystery': True if (not slug or 'mystery' in title.lower() or '神秘' in title) else None,
-                            'dlc': True if e.get('offerType') in ('ADD_ON', 'DLC') else None}))
+                            'dlc': True if e.get('offerType') in ('ADD_ON', 'DLC') else None,
+                            'desc': desc[:400] if desc and desc != title else None,
+                            'dev': (ca.get('developerName') or (e.get('seller') or {}).get('name') or '').strip()[:60] or None}))
         ok.append('epic')
     except Exception as e:  # noqa: BLE001
         errs.append(f'epic: {str(e)[:100]}')
@@ -1163,13 +1169,17 @@ def freebies(D, t0, tagn):
             items.append(_nonull({
                 'id': f'gog:{p.get("id")}', 'store': 'gog', 'title': (p.get('title') or '').strip(), 'img': p.get('coverHorizontal'),
                 'url': p.get('storeLink') or (f'https://www.gog.com/zh/game/{p.get("slug")}' if p.get('slug') else 'https://www.gog.com/'),
-                'orig_t': pr.get('base')}))
+                'orig_t': pr.get('base'), 'dev': ', '.join(str(x) for x in (p.get('developers') or [])[:2])[:60] or None}))
         ok.append('gog')
     except Exception as e:  # noqa: BLE001
         errs.append(f'gog: {str(e)[:100]}')
     for st in ('epic', 'steam', 'gog'):
         if st not in ok:        # 這一家這輪讀不到：先留上一輪還沒過期的
             items += [x for x in old.get('items') or [] if x.get('store') == st and (not x.get('end') or x['end'] > now_s)]
+    try:
+        free_match(D, items, t0, tagn)
+    except Exception as e:  # noqa: BLE001  對不到名字不能拖垮免費補給站
+        errs.append(f'match: {str(e)[:100]}')
     uniq = {}
     for x in items:
         x['seen'] = seen.get(x['id']) or now_s
@@ -1188,6 +1198,190 @@ def freebies(D, t0, tagn):
     wrote = save_if_changed(path, _nonull(out), ignore=('at', 'errs', 'diag'))
     print(f'free: {len([x for x in items if not x.get("up")])} 款現在免費、{len([x for x in items if x.get("up")])} 款預告，來源 {ok}，wrote={wrote}', errs or '')
     print('free diag:', json.dumps(diag, ensure_ascii=False)[:2000])
+
+
+# ------------------------------------------------------------------ 遊戲情報卡（2026-11-19）
+# App 裡出現的每一款遊戲都要點得進去看介紹。解包過的看專題；追蹤中的（live/）本來就有完整資料；
+# 其他出現在 App 裡的——行情板百大、免費補給站、TGA 入圍、最近兩期週報的下週出擊——在這裡抓 Steam 商店的
+# 介紹、截圖、動態預告、語言、評價 → data/info/<appid>.json（點開才載）。
+# 只有名字的（TGA、週報、Epic／GOG 的免費遊戲）用 Steam 商店搜尋，名字完全一樣才算 → data/names.json（App 也拿它查名字）。
+STORESEARCH = 'https://store.steampowered.com/api/storesearch/?term={}&cc=TW&l={}'
+NAME_RECHECK = (90, 14)      # 找到的 90 天、找不到的 14 天後再查一次
+NAME_BUDGET = 40             # 每輪最多查幾個名字（新的先查）
+INFO_KEEP = 14               # 不再出現在 App 裡的，留幾天再刪
+TGA_SKIP = {'performance', 'adapt', 'ugc', 'esathlete', 'esteam', 'creator'}   # 演員、影視、模組、選手、隊伍、實況主：不是 Steam 遊戲
+
+
+def name_key(s):
+    """名字比對用：全形半形統一、小寫、拿掉 ™®©、標點空白都當成一個空格（App 的 nameKey 一模一樣）。"""
+    s = unicodedata.normalize('NFKC', re.sub(r'[™®©]', '', s or '')).lower()     # 先拿掉 ™：NFKC 會把它變成 TM
+    return re.sub(r'[\W_]+', ' ', s).strip()
+
+
+def resolve_names(D, wanted, t0, budget=NAME_BUDGET):
+    """名字 → Steam appid。英文名查英文區、純中文名查繁中區；正規化後完全一樣才算，寧可對不到也不要對錯。
+    結果記在 data/names.json：{key: [appid（0＝找不到）, 查的日期]}。回傳 {key: appid}（只有找到的）。"""
+    path = os.path.join(D, 'names.json')
+    db = (load(path, {}) or {}).get('names') or {}
+    today = t0.astimezone(TW).date()
+    todo, seen = [], set()
+    for raw in wanted:
+        k = name_key(raw)
+        if len(k) < 2 or k in seen:
+            continue
+        seen.add(k)
+        e = db.get(k)
+        if e:
+            try:
+                age = (today - dt.date.fromisoformat(e[1])).days
+            except (TypeError, ValueError, IndexError):
+                age = 999
+            if age < NAME_RECHECK[0 if e[0] else 1]:
+                continue
+        todo.append((0 if not e else 1, raw, k))       # 沒查過的先查
+    todo.sort(key=lambda r: r[0])
+    asked = 0
+    for _, raw, k in todo[:budget]:
+        lang = 'english' if re.search(r'[A-Za-z]', raw) else 'tchinese'
+        term = re.sub(r'[《》〈〉「」『』]', '', raw).strip()
+        try:
+            r = get_json(STORESEARCH.format(urllib.parse.quote(term), lang), timeout=20, tries=1)
+        except Exception as e:  # noqa: BLE001
+            ERRS.append(f'storesearch: {str(e)[:80]}')
+            continue
+        hit = 0
+        for it in r.get('items') or []:
+            if it.get('type') == 'app' and name_key(it.get('name')) == k:
+                hit = int(it['id'])
+                break
+        db[k] = [hit, today.isoformat()]
+        asked += 1
+        time.sleep(0.35)
+    save_if_changed(path, {'at': iso(t0), 'names': dict(sorted(db.items()))})
+    if asked:
+        print(f'names: 查了 {asked} 個名字，排隊 {max(0, len(todo) - budget)} 個；名冊 {len(db)} 筆（找到 {sum(1 for v in db.values() if v[0])}）')
+    return {k: v[0] for k, v in db.items() if v and v[0]}
+
+
+def _free_names(x):
+    """免費遊戲拿去 Steam 對名字的候選：網址裡的英文 slug（Epic 最後面那段亂碼拿掉）、標題、標題裡的英文那段。"""
+    out = []
+    m = re.search(r'/p/([a-z0-9-]+)', x.get('url') or '') or re.search(r'/game/([a-z0-9_]+)', x.get('url') or '')
+    if m:
+        out.append(re.sub(r'-[0-9a-f]{6}$', '', m.group(1)).replace('-', ' ').replace('_', ' '))
+    t = (x.get('title') or '').strip()
+    out.append(t)
+    lat = re.sub(r'^[^A-Za-z0-9]+', '', t)
+    if lat and lat != t:
+        out.append(lat)
+    return [c for i, c in enumerate(out) if c and c not in out[:i]]
+
+
+def free_match(D, items, t0, tagn):
+    """Epic、GOG 的免費遊戲也在 Steam 上的，補上 appid、Steam 評價、中文、標籤（情報卡就有完整介紹）。"""
+    todo = [x for x in items if x.get('store') in ('epic', 'gog') and not x.get('appid') and not x.get('mystery') and not x.get('dlc')]
+    if not todo:
+        return
+    found = resolve_names(D, [c for x in todo for c in _free_names(x)], t0)
+    hit = {}
+    for x in todo:
+        a = next((found[name_key(c)] for c in _free_names(x) if found.get(name_key(c))), None)
+        if a:
+            hit[x['id']] = a
+    info = get_items(sorted(set(hit.values())), media=False) if hit else {}
+    for x in todo:
+        a = hit.get(x['id'])
+        it = info.get(a) if a else None
+        if not it:
+            continue
+        n = norm(it, tagn)
+        x['appid'] = a
+        if n['rv']['n']:
+            x['rv'] = [n['rv']['pct'], n['rv']['n']]
+        z = 'tc' if 'tc' in n['langs'] else 'sc' if 'sc' in n['langs'] else None
+        if z:
+            x['zh'] = z
+        if n['tags']:
+            x['tags'] = n['tags'][:3]
+        if n['adult']:
+            x['adult'] = True
+
+
+def info_targets(D):
+    """要有情報卡的 appid、只有名字的（之後查 appid）：行情板、免費補給站、TGA 入圍、專題和推坑裡「跟誰像」、最近兩期週報的下週出擊。"""
+    tgt, names = set(), []
+    for r in (load(os.path.join(D, 'board.json'), {}) or {}).get('rows') or []:
+        if r.get('a'):
+            tgt.add(int(r['a']))
+    for x in (load(os.path.join(D, 'free.json'), {}) or {}).get('items') or []:
+        if x.get('appid'):
+            tgt.add(int(x['appid']))
+    for c in (load(os.path.join(D, 'tga.json'), {}) or {}).get('cats') or []:
+        if c.get('id') in TGA_SKIP:
+            continue
+        for n in c.get('nom') or []:
+            if n.get('steam'):
+                tgt.add(int(n['steam']))
+            elif n.get('n'):
+                names.append(n['n'])
+    tr = load(os.path.join(D, 'track.json'), {}) or {}       # 專題、推坑裡「跟誰像」的遊戲（publish.py 整理）
+    tgt.update(int(a) for a in tr.get('cmp') or [] if str(a).isdigit())
+    names += [n for n in tr.get('names') or [] if n]
+    for it in ((load(os.path.join(D, 'weekly.json'), {}) or {}).get('items') or [])[:2]:
+        for n in (load(os.path.join(D, 'weekly', f'{it.get("id")}.json'), {}) or {}).get('next') or []:
+            if n.get('steam'):
+                tgt.add(int(n['steam']))
+            elif n.get('name'):
+                names.append(n['name'])
+    return tgt, names
+
+
+def info_rec(x):
+    """情報卡要的欄位（介紹、截圖、動態預告、語言、平台、價格、評價）。評論數取兩位有效數字：每天多幾則不用重寫檔案。"""
+    keep = ('appid', 'name', 'url', 'free', 'price', 'rel', 'langs', 'tags', 'dev', 'pub', 'short', 'plat', 'adult', 'img', 'micro', 'ws')
+    r = {k: x[k] for k in keep if x.get(k) not in (None, '', [], {}, False)}
+    rv = x.get('rv') or {}
+    n = int(rv.get('n') or 0)
+    if n:
+        r['rv'] = {'n': int(float(f'{n:.2g}')) if n >= 100 else n, 'pct': rv.get('pct'), 'label': rv.get('label')}
+    if x.get('shots') and not x.get('adult'):
+        r['shots'] = x['shots'][:8]
+    return r
+
+
+def infos(D, t0, tagn, tracked):
+    """data/info/<appid>.json：新出現的馬上抓，已經有的每天輪到一次（照 appid 錯開、不用記時間）；
+    追蹤中的不做（App 看 live/），超過 INFO_KEEP 天沒出現在 App 裡的刪掉（_seen.json 記最後一次出現的日期）。"""
+    tgt, names = info_targets(D)
+    found = resolve_names(D, names, t0)
+    tgt |= {found[name_key(n)] for n in names if found.get(name_key(n))}
+    tgt -= tracked
+    xd = os.path.join(D, 'info')
+    os.makedirs(xd, exist_ok=True)
+    sp = os.path.join(xd, '_seen.json')
+    seen = load(sp, {}) or {}
+    today = t0.astimezone(TW).date()
+    for a in tgt:
+        seen[str(a)] = today.isoformat()
+    cut = (today - dt.timedelta(days=INFO_KEEP)).isoformat()
+    seen = {k: v for k, v in seen.items() if v >= cut and int(k) not in tracked}
+    have = set()
+    for fn in os.listdir(xd):
+        if fn.endswith('.json') and fn[0] != '_':
+            if fn[:-5] in seen:
+                have.add(fn[:-5])
+            else:
+                os.remove(os.path.join(xd, fn))
+    hour = int(t0.timestamp() // 3600)
+    need = [a for a in sorted(tgt) if str(a) not in have or (hour + zlib.crc32(str(a).encode())) % 24 == 0]
+    items = get_items(need, media=True) if need else {}
+    nw = 0
+    for a in need:
+        it = items.get(a)
+        if it and save_if_changed(os.path.join(xd, f'{a}.json'), info_rec(norm(it, tagn))):
+            nw += 1
+    save_if_changed(sp, dict(sorted(seen.items())))
+    print(f'info: {len(tgt)} 款要有情報卡（這輪抓 {len(need)} 款、寫了 {nw} 個）；名字對到 appid 的 {len(found)} 個')
 
 
 # ------------------------------------------------------------------ 出擊日曆（可訂閱的 .ics）
@@ -1457,7 +1651,9 @@ def main():
     for x in reversed(idx.get('items') or []):
         if x.get('steam'):
             cov[int(x['steam'])] = 'f:' + x['id']
-    for name, fn in (('board', lambda: board(D, t0, tagn, cov)), ('free', lambda: freebies(D, t0, tagn)), ('calendar', lambda: calendar(D, t0))):
+    tracked = {int(a) for a in out_apps}
+    for name, fn in (('board', lambda: board(D, t0, tagn, cov)), ('free', lambda: freebies(D, t0, tagn)), ('calendar', lambda: calendar(D, t0)),
+                     ('info', lambda: infos(D, t0, tagn, tracked))):
         try:
             fn()
         except Exception as e:  # noqa: BLE001

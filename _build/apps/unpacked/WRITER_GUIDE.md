@@ -76,7 +76,7 @@
 | `watch` | 接下來要盯的 2～3 件事（追蹤牆會用） |
 | `sections.gameplay` | `loop` 4～6 步核心循環；`body` 3～4 段，講「你在遊戲裡實際會做什麼」 |
 | `sections.hour` | 「你的第一個小時」3～5 步，實用（設定、選什麼、先做什麼、要避開什麼）。沒玩過就寫「照官方說明和玩家整理」 |
-| `sections.compare` | 2～4 款相似作：像在哪、差在哪 |
+| `sections.compare` | 2～4 款相似作 `{name, same, diff, steam?}`：像在哪、差在哪。那款在 Steam 上就填 `steam`（appid 數字），App 點卡片會打開它的情報卡（介紹、截圖、評價）；沒填的由資料管線照名字去 Steam 對，對不到就只給點播、問 Claude |
 | `sections.story` | `safe` 不劇透的設定與開場；`spoiler` 只放已上市、有來源的劇透，沒有就空陣列；完全沒劇情的遊戲整個設 null |
 | `sections.studio` | 幕後：誰做的、前作、開發過程、商業模式、爭議 |
 | `sections.voices` | 誇、罵各 2～4 條（媒體與玩家的共識，不捏造引言），`debate` 是吵最兇的 1～2 點 |

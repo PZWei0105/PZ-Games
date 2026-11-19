@@ -250,3 +250,34 @@ if '--after' in sys.argv:      # 寫稿之後：假的變化紀錄、官方公�
     lv['stale'] = L.stale_app(A, idx, pk, _dt.datetime.now(_dt.timezone.utc))
     L.live_save(d, lv)
     print('test after →', d)
+
+if '--info' in sys.argv:       # 遊戲情報卡：假的 Steam 介紹（info/）、名字對照（names.json）、免費遊戲對到 Steam
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import live as L
+    T = time.time()
+    os.makedirs(os.path.join(d, 'info'), exist_ok=True)
+    S = 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{}/'
+    def INFO(a, name, short, tags, tc=True, rv=(93, 1100000, '壓倒性好評'), price=(0, 0, 0), free=False, rel='2023-09-27', dev='Valve', shots=6, ea=False, soon=False):
+        r = {'appid': a, 'name': name, 'url': f'https://store.steampowered.com/app/{a}/', 'short': short, 'tags': tags, 'dev': dev, 'pub': dev,
+             'rel': {'date': rel, 'soon': soon, 'ea': ea}, 'langs': {'tc': {'ui': True, 'audio': False, 'sub': True}} if tc else {'sc': {'ui': True}},
+             'plat': ['win', 'deck'], 'img': {'header': S.format(a) + 'header.jpg', 'hero': S.format(a) + 'library_hero.jpg'},
+             'micro': {'webm': S.format(a) + 'micro.webm'}, 'shots': [S.format(a) + f'ss_{i}.jpg' for i in range(shots)],
+             'rv': {'pct': rv[0], 'n': rv[1], 'label': rv[2]}, 'price': {'final': price[0], 'orig': price[1], 'disc': price[2]}}
+        if free:
+            r['free'] = True
+        json.dump(r, open(os.path.join(d, 'info', f'{a}.json'), 'w'), ensure_ascii=False)
+    INFO(730, 'Counter-Strike 2', '（測試資料）十多年來全球數百萬玩家的戰術射擊首選：5 對 5 攻守對抗，經濟系統決定每一回合要買什麼槍。', ['FPS', '射擊', '多人', '競技'], free=True, rel='2012-08-21')
+    INFO(2412340, 'Knightica', '（測試資料）可愛的騎士團衝撞動作 Roguelite：一邊衝鋒一邊收編夥伴，隊伍越長越強，撞開成群的敵人。', ['動作', 'Roguelite', '可愛'], rv=(88, 2300, '極度好評'), price=(29900, 29900, 0), rel='2025-06-12', dev='Studio Test')
+    INFO(3020000, 'CONTROL Resonant', '（測試資料）Remedy 的超自然動作冒險續作：在不斷變形的大樓裡用念力戰鬥，揭開聯邦控制局的秘密。', ['動作', '超自然', '第三人稱'], rv=(0, 0, None), rel='2026-03-12', soon=True, dev='Remedy Entertainment', shots=4)
+    INFO(1794680, 'Vampire Survivors', '（測試資料）一個按鍵都不用按的割草神作：自動攻擊、撿經驗、選升級，三十分鐘活下來就贏。', ['Roguelite', '割草', '像素'], rv=(98, 230000, '壓倒性好評'), price=(9900, 9900, 0), rel='2022-10-20', dev='poncle')
+    nm = {L.name_key(k): [a, '2026-11-19'] for k, a in [('CONTROL Resonant', 3020000), ('Vampire Survivors', 1794680), ('吸血鬼倖存者', 1794680), ('Knightica', 2412340)]}
+    nm.update({L.name_key(k): [0, '2026-11-19'] for k in ['Grand Theft Auto VI', 'The Legend of Zelda: Ocarina of Time', '殺戮尖塔', 'GTA Online']})
+    json.dump({'at': iso(T), 'names': nm}, open(os.path.join(d, 'names.json'), 'w'), ensure_ascii=False)
+    fp = os.path.join(d, 'free.json'); fr = json.load(open(fp, encoding='utf-8'))
+    for x in fr.get('items') or []:
+        if 'Knightica' in (x.get('title') or ''):
+            x.update(appid=2412340, rv=[88, 2300], zh='tc', tags=['動作', 'Roguelite'], end=iso(T + 16 * 3600))
+        elif 'Mark of the Deep' in (x.get('title') or ''):
+            x.update(desc='（測試資料）在被詛咒的海底廢墟裡探險的魂系類銀河城：你是一名被浪打上岸的海盜，要在怪物與陷阱之間找回自己的船。', dev='Mad Mimic')
+    json.dump(fr, open(fp, 'w'), ensure_ascii=False)
+    print('test info →', d)

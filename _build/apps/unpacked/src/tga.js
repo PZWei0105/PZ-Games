@@ -6,6 +6,7 @@ const TGA_GRP = [['main', '年度大獎與製作獎'], ['indie', '獨立遊戲']
 S.tgaMe = Object.assign({ picks: {}, x2: [], lock: null, peek: false, seenRes: false }, LS.get('tga', {}));
 const tgaSave = () => LS.set('tga', S.tgaMe);
 const nomName = (n) => (n ? n.zh || n.n : '');
+const TGA_NOINFO = new Set(['performance', 'adapt', 'ugc', 'esathlete', 'esteam', 'creator']);   // 演員、影視、模組、選手、隊伍、實況主：沒有遊戲介紹可看
 
 function tgaPhase() {
   const t = S.tgaD; if (!t) return 'none';
@@ -31,7 +32,8 @@ function tgaNom(c, n, i, my, reveal, can) {
   const r = n.ref && wkRef(n.ref);
   const cls = [my === i ? 'me' : '', reveal && c.claude.c === i ? 'cl' : '', c.win === i ? 'win' : '', c.win != null && c.win !== i ? 'out' : ''].join(' ');
   const mk = (reveal && c.claude.c === i ? '<i class="tg-cl">C</i>' : '') + (my === i ? '<i class="tg-me">押</i>' : '');
-  return `<button class="tg-n ${cls}" data-act="tgapick" data-c="${c.id}" data-i="${i}"${can ? '' : ' aria-disabled="true"'}><span class="tg-l">${'ABCDEFGH'[i]}</span><span class="tg-nt"><b>${esc(nomName(n))}</b>${n.zh ? `<small>${esc(n.n)}</small>` : ''}${n.sub ? `<small>${esc(n.sub)}</small>` : ''}${r ? `<em>${r.kind === 'f' ? '解包過' : '推坑過'}</em>` : ''}</span>${mk ? `<span class="tg-mk">${mk}</span>` : ''}${c.win === i ? `<i class="tg-win">${ICON.trophy}<b>得獎</b></i>` : ''}</button>`;
+  const gi = TGA_NOINFO.has(c.id) ? '' : `<span class="tg-i" data-act="gameinfo" data-k="tga:${c.id}:${i}" role="button" aria-label="看${esc(nomName(n))}的介紹">i</span>`;
+  return `<button class="tg-n ${cls}${gi ? ' hasi' : ''}" data-act="tgapick" data-c="${c.id}" data-i="${i}"${can ? '' : ' aria-disabled="true"'}>${gi}<span class="tg-l">${'ABCDEFGH'[i]}</span><span class="tg-nt"><b>${esc(nomName(n))}</b>${n.zh ? `<small>${esc(n.n)}</small>` : ''}${n.sub ? `<small>${esc(n.sub)}</small>` : ''}${r ? `<em>${r.kind === 'f' ? '解包過' : '推坑過'}</em>` : ''}</span>${mk ? `<span class="tg-mk">${mk}</span>` : ''}${c.win === i ? `<i class="tg-win">${ICON.trophy}<b>得獎</b></i>` : ''}</button>`;
 }
 function tgaCatHtml(c, ph, reveal) {
   const me = S.tgaMe; const my = me.picks[c.id]; const x2 = me.x2.includes(c.id); const can = ph === 'pick'; const cl = c.claude;

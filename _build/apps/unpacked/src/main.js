@@ -397,6 +397,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'calall') { const L = S.calEv || []; if (L.length) { calSave(L, 'unpacked-calendar.ics'); sfx.stamp(); toast(`${L.length} 筆一次加入`); } return; }
     if (a === 'calcopy') { if (await copyText(CAL_URL)) { sfx.stamp(); toast('訂閱網址已複製'); } return; }
     if (a === 'hinfo') { ev.stopPropagation(); huntInfo(act.dataset.k); return; }
+    if (a === 'gameinfo') { ev.stopPropagation(); sfx.click(); gameOpen(act.dataset.k); return; }   // 遊戲情報卡
     // 行情板
     if (a === 'mkf' || a === 'mks' || a === 'mktag') { if (a === 'mkf') MK.f = act.dataset.v; else if (a === 'mks') MK.sort = act.dataset.v; else MK.tag = MK.tag === act.dataset.v ? '' : act.dataset.v; sfx.click(); const y = scrollY; VIEW().innerHTML = renderBoard(); scrollTo(0, y); if (a === 'mktag' && MK.tag) { const l = $('.mk-tagon'); if (l) l.scrollIntoView({ behavior: 'smooth', block: 'center' }); } return; }
     if (a === 'mkinfo') { mkInfo(act.dataset.a); return; }
@@ -414,7 +415,12 @@ document.addEventListener('click', async (ev) => {
     if (a === 'askchat') { askChat(act.dataset.id); return; }
     // 免費補給站
     if (a === 'frgo') { ev.stopPropagation(); S.freeSeen[act.dataset.id] = 1; LS.set('freeSeen', S.freeSeen); sfx.coin(); window.open(act.getAttribute('href'), '_blank', 'noopener'); return; }
-    if (a === 'frgot') { const id = act.dataset.id; if (S.freeGot[id]) delete S.freeGot[id]; else { S.freeGot[id] = todayTW(); sfx.coin(); burstAt(act, [YEL, PINK], 16, 9); } LS.set('freeGot', S.freeGot); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); setTabs('hunt'); return; }
+    if (a === 'frgot') {
+      const id = act.dataset.id; if (S.freeGot[id]) delete S.freeGot[id]; else { S.freeGot[id] = todayTW(); sfx.coin(); burstAt(act, [YEL, PINK], 16, 9); } LS.set('freeGot', S.freeGot);
+      if (act.closest('#sheet')) { const got = !!S.freeGot[id]; act.classList.toggle('k', got); act.textContent = got ? '✓ 領過了' : '標記領過'; }   // 情報卡裡按的：卡片上的字跟著改
+      if (ROUTE.startsWith('hunt')) { const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); setTabs('hunt'); }
+      return;
+    }
     if (a === 'hunwant') { delete S.marks[act.dataset.id]; save('marks'); closeSheet(); sfx.scratch(); toast('已經從獵物移除'); if (ROUTE.startsWith('hunt')) route(); return; }
     if (a === 'ha-go' || a === 'ha-x') { huntAlertClose(a === 'ha-go'); return; }
     if (a === 'jump') { const el = document.getElementById(act.dataset.to); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); sfx.click(); return; }

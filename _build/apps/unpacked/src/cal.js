@@ -44,13 +44,13 @@ function calEvents() {
     } else if (e.kind === 'fest' && e.big && twDate(Date.parse(e.start)) >= today) add({ type: 'fest', d: twDate(Date.parse(e.start)), name: e.name, route: 'hunt', key2: e.id, sub: `${e.note ? e.note + '・' : ''}${twWhen(e.start)} 開始` });
     else if ((e.kind === 'show' || e.kind === 'vote') && twDate(Date.parse(e.start)) >= today) add({ type: e.kind, d: twDate(Date.parse(e.start)), name: e.name, route: e.route || 'tga', key2: e.id, sub: `台灣時間 ${twWhen(e.start)}${e.kind === 'vote' ? ' 截止' : ' 開播'}${e.note ? '・' + e.note : ''}` });
   }
-  for (const x of freeNow()) if (x.end && !x.mystery && lastDay(x.end) >= today) add({ type: 'free', d: lastDay(x.end), name: x.title, img: x.img, route: 'hunt', key2: x.id, sub: `${(STORE[x.store] || [''])[0]} 限時免費・${twWhen(x.end)} 截止` });
+  for (const x of freeNow()) if (x.end && !x.mystery && lastDay(x.end) >= today) add({ type: 'free', d: lastDay(x.end), name: x.title, img: x.img, gk: 'free:' + x.id, key2: x.id, sub: `${(STORE[x.store] || [''])[0]} 限時免費・${twWhen(x.end)} 截止` });
   const wk = latestWeek(); const wf = wk && S.weekF && S.weekF[wk.id];
-  for (const n of (wf && wf.next) || []) {
+  for (const [ni, n] of ((wf && wf.next) || []).entries()) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(n.d) || n.d < today) continue;
     const r = n.ref && wkRef(n.ref);
     if (r && out.some((e) => e.type === 'rel' && e.route === r.route)) continue;
-    add({ type: 'next', d: n.d, name: n.name, img: r ? headerOf(r.it) : '', route: r && r.route, sub: n.t });
+    add({ type: 'next', d: n.d, name: n.name, img: r ? headerOf(r.it) : '', route: r && r.route, gk: r ? null : `wx:${wk.id}#${ni}`, sub: n.t });
   }
   return out.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : a.type === 'end' ? -1 : 1));
 }
@@ -73,13 +73,13 @@ async function renderCal() {
   const groups = []; ev.forEach((e, i) => { const g = groups[groups.length - 1]; if (g && g.d === e.d) g.i.push(i); else groups.push({ d: e.d, i: [i] }); });
   return `<div class="sec-h"><h2 class="spray-h y">出擊日曆</h2><span class="date-stk">LAUNCH CAL</span></div>
     <p class="sub-note">解包過的上市日、你願望單的上市日和特價截止、Steam 大特賣、免費遊戲截止、TGA、週報的下週出擊，全部排在一起。資料每小時更新。</p>
-    ${next ? `<section class="cnext" ${next.route ? `data-go="${esc(next.route)}"` : next.key ? `data-act="hinfo" data-k="${esc(next.key)}"` : ''}><div class="cn-img">${next.img ? `<img src="${esc(next.img)}" alt="" onerror="imgFail(this)">` : ''}<div class="ht"></div></div>
+    ${next ? `<section class="cnext" ${next.route ? `data-go="${esc(next.route)}"` : next.key ? `data-act="hinfo" data-k="${esc(next.key)}"` : next.gk ? `data-act="gameinfo" data-k="${esc(next.gk)}"` : ''}><div class="cn-img">${next.img ? `<img src="${esc(next.img)}" alt="" onerror="imgFail(this)">` : ''}<div class="ht"></div></div>
       <div class="cn-d"><b>${esc(dLabel(next.d))}</b><span>${esc(mdDay(next.d))}（${wdOf(next.d)}）</span></div><div class="cn-b"><span class="cn-k">下一個${CAL_TYPE[next.type][0]}</span><h3>${esc(next.name)}</h3><p>${esc(next.sub || '')}</p></div></section>` : ''}
     <div class="csub"><div><b>${ICON.cal}訂閱到手機行事曆</b><span>訂閱一次，上市日和特價截止會自動出現在 iPhone 行事曆，之後每小時跟著更新。</span></div>
       <div class="btnrow"><a class="btn y sm" href="${CAL_URL.replace('https://', 'webcal://')}">${ICON.cal}<span>訂閱</span></a><button class="btn sm" data-act="calcopy">${ICON.copy}<span>複製訂閱網址</span></button>${ev.length ? `<button class="btn sm" data-act="calall">${ICON.dl}<span>全部加入一次</span></button>` : ''}</div></div>
     ${grid}
     <div class="clegend"><i class="c-y"></i>上市<i class="c-p"></i>特價截止<i class="c-s"></i>大特賣<i class="c-f"></i>免費截止<i class="c-g"></i>TGA<i class="c-c"></i>新品節<i class="c-w"></i>下週出擊</div>
-    ${groups.length ? `<div class="clist">${groups.map((g) => `<div class="cg" id="cd-${g.d}"><div class="cg-d ${g.d === today ? 'today' : ''}"><b>${esc(mdDay(g.d))}</b><span>週${wdOf(g.d)}</span><em>${esc(dLabel(g.d))}</em></div><div class="cg-l">${g.i.map((i) => { const e = ev[i]; return `<div class="ce" ${e.route ? `data-go="${esc(e.route)}"` : e.key ? `data-act="hinfo" data-k="${esc(e.key)}"` : ''}><span class="ce-t c-${CAL_TYPE[e.type][1]}">${CAL_TYPE[e.type][0]}</span><div class="ce-b"><h4>${esc(e.name)}</h4>${e.sub ? `<p>${esc(e.sub)}</p>` : ''}</div><button class="ce-add" data-act="caladd" data-i="${i}" aria-label="加入行事曆">${ICON.cal}</button></div>`; }).join('')}</div></div>`).join('')}</div>`
+    ${groups.length ? `<div class="clist">${groups.map((g) => `<div class="cg" id="cd-${g.d}"><div class="cg-d ${g.d === today ? 'today' : ''}"><b>${esc(mdDay(g.d))}</b><span>週${wdOf(g.d)}</span><em>${esc(dLabel(g.d))}</em></div><div class="cg-l">${g.i.map((i) => { const e = ev[i]; return `<div class="ce" ${e.route ? `data-go="${esc(e.route)}"` : e.key ? `data-act="hinfo" data-k="${esc(e.key)}"` : e.gk ? `data-act="gameinfo" data-k="${esc(e.gk)}"` : ''}><span class="ce-t c-${CAL_TYPE[e.type][1]}">${CAL_TYPE[e.type][0]}</span><div class="ce-b"><h4>${esc(e.name)}</h4>${e.sub ? `<p>${esc(e.sub)}</p>` : ''}</div><button class="ce-add" data-act="caladd" data-i="${i}" aria-label="加入行事曆">${ICON.cal}</button></div>`; }).join('')}</div></div>`).join('')}</div>`
       : '<div class="empty">接下來沒有排定的上市或特價截止。專題、願望單、週報有新的日期就會自動出現。</div>'}`;
 }
 function calFx() {

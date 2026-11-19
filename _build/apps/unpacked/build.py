@@ -19,7 +19,7 @@ SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'unpacked')
 
-JS_ORDER = ['core.js', 'audio.js', 'fx.js', 'data.js', 'views.js', 'card.js', 'shorts.js', 'hunt.js', 'weekly.js', 'cal.js', 'market.js', 'deals.js', 'tga.js', 'ask.js', 'ops.js', 'opsstats.js', 'opslearn.js', 'vs.js', 'main.js']
+JS_ORDER = ['core.js', 'audio.js', 'fx.js', 'data.js', 'views.js', 'card.js', 'shorts.js', 'hunt.js', 'weekly.js', 'cal.js', 'market.js', 'deals.js', 'info.js', 'tga.js', 'ask.js', 'ops.js', 'opsstats.js', 'opslearn.js', 'vs.js', 'main.js']
 FONTS = [
     ('bebas-neue-latin-400-normal.woff2', 'Bebas Neue'),
     ('permanent-marker-latin-400-normal.woff2', 'Permanent Marker'),

@@ -51,7 +51,7 @@ jobs:
           git config user.name 'unpacked-bot'
           git config user.email 'unpacked-bot@users.noreply.github.com'
           # 一個一個加：還沒產生的檔案不能讓整個 git add 失敗
-          for f in live.json live wish.json calendar.ics hist candidates.json board.json board-d.json free.json inbox.json; do
+          for f in live.json live wish.json calendar.ics hist candidates.json board.json board-d.json free.json inbox.json info names.json; do
             if [ -e "apps/unpacked/data/$f" ]; then git add "apps/unpacked/data/$f"; fi
           done
           if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi

@@ -148,6 +148,14 @@
 `src/card.js`。1080×1350（4:5）或 1080×1080。先量好標題、副標、標籤、重點紙條的高度，再決定放幾條重點、圖多高（字一定要清楚，放不下就少放一條）。
 遊戲圖要能畫進畫布再匯出：先直接載（`crossOrigin=anonymous`），不行就走 `images.weserv.nl` 圖片代理，再不行就只畫塗鴉底（不會讓畫布變成無法匯出）。
 
+## 遊戲情報卡（2026-11-19）
+
+App 裡出現的每一款遊戲都點得進去看介紹（`src/info.js`）：
+- **解包過、推坑過的**：直接去那一篇（TGA 入圍、週報下週出擊、專題裡「跟誰像」都會照 appid 或中英文名字找）。有情境的（免費補給站的「去領」）先開情報卡，上面放「看完整專題」。
+- **其他的**開情報卡：Steam 商店的介紹、截圖、動態預告、標籤、中文（繁中／只有簡中／無中文）、Steam Deck、台灣售價、上市日、Steam 評價、開發發行，加上「點播解包這款」「問 Claude」「Steam 商店頁」。各處的入口：免費補給站整張卡（圖上「ⓘ 看介紹」，神秘遊戲還沒揭曉不算）、出擊日曆的免費截止和下週出擊、週報的下週出擊（「ⓘ 介紹」）、TGA 每個入圍遊戲右下的 i（演員、影視、模組、選手、隊伍、實況主這幾項沒有）、專題和推坑的「跟誰像」卡片。行情板本來的卡片下面多一段「遊戲介紹」。
+- **資料**：`live.py` 的 `infos()` 每輪整理「出現在 App 裡、但沒在追蹤」的遊戲（行情板百大、免費補給站、TGA 入圍、最近兩期週報的下週出擊、`track.json` 的「跟誰像」），新出現的馬上抓、已經有的每天輪到一次（照 appid 錯開），寫進 `data/info/<appid>.json`；不再出現的留 14 天再刪（`info/_seen.json`），變成追蹤中的就刪（改看 `live/`）。只有名字的用 Steam 商店搜尋（英文名查英文區、純中文名查繁中區，**正規化後完全一樣才算**，寧可對不到也不要對錯），記在 `data/names.json`（找到的 90 天、找不到的 14 天後再查；每輪最多查 40 個）。Epic、GOG 的免費遊戲也拿網址 slug 和標題去對 Steam，對到了補上 appid、Steam 評價、中文、標籤；Epic 另外帶官方介紹（`desc`）和開發商。
+- 名字比對 Python `name_key()` 和 App `nameKey()` 一模一樣：先拿掉 ™®©，NFKC（全形變半形）、小寫，標點空白都當成一個空格。
+
 ## 資料格式
 
 - `data/index.json`：`{at, n, items:[{id,date,rank,kind,kind_label,zh,en,steam,platforms,genres,release,price_text,headline,stamp,label,money,zhs,tw,yt,yts,img,gal,updated}]}`（publish.py 產生；`img` 是 `media.images` 第一張，`gal` 是第 2～6 張，首頁海報輪播用；`yts` 是 `media.yt` 的 `[{id,t}]` 最多 4 支，短影音用）。
@@ -162,7 +170,8 @@
 - `data/live.json` 的 `stale`：`{"f:<id>"／"p:<id>": {ch:[寫稿之後的變化], lp:{t?, d}（7 天內最新的官方更新，3 天內才帶標題）}}`（寫稿之後，列表小標和追蹤牆用）。
 - `data/hist/<appid>.json`：`pl` 同上 `[分鐘時間戳, 人數]`、`pr` 價格（有變才記）、`rv`／`rt` 全球與繁中評價 `[時間, 好評數, 總數]`（一天一筆）。
 - `data/board.json`：`{at, src(concurrent/players), since, t:[時間], s:[走勢時間], idx:{n,d1,up,dn,fl,h,sp}, rows:[{a(appid), n, h(30 小時), sp(7 天), d1, d7, pk, r, rp, lw, f:[標記], ath, nm, tags, rv, free, p, img, zh, adult, cov(f:/p:)}], tags:[{t, n, k, d1}]}`；`data/board-d.json`：`{days, pk:{appid:[每天高峰]}, ath, nm, last, since}`。
-- `data/free.json`：`{at, ok, errs, items:[{id(epic:…/steam:…/gog:…), store, title, img, url, orig 或 orig_t, start, end, up(下週才送), mystery, dlc, appid, rv, zh, tags, seen}], past}`。
+- `data/free.json`：`{at, ok, errs, items:[{id(epic:…/steam:…/gog:…), store, title, img, url, orig 或 orig_t, start, end, up(下週才送), mystery, dlc, appid, rv, zh, tags, desc, dev, adult, seen}], past}`（Epic、GOG 的 `appid` 是照名字對到的 Steam 版）。
+- `data/info/<appid>.json`：情報卡 `{appid, name, url, free, price, rel, langs, tags, dev, pub, short, plat, adult, img, micro, ws, rv{n（兩位有效數字）, pct, label}, shots}`；`data/info/_seen.json`：`{appid: 最後一次出現在 App 裡的日期}`。`data/names.json`：`{at, names:{name_key: [appid（0＝Steam 上找不到）, 查的日期]}}`。`track.json` 多了 `cmp`（「跟誰像」有填 steam 的 appid）、`names`（只有名字的）。
 - `data/events.json`：`{at, note, items:[{id, kind(sale/fest/show/vote), name, en, start, end, big, note, src:{t,u}}]}`（時間都是 UTC）。
 - `data/tga.json`：`{show, vote_end, venue, vote_url, sealed, result_at, intro, rules, cats:[{id, zh, en, pt, grp, nom:[{n, zh, sub, ref}], claude:{c, conf, why, s}, win}], sources}`。
 - `data/inbox.json`：`{v, at, cursor, events:[{id, type(ask/req/vid/tga/ping), t, dev, …}]}`（inbox.py 產生，欄位見 `QA_GUIDE.md`；`vid` 是 `{title, when, note?, games?, url?}`，`url` 只收 YouTube 網址）；`data/qa.json`：`{at, items:[{id, type(ask/req/vid), t, q, ref, st(done/no/wip), at, by, a, pts, src, link}]}`（排程寫；`link` 可以是 `f:`／`p:`／`v:<影片三連發 id>`）。
@@ -180,7 +189,7 @@ python3 _build/apps/unpacked/build.py --icons            # 重畫圖示
 python3 _build/apps/unpacked/tools/publish.py            # 專題檢查＋重建目錄
 # 本機看畫面（雲端沙盒連不到 Steam、YouTube、github.io：外部圖片用假圖代替）
 python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data --hunt   # --hunt：假願望單＋假週報；再加 --noweek 測「本週進行中」
-# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）；只寫進 /tmp，絕不 commit
+# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）、--info（情報卡、名字對照，搭配 --hunt 有假週報）；只寫進 /tmp，絕不 commit
 # 舊稿回訪的候選（只讀）：--kind f 專題、--kind p 推坑
 python3 _build/apps/unpacked/tools/revisit.py --kind f
 # 效能：造一年份的資料再量（--legacy 用舊格式比較）；perf.py 也能量現在的

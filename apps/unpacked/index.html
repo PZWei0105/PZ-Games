@@ -2127,6 +2127,33 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 .vs-strip .vst-s.r b{text-align:right}
 .vs-strip .vst-vs{font:400 38px/1 var(--drip);font-style:normal;color:var(--y);text-shadow:3px 3px 0 var(--p)}
 .vs-strip .vst-go{display:block;margin-top:10px;text-align:right;font:900 14px/1 var(--cjk);color:var(--y)}
+/* ---------- 遊戲情報卡（2026-11-19）：每一款遊戲都點得進去看介紹 ---------- */
+.fr[data-act]{cursor:pointer}
+.gi-tag{position:absolute;left:8px;bottom:8px;z-index:2;font:900 12px/1 var(--cjk);background:var(--k);color:var(--y);padding:5px 7px;border:2px solid var(--y);transform:rotate(-2deg)}
+.hinfo.gi .hi-img .ph{position:absolute;inset:0;display:grid;place-items:center;font:400 40px/1 var(--num);color:#555;letter-spacing:3px}
+.gi-ctx{margin:12px 0 4px;background:var(--y);color:var(--k);border:2px solid var(--k);box-shadow:4px 4px 0 var(--p);padding:10px 12px;display:grid;gap:4px}
+.gi-ctx b{display:flex;align-items:center;gap:6px;font:900 14.5px/1.3 var(--cjk)}
+.gi-ctx b svg{width:18px;height:18px;flex:none}
+.gi-ctx span{font:700 13.5px/1.55 var(--cjk)}
+.gi-ctx small{font:700 12px/1.5 var(--cjk);color:#5a5000}
+.gi-ctx a{color:var(--k);text-decoration:underline;text-underline-offset:2px}
+.gi-shots{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;margin:12px 0 4px;padding:2px 0 8px;-webkit-overflow-scrolling:touch}
+.gi-shots img{flex:none;width:min(78%,420px);aspect-ratio:16/9;object-fit:cover;border:2px solid #333;scroll-snap-align:start;background:#222}
+.gi-src{margin-top:10px}
+.gi-wait{margin-top:12px}
+.gi-about{margin-top:14px;border-top:2px dashed #444;padding-top:12px}
+.gi-about h4{font:900 14px/1 var(--cjk);color:var(--y);letter-spacing:1px}
+.gi-about .hi-p{margin-top:8px}
+.gi-i{font:900 11px/1 var(--cjk);font-style:normal;color:var(--k);background:var(--y);padding:3px 5px;margin-left:6px;vertical-align:3px;white-space:nowrap}
+.cmpc[data-act]{cursor:pointer}
+.cmpc[data-act]:active{transform:rotate(var(--rot,0deg)) scale(.98)}
+.wx[data-act]{cursor:pointer;border-color:#555}
+.tg-n.hasi{padding-right:32px}
+.tg-i{position:absolute;right:5px;bottom:5px;z-index:2;width:23px;height:23px;display:grid;place-items:center;border-radius:50%;background:#000;color:var(--y);border:2px solid var(--y);font:italic 900 14px/1 Georgia,"Times New Roman",serif;cursor:pointer}
+.tg-n.me .tg-i{background:var(--y);color:#000;border-color:#000}
+.hinfo.gi h3.gi-top{margin-top:30px!important;padding-right:44px}
+@media (max-height:500px) and (orientation:landscape){.hinfo .hi-img{aspect-ratio:auto;height:54vh}}   /* 手機橫拿：情報卡的圖不要整個畫面都是 */
+.mk-tk .tk-i{cursor:pointer}
 
 </style>
 </head>
@@ -2155,7 +2182,7 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611181332';
+const VERSION = '1.0.2611182359';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3158,7 +3185,7 @@ async function renderFeature(id) {
     ${sec('s-play', 'PLAY', '玩法拆解', `<div class="loop">${Sx.gameplay.loop.map((x, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="lp" style="--rot:${rot(id + x, i, 2)}deg">${esc(x)}</span>`).join('')}<span class="back2">↺ 再來一輪</span></div>
       ${Sx.gameplay.body.map((p) => `<p class="para">${esc(p)}</p>`).join('')}
       <h3 class="tape-h">你的第一個小時</h3><div class="steps">${Sx.hour.map((p) => `<div class="stp">${esc(p)}</div>`).join('')}</div>
-      <h3 class="tape-h p">跟誰像、差在哪</h3><div class="cmp">${Sx.compare.map((c, i) => `<div class="cmpc" style="--rot:${rot(id + c.name, i, 1.2)}deg"><h4>${esc(c.name)}</h4><div class="row"><b>像</b><span>${esc(c.same)}</span></div><div class="row d"><b>不同</b><span>${esc(c.diff)}</span></div></div>`).join('')}</div>`)}
+      <h3 class="tape-h p">跟誰像、差在哪</h3><div class="cmp">${Sx.compare.map((c, i) => `<div class="cmpc" data-act="gameinfo" data-k="cmp:${esc(String(c.steam || ''))}|${esc(c.name)}" role="button" style="--rot:${rot(id + c.name, i, 1.2)}deg"><h4>${esc(c.name)}<i class="gi-i">ⓘ</i></h4><div class="row"><b>像</b><span>${esc(c.same)}</span></div><div class="row d"><b>不同</b><span>${esc(c.diff)}</span></div></div>`).join('')}</div>`)}
     ${story ? sec('s-story', 'STORY', '劇情與世界觀', `${(Sx.story.safe || []).map((p) => `<p class="para">${esc(p)}</p>`).join('')}${(Sx.story.spoiler || []).length ? `<div class="spoil"><div class="inner">${Sx.story.spoiler.map((p) => `<p class="para">${esc(p)}</p>`).join('')}</div><div class="cover" data-act="spoil"><b>⚠ 有雷，撕開才看</b><span>tap to rip!</span></div></div>` : '<p class="sub-note">（這款還沒有可以聊的劇透，上市或玩過後再補。）</p>'}`) : ''}
     ${sec('s-studio', 'STUDIO', '幕後：誰做的', `${Sx.studio.map((p) => `<p class="para">${esc(p)}</p>`).join('')}<h3 class="tape-h">時間軸</h3><div class="tl">${Sx.timeline.map((t) => `<div class="tli ${t.d > today ? 'fut' : ''}"><div class="td">${esc(t.d.replace(/-/g, '.'))}</div><div class="tt">${esc(t.t)}</div></div>`).join('')}</div>`)}
     ${sec('s-voice', 'VOICES', '玩家風向', `<div class="voices"><div class="vc pro"><h4>誇的</h4><ul>${Sx.voices.pros.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="vc con"><h4>罵的</h4><ul>${Sx.voices.cons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
@@ -3319,7 +3346,7 @@ async function renderPick(id) {
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
     ${Sx.gameplay ? sec('s-play', 'PLAY', '玩法拆解', `<div class="loop">${Sx.gameplay.loop.map((x, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="lp" style="--rot:${rot(id + x, i, 2)}deg">${esc(x)}</span>`).join('')}<span class="back2">↺ 再來一輪</span></div>
       ${Sx.gameplay.body.map((p) => `<p class="para">${esc(p)}</p>`).join('')}
-      ${(Sx.compare || []).length ? `<h3 class="tape-h p">跟誰像、差在哪</h3><div class="cmp">${Sx.compare.map((c, i) => `<div class="cmpc" style="--rot:${rot(id + c.name, i, 1.2)}deg"><h4>${esc(c.name)}</h4><div class="row"><b>像</b><span>${esc(c.same)}</span></div><div class="row d"><b>不同</b><span>${esc(c.diff)}</span></div></div>`).join('')}</div>` : ''}`) : ''}
+      ${(Sx.compare || []).length ? `<h3 class="tape-h p">跟誰像、差在哪</h3><div class="cmp">${Sx.compare.map((c, i) => `<div class="cmpc" data-act="gameinfo" data-k="cmp:${esc(String(c.steam || ''))}|${esc(c.name)}" role="button" style="--rot:${rot(id + c.name, i, 1.2)}deg"><h4>${esc(c.name)}<i class="gi-i">ⓘ</i></h4><div class="row"><b>像</b><span>${esc(c.same)}</span></div><div class="row d"><b>不同</b><span>${esc(c.diff)}</span></div></div>`).join('')}</div>` : ''}`) : ''}
     ${sec('s-rate', 'RATE', '評價怎麼說', `${scores.length ? `<div class="scores">${scores.map(([k, v, s2, sub], i) => `<div class="sc" style="--rot:${rot(id + k, i, 1.4)}deg"><span class="sk">${esc(k)}</span><b class="sv ${String(v).length > 6 ? 'long' : ''}">${esc(v)}</b>${sub ? `<span class="ss">${esc(sub)}</span>` : s2 ? `<a class="ss" href="${esc(s2.u)}" target="_blank" rel="noopener noreferrer">來源</a>` : ''}</div>`).join('')}</div>` : ''}
       <div class="fa"><div class="st"><h4>適合你，如果…</h4><ul>${f.fit.for.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="st p"><h4>先別買，如果…</h4><ul>${f.fit.against.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
       ${Sx.voices ? `<h3 class="tape-h">玩家和媒體怎麼說</h3><div class="voices"><div class="vc pro"><h4>誇的</h4><ul>${Sx.voices.pros.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="vc con"><h4>罵的</h4><ul>${Sx.voices.cons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
@@ -4742,7 +4769,7 @@ function weekSettleHtml(wk) {
     <div class="tiers" id="tiers">${tiers.map(([t, a]) => `<div class="tier"><b class="tl" style="background:${TIER_COL[t]}">${t}</b><div class="tt">${a.map((x, i) => { const r = wkRef(x.ref); if (!r) return ''; const img = headerOf(r.it, liveOf(r.it.steam)) || heroOf(r.it); return `<button class="tile" data-go="${esc(r.route)}" style="--i:${i}"><span class="ti">${img ? `<img src="${esc(img)}" alt="" loading="lazy" onerror="imgFail(this)">` : ''}<span class="ph" style="${img ? 'display:none' : ''}">?</span></span><span class="tn">${esc(r.it.zh)}</span>${r.kind === 'p' ? '<i class="tk">推坑</i>' : ''}</button>`; }).join('')}</div></div>`).join('')}</div>` : ''}
     <div class="tlines">${(wk.tiers || []).map((x) => { const r = wkRef(x.ref); return r ? `<div class="tlr" data-go="${esc(r.route)}"><b style="background:${TIER_COL[x.tier] || '#999'}">${esc(x.tier)}</b><div><h4>${esc(r.it.zh)}</h4><p>${esc(x.line)}</p></div></div>` : ''; }).join('')}</div>
     ${(wk.news || []).length ? `<h3 class="tape-h">本週大事</h3><div class="wnews">${wk.news.map((n, i) => `<div class="wn" style="--rot:${rot(wk.id + n.h, i, 1)}deg"><b class="wn-i">${String(i + 1).padStart(2, '0')}</b><h4>${esc(n.h)}</h4><p>${esc(n.t)}</p>${(n.s || []).length ? `<div class="wn-s">來源：${sl(n.s)}</div>` : ''}</div>`).join('')}</div>` : ''}
-    ${(wk.next || []).length ? `<h3 class="tape-h y">下週出擊 <button class="btn sm k" data-go="cal" style="margin-left:8px;vertical-align:2px">${ICON.cal}<span>出擊日曆</span></button></h3><div class="wnext">${wk.next.map((n) => { const r = n.ref && wkRef(n.ref); const d = new Date(n.d + 'T00:00:00Z'); return `<div class="wx" ${r ? `data-go="${esc(r.route)}"` : ''}><div class="wx-d"><b>${esc(n.d.length > 7 ? mdDay(n.d) : n.d.slice(0, 7).replace('-', '/'))}</b><span>${n.d.length > 7 ? '週' + WK[d.getUTCDay()] : '日期未定'}</span></div><div class="wx-b"><h4>${esc(n.name)}${r ? ' <i>已解包</i>' : ''}</h4><p>${esc(n.t)}</p>${(n.s || []).length ? `<div class="wn-s">來源：${sl(n.s)}</div>` : ''}</div></div>`; }).join('')}</div>` : ''}
+    ${(wk.next || []).length ? `<h3 class="tape-h y">下週出擊 <button class="btn sm k" data-go="cal" style="margin-left:8px;vertical-align:2px">${ICON.cal}<span>出擊日曆</span></button></h3><div class="wnext">${wk.next.map((n, ni) => { const r = n.ref && wkRef(n.ref); const d = new Date(n.d + 'T00:00:00Z'); return `<div class="wx" ${r ? `data-go="${esc(r.route)}"` : `data-act="gameinfo" data-k="wx:${esc(wk.id)}#${ni}"`}><div class="wx-d"><b>${esc(n.d.length > 7 ? mdDay(n.d) : n.d.slice(0, 7).replace('-', '/'))}</b><span>${n.d.length > 7 ? '週' + WK[d.getUTCDay()] : '日期未定'}</span></div><div class="wx-b"><h4>${esc(n.name)}${r ? ' <i>已解包</i>' : ' <i class="gi-i">ⓘ 介紹</i>'}</h4><p>${esc(n.t)}</p>${(n.s || []).length ? `<div class="wn-s">來源：${sl(n.s)}</div>` : ''}</div></div>`; }).join('')}</div>` : ''}
     ${deals.length ? `<h3 class="tape-h p">特價戰利品 <small>現在正在特價</small></h3><div class="hscroll">${deals.map((d, i) => `<div class="mini dl" ${d.route ? `data-go="${esc(d.route)}"` : `data-act="hinfo" data-k="${esc(d.key)}"`} style="--rot:${rot(d.name, i, 1.2)}deg"><div class="pimg">${d.img ? `<img src="${esc(d.img)}" alt="" loading="lazy" onerror="imgFail(this)">` : ''}<div class="ph" style="${d.img ? 'display:none' : ''}">SALE</div></div><span class="dl-d">-${d.disc}%</span><div class="mb"><h4>${esc(d.name)}</h4><div class="md">${d.final === 0 ? '免費領' : esc(fmtNT(d.final))}${d.low === 'low' && d.final ? ' · 史低' : ''}</div></div></div>`).join('')}<div class="mini pkm more" data-go="hunt"><div class="mm">${ICON.target}<b>去獵價</b><span>全部獵物</span></div></div></div>` : ''}
     ${kings.length ? `<h3 class="tape-h">數據王 <small>Steam 即時</small></h3><div class="kings">${kings.map(([k, r, v, s], i) => `<div class="king" data-go="${esc(r.x.route)}" style="--rot:${rot(k, i, 1.6)}deg"><span class="kk">${esc(k)}</span><b>${esc(v)}</b><span class="ks">${esc(s)}</span><h4>${esc(r.x.it.zh)}</h4></div>`).join('')}</div>` : ''}
     ${wk.deals ? `<div class="deal" style="margin-top:16px"><b>這週買遊戲的重點</b><p>${esc(wk.deals)}</p></div>` : ''}
@@ -5024,13 +5051,13 @@ function calEvents() {
     } else if (e.kind === 'fest' && e.big && twDate(Date.parse(e.start)) >= today) add({ type: 'fest', d: twDate(Date.parse(e.start)), name: e.name, route: 'hunt', key2: e.id, sub: `${e.note ? e.note + '・' : ''}${twWhen(e.start)} 開始` });
     else if ((e.kind === 'show' || e.kind === 'vote') && twDate(Date.parse(e.start)) >= today) add({ type: e.kind, d: twDate(Date.parse(e.start)), name: e.name, route: e.route || 'tga', key2: e.id, sub: `台灣時間 ${twWhen(e.start)}${e.kind === 'vote' ? ' 截止' : ' 開播'}${e.note ? '・' + e.note : ''}` });
   }
-  for (const x of freeNow()) if (x.end && !x.mystery && lastDay(x.end) >= today) add({ type: 'free', d: lastDay(x.end), name: x.title, img: x.img, route: 'hunt', key2: x.id, sub: `${(STORE[x.store] || [''])[0]} 限時免費・${twWhen(x.end)} 截止` });
+  for (const x of freeNow()) if (x.end && !x.mystery && lastDay(x.end) >= today) add({ type: 'free', d: lastDay(x.end), name: x.title, img: x.img, gk: 'free:' + x.id, key2: x.id, sub: `${(STORE[x.store] || [''])[0]} 限時免費・${twWhen(x.end)} 截止` });
   const wk = latestWeek(); const wf = wk && S.weekF && S.weekF[wk.id];
-  for (const n of (wf && wf.next) || []) {
+  for (const [ni, n] of ((wf && wf.next) || []).entries()) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(n.d) || n.d < today) continue;
     const r = n.ref && wkRef(n.ref);
     if (r && out.some((e) => e.type === 'rel' && e.route === r.route)) continue;
-    add({ type: 'next', d: n.d, name: n.name, img: r ? headerOf(r.it) : '', route: r && r.route, sub: n.t });
+    add({ type: 'next', d: n.d, name: n.name, img: r ? headerOf(r.it) : '', route: r && r.route, gk: r ? null : `wx:${wk.id}#${ni}`, sub: n.t });
   }
   return out.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : a.type === 'end' ? -1 : 1));
 }
@@ -5053,13 +5080,13 @@ async function renderCal() {
   const groups = []; ev.forEach((e, i) => { const g = groups[groups.length - 1]; if (g && g.d === e.d) g.i.push(i); else groups.push({ d: e.d, i: [i] }); });
   return `<div class="sec-h"><h2 class="spray-h y">出擊日曆</h2><span class="date-stk">LAUNCH CAL</span></div>
     <p class="sub-note">解包過的上市日、你願望單的上市日和特價截止、Steam 大特賣、免費遊戲截止、TGA、週報的下週出擊，全部排在一起。資料每小時更新。</p>
-    ${next ? `<section class="cnext" ${next.route ? `data-go="${esc(next.route)}"` : next.key ? `data-act="hinfo" data-k="${esc(next.key)}"` : ''}><div class="cn-img">${next.img ? `<img src="${esc(next.img)}" alt="" onerror="imgFail(this)">` : ''}<div class="ht"></div></div>
+    ${next ? `<section class="cnext" ${next.route ? `data-go="${esc(next.route)}"` : next.key ? `data-act="hinfo" data-k="${esc(next.key)}"` : next.gk ? `data-act="gameinfo" data-k="${esc(next.gk)}"` : ''}><div class="cn-img">${next.img ? `<img src="${esc(next.img)}" alt="" onerror="imgFail(this)">` : ''}<div class="ht"></div></div>
       <div class="cn-d"><b>${esc(dLabel(next.d))}</b><span>${esc(mdDay(next.d))}（${wdOf(next.d)}）</span></div><div class="cn-b"><span class="cn-k">下一個${CAL_TYPE[next.type][0]}</span><h3>${esc(next.name)}</h3><p>${esc(next.sub || '')}</p></div></section>` : ''}
     <div class="csub"><div><b>${ICON.cal}訂閱到手機行事曆</b><span>訂閱一次，上市日和特價截止會自動出現在 iPhone 行事曆，之後每小時跟著更新。</span></div>
       <div class="btnrow"><a class="btn y sm" href="${CAL_URL.replace('https://', 'webcal://')}">${ICON.cal}<span>訂閱</span></a><button class="btn sm" data-act="calcopy">${ICON.copy}<span>複製訂閱網址</span></button>${ev.length ? `<button class="btn sm" data-act="calall">${ICON.dl}<span>全部加入一次</span></button>` : ''}</div></div>
     ${grid}
     <div class="clegend"><i class="c-y"></i>上市<i class="c-p"></i>特價截止<i class="c-s"></i>大特賣<i class="c-f"></i>免費截止<i class="c-g"></i>TGA<i class="c-c"></i>新品節<i class="c-w"></i>下週出擊</div>
-    ${groups.length ? `<div class="clist">${groups.map((g) => `<div class="cg" id="cd-${g.d}"><div class="cg-d ${g.d === today ? 'today' : ''}"><b>${esc(mdDay(g.d))}</b><span>週${wdOf(g.d)}</span><em>${esc(dLabel(g.d))}</em></div><div class="cg-l">${g.i.map((i) => { const e = ev[i]; return `<div class="ce" ${e.route ? `data-go="${esc(e.route)}"` : e.key ? `data-act="hinfo" data-k="${esc(e.key)}"` : ''}><span class="ce-t c-${CAL_TYPE[e.type][1]}">${CAL_TYPE[e.type][0]}</span><div class="ce-b"><h4>${esc(e.name)}</h4>${e.sub ? `<p>${esc(e.sub)}</p>` : ''}</div><button class="ce-add" data-act="caladd" data-i="${i}" aria-label="加入行事曆">${ICON.cal}</button></div>`; }).join('')}</div></div>`).join('')}</div>`
+    ${groups.length ? `<div class="clist">${groups.map((g) => `<div class="cg" id="cd-${g.d}"><div class="cg-d ${g.d === today ? 'today' : ''}"><b>${esc(mdDay(g.d))}</b><span>週${wdOf(g.d)}</span><em>${esc(dLabel(g.d))}</em></div><div class="cg-l">${g.i.map((i) => { const e = ev[i]; return `<div class="ce" ${e.route ? `data-go="${esc(e.route)}"` : e.key ? `data-act="hinfo" data-k="${esc(e.key)}"` : e.gk ? `data-act="gameinfo" data-k="${esc(e.gk)}"` : ''}><span class="ce-t c-${CAL_TYPE[e.type][1]}">${CAL_TYPE[e.type][0]}</span><div class="ce-b"><h4>${esc(e.name)}</h4>${e.sub ? `<p>${esc(e.sub)}</p>` : ''}</div><button class="ce-add" data-act="caladd" data-i="${i}" aria-label="加入行事曆">${ICON.cal}</button></div>`; }).join('')}</div></div>`).join('')}</div>`
       : '<div class="empty">接下來沒有排定的上市或特價截止。專題、願望單、週報有新的日期就會自動出現。</div>'}`;
 }
 function calFx() {
@@ -5159,7 +5186,7 @@ function mkTicker(b) {
   const rows = b.rows.filter((r) => !r.adult);
   const mv = rows.filter((r) => r.d1 != null).sort((x, y) => Math.abs(y.d1) - Math.abs(x.d1)).slice(0, 12);
   const list = (mv.length >= 4 ? mv : rows.slice(0, 12));
-  const one = list.map((r) => `<b>${esc(mkName(r))}</b> ${esc(mkNum(r.n))} <em class="${mkCls(r.d1)}">${mkPct(r.d1)}</em>`).join('<i>◆</i>');
+  const one = list.map((r) => `<span class="tk-i" data-act="mkinfo" data-a="${r.a}"><b>${esc(mkName(r))}</b> ${esc(mkNum(r.n))} <em class="${mkCls(r.d1)}">${mkPct(r.d1)}</em></span>`).join('<i>◆</i>');   // 跑馬燈上的也點得開
   return `<div class="mk-tk"><div class="in">${one}<i>◆</i>${one}<i>◆</i></div></div>`;
 }
 function mkHeat(b) {
@@ -5214,12 +5241,13 @@ async function mkInfo(a) {
       <div><span>Steam 評價</span><b>${r.rv && r.rv[0] != null ? r.rv[0] + '%' : '—'}</b><em>${r.rv ? esc(fmtN(r.rv[1])) + ' 則' : ''}</em></div>
       <div><span>台灣售價</span><b>${r.notw ? '沒上架' : r.free ? '免費' : r.p ? esc(fmtNT(r.p[0])) : '—'}</b><em>${r.notw ? 'Steam 台灣區買不到' : r.p && r.p[1] ? '-' + r.p[1] + '% 特價中' : ''}</em></div>
     </div>
-    ${mkChart(r.h, b.t, '30 小時線上人數')}${mkChart(r.sp, b.s, '7 天走勢')}<div id="mkdays"></div>
+    <div id="mkabout"></div>${mkChart(r.h, b.t, '30 小時線上人數')}${mkChart(r.sp, b.s, '7 天走勢')}<div id="mkdays"></div>
     <div class="btnrow">${ref ? `<button class="btn y" data-go="${esc(ref.route)}">${ref.kind === 'f' ? ICON.page : ICON.gem}<span>${ref.kind === 'f' ? '看解包' : '看推坑'}</span></button>` : `<button class="btn y" data-act="askreq" data-g="${esc(nm)}" data-a="${r.a}">${ICON.radio}<span>點播解包這款</span></button>`}
       <button class="btn p" data-act="askq" data-q="${esc(nm + '：' + why)}" data-ref="${ref ? esc(r.cov) : 'a:' + r.a}" data-ctx="${esc(nm)}">${ICON.radio}<span>問 Claude：${esc(why.replace('？', ''))}</span></button>
       <a class="btn" href="https://store.steampowered.com/app/${r.a}/" target="_blank" rel="noopener noreferrer">${ICON.cart}<span>Steam 商店頁</span></a></div>
     <p class="sub-note" style="margin-top:10px">線上人數來自 Steam 官方，每小時一筆；排程偶爾會晚，24 小時漲跌找前後 90 分鐘內最接近的一筆來比。</p></div>`, 'hsheet');
   sfx.lock();
+  giAboutInto($('#mkabout'), r.a);
   const d = await loadBoardD(); const box = $('#mkdays'); if (!box || !d) return;
   const k = String(r.a); const pk = (d.pk || {})[k];
   if (!pk || pk.filter((v) => v != null).length < 2) return;
@@ -5316,12 +5344,13 @@ function freeNewCount() { return freeNow().filter((x) => !S.freeSeen[x.id] && !S
 function freeCard(x, i) {
   const [sn, sc] = STORE[x.store] || [x.store, ''];
   const left = x.end ? Date.parse(x.end) - Date.now() : null; const got = !!S.freeGot[x.id];
-  return `<article class="fr ${got ? 'got' : ''} ${x.up ? 'up' : ''}" style="--i:${i};--rot:${rot(x.id, i, 1.2)}deg">
-    <div class="fr-im">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${x.img ? 'display:none' : ''}">FREE</div><span class="fr-st ${sc}">${esc(sn)}</span>${!x.up && !S.freeSeen[x.id] && !got ? '<span class="bnew">NEW</span>' : ''}</div>
+  const info = !x.mystery;      // 神秘遊戲還沒揭曉，沒有東西可看
+  return `<article class="fr ${got ? 'got' : ''} ${x.up ? 'up' : ''}" ${info ? `data-act="gameinfo" data-k="free:${esc(x.id)}" role="button"` : ''} style="--i:${i};--rot:${rot(x.id, i, 1.2)}deg">
+    <div class="fr-im">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy" decoding="async" onerror="imgFail(this)">` : ''}<div class="ph" style="${x.img ? 'display:none' : ''}">FREE</div><span class="fr-st ${sc}">${esc(sn)}</span>${!x.up && !S.freeSeen[x.id] && !got ? '<span class="bnew">NEW</span>' : ''}${info ? '<span class="gi-tag">ⓘ 看介紹</span>' : ''}</div>
     <div class="fr-b"><h4>${x.mystery ? '神秘遊戲（開放時才揭曉）' : esc(x.title)}</h4>
       <div class="fr-p">${x.orig_t || x.orig ? `<s>${esc(x.orig_t || fmtNT(x.orig))}</s>` : ''}<b>${x.up ? '下週免費' : '免費領'}</b></div>
       <div class="fr-t">${x.up ? `${esc(twWhen(x.start))} 開放` : left != null ? `⏱ ${esc(leftTxt(left))}・${esc(twWhen(x.end))} 截止` : '限時，截止時間看商店頁'}</div>
-      ${x.rv && x.rv[0] != null ? `<div class="fr-t">Steam 評價 ${x.rv[0]}%（${esc(fmtN(x.rv[1]))} 則）${x.zh === 'tc' ? '・繁中' : ''}</div>` : ''}
+      ${x.rv && x.rv[0] != null ? `<div class="fr-t">Steam 評價 ${x.rv[0]}%（${esc(fmtN(x.rv[1]))} 則）${x.zh === 'tc' ? '・繁中' : x.zh === 'sc' ? '・只有簡中' : ''}</div>` : x.zh === 'tc' ? '<div class="fr-t">有繁中</div>' : ''}
       <div class="btnrow">${x.up ? '' : `<a class="btn sm ${got ? '' : 'y'}" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer" data-act="frgo" data-id="${esc(x.id)}">${ICON.gift}<span>${got ? '再看一次' : '去領'}</span></a><button class="btn sm ${got ? 'k' : ''}" data-act="frgot" data-id="${esc(x.id)}">${got ? '✓ 領過了' : '標記領過'}</button>`}</div></div>
     ${got ? '<i class="fr-stamp">GET!</i>' : ''}</article>`;
 }
@@ -5343,6 +5372,148 @@ function dealsFx() {
 }
 function dealsStop() { clearInterval(DEAL.cd); }
 
+/* ---- info.js ---- */
+/* 解包 — 遊戲情報卡（2026-11-19）：App 裡出現的每一款遊戲都點得進去看介紹。
+   解包過、推坑過的：直接去那一篇（有附情境的，例如免費補給站的「去領」，就先開卡片、上面放「看完整專題」）。
+   追蹤中的：用 live/<appid>.json（跟專題頁同一份）。
+   其他（行情板、免費補給站、TGA 入圍、週報下週出擊、出擊日曆、專題裡的「跟誰像」）：讀 data/info/<appid>.json
+   （GitHub Actions 每天從 Steam 商店更新：介紹、截圖、動態預告、語言、平台、價格、評價）。
+   只有名字的用 data/names.json 查 appid（Steam 商店搜尋、名字完全一樣才算）。都沒有：簡單的卡＋點播解包、問 Claude、去商店找。 */
+const INFO = { got: {}, names: null, seq: 0 };
+/* 名字比對：跟資料管線 live.py 的 name_key 一模一樣（先拿掉 ™®©，全形半形統一、小寫、標點空白都當成一個空格） */
+const nameKey = (s) => String(s || '').replace(/[™®©]/g, '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+function namesLoad() {
+  if (INFO.names) return Promise.resolve(INFO.names);
+  return once('names', () => getJSON('names.json').then((d) => (INFO.names = (d && d.names) || {})).catch(() => (INFO.names = {})));
+}
+async function nameKnown(...names) { const m = await namesLoad(); return names.some((n) => n && m[nameKey(n)]); }
+async function appidOf(...names) {
+  const m = await namesLoad();
+  for (const n of names) { const e = n && m[nameKey(n)]; if (e && e[0]) return e[0]; }
+  return null;
+}
+function infoLoad(a) {
+  a = String(a);
+  if (a in INFO.got) return Promise.resolve(INFO.got[a]);
+  return once('info:' + a, () => getJSON('info/' + a + '.json').catch(() => null).then((d) => (INFO.got[a] = d)));
+}
+/* 這款寫過嗎：照 appid、照名字（中文名、英文名都比） */
+function refOfSteam(a) {
+  a = +a; if (!a) return null;
+  const f = S.index.items.find((x) => +x.steam === a); if (f) return 'f/' + f.id;
+  const p = ((S.picks && S.picks.items) || []).find((x) => +x.steam === a); return p ? 'p/' + p.id : null;
+}
+function refOfName(...names) {
+  const ks = names.map(nameKey).filter((k) => k.length > 1); if (!ks.length) return null;
+  const hit = (x) => ks.includes(nameKey(x.zh)) || ks.includes(nameKey(x.en));
+  const f = S.index.items.find(hit); if (f) return 'f/' + f.id;
+  const p = ((S.picks && S.picks.items) || []).find(hit); return p ? 'p/' + p.id : null;
+}
+function navTo(to) { closeSheet(); if (to === location.hash.replace('#', '')) return; sfx.slap(); NAVN++; location.hash = to; }
+
+/* spec：{appid, name, en, img, badge, url, store, desc, dev, ref, ctx（這款在這裡的情境，HTML）, btns（多的按鈕，HTML）, key}
+   沒有情境（ctx）又寫過的：直接去那一篇，那裡最完整。 */
+async function gameInfo(spec) {
+  const my = ++INFO.seq;
+  let a = spec.appid ? +spec.appid : null;
+  if (!a && (spec.name || spec.en)) a = await appidOf(spec.en, spec.name);
+  const ref = (spec.ref && spec.ref.replace(':', '/')) || (a && refOfSteam(a)) || refOfName(spec.name, spec.en);
+  if (ref && !spec.ctx) { navTo(ref); return; }
+  if (!a) spec.known = await nameKnown(spec.en, spec.name);   // 名字查過了（真的找不到）還是還沒輪到
+  const tracked = a && liveOf(a);
+  const cached = !a ? null : tracked ? (liveReady(a) ? liveOf(a) : undefined) : (String(a) in INFO.got ? INFO.got[String(a)] : undefined);
+  openSheet(`<div class="hinfo gi" id="gi">${gameHtml(spec, cached === undefined ? null : cached, a, ref, cached === undefined)}</div>`, 'hsheet');
+  sfx.lock(); giFx();
+  if (cached !== undefined) return;
+  let d;
+  if (tracked) { await liveLoad([a], 2500); d = liveOf(a); } else d = await infoLoad(a);
+  const box = $('#gi'); if (!box || my !== INFO.seq) return;     // 已經關掉或開了別張
+  box.innerHTML = gameHtml(spec, d, a, ref, false); giFx();
+}
+function giFx() {
+  const v = $('#gi .hi-v'); if (v) { v.addEventListener('playing', () => v.classList.add('on'), { once: true }); v.play().catch(() => {}); }
+}
+const zhOf = (d) => (d && d.langs ? (d.langs.tc ? 'tc' : d.langs.sc ? 'sc' : 'none') : null);
+function gameHtml(spec, d, a, ref, loading) {
+  const name = spec.name || (d && d.name) || spec.en || '這款遊戲';
+  const alt = [d && d.name, spec.en].find((n) => n && nameKey(n) !== nameKey(name));
+  const img = spec.img || (d && d.img && (d.img.header || d.img.hero || d.img.wide)) || '';
+  const mc = (d && !d.adult && d.micro) || {}; const mv = fxOn() && (mc.mp4 || mc.webm);
+  const zh = zhOf(d); const rel = (d && d.rel) || {}; const pr = (d && d.price) || {}; const rv = (d && d.rv) || {};
+  const chips = [
+    ...((d && d.tags) || []).slice(0, 4).map((t) => `<span class="chip n">${esc(t)}</span>`),
+    zh === 'tc' ? `<span class="chip">${d.langs.tc.audio ? '繁中語音' : '繁中'}</span>` : zh === 'sc' ? '<span class="chip n">只有簡中</span>' : zh === 'none' ? '<span class="chip n">無中文</span>' : '',
+    d && (d.plat || []).includes('deck') ? '<span class="chip n">Steam Deck 驗證</span>' : '',
+    rel.ea ? '<span class="chip y">搶先體驗</span>' : '', rel.soon ? '<span class="chip p">即將推出</span>' : '',
+    d && d.ws ? '<span class="chip n">MOD 工作坊</span>' : '', d && d.free ? '<span class="chip y">免費遊玩</span>' : ''].join('');
+  const yr = rel.date ? rel.date.slice(0, 4) : '';
+  const cells = d ? [
+    ['台灣售價', d.free ? '免費' : pr.final != null && (pr.final > 0 || pr.orig > 0) ? fmtNT(pr.final) : '—', pr.disc > 0 ? `特價 -${pr.disc}%${pr.orig ? '・原價 ' + fmtNT(pr.orig) : ''}` : pr.final > 0 ? 'Steam 台灣區' : rel.soon ? '還沒開賣' : '台灣區沒有標價'],
+    ['上市', rel.date ? mdDay(rel.date) : rel.soon ? '未定' : '—', rel.date ? (rel.soon ? '預定・' : '') + yr + ' 年' : esc(rel.text || '')],
+    ['Steam 評價', rv.n && rv.pct != null ? rv.pct + '%' : '—', rv.n && rv.pct != null ? `${rv.label || ''}・${fmtN(rv.n)} 則` : rel.soon ? '還沒上市' : '評論還不夠']] : [];
+  const shots = (d && !d.adult && d.shots) || [];
+  const store = a ? ['https://store.steampowered.com/app/' + a + '/', 'Steam 商店頁'] : spec.url ? [spec.url, (spec.store || '商店') + ' 頁面'] : spec.name ? ['https://store.steampowered.com/search/?term=' + encodeURIComponent(spec.en || spec.name), '到 Steam 找找'] : null;
+  const qref = ref ? ref.replace('/', ':') : a ? 'a:' + a : '';
+  const desc = (d && d.short) || spec.desc || '';
+  const dev = d && (d.dev || d.pub) ? [d.dev && '開發：' + d.dev, d.pub && d.pub !== d.dev && '發行：' + d.pub].filter(Boolean).join('・') : spec.dev ? '開發：' + spec.dev : '';
+  return `${img || mv ? `<div class="hi-img">${img ? `<img src="${esc(img)}" alt="" onerror="imgFail(this)">` : '<div class="ph">INFO</div>'}${mv ? `<video class="hi-v" muted loop playsinline autoplay preload="auto" src="${esc(mc.mp4 || mc.webm)}"></video>` : ''}${spec.badge ? `<span class="bn">${esc(spec.badge)}</span>` : ''}</div>` : ''}
+    <h3 class="${img || mv ? '' : 'gi-top'}">${esc(name)}</h3>${alt ? `<div class="ben">${esc(alt)}</div>` : ''}
+    ${chips.trim() ? `<div class="chips" style="padding:0;margin-top:8px">${chips}</div>` : ''}
+    ${spec.ctx ? `<div class="gi-ctx">${spec.ctx}</div>` : ''}
+    ${cells.length ? `<div class="hi-price">${cells.map(([k, v, s]) => `<div><span>${k}</span><b class="${String(v).length > 6 ? 'sm' : ''}">${esc(v)}</b>${s ? `<em>${esc(s)}</em>` : ''}</div>`).join('')}</div>` : ''}
+    ${desc ? `<p class="hi-p">${esc(desc)}</p>` : loading ? '<p class="sub-note gi-wait">介紹讀取中…</p>' : ''}
+    ${dev ? `<p class="sub-note">${esc(dev)}</p>` : ''}
+    ${shots.length ? `<div class="gi-shots">${shots.map((s) => `<img src="${esc(s)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`).join('')}</div>` : ''}
+    <div class="btnrow">${ref ? `<button class="btn y" data-go="${esc(ref)}">${ref[0] === 'f' ? ICON.page : ICON.gem}<span>${ref[0] === 'f' ? '看完整專題' : '看推坑全文'}</span></button>`
+      : `<button class="btn y" data-act="askreq" data-g="${esc(name)}" data-a="${a || ''}">${ICON.radio}<span>點播解包這款</span></button>`}
+      <button class="btn p" data-act="askq" data-q="${esc(name + '：值得玩嗎？')}" data-ref="${esc(qref)}" data-ctx="${esc(name)}">${ICON.radio}<span>問 Claude</span></button>
+      ${spec.btns || ''}${store ? `<a class="btn" href="${esc(store[0])}" target="_blank" rel="noopener noreferrer">${ICON.cart}<span>${esc(store[1])}</span></a>` : ''}</div>
+    <p class="sub-note gi-src">${d ? (isTracked(a) ? '介紹、截圖來自 Steam 商店（每小時更新）。' : '介紹、截圖來自 Steam 商店（每天更新）。') : loading ? '' : a ? 'Steam 的介紹還在整理，下一輪更新後就會出現；想看完整分析可以點播解包。' : !spec.known ? `Steam 的資料還在對（每小時對一批名字），晚點再點開看看${spec.url ? '' : '；也可以先到 Steam 找找'}。` : spec.desc ? `介紹來自 ${esc(spec.store || '商店')}；Steam 上找不到同名的遊戲。` : 'Steam 上找不到同名的遊戲（可能是主機獨佔、手機遊戲或還沒上架）。想看完整分析，點播解包就會排進寫稿。'}</p>`;
+}
+const isTracked = (a) => !!(a && liveOf(a));
+
+/* 行情板的卡片下面接一段遊戲介紹（介紹、開發、上市、截圖），資料一樣從 live/ 或 info/ 來 */
+async function giAboutInto(box, a) {
+  if (!box || !a) return;
+  let d;
+  if (isTracked(a)) { await liveLoad([a], 2500); d = liveOf(a); } else d = await infoLoad(a);
+  if (!d || !box.isConnected) return;
+  const rel = d.rel || {}; const shots = (!d.adult && d.shots) || [];
+  const dev = [d.dev && '開發：' + d.dev, d.pub && d.pub !== d.dev && '發行：' + d.pub, rel.date && (rel.soon ? '預定 ' : '') + rel.date.replace(/-/g, '/') + ' 上市'].filter(Boolean).join('・');
+  if (!d.short && !shots.length) return;
+  box.innerHTML = `<div class="gi-about"><h4>遊戲介紹</h4>${d.short ? `<p class="hi-p">${esc(d.short)}</p>` : ''}${dev ? `<p class="sub-note">${esc(dev)}</p>` : ''}
+    ${shots.length ? `<div class="gi-shots">${shots.map((s) => `<img src="${esc(s)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`).join('')}</div>` : ''}</div>`;
+}
+
+/* 從各個地方點進來：key 決定是哪一款、帶什麼情境 */
+async function gameOpen(k) {
+  const [kind, ...rest] = String(k || '').split(':'); const id = rest.join(':');
+  if (kind === 'free') {
+    const x = ((S.free && S.free.items) || []).find((y) => y.id === id); if (!x) return;
+    S.freeSeen[x.id] = 1; LS.set('freeSeen', S.freeSeen);
+    const [sn] = STORE[x.store] || [x.store];
+    const left = x.end ? Date.parse(x.end) - Date.now() : null; const got = !!S.freeGot[x.id];
+    const ctx = `<b>${ICON.gift}${esc(sn)} ${x.up ? '下週免費' : '限時免費領'}</b><span>${x.up ? `${esc(twWhen(x.start))} 開放` : left != null ? `${esc(leftTxt(left))}・${esc(twWhen(x.end))} 截止` : '截止時間看商店頁'}${x.orig_t || x.orig ? `・原價 ${esc(x.orig_t || fmtNT(x.orig))}` : ''}</span><small>領了就永久留在帳號裡。${x.store === 'steam' ? '' : `要用 ${esc(sn)} 的帳號領。`}</small>`;
+    const btns = x.up ? '' : `<a class="btn ${got ? '' : 'y'}" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer" data-act="frgo" data-id="${esc(x.id)}">${ICON.gift}<span>${got ? '再看一次' : `去 ${esc(sn)} 領`}</span></a><button class="btn ${got ? 'k' : ''}" data-act="frgot" data-id="${esc(x.id)}">${got ? '✓ 領過了' : '標記領過'}</button>`;
+    return gameInfo({ appid: x.appid, name: x.title, img: x.img, badge: x.up ? '下週免費' : '免費', url: x.url, store: sn, desc: x.desc, dev: x.dev, ctx, btns });
+  }
+  if (kind === 'tga') {
+    const [cid, i] = id.split(':'); const t = S.tgaD; const c = t && t.cats.find((y) => y.id === cid); const n = c && c.nom[+i]; if (!n) return;
+    const cats = t.cats.filter((y) => y.nom.some((m) => nameKey(m.n) === nameKey(n.n))).map((y) => y.zh);
+    const ctx = `<b>${ICON.trophy}TGA 2026 入圍 ${cats.length} 項</b><span>${esc(cats.join('、'))}</span>`;
+    return gameInfo({ appid: n.steam, name: n.zh || n.n, en: n.n, ref: n.ref, ctx: n.ref ? '' : ctx });
+  }
+  if (kind === 'wx') {
+    const [wid, i] = id.split('#'); const wf = S.weekF && S.weekF[wid]; const n = wf && (wf.next || [])[+i]; if (!n) return;
+    const dd = n.d.length > 7 ? `${mdDay(n.d)}（週${WK[new Date(n.d + 'T00:00:00Z').getUTCDay()]}）` : n.d.slice(0, 7).replace('-', '/') + '（日期未定）';
+    const src = (n.s || []).map((j) => wf.sources && wf.sources[j]).filter(Boolean);
+    const ctx = `<b>${ICON.cal}下週出擊・${esc(dd)}</b><span>${esc(n.t || '')}</span>${src.length ? `<small>來源：${src.map((s) => `<a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>`).join('、')}</small>` : ''}`;
+    return gameInfo({ appid: n.steam, name: n.name, ref: n.ref, ctx: n.ref ? '' : ctx });
+  }
+  if (kind === 'cmp') { const p = id.indexOf('|'); return gameInfo({ appid: +id.slice(0, p) || null, name: id.slice(p + 1).replace(/[《》〈〉]/g, '').trim() }); }
+  if (kind === 'a') return gameInfo({ appid: +id });
+}
+
 /* ---- tga.js ---- */
 /* 解包 — TGA 預測戰：The Game Awards 2026 的 30 個獎，你先押；Claude 的預測 11/18 就寫好封存在 data/tga.json，你鎖定之後才拆封。
    開獎當天的排程把得獎填進 tga.json 的 win，App 自動對答案算分（年度遊戲 5 分、六項製作獎 2 分、其他 1 分；加倍卡 3 張）。
@@ -5352,6 +5523,7 @@ const TGA_GRP = [['main', '年度大獎與製作獎'], ['indie', '獨立遊戲']
 S.tgaMe = Object.assign({ picks: {}, x2: [], lock: null, peek: false, seenRes: false }, LS.get('tga', {}));
 const tgaSave = () => LS.set('tga', S.tgaMe);
 const nomName = (n) => (n ? n.zh || n.n : '');
+const TGA_NOINFO = new Set(['performance', 'adapt', 'ugc', 'esathlete', 'esteam', 'creator']);   // 演員、影視、模組、選手、隊伍、實況主：沒有遊戲介紹可看
 
 function tgaPhase() {
   const t = S.tgaD; if (!t) return 'none';
@@ -5377,7 +5549,8 @@ function tgaNom(c, n, i, my, reveal, can) {
   const r = n.ref && wkRef(n.ref);
   const cls = [my === i ? 'me' : '', reveal && c.claude.c === i ? 'cl' : '', c.win === i ? 'win' : '', c.win != null && c.win !== i ? 'out' : ''].join(' ');
   const mk = (reveal && c.claude.c === i ? '<i class="tg-cl">C</i>' : '') + (my === i ? '<i class="tg-me">押</i>' : '');
-  return `<button class="tg-n ${cls}" data-act="tgapick" data-c="${c.id}" data-i="${i}"${can ? '' : ' aria-disabled="true"'}><span class="tg-l">${'ABCDEFGH'[i]}</span><span class="tg-nt"><b>${esc(nomName(n))}</b>${n.zh ? `<small>${esc(n.n)}</small>` : ''}${n.sub ? `<small>${esc(n.sub)}</small>` : ''}${r ? `<em>${r.kind === 'f' ? '解包過' : '推坑過'}</em>` : ''}</span>${mk ? `<span class="tg-mk">${mk}</span>` : ''}${c.win === i ? `<i class="tg-win">${ICON.trophy}<b>得獎</b></i>` : ''}</button>`;
+  const gi = TGA_NOINFO.has(c.id) ? '' : `<span class="tg-i" data-act="gameinfo" data-k="tga:${c.id}:${i}" role="button" aria-label="看${esc(nomName(n))}的介紹">i</span>`;
+  return `<button class="tg-n ${cls}${gi ? ' hasi' : ''}" data-act="tgapick" data-c="${c.id}" data-i="${i}"${can ? '' : ' aria-disabled="true"'}>${gi}<span class="tg-l">${'ABCDEFGH'[i]}</span><span class="tg-nt"><b>${esc(nomName(n))}</b>${n.zh ? `<small>${esc(n.n)}</small>` : ''}${n.sub ? `<small>${esc(n.sub)}</small>` : ''}${r ? `<em>${r.kind === 'f' ? '解包過' : '推坑過'}</em>` : ''}</span>${mk ? `<span class="tg-mk">${mk}</span>` : ''}${c.win === i ? `<i class="tg-win">${ICON.trophy}<b>得獎</b></i>` : ''}</button>`;
 }
 function tgaCatHtml(c, ph, reveal) {
   const me = S.tgaMe; const my = me.picks[c.id]; const x2 = me.x2.includes(c.id); const can = ph === 'pick'; const cl = c.claude;
@@ -7523,6 +7696,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'calall') { const L = S.calEv || []; if (L.length) { calSave(L, 'unpacked-calendar.ics'); sfx.stamp(); toast(`${L.length} 筆一次加入`); } return; }
     if (a === 'calcopy') { if (await copyText(CAL_URL)) { sfx.stamp(); toast('訂閱網址已複製'); } return; }
     if (a === 'hinfo') { ev.stopPropagation(); huntInfo(act.dataset.k); return; }
+    if (a === 'gameinfo') { ev.stopPropagation(); sfx.click(); gameOpen(act.dataset.k); return; }   // 遊戲情報卡
     // 行情板
     if (a === 'mkf' || a === 'mks' || a === 'mktag') { if (a === 'mkf') MK.f = act.dataset.v; else if (a === 'mks') MK.sort = act.dataset.v; else MK.tag = MK.tag === act.dataset.v ? '' : act.dataset.v; sfx.click(); const y = scrollY; VIEW().innerHTML = renderBoard(); scrollTo(0, y); if (a === 'mktag' && MK.tag) { const l = $('.mk-tagon'); if (l) l.scrollIntoView({ behavior: 'smooth', block: 'center' }); } return; }
     if (a === 'mkinfo') { mkInfo(act.dataset.a); return; }
@@ -7540,7 +7714,12 @@ document.addEventListener('click', async (ev) => {
     if (a === 'askchat') { askChat(act.dataset.id); return; }
     // 免費補給站
     if (a === 'frgo') { ev.stopPropagation(); S.freeSeen[act.dataset.id] = 1; LS.set('freeSeen', S.freeSeen); sfx.coin(); window.open(act.getAttribute('href'), '_blank', 'noopener'); return; }
-    if (a === 'frgot') { const id = act.dataset.id; if (S.freeGot[id]) delete S.freeGot[id]; else { S.freeGot[id] = todayTW(); sfx.coin(); burstAt(act, [YEL, PINK], 16, 9); } LS.set('freeGot', S.freeGot); const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); setTabs('hunt'); return; }
+    if (a === 'frgot') {
+      const id = act.dataset.id; if (S.freeGot[id]) delete S.freeGot[id]; else { S.freeGot[id] = todayTW(); sfx.coin(); burstAt(act, [YEL, PINK], 16, 9); } LS.set('freeGot', S.freeGot);
+      if (act.closest('#sheet')) { const got = !!S.freeGot[id]; act.classList.toggle('k', got); act.textContent = got ? '✓ 領過了' : '標記領過'; }   // 情報卡裡按的：卡片上的字跟著改
+      if (ROUTE.startsWith('hunt')) { const y = scrollY; huntStop(); VIEW().innerHTML = renderHunt(); scrollTo(0, y); huntFx(); setTabs('hunt'); }
+      return;
+    }
     if (a === 'hunwant') { delete S.marks[act.dataset.id]; save('marks'); closeSheet(); sfx.scratch(); toast('已經從獵物移除'); if (ROUTE.startsWith('hunt')) route(); return; }
     if (a === 'ha-go' || a === 'ha-x') { huntAlertClose(a === 'ha-go'); return; }
     if (a === 'jump') { const el = document.getElementById(act.dataset.to); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); sfx.click(); return; }

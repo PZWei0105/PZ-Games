@@ -156,6 +156,8 @@ def check(f, r):
     for i, c in enumerate(S.get('compare') or []):
         if not (c.get('name') and c.get('same') and c.get('diff')):
             r.B(fid, f'compare[{i}] 要有 name、same、diff')
+        if c.get('steam') is not None and not str(c['steam']).isdigit():
+            r.B(fid, f'compare[{i}].steam 要是 Steam appid（數字）；不在 Steam 上就不要填')
     for i, t in enumerate(S.get('timeline') or []):
         if not (t.get('d') and t.get('t')):
             r.B(fid, f'timeline[{i}] 要有 d、t')
@@ -302,6 +304,8 @@ def check_pick_depth(f, fid, r):
     for i, c in enumerate(cmp):
         if not (c.get('name') and c.get('same') and c.get('diff')):
             r.B(fid, f'compare[{i}] 要有 name、same、diff')
+        if c.get('steam') is not None and not str(c['steam']).isdigit():
+            r.B(fid, f'compare[{i}].steam 要是 Steam appid（數字）；不在 Steam 上就不要填')
     if 'story' not in S:
         r.B(fid, 'sections.story 要寫（沒有劇情的遊戲填 null）')
     elif S['story'] is not None and not (S['story'].get('safe') or []):
@@ -755,6 +759,8 @@ def check_week(w, r, refs):
             r.B(wid, f'next[{k}] 要有 name、t')
         if n.get('ref') and n['ref'] not in refs:
             r.B(wid, f'next[{k}].ref 不存在：{n["ref"]}')
+        if n.get('steam') is not None and not str(n['steam']).isdigit():
+            r.B(wid, f'next[{k}].steam 要是 Steam appid（數字）；不在 Steam 上就不要填')
         srcs_ok(n.get('s'), f'next[{k}]')
     fp = w['fanpage'] or {}
     post = fp.get('post') or ''
@@ -891,7 +897,17 @@ def build_track(feats, old, picks=()):
     for s, x in keep.items():
         if s not in out and x.get('extra'):
             out[s] = x
-    return {'apps': sorted(out.values(), key=lambda x: x['date'], reverse=True)}
+    # 專題、推坑裡「跟誰像」的遊戲：有 steam 的直接給 appid，只有名字的讓資料管線去 Steam 對名字（App 點進去看情報卡）
+    cmp_ids, cmp_names = set(), set()
+    for f in list(feats) + list(picks):
+        for c in (f.get('sections') or {}).get('compare') or []:
+            if not isinstance(c, dict) or not c.get('name'):
+                continue
+            if str(c.get('steam') or '').isdigit():
+                cmp_ids.add(int(c['steam']))
+            else:
+                cmp_names.add(re.sub(r'[《》〈〉]', '', c['name']).strip())
+    return {'apps': sorted(out.values(), key=lambda x: x['date'], reverse=True), 'cmp': sorted(cmp_ids), 'names': sorted(n for n in cmp_names if n)}
 
 
 def main():
