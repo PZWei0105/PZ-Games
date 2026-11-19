@@ -76,3 +76,23 @@ jobs:
             echo "push 失敗，重試 $i"; sleep $((i * 7))
           done
           exit 1
+
+  # GitHub 的 schedule 常常延誤好幾個小時（2026-11-19 實測隔 5～9 小時才跑一輪），所以每輪跑完就自己預約下一輪（約 20 分鐘一輪）。
+  # 排程（cron）留著當備援：鏈斷了它會再接上。已經有別輪在排隊或在跑，就不再預約，免得變成好幾條鏈。
+  next:
+    needs: feed
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: write
+    steps:
+      - name: 等一下，再預約下一輪
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 1080
+          others=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/spectate-feed.yml/runs?per_page=15" \
+            --jq "[.workflow_runs[] | select(.id != $GITHUB_RUN_ID and (.status == \"queued\" or .status == \"in_progress\" or .status == \"waiting\" or .status == \"pending\" or .status == \"requested\"))] | length")
+          if [ "$others" -gt 0 ]; then echo "已經有 $others 輪在排隊或在跑，不再預約"; exit 0; fi
+          gh api -X POST "repos/$GITHUB_REPOSITORY/actions/workflows/spectate-feed.yml/dispatches" -f ref=main && echo "已預約下一輪"
