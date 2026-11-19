@@ -22,7 +22,8 @@ self.addEventListener('fetch', (e) => {
     }).catch(() => caches.match(key).then((m) => m || Response.error())));
     return;
   }
-  if (url.origin !== location.origin || !url.pathname.includes('/apps/one-more/')) return;
+  // 放在哪個網址都可以（收藏庫的 apps/one-more/，或朋友版拖進 Netlify Drop 的根目錄）：只管這個 service worker 範圍內的檔案
+  if (url.origin !== location.origin || !url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
   e.respondWith(Promise.race([fetch(req).then((r) => {
     if (r.ok && (req.mode === 'navigate' || SHELL.some((s) => url.pathname.endsWith(s.replace('./', '/'))))) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req.mode === 'navigate' ? './index.html' : req, copy)); }
     return r;

@@ -9,6 +9,7 @@
 
 用法：
   python3 _build/apps/one-more/build.py            # 網頁版
+  python3 _build/apps/one-more/build.py --drop     # 另外打包朋友版（一集就好-網頁版.zip：拖進 Netlify Drop 就能上線，跟收藏庫無關）
   python3 _build/apps/one-more/build.py --icons    # 重畫圖示（需要 playwright）
 """
 import argparse, json, os, time
@@ -92,6 +93,7 @@ def icons():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--icons', action='store_true')
+    ap.add_argument('--drop', nargs='?', const=os.path.join(REPO, '..', 'one-more-drop'), help='朋友版打包資料夾')
     a = ap.parse_args()
     ver = version()
     build = time.strftime('%Y%m%d%H%M%S')
@@ -107,6 +109,27 @@ def main():
     if a.icons or not os.path.exists(os.path.join(OUT, 'icons', 'icon-512.png')):
         icons()
     print('網頁版 → %s（index.html %.0f KB，版本 %s）' % (os.path.relpath(OUT, REPO), os.path.getsize(os.path.join(OUT, 'index.html')) / 1024, ver))
+    if a.drop:
+        drop(os.path.abspath(a.drop), ver)
+
+
+def drop(dest, ver):
+    """朋友版：index.html、manifest、sw.js、圖示放在根目錄，壓成一個 zip，整包拖進 https://app.netlify.com/drop 就上線。"""
+    import shutil, zipfile
+    site = os.path.join(dest, 'site')
+    shutil.rmtree(site, ignore_errors=True)
+    os.makedirs(os.path.join(site, 'icons'))
+    for f in ('index.html', 'manifest.webmanifest', 'sw.js'):
+        shutil.copy(os.path.join(OUT, f), os.path.join(site, f))
+    for f in os.listdir(os.path.join(OUT, 'icons')):
+        shutil.copy(os.path.join(OUT, 'icons', f), os.path.join(site, 'icons', f))
+    z = os.path.join(dest, '一集就好-網頁版-v%s.zip' % ver)
+    with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for root, _, files in os.walk(site):
+            for f in files:
+                p = os.path.join(root, f)
+                zf.write(p, os.path.relpath(p, site))
+    print('朋友版 → %s（%.0f KB）' % (z, os.path.getsize(z) / 1024))
 
 
 if __name__ == '__main__':

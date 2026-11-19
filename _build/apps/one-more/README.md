@@ -41,4 +41,8 @@ gh api "repos/PZWei0105/PZ-Games/contents/mine.json?ref=spectate-data" -H "Accep
 python3 _build/apps/one-more/tests/shoot.py --data /tmp/omdata --out /tmp/omshots   # 手機直（iPhone）、橫、電腦三種＋播放流程
 ```
 
+## 朋友版（Netlify Drop）
+
+`python3 _build/apps/one-more/build.py --drop <資料夾>` 會另外打包 `一集就好-網頁版-vX.zip`（index.html、manifest、sw.js、圖示都在根目錄）。解壓縮後把整個資料夾拖進 https://app.netlify.com/drop 就上線，網址和畫面上都不會出現《PZ 遊戲收藏》（2026-11-07 痞子葳說過：給朋友的版本不要帶收藏庫網址或按鈕，有 Netlify 徽章沒關係）。片單照樣從 GitHub 自動更新，不用重新上傳；只有 App 本身改版時才需要重新打包、重新拖一次。`sw.js` 只管自己範圍內的檔案，放在根目錄或 `apps/one-more/` 都能用。
+
 沒有 Claude 版：artifact 裡不能嵌 YouTube 播放器，也讀不到每 30 分鐘更新的片單（同《補番》《觀戰》）。
