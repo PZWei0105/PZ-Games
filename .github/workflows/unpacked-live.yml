@@ -36,6 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main          # 拿最新的 main：排隊等前一輪的，要接著前一輪推上去的資料做（不然兩輪改同一批檔案會打架）
           fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
@@ -57,7 +58,10 @@ jobs:
           if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi
           git commit -q -m '解包：更新 Steam 即時資料'
           for i in 1 2 3 4 5; do
-            git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0
+            # 第一次照常 rebase；撞到同一批檔案就放棄那次 rebase，之後以這一輪剛算好的資料為準（-X theirs：比較新）
+            if [ $i -eq 1 ]; then git pull -q --rebase origin main; else git pull -q --rebase -X theirs origin main; fi \
+              && git push -q origin HEAD:main && exit 0
+            git rebase --abort 2>/dev/null || true
             echo "push 失敗，重試 $i"; sleep $((i * 7))
           done
           exit 1
