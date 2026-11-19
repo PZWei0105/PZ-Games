@@ -1,0 +1,496 @@
+{
+  "id": "spirit-crossing",
+  "date": "2026-11-20",
+  "rank": 3,
+  "kind": "new",
+  "kind_label": "新作",
+  "game": {
+    "zh": "Spirit Crossing",
+    "zh_note": "暫無官方中文名",
+    "en": "Spirit Crossing",
+    "steam": 2321960,
+    "dev": "Spry Fox",
+    "pub": "Spry Fox",
+    "platforms": [
+      "PC（Steam／Epic）",
+      "Nintendo Switch 2",
+      "Nintendo Switch"
+    ],
+    "genres": [
+      "療癒",
+      "大型多人線上",
+      "生活模擬",
+      "探索"
+    ],
+    "release": "2026-11-16",
+    "release_text": "2026/11/16 正式版上市（非搶先體驗）",
+    "price_text": "Steam 特價 NT$505（-10%，到 11/23）／原價 NT$561＋可選會員",
+    "site": "https://store.steampowered.com/app/2321960/Spirit_Crossing/"
+  },
+  "headline": "沒有戰鬥的雲上 MMO：《Cozy Grove》團隊買斷制新作，會員不鎖服裝家具",
+  "hook": "你從雲端的山頂滑翔下來，底下是被暴風雨打壞的浮空小島。營火邊有一群陌生人在合奏，他們在你眼裡只是灰色的影子——直到你跟其中一個交了朋友，他的樣子才清楚起來，還邀你一起去參加釣魚大賽。",
+  "verdict": {
+    "stamp": "觀望",
+    "label": "喜歡療癒系就特價入手",
+    "summary": "Spry Fox 做了五年，把「動物森友會＋光・遇」的感覺做成一款沒有戰鬥、不逼你社交的線上遊戲，Steam 83% 好評、有繁中。但它是買斷再加月費會員的模式，上市初期有排隊、目前同上不到千人，伺服器在哪也沒公布；台灣玩家的連線體驗還不確定，建議特價期間買、先跟朋友揪好再進。",
+    "for": [
+      "喜歡《動物森友會》《Stardew Valley》這類慢步調生活遊戲，想要一群人一起玩的人",
+      "怕線上遊戲壓力的人：沒有戰鬥、沒有 PvP，陌生人可以隱藏",
+      "想找一款有繁中、PC 和 Switch 都能玩的療癒遊戲"
+    ],
+    "against": [
+      "討厭「買斷還要月費」：會員給的飛行坐騎客製化和額外商店格子，有玩家覺得是優勢",
+      "想要大量主線內容：每日任務和資源有上限，是細水長流型",
+      "只想離線單人玩：一定要連線，Switch 還要 Nintendo Switch Online"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Spry Fox（《Cozy Grove》團隊）自己發行；2022 年被 Netflix 收購，2025/12 宣布由創辦人買回，2026/1 起重新獨立",
+      "s": [
+        1,
+        17,
+        16
+      ]
+    },
+    {
+      "k": "上市",
+      "v": "2026/11/16 正式版（16.0 版），不是搶先體驗",
+      "s": [
+        4,
+        6
+      ]
+    },
+    {
+      "k": "平台",
+      "v": "Steam、Epic、Switch、Switch 2（官方更新說明另列 iOS App Store）；Switch 與 Switch 2 是不同商品，存檔不互通、沒有升級包",
+      "s": [
+        4,
+        11,
+        13
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Steam 原價 NT$561，首發特價 -10% 為 NT$505，到 11/23",
+      "s": [
+        1,
+        0
+      ]
+    },
+    {
+      "k": "會員 Cozy Club",
+      "v": "可選的會員：自動續訂 US$9.99／月，或 US$10.99 單買 30 天；其他幣別照 Steam 建議定價；買遊戲本體就送 30 天會員（可隨時兌換）",
+      "s": [
+        8
+      ]
+    },
+    {
+      "k": "會員給什麼",
+      "v": "升級版每週禮物、飛行坐騎客製化、部分商店多幾格、更多服裝存檔欄、額外優惠與差事；官方說沒有會員專屬的服裝或家具",
+      "s": [
+        8,
+        6
+      ]
+    },
+    {
+      "k": "中文",
+      "v": "介面與字幕支援繁體中文、簡體中文（共 13 種語言），沒有語音",
+      "s": [
+        0,
+        10
+      ]
+    },
+    {
+      "k": "連線",
+      "v": "一定要連網、不能離線；Switch 版線上遊玩需要 Nintendo Switch Online",
+      "s": [
+        1,
+        13
+      ]
+    },
+    {
+      "k": "玩法",
+      "v": "沒有戰鬥、地城和 PvP：在雲上的浮空世界滑翔探索、幫助精靈和村民、採集、釣魚、蓋房子和裝潢、營火合奏",
+      "s": [
+        0,
+        4,
+        12
+      ]
+    },
+    {
+      "k": "社交設計",
+      "v": "陌生人一開始是灰色影子，交朋友後才解鎖近距離文字聊天、雙人動作、送禮和傳送；也可以把其他玩家隱藏",
+      "s": [
+        0,
+        13
+      ]
+    },
+    {
+      "k": "Steam 評價",
+      "v": "11/19 查到「非常好評」，約 83%（249 則）",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "同上人數",
+      "v": "SteamCharts 統計史上高峰 773 人（11/19 查）",
+      "s": [
+        3
+      ]
+    },
+    {
+      "k": "系統需求",
+      "v": "最低 i3-8100、GTX 1050、8GB RAM；建議 i5-12400、RTX 3070、16GB RAM；容量 3GB",
+      "s": [
+        1
+      ]
+    },
+    {
+      "k": "Netflix 風波",
+      "v": "原本是 Netflix 手機遊戲，2026/9 Netflix 宣布終止發行合約；Spry Fox 計畫提供從 Netflix 手機版轉移帳號到 Steam 的方式",
+      "s": [
+        16
+      ]
+    },
+    {
+      "k": "更新路線圖",
+      "v": "冬季加房屋客製化、節慶活動；2027 春季加寵物收集、角色外觀更新；夏季加合作建設與社交小遊戲",
+      "s": [
+        7,
+        14
+      ]
+    }
+  ],
+  "money": {
+    "level": 2,
+    "model": "買斷制＋可選月費會員（Cozy Club）",
+    "notes": [
+      "本體 NT$561 買斷，另有 Cozy Club 會員（US$9.99／月）。官方強調沒有單項小額內購、沒有會員專屬服裝家具，也不是必買；買本體就先送 30 天會員。",
+      "但官方在 7 月的意見徵詢文裡也承認，會員玩家的進度可能會「稍微有效率一點」；Steam 有玩家批評買斷後再推月費感覺不好，也有人覺得飛行坐騎的加成在探索遊戲裡是優勢。",
+      "沒有看到抽卡或戰鬥通行證。"
+    ],
+    "flags": [
+      "買斷 NT$561",
+      "月費會員 US$9.99",
+      "無抽卡",
+      "無會員專屬服裝家具"
+    ]
+  },
+  "zh": {
+    "ui": true,
+    "sub": true,
+    "voice": false,
+    "note": "繁體中文介面與字幕；遊戲沒有語音。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區可以直接買，沒有看到區域限制；但官方沒公布伺服器位置，台灣連線延遲和排隊狀況還不確定。"
+  },
+  "rig": {
+    "verdict": "綽綽有餘",
+    "note": "建議配備是 RTX 3070、16GB RAM，你的 SCAR 18 完全夠；容量只要 3GB，接大電視開最高畫質也沒問題。"
+  },
+  "time": {
+    "text": "沒有終點的長線線上遊戲",
+    "note": "每日任務和資源有上限，設計成每天玩一點；官方路線圖排到 2027 夏季。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "uCLzMJXpEW0",
+        "title": "上市預告（Spry Fox 官方）"
+      },
+      {
+        "id": "40LmxL5Cm6I",
+        "title": "公開測試預告（Spry Fox 官方）"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "排隊與伺服器容量會不會改善，官方會不會公布亞洲伺服器",
+    "11/23 首發特價結束後的評價與人數",
+    "冬季更新（房屋客製化、年末活動）的推出時間"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "滑翔探索浮空島",
+        "幫精靈和村民跑任務",
+        "採集、釣魚、做東西",
+        "蓋房子、裝潢",
+        "和其他玩家交朋友",
+        "參加營火合奏、釣魚大賽"
+      ],
+      "body": [
+        "世界設定在雲端上的「Crosslands」，一片被暴風雨打壞的浮空島嶼。你用滑翔在島之間移動，幫精靈和村民完成任務、採集資源、釣魚，慢慢把世界修好。",
+        "生活面很完整：你可以在山頂或共用的驛站蓋房子、裝潢，換衣服、染色；這次上市版還加了新家具組、外牆和屋頂染色，以及服裝存檔欄。",
+        "它是線上遊戲，但社交是「慢慢來」的：陌生人一開始只是灰色影子，交了朋友才看得清楚、能用近距離文字聊天、送禮、互相傳送。不想跟人互動，也可以把別人隱藏。營火合奏、釣魚大賽、畫壁畫是大家一起玩的活動。",
+        "沒有戰鬥、沒有地城、沒有 PvP；代價是節奏偏慢，每日任務和資源都有上限，有玩家提到前兩個小時就會碰到進度門檻。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和玩家評論整理：先到設定把語言選繁體中文。",
+      "上市初期可能要排隊，避開晚上尖峰時段登入會比較順。",
+      "先跟著主線認識幾位主要精靈，每天的任務做完就好，不用一口氣刷資源——上限到了也刷不動。",
+      "想跟朋友一起玩，先互加好友，才會解鎖文字聊天、送禮和傳送。"
+    ],
+    "compare": [
+      {
+        "name": "Palia",
+        "same": "沒有戰鬥壓力的生活系線上遊戲",
+        "diff": "Palia 免費遊玩、靠外觀賺錢；Spirit Crossing 是買斷加月費會員",
+        "steam": 2707930
+      },
+      {
+        "name": "Stardew Valley",
+        "same": "種田、釣魚、蓋房、和村民交朋友",
+        "diff": "Stardew 可以單人離線玩；Spirit Crossing 一定要連線、主打和陌生人慢慢變朋友",
+        "steam": 413150
+      },
+      {
+        "name": "Cozy Grove",
+        "same": "同一個團隊，同樣是幫精靈、每天玩一點的節奏",
+        "diff": "Cozy Grove 是單人；這次變成很多人一起玩的線上遊戲",
+        "steam": 1458100
+      }
+    ],
+    "story": {
+      "safe": [
+        "雲上的浮空世界被暴風雨摧殘，你來到這裡，透過幫助精靈和村民，讓這片土地慢慢恢復。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "Spry Fox 是小型獨立工作室，代表作是單人療癒遊戲《Cozy Grove》。2022 年被 Netflix 收購，這款原本是 Netflix 的手機遊戲。",
+      "2025 年 12 月，創辦人宣布把工作室從 Netflix 買回來，同月公布 Steam 版由自己發行，2026 年 1 月重新獨立。2026 年 9 月，Netflix 宣布不再發行手機版，手機版改由 Spry Fox 自己經營。",
+      "執行長說這款做了大約五年。工作室公開過獨立後的困難：測試期間伺服器每月約 3 萬美元，員工減薪，創辦人年薪只拿 2 萬美元——也因此才有會員制，官方事前還公開徵詢玩家意見。"
+    ],
+    "voices": {
+      "pros": [
+        "吉卜力感的畫面和氣氛，玩起來很放鬆",
+        "社群友善，不會被逼著跟人互動",
+        "效能順，對硬體要求低"
+      ],
+      "cons": [
+        "上市初期要排隊，有人排了 40 分鐘以上",
+        "每日上限和進度門檻讓節奏卡卡的",
+        "買斷 NT$561 之後還推月費會員，觀感不好"
+      ],
+      "debate": [
+        "買斷加月費，對一款沒有戰鬥的療癒遊戲合理嗎？會員的飛行坐騎客製化算不算優勢？",
+        "小工作室為了養伺服器收月費，玩家該不該體諒？"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2022",
+        "t": "Spry Fox 被 Netflix 收購"
+      },
+      {
+        "d": "2025-12-04",
+        "t": "創辦人宣布從 Netflix 買回工作室"
+      },
+      {
+        "d": "2025-12-09",
+        "t": "公布 Steam 版，由 Spry Fox 自己發行"
+      },
+      {
+        "d": "2026-06-06",
+        "t": "Steam 公開測試開跑"
+      },
+      {
+        "d": "2026-09-01",
+        "t": "Netflix 宣布終止手機版發行合約"
+      },
+      {
+        "d": "2026-10-21",
+        "t": "公布 Cozy Club 會員內容與價格"
+      },
+      {
+        "d": "2026-11-16",
+        "t": "PC、Switch、Switch 2 正式上市，首發 -10%"
+      },
+      {
+        "d": "2026-11-23",
+        "t": "Steam 首發特價結束"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "買斷之後還有月費，你能接受嗎？",
+        "why": "Spry Fox 很誠實地公開伺服器成本和工作室處境，但玩家還是覺得被收兩次錢；可以拿來聊小團隊線上遊戲的收費兩難。"
+      },
+      {
+        "q": "「不逼你社交」的線上遊戲，還算線上遊戲嗎？",
+        "why": "陌生人是灰影、可以全部隱藏，跟傳統 MMO 正好相反；這是療癒遊戲的未來，還是自相矛盾？"
+      },
+      {
+        "q": "Netflix 收購再放手，對遊戲是好是壞？",
+        "why": "這款從 Netflix 手機遊戲變成獨立工作室的 PC、Switch 遊戲，是串流平台做遊戲的一個縮影。"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "你從雲端的山頂滑翔下來，營火邊有一群陌生人在合奏。在你眼裡他們只是灰色的影子，直到你跟其中一個交上朋友，他的樣子才清楚起來。\n\n《Spirit Crossing》是《Cozy Grove》團隊 Spry Fox 做了五年的新作，11/16 在 Steam、Epic、Switch 和 Switch 2 推出：一款沒有戰鬥、沒有 PvP 的線上生活遊戲。你在浮空島之間滑翔、幫精靈和村民跑任務、釣魚、蓋房子，想跟人互動就交朋友，不想就把其他玩家隱藏。\n\n有繁體中文，Steam 台灣原價 NT$561，首發特價 NT$505 到 11/23，目前 83% 好評。要注意的是，它在買斷之外還有可選的月費會員，官方說沒有會員專屬的服裝和家具；遊戲一定要連線，上市初期有玩家反映要排隊。\n\n買斷再加月費的療癒遊戲，你可以接受，還是直接打退堂鼓？",
+    "titles": [
+      "Cozy Grove 團隊新作 Spirit Crossing：繁中、NT$505",
+      "沒有戰鬥、陌生人只是影子的線上遊戲，會好玩嗎？",
+      "買斷又收月費的療癒 MMO，你買不買單？"
+    ],
+    "card": {
+      "kicker": "新作｜11/16 上市",
+      "title": "雲上的療癒\n線上生活",
+      "sub": "Spry Fox《Spirit Crossing》",
+      "tags": [
+        "繁體中文",
+        "NT$505",
+        "沒有戰鬥"
+      ],
+      "points": [
+        {
+          "h": "慢慢交朋友",
+          "t": "陌生人是灰影，交朋友才看得清楚。"
+        },
+        {
+          "h": "生活全包",
+          "t": "滑翔、釣魚、蓋房、營火合奏。"
+        },
+        {
+          "h": "注意月費",
+          "t": "買斷之外還有可選的月費會員。"
+        }
+      ]
+    },
+    "tags": [
+      "#SpiritCrossing",
+      "#療癒遊戲",
+      "#SpryFox",
+      "#Steam",
+      "#Switch2",
+      "#遊戲狂想曲"
+    ],
+    "script": "一款沒有戰鬥的線上遊戲，陌生人在你眼裡只是灰色的影子。\n這款叫《Spirit Crossing》，做《Cozy Grove》的 Spry Fox 花了五年，11 月 16 號在 Steam、Switch 跟 Switch 2 上市。你在雲上的浮空島之間滑翔，幫精靈和村民跑任務、釣魚、蓋房子，晚上還能跟大家在營火邊合奏。想社交就交朋友，交了朋友才能聊天、送禮；不想理人，也可以把其他玩家全部隱藏。\n有繁體中文，Steam 原價 561，首發特價 505 到 11 月 23 號，現在八成三好評。不過要先講：它買斷之外還有月費會員，官方說沒有會員專屬的服裝和家具；而且一定要連線，上市初期還有人要排隊。\n買斷再收月費的療癒遊戲，你能接受嗎？留言告訴我。",
+    "credit": "圖片／影片來源：Spry Fox 官方 Steam 商店頁與官方預告",
+    "threads": {
+      "post": "一款沒有戰鬥的線上遊戲，陌生人在你眼裡只是灰色影子。\n\n《Cozy Grove》團隊 Spry Fox 的新作《Spirit Crossing》11/16 上市：雲上浮空島的生活遊戲，滑翔、釣魚、蓋房、營火合奏，交了朋友才看得清楚對方。\n・平台：Steam、Epic、Switch、Switch 2\n・中文：繁體中文介面與字幕\n・Steam 原價 NT$561，特價 NT$505 到 11/23\n・評價：Steam 83% 好評（249 則）\n・注意：一定要連線，另有可選月費會員\n\n氣氛做得很好，但「買斷＋月費」會勸退一些人。\n\n你能接受療癒遊戲收月費嗎？",
+      "topic": "療癒遊戲",
+      "more": [
+        "它怎麼玩：\n・世界是被暴風雨打壞的浮空島，幫精靈和村民跑任務把它修好\n・可以在山頂或共用驛站蓋房、裝潢、染色，還有釣魚大賽和壁畫\n・交朋友解鎖近距離文字聊天、雙人動作、送禮和傳送，不想社交可以隱藏別人\n\n沒有戰鬥、地城和 PvP，每日任務和資源有上限，節奏是每天玩一點。",
+        "買之前要知道：\n・會員 Cozy Club 每月 US$9.99，給額外商店格子、飛行坐騎客製化等；官方說沒有專屬服裝家具\n・Switch 和 Switch 2 是不同商品，存檔不互通\n・官方沒公布伺服器位置，上市初期有玩家反映排隊\n・這款原本是 Netflix 的手機遊戲，工作室今年從 Netflix 獨立\n\n電腦需求很低，容量只要 3GB。"
+      ]
+    }
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：Spirit Crossing",
+      "u": "https://store.steampowered.com/app/2321960/Spirit_Crossing/",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Steam 商品資料（台灣區）",
+      "u": "https://store.steampowered.com/api/appdetails?appids=2321960&cc=tw&l=tchinese",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Steam 玩家評論：Spirit Crossing",
+      "u": "https://steamcommunity.com/app/2321960/reviews/",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "SteamCharts：Spirit Crossing",
+      "u": "https://steamcharts.com/app/2321960",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Gamespress：Spirit Crossing 上市新聞稿",
+      "u": "https://www.gamespress.com/Cozy-MMO-Spirit-Crossing-is-now-available",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Gamespress：公布 11/16 上市",
+      "u": "https://www.gamespress.com/Cozy-MMO-Spirit-Crossing-launches-November-16th",
+      "d": "2026-10-28"
+    },
+    {
+      "t": "Spry Fox：16.0 上市更新說明",
+      "u": "https://spryfox.com/2026/11/16/spirit-crossing-launch-patch-notes-for-version-16-0/",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Spry Fox：2026～2027 路線圖",
+      "u": "https://spryfox.com/2026/11/12/spirit-crossing-roadmap-2026-launch-2027/",
+      "d": "2026-11-12"
+    },
+    {
+      "t": "Spry Fox：Cozy Club 會員介紹",
+      "u": "https://spryfox.com/2026/10/21/an-intro-to-spirit-crossings-cozy-club-membership/",
+      "d": "2026-10-21"
+    },
+    {
+      "t": "Spry Fox：會員功能意見徵詢",
+      "u": "https://spryfox.com/2026/07/31/feedback-request-subscription-features-in-spirit-crossing/",
+      "d": "2026-07-31"
+    },
+    {
+      "t": "Spry Fox 客服：支援語言與平台",
+      "u": "https://support.spryfox.com/hc/en-us/articles/39130947969815-What-languages-and-platforms-does-Spirit-Crossing-support",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Nintendo 美國 eShop：Spirit Crossing",
+      "u": "https://nintendo.com/us/store/products/spirit-crossing-switch/",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Notebookcheck：療癒 MMO 今天上市",
+      "u": "https://www.notebookcheck.net/Promising-cozy-MMO-launches-today-on-PC-and-Nintendo-Switch.1451354.0.html",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Mixed News：Cozy Grove 團隊新作登上 PC 與 Switch",
+      "u": "https://mixed-news.com/en/spirit-crossing-cozy-grove-creators-launch-pc-switch/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Massively OP：正式上市與路線圖",
+      "u": "https://massivelyop.com/2026/11/17/spirit-crossing-makes-its-full-launch-shares-a-roadmap-of-update-plans-through-summer-2027/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Massively OP：買斷 US$29.99 加可選會員",
+      "u": "https://massivelyop.com/2026/08/23/cozy-mmo-spirit-crossing-locks-in-a-29-99-b2p-price-with-an-optional-subscription-for-nice-to-have-stuff/",
+      "d": "2026-08-23"
+    },
+    {
+      "t": "What's on Netflix：Netflix 停止發行 Spirit Crossing",
+      "u": "https://www.whats-on-netflix.com/news/netflix-games/netflix-pulls-the-plug-on-publishing-spirit-crossing-game-ahead-of-official-release/",
+      "d": "2026-09-01"
+    },
+    {
+      "t": "Game World Observer：Spry Fox 創辦人從 Netflix 買回工作室",
+      "u": "https://gameworldobserver.com/2025/12/04/spry-fox-will-become-independent-again-as-the-studios-founders-buy-it-back-from-netflix",
+      "d": "2025-12-04"
+    },
+    {
+      "t": "Gematsu：Spirit Crossing 推出 PC 版",
+      "u": "https://www.gematsu.com/2025/12/spirit-crossing-adds-pc-version",
+      "d": "2025-12-09"
+    },
+    {
+      "t": "Gematsu：PC 公開測試開放",
+      "u": "https://www.gematsu.com/2026/06/spirit-crossing-pc-open-beta-test-now-available",
+      "d": "2026-06-06"
+    }
+  ],
+  "pending": [
+    "伺服器位置、有沒有亞洲伺服器",
+    "Switch 台灣／香港 eShop 價格、Epic 售價",
+    "跨平台遊玩與跨平台進度的正式說明",
+    "PC 與 Switch 版的媒體評分"
+  ],
+  "updated": "2026-11-20T06:30:00+08:00"
+}

@@ -1,6 +1,24 @@
 {
  "apps": [
   {
+   "appid": 4232910,
+   "id": "crusader-kings-iii-silk-and-silver",
+   "date": "2026-11-20",
+   "watch": true
+  },
+  {
+   "appid": 3384600,
+   "id": "professor-layton-new-world-of-steam",
+   "date": "2026-11-20",
+   "watch": true
+  },
+  {
+   "appid": 2321960,
+   "id": "spirit-crossing",
+   "date": "2026-11-20",
+   "watch": true
+  },
+  {
    "appid": 238960,
    "id": "path-of-exile-covens-of-umbra",
    "date": "2026-11-19",
@@ -169,15 +187,22 @@
   }
  ],
  "cmp": [
+  261550,
   268500,
   413150,
   606150,
   646570,
+  653530,
+  787480,
   1102190,
   1282730,
+  1458100,
   1562430,
   1940340,
-  2379780
+  2379780,
+  2707930,
+  3450310,
+  4232900
  ],
  "names": [
   "Against the Storm",
@@ -249,6 +274,7 @@
   "褻瀆神明",
   "逃離塔科夫",
   "隻狼：暗影雙死",
+  "雷頓的神祕偵探社（Layton's Mystery Journey）",
   "鹽與避難所",
   "黑帝斯",
   "黑神話：悟空",

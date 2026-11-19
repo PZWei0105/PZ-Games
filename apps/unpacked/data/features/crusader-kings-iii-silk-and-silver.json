@@ -1,0 +1,477 @@
+{
+  "id": "crusader-kings-iii-silk-and-silver",
+  "date": "2026-11-20",
+  "rank": 2,
+  "kind": "update",
+  "kind_label": "大型更新",
+  "game": {
+    "zh": "Crusader Kings III：Silk & Silver",
+    "zh_note": "暫無官方中文名（遊戲只有簡體中文）",
+    "en": "Crusader Kings III: Silk & Silver",
+    "steam": 4232910,
+    "dev": "Paradox Development Studio",
+    "pub": "Paradox Interactive",
+    "platforms": [
+      "PC（Steam，Windows／macOS／Linux）"
+    ],
+    "genres": [
+      "大戰略",
+      "角色扮演",
+      "中世紀",
+      "擴充內容"
+    ],
+    "release": "2026-11-17",
+    "release_text": "2026/11/17 PC 推出（同時上免費更新 1.21「Florin」）；主機版未公布",
+    "price_text": "擴充 NT$768／本體特價 NT$380（-70%，11/19 查）",
+    "site": "https://store.steampowered.com/app/4232910"
+  },
+  "headline": "王冠不用戴，錢包夠厚就好：《王國風雲 3》讓你當威尼斯商人",
+  "hook": "你沒有一寸封地，卻握著半個地中海的鹽和絲綢。國王派人來借錢，你笑著開出利息；總督選舉前夜，你把金幣分給議會裡的每一個家族。隔天早上，熱那亞的對手發現，他的商路已經寫上你的家徽。",
+  "verdict": {
+    "stamp": "觀望",
+    "label": "本體特價可入、擴充等特價",
+    "summary": "免費的 1.21 更新把經濟系統整個翻新，所有玩家都吃得到；付費的 Silk & Silver 讓你第一次能玩商人和威尼斯、熱那亞這種共和國，點子很對味。但目前媒體評價偏保守（COGconnected 60 分），抱怨商人玩法太多等待；遊戲也只有簡體中文。沒玩過的人，本體正在 -70% 的 NT$380 很划算；擴充建議等評價穩定或特價再補。",
+    "for": [
+      "玩過 CK3、膩了「打仗、聯姻、篡位」那一套，想換個用錢玩政治的路線",
+      "喜歡威尼斯、熱那亞這種商業共和國題材，或《歐陸風雲》的貿易玩法",
+      "還沒入坑、想趁本體 -70% 用 NT$380 先試大戰略的人"
+    ],
+    "against": [
+      "看不慣簡體中文，或想要繁中介面的人（官方沒有繁中）",
+      "期待商人線有大量冒險和事件：評測說大部分時間在等數值累積",
+      "已經被 CK3 一連串 DLC 的總價嚇到、不想再追加的人"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Paradox Development Studio／Paradox Interactive",
+      "s": [
+        0,
+        2
+      ]
+    },
+    {
+      "k": "推出",
+      "v": "2026/11/17 PC 版推出，屬於「大型擴充」；主機版沒有公布日期",
+      "s": [
+        0,
+        2,
+        17
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Silk & Silver NT$768；本體《Crusader Kings III》原價 NT$1,268，11/19 查到特價 -70% 為 NT$380（截止日沒查到）",
+      "s": [
+        4
+      ]
+    },
+    {
+      "k": "擴充季票",
+      "v": "屬於第五章擴充季票：含 By God Alone、Silk & Silver、一組音樂包、一組服裝包，季票美國售價 US$43.99",
+      "s": [
+        13,
+        14
+      ]
+    },
+    {
+      "k": "商人玩法",
+      "v": "可以玩沒有封地的商人家族、經營貿易公司：40 多種貨物、可選運輸、放貸、工藝三種專精，能爭取市場專賣權甚至壟斷",
+      "s": [
+        0,
+        1,
+        12
+      ]
+    },
+    {
+      "k": "共和國",
+      "v": "威尼斯、熱那亞這類共和國變成可玩：家族靠聲望競選總督，議會投票改法律，可在外國設貿易站、組貿易聯盟",
+      "s": [
+        0,
+        1,
+        12
+      ]
+    },
+    {
+      "k": "新開局",
+      "v": "新增兩個書籤劇本：1066 年「Channels of Commerce」、1178 年「Guelphs & Ghibellines」（聚焦教宗黨與皇帝黨）",
+      "s": [
+        0,
+        12
+      ]
+    },
+    {
+      "k": "免費更新 1.21",
+      "v": "同一天推出、所有人都有：建築改成放進專門的城區，以聚落規模和繁榮度取代舊的「發展度」，加入道路與貿易物資，大國的統治難度提高",
+      "s": [
+        10,
+        11
+      ]
+    },
+    {
+      "k": "中文",
+      "v": "介面與字幕只有簡體中文，沒有官方繁體中文；語音只有英文",
+      "s": [
+        2,
+        3
+      ]
+    },
+    {
+      "k": "媒體評價",
+      "v": "Metacritic 還沒有總分；COGconnected 給 60 分，說商人玩法單調、共和國起伏太大",
+      "s": [
+        7,
+        8
+      ]
+    },
+    {
+      "k": "Steam 評價（擴充）",
+      "v": "推出兩天的商店頁顯示「褒貶不一」，約 64%（285 則）",
+      "s": [
+        2
+      ],
+      "p": true
+    },
+    {
+      "k": "Steam 評價（本體）",
+      "v": "全期約 90% 好評（14 萬多則）；最近 30 天約七成「大多好評」",
+      "s": [
+        3,
+        5
+      ]
+    },
+    {
+      "k": "同上人數",
+      "v": "11/18 的 24 小時高峰 26,822 人；史上高峰 98,872 人（2020 年 9 月）",
+      "s": [
+        6
+      ]
+    },
+    {
+      "k": "DLC 數量",
+      "v": "Steam 列出 33 項 DLC；收藏版組合 28 項，美國原價 US$313.77",
+      "s": [
+        3
+      ]
+    },
+    {
+      "k": "系統需求",
+      "v": "最低 i5-750、GTX 660、8GB RAM；建議 i5-8400、GTX 970、16GB RAM；容量 20GB",
+      "s": [
+        3
+      ]
+    }
+  ],
+  "money": {
+    "level": 2,
+    "model": "本體買斷＋付費擴充（有擴充季票）",
+    "notes": [
+      "Silk & Silver 單買 NT$768，也包含在第五章擴充季票裡；同一天的 1.21 經濟大改是免費的，不買擴充也能玩到。",
+      "CK3 的 DLC 已經累積到 33 項，收藏版組合美國原價超過 300 美元；COGconnected 也提到 DLC 總價讓人質疑值不值得。",
+      "本體目前 -70% 只要 NT$380，是入坑的好時機；擴充本身沒有打折。"
+    ],
+    "flags": [
+      "擴充 NT$768",
+      "第五章季票",
+      "DLC 已有 33 項",
+      "免費更新 1.21"
+    ]
+  },
+  "zh": {
+    "ui": "partial",
+    "sub": "partial",
+    "voice": false,
+    "note": "只有簡體中文介面與字幕，沒有官方繁中；語音只有英文。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區可以直接購買，沒有看到區域限制的消息。"
+  },
+  "rig": {
+    "verdict": "綽綽有餘",
+    "note": "建議配備只要 GTX 970、16GB RAM，你的 SCAR 18 遠超過；容量 20GB。大戰略遊戲後期吃的是處理器，275HX 也很夠。"
+  },
+  "time": {
+    "text": "沒有固定長度的大戰略沙盒",
+    "note": "新增 1066、1178 年兩個書籤劇本可以直接開局；評測提到商人與共和國適合長期經營。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "DjzV-66glE4",
+        "title": "Silk & Silver 上市預告（Paradox 官方）"
+      },
+      {
+        "id": "GsIjU7vnIxg",
+        "title": "Silk & Silver 公開預告（Paradox 官方）"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "Metacritic 湊滿評測後的總分，以及 Steam 擴充評價會不會回升",
+    "Paradox 針對商人玩法「等待太多」的平衡更新",
+    "主機版推出日期"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "選商人家族或共和國開局",
+        "開商路、買賣 40 多種貨物",
+        "放貸、遊說貴族",
+        "升級家族宅邸解鎖更多商路",
+        "競選總督、在議會推法律",
+        "爭取專賣權，壟斷整個市場"
+      ],
+      "body": [
+        "以前的 CK3，你一定是個有封地的貴族：打仗、聯姻、搞陰謀。Silk & Silver 第一次讓你當「沒有土地的商人」：你經營一家貿易公司，在地圖上拉商路、買賣貨物，選擇走大量運輸、放貸給國王，或打造工藝品的專精路線。",
+        "賺來的金幣和聲望可以砸在家族宅邸上，解鎖更多商路；做大了可以拿到某個市場的專賣權，甚至整個壟斷。商人也能去遊說貴族和王室，用錢換政治影響力。",
+        "另一條路是共和國：威尼斯、熱那亞這種城邦變成可玩。你是一個貴族家族的家長，聲望決定誰當上總督，議會投票決定任期和國庫怎麼用；共和國可以在外國設貿易站、組貿易聯盟。新的 1178 年書籤劇本，還有教宗黨和皇帝黨的對立可以一路升級成戰爭。",
+        "就算不買擴充，同一天的免費 1.21 更新也改了大家的經濟：建築放進專門的城區，聚落規模和繁榮度取代舊的發展度，還加了道路和貿易物資——老存檔的玩法手感會不一樣。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和評測整理：第一次玩商人，選新的 1066 或 1178 年書籤劇本，北義大利的內容這次擴充最多。",
+      "先把一兩條穩定的商路經營起來，再考慮放貸給國王；評測提到商人很多時間在等數值累積，可以把遊戲速度調快。",
+      "玩共和國要顧家族聲望；評測提到法律限制多，就算當權也常要花時間處理商路。",
+      "老玩家注意：免費更新 1.21 改掉了「發展度」，建築要重新規劃城區，舊的建設習慣要調整。"
+    ],
+    "compare": [
+      {
+        "name": "歐陸風雲 V（Europa Universalis V）",
+        "same": "Paradox 大戰略，貿易與經濟是重點",
+        "diff": "EU5 管的是整個國家；CK3 是一個家族、一個角色的人生",
+        "steam": 3450310
+      },
+      {
+        "name": "騎馬與砍殺 II：霸主",
+        "same": "中世紀，可以靠經商起家",
+        "diff": "騎砍是第三人稱親自上陣；CK3 全部在地圖和選單裡運籌",
+        "steam": 261550
+      },
+      {
+        "name": "Crusader Kings III：By God Alone",
+        "same": "同一張第五章季票的前一個擴充，換條路玩政治",
+        "diff": "By God Alone 讓你當神職人員和教宗；Silk & Silver 讓你當商人和共和國",
+        "steam": 4232900
+      }
+    ],
+    "story": null,
+    "studio": [
+      "Paradox Development Studio 是瑞典的大戰略老牌，《王國風雲》系列從 2004 年做到現在；CK3 在 2020 年推出，Metacritic 91 分。",
+      "CK3 用「章節」賣擴充季票：第五章在 2026 年 4 月推出，9 月先上 By God Alone（玩教宗），11 月再上 Silk & Silver（玩商人），每個擴充都搭配一個免費大更新。",
+      "DLC 越出越多是老玩家的矛盾：Steam 上已經 33 項，收藏版組合美國原價超過 300 美元；COGconnected 的評測也點出 DLC 總價讓人懷疑值不值得。"
+    ],
+    "voices": {
+      "pros": [
+        "經濟系統翻新後，地點和資源真的變重要，貿易路線和城區加了深度",
+        "共和國競選總督好玩，北義大利的內容擴充很多",
+        "新的音樂和美術受到肯定"
+      ],
+      "cons": [
+        "商人玩法常常在原地等數值累積，單調重複",
+        "共和國的家族起伏像雲霄飛車，很難掌控局面",
+        "聚焦範圍窄，冒險感變弱；DLC 總價持續累積"
+      ],
+      "debate": [
+        "「沒有土地的商人」到底好不好玩？推出才幾天，媒體評測就分成「深度變高」和「等待太多」兩派。",
+        "CK3 的 DLC 已經 33 項：新玩家該先買本體就好，還是等組合包？"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2020-09-01",
+        "t": "Crusader Kings III 推出"
+      },
+      {
+        "d": "2026-04-20",
+        "t": "第五章擴充季票推出，搭配免費更新 1.19"
+      },
+      {
+        "d": "2026-09-30",
+        "t": "By God Alone 推出（可玩教宗），搭配免費更新 1.20"
+      },
+      {
+        "d": "2026-10-19",
+        "t": "公布 Silk & Silver"
+      },
+      {
+        "d": "2026-11-17",
+        "t": "Silk & Silver 與免費更新 1.21「Florin」推出"
+      },
+      {
+        "d": "2026-11-18",
+        "t": "本體 24 小時同上高峰 26,822 人"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "在 CK3 裡「沒有土地」還算是在玩王國風雲嗎？",
+        "why": "這個系列的核心一直是封地和血統；商人路線是擴大玩法，還是偏離了本色？"
+      },
+      {
+        "q": "免費更新改經濟、付費擴充賣玩法，這種模式公平嗎？",
+        "why": "Paradox 每次都把大改版免費給所有人，再把新身分做成擴充賣；可以拿來和其他遊戲的收費方式比。"
+      },
+      {
+        "q": "本體 NT$380 是入坑好時機，還是 DLC 地獄的入口？",
+        "why": "33 項 DLC 對新玩家很勸退；可以聊怎麼挑 DLC、哪些可以不買。"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "你沒有一寸封地，卻握著地中海的鹽和絲綢；國王來借錢，你開利息，總督選舉前夜，你把金幣塞給議會裡的每一個家族。\n\n《Crusader Kings III》11/17 推出新擴充 Silk & Silver，第一次讓你當沒有土地的商人：經營貿易公司、拉商路、放貸，做大了還能壟斷市場；威尼斯、熱那亞這種共和國也變成可以玩，家族要靠聲望競選總督。同一天的免費更新 1.21 把經濟系統整個翻新，沒買擴充也吃得到。\n\n擴充在 Steam 台灣區 NT$768，本體 11/19 正在 -70%，只要 NT$380。要注意：遊戲只有簡體中文；擴充剛推出，COGconnected 只給 60 分，評測最常抱怨商人玩法要等太久。\n\n在王國風雲裡，你想當國王，還是當借錢給國王的人？",
+    "titles": [
+      "王國風雲 3 新擴充：當商人、玩威尼斯，本體特價 NT$380",
+      "不打仗、不篡位，靠放貸控制國王？",
+      "33 項 DLC 的王國風雲 3，現在還值得入坑嗎？"
+    ],
+    "card": {
+      "kicker": "大型更新｜11/17 推出",
+      "title": "沒有封地\n也能當老大",
+      "sub": "CK3 擴充 Silk & Silver",
+      "tags": [
+        "大戰略",
+        "NT$768",
+        "只有簡中"
+      ],
+      "points": [
+        {
+          "h": "當商人",
+          "t": "經營貿易公司，放貸、壟斷市場。"
+        },
+        {
+          "h": "玩共和國",
+          "t": "威尼斯、熱那亞可玩，競選總督。"
+        },
+        {
+          "h": "本體特價",
+          "t": "11/19 查到 -70%，只要 NT$380。"
+        }
+      ]
+    },
+    "tags": [
+      "#王國風雲3",
+      "#CrusaderKings3",
+      "#大戰略",
+      "#Paradox",
+      "#Steam",
+      "#遊戲狂想曲"
+    ],
+    "script": "不打仗、不篡位，靠放貸控制國王，這是王國風雲 3 的新玩法。\nParadox 在 11 月 17 號推出新擴充 Silk & Silver，第一次讓你當一個沒有土地的商人：開貿易公司、拉商路、借錢給國王，做大了還能壟斷整個市場。威尼斯、熱那亞這種共和國也變成可以玩，家族要靠聲望去選總督。\n同一天還有免費的大更新，把整個經濟系統翻新，沒買擴充也玩得到。\n價格方面，擴充在 Steam 台灣 768 塊；本體在 11 月 19 號查的時候正打三折，380 塊。不過要先講清楚：遊戲只有簡體中文，擴充剛推出，媒體評價偏保守，最常被抱怨的是商人玩法常常在等。\n在王國風雲裡，你想當國王，還是當借錢給國王的人？留言告訴我。",
+    "credit": "圖片／影片來源：Paradox Interactive 官方 Steam 商店頁與官方預告",
+    "threads": {
+      "post": "不打仗、不篡位，靠借錢給國王當老大。\n\nParadox 11/17 推出《Crusader Kings III》擴充 Silk & Silver：第一次能玩沒有土地的商人家族，威尼斯、熱那亞這種共和國也能玩。\n・擴充 NT$768，本體 11/19 查到 -70% 只要 NT$380\n・同日免費更新 1.21：經濟系統整個翻新\n・評價：COGconnected 60 分，Metacritic 還沒有總分\n・注意：只有簡體中文，沒有繁中\n\n點子很對味，但商人線被抱怨等待太多，擴充可以等等。\n\n你想當國王，還是當借錢給國王的人？",
+      "topic": "大戰略",
+      "more": [
+        "它怎麼玩：\n・經營貿易公司，40 多種貨物，選運輸、放貸、工藝三種專精\n・升級家族宅邸解鎖更多商路，做大可以拿專賣權、壟斷市場\n・共和國靠聲望競選總督，議會投票改法律，能在外國設貿易站、組貿易聯盟\n\n新書籤劇本有 1066 和 1178 兩個，1178 年的教宗黨與皇帝黨對立可以一路打成戰爭。",
+        "買之前要知道：\n・免費的 1.21 已經改掉「發展度」，改成城區、聚落規模和繁榮度，老玩家的建設習慣要重來\n・Silk & Silver 也包含在第五章擴充季票裡，同季票還有玩教宗的 By God Alone\n・Steam 上 CK3 的 DLC 已經 33 項，新玩家先買本體就能玩\n\n電腦需求很低，建議 GTX 970、16GB RAM，容量 20GB。"
+      ]
+    }
+  },
+  "sources": [
+    {
+      "t": "Paradox 新聞稿：Silk & Silver 推出",
+      "u": "https://www.paradoxinteractive.com/media/press-releases/paradox-interactive/find-your-fortune-in-new-crusader-kings-iii-expansion",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "Paradox 新聞稿：公布 Silk & Silver",
+      "u": "https://www.paradoxinteractive.com/media/press-releases/paradox-interactive/take-the-golden-path-to-power-in-upcoming-crusader-kings-iii-expansion",
+      "d": "2026-10-19"
+    },
+    {
+      "t": "Steam 商店頁：Crusader Kings III: Silk & Silver",
+      "u": "https://store.steampowered.com/app/4232910",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Steam 商店頁：Crusader Kings III",
+      "u": "https://store.steampowered.com/app/1158310/Crusader_Kings_III/",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Steam 價格資料（台灣區）",
+      "u": "https://store.steampowered.com/api/appdetails?appids=4232910,1158310&cc=tw&filters=price_overview",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "Steam 評價資料：Crusader Kings III",
+      "u": "https://store.steampowered.com/appreviews/1158310?json=1&language=all&purchase_type=all&num_per_page=0",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "SteamDB：Crusader Kings III 同上人數",
+      "u": "https://steamdb.info/app/1158310/charts",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Metacritic：Silk & Silver",
+      "u": "https://www.metacritic.com/game/crusader-kings-iii-silk-and-silver/",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "COGconnected 評測（60 分）",
+      "u": "https://cogconnected.com/review/crusader-kings-iii-silk-silver-review/",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "Kyusai Media 評測",
+      "u": "https://kyusaimedia.com/gaming/crusader-kings-3-silk-and-silver-review",
+      "d": "2026-11-16"
+    },
+    {
+      "t": "esports.ru：Silk & Silver 與 1.21 更新推出",
+      "u": "https://esports.ru/igrovaya-industriya/news/dlya-crusader-kings-iii-vyshlo-kupecheskoe-dopolnenie-silk-and-silver/",
+      "d": "2026-11-17"
+    },
+    {
+      "t": "a90skid：Silk & Silver 與免費 Florin 更新",
+      "u": "https://www.a90skid.com/crusader-kings-iii-releases-silk-silver-expansion-and-free-florin-update/",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Inven Global：商人公司與可玩共和國",
+      "u": "https://invenglobal.com/articles/27365/crusader-kings-iii-adds-merchant-companies-and-playable-republics-in-silk-silver",
+      "d": "2026-10-19"
+    },
+    {
+      "t": "Paradox 新聞稿：第五章擴充季票",
+      "u": "https://www.paradoxinteractive.com/media/press-releases/press-release/paradox-launches-new-expansion-pass-for-crusader-kings-iii",
+      "d": "2026-04-20"
+    },
+    {
+      "t": "Paradox 官網：第五章擴充季票內容",
+      "u": "https://www.paradoxinteractive.com/games/crusader-kings-iii/add-ons/crusader-kings-iii-chapter-v",
+      "d": "2026-11-19"
+    },
+    {
+      "t": "PC Gamer：CK3 接下來可玩教宗與商人共和國",
+      "u": "https://www.pcgamer.com/games/sim/crusader-kings-3s-next-major-expansions-will-bring-playable-popes-and-merchant-republics/",
+      "d": "2026-04-20"
+    },
+    {
+      "t": "AUTOMATON：By God Alone 與 1.20 更新",
+      "u": "https://automaton-media.com/articles/newsjp/20261003-471614/",
+      "d": "2026-10-03"
+    },
+    {
+      "t": "SimulationDaily：Silk & Silver 推出日與主機版",
+      "u": "https://simulationdaily.com/news/crusader-kings-3-silk-silver-released/",
+      "d": "2026-10-19"
+    },
+    {
+      "t": "GamingTrend：Silk & Silver 介紹",
+      "u": "https://gamingtrend.com/news/crusader-kings-iii-silk-silver-turns-medieval-merchants-into-power-brokers/",
+      "d": "2026-10-21"
+    }
+  ],
+  "pending": [
+    "擴充的 Steam 評價：商店頁顯示約 64%（285 則），但評價資料庫查不到，要再確認",
+    "本體 -70% 特價的截止日",
+    "第五章擴充季票的台灣售價",
+    "主機版推出日期"
+  ],
+  "updated": "2026-11-20T06:30:00+08:00"
+}
