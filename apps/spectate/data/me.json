@@ -1,6 +1,6 @@
 {
  "v": 1,
- "at": "2026-11-18T18:07:59Z",
+ "at": "2026-11-19T11:26:58Z",
  "subs": {
   "UCU6nhA37pbvzw-JXhAB87Mg": {
    "t": 1794980903932,
@@ -36,6 +36,21 @@
    "t": 1795025239027,
    "n": "遊戲狂想曲",
    "src": "mine"
+  },
+  "UCXxq4dniJhVRkaHjg3jspfA": {
+   "t": 1795056773883,
+   "n": "莎皮塞維爾",
+   "src": "app"
+  },
+  "UCtRbs-wLyPxy9rB8nqQKX8Q": {
+   "t": 1795056848679,
+   "n": "不負責任熱血君",
+   "src": "pool"
+  },
+  "UC4D6eg7KWWiXNJVTXtuyZfA": {
+   "t": 1795056921722,
+   "n": "Sky game",
+   "src": "pool"
   }
  },
  "blocks": {},
@@ -48,7 +63,10 @@
   "dzi5270-3",
   "dzi5270-4",
   "dzi5270-5",
-  "dzi5270-6"
+  "dzi5270-6",
+  "d5b33bu-1",
+  "d5b33bu-2",
+  "d5b33bu-3"
  ],
  "log": [
   {
@@ -86,7 +104,25 @@
    "type": "sub",
    "t": 1794980949220,
    "ch": "UCLgGLSFMZQB8c0WGcwE49Gw"
+  },
+  {
+   "id": "d5b33bu-1",
+   "type": "sub",
+   "t": 1795056773883,
+   "ch": "UCXxq4dniJhVRkaHjg3jspfA"
+  },
+  {
+   "id": "d5b33bu-2",
+   "type": "sub",
+   "t": 1795056848679,
+   "ch": "UCtRbs-wLyPxy9rB8nqQKX8Q"
+  },
+  {
+   "id": "d5b33bu-3",
+   "type": "sub",
+   "t": 1795056921722,
+   "ch": "UC4D6eg7KWWiXNJVTXtuyZfA"
   }
  ],
- "cursor": 1794980950
+ "cursor": 1795056923
 }
