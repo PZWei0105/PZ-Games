@@ -2182,7 +2182,7 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611190002';
+const VERSION = '1.0.2611190012';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -5449,7 +5449,7 @@ function gameHtml(spec, d, a, ref, loading) {
     d && d.ws ? '<span class="chip n">MOD 工作坊</span>' : '', d && d.free ? '<span class="chip y">免費遊玩</span>' : ''].join('');
   const yr = rel.date ? rel.date.slice(0, 4) : '';
   const cells = d ? [
-    ['台灣售價', d.free ? '免費' : pr.final != null && (pr.final > 0 || pr.orig > 0) ? fmtNT(pr.final) : '—', pr.disc > 0 ? `特價 -${pr.disc}%${pr.orig ? '・原價 ' + fmtNT(pr.orig) : ''}` : pr.final > 0 ? 'Steam 台灣區' : rel.soon ? '還沒開賣' : '台灣區沒有標價'],
+    [spec.store && spec.store !== 'Steam' ? 'Steam 售價' : '台灣售價', d.free ? '免費' : pr.final != null && (pr.final > 0 || pr.orig > 0) ? fmtNT(pr.final) : '—', pr.disc > 0 ? `特價 -${pr.disc}%${pr.orig ? '・原價 ' + fmtNT(pr.orig) : ''}` : pr.final > 0 ? 'Steam 台灣區' : rel.soon ? '還沒開賣' : '台灣區沒有標價'],
     ['上市', rel.date ? mdDay(rel.date) : rel.soon ? '未定' : '—', rel.date ? (rel.soon ? '預定・' : '') + yr + ' 年' : esc(rel.text || '')],
     ['Steam 評價', rv.n && rv.pct != null ? rv.pct + '%' : '—', rv.n && rv.pct != null ? `${rv.label || ''}・${fmtN(rv.n)} 則` : rel.soon ? '還沒上市' : '評論還不夠']] : [];
   const shots = (d && !d.adult && d.shots) || [];
