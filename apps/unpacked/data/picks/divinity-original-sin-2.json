@@ -192,6 +192,47 @@
   ],
   "images": []
  },
+ "fanpage": {
+  "threads": {
+   "post": "水可以導電、油可以點火，地面還能被祝福或詛咒。用環境把整群敵人一次打垮，是這款最爽的瞬間。\n\n《神界：原罪2 - 終極版》是 Larian 的回合制 RPG，Metacritic 93、GameSpot 給 10 分。\n\n・線上最多 4 人合作，PC 同台還能 2 人分割畫面\n・沒有固定職業，十個技能系統自由混搭\n・中文：繁中介面與字幕，語音英文\n・主線約 58 小時，買斷沒有內購\n\n每個隊友在對話裡都有自己的立場：四個人連線，誰說了算本身就是一場戲。\n\n固定有 2～3 個朋友的話，你們會挑這款開一個長期存檔嗎？",
+   "topic": "RPG",
+   "more": [
+    "任務常常有好幾種解法：說服、偷竊、潛行、硬打都行；起源角色的劇本和整體文筆也很受好評。\n\n要先知道的：\n・難度會突然拉高，前期容易被一場仗卡住\n・任務日誌和指引很模糊，常不知道下一步去哪\n・對話和任務文字量很大，不愛讀字的人會累\n\n這款常在大特賣打很低，SteamDB 記錄過 -82%；四個人一起等特價入最划算。主機和 PC 不能跨平台連線。"
+   ]
+  },
+  "tags": [
+   "#神界原罪2",
+   "#DivinityOriginalSin2",
+   "#回合制",
+   "#合作遊戲",
+   "#遊戲狂想曲"
+  ],
+  "card": {
+   "kicker": "私房推坑｜2017 年作品",
+   "title": "神界：\n原罪 2",
+   "sub": "四人連線的回合制 RPG",
+   "tags": [
+    "回合制",
+    "CRPG",
+    "4人合作"
+   ],
+   "points": [
+    {
+     "h": "元素連鎖",
+     "t": "水導電、油點火，地形也是武器。"
+    },
+    {
+     "h": "最多 4 人",
+     "t": "線上合作，同台可分割畫面。"
+    },
+    {
+     "h": "評價 93 分",
+     "t": "Metacritic 93、GameSpot 10。"
+    }
+   ]
+  },
+  "credit": "圖片／影片來源：神界：原罪2 - 終極版 官方商店頁與預告"
+ },
  "sources": [
   {"t": "Larian 新聞稿：神界原罪 2 正式上市（多人、GM 模式、分割畫面）", "u": "https://pressreleases.triplepointpr.com/2017/09/14/divinity-original-sin-2-now-available-sequel-to-award-winning-and-critically-acclaimed-fantasy-rpg/", "d": "2017-09-14"},
   {"t": "SteamDB：Divinity: Original Sin 2 – Definitive Edition（語言、Metacritic、工作坊、價格紀錄）", "u": "https://steamdb.info/app/435150/info", "d": ""},

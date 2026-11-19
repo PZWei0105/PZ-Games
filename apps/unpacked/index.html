@@ -1962,6 +1962,106 @@ body.calm .bar-t i{transition:none}
 .ytc.chk button.ok i{color:var(--k);background:var(--y);text-align:center}
 .ytc.chk button.ok b{text-decoration:line-through;text-decoration-color:var(--p);text-decoration-thickness:2px}
 
+/* Threads 優先（2026-11-19）：每日三件事、內容種類、加碼、平台階段、教學的三個階段、經營心法 */
+.kchip{display:inline-block;font:900 11px/1 var(--cjk);padding:3px 5px;margin:0 6px 4px 0;border:2px solid var(--k);background:#fff;color:var(--k);transform:rotate(-2deg);vertical-align:2px;letter-spacing:0;white-space:nowrap}
+.kchip.k-f{background:var(--y)}.kchip.k-p{background:#7dff9a}.kchip.k-w{background:var(--k);color:var(--y)}.kchip.k-v{background:var(--p);color:#fff}.kchip.k-x{background:var(--r);color:#fff}
+.m-t .kchip{display:inline-block;margin-bottom:5px}
+.dq{position:relative;margin:12px 0 6px;padding:12px;background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:5px 5px 0 #FF8A1F}
+.dq.all{background:var(--y);box-shadow:5px 5px 0 var(--p)}
+.dq-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dq-h b{font:900 17px/1 var(--cjk)}
+.dq-h span{font:400 22px/1 var(--num);letter-spacing:1px}
+.dq-h em{margin-left:auto;font:900 12px/1 var(--cjk);font-style:normal;background:var(--k);color:var(--y);padding:5px 7px;transform:rotate(3deg)}
+.dq-l{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.dq-i{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:9px 8px 10px;background:#f4f4f4;border:2px solid var(--k);color:var(--k);min-height:104px}
+.dq-i i{width:30px;height:30px;display:grid;place-items:center;font:400 19px/1 var(--num);font-style:normal;background:var(--k);color:var(--y);transform:rotate(-4deg)}
+.dq-i b{font:900 14px/1.3 var(--cjk)}
+.dq-i small{font:700 11px/1.45 var(--cjk);color:#555}
+.dq-i.on{background:var(--k);color:#fff;box-shadow:3px 3px 0 var(--p)}
+.dq-i.on i{background:var(--r);color:#fff}
+.dq-i.on small{color:#bbb}
+.dq-i.on b{text-decoration:line-through;text-decoration-color:var(--p);text-decoration-thickness:3px}
+body:not(.calm) .dq-i{animation:glIn .4s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--i,0) * 70ms)}
+.msn.xtra{box-shadow:5px 5px 0 var(--r)}
+.msn.xtra .m-pf .xs{font:400 26px/1 var(--num);letter-spacing:1px}
+.mnote{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin:14px 0 4px;padding:10px 12px;background:#1d1d1d;border:2px dashed #FF8A1F;cursor:pointer}
+.mnote b{font:900 14px/1.3 var(--cjk);color:#FF8A1F}
+.mnote span{grid-column:1;font:700 12px/1.5 var(--cjk);color:var(--t2)}
+.mnote em{grid-column:2;grid-row:1/3;font:900 13px/1 var(--cjk);font-style:normal;color:#FF8A1F}
+.pl-grid.n1 .pl-h,.pl-grid.n1 .pl-row{grid-template-columns:52px minmax(0,1fr)}
+.pl-grid.n2 .pl-h,.pl-grid.n2 .pl-row{grid-template-columns:46px repeat(2,minmax(0,1fr))}
+.pl-h small{font:900 12px/1 var(--cjk);color:var(--t2);vertical-align:middle}
+.pl-grid.n1 .pl-c{display:grid;grid-template-columns:auto 96px minmax(0,1fr);grid-template-rows:auto auto auto;column-gap:10px;row-gap:3px;align-items:center;min-height:84px;padding:8px}
+.pl-grid.n1 .pl-c em{grid-column:1;grid-row:1/4;flex-direction:column;align-items:flex-start;font-size:24px}
+.pl-grid.n1 .pl-c em .hot{font-size:10px;padding:3px 4px;margin-top:4px}
+.pl-grid.n1 .pc-i{grid-column:2;grid-row:1/4;height:auto;aspect-ratio:16/10}
+.pl-grid.n1 .pl-c b{grid-column:3;font-size:14px;-webkit-line-clamp:2}
+.pl-grid.n1 .pl-c .pc-s{grid-column:3;font:700 11.5px/1.4 var(--cjk);color:#555;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.pl-grid.n1 .pl-c small{grid-column:3;margin-top:0}
+.pl-grid.n1 .pl-c.st-wait .pc-s,.pl-grid.n1 .pl-c.st-empty .pc-s{color:#999}
+.pl-grid.n1 .pl-c b .kchip{margin-bottom:2px}
+.pl-grid.n1 .pl-c.noimg b,.pl-grid.n1 .pl-c.noimg .pc-s,.pl-grid.n1 .pl-c.noimg small{grid-column:2/4}
+.pl-grid.n1 .pl-c.noimg em{grid-row:1/4}
+.cad-pre.n2{grid-template-columns:repeat(2,1fr)}
+.pftabs.n2{grid-template-columns:repeat(2,1fr)}
+.pkl-g{font:900 13px/1.3 var(--cjk);color:var(--y);margin:14px 0 0}
+.pt-part.first{border-left-color:var(--p)}
+.pt-part em{display:flex;justify-content:space-between;gap:8px}
+.pt-part em span{color:#888}
+.pt-part em span.over{color:var(--r)}
+.pf-hint{font:700 12px/1.5 var(--cjk);color:#666;margin-top:6px}
+.pf-meta .auto{background:#fff3c4;border:1px solid #e3c94b;padding:3px 6px;color:#6a5200;font-size:11.5px}
+.go-one{margin:10px 0;padding:10px 12px;border:2px dashed #444}
+/* 教學：平台階段、三個階段的開站任務、經營心法、30 天路線圖 */
+.pmode{margin:12px 0;padding:12px;background:var(--g);border:2px solid #333}
+.pmode h4{font:900 15px/1.3 var(--cjk);color:#fff;margin-bottom:8px}
+.pm-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pm-seg button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:9px 8px;background:#222;border:2px solid #3a3a3a;color:#ccc}
+.pm-seg b{font:900 14px/1.2 var(--cjk)}
+.pm-seg small{font:700 11px/1.3 var(--cjk);opacity:.8}
+.pm-seg button.on{background:#FF8A1F;color:var(--k);border-color:var(--k);box-shadow:3px 3px 0 var(--y);transform:rotate(-1deg)}
+.phase{margin:16px 0;padding:12px;background:#151515;border:3px solid #FF8A1F;box-shadow:5px 5px 0 var(--k)}
+.phase.done{border-color:var(--y)}
+.phase.locked{border-color:#333;border-style:dashed;box-shadow:none}
+.ph-h{display:flex;align-items:center;gap:12px}
+.ph-n{flex:none;width:42px;height:42px;display:grid;place-items:center;font:400 30px/1 var(--num);background:#FF8A1F;color:var(--k);border:2px solid var(--k);transform:rotate(-5deg)}
+.phase.locked .ph-n{background:#333;color:#888}
+.phase.done .ph-n{background:var(--y)}
+.ph-h b{font:900 16.5px/1.3 var(--cjk);color:#fff}
+.ph-h p{font:700 12px/1.5 var(--cjk);color:var(--t2);margin-top:2px}
+.ph-h>em{margin-left:auto;flex:none;white-space:nowrap;font:400 22px/1 var(--num);font-style:normal;color:#FF8A1F;letter-spacing:1px}
+.phase.locked .ph-h>em{color:#777}
+.ph-lock{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ph-lock p{flex:1 1 220px;font:700 12.5px/1.6 var(--cjk);color:var(--t3)}
+.ph-peek{margin-top:8px}
+.ph-peek summary{font:700 12px/1 var(--cjk);color:var(--t3);cursor:pointer}
+.ph-peek ul{margin:8px 0 0 18px;display:grid;gap:4px}
+.ph-peek li{font:500 12.5px/1.5 var(--cjk);color:var(--t2)}
+.phase .quests{margin-bottom:2px}
+.quest summary em.o{color:#777;border-color:#999}
+.q-note{margin:8px 12px 0}
+.q-handles{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.q-handles>b{flex:1 1 100%;font:900 12.5px/1.3 var(--cjk);color:#555}
+.hchip{font:700 15px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:8px 10px;background:var(--k);color:var(--y);border:2px solid var(--k);box-shadow:2px 2px 0 var(--p);text-transform:none}
+.intros{display:grid;gap:10px;margin-top:10px}
+.intro{border:2px solid var(--k);background:#fffef5;padding:8px}
+.intro-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.intro-h b{font:900 13.5px/1 var(--cjk);background:var(--k);color:var(--y);padding:4px 7px}
+.intro-h span{font:400 15px/1 var(--num);color:#777;letter-spacing:1px}
+.intro .pftxt{background:#fff;max-height:none;font-size:14px}
+.intro .btnrow{margin:8px 0 0}
+.pbook{list-style:none;display:grid;gap:8px;counter-reset:pb}
+.pbook li{position:relative;padding:10px 12px 10px 46px;background:var(--g);border:2px solid #333;counter-increment:pb}
+.pbook li::before{content:counter(pb);position:absolute;left:10px;top:9px;width:26px;height:26px;display:grid;place-items:center;font:400 18px/1 var(--num);background:#FF8A1F;color:var(--k);transform:rotate(-5deg)}
+.pbook b{display:block;font:900 15px/1.4 var(--cjk);color:#fff}
+.pbook p{font:500 13px/1.65 var(--cjk);color:var(--t2);margin-top:3px}
+.pbook a{display:block;font:700 11.5px/1.5 var(--cjk);margin-top:5px;overflow-wrap:anywhere}
+.road{display:grid;gap:6px}
+.road>div{display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:baseline;background:var(--g);border:2px solid #2c2c2c;border-left:6px solid #FF8A1F;padding:8px 10px}
+.road b{font:900 13px/1.4 var(--cjk);color:#FF8A1F}
+.road span{font:500 13px/1.6 var(--cjk);color:var(--t2)}
+@media (max-width:380px){.dq-i small{display:none}.dq-i{min-height:74px}.pm-seg small{display:none}}
+
 /* 影片三連發 */
 .v-hero{margin:12px 0;padding:12px;background:var(--k);border:3px solid var(--p);box-shadow:6px 6px 0 var(--y)}
 .vh-i{position:relative;aspect-ratio:16/9;background:#222 center/cover;border:3px solid #fff;display:grid;place-items:center;color:var(--y)}
@@ -2182,7 +2282,7 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611190012';
+const VERSION = '1.0.2611190511';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3373,8 +3473,12 @@ async function renderPick(id) {
 function renderFanList() {
   const items = S.index.items;
   const wait = fanWait(); const n = Math.min(items.length, MORE_N.fan);
+  const pf0 = opsPfs()[0]; const doGo = (ref) => 'fan/~do:' + encodeURIComponent(ref) + '|' + pf0;
+  const frees = freeNow(); const picks = ((S.picks && S.picks.items) || []).filter((x) => x.stamp !== '特價入' || x.date >= addD(todayTW(), -1)).slice(0, 9);
   return `<div class="brandbar"><h2 class="spray-h">出稿台</h2><div class="brandstk"><b>遊戲狂想曲</b><i>GAME RHAPSODY</i></div></div>
-    <p class="sub-note">每篇專題和每週懶人包都配好粉專貼文、Threads／IG／FB 三個平台的版本、塗鴉圖卡和 60 秒口播稿。排程每天會自動挑一篇；想多發一篇、換別篇，從這裡挑。</p>
+    <p class="sub-note">${thOnly() ? '每篇專題、推坑、週報都配好 Threads 版（第 1 則讓人停下來、後面幾則串文講深入）和塗鴉圖卡；限時免費一出來也能直接發快訊。排程每天會自動挑一篇；想多發一篇、換別篇，從這裡挑。' : '每篇專題和每週懶人包都配好粉專貼文、各平台的版本、塗鴉圖卡和 60 秒口播稿；推坑和限免快訊也能直接發。排程每天會自動挑一篇；想多發一篇、換別篇，從這裡挑。'}</p>
+    ${frees.length ? `<h3 class="tape-h p" style="margin-top:6px">限免快訊 <small>今天就能發</small></h3><div class="drafts">${frees.slice(0, 4).map((x) => `<div class="draft" data-go="${doGo('x:' + x.id)}"><div class="di" style="background-image:url('${esc(x.img || '')}')"></div><div><h4>${esc(x.title)}</h4><p>${esc(STORE_N[x.store] || x.store)} 限時免費${x.end ? '・領到 ' + esc(freeEndTW(x)) : ''}</p>${pfChips('x:' + x.id)}</div></div>`).join('')}</div>` : ''}
+    ${picks.length ? `<h3 class="tape-h" style="margin-top:10px">推坑 <small>已上市的私房好遊戲</small></h3><div class="drafts">${picks.map((x) => `<div class="draft" data-go="${doGo('p:' + x.id)}"><div class="di" style="background-image:url('${esc(headerOf(x))}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.stamp ? '【' + x.stamp + '】' : '')}${esc(x.pitch || '')}</p>${pfChips('p:' + x.id)}</div></div>`).join('')}</div>` : ''}
     ${((S.weekly && S.weekly.items) || []).length ? `<h3 class="tape-h y" style="margin-top:6px">每週懶人包</h3><div class="drafts">${S.weekly.items.slice(0, 6).map((w) => `<div class="draft wkd" data-go="fan/w:${esc(w.id)}"><div class="di wk-no sm"><span>WEEK</span><b>${wkNo(w.id)}</b></div><div><h4>${esc(w.title)}</h4><p>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}・封面／Tier 表／下週出擊三張圖卡</p>${pfChips('w:' + w.id, S.posted['w:' + w.id])}</div></div>`).join('')}</div><h3 class="tape-h" style="margin-top:10px">每日專題</h3>` : ''}
     <div class="drafts" id="fandrafts">${items.slice(0, n).map(draftHtml).join('')}</div>${moreS('fan', n, items.length)}`;
 }
@@ -3402,7 +3506,7 @@ async function renderFanDetail(id) {
     <div class="btnrow" style="justify-content:center"><button class="btn sm ${CARD.layout === 'A' ? 'y' : ''}" data-act="cl" data-v="A">版型 A 黃牆</button><button class="btn sm ${CARD.layout === 'B' ? 'y' : ''}" data-act="cl" data-v="B">版型 B 黑牆</button><button class="btn sm ${CARD.ratio === '45' ? 'y' : ''}" data-act="cr" data-v="45">4:5 直式</button><button class="btn sm ${CARD.ratio === '11' ? 'y' : ''}" data-act="cr" data-v="11">1:1 方形</button></div>
     <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="respray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="cdl">${ICON.dl}<span>下載圖卡</span></button>${navigator.share ? `<button class="btn" data-act="cshare">${ICON.share}<span>分享圖卡</span></button>` : ''}</div>
     ${pfs}
-    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>改這裡，三個平台一起改</small></h3>
+    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>${fp.threads ? 'IG、FB 用這份；Threads 版在上面另外改' : '改這裡，各平台一起改'}</small></h3>
     <div class="copybox"><h4>粉專貼文（原稿） <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
       <div class="btnrow"><button class="btn y sm" data-act="copy" data-what="post">${ICON.copy}<span>複製貼文</span></button><button class="btn p sm" data-act="copy" data-what="full">${ICON.copy}<span>貼文＋hashtag</span></button>${S.edits[id] != null ? '<button class="btn sm" data-act="postreset">還原原稿</button>' : ''}</div></div>
     <div class="copybox"><h4>三個標題（A/B 測試用）</h4>${fp.titles.map((t, i) => `<div class="tline"><b>${'ABC'[i]}</b><span>${esc(t)}</span><button class="btn sm" data-act="copy" data-what="title" data-i="${i}">複製</button></div>`).join('')}</div>
@@ -3532,7 +3636,7 @@ function sticker(c, text, x, y, bg, fg, ang, size = 34) {
 function stampSeal(c, x, y, r, stamp, label) {
   c.save(); c.translate(x, y); c.rotate(-0.25);
   c.fillStyle = 'rgba(255,255,255,.86)'; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill();
-  c.strokeStyle = stamp === '推薦' || stamp === '新片' ? '#e3001b' : stamp === '觀望' || stamp === '開聊' ? '#111' : stamp === '明天' ? '#FF2E88' : '#555'; c.lineWidth = r * 0.13; c.beginPath(); c.arc(0, 0, r * 0.9, 0, 7); c.stroke();
+  c.strokeStyle = ['推薦', '新片', '必玩', '閉眼入', '限免'].includes(stamp) ? '#e3001b' : ['觀望', '開聊', '冷門神作'].includes(stamp) ? '#111' : ['明天', '特價入'].includes(stamp) ? '#FF2E88' : '#555'; c.lineWidth = r * 0.13; c.beginPath(); c.arc(0, 0, r * 0.9, 0, 7); c.stroke();
   c.lineWidth = r * 0.03; c.beginPath(); c.arc(0, 0, r * 0.72, 0, 7); c.stroke();
   c.fillStyle = c.strokeStyle; c.textAlign = 'center'; c.textBaseline = 'middle';
   const t = stamp + (stamp === '推薦' ? '!!' : '');
@@ -4834,7 +4938,7 @@ async function renderWeekFan(id) {
     <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="respray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="cdl">${ICON.dl}<span>下載這張</span></button>${navigator.share ? `<button class="btn" data-act="cshare">${ICON.share}<span>分享這張</span></button>` : ''}<button class="btn" data-act="wkall">${ICON.dl}<span>三張一起下載</span></button></div>
     <p class="sub-note" style="text-align:center">三張依序是封面、Tier 表、下週出擊，適合發成一則多圖貼文。</p>
     ${pfs}
-    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>改這裡，三個平台一起改</small></h3>
+    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>${fp.threads ? 'IG、FB 用這份；Threads 版在上面另外改' : '改這裡，各平台一起改'}</small></h3>
     <div class="copybox"><h4>粉專貼文（原稿） <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
       <div class="btnrow"><button class="btn y sm" data-act="copy" data-what="post">${ICON.copy}<span>複製貼文</span></button><button class="btn p sm" data-act="copy" data-what="full">${ICON.copy}<span>貼文＋hashtag</span></button>${S.edits[key] != null ? '<button class="btn sm" data-act="postreset">還原原稿</button>' : ''}</div></div>
     <div class="copybox"><h4>三個標題（A/B 測試用）</h4>${(fp.titles || []).map((t, i) => `<div class="tline"><b>${'ABC'[i]}</b><span>${esc(t)}</span><button class="btn sm" data-act="copy" data-what="title" data-i="${i}">複製</button></div>`).join('')}</div>
@@ -5963,10 +6067,11 @@ function askBoxFor(ref) {
 }
 
 /* ---- ops.js ---- */
-/* 解包 — 粉專作戰台（遊戲狂想曲）：三平台（Threads／Instagram／Facebook 粉專）發文排程、每次上架都附上架教學、導流成效追蹤、影片三連發。
+/* 解包 — 粉專作戰台（遊戲狂想曲）：Threads 優先、IG 與 FB 粉專分階段加開的發文排程、每次上架都附上架教學、導流成效追蹤、影片三連發。
    你的發文紀錄、排程、成效數字只存在這台裝置（localStorage「unpacked.v1.ops」），成效頁可以匯出備份碼換手機。
    平台規則（字數、hashtag、連結額度、營利門檻）讀 data/platforms.json（每週懶人包排程每週查一次），讀不到就用內建的。
-   這一檔：狀態、三平台版本、排程、今日任務、上架流程、排程週曆、出稿台的三平台區塊。成效在 opsstats.js、教學與影片三連發在 opslearn.js。 */
+   這一檔：狀態、各平台版本、排程、今日任務、上架流程、排程週曆、出稿台的平台區塊。成效在 opsstats.js、教學與影片三連發在 opslearn.js、
+   Threads 優先的每日三件事、限免快訊、推坑稿與平台階段在 opsth.js。 */
 const OPS_PF = ['th', 'ig', 'fb'];
 const PFI = {
   th: { n: 'Threads', s: '脆', full: 'Threads（脆）', c: '#C96A10', app: 'https://www.threads.com/' },
@@ -5991,11 +6096,18 @@ function plat() {
 }
 
 /* ---- 狀態（只存在這台裝置） ---- */
-const OPS0 = { v: 1, cad: null, pin: {}, log: [], wk: {}, vids: [], setup: {}, prof: { yt: '', th: '', ig: '', fb: '' }, fbLimit: 'unknown', guide: 'full', ed: {}, vchk: {} };
+const OPS0 = { v: 1, mode: null, cad: null, pin: {}, log: [], wk: {}, vids: [], setup: {}, prof: { yt: '', th: '', ig: '', fb: '' }, fbLimit: 'unknown', guide: 'full', ed: {}, vchk: {}, dq: {} };
 S.ops = Object.assign({}, OPS0, LS.get('ops', {}));
 S.ops.prof = Object.assign({}, OPS0.prof, S.ops.prof || {});
+S.ops.dq = S.ops.dq || {};
 const opsSave = () => LS.set('ops', S.ops);
 if (!S.ops.since) { S.ops.since = todayTW(); opsSave(); }   // 從哪一天開始用（之前的日子不算沒發）
+/* 平台階段（2026-11-19 起 Threads 優先）：th＝只顧 Threads（第一階段）、thig＝加開 IG（第二階段）、all＝三平台（第三階段）。
+   還沒在 IG、FB 發過文的從 Threads 開始；之前就在 IG、FB 發過的維持三平台，不打亂原本的節奏。 */
+const OPS_MODES = { th: ['th'], thig: ['th', 'ig'], all: ['th', 'ig', 'fb'] };
+if (!OPS_MODES[S.ops.mode]) { S.ops.mode = S.ops.log.some((l) => l.pf !== 'th') ? 'all' : 'th'; opsSave(); }
+const opsPfs = () => OPS_MODES[S.ops.mode] || OPS_PF;
+const thOnly = () => S.ops.mode === 'th';
 const OPS = { wk: 0, cdT: 0, steps: new Set(), tab: {}, card: { layout: 'A', ratio: '45', seed: 1, wk: 'cover' }, cur: null, edit: false };
 
 /* ---- 時間 ---- */
@@ -6013,11 +6125,14 @@ function hms(ms) { const s = Math.max(0, Math.round(ms / 1000)); const h = Math.
    Threads 照台灣 2025 全年數據：週間晚上 8～10 點最熱、週四最高、週一中午、週末偏冷（data/platforms.json 的 times）。
    FB、IG 沒有可靠的台灣時段數據：先用晚上 8 點，成效頁累積你自己的成績後會告訴你哪個時段最好。 */
 const CAD_PRESET = {
-  std: { name: '標準', note: '脆每天、FB 一週 4 篇、IG 一週 3 篇，每天坐下來一次發完', th: ['21:00', '12:00', '21:00', '20:00', '20:00', '20:30', '20:30'], fb: ['21:00', null, '20:00', null, '20:00', null, '20:30'], ig: ['21:00', null, null, '20:00', null, '20:00', null] },
-  lite: { name: '起步', note: '一週 4 天：脆 4 篇、FB 2 篇、IG 2 篇，先養成習慣', th: ['21:00', null, null, '20:00', '20:00', null, '20:30'], fb: ['21:00', null, null, null, '20:00', null, null], ig: ['21:00', null, null, '20:00', null, null, null] },
-  rush: { name: '衝刺', note: '脆每天、FB 一週 5 篇、IG 一週 4 篇', th: ['21:00', '12:00', '21:00', '20:00', '20:00', '20:30', '20:30'], fb: ['21:00', null, '20:00', '20:00', '20:00', null, '20:30'], ig: ['21:00', null, '21:00', '20:00', null, '20:00', '20:30'] },
+  std: { name: '標準', note: '脆每天、FB 一週 4 篇、IG 一週 3 篇，每天坐下來一次發完', noteTh: '每天一篇：週間晚上 8～9 點、週一中午 12 點、週日晚上放週報（台灣 Threads 最熱的時段）', noteIg: '脆每天、IG 一週 3 篇', th: ['21:00', '12:00', '21:00', '20:00', '20:00', '20:30', '20:30'], fb: ['21:00', null, '20:00', null, '20:00', null, '20:30'], ig: ['21:00', null, null, '20:00', null, '20:00', null] },
+  lite: { name: '起步', note: '一週 4 天：脆 4 篇、FB 2 篇、IG 2 篇，先養成習慣', noteTh: '一週 4 篇：週三、四、六晚上＋週日週報，先養成習慣', noteIg: '一週 4 天：脆 4 篇、IG 2 篇', th: ['21:00', null, null, '20:00', '20:00', null, '20:30'], fb: ['21:00', null, null, null, '20:00', null, null], ig: ['21:00', null, null, '20:00', null, null, null] },
+  rush: { name: '衝刺', note: '脆每天、FB 一週 5 篇、IG 一週 4 篇', noteIg: '脆每天、IG 一週 4 篇', th: ['21:00', '12:00', '21:00', '20:00', '20:00', '20:30', '20:30'], fb: ['21:00', null, '20:00', '20:00', '20:00', null, '20:30'], ig: ['21:00', null, '21:00', '20:00', null, '20:00', '20:30'] },
 };
 const cad = () => S.ops.cad || CAD_PRESET.std;
+/* 這個階段看得到的節奏（只顧 Threads 時「衝刺」跟「標準」一樣，不列） */
+const cadPresets = () => Object.entries(CAD_PRESET).filter(([k]) => !(thOnly() && k === 'rush'));
+const cadNote = (p) => (thOnly() ? p.noteTh : S.ops.mode === 'thig' ? p.noteIg : null) || p.note;
 /* 數據上的熱門時段（只有 Threads 有台灣數據） */
 function hotOf(pf, d, at) {
   if (pf !== 'th') return '';
@@ -6028,15 +6143,21 @@ function hotOf(pf, d, at) {
   return '';
 }
 
-/* ---- 內容 ---- */
+/* ---- 內容 ----
+   代號：f:<專題>、p:<推坑>、w:<週報>、v:<影片>:<pre|up|talk>、x:<限免快訊，free.json 的 id> */
 const splitRef = (ref) => { const i = String(ref).indexOf(':'); return [ref.slice(0, i), ref.slice(i + 1)]; };
 const opsFeats = () => (S.index && S.index.items) || [];
+const opsPicks = () => (S.picks && S.picks.items) || [];
 const vidOf = (id) => (S.ops.vids || []).find((v) => v.id === id) || null;
 const VK = { pre: { n: '預告', off: -1, at: '20:00', pfs: ['th', 'fb', 'ig'] }, up: { n: '上片', off: 0, at: null, pfs: ['th', 'fb', 'ig'] }, talk: { n: '討論', off: 1, at: '20:30', pfs: ['th', 'fb'] } };
+const KIND_L = { f: '專題', p: '推坑', w: '週報', v: '影片', x: '限免' };
+const kindChip = (k) => (KIND_L[k] ? `<span class="kchip k-${k}">${KIND_L[k]}</span>` : '');
 const ytIdOf = (u) => { const m = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{11})/.exec(u || ''); return m ? m[1] : ''; };
 function refMeta(ref) {
   const [k, id] = splitRef(ref);
   if (k === 'f') { const x = opsFeats().find((i) => i.id === id); return x ? { ref, k, title: x.zh, sub: x.headline, img: headerOf(x), date: x.date, stamp: x.stamp } : { ref, k, title: id, sub: '', img: '', date: '' }; }
+  if (k === 'p') { const x = opsPicks().find((i) => i.id === id); return x ? { ref, k, title: x.zh, sub: x.pitch || x.label || '', img: headerOf(x), date: x.date, stamp: x.stamp } : { ref, k, title: id, sub: '', img: '', date: '' }; }
+  if (k === 'x') { const x = freeOf(id); return x ? { ref, k, title: `限免｜${x.title}`, sub: `${STORE_N[x.store] || x.store} 免費領・${x.end ? '領到 ' + freeEndTW(x) : '期限看商店頁'}`, img: x.img || '', date: todayTW() } : { ref, k, title: '限免快訊', sub: '這個限免已經結束', img: '', date: '' }; }
   if (k === 'w') { const w = ((S.weekly && S.weekly.items) || []).find((i) => i.id === id); const m = w && w.mvp && wkRef(w.mvp); return { ref, k, title: `WEEK ${wkNo(id)} 懶人包`, sub: w ? w.title : '', img: m ? headerOf(m.it) : '', date: w ? w.date : '', wk: true }; }
   if (k === 'v') { const [vid, vk] = id.split(':'); const v = vidOf(vid); const yt = v && ytIdOf(v.url); return { ref, k, title: `${(VK[vk] || {}).n || ''}｜${v ? v.t : '影片'}`, sub: v ? `上片 ${dayLab(v.at.slice(0, 10))} ${v.at.slice(11, 16)}` : '', img: yt ? ytThumb(yt, 'hqdefault') : '', date: v ? v.at.slice(0, 10) : '', vid: true }; }
   return { ref, k, title: ref, sub: '', img: '', date: '' };
@@ -6044,17 +6165,17 @@ function refMeta(ref) {
 
 /* ---- 排程：每天有哪些時段、配哪一篇 ---- */
 function vidSlots(d) {
-  const out = [];
+  const out = []; const on = opsPfs();
   for (const v of S.ops.vids || []) {
     if (!v.at) continue; const up = v.at.slice(0, 10);
-    for (const [k, c] of Object.entries(VK)) if (addD(up, c.off) === d) for (const pf of c.pfs) out.push({ pf, at: c.at || v.at.slice(11, 16), ref: `v:${v.id}:${k}` });
+    for (const [k, c] of Object.entries(VK)) if (addD(up, c.off) === d) for (const pf of c.pfs) if (on.includes(pf)) out.push({ pf, at: c.at || v.at.slice(11, 16), ref: `v:${v.id}:${k}` });
   }
   return out;
 }
 function opsSlotsFor(d) {
   const wd = wdNum(d); const C = cad(); const P = (S.ops.pin || {})[d] || {}; const out = [];
   const vs = vidSlots(d);
-  for (const pf of OPS_PF) {
+  for (const pf of opsPfs()) {
     const vv = vs.filter((x) => x.pf === pf);
     if (vv.length) vv.forEach((x, i) => out.push({ k: d + '.' + pf + (i ? '~' + i : ''), d, pf, at: x.at, vref: x.ref, src: 'vid' }));
     else if (C[pf] && C[pf][wd]) out.push({ k: d + '.' + pf, d, pf, at: C[pf][wd], src: 'auto' });
@@ -6071,11 +6192,17 @@ function autoPick(d, pf, used, dayPick, s) {
     if (!wk && s.at >= '20:00' && nowHM() < '21:00') { s.wkWait = true; return null; }
   }
   if (pf !== 'th' && ok(dayPick) && !dayPick.startsWith('v:')) return dayPick;   // FB、IG 跟脆同一篇：一次坐下來發完
-  const pool = opsFeats().filter((x) => x.date <= d && x.date >= addD(d, -3))
-    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (a.rank || 9) - (b.rank || 9)));
-  for (const x of pool) if (ok('f:' + x.id)) return 'f:' + x.id;
+  const newest = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (a.rank || 9) - (b.rank || 9));
+  const feats = opsFeats().filter((x) => x.date <= d && x.date >= addD(d, -3)).sort(newest).map((x) => 'f:' + x.id);
+  // 推坑是已經上市的好遊戲，放兩週內都不過時；「特價入」講的是當時的特價，只在推出隔天內排
+  const picks = opsPicks().filter((x) => x.date <= d && x.date >= addD(d, x.stamp === '特價入' ? -1 : -14)).sort(newest).map((x) => 'p:' + x.id);
+  // 週二、四、六輪推坑（私房好遊戲，收藏、轉傳率高），其他天輪專題（新作、新聞性）；哪一邊發完了就換另一邊
+  const order = [2, 4, 6].includes(wdNum(d)) ? [...picks, ...feats] : [...feats, ...picks];
+  for (const r of order) if (ok(r)) return r;
   return null;
 }
+/* 還沒排內容的日子預定排哪一類（跟 autoPick 同一套：週二、四、六推坑，其他天專題） */
+const planKind = (d) => ([2, 4, 6].includes(wdNum(d)) ? 'p' : 'f');
 /* 今天以前看發文紀錄；今天自動配內容；明天以後只有釘選和影片三連發（新的解包每天 05:23 才出來） */
 function opsPlan(from, to) {
   const today = todayTW(); const now = Date.now();
@@ -6154,8 +6281,29 @@ async function opsDraft(ref) {
     const tpl = vidTpl(v, vk);
     return { ref, k, id, vid: v, vk, title: `${VK[vk].n}｜${v.t}`, sub: `上片 ${dayLab(v.at.slice(0, 10))} ${v.at.slice(11, 16)}`, base: p ? p.post : tpl.post, th: { post: p ? p.threads || p.post : tpl.threads, topic: (p && p.topic) || '遊戲' }, tags: (p && p.tags) || tpl.tags, titles: [], credit: '遊戲狂想曲 YouTube', claude: !!p, card: (p && p.card) || null, date: v.at.slice(0, 10) };
   }
+  if (k === 'p') {   // 推坑：推坑排程寫的 fanpage（Threads 版＋串文延伸）；舊推坑沒有就照推坑內容自動整理
+    const p = await loadPick(id); const fp = p.fanpage || {}; const key = 'p:' + id;
+    const th = fp.threads || pickThreadsAuto(p);
+    const base = S.edits[key] != null ? S.edits[key] : fp.post || [th.post, ...(th.more || [])].join('\n\n');
+    return { ref, k, id, title: p.game.zh, sub: p.pitch, base, tags: fp.tags || pickTagsAuto(p), titles: fp.titles || [], th, credit: fp.credit || `圖片／影片來源：${p.game.zh} 官方商店頁與預告`, src: p, date: p.date, auto: !fp.threads };
+  }
+  if (k === 'x') {   // 限免快訊：free.json 的即時資料直接排成貼文（數字都是 GitHub Actions 每小時抓的）
+    const x = freeOf(id); if (!x) throw new Error('這個限免已經結束或下架了');
+    const t = freeTpl(x);
+    return { ref, k, id, title: `限免快訊｜${x.title}`, sub: refMeta(ref).sub, base: t.post, th: { post: t.threads, topic: t.topic }, tags: t.tags, titles: [], credit: `圖片來源：${STORE_N[x.store] || x.store} 商店頁`, src: x, date: todayTW(), auto: true };
+  }
   throw new Error('不認得的內容：' + ref);
 }
+/* Threads 串文：單獨一行「---」分開每一則（推坑、專題的 threads.more 會自動接成這樣）；一則超過上限才照段落拆 */
+const THSEP = '\n\n---\n\n';
+function thParts(text, max) {
+  const segs = String(text || '').split(/\n[ \t]*-{3,}[ \t]*\n/).map((s) => s.trim()).filter(Boolean);
+  const parts = []; let split = false;
+  for (const s of segs) { if (s.length <= max) parts.push(s); else { split = true; parts.push(...splitParts(s, max)); } }
+  return { parts: parts.length ? parts : [''], split };
+}
+/* Threads 網頁意圖連結：手機上有裝 Threads 會直接打開 App 的發文畫面，文字和主題標籤都帶好（Meta 官方 Web Intents） */
+const thIntent = (text, topic) => 'https://www.threads.com/intent/post?text=' + encodeURIComponent(text) + (topic ? '&tag=' + encodeURIComponent(topic) : '');
 /* 太長就照段落拆成幾則（Threads 一則上限 500 字） */
 function splitParts(text, max) {
   if (text.length <= max) return [text];
@@ -6183,12 +6331,14 @@ function pfCompose(dr, pf) {
   const v = dr.vid; const url = v && v.url && ytIdOf(v.url) ? v.url.trim() : '';
   let link = 'none', text = '', tags = [], topic = '', parts = null;
   if (pf === 'th') {
-    let body = (dr.th && dr.th.post) || dr.base;
+    const th = dr.th || {};
+    let body = th.post || dr.base;
     if (v) { if (dr.vk === 'up' || dr.vk === 'talk') { if (url) { body += '\n\n▶ 完整影片：' + url; link = 'inline'; } else warn.push('還沒填影片網址：到影片三連發頁填上，連結會自動加在最後一行'); } }
-    text = S.ops.ed[key] != null ? S.ops.ed[key] : body;
-    topic = (dr.th && dr.th.topic) || '遊戲';
-    parts = splitParts(text, P.th.chars);
-    if (parts.length > 1) warn.push(`超過 ${P.th.chars} 字，拆成 ${parts.length} 則串文（或用「文字附件」一次發）`);
+    const more = (th.more || []).filter((x) => x && String(x).trim());
+    text = S.ops.ed[key] != null ? S.ops.ed[key] : [body, ...more].join(THSEP);
+    topic = th.topic || '遊戲';
+    const tp = thParts(text, P.th.chars); parts = tp.parts;
+    if (tp.split) warn.push(`有一則超過 ${P.th.chars} 字，已經照段落拆開；也可以改用「文字附件」一次發（最多 1 萬字）`);
   } else if (pf === 'ig') {
     tags = pickTags(dr.tags, P.ig.hashtags);
     const cta = v ? (dr.vk === 'pre' ? '▶ 明天上片，先追蹤不錯過' : '▶ 完整影片：點個人檔案的連結') : '▶ 遊戲狂想曲 YouTube：連結在個人檔案';
@@ -6206,25 +6356,27 @@ function pfCompose(dr, pf) {
   }
   if (/＿{2,}/.test(text)) warn.push('還有「＿＿＿」沒填：發文前改成你看到的內容');
   if (/痞子葳/.test(text)) warn.push('出現了你本人的名字：粉專只用「遊戲狂想曲」');
-  return { pf, text, parts, tags, topic, link, warn, n: text.length, max: pf === 'th' ? P.th.chars : pf === 'ig' ? P.ig.caption : 0, edited: S.ops.ed[key] != null };
+  if (pf !== 'th' && /\n[ \t]*-{3,}[ \t]*\n/.test(text)) warn.push('裡面有 Threads 串文的分隔線「---」：這個平台是一整篇，發之前刪掉那幾行');
+  return { pf, text, parts, tags, topic, link, warn, n: pf === 'th' ? parts[0].length : text.length, max: pf === 'th' ? P.th.chars : pf === 'ig' ? P.ig.caption : 0, edited: S.ops.ed[key] != null, auto: !!dr.auto };
 }
 
 /* ---- 上架教學：每次上架都附上（照平台、照這一篇的狀況生成步驟） ---- */
 function pfSteps(pf, c, ctx) {
   const P = plat(); const at = ctx.at || ''; const sch = at && ctx.d ? `${dayLab(ctx.d)} ${at}` : '想要的時間';
-  const multi = c.parts && c.parts.length > 1; const wk = ctx.k === 'w';
+  const wk = ctx.k === 'w';
   const B = (label, act, data = '', cls = 'y') => `<button class="btn sm ${cls}" data-act="${act}" ${data}>${label}</button>`;
   const ref = esc(ctx.ref);
   const S1 = [];
   if (pf === 'th') {
-    S1.push({ h: '複製 Threads 版', p: multi ? `這篇超過 ${P.th.chars} 字，已經照段落拆成 ${c.parts.length} 則：先複製第 1 則。` : `已經整理成 Threads 版（${c.n} 字，上限 ${P.th.chars}）。`, b: multi ? c.parts.map((_, i) => B(`${ICON.copy}<span>複製第 ${i + 1} 則</span>`, 'opcopy', `data-ref="${ref}" data-pf="th" data-part="${i}"`, i ? '' : 'y')).join('') : B(`${ICON.copy}<span>複製 Threads 版</span>`, 'opcopy', `data-ref="${ref}" data-pf="th"`) });
-    S1.push({ h: '（建議）存圖卡', p: '帶一張塗鴉圖卡，滑過去比純文字顯眼。', b: B(`${ICON.dl}<span>存圖卡</span>`, 'opcdl', `data-ref="${ref}" data-pf="th"`, ''), opt: true });
-    S1.push({ h: '打開 Threads，開新串文', p: '點最下面中間的「＋」（新串文）。', b: `<a class="btn sm" href="${PFI.th.app}" target="_blank" rel="noopener">打開 Threads</a>` });
-    S1.push({ h: '貼上', p: '長按輸入框 →「貼上」。有存圖卡的話，點輸入框下面的「圖片」圖示選它。' });
-    S1.push({ h: `加主題：${esc(c.topic)}`, p: `在輸入框打「#」再打「${esc(c.topic)}」，從跳出來的選項點一個。每篇只能 ${P.th.topics} 個主題，發出去不會顯示 # 號。` });
-    if (multi) S1.push({ h: '接上後面幾則', p: '點「新增到串文」，回 App 複製下一則再貼上；全部接好再發。也可以改用「文字附件」把整篇放進去（最多 1 萬字）。' });
-    if (c.link === 'inline') S1.push({ h: '影片連結不用另外處理', p: '最後一行的網址發出去就是可以點的連結。' });
-    S1.push({ h: '發佈，或排程', p: `現在發：按「發佈」。想排到 ${esc(sch)}：點右上角「…」→「排程」選時間，再按「完成」。` });
+    const n = c.parts.length; const tp = esc(c.topic);
+    S1.push({ h: '（建議）先存圖卡', p: '有圖的串文在動態上比純文字顯眼。先存起來，等一下在 Threads 裡選它。', b: B(`${ICON.dl}<span>存圖卡</span>`, 'opcdl', `data-ref="${ref}" data-pf="th"`, ''), opt: true });
+    S1.push({ h: n > 1 ? `帶到 Threads：第 1／${n} 則` : '一鍵帶到 Threads', p: `按「帶到 Threads」會直接打開 Threads 的發文畫面，${n > 1 ? '第 1 則的' : ''}文字和主題標籤「${tp}」都幫你填好。沒有跳到 App（或想自己貼）：按「複製」，打開 Threads 點最下面中間的「＋」，長按輸入框 →「貼上」。`, b: `<a class="btn sm y thgo" href="${esc(thIntent(c.parts[0], c.topic))}" target="_blank" rel="noopener" data-ref="${ref}">${ICON.mega}<span>帶到 Threads</span></a>${B(`${ICON.copy}<span>${n > 1 ? '複製第 1 則' : '複製'}</span>`, 'opcopy', `data-ref="${ref}" data-pf="th" data-part="0"`, '')}` });
+    S1.push({ h: '放上圖卡', p: '點輸入框下面像相片的「圖片」圖示，選剛剛存的圖卡（一則最多 10 張圖）。', opt: true });
+    S1.push({ h: `確認主題標籤：${tp}`, p: `輸入框裡應該已經有藍色的「${tp}」。沒有的話打「#」再打「${tp}」，從跳出來的選項點一個。每篇只能 ${P.th.topics} 個主題，發出去不會顯示 # 號。跳出來的選項旁邊有「⋯」的是社群，選它的話貼文會一起出現在那個社群裡。` });
+    if (n > 1) S1.push({ h: `接上第 ${n > 2 ? '2～' + n : 2} 則串文`, p: '點輸入框下面的「新增到串文」，回 App 按「複製第 2 則」再貼上；全部接好再一次發。第 1 則負責讓人停下來，後面幾則才是深入的內容。', b: c.parts.slice(1).map((_, i) => B(`${ICON.copy}<span>複製第 ${i + 2} 則</span>`, 'opcopy', `data-ref="${ref}" data-pf="th" data-part="${i + 1}"`, '')).join('') });
+    if (c.link === 'inline') S1.push({ h: '影片連結不用另外處理', p: '最後一行的網址發出去就是可以點的連結，還會自動長出預覽卡。' });
+    S1.push({ h: ctx.at && ctx.d ? `發佈，或排到 ${esc(sch)}` : '發佈，或排程', p: `現在發：按右下角「發佈」。想排程：點右上角「⋯」→「排程」選時間 →「完成」。發出去 15 分鐘內還能改字（串文右上「⋯」→「編輯」），超過就只能刪掉重發。` });
+    S1.push({ h: '發完的第一個小時：回留言', p: '有人留言就回，回得像朋友聊遊戲（多問一句「你玩到哪了？」）。串文底下聊得越熱，Threads 越會推給更多人；新帳號最該花力氣的就是這一小時。' });
   } else if (pf === 'ig') {
     S1.push({ h: wk ? '存三張圖卡' : '存圖卡', p: wk ? '封面、Tier 表、下週出擊三張依序存好，等一下一次選。' : 'IG 一定要有圖：4:5 直式最適合（App 預設就是 4:5）。', b: B(`${ICON.dl}<span>${wk ? '三張一起存' : '存圖卡'}</span>`, wk ? 'opcdl3' : 'opcdl', `data-ref="${ref}" data-pf="ig"`) });
     S1.push({ h: '複製 IG 版', p: `hashtag 已經挑好 ${c.tags.length} 個（IG 每篇上限 ${P.ig.hashtags} 個），網址改成「連結在個人檔案」（IG 說明裡的網址不能點）。`, b: B(`${ICON.copy}<span>複製 IG 版</span>`, 'opcopy', `data-ref="${ref}" data-pf="ig"`) });
@@ -6256,12 +6408,13 @@ function stepsHtml(pf, c, ctx) {
 }
 /* 一個平台的版本：預覽＋字數＋提醒 */
 function pfTextHtml(pf, c, ref) {
-  const lim = c.max ? `<span class="cnt ${c.n > c.max ? 'over' : ''}">${c.n}／${c.max} 字</span>` : `<span class="cnt">${c.n} 字</span>`;
-  const body = c.parts && c.parts.length > 1 ? c.parts.map((p, i) => `<div class="pt-part"><em>第 ${i + 1}／${c.parts.length} 則・${p.length} 字</em>${nl2br(p)}</div>`).join('') : nl2br(c.text);
+  const multi = c.parts && c.parts.length > 1;
+  const lim = multi ? `<span class="cnt">串文 ${c.parts.length} 則</span>` : c.max ? `<span class="cnt ${c.n > c.max ? 'over' : ''}">${c.n}／${c.max} 字</span>` : `<span class="cnt">${c.n} 字</span>`;
+  const body = multi ? c.parts.map((p, i) => `<div class="pt-part ${i ? '' : 'first'}"><em>${i ? `第 ${i + 1} 則・串文延伸` : '第 1 則・讓人停下來的那一則'}<span class="${p.length > c.max ? 'over' : ''}">${p.length}／${c.max} 字</span></em>${nl2br(p)}</div>`).join('') : nl2br(c.text);
   const edit = OPS.edit === ref + '|' + pf;
   return `<div class="pfbox ${pf}"><h4>${pfBadge(pf)} ${PFI[pf].n} 版 ${lim}</h4>
-    ${edit ? `<textarea class="pfed" data-act="opedtxt" data-ref="${esc(ref)}" data-pf="${pf}">${esc(c.text)}</textarea>` : `<div class="pftxt">${body}</div>`}
-    ${pf === 'th' ? `<div class="pf-meta"><span>主題：<b>${esc(c.topic)}</b></span></div>` : pf === 'ig' ? `<div class="pf-meta"><span>hashtag ${c.tags.length}／${plat().ig.hashtags}</span></div>` : ''}
+    ${edit ? `<textarea class="pfed" data-act="opedtxt" data-ref="${esc(ref)}" data-pf="${pf}">${esc(c.text)}</textarea>${pf === 'th' ? '<p class="pf-hint">每一則串文之間用單獨一行「---」隔開；第 1 則最多 500 字。</p>' : ''}` : `<div class="pftxt">${body}</div>`}
+    ${pf === 'th' ? `<div class="pf-meta"><span>主題：<b>${esc(c.topic)}</b></span>${c.auto ? '<span class="auto">這篇是 App 照內容自動整理的，發之前看一眼</span>' : ''}</div>` : pf === 'ig' ? `<div class="pf-meta"><span>hashtag ${c.tags.length}／${plat().ig.hashtags}</span></div>` : ''}
     ${c.warn.length ? `<ul class="pf-warn">${c.warn.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
     <div class="btnrow"><button class="btn sm" data-act="opedit" data-ref="${esc(ref)}" data-pf="${pf}">${edit ? '改好了' : '改這個平台的字'}</button>${c.edited ? `<button class="btn sm" data-act="opedreset" data-ref="${esc(ref)}" data-pf="${pf}">還原</button>` : ''}</div></div>`;
 }
@@ -6281,8 +6434,8 @@ function slotCard(s) {
   const go = s.ref ? `fan/~go:${s.k}` : '';
   return `<article class="msn st-${s.st}" style="--rot:${rot(s.k, 1, 0.8)}deg">
     <div class="m-pf">${pfBadge(s.pf)}<b>${esc(s.at)}</b>${s.hot ? `<em class="hot">HOT・${esc(s.hot)}</em>` : ''}${s.src === 'vid' ? '<em class="vidt">影片三連發</em>' : ''}<span class="m-st">${esc(when)}</span></div>
-    ${m ? `<div class="m-c" ${go ? `data-go="${go}"` : ''}><div class="m-img" ${m.img ? `style="background-image:url('${esc(m.img)}')"` : ''}>${m.k === 'w' ? `<span class="wk-no sm"><b>${wkNo(splitRef(s.ref)[1])}</b></span>` : ''}</div><div class="m-t"><h4>${esc(m.title)}</h4><p>${esc(m.sub)}</p></div></div>`
-      : `<div class="m-empty">${s.wkWait ? '週報 19:43 出爐後自動填上' : s.st === 'wait' ? '每天 05:23 解包後自動填上' : '最近三天的解包都發過了：可以按「換一篇」挑一篇，或今天跳過'}</div>`}
+    ${m ? `<div class="m-c" ${go ? `data-go="${go}"` : ''}><div class="m-img" ${m.img ? `style="background-image:url('${esc(m.img)}')"` : ''}>${m.k === 'w' ? `<span class="wk-no sm"><b>${wkNo(splitRef(s.ref)[1])}</b></span>` : ''}</div><div class="m-t">${kindChip(m.k)}<h4>${esc(m.title)}</h4><p>${esc(m.sub)}</p></div></div>`
+      : `<div class="m-empty">${s.wkWait ? '週報 19:43 出爐後自動填上' : s.st === 'wait' ? '每天 05:23 解包後自動填上' : '最近的解包和推坑都發過了：可以按「換一篇」挑一篇，或今天跳過'}</div>`}
     <div class="m-b">${s.st === 'done' ? `<button class="btn sm" data-go="${go}">看這篇／回填成績</button>` : s.ref && s.st !== 'skip' ? `<button class="btn p" data-go="${go}">${ICON.mega}<span>開始上架</span></button>` : ''}${s.st !== 'done' ? `<button class="btn sm" data-act="opswap" data-k="${esc(s.k)}">換一篇</button><button class="btn sm" data-act="opskip" data-k="${esc(s.k)}">${s.st === 'skip' ? '不跳過了' : '今天跳過'}</button>` : ''}</div></article>`;
 }
 function renderOpsToday() {
@@ -6304,14 +6457,14 @@ function renderOpsToday() {
   else if (!slots.length) hero = `<div class="oh-k">REST</div><div class="oh-done">今天沒排<small>想發也可以到「出稿」挑一篇</small></div>`;
   else hero = `<div class="oh-k">WAIT</div><div class="oh-done">內容還在路上<small>每天 05:23 解包後自動填上</small></div>`;
   const tom = opsDay(addD(today, 1));
-  return `<div class="ops">${opsNav('today')}${opsHead('作戰台', '每天坐下來一次，照順序發完三個平台。每一篇都附上架教學；發完蓋章，App 幫你記成績。')}
+  return `<div class="ops">${opsNav('today')}${opsHead('作戰台', thOnly() ? '現在只顧 Threads：每天一篇、回完留言、海巡十分鐘。每一篇都附上架教學，發完蓋章，App 幫你記成績。' : `每天坐下來一次，照順序發完${S.ops.mode === 'thig' ? ' Threads 和 IG' : '三個平台'}。每一篇都附上架教學；發完蓋章，App 幫你記成績。`)}
     <section class="op-hero ${next && next.hot ? 'is-hot' : ''}">${hero}
       <div class="oh-st"><div class="streak ${streak ? 'on' : ''}"><b>${streak}</b><span>連發天數</span></div><div class="wkp"><b>${doneWk}<small>／${planned}</small></b><span>本週任務</span><i style="--p:${planned ? Math.min(1, doneWk / planned) : 0}"></i></div><div class="wkp"><b>${left}</b><span>今天還有</span></div></div></section>
-    ${opsSetupBanner()}
+    ${dqHtml()}${opsSetupBanner()}
     <h3 class="tape-h">今日任務 <small>${esc(dayLab(today))}</small></h3>
     <div class="msns">${slots.map(slotCard).join('') || '<div class="empty">今天的節奏沒有排發文。到「排程」可以加時段，或到「出稿」挑一篇直接發。</div>'}</div>
-    ${opsRefillHtml()}${opsCheckinBanner()}
-    ${tom.length ? `<h3 class="tape-h y">明天 <small>${esc(dayLab(addD(today, 1)))}</small></h3><div class="tmr">${tom.map((s) => `<div>${pfBadge(s.pf)}<b>${esc(s.at)}</b><span class="tt">${s.ref ? esc(refMeta(s.ref).title) : s.src === 'vid' ? '影片三連發' : wdNum(s.d) === 0 && s.at >= '20:00' ? '週報（19:43 出爐）' : '05:23 解包後自動填上'}</span>${s.hot ? '<em class="hot">HOT</em>' : ''}</div>`).join('')}</div>` : ''}
+    ${extraHtml()}${opsRefillHtml()}${opsCheckinBanner()}
+    ${tom.length ? `<h3 class="tape-h y">明天 <small>${esc(dayLab(addD(today, 1)))}</small></h3><div class="tmr">${tom.map((s) => `<div>${pfBadge(s.pf)}<b>${esc(s.at)}</b><span class="tt">${s.ref ? esc(refMeta(s.ref).title) : s.src === 'vid' ? '影片三連發' : wdNum(s.d) === 0 && s.at >= '20:00' ? '週報（19:43 出爐）' : planKind(s.d) === 'p' ? '推坑（自動排一款還沒發過的）' : '專題（05:23 解包後自動填上）'}</span>${s.hot ? '<em class="hot">HOT</em>' : ''}</div>`).join('')}</div>` : ''}
     <div class="endcta"><button class="btn y" data-go="fan/~plan">${ICON.cal}<span>看整週排程</span></button><button class="btn" data-go="fan/~drafts">${ICON.page}<span>翻出稿台</span></button></div></div>`;
 }
 
@@ -6325,10 +6478,10 @@ async function renderOpsGo(k) {
 function goHtml(dr, pf, ctx) {
   const c = pfCompose(dr, pf); const pub = pubOf(dr.ref); const done = !!pub[pf];
   const lg = S.ops.log.find((l) => l.ref === dr.ref && l.pf === pf);
-  const sib = OPS_PF.filter((p) => p !== pf);
+  const sib = opsPfs().filter((p) => p !== pf);
   const wk = dr.k === 'w';
   return `<div class="ops go">${opsNav('today')}
-    <div class="btnrow" style="margin-top:12px"><button class="btn sm k" data-go="fan">← 今日任務</button>${dr.k === 'f' ? `<button class="btn sm" data-go="f/${esc(dr.id)}">看完整專題</button>` : dr.k === 'w' ? `<button class="btn sm" data-go="week/${esc(dr.id)}">看週報</button>` : `<button class="btn sm" data-go="fan/~vid:${esc(dr.vid.id)}">回影片三連發</button>`}</div>
+    <div class="btnrow" style="margin-top:12px"><button class="btn sm k" data-go="fan">← 今日任務</button>${dr.k === 'f' ? `<button class="btn sm" data-go="f/${esc(dr.id)}">看完整專題</button>` : dr.k === 'p' ? `<button class="btn sm" data-go="p/${esc(dr.id)}">看推坑全文</button>` : dr.k === 'w' ? `<button class="btn sm" data-go="week/${esc(dr.id)}">看週報</button>` : dr.k === 'x' ? `<button class="btn sm" data-go="hunt">去免費補給站</button>` : `<button class="btn sm" data-go="fan/~vid:${esc(dr.vid.id)}">回影片三連發</button>`}</div>
     <div class="go-head ${pf}">${pfBadge(pf, 'big')}<div><h2>${esc(PFI[pf].full)} 上架</h2><p>${ctx.d ? esc(dayLab(ctx.d) + ' ' + ctx.at) : '不在排程裡，隨時都能發'}${ctx.hot ? `・<em class="hot">HOT・${esc(ctx.hot)}</em>` : ''}</p></div><span class="go-st ${done ? 'ok' : ''}">${done ? '✓ 已發' : '待發'}</span></div>
     <div class="go-what"><div class="gw-i" ${refMeta(dr.ref).img ? `style="background-image:url('${esc(refMeta(dr.ref).img)}')"` : ''}></div><div><b>${esc(dr.title)}</b><span>${esc(dr.sub || '')}</span>${dr.k === 'v' ? `<em>${dr.claude ? 'Claude 寫好的版本' : '範本（請 Claude 寫之前先用這個）'}</em>` : ''}</div>${ctx.k && !done ? `<button class="btn sm" data-act="opswap" data-k="${esc(ctx.k)}">換一篇</button>` : ''}</div>
     <div class="fan-detail"><div class="cardwrap"><canvas id="cardcv" width="1080" height="1350"></canvas><div class="cardbusy" id="cardbusy">噴漆中…</div></div>
@@ -6337,7 +6490,7 @@ function goHtml(dr, pf, ctx) {
     ${stepsHtml(pf, c, { ref: dr.ref, d: ctx.d, at: ctx.at, k: dr.k })}
     <div class="endcta go-done"><button class="btn ${done ? '' : 'p'} big" data-act="opdone" data-ref="${esc(dr.ref)}" data-pf="${pf}" data-k="${esc(ctx.k || '')}">${done ? `✓ ${PFI[pf].s} 已發（點一下取消）` : `✓ ${PFI[pf].s} 發好了`}</button></div>
     ${done && lg ? opsStatRow(lg, true) : ''}
-    <div class="go-sib"><b>同一篇其他平台</b>${sib.map((p) => `<button class="sibb ${pub[p] ? 'ok' : ''}" data-act="opgoto" data-ref="${esc(dr.ref)}" data-pf="${p}">${pfBadge(p)}<span>${pub[p] ? '已發' : '去發'}</span></button>`).join('')}</div></div>`;
+    ${sib.length ? `<div class="go-sib"><b>同一篇其他平台</b>${sib.map((p) => `<button class="sibb ${pub[p] ? 'ok' : ''}" data-act="opgoto" data-ref="${esc(dr.ref)}" data-pf="${p}">${pfBadge(p)}<span>${pub[p] ? '已發' : '去發'}</span></button>`).join('')}</div>` : `<p class="sub-note go-one">現在只顧 Threads。等 Threads 穩定了，到「教學」開第二階段，同一篇就能一鍵做成 IG 版。</p>`}</div>`;
 }
 /* 從出稿台或別的平台跳過來：找這一篇在今天的哪個時段，沒有就不掛時段 */
 function opsGoto(ref, pf) {
@@ -6357,6 +6510,8 @@ async function opsCardRender() {
     const dr = cur.dr;
     if (dr.k === 'f') { await liveLoad([dr.src.game.steam], 3000); await drawCard(cv, dr.src, liveOf(dr.src.game.steam), OPS.card); }
     else if (dr.k === 'w') { S.curWeek = dr.src; await drawWeekCard(cv, dr.src, { kind: OPS.card.wk, ratio: OPS.card.ratio, seed: OPS.card.seed }); }
+    else if (dr.k === 'p') { await liveLoad([dr.src.game.steam], 3000); await drawCard(cv, pickCardF(dr.src), liveOf(dr.src.game.steam), OPS.card); }
+    else if (dr.k === 'x') { await drawCard(cv, freeCardF(dr.src), dr.src.appid ? liveOf(dr.src.appid) : null, OPS.card); }
     else await drawCard(cv, vidCardF(dr), null, OPS.card);
   } catch (e) { console.warn(e); toast('圖卡畫不出來：' + e.message, 'warn'); }
   if (busy) busy.style.display = 'none';
@@ -6378,24 +6533,29 @@ async function opsSaveCards(names, kinds) {
 /* ---- 排程週曆 ---- */
 function renderOpsPlan() {
   const today = todayTW(); const mon = addD(monOf(today), OPS.wk * 7); const days = opsPlan(mon, addD(mon, 6));
+  const PF = opsPfs(); const one = PF.length === 1;
   const cnt = { th: 0, ig: 0, fb: 0 }; let done = 0;
   days.forEach((x) => x.slots.forEach((s) => { if (s.st !== 'skip') cnt[s.pf]++; if (s.st === 'done') done++; }));
-  const total = cnt.th + cnt.ig + cnt.fb; const P = plat();
+  const total = PF.reduce((a, p) => a + cnt[p], 0); const P = plat();
   const cell = (s) => {
     if (!s) return '<span class="pl-c none"></span>';
     const m = s.ref ? refMeta(s.ref) : null;
-    return `<button class="pl-c st-${s.st}" data-act="opslot" data-k="${esc(s.k)}"><em>${esc(s.at)}${s.hot ? '<i class="hot">HOT</i>' : ''}</em>${m && m.img ? `<span class="pc-i" style="background-image:url('${esc(m.img)}')"></span>` : ''}<b>${m ? esc(m.title) : s.wkWait ? '週報' : s.st === 'wait' ? '等解包' : s.st === 'skip' ? '跳過' : '—'}</b><small>${esc(s.st === 'wait' ? (s.wkWait ? '19:43 出爐' : '05:23 自動填') : ST_LAB[s.st] || '')}</small></button>`;
+    const pk = s.wkWait ? 'w' : planKind(s.d);   // 還沒排內容的日子：預定排哪一類
+    const t = m ? esc(m.title) : s.wkWait ? '週報' : s.st === 'wait' ? (one ? `預定排${KIND_L[pk]}` : '等解包') : s.st === 'skip' ? '跳過' : '—';
+    const sub = m ? m.sub : s.st === 'wait' ? (s.wkWait ? '週報 19:43 出爐後自動排上' : pk === 'p' ? '當天自動排一款還沒發過的推坑' : '當天 05:23 解包後自動排上') : '';
+    return `<button class="pl-c st-${s.st} ${m && m.img ? '' : 'noimg'}" data-act="opslot" data-k="${esc(s.k)}"><em>${esc(s.at)}${s.hot ? `<i class="hot">${one ? 'HOT・' + esc(s.hot) : 'HOT'}</i>` : ''}</em>${m && m.img ? `<span class="pc-i" style="background-image:url('${esc(m.img)}')"></span>` : ''}<b>${one ? kindChip(m ? m.k : s.st === 'wait' ? pk : '') : ''}${t}</b>${one && sub ? `<span class="pc-s">${esc(sub)}</span>` : ''}${one && s.st === 'wait' ? '' : `<small>${esc(s.st === 'wait' ? (s.wkWait ? '19:43 出爐' : '05:23 自動填') : ST_LAB[s.st] || '')}</small>`}</button>`;
   };
   const vids = (S.ops.vids || []).slice().sort((a, b) => (a.at < b.at ? 1 : -1));
-  return `<div class="ops">${opsNav('plan')}${opsHead('排程', '每個平台一週發幾篇、幾點發。內容每天 05:23 解包後自動填上；想指定哪一篇、改時間、跳過，點那一格。')}
+  return `<div class="ops">${opsNav('plan')}${opsHead('排程', one ? 'Threads 一週發幾篇、幾點發。內容每天 05:23 解包、11:43 推坑後自動填上（週一三五排專題、二四六排推坑、週日放週報）；想指定哪一篇、改時間、跳過，點那一格。' : '每個平台一週發幾篇、幾點發。內容每天 05:23 解包後自動填上；想指定哪一篇、改時間、跳過，點那一格。')}
     <div class="pl-top"><button class="ib" data-act="opwk" data-d="-1" aria-label="上一週">‹</button><div><b>${esc(dotDay(mon))} – ${esc(dotDay(addD(mon, 6)))}</b><span>${OPS.wk === 0 ? '這週' : OPS.wk > 0 ? OPS.wk + ' 週後' : -OPS.wk + ' 週前'}</span></div><button class="ib" data-act="opwk" data-d="1" aria-label="下一週">›</button></div>
-    <div class="pl-sum"><span>${total} 篇</span>${OPS_PF.map((p) => `<span>${pfBadge(p)} ${cnt[p]}</span>`).join('')}<span class="ok">已發 ${done}</span></div>
+    <div class="pl-sum"><span>${total} 篇</span>${PF.map((p) => `<span>${pfBadge(p)} ${cnt[p]}</span>`).join('')}<span class="ok">已發 ${done}</span></div>
     <div class="btnrow"><button class="btn sm" data-act="opcad">${ICON.gear}<span>發文節奏</span></button><button class="btn sm y" data-act="opics">${ICON.cal}<span>時段加進手機行事曆</span></button><button class="btn sm p" data-act="opvidnew">${ICON.film}<span>＋上片三連發</span></button></div>
-    <div class="pl-grid"><div class="pl-h"><span></span>${OPS_PF.map((p) => `<span>${pfBadge(p)}</span>`).join('')}</div>
-      ${days.map((x) => `<div class="pl-row ${x.d === today ? 'today' : ''} ${x.d < today ? 'past' : ''}"><div class="pl-d"><b>${WK[wdNum(x.d)]}</b><span>${esc(mdDay(x.d))}</span>${x.d === today ? '<i>今天</i>' : ''}</div>${OPS_PF.map((p) => cell(x.slots.find((s) => s.pf === p))).join('')}</div>`).join('')}</div>
-    <details class="pl-why"><summary>這些時段怎麼來的？</summary><p>${esc((P.times.th && P.times.th.note) || '')}</p><p>${esc(P.times.other || '')}</p>${((P.times.th && P.times.th.src) || []).map((s) => `<a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>`).join('')}</details>
+    <div class="pl-grid n${PF.length}"><div class="pl-h"><span></span>${PF.map((p) => `<span>${pfBadge(p)}${one ? ' <small>Threads（脆）</small>' : ''}</span>`).join('')}</div>
+      ${days.map((x) => `<div class="pl-row ${x.d === today ? 'today' : ''} ${x.d < today ? 'past' : ''}"><div class="pl-d"><b>${WK[wdNum(x.d)]}</b><span>${esc(mdDay(x.d))}</span>${x.d === today ? '<i>今天</i>' : ''}</div>${PF.map((p) => cell(x.slots.find((s) => s.pf === p))).join('')}</div>`).join('')}</div>
+    ${opsModeNote()}
+    <details class="pl-why"><summary>這些時段怎麼來的？</summary><p>${esc((P.times.th && P.times.th.note) || '')}</p>${one ? '' : `<p>${esc(P.times.other || '')}</p>`}${((P.times.th && P.times.th.src) || []).map((s) => `<a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>`).join('')}</details>
     <h3 class="tape-h p">影片三連發 <small>${vids.length} 支</small></h3>
-    <p class="sub-note">上新片時：前一天預告、當天上片文、隔天開討論，三個平台自動排進週曆。</p>
+    <p class="sub-note">上新片時：前一天預告、當天上片文、隔天開討論，${one ? '自動排進 Threads' : '各平台自動排進週曆'}。</p>
     <div class="vids">${vids.map(vidRow).join('') || `<div class="empty">還沒有。下次上片前按「＋上片三連發」，填標題和上片時間就好。</div>`}</div></div>`;
 }
 function vidRow(v) {
@@ -6417,13 +6577,16 @@ function swapSheet(k) {
   const s = opsSlot(k); if (!s) return;
   const used = new Set(S.ops.log.filter((l) => l.pf === s.pf).map((l) => l.ref));
   const feats = opsFeats().filter((x) => x.date <= s.d).slice(0, 14).map((x) => 'f:' + x.id);
+  const picks = opsPicks().filter((x) => x.date <= s.d && x.stamp !== '特價入').slice(0, 12).map((x) => 'p:' + x.id);
   const weeks = ((S.weekly && S.weekly.items) || []).slice(0, 2).map((w) => 'w:' + w.id);
+  const frees = s.d === todayTW() ? freeNow().map((x) => 'x:' + x.id) : [];
   const vids = [];
   for (const v of S.ops.vids || []) for (const kk of Object.keys(VK)) vids.push(`v:${v.id}:${kk}`);
-  const refs = [...weeks, ...vids.slice(0, 6), ...feats];
+  const grp = [['限時免費（今天就能發）', frees], ['影片三連發', vids.slice(0, 6)], ['每週懶人包', weeks], ['每日專題（新作、新聞）', feats], ['推坑（已上市的私房好遊戲）', picks]].filter(([, L]) => L.length);
+  const row = (r) => { const m = refMeta(r); return `<button class="pkl ${used.has(r) ? 'used' : ''} ${s.ref === r ? 'on' : ''}" data-act="oppick" data-k="${esc(k)}" data-ref="${esc(r)}"><span class="pkl-i" ${m.img ? `style="background-image:url('${esc(m.img)}')"` : ''}></span><span class="pkl-t"><b>${esc(m.title)}</b><small>${esc(m.date && m.k !== 'x' ? mdDay(m.date) : '')} ${esc(m.sub || '')}</small></span>${used.has(r) ? '<em>發過</em>' : ''}</button>`; };
   openSheet(`<h3>${pfBadge(s.pf)} ${esc(dayLab(s.d))} ${esc(s.at)}・換一篇</h3><p class="sub-note">灰色的是這個平台已經發過的。</p>
-    <label class="op-chk"><input type="checkbox" id="opswapall" checked> 同一天的其他平台也換成這篇</label>
-    <div class="picks-l">${refs.map((r) => { const m = refMeta(r); return `<button class="pkl ${used.has(r) ? 'used' : ''} ${s.ref === r ? 'on' : ''}" data-act="oppick" data-k="${esc(k)}" data-ref="${esc(r)}"><span class="pkl-i" ${m.img ? `style="background-image:url('${esc(m.img)}')"` : ''}></span><span class="pkl-t"><b>${esc(m.title)}</b><small>${esc(m.date ? mdDay(m.date) : '')} ${esc(m.sub || '')}</small></span>${used.has(r) ? '<em>發過</em>' : ''}</button>`; }).join('')}</div>`, 'hsheet');
+    ${opsPfs().length > 1 ? '<label class="op-chk"><input type="checkbox" id="opswapall" checked> 同一天的其他平台也換成這篇</label>' : ''}
+    ${grp.map(([t, L]) => `<h4 class="pkl-g">${esc(t)}</h4><div class="picks-l">${L.map(row).join('')}</div>`).join('')}`, 'hsheet');
 }
 function pinSet(d, pf, patch) {
   const P = S.ops.pin[d] = S.ops.pin[d] || {}; P[pf] = Object.assign({}, P[pf] || {}, patch);
@@ -6436,11 +6599,11 @@ function pinSet(d, pf, patch) {
 }
 /* 發文節奏 */
 function cadSheet() {
-  const C = cad(); const same = (p) => OPS_PF.every((pf) => JSON.stringify(p[pf]) === JSON.stringify(C[pf]));
-  const cur = Object.keys(CAD_PRESET).find((k) => same(CAD_PRESET[k])) || 'custom';
-  openSheet(`<h3>${ICON.gear} 發文節奏</h3><p class="sub-note">先選一個起手式，之後每個平台的星期幾、幾點都能改。累積兩三週成績後，「成效」會告訴你哪個平台、哪個時段最划算。</p>
-    <div class="cad-pre">${Object.entries(CAD_PRESET).map(([k, p]) => `<button class="${cur === k ? 'on' : ''}" data-act="opcadp" data-v="${k}"><b>${p.name}</b><span>${esc(p.note)}</span></button>`).join('')}</div>
-    ${OPS_PF.map((pf) => `<div class="cad-row"><div class="cad-h">${pfBadge(pf)}<b>${PFI[pf].n}</b><span class="cn">一週 ${C[pf].filter(Boolean).length} 篇</span></div>
+  const C = cad(); const PF = opsPfs(); const same = (p) => PF.every((pf) => JSON.stringify(p[pf]) === JSON.stringify(C[pf]));
+  const pre = cadPresets(); const cur = (pre.find(([, p]) => same(p)) || ['custom'])[0];
+  openSheet(`<h3>${ICON.gear} 發文節奏</h3><p class="sub-note">${PF.length === 1 ? '先選一個起手式，之後星期幾、幾點都能改。累積兩三週成績後，「成效」的黃金時段會告訴你哪個時段最好。' : '先選一個起手式，之後每個平台的星期幾、幾點都能改。累積兩三週成績後，「成效」會告訴你哪個平台、哪個時段最划算。'}</p>
+    <div class="cad-pre n${pre.length}">${pre.map(([k, p]) => `<button class="${cur === k ? 'on' : ''}" data-act="opcadp" data-v="${k}"><b>${p.name}${k === 'std' && PF.length === 1 ? '（建議）' : ''}</b><span>${esc(cadNote(p))}</span></button>`).join('')}</div>
+    ${PF.map((pf) => `<div class="cad-row"><div class="cad-h">${pfBadge(pf)}<b>${PFI[pf].n}</b><span class="cn">一週 ${C[pf].filter(Boolean).length} 篇</span></div>
       <div class="cad-days">${[1, 2, 3, 4, 5, 6, 0].map((wd) => `<button class="${C[pf][wd] ? 'on' : ''}" data-act="opcadday" data-pf="${pf}" data-wd="${wd}"><b>${WK[wd]}</b><small>${C[pf][wd] || '—'}</small></button>`).join('')}</div>
       <label class="op-lab sm">${PFI[pf].s} 全部改成<input type="time" data-act="opcadtm" data-pf="${pf}" value="${esc(C[pf].find(Boolean) || '20:00')}"></label></div>`).join('')}
     <p class="sub-note">改完記得到排程頁重新「加進手機行事曆」（舊的提醒要自己刪）。</p>`, 'hsheet');
@@ -6452,7 +6615,7 @@ function opsIcs() {
     'BEGIN:VTIMEZONE', 'TZID:Asia/Taipei', 'BEGIN:STANDARD', 'DTSTART:19700101T000000', 'TZOFFSETFROM:+0800', 'TZOFFSETTO:+0800', 'TZNAME:CST', 'END:STANDARD', 'END:VTIMEZONE'];
   const BY = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']; const today = todayTW(); let n = 0;
   const url = 'https://pzwei0105.github.io/PZ-Games/apps/unpacked/#fan';
-  for (const pf of OPS_PF) {
+  for (const pf of opsPfs()) {
     const byTime = {};
     C[pf].forEach((t, wd) => { if (t) (byTime[t] = byTime[t] || []).push(wd); });
     for (const [t, wds] of Object.entries(byTime)) {
@@ -6479,15 +6642,16 @@ function opsIcsSave() {
 function pfChips(ref, legacy) {
   const pub = pubOf(ref); const any = Object.keys(pub).length;
   if (!any && legacy) return `<span class="pfchips"><span class="old">已發（舊紀錄）</span></span>`;
-  return `<span class="pfchips">${OPS_PF.map((p) => `<span class="pfc ${p} ${pub[p] ? 'ok' : ''}">${PFI[p].s}${pub[p] ? '✓' : ''}</span>`).join('')}</span>`;
+  const PF = [...new Set([...opsPfs(), ...Object.keys(pub)])];   // 之前在別的平台發過的也照樣標出來
+  return `<span class="pfchips">${PF.map((p) => `<span class="pfc ${p} ${pub[p] ? 'ok' : ''}">${PFI[p].s}${pub[p] ? '✓' : ''}</span>`).join('')}</span>`;
 }
 async function opsPfSection(ref) {
   const dr = await opsDraft(ref); OPS.cur = { dr, s: null, detail: true };
-  const tab = OPS.tab[ref] || 'th'; const pub = pubOf(ref);
+  const PF = opsPfs(); const tab = PF.includes(OPS.tab[ref]) ? OPS.tab[ref] : 'th'; const pub = pubOf(ref);
   const c = pfCompose(dr, tab);
   const todays = opsDay(todayTW()).filter((s) => s.ref === ref);
-  return `<section class="pfsec" id="pfsec"><h3 class="tape-h p">三平台版本 <small>每個平台照它的規則改好了</small></h3>
-    <div class="pftabs">${OPS_PF.map((p) => `<button class="${tab === p ? 'on' : ''} ${p}" data-act="optab" data-ref="${esc(ref)}" data-pf="${p}">${pfBadge(p)}<span>${PFI[p].n}</span>${pub[p] ? '<i>✓</i>' : ''}</button>`).join('')}</div>
+  return `<section class="pfsec" id="pfsec"><h3 class="tape-h p">${PF.length === 1 ? 'Threads 版本 <small>照 Threads 的規則整理好了</small>' : `${PF.length === 2 ? '兩個平台' : '三平台'}版本 <small>每個平台照它的規則改好了</small>`}</h3>
+    ${PF.length > 1 ? `<div class="pftabs n${PF.length}">${PF.map((p) => `<button class="${tab === p ? 'on' : ''} ${p}" data-act="optab" data-ref="${esc(ref)}" data-pf="${p}">${pfBadge(p)}<span>${PFI[p].n}</span>${pub[p] ? '<i>✓</i>' : ''}</button>`).join('')}</div>` : ''}
     ${pfTextHtml(tab, c, ref)}
     ${stepsHtml(tab, c, { ref, d: '', at: '', k: dr.k })}
     <div class="endcta"><button class="btn ${pub[tab] ? '' : 'p'}" data-act="opdone" data-ref="${esc(ref)}" data-pf="${tab}" data-k="${esc((todays.find((s) => s.pf === tab) || {}).k || '')}">${pub[tab] ? `✓ ${PFI[tab].s} 已發（點一下取消）` : `✓ ${PFI[tab].s} 發好了`}</button></div></section>`;
@@ -6504,9 +6668,9 @@ async function opsAct(a, act) {
   const rerender = () => { const y = scrollY; route().then(() => scrollTo(0, y)); };
   if (a === 'opcopy') {
     const dr = await opsDraft(ref); const c = pfCompose(dr, pf);   // 每次重算：原稿剛改過也拿得到最新的
-    const text = act.dataset.part != null && c.parts ? c.parts[+act.dataset.part] : c.text;
+    const text = pf === 'th' ? c.parts[Math.min(c.parts.length - 1, +(act.dataset.part || 0))] : c.text;   // Threads 一次複製一則串文
     if (/＿{2,}/.test(text)) toast('提醒：裡面還有「＿＿＿」要填', 'warn');
-    if (await copyText(text)) { sfx.stamp(); haptic(); burstAt(act, [YEL, PINK, BLK], 14, 8); if (!/＿{2,}/.test(text)) toast(`${PFI[pf].s} 版已複製：到 ${PFI[pf].n} 長按貼上`); } else toast('複製失敗，請長按文字自己複製', 'warn');
+    if (await copyText(text)) { sfx.stamp(); haptic(); burstAt(act, [YEL, PINK, BLK], 14, 8); if (!/＿{2,}/.test(text)) toast(pf === 'th' && c.parts.length > 1 ? `第 ${+(act.dataset.part || 0) + 1} 則已複製：到 Threads 長按貼上` : `${PFI[pf].s} 版已複製：到 ${PFI[pf].n} 長按貼上`); } else toast('複製失敗，請長按文字自己複製', 'warn');
     return true;
   }
   if (a === 'opstep') { const key = act.dataset.key; if (OPS.steps.has(key)) OPS.steps.delete(key); else { OPS.steps.add(key); sfx.pop(); haptic(8); } act.closest('.step').classList.toggle('ok', OPS.steps.has(key)); return true; }
@@ -6537,7 +6701,7 @@ async function opsAct(a, act) {
   }
   if (a === 'opcdl' || a === 'opcdl3') {
     const dr = OPS.cur && OPS.cur.dr; if (!dr) return true;
-    const slug = dr.k === 'v' ? 'video-' + dr.vk : dr.id;
+    const slug = dr.k === 'v' ? 'video-' + dr.vk : dr.k === 'x' ? 'free-' + (dr.src.appid || hashStr(dr.id)) : dr.k === 'p' ? 'pick-' + dr.id : dr.id;
     if (a === 'opcdl3' && dr.k === 'w') await opsSaveCards(['cover', 'tier', 'next'].map((x, i) => `gamerhapsody-${slug}-${i + 1}-${x}.png`), ['cover', 'tier', 'next']);
     else if (await opsSaveCards([`gamerhapsody-${slug}-${pf || 'card'}.png`], [null])) impact($('#cardcv'), [PINK, YEL], false);
     return true;
@@ -6563,6 +6727,7 @@ async function opsAct(a, act) {
   if (a === 'opics') { opsIcsSave(); return true; }
   if (opsStatAct && await opsStatAct(a, act)) return true;
   if (opsLearnAct && await opsLearnAct(a, act)) return true;
+  if (opsThAct && await opsThAct(a, act)) return true;
   return false;
 }
 function opsInput(t) {
@@ -6623,6 +6788,8 @@ const CK_F = [
   ['rfb', '從 FB 來的觀看', '同上，找 Facebook 那一列（沒有就填 0）'],
   ['yth', '公開觀看時數（近一年）', 'YouTube 工作室 →「營利」（賺取收益）頁的資格進度：公開觀看時數。選填'],
 ];
+/* 這個階段要回填的欄位：只顧 Threads 時不用填 IG、FB 的 */
+const ckFields = () => { const on = opsPfs(); return CK_F.filter(([k]) => !['th', 'ig', 'fb'].includes(k.replace(/^r/, '')) || on.includes(k.replace(/^r/, ''))); };
 /* 回填的是哪一週：週日晚上、週一、週二回填剛結束（或快結束）的那一週 */
 function ckWeekId() { const t = todayTW(); const wd = wdNum(t); return isoWeekOf(wd === 1 || wd === 2 ? addD(t, -3) : t).id; }
 const wkList = () => Object.keys(S.ops.wk || {}).sort();
@@ -6634,14 +6801,14 @@ function opsCheckinBanner() {
   const t = todayTW(); const wd = wdNum(t); const id = ckWeekId();
   if (S.ops.wk[id] || !S.ops.log.length) return '';
   if (!((wd === 0 && nowHM() >= '20:00') || wd === 1 || wd === 2)) return '';
-  return `<div class="ck-ban" data-go="fan/~stats"><b>WEEK ${wkNo(id)} 週結算</b><span>花 1 分鐘回填三平台粉絲和 YouTube 外部流量，看哪個平台真的帶來觀看</span><em>去回填 ›</em></div>`;
+  return `<div class="ck-ban" data-go="fan/~stats"><b>WEEK ${wkNo(id)} 週結算</b><span>${thOnly() ? '花 1 分鐘回填 Threads 粉絲和 YouTube 外部流量，看 Threads 帶了多少人去看影片' : '花 1 分鐘回填各平台粉絲和 YouTube 外部流量，看哪個平台真的帶來觀看'}</span><em>去回填 ›</em></div>`;
 }
 function opsNeedStats() {
   const now = Date.now(); const lim = addD(todayTW(), -7);
   return S.ops.log.filter((l) => !l.s && l.d >= lim && now - Date.parse(l.at) >= 20 * 3600e3).slice(-6).reverse();
 }
 const STAT_HOW = {
-  th: '那則串文下方的瀏覽次數（或個人檔案 →「洞察報告」）',
+  th: '那則串文下方的瀏覽次數（點進去看得到從粉絲、非粉絲來的各多少）；整個帳號看個人檔案右上的「洞察報告」',
   ig: '那篇貼文下方「查看洞察報告」：觸及帳號、互動',
   fb: '那篇貼文下方「查看洞察報告」：觸及人數、互動',
 };
@@ -6662,18 +6829,19 @@ function renderOpsStats() {
   const id = ckWeekId(); const cur = S.ops.wk[id] || {};
   const prevId = ids.filter((x) => x < id).pop(); const prev = prevId ? S.ops.wk[prevId] : null;
   const P = plat();
-  return `<div class="ops stats">${opsNav('stats')}${opsHead('成效', '粉專是幫 YouTube 帶人的：這裡算給你看，哪個平台真的把人帶到頻道。')}
+  const F = ckFields();
+  return `<div class="ops stats">${opsNav('stats')}${opsHead('成效', thOnly() ? '粉專是幫 YouTube 帶人的：這裡算給你看，Threads 帶了多少人去看你的影片。' : '粉專是幫 YouTube 帶人的：這裡算給你看，哪個平台真的把人帶到頻道。')}
     ${funnelHtml(last, ids.length > 1 ? S.ops.wk[ids[ids.length - 2]] : null)}
-    <section class="ck ${S.ops.wk[id] ? 'done' : ''}"><div class="ck-h"><span class="wk-no sm">WEEK<b>${wkNo(id)}</b></span><div><b>週結算回填</b><small>${S.ops.wk[id] ? '這週填過了，數字可以再改' : '每週日晚上或週一，從各平台後台抄 9 個數字（大約 1 分鐘）'}</small></div></div>
-      <div class="ck-grid">${CK_F.map(([k, l, how]) => `<label class="ck-f ${k.startsWith('r') ? 'ref' : ''}"><span>${k.length === 2 && OPS_PF.includes(k) ? pfBadge(k) : k.startsWith('r') ? pfBadge(k.slice(1)) : ''}${esc(l)}</span><input type="number" inputmode="numeric" min="0" step="any" data-ck="${k}" value="${cur[k] ?? ''}" placeholder="${prev && prev[k] != null ? '上次 ' + prev[k] : ''}"><details><summary>在哪看？</summary><p>${esc(how)}</p></details></label>`).join('')}</div>
+    <section class="ck ${S.ops.wk[id] ? 'done' : ''}"><div class="ck-h"><span class="wk-no sm">WEEK<b>${wkNo(id)}</b></span><div><b>週結算回填</b><small>${S.ops.wk[id] ? '這週填過了，數字可以再改' : `每週日晚上或週一，從後台抄 ${F.length} 個數字（大約 1 分鐘）`}</small></div></div>
+      <div class="ck-grid">${F.map(([k, l, how]) => `<label class="ck-f ${k.startsWith('r') ? 'ref' : ''}"><span>${k.length === 2 && OPS_PF.includes(k) ? pfBadge(k) : k.startsWith('r') ? pfBadge(k.slice(1)) : ''}${esc(l)}</span><input type="number" inputmode="numeric" min="0" step="any" data-ck="${k}" value="${cur[k] ?? ''}" placeholder="${prev && prev[k] != null ? '上次 ' + prev[k] : ''}"><details><summary>在哪看？</summary><p>${esc(how)}</p></details></label>`).join('')}</div>
       <div class="btnrow"><button class="btn p" data-act="opck" data-w="${esc(id)}">${ICON.trophy}<span>結算這一週</span></button></div></section>
-    ${ids.length ? `<h3 class="tape-h">誰帶人去 YouTube</h3>${refBars(ids)}` : ''}
-    ${ids.length > 1 ? `<h3 class="tape-h">粉絲成長</h3><div class="lcs">${lineChart(ids, OPS_PF.map((p) => ({ k: p, name: PFI[p].n, c: PFI[p].c })), '三平台粉絲')}${lineChart(ids, [{ k: 'yt', name: 'YouTube 訂閱', c: '#FFE600' }], 'YouTube 訂閱')}</div>` : ''}
+    ${ids.length ? `<h3 class="tape-h">${thOnly() ? 'Threads 帶了多少人去 YouTube' : '誰帶人去 YouTube'}</h3>${refBars(ids)}` : ''}
+    ${ids.length > 1 ? `<h3 class="tape-h">粉絲成長</h3><div class="lcs">${lineChart(ids, opsPfs().map((p) => ({ k: p, name: PFI[p].n, c: PFI[p].c })), thOnly() ? 'Threads 粉絲' : '各平台粉絲')}${lineChart(ids, [{ k: 'yt', name: 'YouTube 訂閱', c: '#FFE600' }], 'YouTube 訂閱')}</div>` : ''}
     <h3 class="tape-h y">營利門檻進度</h3>${yppHtml(last)}
     <h3 class="tape-h">黃金時段 <small>照你自己的成績算</small></h3>${heatHtml()}
     <h3 class="tape-h p">教練建議</h3><ul class="coach">${opsCoach().map((x) => `<li class="${x[0]}"><b>${esc(x[1])}</b>${esc(x[2])}</li>`).join('')}</ul>
     <h3 class="tape-h">發文紀錄 <small>${S.ops.log.length} 篇</small></h3>
-    <div class="fbq"><span>${pfBadge('fb')} 本月帶連結 <b>${fbLinksUsed()}</b>／${P.fb.link_free}</span><span class="seg">${[['unknown', '不知道有沒有限制'], ['yes', '我的粉專有限制'], ['no', '沒有限制']].map(([v, l]) => `<button class="${S.ops.fbLimit === v ? 'on' : ''}" data-act="opfbl" data-v="${v}">${l}</button>`).join('')}</span></div>
+    ${opsPfs().includes('fb') ? `<div class="fbq"><span>${pfBadge('fb')} 本月帶連結 <b>${fbLinksUsed()}</b>／${P.fb.link_free}</span><span class="seg">${[['unknown', '不知道有沒有限制'], ['yes', '我的粉專有限制'], ['no', '沒有限制']].map(([v, l]) => `<button class="${S.ops.fbLimit === v ? 'on' : ''}" data-act="opfbl" data-v="${v}">${l}</button>`).join('')}</span></div>` : ''}
     <div class="srows">${S.ops.log.slice(-20).reverse().map((l) => opsStatRow(l)).join('') || '<div class="empty">還沒有發文紀錄：到「今日」照任務發第一篇吧。</div>'}</div>
     <h3 class="tape-h">備份 <small>換手機、清快取前先備份</small></h3>
     <p class="sub-note">發文紀錄、排程、成效數字只存在這台裝置。備份碼可以貼回任何一台的《解包》。</p>
@@ -6681,12 +6849,13 @@ function renderOpsStats() {
 }
 function wkDelta(a, b, k) { return a && b && a[k] != null && b[k] != null ? a[k] - b[k] : null; }
 function funnelHtml(last, prev) {
-  if (!last) return `<section class="fun empty-f"><div class="fun-t">導流漏斗</div><p>回填第一週之後，這裡會變成：三平台粉絲 → 帶到 YouTube 的觀看 → 新訂閱。</p></section>`;
-  const fans = OPS_PF.reduce((a, p) => a + (+last[p] || 0), 0); const ref = (+last.rth || 0) + (+last.rig || 0) + (+last.rfb || 0);
-  const d = wkDelta(last, prev, 'yt'); const df = prev ? fans - OPS_PF.reduce((a, p) => a + (+prev[p] || 0), 0) : null;
+  const PF = opsPfs(); const fl = thOnly() ? 'Threads 粉絲' : PF.length === 2 ? 'Threads＋IG 粉絲' : '三平台粉絲';
+  if (!last) return `<section class="fun empty-f"><div class="fun-t">導流漏斗</div><p>回填第一週之後，這裡會變成：${fl} → 帶到 YouTube 的觀看 → 新訂閱。</p></section>`;
+  const fans = PF.reduce((a, p) => a + (+last[p] || 0), 0); const ref = PF.reduce((a, p) => a + (+last['r' + p] || 0), 0);
+  const d = wkDelta(last, prev, 'yt'); const df = prev ? fans - PF.reduce((a, p) => a + (+prev[p] || 0), 0) : null;
   const sg = (x) => (x == null ? '' : `<em class="${x >= 0 ? 'up' : 'dn'}">${x >= 0 ? '+' : ''}${fmtI(x)}</em>`);
   return `<section class="fun"><div class="fun-t">導流漏斗 <small>${esc(wkList().slice(-1)[0] || '')}</small></div>
-    <div class="fun-s s1"><span>三平台粉絲</span><b class="cu" data-n="${fans}" data-f="i">${fmtI(fans)}</b>${sg(df)}</div><i class="fun-a">▼</i>
+    <div class="fun-s s1"><span>${fl}</span><b class="cu" data-n="${fans}" data-f="i">${fmtI(fans)}</b>${sg(df)}</div><i class="fun-a">▼</i>
     <div class="fun-s s2"><span>帶到 YouTube 的觀看（近 7 天）</span><b class="cu" data-n="${ref}" data-f="i">${fmtI(ref)}</b></div><i class="fun-a">▼</i>
     <div class="fun-s s3"><span>YouTube 訂閱</span><b class="cu" data-n="${+last.yt || 0}" data-f="i">${fmtI(last.yt)}</b>${sg(d)}</div></section>`;
 }
@@ -6695,7 +6864,7 @@ function refBars(ids) {
   const lastId = ids[ids.length - 1]; const L = S.ops.wk[lastId]; const four = ids.slice(-4);
   const tot = (p) => four.reduce((a, w) => a + (+S.ops.wk[w]['r' + p] || 0), 0);
   const posts = (p) => S.ops.log.filter((l) => l.pf === p && four.some((w) => isoWeekOf(l.d).id === w)).length;
-  const rows = OPS_PF.map((p) => ({ p, v: +L['r' + p] || 0, t: tot(p), n: posts(p) }));
+  const rows = opsPfs().map((p) => ({ p, v: +L['r' + p] || 0, t: tot(p), n: posts(p) }));
   const mx = Math.max(1, ...rows.map((r) => r.t));
   return `<div class="bars" role="table" aria-label="從各平台來的 YouTube 觀看">${rows.map((r) => `<div class="bar-r" role="row" data-tip="${esc(`${PFI[r.p].n}：最近一週 ${fmtI(r.v)}、近 ${four.length} 週 ${fmtI(r.t)} 次觀看；同期間發了 ${r.n} 篇${r.n ? `，平均每篇帶 ${(r.t / r.n).toFixed(1)} 次` : ''}`)}">
       <span class="bar-l">${pfBadge(r.p)}</span><span class="bar-t"><i style="--w:${(r.t / mx).toFixed(3)};--c:${PFI[r.p].c}"></i></span><span class="bar-v"><b>${fmtI(r.t)}</b><small>${r.n ? (r.t / r.n).toFixed(1) + '／篇' : '—'}</small></span></div>`).join('')}
@@ -6761,31 +6930,38 @@ function heatHtml() {
     ${n < 8 ? `<div class="hm-few">還需要 ${8 - n} 篇有回填成績的貼文，才看得出黃金時段</div>` : '<p class="bar-n">格子越亮＝平均觀看越高，數字是篇數。點格子看細節。</p>'}</div>`;
 }
 function opsCoach() {
-  const out = []; const ids = wkList(); const P = plat();
-  if (!S.ops.log.length) out.push(['go', '先發第一篇', '到「今日」照任務發。第一週先求每天發，不求完美。']);
+  const out = []; const ids = wkList(); const P = plat(); const PF = opsPfs();
+  const last = ids.length ? S.ops.wk[ids[ids.length - 1]] : null;
+  if (!S.ops.log.length) out.push(['go', '先發第一篇', thOnly() ? '到「今日」照任務發。第一週先求每天都有發、每則留言都回，不求完美。' : '到「今日」照任務發。第一週先求每天發，不求完美。']);
   if (!ids.length) out.push(['info', '每週回填一次', '週日晚上或週一花 1 分鐘回填，第二週開始就能比較成長和導流。']);
   const four = ids.slice(-4);
   if (four.length) {
-    const tot = OPS_PF.map((p) => [p, four.reduce((a, w) => a + (+S.ops.wk[w]['r' + p] || 0), 0)]); const R = tot.reduce((a, x) => a + x[1], 0);
-    if (!R) out.push(['info', '還看不到社群導流', '剛起步很正常：社群先養熟，再搭上片三連發把人帶過去。上片那天一定要發。']);
-    else {
+    const tot = PF.map((p) => [p, four.reduce((a, w) => a + (+S.ops.wk[w]['r' + p] || 0), 0)]); const R = tot.reduce((a, x) => a + x[1], 0);
+    if (!R) out.push(['info', '還看不到社群導流', '剛起步很正常：先把 Threads 的人養熟，再搭上片三連發把人帶過去。上片那天一定要發。']);
+    else if (PF.length > 1) {
       tot.sort((a, b) => b[1] - a[1]); const [tp, tv] = tot[0];
       out.push(['good', `${PFI[tp].n} 帶來 ${Math.round((tv / R) * 100)}% 的社群導流`, `近 ${four.length} 週從社群來的 YouTube 觀看大多來自這裡，維持它的發文頻率。`]);
       for (const [p, v] of tot.slice(1)) {
         const posts = S.ops.log.filter((l) => l.pf === p && four.some((w) => isoWeekOf(l.d).id === w)).length;
         if (posts >= 6 && v === 0) out.push(['warn', `${PFI[p].n} 發了 ${posts} 篇還沒帶來觀看`, `可以降成一週 2 篇，把時間挪給 ${PFI[tp].n}；上片三連發照發。`]);
       }
-    }
+    } else out.push(['good', `Threads 近 ${four.length} 週帶了 ${fmtI(R)} 次 YouTube 觀看`, '這就是粉專存在的意義：上片那幾天的三連發通常帶最多，記得每支新片都排。']);
   }
   if (ids.length >= 2) {
     const a = S.ops.wk[ids[ids.length - 2]], b = S.ops.wk[ids[ids.length - 1]];
-    const g = OPS_PF.map((p) => [p, (+b[p] || 0) - (+a[p] || 0)]).sort((x, y) => y[1] - x[1]);
-    if (g[0][1] > 0) out.push(['good', `這週 ${PFI[g[0][0]].n} 粉絲 +${g[0][1]} 最多`, '回頭看看這週在那邊發了什麼，下週多發同類型的。']);
+    const g = PF.map((p) => [p, (+b[p] || 0) - (+a[p] || 0)]).sort((x, y) => y[1] - x[1]);
+    if (g[0][1] > 0) out.push(['good', `這週 ${PFI[g[0][0]].n} 粉絲 +${g[0][1]}`, '回頭看看這週發了什麼、哪一篇留言最多，下週多發同類型的。']);
   }
   const best = Object.entries(heatData()).filter(([, c]) => c.n >= 2).map(([k, c]) => [k, c.v / c.n]).sort((x, y) => y[1] - x[1])[0];
   if (best) { const [wd, b] = best[0].split('-').map(Number); out.push(['good', `你的黃金時段：週${WK[wd]}${HB[b][0]}`, `平均 ${Math.round(best[1])} 次觀看。可以在「排程 → 發文節奏」把重要的貼文挪過去。`]); }
   const st = opsStreak(); if (st >= 3) out.push(['good', `已經連發 ${st} 天`, '小帳號要長大，穩定比爆一篇重要。']);
-  if (S.ops.fbLimit !== 'no' && fbLinksUsed() >= P.fb.link_free) out.push(['warn', 'FB 本月的連結額度用完了', '這個月 FB 的貼文先別放外部連結（留言也算），導流交給 Threads 和 IG 個人檔案。']);
+  if (thOnly()) {
+    const fans = last && last.th != null && last.th !== '' ? +last.th : null;
+    if (fans != null && fans < 100) out.push(['info', `Threads 還差 ${100 - fans} 位粉絲到 100`, '滿 100 位粉絲之後，洞察報告會多出粉絲輪廓這類數據；在那之前先看每篇的瀏覽數和留言數就好。']);
+    if (st >= 14 || (fans != null && fans >= 100)) out.push(['go', '可以開第二階段：Instagram', 'Threads 已經穩定了。到「教學」開第二階段，同一篇的 IG 圖文版 App 會幫你做好。']);
+    const dq = dqStreak(); if (dq >= 3) out.push(['good', `每日三件事全勤 ${dq} 天`, '發文、回留言、海巡都做到的帳號，長得最快。']);
+  }
+  if (PF.includes('fb') && S.ops.fbLimit !== 'no' && fbLinksUsed() >= P.fb.link_free) out.push(['warn', 'FB 本月的連結額度用完了', '這個月 FB 的貼文先別放外部連結（留言也算），導流交給 Threads 和 IG 個人檔案。']);
   const need = opsNeedStats().length; if (need >= 3) out.push(['info', `${need} 篇等你回填成績`, '回填了才算得出黃金時段和每篇帶來多少觀看。']);
   return out;
 }
@@ -6857,81 +7033,193 @@ function opsStatsFx() {
 
 /* ---- opslearn.js ---- */
 /* 解包 — 粉專作戰台・教學與影片三連發。
-   教學：開站任務（一次性，從零開三個平台）、平台規則速查（data/platforms.json）、去哪裡看數據、YouTube 上片清單。
-   影片三連發：上新片時前一天預告、當天上片文、隔天開討論，三個平台自動排進週曆。先給範本；按「請 Claude 寫」走點播台（type: vid），
+   教學：開站任務分三個階段（2026-11-19 起 Threads 優先：先把 Threads 做起來，IG、FB 之後再開）、Threads 經營心法、前 30 天路線圖、
+   平台規則速查（data/platforms.json）、去哪裡看數據、YouTube 上片清單。
+   影片三連發：上新片時前一天預告、當天上片文、隔天開討論，自動排進週曆。先給範本；按「請 Claude 寫」走點播台（type: vid），
    寫稿（05:23）或願望單（16:37）那一班寫好放 data/videos/<點播 id>.json（目錄 data/videos.json），App 對上自己送出的就換成 Claude 的版本。 */
 const BIO = {
   name: '遊戲狂想曲',
-  bio: '🎮 每天解包一款新遊戲\nPC／主機遊戲推坑・特價情報・新片預告\n好遊戲不錯過，雷遊戲不踩過\n▼ YouTube 完整影片',
+  bio: '🎮 每天解包一款 PC／主機遊戲\n新作值不值得買・私房神作推坑・限免特價情報\n好遊戲不錯過，雷遊戲不踩過\n▼ YouTube「遊戲狂想曲」完整影片',
   fbabout: '遊戲狂想曲 GAME RHAPSODY｜PC／主機遊戲推坑、新作解包、特價情報，每天一款。好遊戲不錯過，雷遊戲不踩過。完整影片在 YouTube「遊戲狂想曲」。',
 };
+/* 帳號代號（@ 後面那串）：IG、Threads 只能用英文小寫、數字、底線、句點，最多 30 字；YouTube 的 Gaming-Rhapsody 有連字號，要換寫法 */
+const HANDLES = ['gaming.rhapsody', 'gaming_rhapsody', 'gamingrhapsody.tw'];
+/* 自我介紹（置頂用）：三個口味，都不放網址、不出現本人名字 */
+const INTROS = [
+  { k: 'intro1', t: '直白版', text: '大家好，這裡是「遊戲狂想曲」🎮\n\n只聊 PC 和主機遊戲。每天在這裡解包一款：\n・新作值不值得買：價格、中文、評價、要玩多久，一次講清楚\n・已上市的私房神作：好玩但你可能錯過的\n・限時免費和特價情報：領了就是你的\n\n不碰抽卡手遊、不下農場標題。好遊戲不錯過，雷遊戲不踩過。\n\n先來認識一下：你最近在玩哪一款？留言丟一款，我們聊聊。' },
+  { k: 'intro2', t: '互動版', text: '新帳號報到！這裡是「遊戲狂想曲」，專門幫你篩遊戲。\n\n規則很簡單：\n・每天解包一款 PC／主機遊戲，買之前先看\n・好玩的直接推，會雷的直接講\n・限免、特價一出來就貼\n\n開站第一題：如果硬碟只能留一款遊戲，你留哪一款？' },
+  { k: 'intro3', t: '短版', text: '這裡是「遊戲狂想曲」：每天一款 PC／主機遊戲，值不值得買、哪裡好玩、哪裡會雷，直接講。\n\n完整影片在 YouTube 搜尋「遊戲狂想曲」。\n\n你最近卡在哪一款？' },
+];
+for (const x of INTROS) BIO[x.k] = x.text;
+const PHASES = [
+  { ph: 1, mode: 'th', t: '第一階段・Threads 開站', s: '主力平台：台灣聊遊戲最熱的地方。照順序做完大約 30 分鐘。' },
+  { ph: 2, mode: 'thig', t: '第二階段・加開 Instagram', s: '建議 Threads 連發滿 14 天、或粉絲滿 100 再開：同一篇 App 會幫你做好 IG 圖文版。' },
+  { ph: 3, mode: 'all', t: '第三階段・加開 Facebook 粉專', s: 'IG 也穩定之後再開。FB 有每月連結額度這類眉角，App 會幫你算。' },
+];
+const PH_OF = { th: 1, thig: 2, all: 3 };
 const QUESTS = [
-  { id: 'ig', t: '開 Instagram 帳號，切成創作者', why: 'Threads 要用 IG 帳號登入，IG 也是三個導流平台之一。', steps: [
-    '下載 Instagram，用一個新的 email 註冊：粉專帳號跟你個人的帳號分開，以後才不會混在一起。',
-    '名稱填「遊戲狂想曲」；帳號（@ 後面那串）挑一個好記的英文，最好跟 YouTube 頻道的拼法一樣，三個平台都用同一個。',
-    '大頭貼用頻道的噴漆 Logo：三個平台、YouTube 都用同一張，觀眾一眼認得出是你。',
-    '個人檔案 → 右上「☰」→「帳號類型和工具」→「切換為專業帳號」→ 選「創作者」，類別找「遊戲影片創作者」。專業帳號才有洞察報告（看成績）和排程。',
-    '「編輯個人檔案」→ 簡介貼下面準備好的那段；「連結」放 YouTube 頻道網址（IG 個人檔案最多 5 個連結）。'], copy: ['name', 'bio'] },
-  { id: 'th', t: '用 IG 帳號開 Threads', why: '台灣討論遊戲最熱的地方，是我們的主力。', steps: [
-    '下載 Threads，選「用 Instagram 登入」，選剛剛開的遊戲狂想曲帳號。',
-    '可以一鍵匯入 IG 的大頭貼、名稱和簡介。',
-    '個人檔案設成「公開」，連結放 YouTube 頻道網址。',
-    '先追蹤十幾個你常看的遊戲媒體、遊戲社群帳號，首頁才會推遊戲相關的串文給你，也方便去留言互動。'], copy: ['bio'] },
-  { id: 'fb', t: '建 Facebook 粉專', why: '粉專要用你的個人帳號建立，但外人看不到管理員是誰。', steps: [
+  { id: 'name', ph: 1, t: '想好帳號代號', why: '代號（@ 後面那串英文）就是你的門牌：Threads 跟 IG 共用同一個，之後改了別人會找不到你，一開始就選好。', steps: [
+    '名稱（大字那一行）一律用「遊戲狂想曲」，不放你本人的名字。',
+    '代號只能用英文小寫、數字、底線「_」和句點「.」，不能有連字號：YouTube 的 Gaming-Rhapsody 要換個寫法。下面有三個建議，先想好 2～3 個備案，註冊時被用走了就換下一個。',
+    '準備一個新的 email（例如開一個新的 Gmail）專門給遊戲狂想曲用：粉專跟你個人的帳號完全分開，以後交接、找回密碼都乾淨。',
+    'Threads、IG、之後的 FB 粉專、YouTube 都用同一個名稱和同一張大頭貼（頻道的噴漆 Logo），觀眾在哪裡看到都認得出是你。'], handles: true, copy: ['name'] },
+  { id: 'ig0', ph: 1, t: '開 Instagram 帳號（Threads 的鑰匙）', why: 'Threads 要用 IG 帳號登入。現在只是拿它開門，IG 本身等第二階段再經營。大約 5 分鐘。', steps: [
+    '下載 Instagram，打開後點「建立新帳號」。',
+    '選用電子郵件註冊，填剛剛準備的新 email，輸入寄來的驗證碼。',
+    '設定密碼（記進手機的密碼管理）。生日填你本人的：不會公開，平台只用來確認年齡。',
+    '名字填「遊戲狂想曲」，用戶名稱填你選好的代號；被用走就換備案。',
+    '接下來問你要不要找聯絡人、加入 Facebook 帳號管理中心、追蹤推薦的人：一律先「略過」或「稍後」，粉專跟你的個人帳號分開比較乾淨。',
+    '大頭貼先換成頻道的噴漆 Logo（等一下 Threads 可以一鍵匯入）。',
+    '補充：Threads 現在也能直接用 email 註冊，但用 IG 登入的話，第二階段就不用再開一次，兩邊代號也會一樣。'], copy: ['name'] },
+  { id: 'th', ph: 1, t: '用 IG 帳號登入 Threads', why: '台灣聊遊戲最熱的地方，這是遊戲狂想曲的主力平台。', steps: [
+    '下載 Threads（黑底白色「@」的圖示），打開後選「使用 Instagram 繼續」，選剛剛開的遊戲狂想曲帳號。',
+    '建立個人檔案時點「從 Instagram 匯入」：名字、大頭貼、簡介一次帶過來。',
+    '隱私一定選「公開個人檔案」：私人帳號的串文陌生人看不到，等於白發。',
+    '問你要不要追蹤 IG 上追蹤的人：新帳號本來就沒有，直接下一步。',
+    '按「加入 Threads」，完成！之後就用 Threads 這個 App 發文、回留言。'] },
+  { id: 'thprof', ph: 1, t: '把個人檔案整理成「門面」', why: '有人看到你的串文點進頭像，三秒內就決定要不要追蹤：大頭貼、簡介、連結、置頂文就是你的招牌。', steps: [
+    '點右下角的人像圖示到自己的個人檔案 →「編輯個人檔案」。',
+    '簡介貼下面準備好的那段（上限 150 字，這段大約 75 字）。',
+    '「連結」→「新增連結」貼 YouTube 頻道網址（最多 5 個，之後開了 IG、FB 再補上）。',
+    '編輯畫面如果有「興趣」或「主題」可以掛在個人檔案上，選遊戲、PC 遊戲、Steam 這類，別人一看就知道你聊什麼。',
+    '大頭貼確認是頻道的噴漆 Logo，跟 YouTube 一模一樣。'], copy: ['bio'], yt: true },
+  { id: 'thfeed', ph: 1, t: '把首頁養成「遊戲版」', why: '首頁推什麼，你海巡就看到什麼。先讓 Threads 知道這個帳號只想看遊戲。', steps: [
+    '點下面的放大鏡（搜尋），打「遊戲」或你常玩的遊戲名稱。',
+    '主題標籤旁邊有「⋯」的是社群：點進去按右上角「加入」。遊戲相關的挑 1～3 個就好；加入的社群會掛在你的個人檔案上，別人一看就知道你是聊遊戲的。',
+    '追蹤 15～20 個帳號：遊戲公司和台灣代理的官方帳號、遊戲媒體、你喜歡的實況主或遊戲創作者。',
+    '滑首頁看到跟遊戲無關的串文，點右上「⋯」→「不感興趣」；幾天後首頁就會變成遊戲版。'] },
+  { id: 'thintro', ph: 1, t: '發自我介紹，然後置頂', why: '新來的人點進個人檔案，第一眼看到的是置頂文：告訴他你是誰、追蹤你有什麼好處。', steps: [
+    '下面三個版本挑一個（照你的口氣改幾個字更好），按「帶到 Threads」或「複製」。',
+    '主題標籤選「遊戲」（有遊戲社群的話選社群），按「發佈」。',
+    '發完到自己的個人檔案，在這則串文右上點「⋯」→「置頂到個人檔案」。',
+    '有人來留言一定回：這是你的第一批朋友。'], intro: true },
+  { id: 'cal', ph: 1, t: '把發文時段加進手機行事曆', why: '時間到手機會跳提醒，不用自己記。', steps: [
+    '到「排程」先選發文節奏（起步一週 4 篇，或標準每天一篇）。',
+    '按「時段加進手機行事曆」→ iPhone 會跳出「加入行事曆」→ 按「全部加入」。之後每週固定時段都會提醒，發文前 5 分鐘響。'], act: ['opics', '現在加進行事曆'] },
+  { id: 'first', ph: 1, t: '發第一篇正式貼文', why: '開站完成！之後每天就是三件事：發一篇、回完留言、海巡十分鐘。', steps: [
+    '回「今日」，點今天那一篇的「開始上架」，照上架教學一步一步做。',
+    '發完回來按「Threads 發好了」蓋章；隔天回填這篇的成績。',
+    '當天記得把「每日三件事」都打勾：回留言和海巡跟發文一樣重要。'], go: ['fan', '去今日任務'] },
+  { id: 'yt', ph: 1, opt: true, t: 'YouTube 頻道放上 Threads 連結', why: '在 YouTube 看到你的人，也找得到你的 Threads。', steps: [
+    '用電腦開 studio.youtube.com →「自訂」→「基本資訊」→「連結」→「新增連結」。',
+    '標題填「Threads」，網址填你的 Threads 個人檔案網址（之後開了 IG、FB 再補）。',
+    '按「發布」。頻道首頁的簡介下面就看得到這個連結。'] },
+  { id: 'igpro', ph: 2, t: '把 IG 切成創作者帳號、整理個人檔案', why: '專業帳號才有洞察報告（看成績）和排程。', steps: [
+    '打開 Instagram → 個人檔案 → 右上「☰」→「帳號類型和工具」→「切換為專業帳號」→ 選「創作者」，類別找「遊戲影片創作者」。',
+    '「編輯個人檔案」→ 簡介貼下面那段；「連結」放 YouTube 頻道網址（IG 個人檔案最多 5 個連結，可以把 Threads 也放上去）。',
+    '確認帳號是公開的，大頭貼跟 Threads 一樣。'], copy: ['bio'], yt: true },
+  { id: 'igfirst', ph: 2, t: '發第一篇 IG 圖文', why: '同一篇內容，App 已經做好 IG 版：4:5 圖卡、說明文字、最多 5 個 hashtag。', steps: [
+    '回「今日」，IG 的任務會跟 Threads 排在同一天，照上架教學發。',
+    'IG 說明文字裡的網址不能點，App 會寫成「連結在個人檔案」。'], go: ['fan', '去今日任務'] },
+  { id: 'fb', ph: 3, t: '建 Facebook 粉專', why: '粉專要用你的個人帳號建立，但外人看不到管理員是誰。', steps: [
     '打開 Facebook → 右下「☰」選單 →「粉絲專頁」→「建立」（或「建立新粉絲專頁」）。',
     '名稱填「遊戲狂想曲」，類別打「遊戲影片創作者」。',
     '簡介貼下面準備好的那段，網站填 YouTube 頻道網址。',
     '大頭貼用同一張 Logo；封面可以用頻道的橫幅圖。',
-    '建好以後，右上角大頭貼可以切換「你本人」和「遊戲狂想曲」：發文前一定確定是粉專身分。'], copy: ['fbabout'] },
-  { id: 'link', t: '把 IG 連到 FB 粉專', why: '連起來之後，可以用 Meta Business Suite 一次把 FB 和 IG 排好。', steps: [
+    '建好以後，右上角大頭貼可以切換「你本人」和「遊戲狂想曲」：發文前一定確定是粉專身分。'], copy: ['fbabout'], yt: true },
+  { id: 'link', ph: 3, t: '把 IG 連到 FB 粉專', why: '連起來之後，可以用 Meta Business Suite 一次把 FB 和 IG 排好。', steps: [
     'Facebook 切成粉專身分 →「設定」→「已連結的帳號」→ Instagram →「連結帳號」，登入遊戲狂想曲的 IG。',
     '找不到的話：IG 個人檔案 →「☰」→「帳號管理中心」→「帳號」→「新增帳號」，把 Facebook 加進來。',
     '下載「Meta Business Suite」App 登入，看得到粉專和 IG 兩個帳號就成功了。'] },
-  { id: 'yt', t: 'YouTube 頻道放上三個社群連結', why: '在 YouTube 看到你的人，也找得到粉專。', steps: [
-    '用電腦開 studio.youtube.com →「自訂」→「基本資訊」→「連結」→「新增連結」。',
-    '依序加 Threads、Instagram、Facebook 粉專的網址，標題填平台名稱。',
-    '按「發布」。頻道首頁的簡介下面就看得到這三個連結。'] },
-  { id: 'cal', t: '把發文時段加進手機行事曆', why: '時間到手機會跳提醒，不用自己記。', steps: [
-    '到「排程」先選發文節奏（起步、標準、衝刺）。',
-    '按「時段加進手機行事曆」→ iPhone 會跳出「加入行事曆」→ 按「全部加入」。之後每週固定時段都會提醒。'], act: ['opics', '現在加進行事曆'] },
-  { id: 'first', t: '發第一篇', why: '開站完成！之後每天照「今日任務」發就好。', steps: [
-    '回「今日」，點第一個任務的「開始上架」，照上架教學一步一步做。',
-    '發完回來按「發好了」蓋章；隔天回填這篇的成績。'], go: ['fan', '去今日任務'] },
+  { id: 'fbfirst', ph: 3, t: '發第一篇 FB 粉專貼文', why: 'FB 版放完整的 hashtag；部分粉專每月只有少數幾則能帶外部連結，App 會幫你留給上片文。', steps: [
+    '回「今日」，FB 的任務會排在固定的日子，照上架教學發。',
+    '到「成效」設定你的粉專有沒有連結限制（不確定就選「不知道」）。'], go: ['fan', '去今日任務'] },
 ];
+/* 舊版的開站任務（三平台一起開）換成新的代號：做過的不用重做 */
+(function questMigrate() {
+  const st = S.ops.setup || {}; let ch = false;
+  if (st.ig && !st.ig0) { st.ig0 = st.igpro = st.ig; ch = true; }
+  if (st.th && !st.thprof && st.ig) { st.thprof = st.th; ch = true; }
+  if (ch) opsSave();
+})();
 const YT_CHECK = [
   ['標題', '前 20 個字放最吸引人的：遊戲名＋你的觀點（手機上只看得到前面）。'],
   ['縮圖', '大字 3～6 個＋遊戲畫面、高對比，縮成手機大小還看得懂。'],
-  ['說明欄', '前兩行寫重點和「訂閱遊戲狂想曲」，下面放 Threads、IG、FB 的連結。'],
+  ['說明欄', '前兩行寫重點和「訂閱遊戲狂想曲」，下面放 Threads（之後還有 IG、FB）的連結。'],
   ['章節', '說明欄打時間軸：第一行 00:00、至少 3 段、每段 10 秒以上，YouTube 會自動分章節。'],
   ['結束畫面', '最後 5～20 秒放「下一支影片」和「訂閱」。'],
   ['播放清單', '放進對應的系列，例如每月新遊戲推薦。'],
   ['公開時間', '排程公開或首播，跟預告文講的時間一樣。'],
   ['置頂留言', '自己留一個問題置頂帶動留言；回 App 把影片網址貼進三連發。'],
 ];
-const questDone = () => QUESTS.filter((q) => S.ops.setup[q.id]).length;
+/* Threads 經營心法：新帳號最常卡的地方，有出處的附來源 */
+const PLAYBOOK = [
+  { h: '第一行就要讓人停下來', t: '大家滑動態只看一兩行就決定停不停。把最有感的那件事放第一行：價格、評價、限免，或一句有立場的話；不要寒暄、不要「大家好」。' },
+  { h: '一篇只講一款，結尾丟一個好回答的問題', t: '二選一最好回答（「現在買，還是等特價？」）。留言越多，Threads 越會把這篇推給還沒追蹤你的人。' },
+  { h: '發完一小時內，每一則留言都回', t: '新帳號最該花力氣的是回覆，不是多發幾篇：串文底下你來我往的對話，會讓這篇被推得更遠。', src: [{ t: 'Sendible：Threads 演算法怎麼運作（2026，含創作者觀察）', u: 'https://www.sendible.com/insights/threads-algorithm' }] },
+  { h: '每天海巡 10 分鐘', t: '到別人的遊戲串文底下留有內容的留言（補一個資訊、講一個觀點），比自己多發十篇更容易被看見。不要只留「推」「歡迎追蹤我」，也不要一口氣洗十幾則。' },
+  { h: '只聊遊戲，不蹭別的熱門話題', t: 'Threads 會先看貼文在第一批人身上的反應，再決定推不推更遠；為了流量蹭政治、八卦招來的追蹤者對遊戲沒興趣，之後反而拖累你的遊戲文。', src: [{ t: '經理人：品牌經營 Threads 得先做好這 3 件事（2026-10）', u: 'https://www.managertoday.com.tw/articles/view/72899' }] },
+  { h: '主題標籤只能選一個：選遊戲社群', t: '每篇只能 1 個主題標籤。標籤旁邊有「⋯」的是社群，加入之後發文選它，貼文會出現在社群裡，被一群本來就愛聊遊戲的人看到。', src: [{ t: 'Meta：Threads 社群（Communities）介紹', u: 'https://about.fb.com/news/2025/10/introducing-threads-communities-find-your-people' }, { t: 'Social Media Today：Threads 社群開放給所有人', u: 'https://www.socialmediatoday.com/news/threads-rolls-out-communities-all-users/801861/' }] },
+  { h: '挑對時間發', t: '台灣 Threads 的互動高峰在週間晚上 8～10 點、週四最熱；週一最冷但中午 12 點還行，週末偏冷。排程表已經照這個排好。', src: [{ t: '數位時代／QSearch：台灣 Threads 什麼時段發文最熱鬧', u: 'https://www.bnext.com.tw/article/90152/threads-posting-timing-2026' }] },
+  { h: '連結放最後，重點先講完', t: 'Meta 說 2025 年中起帶連結的串文會正常排序、不會被故意壓；但本來就很少人會點出去，所以重點寫在文字裡，連結當補充（上片文才放）。', src: [{ t: 'Social Media Today：Meta 表示 Threads 的連結貼文已正常排序', u: 'https://www.socialmediatoday.com/news/meta-says-link-posts-ranked-properly-threads-reach/750126/' }] },
+  { h: '寫錯了，15 分鐘內能改', t: '發出去 15 分鐘內，點串文右上「⋯」→「編輯」可以改字；超過就只能刪掉重發。發完先自己看一遍。', src: [{ t: 'Instagram 官方：Threads 使用技巧（15 分鐘內可編輯）', u: 'https://about.instagram.com/blog/tips-and-tricks/instagram-threads-tips/' }] },
+  { h: '穩定比爆紅重要', t: '每天一篇、天天回覆，比一週爆一篇然後消失有用。前兩週只求「每天都有發」，成績之後再看。' },
+  { h: '不買粉、不互刷', t: '買來的粉絲不會看你的影片，互刷讚的帳號也不會；平台還可能把這種行為當成不實互動處理。慢慢來，來的都是真的觀眾。' },
+  { h: '洞察報告滿 100 粉絲才完整', t: '個人檔案右上的「洞察報告」看得到瀏覽、互動、粉絲變化；粉絲輪廓這類數據要滿 100 位粉絲才會出現。在那之前先看每篇的瀏覽數和留言數。', src: [{ t: 'Sendible：Threads 洞察報告看得到哪些數據（2026）', u: 'https://www.sendible.com/insights/threads-insights' }] },
+];
+const ROAD30 = [
+  ['第 1 天', '開站：做完第一階段，發自我介紹並置頂。'],
+  ['第 1～7 天', '每天一篇、回完每一則留言、海巡十分鐘。不看數字，只求「每日三件事」天天打勾。'],
+  ['第 8～14 天', '週日第一次回填成績：看專題、推坑、限免、週報哪一類留言最多，下週多發那一類。'],
+  ['第 15～30 天', '開始用影片三連發：每支新片前一天預告、當天上片、隔天討論，把 Threads 的人帶去 YouTube。'],
+  ['第 30 天', '連發 14 天以上或粉絲滿 100：開第二階段 Instagram，同一篇一鍵做成圖文版。'],
+];
+const curPhase = () => PH_OF[S.ops.mode] || 3;
+const questsActive = () => QUESTS.filter((q) => q.ph <= curPhase());
+const questsNeed = () => questsActive().filter((q) => !q.opt);   // 選做的不算在進度裡
+const questDone = (L = questsNeed()) => L.filter((q) => S.ops.setup[q.id]).length;
 function opsSetupBanner() {
-  const n = questDone(); if (n >= QUESTS.length) return '';
-  return `<div class="setup-ban" data-go="fan/~learn"><b>開站任務 ${n}／${QUESTS.length}</b><span>${esc((QUESTS.find((q) => !S.ops.setup[q.id]) || {}).t || '')}</span><i style="--p:${(n / QUESTS.length).toFixed(3)}"></i><em>繼續 ›</em></div>`;
+  const L = questsNeed(); const n = questDone(L); if (n >= L.length) return '';
+  const ph = PHASES[curPhase() - 1]; const next = L.find((q) => !S.ops.setup[q.id]) || {};
+  return `<div class="setup-ban" data-go="fan/~learn"><b>${next.ph === 1 ? '開站任務' : esc(ph.t)} ${n}／${L.length}</b><span>下一步：${esc(next.t || '')}</span><i style="--p:${(n / L.length).toFixed(3)}"></i><em>繼續 ›</em></div>`;
 }
 
 /* ---- 教學頁 ---- */
+function questHtml(q, i, firstOpen) {
+  const ok = !!S.ops.setup[q.id]; const pr = S.ops.prof;
+  return `<details class="quest ${ok ? 'ok' : ''} ${q.opt ? 'q-opt' : ''}" ${firstOpen ? 'open' : ''}><summary><i>${ok ? '✓' : i + 1}</i><b>${esc(q.t)}</b>${ok ? '<em>完成</em>' : q.opt ? '<em class="o">選做</em>' : ''}</summary>
+      <p class="q-why">${esc(q.why)}</p><ol>${q.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
+      ${q.handles ? `<div class="q-handles"><b>代號建議（點一下複製）</b>${HANDLES.map((h) => `<button class="hchip" data-act="opcopyx" data-t="${esc(h)}">@${esc(h)}</button>`).join('')}</div>` : ''}
+      ${(q.copy || []).map((k) => `<div class="cpx"><pre>${esc(BIO[k])}</pre><button class="btn sm y" data-act="opcopyx" data-k="${k}">${ICON.copy}<span>複製</span></button></div>`).join('')}
+      ${q.yt ? (pr.yt ? `<div class="cpx"><pre>${esc(pr.yt)}</pre><button class="btn sm" data-act="opcopyx" data-k="yt">${ICON.copy}<span>複製頻道網址</span></button></div>` : '<p class="sub-note q-note">在這頁最上面填了 YouTube 頻道網址，這裡就能一鍵複製。</p>') : ''}
+      ${q.intro ? `<div class="intros">${INTROS.map((x) => `<div class="intro"><div class="intro-h"><b>${esc(x.t)}</b><span>${x.text.length} 字</span></div><div class="pftxt">${nl2br(x.text)}</div><div class="btnrow"><a class="btn sm y thgo" href="${esc(thIntent(x.text, '遊戲'))}" target="_blank" rel="noopener">${ICON.mega}<span>帶到 Threads</span></a><button class="btn sm" data-act="opcopyx" data-k="${x.k}">${ICON.copy}<span>複製</span></button></div></div>`).join('')}</div>` : ''}
+      <div class="btnrow">${q.act ? `<button class="btn sm" data-act="${q.act[0]}">${esc(q.act[1])}</button>` : ''}${q.go ? `<button class="btn sm" data-go="${q.go[0]}">${esc(q.go[1])}</button>` : ''}<button class="btn sm ${ok ? '' : 'p'}" data-act="opq" data-k="${q.id}">${ok ? '取消完成' : '完成！'}</button></div></details>`;
+}
+function phaseHtml(P) {
+  const cur = curPhase(); const L = QUESTS.filter((q) => q.ph === P.ph); const need = L.filter((q) => !q.opt); const n = questDone(need);
+  const locked = P.ph > cur; const firstTodo = L.findIndex((q) => !S.ops.setup[q.id]);
+  const head = `<div class="ph-h"><span class="ph-n">${P.ph}</span><div><b>${esc(P.t)}</b><p>${esc(P.s)}</p></div><em>${n}／${need.length}</em></div>`;
+  if (locked) {
+    return `<section class="phase locked">${head}<div class="ph-lock"><p>${P.ph === cur + 1 ? '還沒開：現在先專心經營前一個階段。準備好了按下面，作戰台就會開始排這個平台。' : '前一個階段開了之後再來。'}</p>${P.ph === cur + 1 ? `<button class="btn sm y" data-act="opmode" data-v="${P.mode}">開啟${P.ph === 2 ? '第二' : '第三'}階段</button>` : ''}</div>
+      <details class="ph-peek"><summary>先看看要做哪些事</summary><ul>${L.map((q) => `<li>${esc(q.t)}</li>`).join('')}</ul></details></section>`;
+  }
+  return `<section class="phase ${n >= need.length ? 'done' : ''}">${head}<div class="quests">${L.map((q, i) => questHtml(q, i, i === firstTodo && P.ph === cur)).join('')}</div></section>`;
+}
+function modeHtml() {
+  const M = [['th', '只顧 Threads', '第一階段（建議先這樣）'], ['thig', 'Threads＋IG', '第二階段'], ['all', '三個平台', '第三階段']];
+  return `<section class="pmode"><h4>現在經營哪些平台</h4><div class="pm-seg">${M.map(([v, l, s]) => `<button class="${S.ops.mode === v ? 'on' : ''}" data-act="opmode" data-v="${v}"><b>${l}</b><small>${s}</small></button>`).join('')}</div>
+    <p class="sub-note">${thOnly() ? '先把一個平台做起來，比三個平台都半套有用：今日任務、排程、成效現在都只算 Threads。IG、FB 之後再開，之前的貼文都會留著。' : '今日任務、排程、成效會照這裡選的平台排；改回只顧 Threads 也不會刪掉任何紀錄。'}</p></section>`;
+}
 function renderOpsLearn() {
-  const P = plat(); const n = questDone(); const pr = S.ops.prof;
+  const P = plat(); const L = questsNeed(); const n = questDone(L); const pr = S.ops.prof; const cur = curPhase();
   const rule = (pf, t) => { const r = P[pf] || {}; return `<div class="rule"><div class="rule-h">${pf === 'yt' ? '<span class="pfb yt">YT</span>' : pfBadge(pf)}<b>${esc(t)}</b></div><ul>${(r.notes || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>${(r.src || []).length ? `<details><summary>${r.src.length} 個來源</summary>${r.src.map((s) => `<a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>`).join('')}</details>` : ''}</div>`; };
-  return `<div class="ops learn">${opsNav('learn')}${opsHead('教學', '從零開始：先把三個平台開好，之後每一篇的上架教學都在任務裡。')}
-    <section class="q-top"><div class="q-ring" style="--p:${(n / QUESTS.length).toFixed(3)}"><b>${n}</b><span>／${QUESTS.length}</span></div><div><b>${n >= QUESTS.length ? '開站完成！' : '開站任務'}</b><p>${n >= QUESTS.length ? '三個平台都開好了：每天照「今日任務」發就好。' : '照順序做，每做完一個按「完成」蓋章。'}</p></div></section>
+  const later = ['ig', 'fb'].filter((p) => !opsPfs().includes(p));
+  return `<div class="ops learn">${opsNav('learn')}${opsHead('教學', thOnly() ? '從零開始：先把 Threads 開好、養起來。每一篇的上架教學都在任務裡，這裡是開站和經營的功夫。' : '開站任務、經營心法和平台規則。每一篇的上架教學都在任務裡。')}
+    <section class="q-top"><div class="q-ring" style="--p:${(n / L.length).toFixed(3)}"><b>${n}</b><span>／${L.length}</span></div><div><b>${n >= L.length ? (cur === 1 ? 'Threads 開站完成！' : '開站完成！') : cur === 1 ? 'Threads 開站任務' : '開站任務'}</b><p>${n >= L.length ? '之後每天照「今日任務」：發一篇、回完留言、海巡十分鐘。' : '照順序做，每做完一個按「完成」蓋章。做到一半離開也沒關係，進度會記住。'}</p></div></section>
+    ${modeHtml()}
     <section class="prof"><h4>先填你的 YouTube 頻道網址</h4><p class="sub-note">簡介、連結會用到（只存在這台裝置）。</p>
       <label class="op-lab">YouTube 頻道<input type="url" data-act="opprof" data-k="yt" value="${esc(pr.yt)}" placeholder="https://www.youtube.com/@…"></label></section>
-    <div class="quests">${QUESTS.map((q, i) => { const ok = !!S.ops.setup[q.id]; return `<details class="quest ${ok ? 'ok' : ''}" ${!ok && QUESTS.findIndex((x) => !S.ops.setup[x.id]) === i ? 'open' : ''}><summary><i>${ok ? '✓' : i + 1}</i><b>${esc(q.t)}</b>${ok ? '<em>完成</em>' : ''}</summary>
-      <p class="q-why">${esc(q.why)}</p><ol>${q.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
-      ${(q.copy || []).map((k) => `<div class="cpx"><pre>${esc(BIO[k])}</pre><button class="btn sm y" data-act="opcopyx" data-k="${k}">${ICON.copy}<span>複製</span></button></div>`).join('')}
-      ${q.id === 'ig' || q.id === 'th' || q.id === 'fb' ? (pr.yt ? `<div class="cpx"><pre>${esc(pr.yt)}</pre><button class="btn sm" data-act="opcopyx" data-k="yt">${ICON.copy}<span>複製頻道網址</span></button></div>` : '<p class="sub-note">上面填了頻道網址，這裡就能一鍵複製。</p>') : ''}
-      <div class="btnrow">${q.act ? `<button class="btn sm" data-act="${q.act[0]}">${esc(q.act[1])}</button>` : ''}${q.go ? `<button class="btn sm" data-go="${q.go[0]}">${esc(q.go[1])}</button>` : ''}<button class="btn sm ${ok ? '' : 'p'}" data-act="opq" data-k="${q.id}">${ok ? '取消完成' : '完成！'}</button></div></details>`; }).join('')}</div>
+    ${PHASES.map(phaseHtml).join('')}
+    <h3 class="tape-h p">Threads 經營心法 <small>新帳號最常卡的 12 件事</small></h3>
+    <ol class="pbook">${PLAYBOOK.map((x) => `<li><b>${esc(x.h)}</b><p>${esc(x.t)}</p>${(x.src || []).map((s) => `<a href="${esc(s.u)}" target="_blank" rel="noopener noreferrer">${esc(s.t)}</a>`).join('')}</li>`).join('')}</ol>
+    <h3 class="tape-h y">前 30 天路線圖</h3>
+    <div class="road">${ROAD30.map(([d, t]) => `<div><b>${esc(d)}</b><span>${esc(t)}</span></div>`).join('')}</div>
     <h3 class="tape-h">平台規則速查 <small>查證於 ${esc(P.checked)}</small></h3>
-    <div class="rules">${rule('th', 'Threads（脆）')}${rule('ig', 'Instagram')}${rule('fb', 'Facebook 粉專')}${rule('yt', 'YouTube 營利門檻')}</div>
+    <div class="rules">${rule('th', 'Threads（脆）')}${opsPfs().includes('ig') ? rule('ig', 'Instagram') : ''}${opsPfs().includes('fb') ? rule('fb', 'Facebook 粉專') : ''}${rule('yt', 'YouTube 營利門檻')}</div>
+    ${later.length ? `<details class="pl-why"><summary>之後才用得到的：${later.map((p) => PFI[p].n).join('、')}</summary><div class="rules" style="margin-top:10px">${later.map((p) => rule(p, PFI[p].full)).join('')}</div></details>` : ''}
     <p class="sub-note">平台規則會改：每週日的懶人包編輯會順手查一次，有變就更新這裡和上架教學。</p>
     <h3 class="tape-h">去哪裡看數據</h3>
-    <div class="howto">${CK_F.map(([k, l, how]) => `<div><b>${esc(l)}</b><span>${esc(how)}</span></div>`).join('')}${OPS_PF.map((p) => `<div><b>${PFI[p].n} 每篇成績</b><span>${esc(STAT_HOW[p])}</span></div>`).join('')}</div>
+    <div class="howto">${ckFields().map(([k, l, how]) => `<div><b>${esc(l)}</b><span>${esc(how)}</span></div>`).join('')}${opsPfs().map((p) => `<div><b>${PFI[p].n} 每篇成績</b><span>${esc(STAT_HOW[p])}</span></div>`).join('')}</div>
     <h3 class="tape-h y">YouTube 上片清單 <small>每次上片照這張檢查</small></h3>
     <ol class="ytc">${YT_CHECK.map(([h, t]) => `<li><b>${esc(h)}</b><span>${esc(t)}</span></li>`).join('')}</ol>
     <div class="endcta"><button class="btn p" data-act="opvidnew">${ICON.film}<span>＋上片三連發</span></button><button class="btn" data-act="askq" data-q="粉專經營問題：" data-ref="" data-ctx="粉專經營">${ICON.radio}<span>粉專問題問 Claude</span></button></div></div>`;
@@ -6996,7 +7284,7 @@ async function renderOpsVid(id) {
 function opsVidFx() { if (fxOn()) $$('.vk').forEach((s, i) => { s.style.setProperty('--i', i); s.classList.add('drop'); }); }
 function vidSheet(v) {
   const d = v ? v.at.slice(0, 10) : addD(todayTW(), 2); const t = v ? v.at.slice(11, 16) : '20:00';
-  openSheet(`<h3>${ICON.film} ${v ? '改影片資料' : '上片三連發'}</h3><p class="sub-note">${v ? '' : '填好之後，前一天預告、當天上片、隔天討論會自動排進三個平台的週曆。'}</p>
+  openSheet(`<h3>${ICON.film} ${v ? '改影片資料' : '上片三連發'}</h3><p class="sub-note">${v ? '' : `填好之後，前一天預告、當天上片、隔天討論會自動排進${thOnly() ? ' Threads 的' : '各平台的'}週曆。`}</p>
     <label class="op-lab">影片標題<input type="text" id="vt" maxlength="120" value="${esc(v ? v.t : '')}" placeholder="例如：11 月必玩新遊戲 TOP 10"></label>
     <div class="op-2"><label class="op-lab">上片日期<input type="date" id="vd" value="${esc(d)}" min="${esc(todayTW())}"></label><label class="op-lab">上片時間<input type="time" id="vh" value="${esc(t)}"></label></div>
     <label class="op-lab">這集在講什麼？（選填）<textarea id="vn" maxlength="400" placeholder="講了哪幾款遊戲、你的結論、想讓觀眾吵什麼">${esc(v ? v.note || '' : '')}</textarea></label>
@@ -7012,9 +7300,14 @@ function vidEmit(v) {
 
 /* ---- 點擊與輸入 ---- */
 async function opsLearnAct(a, act) {
-  if (a === 'opq') { const k = act.dataset.k; if (S.ops.setup[k]) delete S.ops.setup[k]; else { S.ops.setup[k] = todayTW(); sfx.stamp(); impact(act, [RED, YEL, BLK], questDone() >= QUESTS.length); if (questDone() >= QUESTS.length) setTimeout(() => { sfx.fanfare(); toast('開站完成！之後照今日任務發就好'); }, 300); } opsSave(); const y = scrollY; await route(); scrollTo(0, y); return true; }
+  if (a === 'opq') {
+    const k = act.dataset.k; const L = questsNeed();
+    if (S.ops.setup[k]) delete S.ops.setup[k];
+    else { S.ops.setup[k] = todayTW(); const all = questDone(L) >= L.length; sfx.stamp(); impact(act, [RED, YEL, BLK], all); if (all) setTimeout(() => { sfx.fanfare(); toast(thOnly() ? 'Threads 開站完成！之後每天：發一篇、回留言、海巡' : '開站完成！之後照今日任務發就好'); }, 300); }
+    opsSave(); const y = scrollY; await route(); scrollTo(0, y); return true;
+  }
   if (a === 'opcopyx') {
-    const k = act.dataset.k; let text = BIO[k] || (k === 'yt' ? S.ops.prof.yt : '');
+    const k = act.dataset.k; let text = act.dataset.t || BIO[k] || (k === 'yt' ? S.ops.prof.yt : '');
     if (k === 'ytdesc' || k === 'ytpin') { const cl = await vidClaude(vidOf(act.dataset.id)); text = cl && cl.yt ? (k === 'ytdesc' ? cl.yt.desc : cl.yt.pin) : ''; }
     if (text && await copyText(text)) { sfx.stamp(); burstAt(act, [YEL, PINK], 12, 7); toast('已複製'); } else toast('沒有東西可以複製', 'warn');
     return true;
@@ -7048,6 +7341,162 @@ function opsLearnInput(t) {
   if (a === 'opvurl') { const v = vidOf(t.dataset.id); if (v) { v.url = t.value.trim().slice(0, 200); opsSave(); } return true; }
   return false;
 }
+
+/* ---- opsth.js ---- */
+/* 解包 — 粉專作戰台・Threads 優先（2026-11-19）
+   痞子葳從零開始經營粉專：先只顧 Threads（台灣聊遊戲最熱的地方），IG、FB 等 Threads 穩定再開（教學頁的第二、三階段）。
+   這一檔：每日三件事（發文、回留言、海巡）、加碼的限免快訊（free.json 的即時資料直接排成貼文）、推坑的 Threads 稿與圖卡、
+   平台階段切換。上架流程、排程在 ops.js，教學在 opslearn.js，成效在 opsstats.js。 */
+const STORE_N = { epic: 'Epic', steam: 'Steam', gog: 'GOG' };
+
+/* ---- 限免快訊 ---- */
+const freeOf = (id) => ((S.free && S.free.items) || []).find((x) => x.id === id) || null;
+/* 現在就能領的（已經開始、至少還有 30 分鐘才結束；不含下週預告、神秘遊戲、DLC） */
+function freeNow() {
+  const now = Date.now();
+  return ((S.free && S.free.items) || []).filter((x) => x.title && !x.up && !x.mystery && !x.dlc && (!x.start || Date.parse(x.start) <= now) && (!x.end || Date.parse(x.end) > now + 30 * 6e4))
+    .sort((a, b) => (Date.parse(a.end || '2999-01-01') - Date.parse(b.end || '2999-01-01')));
+}
+/* 結束時間換成台灣時間：11/20（四）00:00 */
+function freeEndTW(x) {
+  if (!x.end) return '';
+  const t = new Date(Date.parse(x.end) + 8 * 3600e3);
+  return `${t.getUTCMonth() + 1}/${t.getUTCDate()}（${WK[t.getUTCDay()]}）${String(t.getUTCHours()).padStart(2, '0')}:${String(t.getUTCMinutes()).padStart(2, '0')}`;
+}
+const freeOrig = (x) => x.orig_t || (x.orig ? fmtNT(x.orig) : '');
+const freeZh = (z) => (z === 'tc' ? '有繁體中文' : z === 'sc' ? '只有簡體中文' : z === 'none' ? '沒有中文' : '');
+/* 貼文：數字全部來自 free.json（GitHub Actions 每小時抓 Epic、Steam、GOG），沒有的那一行就不寫 */
+function freeTpl(x) {
+  const st = STORE_N[x.store] || x.store; const end = freeEndTW(x); const orig = freeOrig(x); const zh = freeZh(x.zh);
+  const facts = [
+    x.rv && x.rv[0] != null ? `・Steam 評價：${x.rv[0]}% 好評（${Number(x.rv[1] || 0).toLocaleString('zh-TW')} 則）` : '',
+    zh ? `・中文：${zh}` : '',
+    (x.tags || []).length ? `・類型：${x.tags.slice(0, 3).join('、')}` : '',
+  ].filter(Boolean);
+  const head = `${st} 限時免費：《${x.title}》${orig ? `原價 ${orig}，` : ''}現在免費領`;
+  const when = end ? `領取期限：${end} 前（台灣時間），領了就永久留在帳號裡` : '領了就永久留在帳號裡（期限以商店頁為準）';
+  const ask = '領了沒？你會馬上開來玩，還是先收進庫存？';
+  const threads = [head, when, facts.join('\n'), ask].filter(Boolean).join('\n\n');
+  const post = [head, when, facts.join('\n'), `到 ${st} 商店頁搜尋遊戲名稱就能領；領之前記得先登入帳號。`, ask].filter(Boolean).join('\n\n');
+  const tags = ['#限時免費', '#免費遊戲', '#' + st, ...(x.store === 'epic' ? ['#Epic喜加一'] : []), BRAND_TAG];
+  return { threads, post, topic: '免費遊戲', tags: [...new Set(tags)] };
+}
+/* 圖卡：限免專用（黃牆撕紙框＋限免章） */
+function freeCardF(x) {
+  const st = STORE_N[x.store] || x.store; const zh = freeZh(x.zh);
+  const pts = [
+    x.end ? { h: '領取期限', t: freeEndTW(x) + ' 前' } : null,
+    x.rv && x.rv[0] != null ? { h: 'Steam 評價', t: `${x.rv[0]}% 好評（${Number(x.rv[1] || 0).toLocaleString('zh-TW')} 則）` } : null,
+    zh ? { h: '中文', t: zh } : null,
+  ].filter(Boolean);
+  return {
+    id: 'x-' + hashStr(x.id), game: { zh: x.title, en: (st + ' FREE').toUpperCase(), steam: x.appid || null },
+    verdict: { stamp: '限免', label: '領了就是你的' }, media: { yt: [], images: x.img ? [x.img] : [] },
+    fanpage: { credit: `圖片來源：${st} 商店頁`, card: { kicker: `${st} 限時免費`, title: titleLines(x.title), sub: freeOrig(x) ? `原價 ${freeOrig(x)}・現在 0 元` : '現在 0 元領', tags: (x.tags || []).slice(0, 3).map((t) => t.slice(0, 6)), points: pts, image: x.img || '' } },
+  };
+}
+
+/* ---- 推坑 ---- */
+/* 推坑排程沒寫 fanpage 時（2026-11-19 以前的推坑）：照推坑內容排成 Threads 稿＋一則串文延伸 */
+function pickThreadsAuto(p) {
+  const g = p.game || {}; const rs = (p.reasons || []).slice(0, 3);
+  const zh = p.zh && (p.zh.ui || p.zh.sub) ? '有繁體中文' : '';
+  const hook = `${p.stamp ? `【${p.stamp}】` : ''}《${g.zh}》${p.label ? `：${p.label}` : ''}`;
+  const facts = [g.year ? `・${g.year} 年上市，${(g.genres || []).slice(0, 2).join('、')}` : '', p.time && p.time.text ? `・遊玩時間：${p.time.text}` : '', zh ? `・中文：${zh}` : ''].filter(Boolean);
+  const ask = (p.talk && p.talk[0] && p.talk[0].q) || '玩過的說說：你卡最久的是哪裡？';
+  const post = [hook, p.pitch, facts.join('\n'), ask].filter(Boolean).join('\n\n');
+  const more = rs.length ? [`為什麼推它：\n${rs.map((r) => `・${r.h}：${r.t}`).join('\n')}`] : [];
+  return { post, topic: '遊戲推薦', more };
+}
+function pickTagsAuto(p) {
+  const g = p.game || {}; const name = '#' + String(g.zh || g.en || '').replace(/[\s#：:・,，、!！?？'’.。-]/g, '');
+  const gen = (g.genres || []).slice(0, 2).map((x) => '#' + String(x).replace(/[\s#／/]/g, ''));
+  return [...new Set([name, ...gen, '#遊戲推薦', BRAND_TAG])].filter((t) => t.length > 1);
+}
+/* 圖卡：推坑寫了 fanpage.card 就用，沒有就照推坑理由排三張紙條 */
+function pickCardF(p) {
+  const g = p.game || {}; const fp = p.fanpage || {}; const cd = fp.card || {};
+  return {
+    id: 'p-' + p.id, game: { zh: g.zh, en: g.en || g.zh, steam: g.steam || null }, media: p.media || { yt: [], images: [] },
+    verdict: { stamp: p.stamp || '推坑', label: (p.label || '').length <= 9 ? p.label || '' : '' },
+    fanpage: {
+      credit: fp.credit || `圖片來源：${g.zh} 官方商店頁與預告`,
+      card: {
+        kicker: cd.kicker || `私房推坑｜${g.year || ''} 年作品`.replace('｜ 年作品', ''),
+        title: cd.title || titleLines(g.zh),
+        sub: cd.sub || (p.label || p.pitch || '').slice(0, 18),
+        tags: cd.tags || (g.genres || []).slice(0, 3).map((t) => String(t).slice(0, 6)),
+        points: cd.points || (p.reasons || []).slice(0, 3).map((r) => ({ h: String(r.h).slice(0, 8), t: r.t })),
+        image: cd.image || '',
+      },
+    },
+  };
+}
+
+/* ---- 每日三件事（只顧 Threads 時，今日任務最上面） ---- */
+const DQ = [
+  { k: 'post', t: '發今天這一篇', s: '照今日任務發；按「發好了」會自動打勾' },
+  { k: 'reply', t: '回完每一則留言', s: '發文後一小時內最重要' },
+  { k: 'patrol', t: '海巡 10 分鐘', s: '到 3～5 篇別人的遊戲串文留有內容的留言' },
+];
+const dqPosted = (d) => S.ops.log.some((l) => l.d === d && l.pf === 'th');
+const dqOn = (d, k) => (k === 'post' && dqPosted(d)) || !!((S.ops.dq[d] || {})[k]);
+const dqAll = (d) => DQ.every((q) => dqOn(d, q.k));
+function dqStreak() { let d = todayTW(); if (!dqAll(d)) d = addD(d, -1); let n = 0; while (dqAll(d) && n < 400) { n++; d = addD(d, -1); } return n; }
+function dqHtml() {
+  if (!thOnly()) return '';
+  const d = todayTW(); const n = DQ.filter((q) => dqOn(d, q.k)).length; const st = dqStreak();
+  return `<section class="dq ${n === DQ.length ? 'all' : ''}"><div class="dq-h"><b>每日三件事</b><span>${n === DQ.length ? '今天全勤！' : `${n}／${DQ.length}`}</span>${st ? `<em>全勤 ${st} 天</em>` : ''}</div>
+    <div class="dq-l">${DQ.map((q, i) => `<button class="dq-i ${dqOn(d, q.k) ? 'on' : ''}" data-act="opdq" data-k="${q.k}" style="--i:${i}"><i>${dqOn(d, q.k) ? '✓' : i + 1}</i><b>${esc(q.t)}</b><small>${esc(q.s)}</small></button>`).join('')}</div></section>`;
+}
+
+/* ---- 加碼：限免快訊（今天就能發，不佔固定時段） ---- */
+function extraHtml() {
+  const posted = new Set(S.ops.log.map((l) => l.ref));
+  const L = freeNow().filter((x) => !posted.has('x:' + x.id)).slice(0, 3);
+  if (!L.length) return '';
+  const pf = opsPfs()[0];
+  const card = (x) => {
+    const ms = x.end ? Date.parse(x.end) - Date.now() : null; const h = ms != null ? Math.floor(ms / 3600e3) : null;
+    const left = h == null ? '' : h < 24 ? `剩 ${Math.max(1, h)} 小時` : `剩 ${Math.floor(h / 24)} 天`;
+    const go = 'fan/~do:' + encodeURIComponent('x:' + x.id) + '|' + pf;
+    return `<article class="msn xtra" style="--rot:${rot(x.id, 2, 0.8)}deg"><div class="m-pf"><span class="kchip k-x">限免</span><b class="xs">${esc(STORE_N[x.store] || x.store)}</b>${h != null && h < 24 ? '<em class="hot">快結束</em>' : ''}<span class="m-st">${esc(left)}</span></div>
+      <div class="m-c" data-go="${go}"><div class="m-img" ${x.img ? `style="background-image:url('${esc(x.img)}')"` : ''}></div><div class="m-t"><h4>${esc(x.title)}</h4><p>${esc(x.end ? `領到 ${freeEndTW(x)}・` : '')}${esc(freeOrig(x) ? '原價 ' + freeOrig(x) : '免費領')}</p></div></div>
+      <div class="m-b"><button class="btn p" data-go="${go}">${ICON.mega}<span>發限免快訊</span></button></div></article>`;
+  };
+  return `<h3 class="tape-h p">加碼・限免快訊 <small>領完就沒了，越早發越好</small></h3><p class="sub-note">不佔今天的時段：大家最愛收藏、轉傳的就是這種「現在就能拿」的情報。文字照 App 每小時抓的商店資料排好，發之前看一眼。</p><div class="msns">${L.map(card).join('')}</div>`;
+}
+
+/* ---- 平台階段 ---- */
+function opsModeNote() {
+  if (S.ops.mode === 'all') return '';
+  return `<div class="mnote" data-go="fan/~learn"><b>${thOnly() ? '現在只排 Threads' : '現在排 Threads 和 IG'}</b><span>${thOnly() ? 'IG、FB 等 Threads 穩定再開：到「教學」開第二、三階段，排程會自動加上去。' : 'FB 粉專等 IG 也穩定再開：到「教學」開第三階段。'}</span><em>教學 ›</em></div>`;
+}
+async function opsThAct(a, act) {
+  if (a === 'opdq') {
+    const d = todayTW(); const k = act.dataset.k; const o = S.ops.dq[d] = Object.assign({}, S.ops.dq[d]);
+    if (k === 'post' && dqPosted(d)) { toast('今天已經發過了，這一格會自己打勾'); return true; }
+    if (o[k]) delete o[k]; else { o[k] = 1; sfx.stamp(); haptic(20); burstAt(act, [YEL, PINK, BLK], 14, 8); }
+    const lim = addD(d, -60); for (const x of Object.keys(S.ops.dq)) if (x < lim) delete S.ops.dq[x];
+    opsSave();
+    if (dqAll(d) && o[k]) setTimeout(() => { sfx.fanfare(); toast(`今天三件事都做到了！全勤 ${dqStreak()} 天`); if (fxOn()) burst(innerWidth / 2, innerHeight / 3, [PINK, YEL, BLK], 40, 14); }, 180);
+    const box = act.closest('.dq'); if (box) box.outerHTML = dqHtml();
+    return true;
+  }
+  if (a === 'opmode') {
+    const v = act.dataset.v; if (!OPS_MODES[v] || v === S.ops.mode) return true;
+    S.ops.mode = v; opsSave(); sfx.slap(); haptic(20);
+    toast(v === 'th' ? '改成只顧 Threads：今日任務、排程、成效只算 Threads' : v === 'thig' ? '第二階段開啟：之後 IG 會跟 Threads 排在一起' : '第三階段開啟：三個平台一起排');
+    setTabs('fan'); const y = scrollY; await route(); scrollTo(0, y); return true;
+  }
+  return false;
+}
+/* 「帶到 Threads」是一般連結（讓手機用 App 打開），點下去只補音效、把那一步打勾 */
+document.addEventListener('click', (ev) => {
+  const a = ev.target.closest('a.thgo'); if (!a) return;
+  sfx.ding(); haptic(15);
+  const st = a.closest('.step'); if (st && !st.classList.contains('ok')) { const b = st.querySelector('[data-act="opstep"]'); if (b) { OPS.steps.add(b.dataset.key); st.classList.add('ok'); } }
+});
 
 /* ---- vs.js ---- */
 /* 解包 — 2026/11/18 超級大更新：開場「今日頭條」連拍、VS 擂台（兩款遊戲正面對決＋粉專二選一圖卡）

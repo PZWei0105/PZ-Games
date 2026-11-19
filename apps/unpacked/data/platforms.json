@@ -1,24 +1,38 @@
 {
  "v": 1,
- "checked": "2026-11-18",
- "by": "粉專作戰台上線時查證（之後由每週懶人包排程每週查一次，有變才改）",
+ "checked": "2026-11-19",
+ "by": "粉專改成 Threads 優先時查證（2026-11-19；之後由每週懶人包排程每週查一次，有變才改）",
  "th": {
   "name": "Threads",
   "chars": 500,
   "attach": 10000,
   "topics": 1,
   "links": 5,
+  "edit_min": 15,
+  "bio": 150,
+  "bio_links": 5,
   "notes": [
-   "一篇最多 500 字；更長的拆成串文，或用「文字附件」（最多 1 萬字）",
-   "主題標籤每篇只能 1 個：點 # 或打「#」再選，發出去不會顯示 # 號",
-   "內建排程：發文畫面右上「…」→「排程」",
-   "貼文裡的連結可以直接點"
+   "一篇最多 500 字；更長的拆成串文（輸入框下面的「新增到串文」），或用「文字附件」（最多 1 萬字）",
+   "主題標籤每篇只能 1 個：點 # 或打「#」再選，發出去不會顯示 # 號；標籤旁邊有「⋯」的是社群（Communities），選它貼文會一起出現在社群裡",
+   "發出去 15 分鐘內可以改字（串文右上「⋯」→「編輯」），超過就只能刪掉重發",
+   "內建排程：發文畫面右上「⋯」→「排程」",
+   "貼文裡的連結可以直接點；Meta 說 2025 年中起帶連結的串文正常排序、不會被刻意壓低，但點連結的人本來就少，重點要寫在文字裡",
+   "個人檔案：簡介最多 150 字、連結最多 5 個；串文右上「⋯」可以「置頂到個人檔案」",
+   "洞察報告在個人檔案：看瀏覽、互動、粉絲變化；粉絲輪廓這類數據要滿 100 位粉絲才看得到",
+   "「帶到 Threads」用的是 Meta 官方的網頁意圖連結（text、tag 參數）：手機有裝 Threads 會直接打開發文畫面"
   ],
   "src": [
    {"t": "Meta 的 Threads API 說明（整理）：500 字、5 個連結、1 個主題標籤", "u": "https://skedsocial.com/blog/schedule-threads-posts.md"},
    {"t": "Threads 推出文字附件，可附最多 1 萬字長文（9to5Mac）", "u": "https://9to5mac.com/?p=1016173"},
    {"t": "Threads 主題標籤：每篇一個、不顯示 # 號（Engadget）", "u": "https://www.engadget.com/metas-threads-is-getting-searchable-topics-just-dont-call-them-hashtags-191915209.html"},
-   {"t": "Threads 排程貼文怎麼用（電腦王阿達）", "u": "https://koc.com.tw/?p=584184"}
+   {"t": "Threads 排程貼文怎麼用（電腦王阿達）", "u": "https://koc.com.tw/?p=584184"},
+   {"t": "Instagram 官方：Threads 使用技巧（發文後 15 分鐘內可編輯）", "u": "https://about.instagram.com/blog/tips-and-tricks/instagram-threads-tips/"},
+   {"t": "Meta：Threads 社群（Communities）介紹", "u": "https://about.fb.com/news/2025/10/introducing-threads-communities-find-your-people"},
+   {"t": "Social Media Today：Threads 社群開放給所有人（標籤旁的「⋯」代表有社群）", "u": "https://www.socialmediatoday.com/news/threads-rolls-out-communities-all-users/801861/"},
+   {"t": "Social Media Today：Meta 表示 Threads 的連結貼文已經正常排序", "u": "https://www.socialmediatoday.com/news/meta-says-link-posts-ranked-properly-threads-reach/750126/"},
+   {"t": "Net Influencer：Threads 個人檔案可放 5 個連結", "u": "https://www.netinfluencer.com/threads-tests-instagram-free-sign-up-option-for-eu-users/"},
+   {"t": "Sendible：Threads 洞察報告看得到哪些數據（2026，含 100 粉絲門檻）", "u": "https://www.sendible.com/insights/threads-insights"},
+   {"t": "Meta for Developers：Threads 網頁意圖連結（Web Intents）", "u": "https://developers.facebook.com/documentation/threads/threads-web-intents"}
   ]
  },
  "ig": {

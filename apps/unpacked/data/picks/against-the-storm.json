@@ -193,6 +193,47 @@
   ],
   "images": []
  },
+ "fanpage": {
+  "threads": {
+   "post": "城市營造最怕「蓋膩了」。這款的解法是：每一局的建築藍圖都是隨機抽的。\n\n《Against the Storm》是波蘭 Eremite Games 的 Roguelite 城市營造：在暴雨裡蓋村子、照顧五個種族的胃口，一座聚落大約兩小時，可暫停、可加速。\n\n・Metacritic 91、OpenCritic 89，PC Gamer 給 91 分\n・中文：繁中介面與字幕\n・輸了也會帶資源回去升級主城，不會白玩\n・PC、PS、Xbox、Switch 都有，只有單人\n\n沒有萬用公式，每座城都得照手上的牌現想生產鏈。\n\n隨機藍圖，你覺得是增加挑戰，還是讓運氣決定輸贏？",
+   "topic": "模擬經營",
+   "more": [
+    "適合誰：\n・喜歡模擬經營，但玩膩了「照公式蓋」的人\n・想要一次一兩個小時就有完整成就感的人\n・喜歡「這局爛牌也要打贏」那種臨場決策的人\n\n要先知道的：前幾局資訊量大到會被淹沒，介面數字很多；主機版用手把操作比較彆扭，建議電腦玩。\n\n買法：先買本體就夠玩很久，喜歡再補兩部資料片（新種族青蛙人、蝙蝠人）；有 PC Game Pass 也可以先在那邊試。"
+   ]
+  },
+  "tags": [
+   "#AgainstTheStorm",
+   "#城市營造",
+   "#Roguelite",
+   "#模擬經營",
+   "#遊戲狂想曲"
+  ],
+  "card": {
+   "kicker": "私房推坑｜2023 年正式版",
+   "title": "Against\nthe Storm",
+   "sub": "一局兩小時的城市營造",
+   "tags": [
+    "城市營造",
+    "Roguelite",
+    "有繁中"
+   ],
+   "points": [
+    {
+     "h": "藍圖隨機",
+     "t": "沒有萬用公式，每局現想。"
+    },
+    {
+     "h": "一局兩小時",
+     "t": "可暫停、可加速，輸了也有進度。"
+    },
+    {
+     "h": "評價 91 分",
+     "t": "Metacritic 91、PC Gamer 91。"
+    }
+   ]
+  },
+  "credit": "圖片／影片來源：Against the Storm 官方商店頁與預告"
+ },
  "sources": [
   {"t": "Steam 商店頁：Against the Storm（語言、單人、系統需求、資料片）", "u": "https://store.steampowered.com/app/1336490/Against_the_Storm/", "d": ""},
   {"t": "PC Gamer：Against the Storm 評測（91 分）", "u": "https://www.pcgamer.com/against-the-storm-review/", "d": "2023-12-19"},

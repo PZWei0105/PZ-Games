@@ -12,6 +12,8 @@ const CK_F = [
   ['rfb', '從 FB 來的觀看', '同上，找 Facebook 那一列（沒有就填 0）'],
   ['yth', '公開觀看時數（近一年）', 'YouTube 工作室 →「營利」（賺取收益）頁的資格進度：公開觀看時數。選填'],
 ];
+/* 這個階段要回填的欄位：只顧 Threads 時不用填 IG、FB 的 */
+const ckFields = () => { const on = opsPfs(); return CK_F.filter(([k]) => !['th', 'ig', 'fb'].includes(k.replace(/^r/, '')) || on.includes(k.replace(/^r/, ''))); };
 /* 回填的是哪一週：週日晚上、週一、週二回填剛結束（或快結束）的那一週 */
 function ckWeekId() { const t = todayTW(); const wd = wdNum(t); return isoWeekOf(wd === 1 || wd === 2 ? addD(t, -3) : t).id; }
 const wkList = () => Object.keys(S.ops.wk || {}).sort();
@@ -23,14 +25,14 @@ function opsCheckinBanner() {
   const t = todayTW(); const wd = wdNum(t); const id = ckWeekId();
   if (S.ops.wk[id] || !S.ops.log.length) return '';
   if (!((wd === 0 && nowHM() >= '20:00') || wd === 1 || wd === 2)) return '';
-  return `<div class="ck-ban" data-go="fan/~stats"><b>WEEK ${wkNo(id)} 週結算</b><span>花 1 分鐘回填三平台粉絲和 YouTube 外部流量，看哪個平台真的帶來觀看</span><em>去回填 ›</em></div>`;
+  return `<div class="ck-ban" data-go="fan/~stats"><b>WEEK ${wkNo(id)} 週結算</b><span>${thOnly() ? '花 1 分鐘回填 Threads 粉絲和 YouTube 外部流量，看 Threads 帶了多少人去看影片' : '花 1 分鐘回填各平台粉絲和 YouTube 外部流量，看哪個平台真的帶來觀看'}</span><em>去回填 ›</em></div>`;
 }
 function opsNeedStats() {
   const now = Date.now(); const lim = addD(todayTW(), -7);
   return S.ops.log.filter((l) => !l.s && l.d >= lim && now - Date.parse(l.at) >= 20 * 3600e3).slice(-6).reverse();
 }
 const STAT_HOW = {
-  th: '那則串文下方的瀏覽次數（或個人檔案 →「洞察報告」）',
+  th: '那則串文下方的瀏覽次數（點進去看得到從粉絲、非粉絲來的各多少）；整個帳號看個人檔案右上的「洞察報告」',
   ig: '那篇貼文下方「查看洞察報告」：觸及帳號、互動',
   fb: '那篇貼文下方「查看洞察報告」：觸及人數、互動',
 };
@@ -51,18 +53,19 @@ function renderOpsStats() {
   const id = ckWeekId(); const cur = S.ops.wk[id] || {};
   const prevId = ids.filter((x) => x < id).pop(); const prev = prevId ? S.ops.wk[prevId] : null;
   const P = plat();
-  return `<div class="ops stats">${opsNav('stats')}${opsHead('成效', '粉專是幫 YouTube 帶人的：這裡算給你看，哪個平台真的把人帶到頻道。')}
+  const F = ckFields();
+  return `<div class="ops stats">${opsNav('stats')}${opsHead('成效', thOnly() ? '粉專是幫 YouTube 帶人的：這裡算給你看，Threads 帶了多少人去看你的影片。' : '粉專是幫 YouTube 帶人的：這裡算給你看，哪個平台真的把人帶到頻道。')}
     ${funnelHtml(last, ids.length > 1 ? S.ops.wk[ids[ids.length - 2]] : null)}
-    <section class="ck ${S.ops.wk[id] ? 'done' : ''}"><div class="ck-h"><span class="wk-no sm">WEEK<b>${wkNo(id)}</b></span><div><b>週結算回填</b><small>${S.ops.wk[id] ? '這週填過了，數字可以再改' : '每週日晚上或週一，從各平台後台抄 9 個數字（大約 1 分鐘）'}</small></div></div>
-      <div class="ck-grid">${CK_F.map(([k, l, how]) => `<label class="ck-f ${k.startsWith('r') ? 'ref' : ''}"><span>${k.length === 2 && OPS_PF.includes(k) ? pfBadge(k) : k.startsWith('r') ? pfBadge(k.slice(1)) : ''}${esc(l)}</span><input type="number" inputmode="numeric" min="0" step="any" data-ck="${k}" value="${cur[k] ?? ''}" placeholder="${prev && prev[k] != null ? '上次 ' + prev[k] : ''}"><details><summary>在哪看？</summary><p>${esc(how)}</p></details></label>`).join('')}</div>
+    <section class="ck ${S.ops.wk[id] ? 'done' : ''}"><div class="ck-h"><span class="wk-no sm">WEEK<b>${wkNo(id)}</b></span><div><b>週結算回填</b><small>${S.ops.wk[id] ? '這週填過了，數字可以再改' : `每週日晚上或週一，從後台抄 ${F.length} 個數字（大約 1 分鐘）`}</small></div></div>
+      <div class="ck-grid">${F.map(([k, l, how]) => `<label class="ck-f ${k.startsWith('r') ? 'ref' : ''}"><span>${k.length === 2 && OPS_PF.includes(k) ? pfBadge(k) : k.startsWith('r') ? pfBadge(k.slice(1)) : ''}${esc(l)}</span><input type="number" inputmode="numeric" min="0" step="any" data-ck="${k}" value="${cur[k] ?? ''}" placeholder="${prev && prev[k] != null ? '上次 ' + prev[k] : ''}"><details><summary>在哪看？</summary><p>${esc(how)}</p></details></label>`).join('')}</div>
       <div class="btnrow"><button class="btn p" data-act="opck" data-w="${esc(id)}">${ICON.trophy}<span>結算這一週</span></button></div></section>
-    ${ids.length ? `<h3 class="tape-h">誰帶人去 YouTube</h3>${refBars(ids)}` : ''}
-    ${ids.length > 1 ? `<h3 class="tape-h">粉絲成長</h3><div class="lcs">${lineChart(ids, OPS_PF.map((p) => ({ k: p, name: PFI[p].n, c: PFI[p].c })), '三平台粉絲')}${lineChart(ids, [{ k: 'yt', name: 'YouTube 訂閱', c: '#FFE600' }], 'YouTube 訂閱')}</div>` : ''}
+    ${ids.length ? `<h3 class="tape-h">${thOnly() ? 'Threads 帶了多少人去 YouTube' : '誰帶人去 YouTube'}</h3>${refBars(ids)}` : ''}
+    ${ids.length > 1 ? `<h3 class="tape-h">粉絲成長</h3><div class="lcs">${lineChart(ids, opsPfs().map((p) => ({ k: p, name: PFI[p].n, c: PFI[p].c })), thOnly() ? 'Threads 粉絲' : '各平台粉絲')}${lineChart(ids, [{ k: 'yt', name: 'YouTube 訂閱', c: '#FFE600' }], 'YouTube 訂閱')}</div>` : ''}
     <h3 class="tape-h y">營利門檻進度</h3>${yppHtml(last)}
     <h3 class="tape-h">黃金時段 <small>照你自己的成績算</small></h3>${heatHtml()}
     <h3 class="tape-h p">教練建議</h3><ul class="coach">${opsCoach().map((x) => `<li class="${x[0]}"><b>${esc(x[1])}</b>${esc(x[2])}</li>`).join('')}</ul>
     <h3 class="tape-h">發文紀錄 <small>${S.ops.log.length} 篇</small></h3>
-    <div class="fbq"><span>${pfBadge('fb')} 本月帶連結 <b>${fbLinksUsed()}</b>／${P.fb.link_free}</span><span class="seg">${[['unknown', '不知道有沒有限制'], ['yes', '我的粉專有限制'], ['no', '沒有限制']].map(([v, l]) => `<button class="${S.ops.fbLimit === v ? 'on' : ''}" data-act="opfbl" data-v="${v}">${l}</button>`).join('')}</span></div>
+    ${opsPfs().includes('fb') ? `<div class="fbq"><span>${pfBadge('fb')} 本月帶連結 <b>${fbLinksUsed()}</b>／${P.fb.link_free}</span><span class="seg">${[['unknown', '不知道有沒有限制'], ['yes', '我的粉專有限制'], ['no', '沒有限制']].map(([v, l]) => `<button class="${S.ops.fbLimit === v ? 'on' : ''}" data-act="opfbl" data-v="${v}">${l}</button>`).join('')}</span></div>` : ''}
     <div class="srows">${S.ops.log.slice(-20).reverse().map((l) => opsStatRow(l)).join('') || '<div class="empty">還沒有發文紀錄：到「今日」照任務發第一篇吧。</div>'}</div>
     <h3 class="tape-h">備份 <small>換手機、清快取前先備份</small></h3>
     <p class="sub-note">發文紀錄、排程、成效數字只存在這台裝置。備份碼可以貼回任何一台的《解包》。</p>
@@ -70,12 +73,13 @@ function renderOpsStats() {
 }
 function wkDelta(a, b, k) { return a && b && a[k] != null && b[k] != null ? a[k] - b[k] : null; }
 function funnelHtml(last, prev) {
-  if (!last) return `<section class="fun empty-f"><div class="fun-t">導流漏斗</div><p>回填第一週之後，這裡會變成：三平台粉絲 → 帶到 YouTube 的觀看 → 新訂閱。</p></section>`;
-  const fans = OPS_PF.reduce((a, p) => a + (+last[p] || 0), 0); const ref = (+last.rth || 0) + (+last.rig || 0) + (+last.rfb || 0);
-  const d = wkDelta(last, prev, 'yt'); const df = prev ? fans - OPS_PF.reduce((a, p) => a + (+prev[p] || 0), 0) : null;
+  const PF = opsPfs(); const fl = thOnly() ? 'Threads 粉絲' : PF.length === 2 ? 'Threads＋IG 粉絲' : '三平台粉絲';
+  if (!last) return `<section class="fun empty-f"><div class="fun-t">導流漏斗</div><p>回填第一週之後，這裡會變成：${fl} → 帶到 YouTube 的觀看 → 新訂閱。</p></section>`;
+  const fans = PF.reduce((a, p) => a + (+last[p] || 0), 0); const ref = PF.reduce((a, p) => a + (+last['r' + p] || 0), 0);
+  const d = wkDelta(last, prev, 'yt'); const df = prev ? fans - PF.reduce((a, p) => a + (+prev[p] || 0), 0) : null;
   const sg = (x) => (x == null ? '' : `<em class="${x >= 0 ? 'up' : 'dn'}">${x >= 0 ? '+' : ''}${fmtI(x)}</em>`);
   return `<section class="fun"><div class="fun-t">導流漏斗 <small>${esc(wkList().slice(-1)[0] || '')}</small></div>
-    <div class="fun-s s1"><span>三平台粉絲</span><b class="cu" data-n="${fans}" data-f="i">${fmtI(fans)}</b>${sg(df)}</div><i class="fun-a">▼</i>
+    <div class="fun-s s1"><span>${fl}</span><b class="cu" data-n="${fans}" data-f="i">${fmtI(fans)}</b>${sg(df)}</div><i class="fun-a">▼</i>
     <div class="fun-s s2"><span>帶到 YouTube 的觀看（近 7 天）</span><b class="cu" data-n="${ref}" data-f="i">${fmtI(ref)}</b></div><i class="fun-a">▼</i>
     <div class="fun-s s3"><span>YouTube 訂閱</span><b class="cu" data-n="${+last.yt || 0}" data-f="i">${fmtI(last.yt)}</b>${sg(d)}</div></section>`;
 }
@@ -84,7 +88,7 @@ function refBars(ids) {
   const lastId = ids[ids.length - 1]; const L = S.ops.wk[lastId]; const four = ids.slice(-4);
   const tot = (p) => four.reduce((a, w) => a + (+S.ops.wk[w]['r' + p] || 0), 0);
   const posts = (p) => S.ops.log.filter((l) => l.pf === p && four.some((w) => isoWeekOf(l.d).id === w)).length;
-  const rows = OPS_PF.map((p) => ({ p, v: +L['r' + p] || 0, t: tot(p), n: posts(p) }));
+  const rows = opsPfs().map((p) => ({ p, v: +L['r' + p] || 0, t: tot(p), n: posts(p) }));
   const mx = Math.max(1, ...rows.map((r) => r.t));
   return `<div class="bars" role="table" aria-label="從各平台來的 YouTube 觀看">${rows.map((r) => `<div class="bar-r" role="row" data-tip="${esc(`${PFI[r.p].n}：最近一週 ${fmtI(r.v)}、近 ${four.length} 週 ${fmtI(r.t)} 次觀看；同期間發了 ${r.n} 篇${r.n ? `，平均每篇帶 ${(r.t / r.n).toFixed(1)} 次` : ''}`)}">
       <span class="bar-l">${pfBadge(r.p)}</span><span class="bar-t"><i style="--w:${(r.t / mx).toFixed(3)};--c:${PFI[r.p].c}"></i></span><span class="bar-v"><b>${fmtI(r.t)}</b><small>${r.n ? (r.t / r.n).toFixed(1) + '／篇' : '—'}</small></span></div>`).join('')}
@@ -150,31 +154,38 @@ function heatHtml() {
     ${n < 8 ? `<div class="hm-few">還需要 ${8 - n} 篇有回填成績的貼文，才看得出黃金時段</div>` : '<p class="bar-n">格子越亮＝平均觀看越高，數字是篇數。點格子看細節。</p>'}</div>`;
 }
 function opsCoach() {
-  const out = []; const ids = wkList(); const P = plat();
-  if (!S.ops.log.length) out.push(['go', '先發第一篇', '到「今日」照任務發。第一週先求每天發，不求完美。']);
+  const out = []; const ids = wkList(); const P = plat(); const PF = opsPfs();
+  const last = ids.length ? S.ops.wk[ids[ids.length - 1]] : null;
+  if (!S.ops.log.length) out.push(['go', '先發第一篇', thOnly() ? '到「今日」照任務發。第一週先求每天都有發、每則留言都回，不求完美。' : '到「今日」照任務發。第一週先求每天發，不求完美。']);
   if (!ids.length) out.push(['info', '每週回填一次', '週日晚上或週一花 1 分鐘回填，第二週開始就能比較成長和導流。']);
   const four = ids.slice(-4);
   if (four.length) {
-    const tot = OPS_PF.map((p) => [p, four.reduce((a, w) => a + (+S.ops.wk[w]['r' + p] || 0), 0)]); const R = tot.reduce((a, x) => a + x[1], 0);
-    if (!R) out.push(['info', '還看不到社群導流', '剛起步很正常：社群先養熟，再搭上片三連發把人帶過去。上片那天一定要發。']);
-    else {
+    const tot = PF.map((p) => [p, four.reduce((a, w) => a + (+S.ops.wk[w]['r' + p] || 0), 0)]); const R = tot.reduce((a, x) => a + x[1], 0);
+    if (!R) out.push(['info', '還看不到社群導流', '剛起步很正常：先把 Threads 的人養熟，再搭上片三連發把人帶過去。上片那天一定要發。']);
+    else if (PF.length > 1) {
       tot.sort((a, b) => b[1] - a[1]); const [tp, tv] = tot[0];
       out.push(['good', `${PFI[tp].n} 帶來 ${Math.round((tv / R) * 100)}% 的社群導流`, `近 ${four.length} 週從社群來的 YouTube 觀看大多來自這裡，維持它的發文頻率。`]);
       for (const [p, v] of tot.slice(1)) {
         const posts = S.ops.log.filter((l) => l.pf === p && four.some((w) => isoWeekOf(l.d).id === w)).length;
         if (posts >= 6 && v === 0) out.push(['warn', `${PFI[p].n} 發了 ${posts} 篇還沒帶來觀看`, `可以降成一週 2 篇，把時間挪給 ${PFI[tp].n}；上片三連發照發。`]);
       }
-    }
+    } else out.push(['good', `Threads 近 ${four.length} 週帶了 ${fmtI(R)} 次 YouTube 觀看`, '這就是粉專存在的意義：上片那幾天的三連發通常帶最多，記得每支新片都排。']);
   }
   if (ids.length >= 2) {
     const a = S.ops.wk[ids[ids.length - 2]], b = S.ops.wk[ids[ids.length - 1]];
-    const g = OPS_PF.map((p) => [p, (+b[p] || 0) - (+a[p] || 0)]).sort((x, y) => y[1] - x[1]);
-    if (g[0][1] > 0) out.push(['good', `這週 ${PFI[g[0][0]].n} 粉絲 +${g[0][1]} 最多`, '回頭看看這週在那邊發了什麼，下週多發同類型的。']);
+    const g = PF.map((p) => [p, (+b[p] || 0) - (+a[p] || 0)]).sort((x, y) => y[1] - x[1]);
+    if (g[0][1] > 0) out.push(['good', `這週 ${PFI[g[0][0]].n} 粉絲 +${g[0][1]}`, '回頭看看這週發了什麼、哪一篇留言最多，下週多發同類型的。']);
   }
   const best = Object.entries(heatData()).filter(([, c]) => c.n >= 2).map(([k, c]) => [k, c.v / c.n]).sort((x, y) => y[1] - x[1])[0];
   if (best) { const [wd, b] = best[0].split('-').map(Number); out.push(['good', `你的黃金時段：週${WK[wd]}${HB[b][0]}`, `平均 ${Math.round(best[1])} 次觀看。可以在「排程 → 發文節奏」把重要的貼文挪過去。`]); }
   const st = opsStreak(); if (st >= 3) out.push(['good', `已經連發 ${st} 天`, '小帳號要長大，穩定比爆一篇重要。']);
-  if (S.ops.fbLimit !== 'no' && fbLinksUsed() >= P.fb.link_free) out.push(['warn', 'FB 本月的連結額度用完了', '這個月 FB 的貼文先別放外部連結（留言也算），導流交給 Threads 和 IG 個人檔案。']);
+  if (thOnly()) {
+    const fans = last && last.th != null && last.th !== '' ? +last.th : null;
+    if (fans != null && fans < 100) out.push(['info', `Threads 還差 ${100 - fans} 位粉絲到 100`, '滿 100 位粉絲之後，洞察報告會多出粉絲輪廓這類數據；在那之前先看每篇的瀏覽數和留言數就好。']);
+    if (st >= 14 || (fans != null && fans >= 100)) out.push(['go', '可以開第二階段：Instagram', 'Threads 已經穩定了。到「教學」開第二階段，同一篇的 IG 圖文版 App 會幫你做好。']);
+    const dq = dqStreak(); if (dq >= 3) out.push(['good', `每日三件事全勤 ${dq} 天`, '發文、回留言、海巡都做到的帳號，長得最快。']);
+  }
+  if (PF.includes('fb') && S.ops.fbLimit !== 'no' && fbLinksUsed() >= P.fb.link_free) out.push(['warn', 'FB 本月的連結額度用完了', '這個月 FB 的貼文先別放外部連結（留言也算），導流交給 Threads 和 IG 個人檔案。']);
   const need = opsNeedStats().length; if (need >= 3) out.push(['info', `${need} 篇等你回填成績`, '回填了才算得出黃金時段和每篇帶來多少觀看。']);
   return out;
 }

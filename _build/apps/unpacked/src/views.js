@@ -602,8 +602,12 @@ async function renderPick(id) {
 function renderFanList() {
   const items = S.index.items;
   const wait = fanWait(); const n = Math.min(items.length, MORE_N.fan);
+  const pf0 = opsPfs()[0]; const doGo = (ref) => 'fan/~do:' + encodeURIComponent(ref) + '|' + pf0;
+  const frees = freeNow(); const picks = ((S.picks && S.picks.items) || []).filter((x) => x.stamp !== '特價入' || x.date >= addD(todayTW(), -1)).slice(0, 9);
   return `<div class="brandbar"><h2 class="spray-h">出稿台</h2><div class="brandstk"><b>遊戲狂想曲</b><i>GAME RHAPSODY</i></div></div>
-    <p class="sub-note">每篇專題和每週懶人包都配好粉專貼文、Threads／IG／FB 三個平台的版本、塗鴉圖卡和 60 秒口播稿。排程每天會自動挑一篇；想多發一篇、換別篇，從這裡挑。</p>
+    <p class="sub-note">${thOnly() ? '每篇專題、推坑、週報都配好 Threads 版（第 1 則讓人停下來、後面幾則串文講深入）和塗鴉圖卡；限時免費一出來也能直接發快訊。排程每天會自動挑一篇；想多發一篇、換別篇，從這裡挑。' : '每篇專題和每週懶人包都配好粉專貼文、各平台的版本、塗鴉圖卡和 60 秒口播稿；推坑和限免快訊也能直接發。排程每天會自動挑一篇；想多發一篇、換別篇，從這裡挑。'}</p>
+    ${frees.length ? `<h3 class="tape-h p" style="margin-top:6px">限免快訊 <small>今天就能發</small></h3><div class="drafts">${frees.slice(0, 4).map((x) => `<div class="draft" data-go="${doGo('x:' + x.id)}"><div class="di" style="background-image:url('${esc(x.img || '')}')"></div><div><h4>${esc(x.title)}</h4><p>${esc(STORE_N[x.store] || x.store)} 限時免費${x.end ? '・領到 ' + esc(freeEndTW(x)) : ''}</p>${pfChips('x:' + x.id)}</div></div>`).join('')}</div>` : ''}
+    ${picks.length ? `<h3 class="tape-h" style="margin-top:10px">推坑 <small>已上市的私房好遊戲</small></h3><div class="drafts">${picks.map((x) => `<div class="draft" data-go="${doGo('p:' + x.id)}"><div class="di" style="background-image:url('${esc(headerOf(x))}')"></div><div><h4>${esc(x.zh)}</h4><p>${esc(x.stamp ? '【' + x.stamp + '】' : '')}${esc(x.pitch || '')}</p>${pfChips('p:' + x.id)}</div></div>`).join('')}</div>` : ''}
     ${((S.weekly && S.weekly.items) || []).length ? `<h3 class="tape-h y" style="margin-top:6px">每週懶人包</h3><div class="drafts">${S.weekly.items.slice(0, 6).map((w) => `<div class="draft wkd" data-go="fan/w:${esc(w.id)}"><div class="di wk-no sm"><span>WEEK</span><b>${wkNo(w.id)}</b></div><div><h4>${esc(w.title)}</h4><p>${esc(dotDay(w.from))}–${esc(dotDay(w.to))}・封面／Tier 表／下週出擊三張圖卡</p>${pfChips('w:' + w.id, S.posted['w:' + w.id])}</div></div>`).join('')}</div><h3 class="tape-h" style="margin-top:10px">每日專題</h3>` : ''}
     <div class="drafts" id="fandrafts">${items.slice(0, n).map(draftHtml).join('')}</div>${moreS('fan', n, items.length)}`;
 }
@@ -631,7 +635,7 @@ async function renderFanDetail(id) {
     <div class="btnrow" style="justify-content:center"><button class="btn sm ${CARD.layout === 'A' ? 'y' : ''}" data-act="cl" data-v="A">版型 A 黃牆</button><button class="btn sm ${CARD.layout === 'B' ? 'y' : ''}" data-act="cl" data-v="B">版型 B 黑牆</button><button class="btn sm ${CARD.ratio === '45' ? 'y' : ''}" data-act="cr" data-v="45">4:5 直式</button><button class="btn sm ${CARD.ratio === '11' ? 'y' : ''}" data-act="cr" data-v="11">1:1 方形</button></div>
     <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="respray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="cdl">${ICON.dl}<span>下載圖卡</span></button>${navigator.share ? `<button class="btn" data-act="cshare">${ICON.share}<span>分享圖卡</span></button>` : ''}</div>
     ${pfs}
-    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>改這裡，三個平台一起改</small></h3>
+    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>${fp.threads ? 'IG、FB 用這份；Threads 版在上面另外改' : '改這裡，各平台一起改'}</small></h3>
     <div class="copybox"><h4>粉專貼文（原稿） <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
       <div class="btnrow"><button class="btn y sm" data-act="copy" data-what="post">${ICON.copy}<span>複製貼文</span></button><button class="btn p sm" data-act="copy" data-what="full">${ICON.copy}<span>貼文＋hashtag</span></button>${S.edits[id] != null ? '<button class="btn sm" data-act="postreset">還原原稿</button>' : ''}</div></div>
     <div class="copybox"><h4>三個標題（A/B 測試用）</h4>${fp.titles.map((t, i) => `<div class="tline"><b>${'ABC'[i]}</b><span>${esc(t)}</span><button class="btn sm" data-act="copy" data-what="title" data-i="${i}">複製</button></div>`).join('')}</div>

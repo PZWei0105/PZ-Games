@@ -191,6 +191,8 @@ def check(f, r):
     if URLISH.search(post):
         r.B(fid, '粉專貼文不要放網址：粉專作戰台會照各平台的連結規則自己加')
     check_threads(fp.get('threads'), fid, r)
+    if not fp.get('threads') and (f.get('date') or '') >= '2026-11-20':
+        r.W(fid, '粉專少了 Threads 版（fanpage.threads）：2026-11-19 起粉專以 Threads 為主力，照 WRITER_GUIDE 第 4 節補上')
     check_self_name(fp, fid, r, '粉專素材（fanpage）')
     b = f.get('buy')
     if f['kind'] == 'wish' and not b:
@@ -402,6 +404,7 @@ def check_pick(f, r):
     for i, q in enumerate(f.get('talk') or []):
         if not (q.get('q') and q.get('why')):
             r.B(fid, f'talk[{i}] 要有 q、why')
+    check_pick_fanpage(f, fid, r)
     check_rev(f, fid, r)
     text_quality(f, fid, r)
 
@@ -486,6 +489,58 @@ def check_threads(th, fid, r, what='fanpage.threads'):
     if t is not None and (not isinstance(t, str) or not 1 <= len(t.strip()) <= 20 or '#' in t):
         r.B(fid, f'{what}.topic 要 1～20 字、不含 #（例：遊戲、Steam、獨立遊戲）')
     simp_check(p, fid, r)
+    more = th.get('more')   # 串文延伸（選填）：接在第 1 則後面的 1～3 則，講深入的內容
+    if more is not None:
+        if not isinstance(more, list) or not 1 <= len(more) <= 3:
+            r.B(fid, f'{what}.more 要是 1～3 則字串的清單（串文延伸）')
+            more = []
+        for i, m in enumerate(more):
+            if not isinstance(m, str) or not 40 <= len(m.strip()) <= 480:
+                r.B(fid, f'{what}.more[{i}] 要 40～480 字（每一則串文上限 500）')
+                continue
+            if '#' in m:
+                r.B(fid, f'{what}.more[{i}] 不要放 #')
+            if URLISH.search(m):
+                r.B(fid, f'{what}.more[{i}] 不要放網址')
+            if re.search(r'\n[ \t]*-{3,}[ \t]*\n', '\n' + m + '\n'):
+                r.B(fid, f'{what}.more[{i}] 不要放「---」：每一則是清單裡的一個字串，App 會自己接成串文')
+            simp_check(m, fid, r)
+
+
+def check_pick_fanpage(f, fid, r):
+    """推坑的粉專稿（2026-11-19 起，粉專 Threads 優先）：Threads 版＋串文延伸、hashtag、可選圖卡。格式見 PICKS_GUIDE.md 第 3b 節。"""
+    fp = f.get('fanpage')
+    if fp is None:
+        if (f.get('date') or '') >= '2026-11-20':
+            r.W(fid, '推坑少了 fanpage（粉專 Threads 稿）：照 PICKS_GUIDE 第 3b 節補上，粉專作戰台才排得到它')
+        return
+    if not isinstance(fp, dict) or not isinstance(fp.get('threads'), dict):
+        r.B(fid, 'fanpage 要有 threads：{"post": ..., "topic": ..., "more": [...]}')
+        return
+    check_threads(fp['threads'], fid, r)
+    p = fp['threads'].get('post') or ''
+    if not 150 <= len(p) <= 420:
+        r.W(fid, f'推坑的 Threads 第 1 則 {len(p)} 字（建議 150～420）')
+    if not p.rstrip().endswith(('？', '?')):
+        r.W(fid, '推坑的 Threads 第 1 則最後一句建議是給讀者的提問')
+    if not fp['threads'].get('topic'):
+        r.B(fid, 'fanpage.threads.topic 不能空（Threads 一篇一個主題標籤，不含 #）')
+    tags = fp.get('tags') or []
+    if not (3 <= len(tags) <= 8) or any(not isinstance(t, str) or not t.startswith('#') or ' ' in t for t in tags):
+        r.B(fid, 'fanpage.tags 要 3～8 個、# 開頭、不能有空格（最後一個固定 #遊戲狂想曲）')
+    card = fp.get('card')
+    if card is not None:
+        for k in ('kicker', 'title', 'sub'):
+            if not card.get(k):
+                r.B(fid, f'fanpage.card.{k} 不能空（不寫圖卡就整個 card 拿掉，App 會照推坑理由排）')
+        if len(card.get('points') or []) < 2:
+            r.B(fid, 'fanpage.card.points 至少 2 條')
+        for ln in (card.get('title') or '').split('\n'):
+            if len(ln) > 13:
+                r.W(fid, f'圖卡標題一行 {len(ln)} 字，可能太長（建議 ≤ 12）：{ln}')
+    if URLISH.search(json.dumps(fp, ensure_ascii=False)):
+        r.B(fid, 'fanpage 不要放網址：粉專作戰台會照各平台的連結規則自己加')
+    check_self_name(fp, fid, r, '推坑的粉專素材（fanpage）')
 
 
 def check_self_name(o, fid, r, what):
@@ -786,6 +841,8 @@ def check_week(w, r, refs):
     if URLISH.search(post):
         r.B(wid, '粉專貼文不要放網址：粉專作戰台會照各平台的連結規則自己加')
     check_threads(fp.get('threads'), wid, r)
+    if not fp.get('threads'):
+        r.W(wid, '週報少了 Threads 版（fanpage.threads）：粉專以 Threads 為主力，照 WEEKLY_GUIDE 第 3 節補上')
     check_self_name(fp, wid, r, '粉專素材（fanpage）')
     text_quality(w, wid, r)
 

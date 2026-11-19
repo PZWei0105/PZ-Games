@@ -19,7 +19,7 @@ SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'unpacked')
 
-JS_ORDER = ['core.js', 'audio.js', 'fx.js', 'data.js', 'views.js', 'card.js', 'shorts.js', 'hunt.js', 'weekly.js', 'cal.js', 'market.js', 'deals.js', 'info.js', 'tga.js', 'ask.js', 'ops.js', 'opsstats.js', 'opslearn.js', 'vs.js', 'main.js']
+JS_ORDER = ['core.js', 'audio.js', 'fx.js', 'data.js', 'views.js', 'card.js', 'shorts.js', 'hunt.js', 'weekly.js', 'cal.js', 'market.js', 'deals.js', 'info.js', 'tga.js', 'ask.js', 'ops.js', 'opsstats.js', 'opslearn.js', 'opsth.js', 'vs.js', 'main.js']
 FONTS = [
     ('bebas-neue-latin-400-normal.woff2', 'Bebas Neue'),
     ('permanent-marker-latin-400-normal.woff2', 'Permanent Marker'),
@@ -56,7 +56,7 @@ def compose(version):
 MANIFEST = {
     'name': '解包 UNPACKED',
     'short_name': '解包',
-    'description': '痞子葳的遊戲解包台：每天 2～3 款深度專題、私房推坑、直式短影音預告牆、Steam 願望單獵價雷達與免費補給站、Steam 行情板、TGA 預測戰、點播台、每週懶人包，加上遊戲狂想曲粉專作戰台（三平台排程、上架教學、導流成效）。',
+    'description': '痞子葳的遊戲解包台：每天 2～3 款深度專題、私房推坑、直式短影音預告牆、Steam 願望單獵價雷達與免費補給站、Steam 行情板、TGA 預測戰、點播台、每週懶人包，加上遊戲狂想曲粉專作戰台（Threads 優先的發文排程、上架教學、導流成效）。',
     'lang': 'zh-Hant-TW',
     'start_url': './',
     'scope': './',

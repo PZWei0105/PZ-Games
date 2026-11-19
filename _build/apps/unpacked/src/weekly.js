@@ -181,7 +181,7 @@ async function renderWeekFan(id) {
     <div class="btnrow" style="justify-content:center"><button class="btn p" data-act="respray">${ICON.can}<span>重噴一張</span></button><button class="btn y" data-act="cdl">${ICON.dl}<span>下載這張</span></button>${navigator.share ? `<button class="btn" data-act="cshare">${ICON.share}<span>分享這張</span></button>` : ''}<button class="btn" data-act="wkall">${ICON.dl}<span>三張一起下載</span></button></div>
     <p class="sub-note" style="text-align:center">三張依序是封面、Tier 表、下週出擊，適合發成一則多圖貼文。</p>
     ${pfs}
-    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>改這裡，三個平台一起改</small></h3>
+    <h3 class="tape-h" style="margin-top:24px">原稿與素材 <small>${fp.threads ? 'IG、FB 用這份；Threads 版在上面另外改' : '改這裡，各平台一起改'}</small></h3>
     <div class="copybox"><h4>粉專貼文（原稿） <span class="cnt" id="postcnt">${post.length} 字</span></h4><textarea id="posttxt" data-act="postedit">${esc(post)}</textarea>
       <div class="btnrow"><button class="btn y sm" data-act="copy" data-what="post">${ICON.copy}<span>複製貼文</span></button><button class="btn p sm" data-act="copy" data-what="full">${ICON.copy}<span>貼文＋hashtag</span></button>${S.edits[key] != null ? '<button class="btn sm" data-act="postreset">還原原稿</button>' : ''}</div></div>
     <div class="copybox"><h4>三個標題（A/B 測試用）</h4>${(fp.titles || []).map((t, i) => `<div class="tline"><b>${'ABC'[i]}</b><span>${esc(t)}</span><button class="btn sm" data-act="copy" data-what="title" data-i="${i}">複製</button></div>`).join('')}</div>

@@ -142,7 +142,7 @@ def run():
             pg.wait_for_timeout(1500)
             res[kind + '_heap_mb'], res[kind + '_nodes'] = metrics(cdp)
         routes = [('#lib', '#libgrid'), ('#picks', '.pks'), ('#shorts', '#shfeed'), ('#hunt', '.radar'), ('#cal', '.ce-b, .cn-b, .empty'),
-                  ('#board', '.mk-row, .empty'), ('#tga', '.tg-cats'), ('#ask', '.ask-hero'), ('#fan', '.drafts'), ('#home', '.posters')]
+                  ('#board', '.mk-row, .empty'), ('#tga', '.tg-cats'), ('#ask', '.ask-hero'), ('#fan', '.ops .ops-nav'), ('#fan/~plan', '.pl-grid'), ('#fan/~drafts', '.drafts'), ('#fan/~learn', '.phase'), ('#home', '.posters')]   # #fan 從 11/18 起是粉專作戰台的「今日」
         if fid:
             routes.insert(0, (f'#f/{fid}', '.ftabs'))
         if pid:
@@ -155,7 +155,7 @@ def run():
                 errs.append(f'{h}: {e}')
             pg.wait_for_timeout(900)
             heap, nodes = metrics(cdp)
-            res['routes'][h.split('/')[0]] = {'ms': ms, 'heap_mb': heap, 'nodes': nodes}
+            res['routes'][h if h.startswith('#fan') else h.split('/')[0]] = {'ms': ms, 'heap_mb': heap, 'nodes': nodes}
         res['errors'] = errs[:8]
         b.close()
     return res

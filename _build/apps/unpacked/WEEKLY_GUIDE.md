@@ -48,7 +48,7 @@ App 會把週報做成遊戲的「本週結算」畫面（WEEK 數字砸下、�
 - `script`：60 秒口播稿，口語、230～300 字，第一句就是鉤子，照 Tier 表從 S 講下來，結尾丟問題。
 - `credit`：素材來源（例：圖片來源：各遊戲官方 Steam 商店頁）。
 - `cover`：封面圖卡的字：`kicker` ≤ 12 字（例：每週遊戲懶人包）、`title` 兩行用 `\n` 分開、每行 ≤ 11 字、`sub` 選填。
-- `threads`：`{post, topic}`，Threads 版（粉專作戰台週日 21:00 發 Threads 時用）。`post` 150～350 字：這週一句話＋S 級是誰＋一則最大的事＋結尾提問；內文**不放 #**。`topic` 一個主題標籤、不含 #（例：遊戲、Steam）。
+- `threads`：`{post, topic, more}`，Threads 版（粉專作戰台週日 21:00 發 Threads 時用；2026-11-19 起粉專以 Threads 為主力，一定要寫）。寫法照 `WRITER_GUIDE.md` 第 4 節的「Threads 寫法」。`post` 150～400 字：這週一句話＋S 級是誰＋一則最大的事＋結尾提問；`more` 1～2 則（每則 120～420 字）：本週大事的另外兩則、下週出擊挑 2～3 款；內文**不放 #**、不放「---」。`topic` 一個主題標籤、不含 #（例：遊戲、Steam）。
 - 所有粉專文字都**不放網址**（粉專作戰台會照各平台規則自己加），也**不出現「痞子葳」**。publish.py 會擋。
 
 ## 4. 格式（`apps/unpacked/data/weekly/<id>.json`，檔名就是 id）
@@ -99,7 +99,7 @@ push 失敗：`git pull --rebase origin main` 再推，最多重試 3 次。
 粉專作戰台的教學、字數上限、hashtag 數、連結規則、YouTube 營利門檻，都讀 `apps/unpacked/data/platforms.json`。平台常改規則，每週查一次：
 
 1. 用 WebSearch 查這四件事最近有沒有變（只看 Meta、Instagram、Threads、YouTube 的官方說明或公告，和大型科技媒體的報導）：
-   - Threads：一則字數上限、主題標籤（topic）數、連結數、文字附件、排程功能。
+   - Threads：一則字數上限、主題標籤（topic）數、連結數、文字附件、排程功能、發文後可編輯的時間、個人檔案簡介字數與連結數、社群（Communities）怎麼加入與發文、洞察報告要幾位粉絲才完整、網頁意圖連結（`threads.com/intent/post` 的 text、tag 參數，粉專作戰台的「帶到 Threads」靠它）。
    - Instagram：每篇 hashtag 上限、說明文字字數、個人檔案連結數、說明文字裡的連結能不能點。
    - Facebook 粉專：帶外部連結的貼文／留言每月幾則、哪些不算。
    - YouTube 合作夥伴計畫：粉絲贊助與廣告分潤的門檻（訂閱、觀看時數、Shorts 觀看）、生效日。
