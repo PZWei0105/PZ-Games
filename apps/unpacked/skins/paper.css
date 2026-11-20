@@ -280,6 +280,22 @@ input[type=range]{accent-color:#1f5fa8}
 #gate .go{font:900 clamp(18px,5vw,30px)/1 var(--cjkh);background:#fffdf8;color:#c4161c;box-shadow:6px 6px 0 #1f5fa8}
 #gate .gm{color:#1b1813}
 #gate .gs{color:#1b1813}
+#gate .ul-link{stroke:#1b1813}
+#gate .ul-shk{stroke:#1b1813}
+#gate .ul-body{fill:#1b1813;stroke:#1b1813}
+#gate .ul-hole{fill:#c4161c}
+#gate .ul-tag{fill:#1f5fa8}
+#gate .ul-t{color:#1b1813;background:#fffdf8;box-shadow:4px 4px 0 #1b1813}
+#gate .ul-in{border:4px solid #1b1813;background:#fffdf8;color:#1b1813;box-shadow:5px 5px 0 #1f5fa8}
+#gate .ul-in::placeholder{color:#1b181388}
+#gate .ul-in:focus{box-shadow:5px 5px 0 #1f5fa8,0 0 0 4px #fffdf8}
+#gate .ul-eye{color:#1b1813}
+#gate .ul-eye[aria-pressed="true"]{color:#1f5fa8}
+#gate .ul-m{color:#1b1813}
+#gate .ul-m.bad{color:#fffdf8;background:#d6262b}
+#gate .ul-n{color:#1b1813}
+#gate .ul-open{color:#1f5fa8;text-shadow:4px 4px 0 #1b1813;-webkit-text-stroke:2px #1b1813}
+@media (max-height:450px){#gate.locked .gl{-webkit-text-stroke:4px #1b1813}}
 #intro{background:#fffdf8}
 #intro .ht{background-image:radial-gradient(#1b181310 24%,transparent 26%)}
 #intro .rays{background:repeating-conic-gradient(#ffd94d18 0 6deg,transparent 6deg 12deg)}

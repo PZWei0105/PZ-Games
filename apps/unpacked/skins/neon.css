@@ -280,6 +280,22 @@ input[type=range]{accent-color:#ff2bd6}
 #gate .go{font:900 clamp(18px,5vw,30px)/1 var(--cjkh);background:#08040f;color:#00f0ff;box-shadow:6px 6px 0 #ff2bd6}
 #gate .gm{color:#07030f}
 #gate .gs{color:#07030f}
+#gate .ul-link{stroke:#07030f}
+#gate .ul-shk{stroke:#07030f}
+#gate .ul-body{fill:#07030f;stroke:#f2eeff}
+#gate .ul-hole{fill:#00f0ff}
+#gate .ul-tag{fill:#ff2bd6}
+#gate .ul-t{color:#07030f;background:#ece6ff;box-shadow:4px 4px 0 #000000}
+#gate .ul-in{border:4px solid #07030f;background:#ece6ff;color:#07030f;box-shadow:5px 5px 0 #ff2bd6}
+#gate .ul-in::placeholder{color:#03010888}
+#gate .ul-in:focus{box-shadow:5px 5px 0 #ff2bd6,0 0 0 4px #f2eeff}
+#gate .ul-eye{color:#07030f}
+#gate .ul-eye[aria-pressed="true"]{color:#ff2bd6}
+#gate .ul-m{color:#07030f}
+#gate .ul-m.bad{color:#f2eeff;background:#ff2bd6}
+#gate .ul-n{color:#07030f}
+#gate .ul-open{color:#ff2bd6;text-shadow:4px 4px 0 #000000;-webkit-text-stroke:2px #f2eeff}
+@media (max-height:450px){#gate.locked .gl{-webkit-text-stroke:4px #f2eeff}}
 #intro{background:#08040f}
 #intro .ht{background-image:radial-gradient(#f2eeff10 24%,transparent 26%)}
 #intro .rays{background:repeating-conic-gradient(#00f0ff18 0 6deg,transparent 6deg 12deg)}
