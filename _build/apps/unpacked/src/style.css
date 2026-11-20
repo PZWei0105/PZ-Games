@@ -2508,6 +2508,11 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 .tcv-c.neg h4{color:#ff7a9c}
 .tq{margin:0 0 8px;padding:9px 10px;background:#fff;color:#222;border:2px solid var(--k);box-shadow:3px 3px 0 #7dff9a;font:600 13.5px/1.6 var(--cjkb)}
 .tq.neg{box-shadow:3px 3px 0 #ff7a9c}
+.tq.cl{cursor:pointer}
+.tq.cl p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden}
+.tq.cl.open p{display:block}
+.tq.cl footer::after{content:'・點開看全文';color:#999}
+.tq.cl.open footer::after{content:''}
 .tq footer{font:700 11px/1 var(--cjk);color:#777;margin-top:6px}
 .tcv-n{font:600 12.5px/1.5 var(--cjk);color:var(--t3)}
 .tcv-a{display:inline-block;margin-top:4px;font:900 12.5px/1 var(--cjk);color:var(--y)}

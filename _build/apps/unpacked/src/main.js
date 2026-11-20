@@ -459,6 +459,7 @@ document.addEventListener('click', async (ev) => {
     if (a.startsWith('db') && dbAct(a, act)) return;   // 資料庫
     if (a === 'swcdl' || a === 'swcshare') { saleCardOut(a === 'swcshare'); return; }
     if (a.startsWith('sw') && saleAct(a, act)) return;   // 特賣作戰室
+    if (a === 'tqx' && launchAct(a, act)) return;      // 繁中風向：長評論展開
     if (a === 'search') { DB.mode = 'all'; DB.focus = true; sfx.click(); closeSheet(); if (ROUTE === 'lib') route(); else { NAVN++; location.hash = 'lib'; } return; }
     if (a === 'hub') { audioInit(); openHub(); return; }
     if (a === 'hubfx') { S.settings.fx = S.settings.fx === 'full' ? 'calm' : 'full'; save('settings'); document.body.classList.toggle('calm', S.settings.fx !== 'full'); sfx.click(); hubSync(); return; }

@@ -396,7 +396,7 @@ def live_split(x):
     if mc:
         s['micro'] = mc          # mp4 給 iPhone、webm 給沒有 H.264 的瀏覽器，兩個都留（首頁海報、推坑牆直接用）
     ln = x.get('launch')
-    if ln and ln.get('pk') and time.time() - ln.get('ts', 0) < 7 * 86400:   # 上市 7 天內：首頁追蹤牆的戰報便利貼要用（完整戰報在 live/<appid>.json）
+    if ln and (ln.get('pk') or ln.get('rv')) and time.time() - ln.get('ts', 0) < 7 * 86400:   # 上市 7 天內：首頁追蹤牆的戰報便利貼要用（完整戰報在 live/<appid>.json）
         s['ln'] = {k: ln[k] for k in ('ts', 'h', 'pk', 'rv', 'rt', 'fz') if k in ln}
     return s, {k: v for k, v in x.items() if k not in LIVE_SUM}
 
@@ -1418,19 +1418,12 @@ def launch_report(prev, x, h, t0):
     if age < 0.5 or (not old and age > 24 * LAUNCH_DAYS):
         return old
     m0 = ts // 60; m1 = int(min(now, ts + 72 * 3600) // 60)
-    pl = [p for p in h.get('pl') or [] if m0 <= p[0] <= m1 and p[1] is not None]
-    if not pl:
-        return old
-    pk = max(pl, key=lambda p: p[1])
-    series, last = [], None      # 每 3 小時一點（凍結以後還畫得出曲線）
-    for p in pl:
-        if last is None or p[0] - last >= 175:
-            series.append(p); last = p[0]
-    if series[-1] != pl[-1]:
-        series.append(pl[-1])
+    pl = [p for p in h.get('pl') or [] if m0 <= p[0] <= m1 and p[1]]      # DLC 之類 Steam 不給同上人數（0 或 404）：只做評價
     pct = lambda r: [round(r[1] * 100 / r[2]), r[2]] if r and r[2] else None   # noqa: E731
     rv = [r for r in h.get('rv') or [] if m0 <= r[0]]
     rt = [r for r in h.get('rt') or [] if m0 <= r[0]]
+    if not pl and not rv:
+        return old
     upto = lambda L: [r for r in L if r[0] <= m1 + 180] or L[:1]   # noqa: E731  72 小時那一刻（或最接近的一筆）
     patches = []
     for n in x.get('news') or []:
@@ -1440,8 +1433,16 @@ def launch_report(prev, x, h, t0):
             continue
         if n.get('k') == 'patch' and ts - 3600 <= nt <= ts + 72 * 3600:
             patches.append({'t': (n.get('t') or '')[:70], 'u': n.get('u'), 'd': n.get('d')})
-    rep = {'ts': ts, 'h': int(min(age, 72)), 'pk': pk[1], 'pkt': pk[0], 'pl': series[-30:],
-           'part': 1 if pl[0][0] - m0 > 6 * 60 else 0}
+    rep = {'ts': ts, 'h': int(min(age, 72)), 'part': 1 if (pl[0][0] - m0 > 6 * 60 if pl else rv[0][0] - m0 > 26 * 60) else 0}
+    if pl:
+        pk = max(pl, key=lambda p: p[1])
+        series, last = [], None      # 每 3 小時一點（凍結以後還畫得出曲線）
+        for p in pl:
+            if last is None or p[0] - last >= 175:
+                series.append(p); last = p[0]
+        if series[-1] != pl[-1]:
+            series.append(pl[-1])
+        rep.update(pk=pk[1], pkt=pk[0], pl=series[-30:])
     if rv:
         rep['rv0'] = pct(rv[0]); rep['rv'] = pct(upto(rv)[-1])
     if rt:

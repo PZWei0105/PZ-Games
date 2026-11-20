@@ -1472,6 +1472,7 @@ span.mk-sp.none{color:#5a63a0}
 .tcv-c.neg h4{color:#ffc3d9}
 .tq{background:#fff1e8;color:#191f48;border:2px solid #000000;box-shadow:3px 3px 0 #00e436}
 .tq.neg{box-shadow:3px 3px 0 #ffc3d9}
+.tq.cl footer::after{color:#9196c2}
 .tq footer{color:#6c73ab}
 .tcv-n{color:#8489ba}
 .tcv-a{color:#ffec27}
