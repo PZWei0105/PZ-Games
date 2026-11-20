@@ -1,39 +1,17 @@
 {
- "note": "補番 BINGE 研究用：改這個檔推上去，就會在 GitHub Actions 跑一次 binge-research（結果在 binge-research 分支）",
+ "note": "補番 BINGE 研究用：改這個檔推上去，就會在 GitHub Actions 跑一次 binge-research（結果在 binge-research 分支）。2026-11-20：替 4 個月沒更新的 AI 漫劇、沙雕頻道找接班",
  "queries": [
-  "孟德四舅 動畫",
-  "我們這一家 木棉花",
-  "蠟筆小新 木棉花",
-  "哆啦A夢 國語 木棉花",
-  "優酷動漫 YOUKU ANIMATION",
-  "腾讯动漫 合集 官方"
+  "AI漫剧 一口气看完",
+  "AI动漫 完结 合集",
+  "沙雕动画 一口气看完 合集",
+  "漫剧 一口气看完 全集",
+  "沙雕动画 完结",
+  "AI漫剧 修仙 合集"
  ],
  "handles": [],
- "search_top": [
-  "孟德四舅",
-  "YOUKU ANIMATION 优酷动漫",
-  "腾讯视频动漫 英文",
-  "GaragePlay 車庫娛樂 動畫"
- ],
- "probe_rss_watch": [
-  "UCgdwtyqBunlRb-i-7PnCssQ",
-  "UCaNJ7uQDxAHXFaRcV8d5eBA",
-  "UC45ONEZZfMDZCnEhgYmVu-A",
-  "UC80ztI40QAXzWL94eoRzWow"
- ],
- "probe_playlists": [
-  "PL12UaAf_xzfor6SdQvoC7pr7Hwfowmr5Q",
-  "PL12UaAf_xzfr1wiFH5rlDMACeM8EP2Wdb"
- ],
- "probe_playlist_tab": [
-  "UCgdwtyqBunlRb-i-7PnCssQ",
-  "UC45ONEZZfMDZCnEhgYmVu-A",
-  "UCQe8YEJaNoqWQCiw0p6XjXg",
-  "UCVQvZ-qsSF2UWzFhmCv079A",
-  "UCQFyMGc6h30NMCd6HCk0ZPA",
-  "UCYGppeNR9_jV8RzTTufNT6w",
-  "UC0Mn7N3sXOCf5mI0eni3gjQ",
-  "UCexhmwhQ2zmBDt2Q6qM3hdg"
- ],
+ "search_top": [],
+ "probe_rss_watch": [],
+ "probe_playlists": [],
+ "probe_playlist_tab": [],
  "deep": []
 }
