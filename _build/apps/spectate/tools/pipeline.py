@@ -1103,7 +1103,8 @@ def web_extras(cache, roster, me):
             if not j:
                 break
             for it in j.get('items') or []:
-                if (it.get('snippet') or {}).get('channelId') in blocks:
+                sn = it.get('snippet') or {}
+                if sn.get('channelId') in blocks or BAHA.search(sn.get('channelTitle') or ''):   # 不收巴哈姆特（2026-11-21 發現發燒榜混進來）
                     continue
                 v = ext_record(cache, it, 'hot')
                 if v:
@@ -1155,7 +1156,7 @@ def web_live_take(cache, j, tag, blocks):
     for it in (j or {}).get('items') or []:
         sn = it.get('snippet') or {}
         vid = (it.get('id') or {}).get('videoId')
-        if not vid or sn.get('channelId') in blocks:
+        if not vid or sn.get('channelId') in blocks or BAHA.search(sn.get('channelTitle') or ''):
             continue
         title = htmlmod.unescape(sn.get('title') or '')
         if X.SPAM.search(title) or X.GACHA.search(title) or X.lang_of(title) != 'zh':
@@ -1279,6 +1280,8 @@ def build_storm(cache, cfg, roster, me):
     for v in cache['videos'].values():
         if v.get('gone') or v['c'] in blocks or v.get('spam') or v.get('gacha') or v.get('xx') or v.get('s') == 1:
             continue
+        if BAHA.search(((chans.get(v['c']) or cache['xch'].get(v['c']) or {}).get('n')) or ''):
+            continue
         txt = '%s %s %s' % (v.get('t0') or '', v.get('t') or '', v.get('tz') or '')
         if (v.get('sk') == cfg['key'] or cfg['rx'].search(txt)) and not OFFTOPIC.search(txt):
             vids.append(v)
@@ -1323,6 +1326,9 @@ def prune_ext(cache):
     for vid, v in list(cache['videos'].items()):
         tag = v.get('ext')
         if not tag:
+            continue
+        if BAHA.search((cache['xch'].get(v['c']) or {}).get('n') or ''):   # 名單外的巴哈姆特：不管在哪個榜上都拿掉
+            del cache['videos'][vid]
             continue
         if vid in hot:
             continue

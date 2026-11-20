@@ -48,6 +48,7 @@ VIDS = {
     'llllllllll2': vitem('llllllllll2', E2, '【直播】小台試播', lbc='live', cv=3),
     'uuuuuuuuuu1': vitem('uuuuuuuuuu1', E3, '【首播】新作發表會', lbc='upcoming'),
     'gggggggggg1': vitem('gggggggggg1', E1, '台灣看不到的影片', region={'blocked': ['TW', 'HK']}),
+    'bbbbbbbbbb1': dict(vitem('bbbbbbbbbb1', E1, '《俠盜獵車手 6》最速評測'), snippet=dict(vitem('bbbbbbbbbb1', E1, 'x')['snippet'], channelId='UCbahabahabahabahabahaba', channelTitle='巴哈姆特電玩瘋', title='《俠盜獵車手 6》最速評測')),
 }
 CALLS = []
 
@@ -58,7 +59,7 @@ def fake_http(url, headers=None, timeout=25, tries=3, json_out=False):
     path = u.path.rsplit('/', 1)[-1]
     CALLS.append((path, q))
     if path == 'videos' and q.get('chart') == 'mostPopular':
-        return 200, {'items': [VIDS[k] for k in ('rrrrrrrrrr1', 'hhhhhhhhhh1', 'hhhhhhhhhh2', 'hhhhhhhhhh3', 'gggggggggg1')]}
+        return 200, {'items': [VIDS[k] for k in ('rrrrrrrrrr1', 'hhhhhhhhhh1', 'hhhhhhhhhh2', 'hhhhhhhhhh3', 'gggggggggg1', 'bbbbbbbbbb1')]}
     if path == 'videos':
         return 200, {'items': [VIDS[i] for i in q['id'].split(',') if i in VIDS]}
     if path == 'search':
@@ -101,6 +102,7 @@ def main():
     ok(vids['hhhhhhhhhh1'].get('ext') == 'hot' and 'ext' not in vids['rrrrrrrrrr1'], '發燒榜：名單外的標 ext=hot，名單內的不標')
     ok(vids['hhhhhhhhhh3'].get('s') == 1, '發燒榜裡的 45 秒短片當 Shorts')
     ok(cache['ext'].get('hot', [])[:2] == ['rrrrrrrrrr1', 'hhhhhhhhhh1'], '發燒榜照名次記')
+    ok('bbbbbbbbbb1' not in vids and 'bbbbbbbbbb1' not in cache['ext'].get('hot', []), '發燒榜：巴哈姆特的頻道不收')
     ok('llllllllll1' in vids and vids['llllllllll1'].get('ext') == 'wl' and vids['llllllllll1'].get('cv') == 4200, '全網直播：收大台、有同時觀看')
     ok('llllllllll2' not in vids, '全網直播：同時觀看太少的不收')
     ok(vids.get('uuuuuuuuuu1', {}).get('xx') == 1, '即將直播：小頻道標成濾掉')

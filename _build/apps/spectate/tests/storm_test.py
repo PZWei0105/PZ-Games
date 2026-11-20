@@ -108,7 +108,11 @@ def main():
     P.storm_extras(cache, cfg, me)
     ok(not [c for c in CALLS[n:] if c[0] == 'search'], '時間還沒到不重搜')
     P.classify(cache, roster)
+    # 發燒榜早就收進來的巴哈姆特影片（名單外、標題對得上）：特別轉播也不能出現
+    cache['xch']['UCbahabahabahabahabahaba'] = {'n': '巴哈姆特電玩瘋', 'ts': int(NOW)}
+    cache['videos']['bahabahaba1'] = {'i': 'bahabahaba1', 'c': 'UCbahabahabahabahabahaba', 't0': '罪惡市降臨《俠盜獵車手 6》最速評測', 'p': NOW - 3600, 'l': 'review', 'z': 'zh', 'ext': 'hot', 'seen_ext': NOW}
     st = P.build_storm(cache, cfg, roster, me)
+    ok('bahabahaba1' not in st['items'], '特別轉播：發燒榜收進來的巴哈姆特影片也不出現')
     ok(st['key'] == 'gta-vi' and st['lc'] == 2 and st['lv'] == 182000 + 9400, 'storm.json：直播中 2 台、觀看人數加總')
     ok(st['live'][0] == 'llllllllll1', '直播照同時觀看排')
     ok('rrrrrrrrrr1' in st['new'] and 'rrrrrrrrrr2' not in st['new'], '名單內的相關影片也算、不相關的不算')
@@ -135,6 +139,7 @@ def main():
     v['seen_st'] = NOW - 2 * 86400
     P.prune_ext(cache)
     ok('zzzzzzzzzz2' not in vids, '換了一款，舊的搜尋結果一天後清掉')
+    ok('bahabahaba1' not in vids, '名單外的巴哈姆特影片：不管在哪個榜上都清掉')
     ok('llllllllll1' in vids, '還在直播的先留著')
     print('\n' + ('全部通過' if not fails else '失敗 %d 項' % len(fails)))
     sys.exit(1 if fails else 0)
