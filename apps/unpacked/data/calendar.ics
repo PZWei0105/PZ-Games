@@ -17,6 +17,15 @@ DESCRIPTION:-10%，NT$505，最後到 02:00\n解包 UNPACKED
 URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/spirit-crossing
 END:VEVENT
 BEGIN:VEVENT
+UID:unpacked-end-3218350-20261125@pzwei0105.github.io
+DTSTAMP:20261125T000000Z
+DTSTART;VALUE=DATE:20261125
+DTEND;VALUE=DATE:20261126
+SUMMARY:特價截止｜Melvor Idle 2: A RuneScape Adventure
+DESCRIPTION:-10%，NT$250，最後到 02:00\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/melvor-idle-2
+END:VEVENT
+BEGIN:VEVENT
 UID:unpacked-free-epic3d6441ab9d4246208bc97d7babf664b51f9a12b06b4f437790b6913ad136a08c-20261126@pzwei0105.github.io
 DTSTAMP:20261126T000000Z
 DTSTART;VALUE=DATE:20261126
@@ -24,6 +33,15 @@ DTEND;VALUE=DATE:20261127
 SUMMARY:免費截止｜Mark of the Deep
 DESCRIPTION:Epic 限時免費領，11/27 00:00 截止\n解包 UNPACKED
 URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#hunt
+END:VEVENT
+BEGIN:VEVENT
+UID:unpacked-rel-3333850-20261127@pzwei0105.github.io
+DTSTAMP:20261127T000000Z
+DTSTART;VALUE=DATE:20261127
+DTEND;VALUE=DATE:20261128
+SUMMARY:上市｜Arkheron
+DESCRIPTION:PC（Steam）、PS5、Xbox Series X|S\n解包 UNPACKED
+URL:https://pzwei0105.github.io/PZ-Games/apps/unpacked/#f/arkheron
 END:VEVENT
 BEGIN:VEVENT
 UID:unpacked-end-1336490-20261127@pzwei0105.github.io
