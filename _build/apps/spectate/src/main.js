@@ -4,7 +4,7 @@ const INTRO_REV = 2;   // 開場的版本：2026/11/18 加了「今晚節目單�
 
 let ROUTE = null, BASE = 'home', PENDING_CTX = '';
 const SCROLL = new Map();
-const TAB_OF = (r) => (r.startsWith('live') ? 'live' : r.startsWith('games') || r.startsWith('g/') ? 'games' : r.startsWith('rookies') ? 'rookies' : r.startsWith('me') || r === 'key' ? 'me' : 'home');
+const TAB_OF = (r) => (r.startsWith('storm') ? 'storm' : r.startsWith('live') ? 'live' : r.startsWith('games') || r.startsWith('g/') ? 'games' : r.startsWith('rookies') ? 'rookies' : r.startsWith('me') || r === 'key' ? 'me' : 'home');
 
 function parse() { return decodeURIComponent((location.hash || '').replace(/^#/, '')) || 'home'; }
 
@@ -13,6 +13,7 @@ function render(r) {
   let html;
   try {
     if (r === 'home') html = vHome();
+    else if (r === 'storm') html = vStorm();
     else if (r === 'live') html = vLive();
     else if (r === 'games') html = vGames();
     else if (r.startsWith('g/')) html = vGame(r.slice(2));
@@ -66,6 +67,7 @@ function route() {
 function defaultCtx(id) {
   const it = IDX.byId.get(id);
   if (!it) return [id];
+  if (it.so && stormHas(id)) return stormAll().map((x) => x.i);   // 從《解包》風暴眼點進來的名單外影片：接著播特別轉播
   if (VIEW.subs[it.c]) return L.subs().map((x) => x.i);
   if (it.g) return L.game(it.g).map((x) => x.i);
   return L.main().map((x) => x.i);
@@ -74,6 +76,7 @@ function ctxLabel(name) {
   if (!name) return '';
   const map = { hero: '焦點', main: subsOn() ? '你的頻道' : '精選', trailer: '新預告', dark: '黑馬', live: '直播', cont: '繼續觀看', later: '稍後觀看', review: '評測', deep: '深度', guide: '攻略', play: '實況', news: '新聞' };
   if (map[name]) return map[name];
+  if (name.startsWith('st:')) return '特別轉播' + (stormName() ? '・' + stormName() : '');
   if (name.startsWith('g:')) { const g = gameOf(name.slice(2).split(':')[0]); return g ? gameName(g) : ''; }
   if (name.startsWith('ch:') || name.startsWith('rk:')) return chOf(name.slice(3)).n || '';
   if (name.startsWith('list:')) return (LIST_META[name.slice(5)] || [''])[0];
@@ -188,6 +191,7 @@ document.addEventListener('click', (e) => {
     case 'back': Snd.play('back'); if (history.length > 1) history.back(); else location.hash = 'home'; break;
     case 'reload': Snd.play('select'); toast('重新接收轉播訊號…'); refreshData(true).then(() => softRefresh()); break;
     case 'more': LF.limit = +a.dataset.n || 96; softRefresh(); break;
+    case 'st-zh': ST.zh = a.dataset.k === '1'; store.set('stZh', ST.zh); LF.limit = 48; MEMO.clear(); Snd.play('tick'); softRefresh(); break;
     case 'lf-lane': LF.lane = a.dataset.k; LF.limit = 48; Snd.play('tick'); softRefresh(); break;
     case 'lf-lang': LF.lang = a.dataset.k; LF.limit = 48; Snd.play('tick'); softRefresh(); break;
     case 'clear-hist': if (a.dataset.sure) { clearHistory(); toast('清掉了'); softRefresh(); } else { a.dataset.sure = 1; a.textContent = '再按一次確定清除'; } break;
@@ -332,7 +336,7 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.key === '/') { e.preventDefault(); openSearch(); }
   else if ($('#sheet') && !$('#sheet').hidden && e.key === 'Escape') closeSheet();
-  else if (e.key >= '1' && e.key <= '5') { const t = ['home', 'live', 'games', 'rookies', 'me'][+e.key - 1]; location.hash = t; }
+  else if (e.key >= '1' && e.key <= '6') { const t = ['home', 'storm', 'live', 'games', 'rookies', 'me'][+e.key - 1]; location.hash = t; }
 });
 
 document.addEventListener('visibilitychange', () => {
@@ -342,7 +346,7 @@ document.addEventListener('visibilitychange', () => {
     store.set('visit', Date.now());
   } else {
     Snd.setHidden(false);
-    if (Date.now() - D.at > 2 * 60e3) refreshData().then((ch) => { if (ch && !Player.isOpen() && (ROUTE === 'home' || ROUTE === 'live')) softRefresh(); });
+    if (Date.now() - D.at > 2 * 60e3) refreshData().then((ch) => { if (ch && !Player.isOpen() && (ROUTE === 'home' || ROUTE === 'live' || ROUTE === 'storm')) softRefresh(); });
     sendNow();
   }
 });
@@ -379,6 +383,8 @@ async function start() {
     document.addEventListener('keydown', unlock, { once: true });
   }
   await loading;
+  // 從《解包》直接點影片進來（#watch/…）時資料還沒到：到了之後補上標題、頻道和接著播的清單
+  if (Player.isOpen() && Player.cur && Player.cur.ghost) Player.relink(defaultCtx(Player.cur.i));
   try { questCheck(); } catch (e) { /* */ }
   if (!Player.isOpen()) softRefresh();
   sendNow();

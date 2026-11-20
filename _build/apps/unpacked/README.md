@@ -1,6 +1,6 @@
 # 解包 UNPACKED
 
-痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達（每款都有 Claude 的願望單解包、買不買判定與目標價、到價警報）、出擊日曆（可訂閱到手機行事曆）、每週懶人包（本週結算）、Steam 行情板（線上人數前百名做成股市看盤）、大特賣倒數＋免費補給站（Epic／Steam／GOG 限時免費）、TGA 預測戰（跟 Claude 封存的預測比誰準）、點播台（指定遊戲解包、你問我答），以及「遊戲狂想曲」粉專作戰台（Threads／IG／FB 三平台發文排程、每一次上架都附步驟教學、導流成效追蹤、新片的影片三連發；用的是每篇的貼文、Threads 版、三個標題、塗鴉圖卡、60 秒口播稿）。
+痞子葳的遊戲解包台（2026-11-16 上線）：每天清晨自動解包 2～3 款遊戲的深度專題，附預告、截圖、Steam 台灣區即時數據；另有 Claude 私房推坑、直式短影音預告牆、Steam 願望單獵價雷達（每款都有 Claude 的願望單解包、買不買判定與目標價、到價警報）、出擊日曆（可訂閱到手機行事曆）、每週懶人包（本週結算）、Steam 行情板（線上人數前百名做成股市看盤）、大特賣倒數＋免費補給站（Epic／Steam／GOG 限時免費）、TGA 預測戰（跟 Claude 封存的預測比誰準）、點播台（指定遊戲解包、你問我答）、風暴眼（現在最熱的那一款：新聞、玩家、主播、熱度一頁看完，一天兩次風暴日報），以及「遊戲狂想曲」粉專作戰台（Threads／IG／FB 三平台發文排程、每一次上架都附步驟教學、導流成效追蹤、新片的影片三連發；用的是每篇的貼文、Threads 版、三個標題、塗鴉圖卡、60 秒口播稿）。
 網址：https://pzwei0105.github.io/PZ-Games/apps/unpacked/
 
 起因：痞子葳看到 TGP 玩家口袋的 FB 遊戲介紹貼文，想要一個 App「主動抓取並寫成一篇篇遊戲詳細介紹」。他要求：主頁自己看、要詳盡、要有討論，像《玩真的》一樣附影片與圖片預覽，**而且要比玩真的更強、更全面**；粉專分頁照 Claude 建議的格式。全部收（大作、獨立、免費、平台獨佔），**手機遊戲一律排除**（他不喜歡什麼都得課金才能解鎖的遊戲）；每天 2～3 篇深度專題。視覺要呼應頻道的噴漆塗鴉風、聲光效果拉滿。
@@ -18,6 +18,7 @@
 | Steam 行情板、免費補給站 | 同一個 GitHub Actions（每小時） | `tools/live.py` → `data/board.json`（前百名＋30 小時曲線＋7 天走勢）、`data/board-d.json`（每天高峰，留 120 天）、`data/free.json`（Epic、Steam、GOG 限時免費；某家這一輪抓不到就沿用上一輪還沒過期的） |
 | 點播台（點播解包、你問我答、影片三連發） | App → 轉發站 ntfy.sh → 同一個 GitHub Actions 每小時收件（`tools/inbox.py` → `data/inbox.json`）→ 寫稿（05:23）、推坑（11:43，只接問答）、願望單（16:37）三班排程回答 | 回答寫進 `data/qa.json`，規範在 `QA_GUIDE.md`。影片三連發（粉專作戰台送的新片文案）寫進 `data/videos/<點播 id>.json`（QA_GUIDE 第 7 節），publish.py 產生 `data/videos.json`。轉發站主題寫在公開的程式裡，收件一律當不可信資料 |
 | 平台規則（粉專作戰台的字數、hashtag、連結規則、YouTube 營利門檻） | 每週懶人包排程順便查證（WEEKLY_GUIDE 第 8 節），有官方或兩個可靠來源確認有變才改 | `data/platforms.json`（publish.py 檢查格式）；App 讀不到時用內建的同一份數字 |
+| 風暴眼（現在最熱的那一款） | 盯哪一款、一天兩次的風暴日報：Claude 的排程任務「解包：風暴日報」（每天台灣時間 08:42、18:42；有大事才推播）。新聞、PTT、Reddit、熱度：同一個 GitHub Actions 每小時（`tools/storm.py`）。YouTube：《觀戰》的管線（特別轉播） | `data/storm-pick.json`、`data/storm/<key>.digest.json` 歸排程（規範在 `STORM_GUIDE.md`）；`data/storm.json`、`data/storm/<key>.json` 歸 Actions |
 | TGA 預測戰 | Claude 11/18 封存預測（`data/tga.json`，publish.py 記了指紋，之後只准填 `win`／`result_at`）；12/11 的單次排程「解包：TGA 開獎」填得獎名單、推播比分 | 規範在 `TGA_GUIDE.md` |
 | 活動表（大特賣、新品節、主題節、頒獎典禮） | 寫稿排程看到官方公告就更新 | `data/events.json`（只收官方來源；格式見 `WRITER_GUIDE.md`「順手更新活動表」） |
 | App 本體 | 這個資料夾的 `src/`，`build.py` 組成單一 index.html | `apps/unpacked/`（`build.py` 不碰 `data/`） |
@@ -89,7 +90,7 @@
 - **點播台**（右上角收音機圖示；`#ask`）：「你問我答」問任何遊戲問題（可以指定關於哪一款，有快速問題貼紙）、「點播解包」指定一款遊戲請編輯寫完整專題。上方燈號：送出中／已送出等收件／都收到了／送不出去（連上網路自動重送）。每一則顯示狀態（排隊中、下一班是誰幾點、處理中、已回覆），回答有段落、重點、來源、「看那一篇」；有新回答時收音機圖示亮數字、打開 App 會提示。三班的時間表也列在頁面上。
   - 專題頁、推坑頁的「問 Claude」：送到點播台，或「現在就聊」把這款的重點整理好複製、打開 Claude 直接聊；那一款被問過的問答也會出現在專題頁下面。
   - 問答存在公開的 GitHub 上，頁面上有提醒不要寫私人資料。
-- **資料庫**（分頁列第五個，原本的「庫存」；頂端 🔍 萬用搜尋也是這裡）：上面兩個分頁——
+- **資料庫**（原本的「庫存」；2026-11-21 起分頁列第二格讓給風暴眼，改從頂端 🔍 萬用搜尋、全部功能進來）：上面兩個分頁——
   - 「全部遊戲」：App 裡出現過的每一款（專題、推坑、願望單、行情板百大、限免、TGA 入圍、週報下週出擊、自己加的）一起搜，中英文名都行（Steam 台灣區的名字常是中文，`db.json` 另外帶英文名）。篩選：來源、有繁中、特價中、免費、可裝 Mod、好評 90%↑、NT$300 內、即將推出、類型；排序：推薦／最相關、熱玩人數、好評、便宜、折扣、新上市。每一列有橫幅圖、價格與折扣、好評率、在線人數、繁中／MOD、來源貼紙；點了：寫過的去專題／推坑，其他開情報卡。成人向的只有指名搜尋才出現。
   - 搜不到（或沒有名字完全一樣的）就按「＋加進資料庫」：走點播台的轉發站送 `{type:'add', q}`，下一班（每小時 41 分的 Actions）`live.py` 的 `adds()` 去 Steam 商店搜尋——名字完全一樣、開頭一樣或包含整段字才算，找到就補上情報卡、進資料庫（來源「我加的」）；找不到記「找不到」加最多 3 個建議，App 上可以直接點建議再加一次。自己加過的列在搜尋框下面（排隊中／✓ 已加入／✗ 找不到），找到的放 3 天就收起來。
   - 「解包專題」：原本的庫存——結論／平台／類型／中文／課金／我的標記篩選、排序，最多 3 款加入比較（比較表）。
@@ -148,7 +149,7 @@
 
 ## 導覽（2026-11-20 整理）
 - **頂端列**：🔍 萬用搜尋（直接打開資料庫、游標放進搜尋框）、VS 擂台、點播台（收音機，有新回覆亮數字）、👕 換裝、⊞ 全部功能。原本頂端的音效、鼓組開關收進「全部功能」最上面一排（音效／配樂／特效／換裝，一按就切）。
-- **全部功能**（`nav.js`；頂端 ⊞ 打開，首頁最下面也有一份，取代原本那排按鈕）：資料庫、行情板（大盤漲跌）、特賣作戰室（大特賣前 45 天起）、遊戲星圖（探索度）、年度回顧、出擊日曆（下一個是幾天後的哪一款）、每週懶人包（最新一期）、TGA 預測戰（倒數）、VS 擂台、點播台（新回覆幾則）、免費補給站（現在幾款限免，點了直接捲到獵價頁的補給站）、短影音、粉專作戰台、換裝、看導覽、設定。每一格的小字都是現在的真實狀態。
+- **全部功能**（`nav.js`；頂端 ⊞ 打開，首頁最下面也有一份，取代原本那排按鈕）：風暴眼（現在盯哪一款、颱風等級）、資料庫、行情板（大盤漲跌）、特賣作戰室（大特賣前 45 天起）、遊戲星圖（探索度）、年度回顧、出擊日曆（下一個是幾天後的哪一款）、每週懶人包（最新一期）、TGA 預測戰（倒數）、VS 擂台、點播台（新回覆幾則）、免費補給站（現在幾款限免，點了直接捲到獵價頁的補給站）、短影音、粉專作戰台、換裝、看導覽、設定。每一格的小字都是現在的真實狀態。
 - **第一次導覽**：改版後第一次打開（`tourDone` < `TOUR_REV`），開場播完、獵物警報和疊層都關了才開始，五步框出分頁列、萬用搜尋、全部功能、換裝、點播台，點哪都下一步、可以跳過；「全部功能 → 看導覽」可以重看。
 
 ## 換裝（2026-11-20）
@@ -184,6 +185,19 @@
 - 「統計到今天」，隨時都能看（全部功能的「年度回顧」）；12/20～1/10 首頁掛橫幅，1/10 前看的是去年。
 - 粉專圖卡（1080×1350，遊戲狂想曲）只放解包的數字（款數、最大的星座、結論、好評率最高三款），**不放個人紀錄、不放痞子葳**。
 - 動畫只動 transform／opacity（數字跳動是改文字），每張的音效跟著換裝（`sfx` 同一組名字，各套各自的聲音）。
+
+## 風暴眼（2026-11-21）
+分頁列第二格（`storm.js`；`#storm`，看過去的風暴是 `#storm/<key>`）：一次只盯「現在最熱的那一款」，打開就知道它現在發生什麼事。痞子葳的需求原話：「目前最新最熱門的遊戲相關所有的資訊……內容、資訊、玩家討論跟直播主們的回饋，全都在這個分頁」。
+- **颱風眼主視覺**：遊戲在正中間，官方、媒體、玩家、主播四顆衛星繞著轉（數字是各來源這一輪抓到幾則）；颱風等級 CAT 1～5（輕颱、中颱、強颱、超強颱、史詩級）＋熱度指數＋跟 24 小時前比。下面三顆按鈕：看解包專題（寫過的話）、《觀戰》特別轉播、換一場風暴。
+- **風暴儀表**：熱度、24 小時新聞、YouTube 直播中（台數、觀看人數）、24 小時新片、PTT 24 小時篇數，各自跟 24 小時前比。
+- **熱度時間軸**：每小時一點、最近 30 天；虛線是颱風等級的門檻，圓點是風暴日報（點了切到那一則）。
+- **風暴日報**（Claude 一天兩次，`STORM_GUIDE.md`）：標題、一段話重點、3～6 點、接下來要注意、來源；可以一鍵「複製 Threads 貼文」或「做成圖卡」（1080×1350，遊戲狂想曲，不放痞子葳）。上面一排切換早報、晚報，**下面各段跟著顯示那一則的內容**。
+- **官方動態、媒體怎麼說、玩家風向、主播怎麼說、PC 版雷達**：日報整理的重點（附來源編號）＋ Actions 每小時抓的原始清單（繁中／國外新聞、PTT 三天內照推文數排、Reddit 熱門、YouTube 直播中／中文最新／全球最熱，片點了到《觀戰》播）。
+- **換一場風暴**：《觀戰》上這兩天最多台在聊的幾款可以直接點，也能自己打名字；送出走點播台的轉發站（`{type:'storm', q, mode:'pin'}`，「換回自動」是 `mode:'auto'`），下一輪 Actions（每小時 41 分）就換過去，排程下一班會補上完整的搜尋字和日報。送出後到換好之前，App 上會掛「已送出」。
+- **自動判斷**：排程比較熱度、YouTube 台數、Steam 同上、新聞量，換的門檻很高（現任上市 14 天內或熱度 45 以上不換，除非年度級大事連續兩班更熱；連兩天低於 28 才找下一款）。過去的風暴留在頁尾「過去的風暴」。
+- **熱度指數**（`storm.py` 的 `heat()`）：`100 ×（0.35 × 新聞 + 0.35 × 直播觀看 + 0.15 × 24 小時新片 + 0.15 × PTT）`，每一項取對數再除以上限（新聞 150 則、直播 20 萬人、新片 150 支、PTT 60 篇）；CAT 門檻 28、45、62、80。
+- 分頁上的 NEW：有新的風暴日報、還沒進來看過（`stormSeen`）；跑馬燈也會帶一句「風暴眼：GTA 6 超強颱・熱度 78」。
+- 效能：颱風眼的三圈只轉 transform（`body.calm` 時停），數字跳動是改文字；時間軸是一張 SVG（線寬不跟著縮放）。
 
 ## 聲光
 
@@ -226,6 +240,7 @@ App 裡出現的每一款遊戲都點得進去看介紹（`src/info.js`）：
 - `data/info/<appid>.json`：情報卡 `{appid, name, url, free, price, rel, langs, tags, dev, pub, short, plat, adult, img, micro, ws, rv{n（兩位有效數字）, pct, label}, shots}`；`data/info/_seen.json`：`{appid: 最後一次出現在 App 裡的日期}`。`data/names.json`：`{at, names:{name_key: [appid（0＝Steam 上找不到）, 查的日期]}}`。`track.json` 多了 `cmp`（「跟誰像」有填 steam 的 appid）、`names`（只有名字的）。
 - `data/db.json`（資料庫，live.py 的 `dbuild()` 每小時整理）：`{at, n, items:[{a(appid，0＝不在 Steam), n(名字), e(英文名，跟 n 不一樣才有), z(中文名), t[標籤], c(tc/sc/''), p, o, d(現價、原價、折扣，分), fr(免費), r, rn(好評率、則數兩位有效數字), m(有工作坊), y(上市日), soon, i(橫幅圖), pl(在線人數), ad(成人向), s[來源：f:<專題> p:<推坑> w 願望單 b 行情板 x:<限免 id> t TGA k 週報 q 加進資料庫]}]}`。英文名上一版有的沿用，沒有的一輪最多問 150 款。
 - `data/adds.json`（加進資料庫，live.py 的 `adds()`）：`{at, items:{name_key: {q, st(ok/miss), a, n, sug:[[appid, 名字]], at}}}`，最多 300 筆；一輪最多處理 12 個。點播台收件的 `add` 事件：`{id, type:'add', t, dev, q(≤80 字)}`（排程的編輯不用管，管線自己處理）。
+- 風暴眼（2026-11-21）：`data/storm-pick.json`（排程寫）＝`{at, auto(自動判斷的 key), why, games:{key:{zh, en, short, since, rel, plat, steam, img, yt_id, rx(比對標題), news:{zh,en}(Google News 搜尋字), yt:{zh,en}(觀戰搜尋字，| 分隔), ptt[], boards[], reddit}}}`；`data/storm.json`（storm.py 每小時）＝`{v, at, cur:{key…同上欄位, pin(1＝痞子葳指定), why}, s:{heat, cat, d24, news24, lv, lc, n24, ptt24}, peak, feats:[{id, d, k}], hist:[{key, zh, from, to, peak}], head:{t, at, tldr}(最新一則日報), cands:[{zh, en, n, chs}](觀戰的熱門遊戲), errs}`；`data/storm/<key>.json`＝`{v, at, key, news:{zh,en:[{t, s(媒體), su, u, ts}]}, off:[同上], ptt:[{t, b, n(推文數；爆＝100、X＝負), u, ts}](不存作者), reddit:{ok, sub, items:[{t, n, c, f, u, ts}], stale?, why?}, yt:{at, n24, n72, lv, lc, zl, live, cz, top:[{i, t, cn, p, v, cv, l, z, lv, ne}], lanes:{車道: 支數}}, tl:[[分鐘, 熱度, 新聞24, 直播觀看, 新片24, PTT24]](最多 720 點)}`；`data/storm/<key>.digest.json`（排程寫）＝`{key, items:[{at, slot(am/pm), title, tldr, points:[{h, t, s}], off:[{t, d?, s}], media:{scores:[{n, v, s}], notes:[{t, s}]}, players:{pos, neg, debate, s}, streamers:[{who, where?, t, s}], pc:{st, t, s}, next[], fan:{post, topic}, sources:[{t, u, p}]}]}`（最新的在前面、最多 30 則；`s` 是來源編號，從 1 開始；publish.py 的 `check_storm()` 檢查）。點播台收件的 `storm` 事件：`{id, type:'storm', t, dev, q(≤80 字), mode(pin/auto)}`。
 - `data/events.json`：`{at, note, items:[{id, kind(sale/fest/show/vote), name, en, start, end, big, note, src:{t,u}}]}`（時間都是 UTC）。
 - `data/tga.json`：`{show, vote_end, venue, vote_url, sealed, result_at, intro, rules, cats:[{id, zh, en, pt, grp, nom:[{n, zh, sub, ref}], claude:{c, conf, why, s}, win}], sources}`。
 - `data/inbox.json`：`{v, at, cursor, events:[{id, type(ask/req/vid/tga/ping), t, dev, …}]}`（inbox.py 產生，欄位見 `QA_GUIDE.md`；`vid` 是 `{title, when, note?, games?, url?}`，`url` 只收 YouTube 網址）；`data/qa.json`：`{at, items:[{id, type(ask/req/vid), t, q, ref, st(done/no/wip), at, by, a, pts, src, link}]}`（排程寫；`link` 可以是 `f:`／`p:`／`v:<影片三連發 id>`）。
@@ -234,7 +249,7 @@ App 裡出現的每一款遊戲都點得進去看介紹（`src/info.js`）：
 - 專題和週報的 `fanpage.threads`：`{post, topic, more?}`（Threads 版；`post` 第 1 則 150～400 字，`more` 是 1～3 則串文延伸、每則 40～480 字，寫法見 WRITER_GUIDE 第 4 節「Threads 寫法」；內文不放 #、不放 `---`，`topic` 一個主題標籤、不含 #）。2026-11-20 起的專題、每一份週報沒有 Threads 版會警告。
 - 推坑的 `fanpage`（2026-11-19 起，PICKS_GUIDE 第 3b 節）：`{threads:{post, topic, more}, tags[], card?:{kicker, title, sub, tags[], points:[{h, t}]}, credit}`；給粉絲看的，不寫只對痞子葳說的話。publish.py 檢查格式（`check_pick_fanpage`），2026-11-20 起的推坑沒寫會警告。
 - 所有粉專文字不放網址、不出現「痞子葳」（publish.py 擋）。
-- localStorage 前綴 `unpacked.v1.`：`tga`（押注、加倍卡、鎖定時間、偷看過沒）、`ask`（裝置代號、待送、已送、自己的點播、看過的回答）、`freeGot`（領過的免費遊戲）、`freeSeen`、`mkBell`（今天敲過開盤鐘沒）；`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音、`skin` 換裝）、`adds`（自己加進資料庫的 `[{q, at}]`）、`sale`（作戰室：`{特賣 id: {b(預算，分), pick(勾的), my(自己定的目標價), got(買了：實付、那天)}}`）、`tourDone`（第一次導覽看到第幾版）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
+- localStorage 前綴 `unpacked.v1.`：`tga`（押注、加倍卡、鎖定時間、偷看過沒）、`ask`（裝置代號、待送、已送、自己的點播、看過的回答）、`freeGot`（領過的免費遊戲）、`freeSeen`、`mkBell`（今天敲過開盤鐘沒）；`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音、`skin` 換裝）、`adds`（自己加進資料庫的 `[{q, at}]`）、`sale`（作戰室：`{特賣 id: {b(預算，分), pick(勾的), my(自己定的目標價), got(買了：實付、那天)}}`）、`tourDone`（第一次導覽看到第幾版）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）、`stormSeen`（看過的最新風暴日報時間）、`stormPend`（換一場風暴送出、還沒換好：`{q, mode, t}`，換好或 6 小時後清掉）、`stormHello`（「新分頁風暴眼」的提示說過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
 - `unpacked.v1.ops`（粉專作戰台）：`{v, since(開始用的那天), cad(發文節奏：th/fb/ig 各 7 格、週日到週六、null＝不發), pin({日期:{平台:{r(內容；'-'＝跳過), at, add}}}), log([{id, ref, pf, d, k(pre/up/talk), at, link, s:{v 觀看, e 互動, f 新粉絲}}]), wk({週 id:{th, ig, fb, yt, ytv, rth, rig, rfb, yth}}), vids([{id, t, at(YYYY-MM-DDTHH:MM), url, note, games, ev(點播 id), made}]), setup(開站任務), prof(個人檔案網址), fbLimit(unknown/yes/no), guide(full/lite), ed({ref|平台: 改過的文字}), vchk(上片清單打勾), mode(th/thig/all：經營到第幾階段), dq({日期:{post, reply, patrol}}：每日三件事；當天有 Threads 發文紀錄，「發一篇」自動算做到；只留 60 天)}`；內容代號 `f:<專題>`、`p:<推坑>`、`w:<週>`、`v:<影片>:<pre|up|talk>`、`x:<free.json 的 id>`（限免快訊）。開站任務 `setup` 2026-11-19 換了一套鍵（name、ig0、th、thprof、thfeed、thintro、cal、first、yt、igpro、igfirst、fb、link、fbfirst），舊的鍵會自動對過來。
 
 ## 組建與測試
@@ -245,7 +260,8 @@ python3 _build/apps/unpacked/build.py --icons            # 重畫圖示
 python3 _build/apps/unpacked/tools/publish.py            # 專題檢查＋重建目錄
 # 本機看畫面（雲端沙盒連不到 Steam、YouTube、github.io：外部圖片用假圖代替）
 python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data --hunt   # --hunt：假願望單＋假週報；再加 --noweek 測「本週進行中」
-# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）、--info（情報卡、名字對照，搭配 --hunt 有假週報）、--db（資料庫＋三筆加進資料庫的狀態）、--launch（兩篇專題假裝 2 天前、20 天前上市：直播中與凍結的戰報＋繁中風向）；只寫進 /tmp，絕不 commit
+# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）、--info（情報卡、名字對照，搭配 --hunt 有假週報）、--db（資料庫＋三筆加進資料庫的狀態）、--launch（兩篇專題假裝 2 天前、20 天前上市：直播中與凍結的戰報＋繁中風向）、--storm（風暴眼：假的最熱遊戲、新聞、PTT、Reddit、YouTube、48 小時時間軸、兩則風暴日報）；只寫進 /tmp，絕不 commit
+# 風暴眼的管線離線跑：python3 _build/apps/unpacked/tools/storm.py --data /tmp/unp/data --offline <假回應資料夾>（沒有的網址會記進 errs，照常寫檔）
 # 換裝：python3 _build/apps/unpacked/skins.py 印出色票數與各套 CSS 大小；截圖時 localStorage 的 settings 帶 skin:'pixel'／'neon'／'paper'
 # 舊稿回訪的候選（只讀）：--kind f 專題、--kind p 推坑
 python3 _build/apps/unpacked/tools/revisit.py --kind f

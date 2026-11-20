@@ -174,7 +174,7 @@ a{color:#c4161c}
 .ic h4 .tagx{background:#d6262b;color:#fffdf8}
 .ic h4 .tagx.y{background:#ffd94d;color:#1b1813}
 .ic h4 .tagx.g{background:#0b7a43;color:#1b1813}
-.ic h4 .tagx.k{background:#1b1813;color:#1b1813;border:1px solid #c3b8a0}
+.ic h4 .tagx.k{background:#1b1813;border:1px solid #c3b8a0;color:#fffdf8}
 .ic p,.ic li{color:#2f2a21}
 .ic li::before{background:#d6262b}
 .meter i{background:#f0eadc}
@@ -208,7 +208,7 @@ a{color:#c4161c}
 .spoil .cover{background:#ffd94d;color:#1b1813}
 .spoil .cover b{font:900 20px/1 var(--cjkh)}
 .vc{border:3px solid #1b1813}
-.vc.pro{background:#0b7a43;color:#0b7a43;box-shadow:4px 4px 0 #0b7a43}
+.vc.pro{background:#cdfae4;color:#0d2a1c;box-shadow:4px 4px 0 #0b7a43}
 .vc.con{background:#f1adaf;color:#110303;box-shadow:4px 4px 0 #1f5fa8}
 .debate{background:#fffdf8;border:2px solid #1b1813}
 .debate h4{color:#c4161c}
@@ -723,9 +723,6 @@ span.mk-sp.none{color:#544d42}
 .fr-im{background:#fefcf6;border-bottom:3px solid #1b1813}
 .fr-im .ph{color:#4a443a}
 .fr-st{border:2px solid #1b1813;background:#fffdf8;color:#1b1813}
-.fr-st.ep{background:#fffdf8;color:#1b1813;border-color:#1b1813}
-.fr-st.st{background:#1f5fa8;color:#1f5fa8}
-.fr-st.gg{background:#6b3fa0;color:#fffdf8}
 .fr-p s{color:#696255}
 .fr-p b{font:900 20px/1 var(--cjkh);color:#0b7a43}
 .fr.up .fr-p b{color:#544d42}
@@ -860,7 +857,7 @@ span.mk-sp.none{color:#544d42}
 .af-h b{background:#ffd94d;color:#1b1813}
 .af-h span{color:#29241d}
 .af-go{color:#c4161c}
-.af-k{color:#1b1813;background:#1b1813;border:2px solid #1b1813}
+.af-k{background:#1b1813;border:2px solid #1b1813;color:#fffdf8}
 .af-k.p{border-color:#d6262b;color:#1f5fa8}
 .af-rev{color:#0b7a43}
 .after.ok{border-color:#0b7a43;box-shadow:5px 5px 0 #0b7a43}
@@ -1098,7 +1095,7 @@ span.mk-sp.none{color:#544d42}
 .sr-in input{border:2px solid #c3b8a0;background:#fffdf8;color:#1b1813}
 .sr-in input::placeholder{color:#5d564b}
 .sr-how{color:#665f52}
-#optip{background:#1b1813;border:2px solid #1b1813;color:#1b1813}
+#optip{background:#1b1813;border:2px solid #1b1813;color:#fffdf8}
 .q-top{background:#fffdf8;border:3px solid #1b1813;box-shadow:5px 5px 0 #1f5fa8}
 .q-ring{background:conic-gradient(#ffd94d calc(#d6262b * 360deg),#f3ede1 0)}
 .q-ring::before{background:#fffdf8}
@@ -1540,6 +1537,88 @@ span.mk-sp.none{color:#544d42}
 .rc-vs>span{color:#1b1813}
 .rc-cardbox canvas{border:3px solid #1b1813;box-shadow:6px 6px 0 #1f5fa8;background:#fffdf8}
 .rc-ban{background:#ffd94d;color:#1b1813}
+.se-hero{background:#fffdf8;border:3px solid #1b1813;box-shadow:7px 7px 0 #1f5fa8}
+.se-ring{border:4px dashed #1b1813}
+.se-ring.r2{border:3px dotted #d6262b}
+.se-ring.r3{border:3px solid #1b181359}
+.se-core{background:#fefcf6;border:4px solid #1b1813;box-shadow:0 0 0 5px #1b1813}
+.se-coreb{background:#ffd94d;color:#1b1813;border:2px solid #1b1813}
+.se-sat{background:#fffdf8;border:3px solid #d6262b;color:#1b1813}
+.se-sat i{color:#c4161c}
+.se-kick{color:#c4161c}
+.se-name{font:900 34px/1.1 var(--cjkh);color:#1b1813;text-shadow:3px 3px 0 #1f5fa8}
+.se-en{color:#534d42}
+.se-sub{color:#2f2a21}
+.se-cat{background:#d6262b;color:#fffdf8;border:3px solid #1b1813;box-shadow:4px 4px 0 #d6262b}
+.se-cat.c1,.se-cat.c2{background:#f3ede1}
+.se-why{color:#2f2a21}
+.se-why b{background:#ffd94d;color:#1b1813}
+.se-why b.se-pin{background:#d6262b;color:#fffdf8}
+.se-hero.past{border-color:#c3b8a0;box-shadow:7px 7px 0 #574935}
+.se-pastbar{background:#f3ede1;border:2px dashed #b6ab94;color:#2f2a21}
+.se-d{color:#534d42}
+.se-d.up{color:#0b7a43}
+.se-d.dn{color:#cb2329}
+.se-g{background:#f9f6ed;border:2px solid #d6ccb6}
+.se-g.g-heat{background:#ffd94d;border-color:#1b1813}
+.se-g small{color:#534d42}
+.se-g b{color:#1b1813}
+.se-g b i{color:#534d42}
+.se-g.g-heat small,.se-g.g-heat b,.se-g.g-heat b i,.se-g.g-heat .se-d{color:#1b1813}
+.se-tl .th{stroke:#1b18131c}
+.se-th{color:#1b181347}
+.se-tl svg{border-bottom:2px solid #d6ccb6}
+.se-tl polyline{stroke:#c4161c}
+.se-tl .ar{fill:#c4161c22}
+.se-mk{background:#d6262b;border:2px solid #1b1813}
+.se-tlpk{background:#fffdf8;border:2px solid #d6262b}
+.se-tlx span{color:#696255}
+.se-dgtabs button{border:2px solid #cdc2ab;color:#3a342b;background:#fbf8f0}
+.se-dgtabs button.on{background:#ffd94d;color:#1b1813;border-color:#1b1813}
+.se-dgc{background:#fffdf8;color:#1b1813;border:3px solid #1b1813;box-shadow:6px 6px 0 #d6262b}
+.se-dgh b{font:900 20px/1.3 var(--cjkh);color:#1b1813}
+.se-dgh small{color:#5d564b}
+.se-tldr{color:#1b1813;background:#fffcf0;border-left:5px solid #d6262b}
+.se-pts li{color:#26211c}
+.se-pts li::before{background:#fffdf8;color:#c4161c}
+.se-pts li b{color:#1b1813}
+.se-sup sup{background:#f2b5b7;color:#7d1619}
+.se-next{background:#fbf8f1;border:2px dashed #7d7465}
+.se-next b{color:#1b1813}
+.se-next p{color:#2b2620}
+.se-srcs{color:#4a443a}
+.se-srcs summary{color:#1b1813}
+.se-srcs a{color:#1f5fa8}
+.se-srcs small{color:#696255}
+.se-empty{background:#f9f6ed;border:2px dashed #c3b8a0;color:#3a342b}
+.se-list li{background:#f9f6ed;border:2px solid #d6ccb6;color:#24201a}
+.se-list li a{color:#1b1813}
+.se-list li small{color:#5d564b}
+.se-list.off li{border-left:5px solid #1b1813}
+.se-push{background:#ebe4d4;color:#c4161c}
+.se-push.boom{background:#c4161c;color:#fffdf8}
+.se-push.neg{background:#d7ceb9;color:#534d42}
+.se-h4{color:#c4161c}
+.se-score{background:#ffd94d;color:#1b1813;border:3px solid #1b1813;box-shadow:4px 4px 0 #1f5fa8}
+.se-notes{color:#2f2a21}
+.se-q{background:#fffdf8;color:#26211c;border:2px solid #1b1813;box-shadow:4px 4px 0 #1f5fa8}
+.se-q footer{color:#4a443a}
+.se-q footer b{color:#1b1813}
+.se-v{color:#1b1813;background:#f9f6ed;border:2px solid #d6ccb6}
+.se-v.live{border-color:#c4161c}
+.se-vt{background:#f3ede1}
+.se-vt em{background:#fffdf8cc;color:#1b1813}
+.se-vt em.se-onair{background:#c4161c}
+.se-v small{color:#5d564b}
+.se-pc{background:#f9f6ed;border:2px solid #d6ccb6}
+.se-pcst{background:#ffd94d;color:#1b1813}
+.se-pc p{color:#2f2a21}
+.se-hist button{background:#f9f6ed;border:2px solid #d6ccb6;color:#24201a}
+.se-hist small{color:#5d564b}
+.sepick .se-cands button{background:#f9f6ed;border:2px solid #cdc2ab;color:#1b1813}
+.sepick .se-cands small{color:#534d42}
+.se-pinf input{background:#fffdf8;color:#1b1813;border:2px solid #c3b8a0}
+.se-pend{color:#1b1813;background:#ffd94d}
 /* ---- skin-paper.css ---- */
 /* ==========================================================================
    換裝：紙本雜誌（PAPER）— 米白紙、粗黑襯線大標、雙線欄框、紅色印章、螢光筆、剪貼的紙片

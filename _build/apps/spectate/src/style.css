@@ -50,7 +50,10 @@ html.watching body { overflow: hidden; }
 .onair i { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: blink 1.2s steps(2) infinite; }
 .onair b { color: #fff; font-weight: 600; }
 @keyframes blink { 50% { opacity: .25; } }
-.top-sp { flex: 1; }
+.bug, .onair { flex-shrink: 0; white-space: nowrap; }
+/* 手機上有直播時，台標＋ON AIR＋兩顆按鈕放不下（2026-11-21 發現台標被擠成兩行）：先收掉時鐘 */
+@media (max-width: 470px) { #top:has(#onair:not([hidden])) .bug-clock { display: none; } }
+.top-sp { flex: 1; min-width: 0; }
 .ico-btn { width: 40px; height: 40px; display: grid; place-items: center; color: var(--ice); border-radius: 50%; }
 .ico-btn svg { width: 22px; height: 22px; fill: currentColor; }
 .ico-btn:active { background: var(--panel3); }
@@ -68,6 +71,7 @@ html.watching body { overflow: hidden; }
 .tk-lbl { color: #fff; font-weight: 800; }
 .tk-red { color: #ff6b88; font-weight: 800; }
 .tk-lime { color: var(--lime); font-weight: 700; }
+.tk-gold { color: var(--gold); font-weight: 800; }
 .tk-dim { color: var(--mute); }
 .tk-sep { color: var(--red); font-style: normal; font-size: 9px; }
 .fx-lite .tk-run { animation-duration: calc(var(--tk, 40s) * 1.6); }
@@ -301,6 +305,46 @@ img.noimg { opacity: 0; }
 .chh-t { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .chh-m { font-size: 13px; color: var(--dim); }
 .chh-ds { margin: 4px 0 0; font-size: 13px; color: var(--mute); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------------- 特別轉播（2026-11-21）：突發新聞的特報字卡 ---------------- */
+.stv { position: relative; margin-top: 10px; }
+.stv-img { position: relative; aspect-ratio: 16 / 9; max-height: 50vh; width: 100%; overflow: hidden; background: #000; }
+.stv-img img { width: 100%; height: 100%; object-fit: cover; }
+.stv-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6, 7, 11, .5) 0%, rgba(6, 7, 11, 0) 28%, rgba(6, 7, 11, 0) 45%, rgba(6, 7, 11, .97)); }
+.stv-bar { position: absolute; left: 0; top: 14px; display: flex; align-items: stretch; height: 30px; }
+.stv-sc { display: flex; align-items: center; gap: 8px; padding: 0 16px 0 var(--pad); background: var(--red); color: #fff; font-family: var(--f-num); font-size: 19px; letter-spacing: 2.5px; line-height: 1; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.stv-sc i { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: stBlink 1.2s steps(2, jump-none) infinite; }
+@keyframes stBlink { 50% { opacity: .15; } }
+.stv-bar em { display: flex; align-items: center; margin-left: -6px; padding: 0 16px 0 18px; background: #fff; color: #07080d; font-style: normal; font-weight: 900; font-size: 14px; letter-spacing: 2px; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.stv-txt { position: relative; margin-top: -62px; padding: 0 var(--pad); display: flex; flex-direction: column; gap: 5px; }
+.stv-cat { align-self: flex-start; display: inline-flex; align-items: baseline; gap: 8px; padding: 5px 12px 4px; background: rgba(255, 194, 41, .14); border: 1px solid rgba(255, 194, 41, .6); color: var(--gold); transform: skewX(-10deg); }
+.stv-cat b { font-family: var(--f-num); font-size: 20px; letter-spacing: 1.5px; line-height: 1; font-weight: 600; }
+.stv-cat span { font-weight: 900; font-size: 13px; }
+.stv-cat i { font-style: normal; font-size: 12px; color: #ffe6a6; }
+.stv-cat.c4, .stv-cat.c5 { background: rgba(255, 45, 85, .16); border-color: rgba(255, 45, 85, .7); color: #ff6b88; }
+.stv-cat.c4 i, .stv-cat.c5 i { color: #ffc2cf; }
+.stv h1 { margin: 2px 0 0; font-size: clamp(26px, 7vw, 42px); font-weight: 900; line-height: 1.12; text-shadow: 0 2px 18px rgba(0, 0, 0, .6); }
+.stv-en { font-family: var(--f-lat); color: var(--dim); font-size: 13px; }
+.stv-sub { font-size: 13px; color: var(--ice); }
+.stv-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 8px; background: var(--line2); border: 1px solid var(--line2); }
+.stv-stats span { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px 7px; background: rgba(10, 13, 21, .92); font-size: 11.5px; color: var(--dim); min-width: 0; }
+.stv-stats b { font-family: var(--f-num); font-size: 27px; font-weight: 600; color: #fff; line-height: 1; }
+.stv-stats span.on b { color: var(--red); }
+.stv-spark { margin-top: 8px; }
+.stv-spark svg { display: block; width: 100%; height: 46px; }
+.stv-spark path { fill: rgba(255, 45, 85, .14); stroke: none; }
+.stv-spark polyline { fill: none; stroke: var(--red); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.stv-spark span { display: block; margin-top: 3px; font-size: 11.5px; color: var(--mute); }
+.stv-spark b { color: var(--ice); font-weight: 700; }
+.stv-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+.stv + .chips { margin-top: 6px; }
+@media (max-width: 420px) { .stv-stats span { padding: 7px 7px 6px; font-size: 10.5px; } .stv-stats b { font-size: 24px; } }
+@media (min-width: 900px) {
+  .stv-img { aspect-ratio: 21 / 8; max-height: 60vh; }
+  .stv-txt { margin-top: -120px; max-width: 980px; }
+  .stv-stats { max-width: 720px; }
+  .stv-spark { max-width: 720px; }
+}
 
 /* ---------------- 新秀選秀會 ---------------- */
 .deck { position: relative; height: clamp(400px, calc(100svh - var(--toph) - var(--tkh) - var(--st) - var(--tabh) - var(--sb) - 230px), 540px); margin: 12px auto 0; max-width: 440px; padding: 0 var(--pad); touch-action: pan-y; }
@@ -624,7 +668,7 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
   :root { --toph: 42px; --tkh: 22px; --rail: calc(72px + var(--sl)); --tabh: 0px; }
   #tabs { top: 0; bottom: 0; right: auto; width: var(--rail); height: auto; flex-direction: column; justify-content: center; padding: var(--st) 0 var(--sb) var(--sl); border-top: 0; border-right: 1px solid var(--line2); }
   #tabs::before { display: none; }
-  #tabs a { flex: 0 0 60px; font-size: 10.5px; }
+  #tabs a { flex: 0 0 56px; font-size: 10.5px; }
   #tabs .ink { left: auto; right: 0; top: 0; width: 3px; }
   .bug { height: 26px; }
   .bug-logo { font-size: 15px; } .bug-en { font-size: 16px; } .bug-clock { font-size: 17px; }

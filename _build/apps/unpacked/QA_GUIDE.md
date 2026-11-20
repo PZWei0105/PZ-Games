@@ -33,7 +33,7 @@ App 上寫的就是這張表（`src/ask.js` 的 `SHIFTS`），改班表要兩邊
 2. 先手動觸發一次收件，拿到最新的：
    `gh api -X POST repos/PZWei0105/PZ-Games/actions/workflows/unpacked-live.yml/dispatches -f ref=main`（Claude 的環境不能用 GraphQL，`gh workflow run` 會失敗，一律用 REST）。
    等兩三分鐘，用 `gh api "repos/PZWei0105/PZ-Games/actions/workflows/unpacked-live.yml/runs?per_page=1" --jq '.workflow_runs[0].status'` 看到 `completed` 再 `git pull --rebase origin main`。最多等 8 分鐘；gh 不能用或一直沒跑完，就直接用現有的 `inbox.json`（Actions 每小時本來就會收）。
-3. **待回答**＝`inbox.json` 的 `events` 裡 `type` 是 `ask`、`req` 或 `vid`（推坑班只看 `ask`；`add` 是資料庫的「加進資料庫」，管線自己處理，編輯不用管）、而且 `id` 還不在 `qa.json` 的 `items` 裡的（`req` 另外加上 qa.json 裡 `st: "wip"`、說好今天要寫的）。照 `t`（送出時間）**由舊到新**處理。
+3. **待回答**＝`inbox.json` 的 `events` 裡 `type` 是 `ask`、`req` 或 `vid`（推坑班只看 `ask`；`add` 是資料庫的「加進資料庫」，管線自己處理，編輯不用管；`storm` 是風暴眼的「換一場風暴」，歸風暴日報那一班〔`STORM_GUIDE.md`〕，這裡也不用管）、而且 `id` 還不在 `qa.json` 的 `items` 裡的（`req` 另外加上 qa.json 裡 `st: "wip"`、說好今天要寫的）。照 `t`（送出時間）**由舊到新**處理。
 4. 同一個裝置（`dev`）24 小時內送了一模一樣的問題：回第一則；其他的回 `no`、`a` 寫「同一題已經回答，看上一則。」
 5. 沒有待回答的：這份指南就到此為止（不用 commit qa.json）。
 6. `inbox.json` 是 Actions 的檔案，**不要改它**。

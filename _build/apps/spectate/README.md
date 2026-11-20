@@ -23,6 +23,7 @@
 | 路由 | 內容 |
 |---|---|
 | `home` 轉播台 | 焦點輪播（中文預告優先）、直播中、你的頻道新片（還沒選台時播精選名單＋「先選台」提示）、新預告、黑馬、熱門遊戲、新秀試吃、繼續觀看、稍後觀看、評測、深度、攻略、實況、新聞；這週太集中在同三台時出現「破圈」提示 |
+| `storm` 特別轉播（2026-11-21） | 《解包》風暴眼盯的那一款（現在最熱的遊戲）的所有影片：SPECIAL COVERAGE 特報字卡（颱風等級、熱度讀《解包》的 `data/storm.json`）、直播中台數與觀看人數、24 小時新片、48 小時直播觀看曲線、連播；直播中、中文最新、全球最熱（七天內照觀看）、評測、攻略、實況反應、新聞、預告、深度、全部新片；可切「只看中文」。名單外的頻道也收，**只在這一頁**，不混進轉播台的各排；有直播時分頁亮紅點、跑馬燈帶一句 |
 | `live` 直播 | 直播中、賽程表（即將直播／首播）、剛結束的重播、直播重播與發表會（沒金鑰時用標題判斷） |
 | `games`、`g/<key>` 遊戲 | 同一款遊戲的所有影片：預告、評測、攻略、實況、新聞、深度；「誰在聊這款」可以直接訂閱（從遊戲找人）；有 Steam 的連 Steam、《解包》有專題的連過去 |
 | `rookies` 新秀 | 選秀會（全網探勘＋精選名單裡還沒選的，每天換一批）、精選名單（分四組，可整組訂閱）、跳過的 |
@@ -54,7 +55,8 @@
    - **台灣發燒榜**（`web_extras`）：`videos.list chart=mostPopular regionCode=TW videoCategoryId=20`，兩頁 100 支、兩小時一次（2 點）。名單外的影片 `ext: 'hot'`，頻道放 `cache.xch`，feed 的 `hot` 是名次。
    - **全網直播**：`search eventType=live`（台灣、中文、遊戲類、照觀看排），每小時一次、凌晨 4～9 點不搜；同時觀看 30 人以上才收（`ext: 'wl'`）。**全網即將直播**每六小時一次，頻道訂閱 1 萬以下的濾掉（`ext: 'wu'`）。結束六小時後、掉出發燒榜一天後自動拿掉（`prune_ext`）。
    - **額度**：`cache.api` 記太平洋時間每天的用量，上限 `API_DAY_CAP` 5,500（同一把金鑰《補番》最多 4,000）。
-6. **輸出**：`feed.json`、`games.json`、`discover.json`、`status.json`、`cache.json` 推到 **`spectate-data` 分支**（每次強制推送、只留最新一版，repo 不會越長越大、也不會每 20 分鐘觸發一次 Pages）。App 從 `raw.githubusercontent.com/PZWei0105/PZ-Games/spectate-data/` 讀。
+   - **特別轉播**（2026-11-21，`storm_cfg`／`storm_extras`／`build_storm`）：讀 main 上《解包》的 `apps/unpacked/data/storm.json`（`cur`：哪一款、`rx` 比對標題、`yt` 搜尋字）。名單內的片標題對得上就收；另外用 `search` 補名單外的：中文最新（`relevanceLanguage=zh-Hant`、`regionCode=TW`、照時間、三天內）每 4 小時、全球最熱（英文搜尋字、照觀看數、七天內）每 8 小時、直播中（`eventType=live`）每 3 小時（台灣 3～9 點不搜）；三種一天約 15 次、1,500 點，額度剩不到 `SX_RESERVE`（900）就先停。搜到的濾掉搬運、抽卡、政論和**巴哈姆特**，標 `ext: 'st'`、`sk`（哪一款），**不進 `feed.json` 的主清單**，只寫進 `storm.json`；換了一款就重新計時，名單外的片留 3 天（換款後 1 天）。
+6. **輸出**：`feed.json`、`games.json`、`discover.json`、`status.json`、`storm.json`、`cache.json` 推到 **`spectate-data` 分支**（每次強制推送、只留最新一版，repo 不會越長越大、也不會每 20 分鐘觸發一次 Pages）。App 從 `raw.githubusercontent.com/PZWei0105/PZ-Games/spectate-data/` 讀。
 
 `status.json` 有 `log`（這次執行的紀錄）、`errors`、`quiet`（精選名單裡 30 天沒更新的頻道）、`unresolved`（解析不到的名單）——**維護時先看這個**，再決定名單要不要換人。
 
@@ -63,11 +65,12 @@
 - `feed.json`：`{at, key, ch:{UC…:{n 名稱, a 頭像, l 語言, k 類型, tags, seed 精選, cand 新秀候選, subs, ds}}, items:[{i, c, t 標題, t0 原標題, tz 官方中文標題, p 發布秒, v 觀看, d 片長, l 車道, g 遊戲, z 語言, s Shorts, x 濾掉, lv live/upcoming, st 開播秒, cv 同時觀看, rp 重播, dh 黑馬倍數}], games:{key:{zh, en, id, img}}}`
 - `games.json`：`{games:[{k, zh, en, id, img, n, chs, lanes, hot, last, cover, gacha}]}`
 - `discover.json`：`{day, key, picks:[{c, n, a, subs, vids, country, ds, why[], ratio, score, sample:{i,t,p,v,d}, day}]}`
+- `storm.json`（特別轉播）：`{v, at, key, g:{zh, en}, n24, n72, lv(直播觀看合計), lc(直播台數), zl(中文直播台數), live[], cz[](中文最新), new[], top[](七天內照觀看), lanes:{車道: [影片]}, tl:[[分鐘, 直播觀看, 24 小時新片]](最多 720 點), items:{影片: {i, c, t, p, l, v, d, lv, st, cv, tz, g, z, ne, rp, ext, t0}}, ch:{UC…: {n, a, subs, ext, l}}}`；沒有風暴時只有 `{v, at, key: null}`。App 把 `items` 併進 `IDX.byId`（導播台、連播找得到，標 `so`）、`ch` 併進頻道表，不進 `IDX.items`。`status.json` 多了 `storm:{key, videos, live, n24}`。
 - `me.json`：`{subs:{UC:{t,n,src}}, blocks, passes, later:{影片:t}, adds:[{id,q,t,st:wait/ok/fail,ch,n}], seen:[事件 id], cursor}`
 
 ### App 這邊（localStorage 前綴 `spectate.v1.`）
 
-`set` 設定、`dev` 裝置代號、`seq` 事件序號、`out` 還沒被管線確認的事件、`base` 上一份 me.json、`hist`（影片：[最後看、看到第幾秒、片長、看完、累積毫秒、頻道]，最多 900 支）、`wt`（每天每台看了幾毫秒，留 35 天）、`visit`、`boot`、`picked`。
+`set` 設定、`stZh`（特別轉播「只看中文」）、`dev` 裝置代號、`seq` 事件序號、`out` 還沒被管線確認的事件、`base` 上一份 me.json、`hist`（影片：[最後看、看到第幾秒、片長、看完、累積毫秒、頻道]，最多 900 支）、`wt`（每天每台看了幾毫秒，留 35 天）、`visit`、`boot`、`picked`。
 畫面上的訂閱狀態＝`base`＋還沒確認的 `out`（同一套 `applyEv`）；看到 me.json 的 `seen` 有自己的事件就從 `out` 移掉，3 小時沒確認的會重送。右上角燈號：綠＝都同步、黃＝等管線收件、紅＝送不出去。
 
 ## 播放

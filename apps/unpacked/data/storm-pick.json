@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-21T00:27:00+08:00",
+  "auto": "gta-vi",
+  "why": "11/19 全球上市，Metacritic 99、OpenCritic 98；距離上一代 13 年，全世界都在玩、都在聊",
+  "games": {
+    "gta-vi": {
+      "zh": "俠盜獵車手 VI",
+      "en": "Grand Theft Auto VI",
+      "short": "GTA 6",
+      "since": "2026-11-19",
+      "rel": "2026-11-19",
+      "plat": "PS5、Xbox Series X|S（PC 版未公布）",
+      "steam": null,
+      "img": "https://gmedia.playstation.com/is/image/SIEPDC/Grand-Theft-Auto-VI-pre-order-hero-desktop-03-19jun25$en?$1600px$",
+      "yt_id": "oFwB6gZLRmc",
+      "rx": "GTA\\s?(6|VI|六)(?![0-9])|俠盜獵車手\\s?(6|VI|六)|Grand Theft Auto\\s?VI",
+      "news": {"zh": "GTA6 OR \"GTA 6\" OR \"俠盜獵車手 VI\" OR 俠盜獵車手6", "en": "\"GTA 6\" OR \"GTA VI\" OR \"Grand Theft Auto VI\""},
+      "yt": {"zh": "GTA6|GTA 6|俠盜獵車手6", "en": "GTA 6|GTA VI"},
+      "ptt": ["GTA6", "GTA 6", "俠盜獵車手"],
+      "boards": ["C_Chat", "PlayStation", "XBOX", "Steam"],
+      "reddit": "GTA6"
+    }
+  }
+}

@@ -15,6 +15,8 @@ function hubTiles() {
   const T = [];
   const nDb = S.db ? S.db.n : 0;
   T.push({ go: 'lib', ic: ICON.box, t: '資料庫', s: nDb ? `${nDb} 款遊戲一起搜` : '全部遊戲一起搜', c: 'y' });
+  let st = ''; try { st = stormHubLine(); } catch (e) { /* */ }
+  T.push({ go: 'storm', ic: ICON.storm, t: '風暴眼', s: st, c: 'p' });
   try {
     const ix = S.board && S.board.idx;
     T.push({ go: 'board', ic: ICON.chart, t: '行情板', s: ix && ix.d1 != null ? `大盤 ${ix.d1 > 0 ? '▲' : ix.d1 < 0 ? '▼' : ''}${Math.abs(ix.d1).toFixed(1)}%` : 'Steam 線上人數看盤', c: ix && ix.d1 > 0 ? 'up' : ix && ix.d1 < 0 ? 'dn' : 'w' });
@@ -64,7 +66,7 @@ function hubSync() { const h = $('#sheet.on .hubsh'); if (h) h.parentElement.inn
 
 /* ---- 第一次導覽：一個一個框出來講（點哪都可以下一步） ---- */
 const TOUR = [
-  { el: '#tabs', t: '底下六個分頁', d: '今日的專題、Claude 推坑、短影音、獵價、資料庫、粉專作戰台。' },
+  { el: '#tabs', t: '底下六個分頁', d: '今日的專題、風暴眼（現在最熱的那一款，全部消息都在這）、Claude 推坑、短影音、獵價、粉專作戰台。資料庫在右上角的放大鏡。' },
   { el: '[data-act="search"]', t: '萬用搜尋', d: 'App 裡出現過的每一款遊戲（專題、推坑、願望單、百大、限免、TGA…）一起搜，中英文都行。搜不到就「加進資料庫」，一小時內補上情報卡。' },
   { el: '[data-act="hub"]', t: '全部功能', d: '行情板、出擊日曆、每週懶人包、TGA 預測戰、VS 擂台、點播台、免費補給站都在這裡，還有音效、配樂開關。' },
   { el: '[data-act="skinsheet"]', t: '換裝', d: '一按整套換：畫面、字型、音效、配樂、開場全部換，內容不變。塗鴉街頭、像素掌機、霓虹賽博、紙本雜誌四套。' },

@@ -191,8 +191,15 @@ def skin_value(sid, role, key, base_hex, base):
         return lerp_anchor(anchors, light(rgb))
     fam = hue_family(rgb)
     tgt = sk['fam'].get(fam) if fam else None
+    _, l1, s1 = colorsys.rgb_to_hls(*(v / 255 for v in rgb))
     if not tgt:
         v = base_hex
+    elif fam not in GRAFFITI_FAM and (l1 > 0.82 or l1 < 0.2) and (sk['dark'] or (role in ('b', 'ba', 'bt') and l1 > 0.82) or (role in ('t', 'l', 'o') and l1 < 0.2)):
+        # 塗鴉版沒有基準色的色族（綠、橘、藍、紫）：粉彩底維持粉彩、深色字維持深色——只換色相，明度照原本的。
+        # 不然淺綠底和深綠字會被換成同一個綠（2026-11-21 三套的「誇的」卡片都整塊看不到字）。
+        # 淺色的紙本版只保留「淺底、深字」這兩種（深色的底照舊換成色族色，跟紙本把黑底翻成紙色是同一個道理）
+        th, _, ts = colorsys.rgb_to_hls(*(v / 255 for v in hx(tgt)[0]))
+        v = to_hex([c * 255 for c in colorsys.hls_to_rgb(th, l1, min(ts, s1))])
     else:
         fam_base = hx(GRAFFITI_FAM.get(fam, base_hex))[0] if fam in GRAFFITI_FAM else rgb
         v = shift_like(rgb, fam_base, tgt)
@@ -469,7 +476,11 @@ def build_skins(src_dir):
                     if o_map.get(p) != v:
                         diff.append((p, v))
                 if diff:
-                    items.append(('rule', ctx, sel, diff))
+                    full = {}
+                    for d in n_decls:
+                        if ':' in d:
+                            p, v = d.split(':', 1); full[p.strip().lower()] = v.strip()
+                    items.append(('rule', ctx, sel, diff, full, o_map))
             elif kind == 'kf':
                 out = re.sub(r'([^{}]*)\{([^{}]*)\}', lambda m: m.group(1) + '{' + tk.block('kf', m.group(2)) + '}', body)
                 if out != body:
@@ -483,6 +494,34 @@ def build_skins(src_dir):
         key, h, aa = tk.uses[(role, name)]
         return skin_value(sid, role, key, h, base) + aa
 
+    def solid(v):
+        if not v or '\x00' in v:
+            return None
+        imp = '!important' in v
+        m = re.fullmatch(r'\s*(#[0-9a-fA-F]{3,8})\s*(?:!important)?\s*', v)
+        return (m.group(1), imp) if m else None
+
+    def gval(v):   # 塗鴉版的實際顏色
+        return re.sub(r'var\(--([a-z0-9]+)\)', lambda m: base.get(m.group(1), m.group(0)), v or '')
+
+    def fix_contrast(sid, full, orig):
+        """同一條規則裡「底色＋字色」換完幾乎同色（對比 < 1.8，塗鴉版原本 ≥ 3）→ 字改成那一套的墨色或紙白，哪個清楚用哪個。
+        2026-11-21：三套的「誇的」卡片、紙本版黑底白字的小標，都換成同色看不到字"""
+        bgv = full.get('background-color') or full.get('background')
+        fgv = full.get('color')
+        b, f = solid(lit(sid, bgv) if bgv else None), solid(lit(sid, fgv) if fgv else None)
+        ob, of = solid(gval(orig.get('background-color') or orig.get('background'))), solid(gval(orig.get('color')))
+        if not (b and f and ob and of):
+            return None
+        (brgb, ba), (frgb, fa) = hx(b[0]), hx(f[0])
+        if ba < 0.95 or fa < 0.95 or contrast(brgb, frgb) >= 1.8:
+            return None
+        if contrast(hx(ob[0])[0], hx(of[0])[0]) < 3:
+            return None   # 塗鴉版本來就是淡淡的（故意的）
+        sk = SKINS[sid]
+        best = max((sk['base']['k'], sk['base']['w']), key=lambda c: contrast(hx(c)[0], brgb))
+        return best + (' !important' if f[1] else '')
+
     sheets = {}
     for sid in SKIN_IDS[1:]:
         sk, f = SKINS[sid], FONTS[sid]
@@ -490,7 +529,10 @@ def build_skins(src_dir):
         parts = ['/* 解包 換裝：%s（skins.py 自動產生，不要手改） */' % sk['name'], ':root{%s}' % root]
         for it in items:
             if it[0] == 'rule':
-                _, ctx, sel, diff = it
+                _, ctx, sel, diff, full, orig = it
+                fx = fix_contrast(sid, full, orig)
+                if fx:
+                    diff = [(p, v) for p, v in diff if p != 'color'] + [('color', fx)]
                 txt = '%s{%s}' % (sel, ';'.join('%s:%s' % (p, lit(sid, v)) for p, v in diff))
             else:
                 _, ctx, pre, inner = it

@@ -208,7 +208,7 @@ a{color:#00f0ff}
 .spoil .cover{background:#00f0ff;color:#07030f}
 .spoil .cover b{font:900 20px/1 var(--cjkh)}
 .vc{border:3px solid #07030f}
-.vc.pro{background:#3dffa8;color:#3dffa8;box-shadow:4px 4px 0 #3dffa8}
+.vc.pro{background:#c8ffe6;color:#0d2a1d;box-shadow:4px 4px 0 #3dffa8}
 .vc.con{background:#ffcdf5;color:#420035;box-shadow:4px 4px 0 #ff2bd6}
 .debate{background:#08040f;border:2px solid #00f0ff}
 .debate h4{color:#00f0ff}
@@ -563,18 +563,18 @@ input[type=range]{accent-color:#ff2bd6}
 .buycard.hit .bc-call{color:#3dffa8}
 .buycard .bc-t b{color:#ff3d6e}
 .buycard .bc-now{color:#271b47}
-.bc-hit{background:#3dffa8;color:#f2eeff}
+.bc-hit{background:#3dffa8;color:#07030f}
 .buycard .bc-w{color:#43366e}
 .buycard .hpk .tg{color:#3dffa8}
 .hp .hpt{background:#3dffa8;box-shadow:0 0 0 1.5px #000000}
 .bc-stamp{border:6px solid #3dffa8;color:#3dffa8;font:900 24px/1 var(--cjkh);background:#f2eeffd8}
 .chip.cl{background:#ece6ff;color:#07030f;box-shadow:inset 0 0 0 2px #000000}
-.chip.cl.hit{background:#3dffa8;color:#f2eeff}
+.chip.cl.hit{background:#3dffa8;color:#07030f}
 .chip.q{background:#1d1336;color:#00f0ff;box-shadow:inset 0 0 0 2px #00f0ff}
 .hqueue{background:#120b23;border:2px dashed #00f0ff;color:#c3bbe1}
 .hqueue b{color:#00f0ff}
 .hqueue em{color:#f2eeff}
-.bhit{background:#3dffa8;color:#f2eeff}
+.bhit{background:#3dffa8;color:#07030f}
 .tr-tg{color:#3dffa8!important}
 .hi-buy{background:#ece6ff;color:#07030f;border:3px solid #07030f;box-shadow:4px 4px 0 #00f0ff}
 .hi-buy b{font:900 24px/1.1 var(--cjkh)}
@@ -723,9 +723,6 @@ span.mk-sp.none{color:#544881}
 .fr-im{background:#180e2d;border-bottom:3px solid #07030f}
 .fr-im .ph{color:#43366e}
 .fr-st{border:2px solid #07030f;background:#ece6ff;color:#030108}
-.fr-st.ep{background:#08040f;color:#f2eeff;border-color:#f2eeff}
-.fr-st.st{background:#5b7cff;color:#5b7cff}
-.fr-st.gg{background:#b26bff;color:#f2eeff}
 .fr-p s{color:#7b70a7}
 .fr-p b{font:900 20px/1 var(--cjkh);color:#3dffa8}
 .fr.up .fr-p b{color:#544881}
@@ -734,7 +731,7 @@ span.mk-sp.none{color:#544881}
 .hstrip.free .hs-k{background:#3dffa8}
 .hstrip.sale{background:repeating-linear-gradient(-45deg,#ff3d6e 0 14px,#08040f 14px 28px)}
 .hstrip.sale .hs-k{background:#08040f;color:#00f0ff}
-.tg-hero{background:radial-gradient(90% 70% at 50% -10%,#ff9f1c 0%,#ff9f1c 45%,#06030c 80%);border:3px solid #ffd23f;box-shadow:6px 6px 0 #ff2bd6}
+.tg-hero{background:radial-gradient(90% 70% at 50% -10%,#ff9f1c 0%,#2a1a05 45%,#06030c 80%);border:3px solid #ffd23f;box-shadow:6px 6px 0 #ff2bd6}
 .tg-beams i{background:linear-gradient(180deg,#a0f9ff66,transparent 75%)}
 .tg-stars{background-image:radial-gradient(#ffd23f 1px,transparent 1.6px),radial-gradient(#ece6ff 1px,transparent 1.6px)}
 .tg-k{color:#ffd23f}
@@ -794,7 +791,7 @@ span.mk-sp.none{color:#544881}
 .tgb-p span{color:#b5acd7}
 .tgb-p i{background:#271b47}
 .tgb-p i::after{background:#00f0ff}
-.tg-ban{background:radial-gradient(120% 140% at 0% 0%,#ff9f1c,#090513 60%);border:3px solid #ffd23f;box-shadow:5px 5px 0 #ff2bd6}
+.tg-ban{background:radial-gradient(120% 140% at 0% 0%,#5c3808,#090513 60%);border:3px solid #ffd23f;box-shadow:5px 5px 0 #ff2bd6}
 .tgb-l{color:#ffd23f}
 .tgb-l span{color:#f2eeff}
 .tgb-b b{color:#f2eeff}
@@ -1316,7 +1313,7 @@ span.mk-sp.none{color:#544881}
 .dbr-b>b{color:#f2eeff}
 .dbr-b small{color:#8176ac}
 .dbc{background:#1f1539;color:#c7bfe3}
-.dbc.tc{background:#3dffa8;color:#f2eeff}
+.dbc.tc{background:#3dffa8;color:#07030f}
 .dbc.sc{background:#322659;color:#d8d1ef}
 .dbc.mod{background:#ff2bd6;color:#f2eeff}
 .dbp{color:#00f0ff}
@@ -1540,6 +1537,88 @@ span.mk-sp.none{color:#544881}
 .rc-vs>span{color:#f2eeff}
 .rc-cardbox canvas{border:3px solid #f2eeff;box-shadow:6px 6px 0 #ff2bd6;background:#08040f}
 .rc-ban{background:#00f0ff;color:#07030f}
+.se-hero{background:#08040f;border:3px solid #00f0ff;box-shadow:7px 7px 0 #ff2bd6}
+.se-ring{border:4px dashed #00f0ff}
+.se-ring.r2{border:3px dotted #ff2bd6}
+.se-ring.r3{border:3px solid #00f0ff59}
+.se-core{background:#180e2d;border:4px solid #f2eeff;box-shadow:0 0 0 5px #000000}
+.se-coreb{background:#00f0ff;color:#07030f;border:2px solid #07030f}
+.se-sat{background:#08040f;border:3px solid #ff2bd6;color:#f2eeff}
+.se-sat i{color:#00f0ff}
+.se-kick{color:#00f0ff}
+.se-name{font:900 34px/1.1 var(--cjkh);color:#f2eeff;text-shadow:3px 3px 0 #ff2bd6}
+.se-en{color:#a298c7}
+.se-sub{color:#d8d1ef}
+.se-cat{background:#ff2bd6;color:#f2eeff;border:3px solid #07030f;box-shadow:4px 4px 0 #00f0ff}
+.se-cat.c1,.se-cat.c2{background:#1d1336}
+.se-why{color:#d8d1ef}
+.se-why b{background:#00f0ff;color:#07030f}
+.se-why b.se-pin{background:#ff2bd6;color:#f2eeff}
+.se-hero.past{border-color:#43366e;box-shadow:7px 7px 0 #271b47}
+.se-pastbar{background:#1d1336;border:2px dashed #544881;color:#d8d1ef}
+.se-d{color:#a298c7}
+.se-d.up{color:#3dffa8}
+.se-d.dn{color:#ff77e5}
+.se-g{background:#120b23;border:2px solid #271b47}
+.se-g.g-heat{background:#00f0ff;border-color:#07030f}
+.se-g small{color:#a298c7}
+.se-g b{color:#f2eeff}
+.se-g b i{color:#a298c7}
+.se-g.g-heat small,.se-g.g-heat b,.se-g.g-heat b i,.se-g.g-heat .se-d{color:#07030f}
+.se-tl .th{stroke:#f2eeff1c}
+.se-th{color:#f2eeff47}
+.se-tl svg{border-bottom:2px solid #271b47}
+.se-tl polyline{stroke:#00f0ff}
+.se-tl .ar{fill:#00f0ff22}
+.se-mk{background:#ff2bd6;border:2px solid #07030f}
+.se-tlpk{background:#ece6ff;border:2px solid #ff2bd6}
+.se-tlx span{color:#7b70a7}
+.se-dgtabs button{border:2px solid #322659;color:#c7bfe3;background:#140c26}
+.se-dgtabs button.on{background:#00f0ff;color:#07030f;border-color:#07030f}
+.se-dgc{background:#ece6ff;color:#07030f;border:3px solid #07030f;box-shadow:6px 6px 0 #00f0ff}
+.se-dgh b{font:900 20px/1.3 var(--cjkh);color:#07030f}
+.se-dgh small{color:#675c94}
+.se-tldr{color:#07030f;background:#a8faff;border-left:5px solid #ff2bd6}
+.se-pts li{color:#180e2d}
+.se-pts li::before{background:#08040f;color:#00f0ff}
+.se-pts li b{color:#07030f}
+.se-sup sup{background:#ffd6f7;color:#c1009c}
+.se-next{background:#e8e3f9;border:2px dashed #8f85b8}
+.se-next b{color:#07030f}
+.se-next p{color:#271b47}
+.se-srcs{color:#43366e}
+.se-srcs summary{color:#07030f}
+.se-srcs a{color:#5b7cff}
+.se-srcs small{color:#7b70a7}
+.se-empty{background:#120b23;border:2px dashed #43366e;color:#c7bfe3}
+.se-list li{background:#120b23;border:2px solid #271b47;color:#e5e0f7}
+.se-list li a{color:#f2eeff}
+.se-list li small{color:#8f85b8}
+.se-list.off li{border-left:5px solid #00f0ff}
+.se-push{background:#271b47;color:#00f0ff}
+.se-push.boom{background:#ff3d6e;color:#f2eeff}
+.se-push.neg{background:#43366e;color:#a298c7}
+.se-h4{color:#00f0ff}
+.se-score{background:#00f0ff;color:#07030f;border:3px solid #07030f;box-shadow:4px 4px 0 #ff2bd6}
+.se-notes{color:#d8d1ef}
+.se-q{background:#ece6ff;color:#180e2d;border:2px solid #07030f;box-shadow:4px 4px 0 #ff2bd6}
+.se-q footer{color:#43366e}
+.se-q footer b{color:#07030f}
+.se-v{color:#f2eeff;background:#120b23;border:2px solid #271b47}
+.se-v.live{border-color:#ff3d6e}
+.se-vt{background:#1d1336}
+.se-vt em{background:#030108cc;color:#f2eeff}
+.se-vt em.se-onair{background:#ff3d6e}
+.se-v small{color:#8f85b8}
+.se-pc{background:#120b23;border:2px solid #271b47}
+.se-pcst{background:#00f0ff;color:#07030f}
+.se-pc p{color:#d8d1ef}
+.se-hist button{background:#120b23;border:2px solid #271b47;color:#e5e0f7}
+.se-hist small{color:#8f85b8}
+.sepick .se-cands button{background:#120b23;border:2px solid #322659;color:#f2eeff}
+.sepick .se-cands small{color:#a298c7}
+.se-pinf input{background:#08040f;color:#f2eeff;border:2px solid #43366e}
+.se-pend{color:#07030f;background:#00f0ff}
 /* ---- skin-neon.css ---- */
 /* ==========================================================================
    換裝：霓虹賽博（NEON）— 紫黑夜城、地平線上的太陽、透視格線、掃描線、霓虹管雙線框

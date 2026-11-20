@@ -18,7 +18,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'spectate')
-JS_ORDER = ['core.js', 'sound.js', 'fx.js', 'player.js', 'views.js', 'quest.js', 'main.js']
+JS_ORDER = ['core.js', 'sound.js', 'fx.js', 'player.js', 'views.js', 'storm.js', 'quest.js', 'main.js']
 FONTS = [
     ('teko-latin-500-normal.woff2', 'Teko', 500, 'normal'),
     ('teko-latin-600-normal.woff2', 'Teko', 600, 'normal'),

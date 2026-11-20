@@ -208,7 +208,7 @@ a{color:#ffec27}
 .spoil .cover{background:#ffec27;color:#05061a}
 .spoil .cover b{font:900 20px/1 var(--cjkh)}
 .vc{border:3px solid #000000}
-.vc.pro{background:#00e436;color:#00e436;box-shadow:4px 4px 0 #00e436}
+.vc.pro{background:#c8ffd5;color:#0d2a14;box-shadow:4px 4px 0 #00e436}
 .vc.con{background:#fff0f5;color:#8e0033;box-shadow:4px 4px 0 #1d6fc2}
 .debate{background:#0b0d24;border:2px solid #ffec27}
 .debate h4{color:#ffec27}
@@ -563,18 +563,18 @@ input[type=range]{accent-color:#29adff}
 .buycard.hit .bc-call{color:#00e436}
 .buycard .bc-t b{color:#ff004d}
 .buycard .bc-now{color:#28326b}
-.bc-hit{background:#00e436;color:#fff1e8}
+.bc-hit{background:#00e436;color:#05061a}
 .buycard .bc-w{color:#465190}
 .buycard .hpk .tg{color:#00e436}
 .hp .hpt{background:#00e436;box-shadow:0 0 0 1.5px #000000}
 .bc-stamp{border:6px solid #00e436;color:#00e436;font:900 24px/1 var(--cjkh);background:#fff1e8d8}
 .chip.cl{background:#fff1e8;color:#05061a;box-shadow:inset 0 0 0 2px #000000}
-.chip.cl.hit{background:#00e436;color:#fff1e8}
+.chip.cl.hit{background:#00e436;color:#05061a}
 .chip.q{background:#1e2657;color:#ffec27;box-shadow:inset 0 0 0 2px #ab5236}
 .hqueue{background:#131839;border:2px dashed #ffec27;color:#c5c6dd}
 .hqueue b{color:#ffec27}
 .hqueue em{color:#fff1e8}
-.bhit{background:#00e436;color:#fff1e8}
+.bhit{background:#00e436;color:#05061a}
 .tr-tg{color:#00e436!important}
 .hi-buy{background:#fff1e8;color:#05061a;border:3px solid #000000;box-shadow:4px 4px 0 #ab5236}
 .hi-buy b{font:900 24px/1.1 var(--cjkh)}
@@ -723,9 +723,6 @@ span.mk-sp.none{color:#5a63a0}
 .fr-im{background:#191f48;border-bottom:3px solid #000000}
 .fr-im .ph{color:#465190}
 .fr-st{border:2px solid #000000;background:#fff1e8;color:#000000}
-.fr-st.ep{background:#0b0d24;color:#fff1e8;border-color:#fff1e8}
-.fr-st.st{background:#29adff;color:#29adff}
-.fr-st.gg{background:#7a1fa2;color:#fff1e8}
 .fr-p s{color:#7e84b7}
 .fr-p b{font:900 20px/1 var(--cjkh);color:#00e436}
 .fr.up .fr-p b{color:#5a63a0}
@@ -734,7 +731,7 @@ span.mk-sp.none{color:#5a63a0}
 .hstrip.free .hs-k{background:#00e436}
 .hstrip.sale{background:repeating-linear-gradient(-45deg,#ff004d 0 14px,#0b0d24 14px 28px)}
 .hstrip.sale .hs-k{background:#0b0d24;color:#ffec27}
-.tg-hero{background:radial-gradient(90% 70% at 50% -10%,#ffa300 0%,#ffa300 45%,#070819 80%);border:3px solid #ffa300;box-shadow:6px 6px 0 #1d6fc2}
+.tg-hero{background:radial-gradient(90% 70% at 50% -10%,#ffa300 0%,#2a1d05 45%,#070819 80%);border:3px solid #ffa300;box-shadow:6px 6px 0 #1d6fc2}
 .tg-beams i{background:linear-gradient(180deg,#fffac766,transparent 75%)}
 .tg-stars{background-image:radial-gradient(#ffa300 1px,transparent 1.6px),radial-gradient(#fff1e8 1px,transparent 1.6px)}
 .tg-k{color:#ffa300}
@@ -794,7 +791,7 @@ span.mk-sp.none{color:#5a63a0}
 .tgb-p span{color:#b5b8d6}
 .tgb-p i{background:#28326b}
 .tgb-p i::after{background:#ffec27}
-.tg-ban{background:radial-gradient(120% 140% at 0% 0%,#ffa300,#0a0c22 60%);border:3px solid #ffa300;box-shadow:5px 5px 0 #1d6fc2}
+.tg-ban{background:radial-gradient(120% 140% at 0% 0%,#5c3e08,#0a0c22 60%);border:3px solid #ffa300;box-shadow:5px 5px 0 #1d6fc2}
 .tgb-l{color:#ffa300}
 .tgb-l span{color:#fff1e8}
 .tgb-b b{color:#fff1e8}
@@ -1316,7 +1313,7 @@ span.mk-sp.none{color:#5a63a0}
 .dbr-b>b{color:#fff1e8}
 .dbr-b small{color:#8489ba}
 .dbc{background:#20285b;color:#c8c9df}
-.dbc.tc{background:#00e436;color:#fff1e8}
+.dbc.tc{background:#00e436;color:#05061a}
 .dbc.sc{background:#353f7d;color:#dbdae8}
 .dbc.mod{background:#29adff;color:#fff1e8}
 .dbp{color:#ffec27}
@@ -1540,6 +1537,88 @@ span.mk-sp.none{color:#5a63a0}
 .rc-vs>span{color:#fff1e8}
 .rc-cardbox canvas{border:3px solid #fff1e8;box-shadow:6px 6px 0 #1d6fc2;background:#0b0d24}
 .rc-ban{background:#ffec27;color:#05061a}
+.se-hero{background:#0b0d24;border:3px solid #ffec27;box-shadow:7px 7px 0 #1d6fc2}
+.se-ring{border:4px dashed #ffec27}
+.se-ring.r2{border:3px dotted #29adff}
+.se-ring.r3{border:3px solid #ffec2759}
+.se-core{background:#191f48;border:4px solid #fff1e8;box-shadow:0 0 0 5px #000000}
+.se-coreb{background:#ffec27;color:#05061a;border:2px solid #000000}
+.se-sat{background:#0b0d24;border:3px solid #29adff;color:#fff1e8}
+.se-sat i{color:#ffec27}
+.se-kick{color:#ffec27}
+.se-name{font:900 34px/1.1 var(--cjkh);color:#fff1e8;text-shadow:3px 3px 0 #1d6fc2}
+.se-en{color:#a3a7cc}
+.se-sub{color:#dbdae8}
+.se-cat{background:#29adff;color:#fff1e8;border:3px solid #000000;box-shadow:4px 4px 0 #ab5236}
+.se-cat.c1,.se-cat.c2{background:#1e2657}
+.se-why{color:#dbdae8}
+.se-why b{background:#ffec27;color:#05061a}
+.se-why b.se-pin{background:#29adff;color:#fff1e8}
+.se-hero.past{border-color:#465190;box-shadow:7px 7px 0 #28326b}
+.se-pastbar{background:#1e2657;border:2px dashed #5a63a0;color:#dbdae8}
+.se-d{color:#a3a7cc}
+.se-d.up{color:#00e436}
+.se-d.dn{color:#ffc3d9}
+.se-g{background:#131839;border:2px solid #28326b}
+.se-g.g-heat{background:#ffec27;border-color:#000000}
+.se-g small{color:#a3a7cc}
+.se-g b{color:#fff1e8}
+.se-g b i{color:#a3a7cc}
+.se-g.g-heat small,.se-g.g-heat b,.se-g.g-heat b i,.se-g.g-heat .se-d{color:#05061a}
+.se-tl .th{stroke:#fff1e81c}
+.se-th{color:#fff1e847}
+.se-tl svg{border-bottom:2px solid #28326b}
+.se-tl polyline{stroke:#ffec27}
+.se-tl .ar{fill:#ffec2722}
+.se-mk{background:#29adff;border:2px solid #000000}
+.se-tlpk{background:#fff1e8;border:2px solid #29adff}
+.se-tlx span{color:#7e84b7}
+.se-dgtabs button{border:2px solid #353f7d;color:#c8c9df;background:#151a3d}
+.se-dgtabs button.on{background:#ffec27;color:#05061a;border-color:#000000}
+.se-dgc{background:#fff1e8;color:#05061a;border:3px solid #000000;box-shadow:6px 6px 0 #ab5236}
+.se-dgh b{font:900 20px/1.3 var(--cjkh);color:#05061a}
+.se-dgh small{color:#6c73ab}
+.se-tldr{color:#05061a;background:#fffbcf;border-left:5px solid #29adff}
+.se-pts li{color:#191f48}
+.se-pts li::before{background:#0b0d24;color:#ffec27}
+.se-pts li b{color:#05061a}
+.se-sup sup{background:#fff0f5;color:#ff0e65}
+.se-next{background:#f1e8e8;border:2px dashed #9196c2}
+.se-next b{color:#05061a}
+.se-next p{color:#28326b}
+.se-srcs{color:#465190}
+.se-srcs summary{color:#05061a}
+.se-srcs a{color:#29adff}
+.se-srcs small{color:#7e84b7}
+.se-empty{background:#131839;border:2px dashed #465190;color:#c8c9df}
+.se-list li{background:#131839;border:2px solid #28326b;color:#ede6e8}
+.se-list li a{color:#fff1e8}
+.se-list li small{color:#9196c2}
+.se-list.off li{border-left:5px solid #ffec27}
+.se-push{background:#28326b;color:#ffec27}
+.se-push.boom{background:#ff004d;color:#fff1e8}
+.se-push.neg{background:#465190;color:#a3a7cc}
+.se-h4{color:#ffec27}
+.se-score{background:#ffec27;color:#05061a;border:3px solid #000000;box-shadow:4px 4px 0 #1d6fc2}
+.se-notes{color:#dbdae8}
+.se-q{background:#fff1e8;color:#191f48;border:2px solid #000000;box-shadow:4px 4px 0 #1d6fc2}
+.se-q footer{color:#465190}
+.se-q footer b{color:#05061a}
+.se-v{color:#fff1e8;background:#131839;border:2px solid #28326b}
+.se-v.live{border-color:#ff004d}
+.se-vt{background:#1e2657}
+.se-vt em{background:#000000cc;color:#fff1e8}
+.se-vt em.se-onair{background:#ff004d}
+.se-v small{color:#9196c2}
+.se-pc{background:#131839;border:2px solid #28326b}
+.se-pcst{background:#ffec27;color:#05061a}
+.se-pc p{color:#dbdae8}
+.se-hist button{background:#131839;border:2px solid #28326b;color:#ede6e8}
+.se-hist small{color:#9196c2}
+.sepick .se-cands button{background:#131839;border:2px solid #353f7d;color:#fff1e8}
+.sepick .se-cands small{color:#a3a7cc}
+.se-pinf input{background:#0b0d24;color:#fff1e8;border:2px solid #465190}
+.se-pend{color:#05061a;background:#ffec27}
 /* ---- skin-pixel.css ---- */
 /* ==========================================================================
    換裝：像素掌機（PIXEL）— 方塊、硬邊、像素字、浮雕按鈕，像在掌機上翻攻略本

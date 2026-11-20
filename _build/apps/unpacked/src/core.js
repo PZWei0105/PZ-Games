@@ -79,7 +79,7 @@ function toast(msg, kind = '') {
   const t = $('#toast'); if (!t) return;
   t.className = kind; t.textContent = msg;
   requestAnimationFrame(() => t.classList.add('on'));
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2200);
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), Math.min(6000, Math.max(2200, String(msg).length * 85)));   // 長的字多留一下
 }
 
 async function copyText(text) {
@@ -99,6 +99,7 @@ const ICON = {
   can: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="7" y="8" width="10" height="14" rx="2"/><path d="M9 8V5h6v3M11 5V3h3"/><path d="M17 4l2-1M17 6h3M17 8l2 1" stroke-linecap="round"/></svg>',
   canoff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="7" y="8" width="10" height="14" rx="2"/><path d="M9 8V5h6v3"/><path d="M4 4l16 16" stroke-linecap="round"/></svg>',
   boom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="8" width="20" height="12" rx="2"/><circle cx="7.5" cy="14" r="3"/><circle cx="16.5" cy="14" r="3"/><path d="M7 8V5h10v3"/></svg>',
+  storm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="2.6"/><path d="M12 3.4a8.6 8.6 0 0 1 8.5 7.2M20.6 12.2a8.6 8.6 0 0 1-7.2 8.4M11.8 20.6a8.6 8.6 0 0 1-8.4-7.2M3.4 11.8a8.6 8.6 0 0 1 7.2-8.4"/></svg>',
   cons: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 18.5 9 9.5l5.5 3.5 5-8"/><circle cx="4.5" cy="18.5" r="2" fill="currentColor"/><circle cx="9" cy="9.5" r="2.3" fill="currentColor"/><circle cx="14.5" cy="13" r="1.8" fill="currentColor"/><circle cx="19.5" cy="5" r="2.5" fill="currentColor"/></svg>',
   recap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M3 6.5v11M21 6.5v11"/><path d="M10.5 9v6l5-3z" fill="currentColor"/></svg>',
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>',

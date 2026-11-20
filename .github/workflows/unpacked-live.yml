@@ -1,6 +1,7 @@
 # 《解包 UNPACKED》資料管線：Steam 台灣區價格、同上人數、評價、預告與截圖，加上每日寫稿用的選題候選。
 # 只動 apps/unpacked/data/ 底下的 live.json＋live/（即時資料分兩層）、wish.json、hist/、candidates.json、board.json／board-d.json（行情板）、free.json（免費補給站）、
-# calendar.ics、inbox.json（點播台收件）、db.json（資料庫）、adds.json（加進資料庫）；專題、推坑、週報、問答（qa.json）由排程推上來。
+# calendar.ics、inbox.json（點播台收件）、db.json（資料庫）、adds.json（加進資料庫）、storm.json＋storm/<款>.json（風暴眼：新聞、PTT、Reddit、熱度）；
+# 專題、推坑、週報、問答（qa.json）、風暴日報（storm/<款>.digest.json）和風暴眼盯哪一款（storm-pick.json）由排程推上來。
 # 願望單：Steam 代號放在 repo 的 Actions 密碼 UNP_STEAM（Settings → Secrets and variables → Actions），不會公開。
 name: unpacked-live
 
@@ -15,6 +16,9 @@ on:
       - 'apps/unpacked/data/events.json'
       - '_build/apps/unpacked/tools/inbox.py'
       - '_build/apps/unpacked/tools/live.py'
+      - '_build/apps/unpacked/tools/storm.py'
+      - 'apps/unpacked/data/storm-pick.json'       # 風暴日報換了一款：馬上重抓
+      - 'apps/unpacked/data/storm/*.digest.json'   # 新的風暴日報：馬上更新分頁上的 NEW
   workflow_dispatch:
     inputs:
       selftest:
@@ -48,12 +52,15 @@ jobs:
         env:
           UNP_STEAM: ${{ secrets.UNP_STEAM }}
         run: python3 _build/apps/unpacked/tools/live.py --data apps/unpacked/data
+      # 風暴眼：最熱那一款的新聞、PTT、Reddit、熱度（出錯也不擋上面 Steam 的資料）
+      - name: 風暴眼
+        run: python3 _build/apps/unpacked/tools/storm.py --data apps/unpacked/data || echo '風暴眼這輪失敗，下一輪再抓'
       - name: 有變動才 commit
         run: |
           git config user.name 'unpacked-bot'
           git config user.email 'unpacked-bot@users.noreply.github.com'
           # 一個一個加：還沒產生的檔案不能讓整個 git add 失敗
-          for f in live.json live wish.json calendar.ics hist candidates.json board.json board-d.json free.json inbox.json info names.json db.json adds.json; do
+          for f in live.json live wish.json calendar.ics hist candidates.json board.json board-d.json free.json inbox.json info names.json db.json adds.json storm.json storm; do
             if [ -e "apps/unpacked/data/$f" ]; then git add "apps/unpacked/data/$f"; fi
           done
           if git diff --cached --quiet; then echo '沒有變動'; exit 0; fi

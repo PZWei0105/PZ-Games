@@ -3,6 +3,7 @@
 用法：python3 testdata.py /tmp/unp/data            # 假的 ROB RUN 即時資料（其他款保留 repo 裡的真資料）
       python3 testdata.py /tmp/unp/data --hunt     # 再加：假的 Steam 願望單（各種特價狀態）＋一份假週報
       python3 testdata.py /tmp/unp/data --hunt --noweek   # 只要假願望單（測「本週進行中」）
+      python3 testdata.py /tmp/unp/data --storm    # 風暴眼：假的最熱遊戲、新聞、PTT、Reddit、YouTube、48 小時時間軸、兩則風暴日報
 """
 import json, math, os, random, sys, time
 
@@ -323,3 +324,54 @@ if '--launch' in sys.argv:   # 上市戰報＋繁中最新風向：第一篇有 
         json.dump(h, open(os.path.join(d, 'hist', f'{a}.json'), 'w'))
     L.live_save(d, lv)
     print('test launch →', d, [x['id'] for x in ids])
+
+if '--storm' in sys.argv:   # 風暴眼（2026-11-21）：假的 storm.json、storm/<key>.json、風暴日報（標題都標「測試」）
+    TT = int(time.time()); K = 'gta-vi'
+    os.makedirs(os.path.join(d, 'storm'), exist_ok=True)
+    cur = {'key': K, 'zh': '俠盜獵車手 VI', 'en': 'Grand Theft Auto VI', 'short': 'GTA 6', 'since': time.strftime('%Y-%m-%d', time.gmtime(TT - 2 * 86400)),
+           'rel': time.strftime('%Y-%m-%d', time.gmtime(TT - 2 * 86400)), 'plat': 'PS5、Xbox Series X|S（PC 版未公布）', 'steam': None,
+           'img': None, 'yt_id': 'oFwB6gZLRmc', 'pin': 0, 'why': '（測試）上市第三天，全世界都在玩',
+           'rx': r'GTA\s?(6|VI)', 'news': {'zh': 'GTA6', 'en': 'GTA 6'}, 'yt': {'zh': 'GTA6', 'en': 'GTA 6'}, 'ptt': ['GTA6'], 'boards': ['C_Chat'], 'reddit': 'GTA6'}
+    tl = []
+    for h in range(48, -1, -1):
+        x = 48 - h
+        heat = int(55 + 35 * math.sin(min(1, x / 10) * math.pi / 2) - 8 * max(0, (x - 24) / 20) + 4 * math.sin(x / 2.5))
+        tl.append([TT // 60 - h * 60, max(0, min(100, heat)), 60 + x * 3, int(150000 + 40000 * math.sin(x / 3)), 80 + x * 2, 20 + x])
+    nw = lambda t, src, ago: {'t': t, 's': src, 'su': '', 'u': 'https://news.google.com/', 'ts': TT - ago}
+    vid = lambda i, t, cn, ago, **k: dict({'i': 'tst%08d' % i, 't': t, 'cn': cn, 'p': TT - ago, 'l': 'play', 'z': 'zh'}, **k)
+    yt = {'at': iso(TT), 'n24': 132, 'n72': 310, 'lv': 191400, 'lc': 2, 'zl': 1,
+          'live': [vid(1, '（測試）GTA 6 二十四小時直播', '測試主播 A', 3600, cv=182000, lv='live', z='en'), vid(2, '（測試）GTA6 直播第二天：搶銀行任務', '測試主播 B', 5400, cv=9400, lv='live')],
+          'cz': [vid(10 + i, '（測試）GTA6 中文心得第 %d 集' % (i + 1), '測試頻道 %d' % i, 3600 * (i + 2), v=20000 - i * 1500, l='review') for i in range(6)],
+          'top': [vid(30 + i, '(test) GTA 6 top video %d' % (i + 1), 'Test Channel %d' % i, 86400 + i * 3600, v=2000000 - i * 150000, z='en') for i in range(6)],
+          'lanes': {'review': 8, 'guide': 5, 'play': 12, 'news': 4}}
+    det = {'v': 1, 'at': iso(TT), 'key': K,
+           'news': {'zh': [nw('（測試）GTA6 首日銷量新聞 %d' % i, '測試媒體', 3600 * (i + 1)) for i in range(7)],
+                    'en': [nw('(test) GTA 6 launch story %d' % i, 'Test Media', 3600 * (i + 2)) for i in range(4)]},
+           'off': [nw('（測試）Rockstar 公告：第一個修正檔', 'Rockstar Games', 7200)],
+           'ptt': [{'t': '[閒聊] （測試）GTA6 好玩到不想睡覺', 'b': 'C_Chat', 'n': 100, 'u': 'https://www.ptt.cc/bbs/C_Chat/index.html', 'ts': TT - 5000},
+                   {'t': '[心得] （測試）GTA6 三十幀習慣了嗎', 'b': 'PlayStation', 'n': 46, 'u': 'https://www.ptt.cc/bbs/PlayStation/index.html', 'ts': TT - 9000},
+                   {'t': '[問題] （測試）盒裝版下載碼不能用', 'b': 'PlayStation', 'n': -3, 'u': 'https://www.ptt.cc/bbs/PlayStation/index.html', 'ts': TT - 20000}],
+           'reddit': {'ok': 1, 'sub': 'GTA6', 'ts': TT - 600, 'items': [{'t': '(test) The attention to detail is insane', 'n': 15400, 'c': 820, 'f': 'Discussion', 'u': 'https://www.reddit.com/r/GTA6/', 'ts': TT - 8000}]},
+           'yt': yt, 'tl': tl}
+    src = [{'t': '（測試）來源 %d' % i, 'u': 'https://example.com/%d' % i, 'p': '測試媒體'} for i in range(1, 7)]
+
+    def dig(ago, slot, title):
+        return {'at': time.strftime('%Y-%m-%dT%H:%M:%S+08:00', time.gmtime(TT - ago + 8 * 3600)), 'slot': slot, 'title': title,
+                'tldr': '（測試資料）評價和熱度都是史上級，抱怨集中在主機鎖 30 幀和上市當天的斷線；線上模式和 PC 版都還沒有日期。',
+                'points': [{'h': '評價史上級', 't': '（測試）媒體評分幾乎全數推薦。', 's': [1]}, {'h': '直播紀錄', 't': '（測試）三大平台同時觀看創新高。', 's': [2]}, {'h': '30 幀爭議', 't': '（測試）主機版鎖 30 幀。', 's': [3]}],
+                'off': [{'t': '（測試）上市前推了兩次更新', 'd': time.strftime('%Y-%m-%d', time.gmtime(TT - 4 * 86400)), 's': [4]}],
+                'media': {'scores': [{'n': 'Metacritic', 'v': '99', 's': [1]}], 'notes': [{'t': '（測試）台灣售價標準版 NT$2,320。', 's': [5]}]},
+                'players': {'pos': ['（測試）路人互動很真實'], 'neg': ['（測試）主機鎖 30 幀'], 'debate': ['（測試）要先買主機玩，還是等 PC 版？'], 's': [6]},
+                'streamers': [{'who': '測試主播 A', 'where': 'Twitch', 't': '（測試）上市日觀看人數最高。', 's': [2]}],
+                'pc': {'st': '未公布', 't': '（測試）PC 版沒有時間表。', 's': [3]}, 'next': ['（測試）第一個修正檔會修什麼'],
+                'fan': {'post': '（測試資料）GTA 6 上市第三天。\n・評分很高\n・直播很多人看\n・主機鎖 30 幀\n你已經在玩了嗎？', 'topic': 'GTA6'}, 'sources': src}
+    dg = {'key': K, 'items': [dig(1800, 'am', '（測試）GTA 6 上市第 3 天：評分 99、直播破紀錄'), dig(15 * 3600, 'pm', '（測試）GTA 6 上市第 2 天：伺服器塞爆')]}
+    pk = max(p[1] for p in tl)
+    sm = {'v': 1, 'at': iso(TT), 'cur': cur, 's': {'heat': tl[-1][1], 'cat': 5 if tl[-1][1] >= 80 else 4 if tl[-1][1] >= 62 else 3, 'd24': tl[-1][1] - tl[-25][1], 'news24': 9, 'lv': 191400, 'lc': 2, 'n24': 132, 'ptt24': 6},
+          'peak': pk, 'feats': [], 'hist': [{'key': 'test-old', 'zh': '（測試）上一場風暴', 'from': '2026-10-01', 'to': '2026-10-20', 'peak': 71}],
+          'head': {'t': dg['items'][0]['title'], 'at': dg['items'][0]['at'], 'tldr': dg['items'][0]['tldr']},
+          'cands': [{'zh': '（測試）候選遊戲 A', 'en': 'Test Game A', 'n': 40, 'chs': 12}], 'errs': []}
+    json.dump(det, open(os.path.join(d, 'storm', K + '.json'), 'w'), ensure_ascii=False)
+    json.dump(dg, open(os.path.join(d, 'storm', K + '.digest.json'), 'w'), ensure_ascii=False)
+    json.dump(sm, open(os.path.join(d, 'storm.json'), 'w'), ensure_ascii=False)
+    print('test storm →', d)

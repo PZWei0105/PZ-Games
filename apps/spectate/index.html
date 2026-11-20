@@ -71,7 +71,10 @@ html.watching body { overflow: hidden; }
 .onair i { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: blink 1.2s steps(2) infinite; }
 .onair b { color: #fff; font-weight: 600; }
 @keyframes blink { 50% { opacity: .25; } }
-.top-sp { flex: 1; }
+.bug, .onair { flex-shrink: 0; white-space: nowrap; }
+/* 手機上有直播時，台標＋ON AIR＋兩顆按鈕放不下（2026-11-21 發現台標被擠成兩行）：先收掉時鐘 */
+@media (max-width: 470px) { #top:has(#onair:not([hidden])) .bug-clock { display: none; } }
+.top-sp { flex: 1; min-width: 0; }
 .ico-btn { width: 40px; height: 40px; display: grid; place-items: center; color: var(--ice); border-radius: 50%; }
 .ico-btn svg { width: 22px; height: 22px; fill: currentColor; }
 .ico-btn:active { background: var(--panel3); }
@@ -89,6 +92,7 @@ html.watching body { overflow: hidden; }
 .tk-lbl { color: #fff; font-weight: 800; }
 .tk-red { color: #ff6b88; font-weight: 800; }
 .tk-lime { color: var(--lime); font-weight: 700; }
+.tk-gold { color: var(--gold); font-weight: 800; }
 .tk-dim { color: var(--mute); }
 .tk-sep { color: var(--red); font-style: normal; font-size: 9px; }
 .fx-lite .tk-run { animation-duration: calc(var(--tk, 40s) * 1.6); }
@@ -322,6 +326,46 @@ img.noimg { opacity: 0; }
 .chh-t { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .chh-m { font-size: 13px; color: var(--dim); }
 .chh-ds { margin: 4px 0 0; font-size: 13px; color: var(--mute); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------------- 特別轉播（2026-11-21）：突發新聞的特報字卡 ---------------- */
+.stv { position: relative; margin-top: 10px; }
+.stv-img { position: relative; aspect-ratio: 16 / 9; max-height: 50vh; width: 100%; overflow: hidden; background: #000; }
+.stv-img img { width: 100%; height: 100%; object-fit: cover; }
+.stv-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6, 7, 11, .5) 0%, rgba(6, 7, 11, 0) 28%, rgba(6, 7, 11, 0) 45%, rgba(6, 7, 11, .97)); }
+.stv-bar { position: absolute; left: 0; top: 14px; display: flex; align-items: stretch; height: 30px; }
+.stv-sc { display: flex; align-items: center; gap: 8px; padding: 0 16px 0 var(--pad); background: var(--red); color: #fff; font-family: var(--f-num); font-size: 19px; letter-spacing: 2.5px; line-height: 1; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.stv-sc i { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: stBlink 1.2s steps(2, jump-none) infinite; }
+@keyframes stBlink { 50% { opacity: .15; } }
+.stv-bar em { display: flex; align-items: center; margin-left: -6px; padding: 0 16px 0 18px; background: #fff; color: #07080d; font-style: normal; font-weight: 900; font-size: 14px; letter-spacing: 2px; clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+.stv-txt { position: relative; margin-top: -62px; padding: 0 var(--pad); display: flex; flex-direction: column; gap: 5px; }
+.stv-cat { align-self: flex-start; display: inline-flex; align-items: baseline; gap: 8px; padding: 5px 12px 4px; background: rgba(255, 194, 41, .14); border: 1px solid rgba(255, 194, 41, .6); color: var(--gold); transform: skewX(-10deg); }
+.stv-cat b { font-family: var(--f-num); font-size: 20px; letter-spacing: 1.5px; line-height: 1; font-weight: 600; }
+.stv-cat span { font-weight: 900; font-size: 13px; }
+.stv-cat i { font-style: normal; font-size: 12px; color: #ffe6a6; }
+.stv-cat.c4, .stv-cat.c5 { background: rgba(255, 45, 85, .16); border-color: rgba(255, 45, 85, .7); color: #ff6b88; }
+.stv-cat.c4 i, .stv-cat.c5 i { color: #ffc2cf; }
+.stv h1 { margin: 2px 0 0; font-size: clamp(26px, 7vw, 42px); font-weight: 900; line-height: 1.12; text-shadow: 0 2px 18px rgba(0, 0, 0, .6); }
+.stv-en { font-family: var(--f-lat); color: var(--dim); font-size: 13px; }
+.stv-sub { font-size: 13px; color: var(--ice); }
+.stv-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 8px; background: var(--line2); border: 1px solid var(--line2); }
+.stv-stats span { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px 7px; background: rgba(10, 13, 21, .92); font-size: 11.5px; color: var(--dim); min-width: 0; }
+.stv-stats b { font-family: var(--f-num); font-size: 27px; font-weight: 600; color: #fff; line-height: 1; }
+.stv-stats span.on b { color: var(--red); }
+.stv-spark { margin-top: 8px; }
+.stv-spark svg { display: block; width: 100%; height: 46px; }
+.stv-spark path { fill: rgba(255, 45, 85, .14); stroke: none; }
+.stv-spark polyline { fill: none; stroke: var(--red); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.stv-spark span { display: block; margin-top: 3px; font-size: 11.5px; color: var(--mute); }
+.stv-spark b { color: var(--ice); font-weight: 700; }
+.stv-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+.stv + .chips { margin-top: 6px; }
+@media (max-width: 420px) { .stv-stats span { padding: 7px 7px 6px; font-size: 10.5px; } .stv-stats b { font-size: 24px; } }
+@media (min-width: 900px) {
+  .stv-img { aspect-ratio: 21 / 8; max-height: 60vh; }
+  .stv-txt { margin-top: -120px; max-width: 980px; }
+  .stv-stats { max-width: 720px; }
+  .stv-spark { max-width: 720px; }
+}
 
 /* ---------------- 新秀選秀會 ---------------- */
 .deck { position: relative; height: clamp(400px, calc(100svh - var(--toph) - var(--tkh) - var(--st) - var(--tabh) - var(--sb) - 230px), 540px); margin: 12px auto 0; max-width: 440px; padding: 0 var(--pad); touch-action: pan-y; }
@@ -645,7 +689,7 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
   :root { --toph: 42px; --tkh: 22px; --rail: calc(72px + var(--sl)); --tabh: 0px; }
   #tabs { top: 0; bottom: 0; right: auto; width: var(--rail); height: auto; flex-direction: column; justify-content: center; padding: var(--st) 0 var(--sb) var(--sl); border-top: 0; border-right: 1px solid var(--line2); }
   #tabs::before { display: none; }
-  #tabs a { flex: 0 0 60px; font-size: 10.5px; }
+  #tabs a { flex: 0 0 56px; font-size: 10.5px; }
   #tabs .ink { left: auto; right: 0; top: 0; width: 3px; }
   .bug { height: 26px; }
   .bug-logo { font-size: 15px; } .bug-en { font-size: 16px; } .bug-clock { font-size: 17px; }
@@ -764,6 +808,7 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
 
 <nav id="tabs">
   <a href="#home" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3 5h18v11H3zM8 19h8v2H8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 8l5 2.5-5 2.5z"/></svg><span>轉播台</span></a>
+  <a href="#storm" data-tab="storm"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.7"/><path d="M12 3.6a8.4 8.4 0 0 1 8.3 7M20.4 12.2a8.4 8.4 0 0 1-7 8.2M11.8 20.4a8.4 8.4 0 0 1-8.2-7M3.6 11.8a8.4 8.4 0 0 1 7-8.2" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg><span>特別轉播</span><b class="tab-dot" id="tabStormDot" hidden></b></a>
   <a href="#live" data-tab="live"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4M8.8 8.8a4.5 4.5 0 0 0 0 6.4M15.2 8.8a4.5 4.5 0 0 1 0 6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>直播</span><b class="tab-dot" id="tabLiveDot" hidden></b></a>
   <a href="#games" data-tab="games"><svg viewBox="0 0 24 24"><path d="M7 8h10a4 4 0 0 1 3.9 4.8l-.9 4A2.6 2.6 0 0 1 15.6 18L14 16h-4l-1.6 2a2.6 2.6 0 0 1-4.4-1.2l-.9-4A4 4 0 0 1 7 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 11v3M6.5 12.5h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="11.5" r="1.1"/><circle cx="17.3" cy="13.6" r="1.1"/></svg><span>遊戲</span></a>
   <a href="#rookies" data-tab="rookies"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.1l6.1-.7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>新秀</span><b class="tab-dot" id="tabRookDot" hidden></b></a>
@@ -798,8 +843,8 @@ html.watching #toast { bottom: calc(24px + var(--sb)); }
 'use strict';
 /* 觀戰 SPECTATE — 核心：設定、資料、同步、清單 */
 
-const VERSION = '1.3.0';
-const BUILD = '261118231001';   // 每次組建不一樣（build.py 填）：回到 App 時跟網站上的 ver.json 比，看有沒有新版
+const VERSION = '1.4.0';
+const BUILD = '261120163350';   // 每次組建不一樣（build.py 填）：回到 App 時跟網站上的 ver.json 比，看有沒有新版
 const NAME = '痞子葳';
 const RAW = 'https://raw.githubusercontent.com/PZWei0105/PZ-Games';
 const QS = new URLSearchParams(location.search);
@@ -898,7 +943,7 @@ const KINDS = { official: '官方', media: '媒體', creator: '創作者', strea
 const LANGS = { zh: '中', en: 'EN', ja: '日', ko: '韓' };
 
 /* ------------------------------------------------------------ 資料 */
-const D = { feed: null, games: null, disc: null, me: null, status: null, at: 0, ok: false, err: null, busy: false };
+const D = { feed: null, games: null, disc: null, me: null, status: null, storm: null, at: 0, ok: false, err: null, busy: false };
 const IDX = { items: [], byId: new Map(), ch: {}, games: {}, gameList: [], gameMap: new Map(), hot: [], rev: 0 };
 /* 播放器回報「頻道不允許嵌入」的影片：記在這台裝置，下次直接標出來（金鑰沒查到的也補上） */
 const NE = store.get('ne', {});
@@ -924,9 +969,9 @@ async function getJSON(base, name, fresh) {
 async function loadAll(fresh) {
   if (D.busy) return false;
   D.busy = true;
-  const [feed, games, disc, status, me] = await Promise.allSettled([
+  const [feed, games, disc, status, me, storm] = await Promise.allSettled([
     getJSON(DATA_URL, 'feed.json', fresh), getJSON(DATA_URL, 'games.json', fresh), getJSON(DATA_URL, 'discover.json', fresh),
-    getJSON(DATA_URL, 'status.json', fresh), getJSON(MAIN_URL, 'me.json', fresh),
+    getJSON(DATA_URL, 'status.json', fresh), getJSON(MAIN_URL, 'me.json', fresh), getJSON(DATA_URL, 'storm.json', fresh),
   ]);
   D.busy = false;
   let changed = false;
@@ -940,9 +985,12 @@ async function loadAll(fresh) {
   if (disc.status === 'fulfilled') D.disc = disc.value;
   if (status.status === 'fulfilled') D.status = status.value;
   if (me.status === 'fulfilled' && me.value) takeMe(me.value);
+  let stormCh = false;   // 特別轉播（storm.js）
+  if (storm.status === 'fulfilled' && storm.value && (!D.storm || D.storm.at !== storm.value.at)) { D.storm = storm.value; stormCh = true; }
   D.at = Date.now();
   if (changed) indexFeed();
-  return changed;
+  if (changed || stormCh) indexStorm();
+  return changed || stormCh;
 }
 
 function indexFeed() {
@@ -1969,6 +2017,13 @@ const Player = (() => {
   }
   function setMode(k) { mode = k; renderPvw(); Snd.play('tick'); }
   function refresh() { if (open_) { renderInfo(); renderPvw(); } }
+  function relink(list) {   // 開的時候還沒有資料（從別的 App 直接點進來）：資料到了再補
+    if (!open_ || !cur) return;
+    const it = IDX.byId.get(cur.i);
+    if (it) cur = it;
+    if (list && list.length > 1 && ctxIds.length <= 1) { ctxIds = list.slice(0, 80); if (!ctxIds.includes(cur.i)) ctxIds.unshift(cur.i); }
+    refresh();
+  }
   function toggle() {
     if (!yt || !ready) return;
     try { if (yt.getPlayerState() === 1) yt.pauseVideo(); else yt.playVideo(); } catch (e) { /* */ }
@@ -1996,7 +2051,7 @@ const Player = (() => {
     if (req) req.call(f).catch(() => toast('這台裝置不支援全螢幕：請用播放器右下角的全螢幕鍵'));
     else toast('請用播放器右下角的全螢幕鍵');
   }
-  return { open, close, isOpen, take, next, prev, toggle, setMode, refresh, cancelNext, fullscreen, wipe, hasNext: () => !!nextItem(), get cur() { return cur; } };
+  return { open, close, isOpen, take, next, prev, toggle, setMode, refresh, relink, cancelNext, fullscreen, wipe, hasNext: () => !!nextItem(), get cur() { return cur; } };
 })();
 
 /* ------------------------------------------------------------ 橫放全螢幕
@@ -2717,6 +2772,7 @@ function renderTicker() {
   parts.push(`<span class="tk-lbl">${esc(greet())}，${esc(NAME)}</span>`);
   if (live) parts.push(`<span class="tk-red">● ON AIR ${live} 場</span>`);
   parts.push(`<span>新片 <b>${newN}</b>${subsOn() ? '（你的頻道）' : ''}</span>`);
+  if (stormOn()) parts.push(`<span class="tk-gold">特別轉播《${esc(stormName())}》${D.storm.lc ? `● ${D.storm.lc} 台直播・${num(D.storm.lv)} 人在看` : `24 小時 ${D.storm.n24 || 0} 支新片`}</span>`);
   if (top) parts.push(`<span>本週最熱《${esc(gameName(top))}》${top.chs} 台在聊</span>`);
   if (rk) parts.push(`<span class="tk-lime">新秀 ${rk} 位等你選</span>`);
   const dark = L.dark()[0];
@@ -2731,6 +2787,126 @@ function renderTicker() {
   $('#onairN').textContent = live;
   $('#tabLiveDot').hidden = !live;
   $('#tabRookDot').hidden = !rk;
+  $('#tabStormDot').hidden = !(stormOn() && D.storm.lc);
+}
+
+/* ---- storm.js ---- */
+'use strict';
+/* 觀戰 SPECTATE — 特別轉播（2026-11-21）
+   《解包》的風暴眼選出「現在最熱的那一款」，這裡把那款遊戲的影片全收在一頁：直播中、中文最新、全球最熱、評測、攻略、實況、新聞。
+   名單外的頻道也收（管線另外用關鍵字搜，見 pipeline.py 的 storm_extras），但不會混進轉播台的主清單——只在這一頁出現。
+   資料：spectate-data 分支的 storm.json（管線每 20 分鐘寫）；颱風等級、熱度讀《解包》的 data/storm.json（同一個網站）。 */
+
+const ST = { zh: !!store.get('stZh', false), unp: null, unpAt: 0, unpBusy: false };
+const ST_CAT = ['', '輕颱', '中颱', '強颱', '超強颱', '史詩級'];
+
+/* 特別轉播的影片併進 IDX.byId（導播台、連播找得到），頻道併進 IDX.ch；不進 IDX.items，所以不會混進轉播台的各排 */
+function indexStorm() {
+  const s = D.storm;
+  if (!s || !s.items) return;
+  for (const [id, it] of Object.entries(s.items)) {
+    if (IDX.byId.has(id)) continue;
+    const x = Object.assign({ so: 1 }, it);   // so：只在特別轉播出現
+    if (NE[id] && !x.ne) x.ne = 'embed';
+    IDX.byId.set(id, x);
+  }
+  for (const [c, ch] of Object.entries(s.ch || {})) if (!IDX.ch[c]) IDX.ch[c] = ch;
+  MEMO.clear();
+}
+const stormOn = () => !!(D.storm && D.storm.key);
+function stIds(ids) {
+  return (ids || []).map((v) => IDX.byId.get(v)).filter((it) => it && !VIEW.blocks[it.c] && (!ST.zh || zf(it)));
+}
+function stormAll() {   // 連播的順序：直播中 → 中文最新 → 全球最熱 → 其他新片
+  const s = D.storm || {}, seen = new Set(), out = [];
+  for (const it of stIds([].concat(s.live || [], s.cz || [], s.top || [], s.new || []))) {
+    if (seen.has(it.i) || it.lv === 'upcoming') continue;
+    seen.add(it.i); out.push(it);
+  }
+  return out;
+}
+const stormHas = (id) => { const s = D.storm; return !!(s && s.items && s.items[id]); };
+function stormName() {
+  const s = D.storm || {}, u = stUnp();
+  return (u && (u.cur.short || u.cur.zh)) || (s.g && (s.g.zh || s.g.en)) || '';
+}
+function stUnp() {   // 《解包》的風暴眼（同一款才用）
+  const u = ST.unp, s = D.storm;
+  return u && u.cur && s && u.cur.key === s.key ? u : null;
+}
+function loadUnpStorm(force) {
+  if (ST.unpBusy || (!force && Date.now() - ST.unpAt < 10 * 60e3)) return;
+  ST.unpBusy = true;
+  fetch('../unpacked/data/storm.json?t=' + Math.floor(Date.now() / 6e5), { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    .then((j) => {
+      ST.unpBusy = false; ST.unpAt = Date.now();
+      const was = JSON.stringify(ST.unp && ST.unp.s);
+      if (j && j.cur) ST.unp = j;
+      if (j && was !== JSON.stringify(j.s) && ROUTE === 'storm' && !Player.isOpen()) softRefresh();
+    });
+}
+
+function stSpark(tl) {   // 直播觀看人數（最近 48 小時）
+  const pts = (tl || []).filter((p) => p[0] > Date.now() / 6e4 - 48 * 60);
+  if (pts.length < 3) return '';
+  const W = 300, H = 46, t0 = pts[0][0], t1 = pts[pts.length - 1][0], span = Math.max(60, t1 - t0);
+  const mx = Math.max(1, ...pts.map((p) => p[1]));
+  const xy = pts.map((p) => `${(((p[0] - t0) / span) * W).toFixed(1)},${(H - 3 - (p[1] / mx) * (H - 8)).toFixed(1)}`);
+  const pk = pts.reduce((a, b) => (b[1] > a[1] ? b : a));
+  const d = new Date(pk[0] * 6e4);
+  return `<div class="stv-spark"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path d="M0,${H} L${xy.join(' L')} L${W},${H} Z"/><polyline points="${xy.join(' ')}"/></svg>
+    <span>直播觀看人數・48 小時　最高 <b>${num(pk[1])}</b>（${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:00）</span></div>`;
+}
+
+function vStorm() {
+  if (!D.feed && !D.storm) return loadingView();
+  loadUnpStorm();
+  const s = D.storm;
+  if (!stormOn()) {
+    return pageHead('特別轉播', 'SPECIAL COVERAGE') + empty('現在沒有特別轉播', '《解包》的風暴眼一選出「現在最熱的那一款」，這裡就開播：那款遊戲的直播、中文最新、全球最熱、評測、攻略、實況，全收在一頁。', '<a class="btn" href="../unpacked/#storm">去《解包》看風暴眼</a>');
+  }
+  const u = stUnp(), c = u ? u.cur : {}, sm = u ? u.s || {} : {};
+  const live = stIds(s.live), cz = stIds(s.cz), top = stIds(s.top), all = stormAll();
+  const name = c.zh || (s.g && (s.g.zh || s.g.en)) || '';
+  const en = c.en || (s.g && s.g.en) || '';
+  const coverVid = (top[0] || cz[0] || live[0] || {}).i;
+  const cover = c.img || (c.yt_id ? thumb(c.yt_id, 'maxresdefault') : coverVid ? thumb(coverVid, 'maxresdefault') : '');
+  const coverFb = c.yt_id ? thumb(c.yt_id, 'hqdefault') : coverVid ? thumb(coverVid, 'hqdefault') : '';
+  const day = c.rel ? Math.floor((Date.now() - Date.parse(c.rel + 'T00:00:00+08:00')) / 864e5) : null;
+  const sub = [day != null ? (day >= 0 ? `上市第 ${day + 1} 天` : `倒數 ${-day} 天`) : '', c.plat || ''].filter(Boolean).join('・');
+  const cat = sm.cat || 0;
+  let h = `<section class="stv">
+    <div class="stv-img">${cover ? `<img src="${esc(cover)}" ${coverFb && coverFb !== cover ? `data-fb="${esc(coverFb)}"` : ''} alt="">` : ''}<span class="stv-shade"></span>
+      <div class="stv-bar"><span class="stv-sc"><i></i>SPECIAL COVERAGE</span><em>特別轉播</em></div></div>
+    <div class="stv-txt">
+      ${cat ? `<a class="stv-cat c${cat}" href="../unpacked/#storm"><b>CAT ${cat}</b><span>${ST_CAT[cat]}</span><i>熱度 ${sm.heat || 0}</i></a>` : ''}
+      <h1>${esc(name)}</h1>${en && en !== name ? `<div class="stv-en">${esc(en)}</div>` : ''}${sub ? `<div class="stv-sub">${esc(sub)}</div>` : ''}
+      <div class="stv-stats">
+        <span class="${s.lc ? 'on' : ''}"><b>${s.lc || 0}</b>台直播中</span>
+        <span><b>${s.lv ? num(s.lv) : 0}</b>人在看</span>
+        <span><b>${s.n24 || 0}</b>支 24 小時新片</span>
+        <span><b>${s.zl || 0}</b>台中文直播</span>
+      </div>
+      ${stSpark(s.tl)}
+      <div class="stv-acts">${all.length ? `<button class="go-btn sm" data-act="play-list" data-ctx="${ctxOf('st:all', all)}"><b>▶</b>連播特別轉播</button>` : ''}<a class="chip unp" href="../unpacked/#storm">《解包》風暴眼 ›</a></div>
+    </div></section>`;
+  h += `<div class="chips">${[[false, '全部語言'], [true, '只看中文']].map(([k, t]) => `<button class="${ST.zh === k ? 'on' : ''}" data-act="st-zh" data-k="${k ? 1 : 0}">${t}</button>`).join('')}</div>`;
+  let body = '';
+  if (live.length) {
+    const ctx = ctxOf('st:live', live);
+    body += `<section class="sec live-sec">${secHead('直播中', 'ON AIR', '', `<span class="sh-note">${live.length} 台・照觀看人數排</span>`)}<div class="row big">${live.slice(0, 12).map((it) => card(it, ctx, { big: 1 })).join('')}</div></section>`;
+  }
+  body += row('st:cz', cz, { zh: '中文最新', en: 'LATEST・中文', max: 20, extra: '<span class="sh-note">台灣、香港的頻道優先</span>' });
+  body += row('st:top', top, { zh: '全球最熱', en: 'MOST WATCHED', max: 20, ranked: 1, extra: '<span class="sh-note">七天內、照觀看數</span>' });
+  const LN = [['review', '評測', 'REVIEWS'], ['guide', '攻略', 'GUIDES'], ['play', '實況反應', 'LET\'S PLAY'], ['news', '新聞', 'NEWS'], ['trailer', '預告', 'TRAILERS'], ['deep', '深度與幕後', 'DEEP DIVE']];
+  for (const [l, zh, en2] of LN) body += row('st:' + l, stIds((s.lanes || {})[l]), { zh, en: en2, max: 20 });
+  const rest = stIds(s.new).filter((it) => it.lv !== 'live');
+  if (rest.length) body += `<section class="sec">${secHead('全部新片', 'ALL NEW', '', '<span class="sh-note">最新的在前面</span>')}${grid('st:new', rest, { limit: LF.limit })}</section>`;
+  h += body || empty(ST.zh ? '還沒有中文的片' : '這款還沒有影片', ST.zh ? '換成「全部語言」看看國外的。' : '管線下一輪（20 分鐘內）會去搜。');
+  const age = s.at ? Math.round((Date.now() - Date.parse(s.at)) / 60000) : null;
+  h += `<div class="foot">特別轉播 ${age == null ? '' : age < 2 ? '剛剛' : age + ' 分鐘前'}更新・名單外的頻道也收，只放在這一頁・換一款由《解包》的風暴眼決定</div>`;
+  return h;
 }
 
 /* ---- quest.js ---- */
@@ -2889,7 +3065,7 @@ const INTRO_REV = 2;   // 開場的版本：2026/11/18 加了「今晚節目單�
 
 let ROUTE = null, BASE = 'home', PENDING_CTX = '';
 const SCROLL = new Map();
-const TAB_OF = (r) => (r.startsWith('live') ? 'live' : r.startsWith('games') || r.startsWith('g/') ? 'games' : r.startsWith('rookies') ? 'rookies' : r.startsWith('me') || r === 'key' ? 'me' : 'home');
+const TAB_OF = (r) => (r.startsWith('storm') ? 'storm' : r.startsWith('live') ? 'live' : r.startsWith('games') || r.startsWith('g/') ? 'games' : r.startsWith('rookies') ? 'rookies' : r.startsWith('me') || r === 'key' ? 'me' : 'home');
 
 function parse() { return decodeURIComponent((location.hash || '').replace(/^#/, '')) || 'home'; }
 
@@ -2898,6 +3074,7 @@ function render(r) {
   let html;
   try {
     if (r === 'home') html = vHome();
+    else if (r === 'storm') html = vStorm();
     else if (r === 'live') html = vLive();
     else if (r === 'games') html = vGames();
     else if (r.startsWith('g/')) html = vGame(r.slice(2));
@@ -2951,6 +3128,7 @@ function route() {
 function defaultCtx(id) {
   const it = IDX.byId.get(id);
   if (!it) return [id];
+  if (it.so && stormHas(id)) return stormAll().map((x) => x.i);   // 從《解包》風暴眼點進來的名單外影片：接著播特別轉播
   if (VIEW.subs[it.c]) return L.subs().map((x) => x.i);
   if (it.g) return L.game(it.g).map((x) => x.i);
   return L.main().map((x) => x.i);
@@ -2959,6 +3137,7 @@ function ctxLabel(name) {
   if (!name) return '';
   const map = { hero: '焦點', main: subsOn() ? '你的頻道' : '精選', trailer: '新預告', dark: '黑馬', live: '直播', cont: '繼續觀看', later: '稍後觀看', review: '評測', deep: '深度', guide: '攻略', play: '實況', news: '新聞' };
   if (map[name]) return map[name];
+  if (name.startsWith('st:')) return '特別轉播' + (stormName() ? '・' + stormName() : '');
   if (name.startsWith('g:')) { const g = gameOf(name.slice(2).split(':')[0]); return g ? gameName(g) : ''; }
   if (name.startsWith('ch:') || name.startsWith('rk:')) return chOf(name.slice(3)).n || '';
   if (name.startsWith('list:')) return (LIST_META[name.slice(5)] || [''])[0];
@@ -3073,6 +3252,7 @@ document.addEventListener('click', (e) => {
     case 'back': Snd.play('back'); if (history.length > 1) history.back(); else location.hash = 'home'; break;
     case 'reload': Snd.play('select'); toast('重新接收轉播訊號…'); refreshData(true).then(() => softRefresh()); break;
     case 'more': LF.limit = +a.dataset.n || 96; softRefresh(); break;
+    case 'st-zh': ST.zh = a.dataset.k === '1'; store.set('stZh', ST.zh); LF.limit = 48; MEMO.clear(); Snd.play('tick'); softRefresh(); break;
     case 'lf-lane': LF.lane = a.dataset.k; LF.limit = 48; Snd.play('tick'); softRefresh(); break;
     case 'lf-lang': LF.lang = a.dataset.k; LF.limit = 48; Snd.play('tick'); softRefresh(); break;
     case 'clear-hist': if (a.dataset.sure) { clearHistory(); toast('清掉了'); softRefresh(); } else { a.dataset.sure = 1; a.textContent = '再按一次確定清除'; } break;
@@ -3217,7 +3397,7 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.key === '/') { e.preventDefault(); openSearch(); }
   else if ($('#sheet') && !$('#sheet').hidden && e.key === 'Escape') closeSheet();
-  else if (e.key >= '1' && e.key <= '5') { const t = ['home', 'live', 'games', 'rookies', 'me'][+e.key - 1]; location.hash = t; }
+  else if (e.key >= '1' && e.key <= '6') { const t = ['home', 'storm', 'live', 'games', 'rookies', 'me'][+e.key - 1]; location.hash = t; }
 });
 
 document.addEventListener('visibilitychange', () => {
@@ -3227,7 +3407,7 @@ document.addEventListener('visibilitychange', () => {
     store.set('visit', Date.now());
   } else {
     Snd.setHidden(false);
-    if (Date.now() - D.at > 2 * 60e3) refreshData().then((ch) => { if (ch && !Player.isOpen() && (ROUTE === 'home' || ROUTE === 'live')) softRefresh(); });
+    if (Date.now() - D.at > 2 * 60e3) refreshData().then((ch) => { if (ch && !Player.isOpen() && (ROUTE === 'home' || ROUTE === 'live' || ROUTE === 'storm')) softRefresh(); });
     sendNow();
   }
 });
@@ -3264,6 +3444,8 @@ async function start() {
     document.addEventListener('keydown', unlock, { once: true });
   }
   await loading;
+  // 從《解包》直接點影片進來（#watch/…）時資料還沒到：到了之後補上標題、頻道和接著播的清單
+  if (Player.isOpen() && Player.cur && Player.cur.ghost) Player.relink(defaultCtx(Player.cur.i));
   try { questCheck(); } catch (e) { /* */ }
   if (!Player.isOpen()) softRefresh();
   sendNow();

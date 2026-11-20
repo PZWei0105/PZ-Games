@@ -11,6 +11,7 @@ function setTabs(name) {
   const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
   const pnew = pi.filter((x) => x.date === pl && !S.seen['p:' + x.id]).length;
   const pd = $('.tab[data-go="picks"] .dot'); if (pd) { pd.textContent = pnew; pd.classList.toggle('hide', !pnew); }
+  const ed = $('.tab[data-go="storm"] .dot'); if (ed) { const on = name !== 'storm' && stormNew(); ed.textContent = on ? 'NEW' : ''; ed.classList.toggle('hide', !on); }
   const sn = shNewCount(); const sd = $('.tab[data-go="shorts"] .dot'); if (sd) { sd.textContent = sn; sd.classList.toggle('hide', !sn); }
   const hn = huntSaleCount(); const hd = $('.tab[data-go="hunt"] .dot'); if (hd) { hd.textContent = hn; hd.classList.toggle('hide', !hn); }
   askLamp();
@@ -21,7 +22,9 @@ function tapeText() {
   const names = today.map((x) => `<b>${esc(x.zh)}</b>`).join(' ★ ');
   const pi = (S.picks && S.picks.items) || []; const pl = pi[0] && pi[0].date;
   const pk = pi.filter((x) => x.date === pl).map((x) => `<b>${esc(x.zh)}</b>`).join('、');
-  const one = `痞子葳，${last === todayTW() ? '今天' : mdDay(last || todayTW())}解包 ${today.length} 款 ★ ${names} ★ ${pk ? `${pl === todayTW() ? '今日' : '最新'}推坑：${pk} ★ ` : ''}好遊戲不錯過，雷遊戲不踩過 ★ GAME RHAPSODY ★ `;
+  const sc = stormCur(); const ss = S.storm && S.storm.s;
+  const se = sc && ss ? `風暴眼：<b>${esc(sc.short || sc.zh)}</b> ${SE_CAT[ss.cat || 1]}・熱度 ${ss.heat || 0} ★ ` : '';
+  const one = `痞子葳，${last === todayTW() ? '今天' : mdDay(last || todayTW())}解包 ${today.length} 款 ★ ${names} ★ ${pk ? `${pl === todayTW() ? '今日' : '最新'}推坑：${pk} ★ ` : ''}${se}好遊戲不錯過，雷遊戲不踩過 ★ GAME RHAPSODY ★ `;
   $('#tape').innerHTML = `<span class="in">${one}${one}</span>`;
 }
 
@@ -51,6 +54,7 @@ async function route() {
       afterFeature();
       scrollTo(0, 0);
     } else if (name === 'hunt') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderHunt(); if (S.jump) { const j = $(S.jump); S.jump = ''; if (j) requestAnimationFrame(() => j.scrollIntoView({ block: 'start' })); else restoreScroll(h); } else restoreScroll(h); huntFx(); }
+    else if (name === 'storm') { setTabs('storm'); v.innerHTML = await renderStorm(arg); scrollTo(0, 0); stormFx(); setTabs('storm'); }
     else if (name === 'recap') { if (!prev || !v.firstElementChild || v.querySelector('.empty')) { setTabs('home'); v.innerHTML = renderHome(); } recapOpen(prev); }
     else if (name === 'stars') { setTabs('lib'); v.innerHTML = renderStars(); scrollTo(0, 0); starsFx(); }
     else if (name === 'sale') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderSale(); if (prev === h) restoreScroll(h); else scrollTo(0, 0); saleFx(); }
@@ -464,6 +468,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'tqx' && launchAct(a, act)) return;      // 繁中風向：長評論展開
     if (a.startsWith('st') && starAct(a, act)) return;   // 遊戲星圖
     if (a.startsWith('rc') && recapAct(a, act)) return;   // 年度回顧
+    if (a.startsWith('se') && stormAct(a, act)) return;   // 風暴眼
     if (a === 'search') { DB.mode = 'all'; DB.focus = true; sfx.click(); closeSheet(); if (ROUTE === 'lib') route(); else { NAVN++; location.hash = 'lib'; } return; }
     if (a === 'hub') { audioInit(); openHub(); return; }
     if (a === 'hubfx') { S.settings.fx = S.settings.fx === 'full' ? 'calm' : 'full'; save('settings'); document.body.classList.toggle('calm', S.settings.fx !== 'full'); sfx.click(); hubSync(); return; }
@@ -562,7 +567,7 @@ async function boot() {
   fxInit();
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
   $('#top').innerHTML = topBarHtml();
-  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>資料庫</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
+  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="storm">${ICON.storm}<span>風暴眼</span><i class="dot hide"></i></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
   try { await loadIndex(); } catch (e) { ok = false; console.error(e); }
@@ -587,6 +592,8 @@ async function boot() {
     setTimeout(huntAlert, 500);
     // 第一次導覽（改版後第一次也會）：等獵物警報、疊層都關了再開始
     if ((+LS.get('tourDone', 0) || 0) < TOUR_REV) { let n = 0; const tk = setInterval(() => { if (++n > 40) { clearInterval(tk); return; } if (!$('#halert.on') && !$('#sheet.on') && !S.introPending && !$('#intro')) { clearInterval(tk); setTimeout(() => tourStart(), 900); } }, 700); }
+    // 2026-11-21 新分頁「風暴眼」：只說一次（資料庫從分頁列搬到右上角的放大鏡）
+    else if (stormCur() && !LS.get('stormHello', 0)) { LS.set('stormHello', 1); let n = 0; const tk = setInterval(() => { if (++n > 40) { clearInterval(tk); return; } if (!$('#halert.on') && !$('#sheet.on') && !S.introPending && !$('#intro')) { clearInterval(tk); setTimeout(() => toast(`新分頁「風暴眼」：${stormCur().short || stormCur().zh} 的全部消息都在這（資料庫搬到右上角的放大鏡）`), 900); } }, 700); }
     setTimeout(() => dbLoad(), 4000);   // 閒下來先把資料庫載好（全部功能的數字、搜尋馬上能用）
     if (!ok) toast('資料讀不到，檢查一下網路', 'warn');
   };

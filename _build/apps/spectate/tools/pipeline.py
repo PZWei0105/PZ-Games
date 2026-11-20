@@ -642,6 +642,14 @@ def main():
                 raise
             except Exception as e:  # noqa: BLE001
                 err('發燒榜／全網直播：%s' % e)
+        storm = storm_cfg(args.repo)
+        if KEY and storm:
+            try:
+                storm_extras(cache, storm, me)
+            except QuotaStop:
+                raise
+            except Exception as e:  # noqa: BLE001
+                err('特別轉播：%s' % e)
         prune_ext(cache)
         # ---- 4. 整理影片
         prune(cache, roster, me)
@@ -658,6 +666,7 @@ def main():
         if KEY:
             discover(cache, roster, me, games)
     except QuotaStop as e:
+        storm = storm_cfg(args.repo)
         err('YouTube 金鑰暫停使用（%s）：這次只用 RSS' % e)
         prune_ext(cache)
         classify(cache, roster)
@@ -670,6 +679,8 @@ def main():
     dump(os.path.join(out, 'games.json'), {'v': 1, 'at': stamp(), 'games': games})
     dump(os.path.join(out, 'discover.json'), build_discover(cache))
     dump(os.path.join(out, 'mine.json'), build_mine(feed))      # 《一集就好》首頁置頂：痞子葳自己的頻道
+    st = build_storm(cache, storm, roster, me)                     # 特別轉播（《解包》風暴眼也讀這份）
+    dump(os.path.join(out, 'storm.json'), st)
     dump(os.path.join(out, 'cache.json'), cache)
     quiet = []
     for cid, r in roster['channels'].items():
@@ -683,7 +694,9 @@ def main():
     stat.update({'v': 1, 'at': stamp(), 'run_s': round(time.time() - t0, 1), 'videos': len(feed['items']),
                  'channels': len(feed['ch']), 'units': UNITS[0], 'units_day': cache['api'].get('units', 0), 'hot': len((cache['ext'] or {}).get('hot') or []),
                  'web_live': sum(1 for v in cache['videos'].values() if v.get('ext') == 'wl' and v.get('lv') == 'live'),
-                 'noembed': sum(1 for v in cache['videos'].values() if v.get('ne')), 'steam_left': STEAM_LEFT[0], 'errors': ERRS[-40:], 'log': LOG[-160:]})
+                 'noembed': sum(1 for v in cache['videos'].values() if v.get('ne')), 'steam_left': STEAM_LEFT[0],
+                 'storm': {'key': st.get('key'), 'videos': len(st.get('items') or {}), 'live': st.get('lc'), 'n24': st.get('n24')},
+                 'errors': ERRS[-40:], 'log': LOG[-160:]})
     dump(os.path.join(out, 'status.json'), stat, pretty=True)
     with open(os.path.join(out, 'README.md'), 'w', encoding='utf-8') as f:
         f.write('# 觀戰 SPECTATE 轉播資料\n\n這個分支由 GitHub Actions `spectate-feed` 自動產生、每次只留最新一版（強制推送）。'
@@ -1163,6 +1176,147 @@ def web_live_take(cache, j, tag, blocks):
     return n
 
 
+# ================================================================ 特別轉播（2026-11-21）：《解包》風暴眼盯的那一款，全網的相關影片
+SX_ZH_EVERY = 4 * 3600      # 中文最新：每 4 小時搜一次（一次 100 點）
+SX_TOP_EVERY = 8 * 3600     # 全球最熱（7 天內、照觀看數）：每 8 小時
+SX_LIVE_EVERY = 3 * 3600    # 直播中：每 3 小時（台灣凌晨 3～9 點不搜）
+SX_RESERVE = 900            # 今天剩不到這麼多點就不搜，留給原本的功能（一天約多花 1,500 點）
+SX_KEEP = 3 * 86400         # 搜到的影片留幾天（直播中的一直留）
+BAHA = re.compile(r'巴哈姆特|bahamut|gamer\.com\.tw', re.I)     # 觀戰不收巴哈姆特的頻道與內容
+
+
+def storm_cfg(repo):
+    """《解包》的 storm.json（main 分支，風暴眼的管線每小時寫）：現在盯哪一款、搜尋字、比對標題的規則。"""
+    s = load(os.path.join(repo, 'apps', 'unpacked', 'data', 'storm.json'), None) or {}
+    c = s.get('cur') or {}
+    if not c.get('key') or not c.get('rx'):
+        return None
+    try:
+        rx = re.compile(c['rx'], re.I)
+    except re.error:
+        return None
+    yt = c.get('yt') or {}
+    return {'key': c['key'], 'zh': c.get('zh') or c['key'], 'en': c.get('en') or '', 'rx': rx,
+            'qzh': yt.get('zh') or c.get('zh') or c.get('en'), 'qen': yt.get('en') or c.get('en') or c.get('zh')}
+
+
+def storm_take(cache, j, cfg, flag, blocks, live_only=False):
+    ids = []
+    for it in (j or {}).get('items') or []:
+        sn = it.get('snippet') or {}
+        vid = (it.get('id') or {}).get('videoId')
+        if not vid or not VID_RE.match(vid) or sn.get('channelId') in blocks:
+            continue
+        title = htmlmod.unescape(sn.get('title') or '')
+        if not cfg['rx'].search(title + ' ' + (sn.get('description') or '')[:160]):
+            continue
+        if X.SPAM.search(title) or X.GACHA.search(title) or BAHA.search(sn.get('channelTitle') or '') or OFFTOPIC.search(title):
+            continue
+        ids.append(vid)
+    if not ids:
+        return 0
+    j2 = api('videos', part=VPARTS, id=','.join(ids[:50]), hl='zh-TW', maxResults=50)
+    n = 0
+    for it in (j2 or {}).get('items') or []:
+        if live_only and (it.get('snippet') or {}).get('liveBroadcastContent') != 'live':
+            continue
+        v = cache['videos'].get(it['id'])
+        if v is None:
+            v = ext_record(cache, it, 'st')
+        else:
+            take_api(v, it)
+        if not v:
+            continue
+        v['sk'] = cfg['key']
+        v['sx'] = ''.join(sorted(set((v.get('sx') or '') + flag)))
+        v['seen_st'] = int(NOW)
+        n += 1
+    return n
+
+
+def storm_extras(cache, cfg, me):
+    blocks = set(me['blocks'])
+    x = cache.setdefault('ext', {})
+    if x.get('sk') != cfg['key']:            # 換了一款：重新搜、時間軸重來
+        x.update({'sk': cfg['key'], 'sz_ts': 0, 'st_ts': 0, 'sl_ts': 0, 'stl': []})
+    ago = lambda s: dt.datetime.fromtimestamp(NOW - s, dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')  # noqa: E731
+    tw_hour = dt.datetime.now(TW).hour
+    if NOW - x.get('sz_ts', 0) > SX_ZH_EVERY and api_left() > SX_RESERVE:
+        x['sz_ts'] = int(NOW)
+        j = api('search', part='snippet', type='video', q=cfg['qzh'], relevanceLanguage='zh-Hant', regionCode='TW', order='date',
+                publishedAfter=ago(3 * 86400), maxResults=50, safeSearch='moderate')
+        log('特別轉播（%s）中文最新：收 %d 支' % (cfg['zh'], storm_take(cache, j, cfg, 'z', blocks)))
+    if NOW - x.get('st_ts', 0) > SX_TOP_EVERY and api_left() > SX_RESERVE:
+        x['st_ts'] = int(NOW)
+        j = api('search', part='snippet', type='video', q=cfg['qen'], order='viewCount', publishedAfter=ago(7 * 86400), maxResults=50, safeSearch='moderate')
+        log('特別轉播全球最熱：收 %d 支' % storm_take(cache, j, cfg, 't', blocks))
+    if not (3 <= tw_hour < 9) and NOW - x.get('sl_ts', 0) > SX_LIVE_EVERY and api_left() > SX_RESERVE:
+        x['sl_ts'] = int(NOW)
+        j = api('search', part='snippet', type='video', eventType='live', q=cfg['qen'], order='viewCount', maxResults=50, safeSearch='moderate')
+        log('特別轉播直播中：收 %d 場' % storm_take(cache, j, cfg, 'l', blocks, live_only=True))
+
+
+def storm_item(v, chans):
+    it = {'i': v['i'], 'c': v['c'], 't': v.get('t') or v.get('t0'), 'p': v.get('p'), 'l': v.get('l') or 'play'}
+    for k in ('v', 'd', 'lv', 'st', 'cv', 'tz', 'g', 'z', 'ne'):
+        if v.get(k) is not None:
+            it[k] = v[k]
+    if v.get('rp'):
+        it['rp'] = 1
+    if v['c'] not in chans:
+        it['ext'] = v.get('ext') or 'st'
+    if v.get('t0') and v.get('t0') != it['t']:
+        it['t0'] = v['t0']
+    return it
+
+
+def build_storm(cache, cfg, roster, me):
+    """storm.json：這一款的直播中、中文最新、最新、全球最熱、各車道，加上 24 小時新片數、直播觀看人數的時間軸。"""
+    if not cfg:
+        return {'v': 1, 'at': stamp(), 'key': None}
+    blocks, chans = set(me['blocks']), roster['channels']
+    vids = []
+    for v in cache['videos'].values():
+        if v.get('gone') or v['c'] in blocks or v.get('spam') or v.get('gacha') or v.get('xx') or v.get('s') == 1:
+            continue
+        txt = '%s %s %s' % (v.get('t0') or '', v.get('t') or '', v.get('tz') or '')
+        if (v.get('sk') == cfg['key'] or cfg['rx'].search(txt)) and not OFFTOPIC.search(txt):
+            vids.append(v)
+    up = [v for v in vids if v.get('lv') != 'upcoming']
+    live = sorted([v for v in vids if v.get('lv') == 'live'], key=lambda v: -(v.get('cv') or 0))[:30]
+    cz = sorted([v for v in up if v.get('z') == 'zh' and v.get('lv') != 'live'], key=lambda v: -(v.get('p') or 0))[:60]
+    new = sorted([v for v in up if v.get('lv') != 'live'], key=lambda v: -(v.get('p') or 0))[:80]
+    top = sorted([v for v in up if NOW - (v.get('p') or 0) < 7 * 86400 and v.get('lv') != 'live'], key=lambda v: -(v.get('v') or 0))[:40]
+    lanes = {}
+    for l in ('review', 'guide', 'play', 'news', 'trailer', 'deep'):
+        lst = sorted([v for v in up if v.get('l') == l and v.get('lv') != 'live'], key=lambda v: (v.get('z') != 'zh', -(v.get('p') or 0)))[:30]
+        if lst:
+            lanes[l] = [v['i'] for v in lst]
+    n24 = sum(1 for v in vids if NOW - (v.get('p') or 0) < 86400)
+    n72 = sum(1 for v in vids if NOW - (v.get('p') or 0) < 3 * 86400)
+    lv = sum(v.get('cv') or 0 for v in live)
+    x = cache.setdefault('ext', {})
+    tl = [p for p in (x.get('stl') or []) if p[0] > (NOW - 30 * 86400) / 60]
+    if not tl or NOW / 60 - tl[-1][0] >= 50:
+        tl.append([int(NOW // 60), lv, n24])
+    x['stl'] = tl[-720:]
+    used = {v['i']: v for v in live + cz + new + top}
+    for l in lanes.values():
+        for i in l:
+            used.setdefault(i, cache['videos'][i])
+    ch = {}
+    for v in used.values():
+        c = v['c']
+        if c in ch:
+            continue
+        r = chans.get(c) or cache['xch'].get(c) or {}
+        ch[c] = {k: val for k, val in {'n': r.get('n') or r.get('seed'), 'a': r.get('a'), 'subs': (cache['chstat'].get(c) or {}).get('subs') or r.get('subs'),
+                                       'ext': None if c in chans else 1, 'l': r.get('l')}.items() if val is not None}
+    return {'v': 1, 'at': stamp(), 'key': cfg['key'], 'g': {'zh': cfg['zh'], 'en': cfg['en']}, 'n24': n24, 'n72': n72, 'lv': lv, 'lc': len(live),
+            'zl': sum(1 for v in live if v.get('z') == 'zh'), 'live': [v['i'] for v in live], 'cz': [v['i'] for v in cz], 'new': [v['i'] for v in new],
+            'top': [v['i'] for v in top], 'lanes': lanes, 'tl': x['stl'], 'items': {i: storm_item(v, chans) for i, v in used.items()}, 'ch': ch}
+
+
 def prune_ext(cache):
     """名單外的影片：發燒榜掉出去一天就拿掉；直播結束六小時、預定時間過了三小時就拿掉。"""
     hot = set((cache.get('ext') or {}).get('hot') or [])
@@ -1177,6 +1331,8 @@ def prune_ext(cache):
         if tag == 'hot' and NOW - v.get('seen_ext', 0) < 86400:
             continue
         if tag in ('wl', 'wu') and NOW - max(v.get('seen_ext', 0), v.get('st') or 0) < 6 * 3600:
+            continue
+        if tag == 'st' and NOW - v.get('seen_st', 0) < (SX_KEEP if v.get('sk') == (cache.get('ext') or {}).get('sk') else 86400):
             continue
         del cache['videos'][vid]
     used = {v['c'] for v in cache['videos'].values() if v.get('ext')}
@@ -1464,7 +1620,7 @@ def build_feed(cache, roster, me):
     items = []
     blocks = set(me['blocks'])
     for v in sorted(vids.values(), key=lambda v: -(v.get('p') or 0)):
-        if v.get('gone') or v['c'] in blocks:
+        if v.get('gone') or v['c'] in blocks or v.get('ext') == 'st':
             continue
         r = chans.get(v['c']) or {}
         it = {'i': v['i'], 'c': v['c'], 't': v.get('t') or v.get('t0'), 'p': v.get('p')}

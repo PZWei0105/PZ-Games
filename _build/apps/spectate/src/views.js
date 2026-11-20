@@ -508,6 +508,7 @@ function renderTicker() {
   parts.push(`<span class="tk-lbl">${esc(greet())}，${esc(NAME)}</span>`);
   if (live) parts.push(`<span class="tk-red">● ON AIR ${live} 場</span>`);
   parts.push(`<span>新片 <b>${newN}</b>${subsOn() ? '（你的頻道）' : ''}</span>`);
+  if (stormOn()) parts.push(`<span class="tk-gold">特別轉播《${esc(stormName())}》${D.storm.lc ? `● ${D.storm.lc} 台直播・${num(D.storm.lv)} 人在看` : `24 小時 ${D.storm.n24 || 0} 支新片`}</span>`);
   if (top) parts.push(`<span>本週最熱《${esc(gameName(top))}》${top.chs} 台在聊</span>`);
   if (rk) parts.push(`<span class="tk-lime">新秀 ${rk} 位等你選</span>`);
   const dark = L.dark()[0];
@@ -522,4 +523,5 @@ function renderTicker() {
   $('#onairN').textContent = live;
   $('#tabLiveDot').hidden = !live;
   $('#tabRookDot').hidden = !rk;
+  $('#tabStormDot').hidden = !(stormOn() && D.storm.lc);
 }

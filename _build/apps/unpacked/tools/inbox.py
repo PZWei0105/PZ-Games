@@ -49,6 +49,7 @@ FIELDS = {
     'tga': {'picks': DICT(40, 12, INT(0, 9)), 'x2': LIST(3, 12), 'peek': BOOL, 'lock': STR(32)},   # TGA 預測鎖定
     'vid': {'title': STR(120), 'when': ISO, 'note': STR(400), 'games': LIST(6, 60), 'url': URL},   # 影片三連發：新片的預告／上片／討論文案（粉專作戰台）
     'add': {'q': STR(80)},                                                    # 資料庫：搜不到的遊戲「加進資料庫」（live.py 去 Steam 找）
+    'storm': {'q': STR(80), 'mode': STR(8)},                                  # 風暴眼：指定一款（mode pin＋q）或換回自動（mode auto）；storm.py 用
     'ping': {'note': STR(40)},
 }
 ID = re.compile(r'^d[a-z0-9]{3,10}-[a-z0-9]{4,12}$')

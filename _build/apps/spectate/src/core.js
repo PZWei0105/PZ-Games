@@ -101,7 +101,7 @@ const KINDS = { official: '官方', media: '媒體', creator: '創作者', strea
 const LANGS = { zh: '中', en: 'EN', ja: '日', ko: '韓' };
 
 /* ------------------------------------------------------------ 資料 */
-const D = { feed: null, games: null, disc: null, me: null, status: null, at: 0, ok: false, err: null, busy: false };
+const D = { feed: null, games: null, disc: null, me: null, status: null, storm: null, at: 0, ok: false, err: null, busy: false };
 const IDX = { items: [], byId: new Map(), ch: {}, games: {}, gameList: [], gameMap: new Map(), hot: [], rev: 0 };
 /* 播放器回報「頻道不允許嵌入」的影片：記在這台裝置，下次直接標出來（金鑰沒查到的也補上） */
 const NE = store.get('ne', {});
@@ -127,9 +127,9 @@ async function getJSON(base, name, fresh) {
 async function loadAll(fresh) {
   if (D.busy) return false;
   D.busy = true;
-  const [feed, games, disc, status, me] = await Promise.allSettled([
+  const [feed, games, disc, status, me, storm] = await Promise.allSettled([
     getJSON(DATA_URL, 'feed.json', fresh), getJSON(DATA_URL, 'games.json', fresh), getJSON(DATA_URL, 'discover.json', fresh),
-    getJSON(DATA_URL, 'status.json', fresh), getJSON(MAIN_URL, 'me.json', fresh),
+    getJSON(DATA_URL, 'status.json', fresh), getJSON(MAIN_URL, 'me.json', fresh), getJSON(DATA_URL, 'storm.json', fresh),
   ]);
   D.busy = false;
   let changed = false;
@@ -143,9 +143,12 @@ async function loadAll(fresh) {
   if (disc.status === 'fulfilled') D.disc = disc.value;
   if (status.status === 'fulfilled') D.status = status.value;
   if (me.status === 'fulfilled' && me.value) takeMe(me.value);
+  let stormCh = false;   // 特別轉播（storm.js）
+  if (storm.status === 'fulfilled' && storm.value && (!D.storm || D.storm.at !== storm.value.at)) { D.storm = storm.value; stormCh = true; }
   D.at = Date.now();
   if (changed) indexFeed();
-  return changed;
+  if (changed || stormCh) indexStorm();
+  return changed || stormCh;
 }
 
 function indexFeed() {

@@ -278,6 +278,13 @@ const Player = (() => {
   }
   function setMode(k) { mode = k; renderPvw(); Snd.play('tick'); }
   function refresh() { if (open_) { renderInfo(); renderPvw(); } }
+  function relink(list) {   // 開的時候還沒有資料（從別的 App 直接點進來）：資料到了再補
+    if (!open_ || !cur) return;
+    const it = IDX.byId.get(cur.i);
+    if (it) cur = it;
+    if (list && list.length > 1 && ctxIds.length <= 1) { ctxIds = list.slice(0, 80); if (!ctxIds.includes(cur.i)) ctxIds.unshift(cur.i); }
+    refresh();
+  }
   function toggle() {
     if (!yt || !ready) return;
     try { if (yt.getPlayerState() === 1) yt.pauseVideo(); else yt.playVideo(); } catch (e) { /* */ }
@@ -305,7 +312,7 @@ const Player = (() => {
     if (req) req.call(f).catch(() => toast('這台裝置不支援全螢幕：請用播放器右下角的全螢幕鍵'));
     else toast('請用播放器右下角的全螢幕鍵');
   }
-  return { open, close, isOpen, take, next, prev, toggle, setMode, refresh, cancelNext, fullscreen, wipe, hasNext: () => !!nextItem(), get cur() { return cur; } };
+  return { open, close, isOpen, take, next, prev, toggle, setMode, refresh, relink, cancelNext, fullscreen, wipe, hasNext: () => !!nextItem(), get cur() { return cur; } };
 })();
 
 /* ------------------------------------------------------------ 橫放全螢幕

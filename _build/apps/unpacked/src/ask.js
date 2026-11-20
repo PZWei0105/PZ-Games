@@ -14,7 +14,7 @@ const askId = () => S.ask.dev + '-' + (Math.random().toString(36).slice(2) + '00
 function askEmit(type, data) {
   const ev = Object.assign({ id: askId(), t: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), type }, data);
   S.ask.out.push(ev); S.ask.out = S.ask.out.slice(-60);
-  if (type !== 'tga' && type !== 'add') { S.ask.mine.unshift(ev); S.ask.mine = S.ask.mine.slice(0, 120); }
+  if (type !== 'tga' && type !== 'add' && type !== 'storm') { S.ask.mine.unshift(ev); S.ask.mine = S.ask.mine.slice(0, 120); }
   askSave(); askFlush(); return ev;
 }
 async function askFlush(force) {

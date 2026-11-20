@@ -12,10 +12,11 @@ async function getJSON(path, fresh = true) {
 }
 async function loadIndex() {
   // 全部一起發出去（以前分三批排隊，手機網路每批多等一趟）；行情板、免費補給站、活動時程、TGA、點播台讀不到都不影響主畫面
-  const [idx, live, picks, wish, weekly, skip, board, free, events, tga, qa, inbox, plats, vids] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })),
+  const [idx, live, picks, wish, weekly, skip, board, free, events, tga, qa, inbox, plats, vids, storm] = await Promise.all([getJSON('index.json'), getJSON('live.json').catch(() => ({ apps: {} })),
     getJSON('picks.json').catch(() => ({ items: [] })), getJSON('wish.json').catch(() => null), getJSON('weekly.json').catch(() => ({ items: [] })), getJSON('wish-skip.json').catch(() => ({})),
-    ...['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json', 'platforms.json', 'videos.json'].map((p) => getJSON(p).catch(() => null))]);
+    ...['board.json', 'free.json', 'events.json', 'tga.json', 'qa.json', 'inbox.json', 'platforms.json', 'videos.json', 'storm.json'].map((p) => getJSON(p).catch(() => null))]);
   if (plats && plats.th) S.plat = plats;        // 粉專作戰台：平台規則（每週懶人包排程每週查一次）
+  if (storm && storm.cur) { S.storm = storm; if (typeof stormPendSync === 'function') stormPendSync(); }   // 風暴眼：現在最熱的那一款
   if (vids && vids.items) S.vidIdx = vids;      // 粉專作戰台：Claude 寫好的影片三連發
   S.stale = (live && live.stale) || {};       // 寫稿之後（列表小標、追蹤牆）：跟著 live.json 一起來，不多等一趟
   S.wishSkip = skip || {};

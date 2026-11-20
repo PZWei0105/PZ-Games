@@ -882,6 +882,171 @@ def build_picks(picks):
     return {'at': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'n': len(items), 'items': items}
 
 
+STORM_PC = {'未公布', '已公布', '已上市', '不會出'}
+KEY_RX = re.compile(r'^[a-z0-9][a-z0-9-]{1,59}$')
+
+
+def check_storm(r):
+    """風暴眼（STORM_GUIDE.md）：storm-pick.json（盯哪一款、搜尋字）和 storm/<key>.digest.json（風暴日報）。"""
+    pp = os.path.join(DATA, 'storm-pick.json')
+    if os.path.exists(pp):
+        try:
+            pk = json.load(open(pp, encoding='utf-8'))
+        except ValueError as e:
+            r.B('storm-pick.json', f'JSON 壞掉：{e}')
+            pk = None
+        if pk is not None:
+            games = pk.get('games') if isinstance(pk.get('games'), dict) else None
+            if games is None:
+                r.B('storm-pick.json', 'games 要是 {key: 搜尋字}')
+                games = {}
+            if pk.get('auto') and pk['auto'] not in games:
+                r.B('storm-pick.json', f'auto（{pk["auto"]}）不在 games 裡')
+            for k, g in games.items():
+                fid = 'storm-pick.json ' + k
+                if not KEY_RX.match(k):
+                    r.B(fid, 'key 只能用英文小寫、數字和 -')
+                if not isinstance(g, dict):
+                    r.B(fid, '要是物件'); continue
+                for f in ('zh', 'en', 'short', 'rx'):
+                    if not isinstance(g.get(f), str) or not g.get(f).strip():
+                        r.B(fid, f'少了 {f}')
+                if len(g.get('short') or '') > 12:
+                    r.W(fid, 'short 太長（跑馬燈、分頁、圖卡會擠）')
+                try:
+                    rx = re.compile(g.get('rx') or '', re.I)
+                    if rx.search('') or rx.search('今天天氣很好 a b c'):
+                        r.B(fid, 'rx 什麼都比對得到：會把不相干的影片和文章收進來')
+                except re.error as e:
+                    r.B(fid, f'rx 寫錯：{e}')
+                for f in ('news', 'yt'):
+                    v = g.get(f)
+                    if not isinstance(v, dict) or not (v.get('zh') or '').strip() or not (v.get('en') or '').strip():
+                        r.B(fid, f'{f} 要有 zh 和 en')
+                if not isinstance(g.get('ptt'), list) or len(g.get('ptt') or []) > 4:
+                    r.B(fid, 'ptt 要是 1～4 個搜尋字')
+                if not isinstance(g.get('boards'), list) or not all(re.match(r'^[A-Za-z0-9_-]{2,14}$', b or '') for b in g.get('boards') or []) or len(g.get('boards') or []) > 6:
+                    r.B(fid, 'boards 要是最多 6 個 PTT 看板名')
+                if g.get('reddit') and not re.match(r'^[A-Za-z0-9_]{2,21}$', g['reddit']):
+                    r.B(fid, 'reddit 只寫版名（不含 r/）')
+                for f in ('rel', 'since'):
+                    if g.get(f) and not re.match(r'^\d{4}-\d{2}-\d{2}$', str(g[f])):
+                        r.B(fid, f'{f} 要是 YYYY-MM-DD')
+                if g.get('img') and not str(g['img']).startswith('https://'):
+                    r.B(fid, 'img 要是 https 網址')
+                if g.get('yt_id') and not re.match(r'^[A-Za-z0-9_-]{11}$', g['yt_id']):
+                    r.B(fid, 'yt_id 要是 11 碼的 YouTube 影片 id')
+                simp_check(''.join(txt_all({x: g.get(x) for x in ('zh', 'short', 'plat')})), fid, r)
+    sd = os.path.join(DATA, 'storm')
+    if not os.path.isdir(sd):
+        return
+    for fn in sorted(os.listdir(sd)):
+        if not fn.endswith('.digest.json'):
+            continue
+        fid = 'storm/' + fn
+        try:
+            dg = json.load(open(os.path.join(sd, fn), encoding='utf-8'))
+        except ValueError as e:
+            r.B(fid, f'JSON 壞掉：{e}')
+            continue
+        if dg.get('key') != fn[:-len('.digest.json')]:
+            r.B(fid, f'key 要和檔名一樣（{dg.get("key")}）')
+        items = dg.get('items')
+        if not isinstance(items, list):
+            r.B(fid, 'items 要是陣列'); continue
+        if len(items) > 30:
+            r.W(fid, f'留了 {len(items)} 則（最多 30，刪最舊的）')
+        last, seen = None, set()
+        for i, it in enumerate(items):
+            iid = f'{fid} #{i + 1}'
+            try:
+                at = dt.datetime.fromisoformat(str(it.get('at')))
+                if at.tzinfo is None:
+                    raise ValueError
+            except (ValueError, TypeError):
+                r.B(iid, 'at 要是含時區的時間（例 2026-11-21T08:50:00+08:00）'); continue
+            if last and at > last:
+                r.B(iid, '最新的要放最前面')
+            last = at
+            if it.get('slot') not in ('am', 'pm'):
+                r.B(iid, 'slot 只能是 am 或 pm')
+            slot = (at.astimezone(dt.timezone(dt.timedelta(hours=8))).date().isoformat(), it.get('slot'))
+            if slot in seen:
+                r.B(iid, '同一天同一班有兩則（改寫那一則，不要再加）')
+            seen.add(slot)
+            if i >= 3:
+                continue   # 舊的只看格式、不重查內容
+            src = it.get('sources') or []
+            n = len(src)
+            if n < 6:
+                r.W(iid, f'只有 {n} 個來源（每則至少 6 個）')
+            for k, x in enumerate(src, 1):
+                if not isinstance(x, dict) or not str(x.get('u') or '').startswith('https://') or not (x.get('t') or '').strip():
+                    r.B(iid, f'來源 {k} 要有標題 t 和 https 網址 u')
+            used = set()
+
+            def refs(o, what):
+                ss = (o or {}).get('s') if isinstance(o, dict) else None
+                if not isinstance(ss, list) or not ss:
+                    r.B(iid, f'{what} 沒標來源（s）')
+                    return
+                for v in ss:
+                    if not isinstance(v, int) or not 1 <= v <= n:
+                        r.B(iid, f'{what} 的來源編號 {v} 不存在')
+                    else:
+                        used.add(v)
+            if not (it.get('title') or '').strip() or len(it.get('title') or '') > 46:
+                r.B(iid, 'title 要有、40 字左右以內')
+            tl = len(it.get('tldr') or '')
+            if not 40 <= tl <= 220:
+                r.B(iid, f'tldr 要 60～180 字（現在 {tl}）')
+            pts = it.get('points') or []
+            if not 3 <= len(pts) <= 6:
+                r.B(iid, f'points 要 3～6 點（現在 {len(pts)}）')
+            for k, pnt in enumerate(pts, 1):
+                if not (pnt.get('h') or '').strip() or not (pnt.get('t') or '').strip():
+                    r.B(iid, f'第 {k} 點要有 h 和 t')
+                refs(pnt, f'第 {k} 點')
+            for k, x in enumerate(it.get('off') or [], 1):
+                refs(x, f'官方動態第 {k} 則')
+            md = it.get('media') or {}
+            for k, x in enumerate(md.get('scores') or [], 1):
+                refs(x, f'評分第 {k} 個')
+            for k, x in enumerate(md.get('notes') or [], 1):
+                refs(x, f'媒體第 {k} 則')
+            pl = it.get('players') or {}
+            if not (pl.get('pos') or pl.get('neg') or pl.get('debate')):
+                r.W(iid, 'players（玩家風向）是空的')
+            else:
+                refs(pl, '玩家風向')
+            for k, x in enumerate(it.get('streamers') or [], 1):
+                if not (x.get('who') or '').strip():
+                    r.B(iid, f'主播第 {k} 則沒寫是誰')
+                refs(x, f'主播第 {k} 則')
+            pc = it.get('pc')
+            if not isinstance(pc, dict) or pc.get('st') not in STORM_PC:
+                r.B(iid, 'pc.st 只能是：' + '、'.join(sorted(STORM_PC)))
+            else:
+                refs(pc, 'PC 版雷達')
+            if not 1 <= len(it.get('next') or []) <= 5:
+                r.B(iid, 'next 要 1～5 點')
+            fan = it.get('fan') or {}
+            post = fan.get('post') or ''
+            if not 120 <= len(post) <= 450:
+                r.B(iid, f'粉專貼文 fan.post 要 150～400 字（現在 {len(post)}）')
+            if URLISH.search(post) or '#' in post or '---' in post:
+                r.B(iid, '粉專貼文不放網址、不放 #、不放 ---')
+            if any(w in post for w in FAKE_CROWD):
+                r.B(iid, '粉專貼文有沒根據的群眾說法（' + '、'.join(w for w in FAKE_CROWD if w in post) + '）')
+            if not (fan.get('topic') or '').strip() or '#' in (fan.get('topic') or ''):
+                r.B(iid, 'fan.topic 要一個主題標籤（不含 #）')
+            check_self_name(fan, iid, r, '粉專貼文')
+            unused = sorted(set(range(1, n + 1)) - used)
+            if unused:
+                r.W(iid, f'來源 {unused} 沒有被任何一段用到')
+            simp_check(''.join(txt_all({k: v for k, v in it.items() if k != 'sources'})), iid, r)
+
+
 def write_if_changed(path, obj):
     """內容沒變（只差產生時間 at）就不寫，免得每次跑都弄髒 git、擋到 pull --rebase。"""
     try:
@@ -1067,6 +1232,7 @@ def main():
             fn(json.load(open(pth, encoding='utf-8')))
         except ValueError as e:
             r.B(name, f'JSON 壞掉：{e}')
+    check_storm(r)
     # 典藏升級的體檢：每次開 App 都要載的檔案太大時提醒（量測：tools/stress.py＋tools/perf.py，做法見 ROADMAP「典藏」）
     for name, lim in (('index.json', 3.0), ('picks.json', 2.0), ('live.json', 6.0)):
         pth = os.path.join(DATA, name)
