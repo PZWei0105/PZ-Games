@@ -1,0 +1,335 @@
+{
+  "id": "melvor-idle-2",
+  "date": "2026-11-21",
+  "rank": 1,
+  "kind": "ea",
+  "kind_label": "搶先體驗",
+  "game": {
+    "zh": "Melvor Idle 2: A RuneScape Adventure",
+    "zh_note": "暫無官方中文名",
+    "en": "Melvor Idle 2: A RuneScape Adventure",
+    "steam": 3218350,
+    "dev": "Games by Malcs",
+    "pub": "Jagex",
+    "platforms": [
+      "PC（Steam：Windows、macOS、Linux）"
+    ],
+    "genres": [
+      "放置角色扮演",
+      "練技能",
+      "單人"
+    ],
+    "release": "2026-11-17",
+    "release_text": "2026/11/17 開放搶先體驗（預計 12～18 個月後推出正式版）",
+    "price_text": "Steam 特價 NT$250（-10%，到 11/24）／原價 NT$278",
+    "site": "https://store.steampowered.com/app/3218350/"
+  },
+  "headline": "賣破百萬的放置練功遊戲出續作，這次掛上 RuneScape 官方招牌",
+  "hook": "你把角色丟去砍樹，自己去上班。晚上打開電腦，木頭已經堆滿倉庫，伐木升了三級；你順手把木頭丟進火堆練生火、再派他去打一隻任務 Boss——整個遊戲就是一張會自己長大的表格，而你停不下來。",
+  "verdict": {
+    "stamp": "推薦",
+    "label": "看得懂英文就趁特價入手",
+    "summary": "前作賣破 100 萬套，續作一開搶先體驗 Steam 同上就衝到 2.7 萬人、九成以上好評，NT$278 買斷、沒有內購，電腦什麼都跑得動。最大的門檻是目前只有英文：前作有繁中，這次還沒有，怕英文的可以等中文。",
+    "for": [
+      "上班上課沒空、但想要「每天都在進步」感覺的人：關掉遊戲也會繼續練",
+      "玩過《Old School RuneScape》或前作《Melvor Idle》、喜歡規劃練功路線的人",
+      "想找一款便宜、不吃硬體、可以掛在第二螢幕的遊戲"
+    ],
+    "against": [
+      "英文不好的人：介面、任務、物品說明全是英文，目前不支援中文",
+      "想要動作、畫面或操作手感的人：它就是選單和數字",
+      "不想玩半成品的人：還在搶先體驗，部分技能要到正式版才有"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Games by Malcs 開發、Jagex（RuneScape 的公司）發行；2026/10/29 宣布掛上「A RuneScape Adventure」副標，成為 RuneScape 官方外傳",
+      "s": [0, 4, 8]
+    },
+    {
+      "k": "搶先體驗",
+      "v": "2026/11/17 在 Steam 開放搶先體驗，官方預計搶先體驗期 12～18 個月",
+      "s": [0, 3, 10]
+    },
+    {
+      "k": "平台",
+      "v": "目前只有 PC（Steam，支援 Windows、macOS、Linux）；官方說 Android、iOS 版 2027 年推出",
+      "s": [0, 3]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Steam 台灣原價 NT$278，首發 -10% 為 NT$250，到 11/24",
+      "s": [1]
+    },
+    {
+      "k": "收費方式",
+      "v": "買斷制、沒有內購；商店頁說正式版不會漲價，未來會推出提高等級上限的付費 DLC",
+      "s": [0, 8]
+    },
+    {
+      "k": "中文",
+      "v": "只支援英文（介面與語音），不支援繁體與簡體中文",
+      "s": [0, 1]
+    },
+    {
+      "k": "技能",
+      "v": "商店頁寫可以練 25 種技能；發行商說完整版會多 5 個新技能、共 29 種；搶先體驗比試玩版新增占星、藥草學、敏捷",
+      "s": [0, 3, 4, 6]
+    },
+    {
+      "k": "這次新增",
+      "v": "任務系統與任務 Boss、第二幕主線、重做的精通系統（精通公會）、日夜與天氣變化、可以自選難度的新模式；超過 1,000 種物品、100 種以上怪物",
+      "s": [0, 3, 6]
+    },
+    {
+      "k": "戰鬥",
+      "v": "近戰、遠程、魔法三系，有地城和 Boss；官方說戰鬥系統加入新的機制",
+      "s": [0, 4]
+    },
+    {
+      "k": "單機與存檔",
+      "v": "單人遊戲，關掉也會累積離線進度；支援 Steam 雲端存檔",
+      "s": [0, 3]
+    },
+    {
+      "k": "Steam 評價",
+      "v": "11/21 查到「非常好評」，約 91%（582 則）",
+      "s": [0]
+    },
+    {
+      "k": "同上人數",
+      "v": "SteamCharts 統計史上高峰 27,128 人（11/21 查）",
+      "s": [2]
+    },
+    {
+      "k": "前作",
+      "v": "《Melvor Idle》2020/11 搶先體驗、2021/11 正式版，賣破 100 萬套；前作支援繁體中文",
+      "s": [4, 12]
+    },
+    {
+      "k": "系統需求",
+      "v": "Windows 最低 1GB RAM、內顯就能跑；建議 2GB RAM，容量 4GB",
+      "s": [0]
+    },
+    {
+      "k": "路線圖",
+      "v": "官方說上市大約一週後公布路線圖，會講新內容、手機版、新技能和正式版",
+      "s": [3]
+    }
+  ],
+  "money": {
+    "level": 1,
+    "model": "買斷制，未來有付費 DLC",
+    "notes": [
+      "NT$278 買斷，商店頁說沒有內購（PC Gamer 報導的官方說法也一樣）；正式版不漲價。",
+      "未來會有提高等級上限的付費 DLC，前作也是這樣賣擴充。",
+      "有 RuneScape 老玩家擔心 Jagex 接手後會加收費；PC Gamer 指出前作合作到現在沒出過這種問題。"
+    ],
+    "flags": [
+      "買斷 NT$278",
+      "無內購",
+      "有付費 DLC 計畫",
+      "無抽卡"
+    ]
+  },
+  "zh": {
+    "ui": false,
+    "sub": false,
+    "voice": false,
+    "note": "目前只有英文，不支援繁中、簡中；前作有繁中。AUTOMATON 報導官方計畫之後加入多語言，但還沒有時程。"
+  },
+  "tw": {
+    "ok": true,
+    "note": "Steam 台灣區可以直接買，單人遊戲、沒有伺服器延遲問題。"
+  },
+  "rig": {
+    "verdict": "不吃硬體",
+    "note": "最低需求是 1GB RAM、內顯，你的 SCAR 18 開著它再玩別的遊戲都沒差；容量只要 4GB，很適合丟在第二螢幕或大電視角落掛著。"
+  },
+  "time": {
+    "text": "沒有終點的長期練功",
+    "note": "放置遊戲是每天開一下、調整目標的節奏；等級上限 99，之後的 DLC 會再往上加。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "NhEuYBsIZuk",
+        "title": "搶先體驗預告（Melvor Idle 官方）"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "11/24 前後公布的路線圖：新技能、手機版時程、正式版內容",
+    "會不會加回繁體中文（前作有）",
+    "首發特價 11/24 結束後的同上人數和評價"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "選一個技能開練（伐木、釣魚、採礦…）",
+        "關掉遊戲，讓它離線累積",
+        "回來把材料拿去做裝備、藥水",
+        "穿好裝備去打怪、打地城和 Boss",
+        "解任務、升精通，換更好的練功點"
+      ],
+      "body": [
+        "Melvor Idle 的核心是「選目標、按下去、等」。每個技能都是一條自己的升級線：伐木產木頭、生火用木頭升級、鍛造吃礦石做裝備。你做的決定是先練哪個、材料要拿去哪裡，剩下的時間角色自己會練。",
+        "戰鬥也是自動的：你配好近戰、遠程或魔法的裝備和食物，角色就會一隻一隻打下去。你的功課是挑對打得過的怪、算好補給，打不過就回頭練技能。",
+        "續作加了很多讓「規劃」更有料的東西：有劇情的任務系統和任務 Boss、第二幕主線、重做的精通系統（精通公會）、會影響遊戲的日夜和天氣，還有自選難度的新模式。占星會給全技能永久加成、藥草學做的藥水能幫所有技能加速，這類跨技能的加成讓練功順序很有學問。",
+        "要先講清楚：它的畫面就是選單、圖示和數字，有玩家說介面「根本是一張試算表」，而這對喜歡這類遊戲的人反而是稱讚。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和玩家整理：先確定你能接受全英文介面，再決定要不要買；Steam 有退款機制可以先試。",
+      "第一個小時先練採集類（伐木、釣魚、採礦），它們是後面所有生產技能的材料來源。",
+      "把食物做好再去打怪，戰鬥是自動的，補給不夠就會白死。",
+      "官方建議定期用「Copy save string」備份存檔，換電腦或出問題時用得到。"
+    ],
+    "compare": [
+      {
+        "name": "Melvor Idle",
+        "same": "同一個團隊、同樣是 RuneScape 風格的放置練技能",
+        "diff": "前作有繁中、內容已經完整；續作加了任務劇情、日夜天氣、重做精通，但目前只有英文",
+        "steam": 1267910
+      },
+      {
+        "name": "Old School RuneScape",
+        "same": "Melvor 的靈感來源：練技能、刷裝備、打 Boss",
+        "diff": "OSRS 是要自己操作的多人線上遊戲、免費加月費會員；Melvor 是單人放置、買斷",
+        "steam": 1343370
+      },
+      {
+        "name": "IdleOn – The Incremental MMO",
+        "same": "同樣是放置練功、會離線成長",
+        "diff": "IdleOn 免費遊玩、有內購；Melvor 2 買斷、沒有內購",
+        "steam": 1476970
+      }
+    ],
+    "story": {
+      "safe": [
+        "續作加入了有劇情的任務系統和第二幕主線，也有任務 Boss；世界不是 RuneScape 原本的大陸，而是 Melvor 自己的世界，只是掛上 RuneScape 官方外傳的招牌。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "Games by Malcs 是 Malcs（Brendan Malcolm）創立的工作室，前作最早是他一個人開發。前作《Melvor Idle》是向 RuneScape 致敬的放置遊戲，2020 年在 Steam 搶先體驗，2021 年正式版，後來賣破 100 萬套。",
+      "2021 年 Jagex 透過「Jagex Partners」接手發行前作，當時強調創作權留在 Malcs 手上、遊戲維持買斷。",
+      "續作 2025 年 4 月公布，2026 年 10 月 Jagex 宣布正式發行，並掛上「A RuneScape Adventure」副標，讓它成為 RuneScape 官方外傳。有老玩家擔心 RuneScape 的收費習慣會帶進來，目前官方說法是買斷、沒有內購，只有之後的付費 DLC。"
+    ],
+    "voices": {
+      "pros": [
+        "有玩家說各方面都比前作進步，音樂和美術也更好",
+        "每個戰鬥系都有專屬裝備，配裝更有變化",
+        "練功的成就感很穩定，適合每天開一下"
+      ],
+      "cons": [
+        "系統變複雜了，但有玩家覺得前作那種技能互相串連的感覺變弱",
+        "部分技能（例如符文製作、生火、偷竊）被批評定位不清、回饋感不夠",
+        "前作有繁中，續作目前只有英文"
+      ],
+      "debate": [
+        "掛上 RuneScape 官方招牌，是讓更多人認識它，還是會被 Jagex 的收費習慣拖累？",
+        "續作把系統做深，是讓放置遊戲更有策略，還是讓它不再「放置」？"
+      ]
+    },
+    "timeline": [
+      { "d": "2020-11-19", "t": "前作《Melvor Idle》Steam 搶先體驗" },
+      { "d": "2021-11-18", "t": "前作推出正式版（Jagex 發行）" },
+      { "d": "2025-04-23", "t": "公布《Melvor Idle 2》" },
+      { "d": "2026-10-29", "t": "Jagex 宣布發行，成為 RuneScape 官方外傳" },
+      { "d": "2026-11-17", "t": "Steam 搶先體驗開跑，首發 -10%" },
+      { "d": "2026-11-24", "t": "首發特價結束；官方預計這週前後公布路線圖" },
+      { "d": "2027", "t": "Android、iOS 版預計推出" }
+    ],
+    "discuss": [
+      {
+        "q": "放置遊戲掛上大 IP，是好事還是壞事？",
+        "why": "Melvor 本來就是 RuneScape 粉絲做的致敬作，現在變成官方外傳；可以聊小團隊被大廠收編的利弊，以及玩家為什麼擔心收費。"
+      },
+      {
+        "q": "一款「不用玩」的遊戲，為什麼能衝到 2.7 萬人同上？",
+        "why": "放置遊戲的魅力在規劃和看數字長大，很適合拿來做「為什麼我們愛看進度條」的影片。"
+      },
+      {
+        "q": "前作有中文，續作搶先體驗只有英文，你會等嗎？",
+        "why": "台灣玩家很在意中文；這題可以拿來做投票，順便聊搶先體驗該不該先上在地化。"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "你讓角色去砍樹，自己去上班。下班打開電腦，倉庫已經堆滿木頭，伐木還升了好幾級。\n\n《Melvor Idle 2: A RuneScape Adventure》是賣破百萬套的放置練功遊戲續作，由 Games by Malcs 開發、RuneScape 的 Jagex 發行，11/17 在 Steam 開放搶先體驗。你挑一個技能讓角色自己練，材料拿去做裝備和藥水，再配好裝去自動打怪、打地城和任務 Boss；這次多了劇情任務、日夜天氣和重做的精通系統。\n\nSteam 台灣原價 NT$278，首發特價 NT$250 到 11/24，買斷沒有內購，Steam 上九成以上好評，同上人數衝到 2.7 萬。要注意的是目前只有英文，前作有繁中、這次還沒有。\n\n全英文的放置遊戲，你會現在入手，還是等中文？",
+    "titles": [
+      "Melvor Idle 2 搶先體驗：NT$250、九成好評",
+      "一款「不用玩」的遊戲，為什麼 2.7 萬人同時在線？",
+      "放置遊戲變成 RuneScape 官方外傳，好事還壞事？"
+    ],
+    "card": {
+      "kicker": "搶先體驗｜同上 2.7 萬",
+      "title": "關掉也在練功\n放置神作續篇",
+      "sub": "Melvor Idle 2",
+      "tags": [
+        "放置練功",
+        "NT$250",
+        "只有英文"
+      ],
+      "points": [
+        {
+          "h": "自己會長大",
+          "t": "選技能就去忙，離線也會累積。"
+        },
+        {
+          "h": "買斷無內購",
+          "t": "原價 NT$278，首發特價到 11/24。"
+        },
+        {
+          "h": "注意語言",
+          "t": "目前只支援英文，前作才有繁中。"
+        }
+      ]
+    },
+    "tags": [
+      "#MelvorIdle2",
+      "#放置遊戲",
+      "#RuneScape",
+      "#Steam",
+      "#搶先體驗",
+      "#遊戲狂想曲"
+    ],
+    "script": "有一款遊戲，你關掉它，它還是在玩。\n它叫《Melvor Idle 2》，前作賣破一百萬套，這次由做 RuneScape 的 Jagex 發行，11 月 17 號在 Steam 開放搶先體驗。玩法很單純：你讓角色去砍樹、釣魚、挖礦，自己去做別的事，回來材料就堆滿了，再拿去做裝備、做藥水，配好裝讓他自動去打怪、打 Boss。這次還多了劇情任務、日夜天氣，跟重做的精通系統。\n價錢很佛，台灣原價 278，首發特價 250 到 11 月 24 號，買斷沒有內購，Steam 九成以上好評，同時在線衝到兩萬七千人。但要先講，目前只有英文，前作有繁中，續作還沒有。\n全英文的放置遊戲，你會現在入手，還是等中文？留言告訴我。",
+    "credit": "圖片／影片來源：Melvor Idle 2 官方 Steam 商店頁與官方預告",
+    "threads": {
+      "post": "關掉遊戲，角色還在幫你練功。\n\n賣破百萬套的放置遊戲續作《Melvor Idle 2: A RuneScape Adventure》11/17 開放 Steam 搶先體驗，這次由 RuneScape 的 Jagex 發行，正式變成官方外傳。\n・價格：台灣原價 NT$278，首發 NT$250 到 11/24，買斷無內購\n・評價：Steam 約九成以上好評，同上衝到 2.7 萬\n・平台：PC（Windows、macOS、Linux），手機版 2027\n・注意：目前只有英文，不支援中文\n\n便宜、不吃硬體、很適合掛第二螢幕，唯一的坑是語言。\n\n全英文你會現在衝，還是等中文？",
+      "topic": "放置遊戲",
+      "more": [
+        "它怎麼玩：\n・選一個技能讓角色自己練，伐木、釣魚、採礦的材料再拿去鍛造、做藥水\n・戰鬥是自動的，你負責配近戰、遠程或魔法的裝備和補給\n・這次加了劇情任務和任務 Boss、日夜天氣、重做的精通系統，占星和藥草學能幫全技能加成\n\n整個遊戲就是在規劃練功順序，喜歡看數字長大的人會很難停下來。",
+        "買之前要知道：\n・還在搶先體驗，官方預計 12～18 個月才推出正式版，部分技能要等正式版\n・正式版不漲價，但之後會有提高等級上限的付費 DLC\n・前作有繁中，續作目前沒有，官方還沒講何時加\n・官方說上市一週左右會公布路線圖\n\n最低需求只要 1GB RAM 加內顯，什麼電腦都跑得動。"
+      ]
+    }
+  },
+  "sources": [
+    { "t": "Steam 商店頁：Melvor Idle 2: A RuneScape Adventure", "u": "https://store.steampowered.com/app/3218350/", "d": "2026-11-21" },
+    { "t": "Steam 商店頁（台灣區）：Melvor Idle 2", "u": "https://store.steampowered.com/app/3218350?l=tchinese&cc=tw", "d": "2026-11-21" },
+    { "t": "SteamCharts：Melvor Idle 2", "u": "https://steamcharts.com/app/3218350", "d": "2026-11-21" },
+    { "t": "Melvor Idle 官方：搶先體驗上市須知", "u": "https://news.melvoridle.com/steam-early-access-launch-what-you-need-to-know/", "d": "2026-11-12" },
+    { "t": "Gamespress：Jagex 宣布與 Games by Malcs 合作發行", "u": "https://gamespress.com/Jagex-Announces-Partnership-With-Games-by-Malcs-to-Publish-Idle-Advent", "d": "2026-10-29" },
+    { "t": "Inven Global：11/17 開放搶先體驗", "u": "https://www.invenglobal.com/articles/27894/melvor-idle-2-a-runescape-adventure-launches-in-steam-early-access-on-november-17th", "d": "2026-10-29" },
+    { "t": "Inven Global：搶先體驗上市、五個新技能", "u": "https://www.invenglobal.com/articles/28722/melvor-idle-2-a-runescape-adventure-launches-in-steam-early-access-with-five-new-skills", "d": "2026-11-17" },
+    { "t": "GamingOnLinux：Jagex 發行，成為 RuneScape 官方遊戲", "u": "https://www.gamingonlinux.com/2026/10/jagex-are-now-publishing-melvor-idle-2-as-an-official-runescape-game/", "d": "2026-10-29" },
+    { "t": "PC Gamer：Jagex 讓續作成為官方外傳", "u": "https://www.pcgamer.com/games/rpg/jagex-partnered-with-a-runescape-inspired-idle-game-to-turn-the-sequel-into-an-official-spinoff/", "d": "2026-11-01" },
+    { "t": "PC Gamer：Jagex 發行 Melvor Idle（2021）", "u": "https://pcgamer.com/jagex-to-publish-runescape-inspired-idle-game-melvor-idle", "d": "2021-10-24" },
+    { "t": "AUTOMATON：Melvor Idle 2 公布", "u": "https://automaton-media.com/articles/newsjp/melvor-idle-2-20250425-336481/", "d": "2025-04-25" },
+    { "t": "Steam 玩家評論：Melvor Idle 2", "u": "https://steamcommunity.com/app/3218350/reviews/?browsefilter=toprated", "d": "2026-11-21" },
+    { "t": "Steam 商店頁：Melvor Idle（前作）", "u": "https://store.steampowered.com/app/1267910/", "d": "2026-11-21" },
+    { "t": "Steam 商店頁：Old School RuneScape", "u": "https://store.steampowered.com/app/1343370/", "d": "2026-11-21" },
+    { "t": "Steam 商店頁：IdleOn – The Incremental MMO", "u": "https://store.steampowered.com/app/1476970/", "d": "2026-11-21" }
+  ],
+  "pending": [
+    "完整版 29 種技能裡，還沒推出的是哪幾個（官方新聞稿沒列出）",
+    "等級上限：商店頁寫 99，PC Gamer 寫 120，可能是 DLC 之後的上限",
+    "繁體中文何時加入",
+    "需不需要一直連網（官方沒寫）"
+  ],
+  "updated": "2026-11-21T06:20:00+08:00"
+}

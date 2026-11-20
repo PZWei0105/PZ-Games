@@ -1,0 +1,482 @@
+{
+  "id": "arkheron",
+  "date": "2026-11-21",
+  "rank": 2,
+  "kind": "upcoming",
+  "kind_label": "即將推出",
+  "game": {
+    "zh": "Arkheron",
+    "zh_note": "暫無官方中文名",
+    "en": "Arkheron",
+    "steam": 3333850,
+    "dev": "Bonfire Studios",
+    "pub": "Bonfire Studios",
+    "platforms": [
+      "PC（Steam）",
+      "PS5",
+      "Xbox Series X|S"
+    ],
+    "genres": [
+      "團隊 PvP 動作",
+      "大逃殺",
+      "等角視角"
+    ],
+    "release": "2026-11-27",
+    "release_text": "2026/11/27 三平台同步開放搶先體驗（11/27～29 免費週末）",
+    "price_text": "US$24.99（台灣價待確認）／11/27～29 免費週末",
+    "site": "https://store.steampowered.com/app/3333850/Arkheron/"
+  },
+  "headline": "《魔獸世界》設計師的新作：45 人爬塔的三人組隊 PvP，11/27 免費週末",
+  "hook": "你和兩個隊友擠在一間圓形石室裡，地上的傳送陣正在充能。門外還有兩隊人想搶這個位子。你身上湊齊了兩件同一位「永恆者」的遺物，再撿到兩件就能變身——撐到傳送陣亮起，你們就能往塔的上一層走。",
+  "verdict": {
+    "stamp": "觀望",
+    "label": "免費週末先試",
+    "summary": "暴雪老將 Rob Pardo 的工作室從 2018 年做到現在，把大逃殺改成「一層層往上爬的塔」，配上湊套裝變身的裝備系統，媒體試玩反應不錯，也有繁中。但它是 US$24.99 的付費 PvP、台灣價和亞洲伺服器都還沒公布，同類型的《SUPERVIVE》已經宣布停服；11/27～29 免費週末剛好拿來確認連線和揪不揪得到人。",
+    "for": [
+      "喜歡《Battlerite》、《暗黑破壞神》那種俯視角動作、又想要組隊 PvP 的人",
+      "有固定三人車隊：只要一個人買，朋友用免費的好友通行證就能一起玩",
+      "厭倦傳統大逃殺「躲到最後」的人：每一層都逼你打一場"
+    ],
+    "against": [
+      "沒有固定隊友、不想跟陌生人連線的人：三人一隊是主軸",
+      "只想輕鬆玩的人：媒體試玩提到上手門檻高",
+      "怕付費 PvP 沒人玩的人：同類型前例不少，搶先體驗的人數還要看"
+    ]
+  },
+  "facts": [
+    {
+      "k": "開發／發行",
+      "v": "Bonfire Studios（美國加州爾灣）開發發行（韓國、日本由 HYBE IM 發行）；共同創辦人 Rob Pardo 是暴雪前創意長、《魔獸世界》首席設計師",
+      "s": [
+        0,
+        5
+      ]
+    },
+    {
+      "k": "開發歷程",
+      "v": "2018 年開始開發，用 Unity 引擎，是工作室的第一款遊戲；投資方包括 a16z、Riot Games",
+      "s": [
+        5,
+        6
+      ]
+    },
+    {
+      "k": "搶先體驗",
+      "v": "2026/11/27 在 Steam、PS5、Xbox Series X|S 同步開放搶先體驗，三平台跨平台連線",
+      "s": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "k": "售價",
+      "v": "標準版 US$24.99、支持者版 US$49.99（多兩組外觀）；官方預計正式版前會漲價",
+      "s": [
+        2,
+        3
+      ]
+    },
+    {
+      "k": "台灣售價",
+      "v": "Steam 台灣區價格還沒公布",
+      "s": [
+        1
+      ],
+      "p": true
+    },
+    {
+      "k": "免費週末",
+      "v": "11/27～29 開幕週末全遊戲免費玩；Xbox Game Pass 會員從 11/27 起前三個月可玩完整遊戲",
+      "s": [
+        2,
+        3
+      ]
+    },
+    {
+      "k": "好友通行證",
+      "v": "免費下載；隊伍裡只要有一個人買了遊戲，整隊都能玩主要模式",
+      "s": [
+        0,
+        2,
+        3
+      ]
+    },
+    {
+      "k": "收費方式",
+      "v": "付費下載＋只賣外觀；官方說沒有付費變強、沒有戰利品箱和抽卡，搶先體驗期間「收藏」（類似通行證）可以免費解",
+      "s": [
+        2,
+        3
+      ]
+    },
+    {
+      "k": "中文",
+      "v": "介面與字幕支援繁體、簡體中文；語音只有英、日、韓文",
+      "s": [
+        0,
+        1
+      ]
+    },
+    {
+      "k": "連線與反作弊",
+      "v": "一定要連網；使用 Theia 反作弊，需要同意第三方授權條款",
+      "s": [
+        0
+      ]
+    },
+    {
+      "k": "主模式",
+      "v": "三人一隊、15 隊共 45 人爬塔；場地每層縮小，每層結束要搶傳送門才能往上，最後在塔頂決戰",
+      "s": [
+        0,
+        9,
+        11
+      ]
+    },
+    {
+      "k": "裝備系統",
+      "v": "裝備是 12 位「永恆者」的遺物：同一位湊 2 件有套裝加成，湊滿 4 件就變身，多一個技能、傷害和血量提高",
+      "s": [
+        0,
+        9
+      ]
+    },
+    {
+      "k": "其他模式",
+      "v": "3v3 一層層對打的「Spires」、自訂遊戲、教學與訓練；Spires 是因為測試發現訓練模式和主模式之間難度落差太大才加的",
+      "s": [
+        0,
+        7
+      ]
+    },
+    {
+      "k": "測試紀錄",
+      "v": "2025/9 Steam Alpha 測試，測試版同上高峰 3,059 人",
+      "s": [
+        11,
+        12
+      ]
+    },
+    {
+      "k": "系統需求",
+      "v": "最低 GTX 1060 6GB、8GB RAM；建議 RTX 2070、12GB RAM；容量 25GB，需要 SSD",
+      "s": [
+        0
+      ]
+    }
+  ],
+  "money": {
+    "level": 1,
+    "model": "付費下載（US$24.99）＋外觀",
+    "notes": [
+      "標準版 US$24.99、支持者版 US$49.99，差別只在外觀；兩組外觀包也各賣 US$14.99。",
+      "官方說沒有付費變強、沒有戰利品箱、沒有抽卡；搶先體驗上市時還沒有完整的外觀商店，「收藏」系統可以免費解。",
+      "11/27～30 購買多送一組外觀和搶先體驗限定配色。",
+      "Xbox Game Pass 會員從 11/27 起的前三個月可以玩完整遊戲。"
+    ],
+    "flags": [
+      "US$24.99",
+      "只賣外觀",
+      "好友通行證免費",
+      "無抽卡"
+    ]
+  },
+  "zh": {
+    "ui": true,
+    "sub": true,
+    "voice": false,
+    "note": "繁體中文介面與字幕；語音只有英、日、韓文。開發商說少數緊急公告和幾十條選單文字先用 AI 翻譯。"
+  },
+  "tw": {
+    "ok": "partial",
+    "note": "Steam 台灣區可以加願望單，但價格還沒公布；官方還沒說有沒有亞洲伺服器，台灣連線品質要等免費週末實測。"
+  },
+  "rig": {
+    "verdict": "綽綽有餘",
+    "note": "建議配備是 RTX 2070、12GB RAM，你的 SCAR 18 開高畫質沒問題；容量 25GB，要裝在 SSD 上。"
+  },
+  "time": {
+    "text": "一場約 25 分鐘（媒體試玩）",
+    "note": "官方沒公布一場多久，CGMagazine 試玩大約 25 分鐘；搶先體驗沒有寫多久，官方說做到值得天天玩才推正式版。"
+  },
+  "media": {
+    "yt": [
+      {
+        "id": "m8fQPBk3_m8",
+        "title": "玩法總覽預告（IGN 轉載）"
+      },
+      {
+        "id": "GZbPXtWWLaw",
+        "title": "玩法深度介紹（IGN 轉載）"
+      }
+    ],
+    "images": []
+  },
+  "watch": [
+    "台灣售價和有沒有亞洲伺服器",
+    "11/27～29 免費週末的同上人數和連線品質",
+    "免費週末之後，付費門檻會不會讓人數掉下來"
+  ],
+  "sections": {
+    "gameplay": {
+      "loop": [
+        "三人選落點進塔",
+        "打怪、解支線、撿遺物",
+        "湊套裝、用貨幣買消耗品和加成",
+        "搶傳送門、往上一層",
+        "塔頂決戰"
+      ],
+      "body": [
+        "Arkheron 是等角視角（俯視角）的動作 PvP，滑鼠鍵盤和手把都能玩。主模式「Ascension」一場 15 隊、每隊 3 人，大家從塔的下層出發，一層層往上爬。",
+        "每層的節奏是：選落點、打怪解支線、撿裝備，然後在這層結束前擠進圓形的傳送門房間，撐到傳送才能上樓；有人搶同一個門，就要打到只剩一隊。所以它不是「躲到最後」的大逃殺，每一層都會逼你出手。",
+        "裝備是重點：所有裝備都是 12 位「永恆者」的遺物，同一位湊 2 件有套裝效果，湊滿 4 件直接變身成那位永恆者，多一個技能、更耐打。隊友之間可以互相標記裝備，還能幫隊友把同一件升級。混搭不同套裝叫「Shattered」，也是一種玩法。",
+        "因為測試時訓練模式和主模式的難度落差太大，開發商加了「Spires」：3v3 一層層對打、只有有限次數的挑戰，讓你先練手感再去打 45 人的主模式。"
+      ]
+    },
+    "hour": [
+      "以下照官方說明和媒體試玩整理：11/27～29 免費週末先下載，確認台灣連線順不順再決定買不買。",
+      "先打教學和訓練，再去 Spires 熟悉 3v3，不要一開始就衝 45 人的主模式。",
+      "落點跟隊友選在一起：媒體試玩提到落點選太慢會跟隊友分散。",
+      "撿裝備時先看是哪位永恆者的，跟隊友講好誰湊哪一套，比亂撿有用。"
+    ],
+    "compare": [
+      {
+        "name": "Battlerite Royale",
+        "same": "俯視角技能動作＋大逃殺",
+        "diff": "Arkheron 是一層層爬塔、湊套裝變身，每層都要搶傳送門"
+      },
+      {
+        "name": "SUPERVIVE",
+        "same": "俯視角技能動作的大逃殺",
+        "diff": "SUPERVIVE 免費遊玩、2025 年底已宣布停服；Arkheron 是付費下載加好友通行證",
+        "steam": 1283700
+      },
+      {
+        "name": "暗黑破壞神 IV",
+        "same": "俯視角刷裝、套裝效果的手感（開發商自己提過的靈感）",
+        "diff": "暗黑是 PvE 為主；Arkheron 是三人組隊 PvP"
+      }
+    ],
+    "story": {
+      "safe": [
+        "舞台是一座黑暗奇幻的高塔，各隊爭奪過去「永恆者」留下的遺物往塔頂爬；搶先體驗的「序章」是第一段劇情篇章，附第一批收藏和任務。"
+      ],
+      "spoiler": []
+    },
+    "studio": [
+      "Bonfire Studios 在美國加州爾灣，由《魔獸世界》首席設計師、暴雪前創意長 Rob Pardo 共同創立，早期成員有《暗黑破壞神 III》的 Josh Mosqueira。",
+      "Arkheron 從 2018 年開始做，是工作室第一款遊戲。Pardo 在 PC Gamer 的訪談裡說，這一路走進很多死胡同。資金來自 a16z、Riot Games 等，官方說新一輪投資會撐到正式上市。",
+      "2025 年 1 月正式公開，之後經歷 Alpha、Next Fest 試玩、封測和跨平台測試；搶先體驗會在瑞典 DreamHack 斯德哥爾摩現場開跑。"
+    ],
+    "voices": {
+      "pros": [
+        "Game Informer 說機制組合很獨特，永恆者會輪替上場，強勢組合不會一直固定",
+        "CGMagazine 說一場接一場停不下來，手把和鍵鼠手感都好、介面清楚",
+        "Destructoid 說戰鬥流暢緊張，獎勵打策略而不是躲"
+      ],
+      "cons": [
+        "上手門檻高，訓練模式和實戰落差大",
+        "Alpha 時效能不穩，運氣不好會遇到裝備比你好的隊伍",
+        "落點選太慢會跟隊友分散"
+      ],
+      "debate": [
+        "付費 PvP 在一片免費遊戲裡賣 US$24.99，好友通行證夠不夠撐起人數？",
+        "它到底算不算大逃殺？每層都逼戰的設計，是更好玩還是更累？"
+      ]
+    },
+    "timeline": [
+      {
+        "d": "2018",
+        "t": "開始開發"
+      },
+      {
+        "d": "2025-01",
+        "t": "正式公開"
+      },
+      {
+        "d": "2025-09",
+        "t": "Steam Alpha 測試"
+      },
+      {
+        "d": "2026-02-20",
+        "t": "Steam 新品節試玩版"
+      },
+      {
+        "d": "2026-07-15",
+        "t": "封閉測試（到 7/26）"
+      },
+      {
+        "d": "2026-09-25",
+        "t": "跨平台測試，首次開放 PS5、Xbox"
+      },
+      {
+        "d": "2026-11-27",
+        "t": "三平台搶先體驗，免費週末到 11/29"
+      },
+      {
+        "d": "2026-11-30",
+        "t": "Discord 合作伺服器免費週（到 12/6）"
+      }
+    ],
+    "discuss": [
+      {
+        "q": "一個人買、三個人玩，好友通行證是佛心還是必要？",
+        "why": "付費 PvP 最怕沒人；這個設計可以拿來聊「付費遊戲怎麼跟免費遊戲搶人」。"
+      },
+      {
+        "q": "《魔獸世界》設計師做的新遊戲，你會因為名字買單嗎？",
+        "why": "Pardo 的名氣很大，但工作室花了近十年才推出第一款；適合聊老將光環和新作現實。"
+      },
+      {
+        "q": "每層都逼你打的大逃殺，會比躲到最後好玩嗎？",
+        "why": "Ascension 的傳送門設計是它跟傳統大逃殺最大的不同，適合做影片拆解。"
+      }
+    ]
+  },
+  "fanpage": {
+    "post": "你和兩個隊友擠在圓形石室裡，傳送陣正在充能，門外還有兩隊人想搶這個位子。撐到它亮起，你們就能往塔的上一層走。\n\n《Arkheron》是《魔獸世界》首席設計師 Rob Pardo 共同創立的 Bonfire Studios 做了好幾年的新作，11/27 在 Steam、PS5、Xbox Series X|S 同步搶先體驗。三人一隊、15 隊一起爬塔，每層都要搶傳送門；裝備是 12 位「永恆者」的遺物，湊兩件有套裝效果，湊滿四件直接變身。\n\n有繁體中文介面和字幕，可以跨平台。售價 US$24.99，台灣價還沒公布；11/27～29 免費週末，平常只要隊上一個人買，朋友就能用免費的好友通行證一起玩。官方說只賣外觀、沒有抽卡。\n\n付費的組隊 PvP，你會免費週末試完就買，還是先看人數再說？",
+    "titles": [
+      "Arkheron 11/27 搶先體驗：繁中、免費週末",
+      "《魔獸世界》設計師的爬塔 PvP，會是下一款大逃殺嗎？",
+      "一人買三人玩，付費 PvP 撐得住人數嗎？"
+    ],
+    "card": {
+      "kicker": "即將推出｜11/27 搶先體驗",
+      "title": "45 人爬塔\n湊滿套裝變身",
+      "sub": "Bonfire Studios《Arkheron》",
+      "tags": [
+        "三人組隊",
+        "繁體中文",
+        "免費週末"
+      ],
+      "points": [
+        {
+          "h": "每層都要打",
+          "t": "搶到傳送門才能往上一層走。"
+        },
+        {
+          "h": "湊套裝變身",
+          "t": "同一位永恆者的遺物湊滿四件。"
+        },
+        {
+          "h": "一人買全隊玩",
+          "t": "好友通行證免費，隊上一人買就行。"
+        }
+      ]
+    },
+    "tags": [
+      "#Arkheron",
+      "#大逃殺",
+      "#組隊PvP",
+      "#Steam",
+      "#搶先體驗",
+      "#遊戲狂想曲"
+    ],
+    "script": "如果大逃殺不是躲到最後，而是一層一層往塔頂打上去，你會玩嗎？\n這款叫《Arkheron》，做《魔獸世界》的 Rob Pardo 共同創立的工作室做了好幾年，11 月 27 號在 Steam、PS5、Xbox 同步搶先體驗。三人一隊，十五隊一起爬塔，每一層結束都要搶傳送門，搶不到就上不去。裝備是十二位永恆者的遺物，湊兩件有套裝效果，湊滿四件直接變身，多一招還更耐打。\n有繁體中文介面跟字幕，可以跨平台。售價 24.99 美金，台灣價還沒出來；11 月 27 到 29 號免費週末，平常只要隊上一個人買，朋友用免費的好友通行證就能一起玩，官方說只賣外觀、沒有抽卡。\n付費的組隊 PvP，你會試完就買，還是先看有沒有人玩？留言告訴我。",
+    "credit": "圖片／影片來源：Arkheron 官方 Steam 商店頁與官方預告（IGN 轉載）",
+    "threads": {
+      "post": "這款大逃殺不讓你躲：每一層都要搶傳送門，才能往塔頂爬。\n\n《魔獸世界》首席設計師 Rob Pardo 共同創立的 Bonfire Studios 新作《Arkheron》，11/27 在 Steam、PS5、Xbox Series X|S 同步搶先體驗，三人一隊、15 隊一起爬塔。\n・中文：繁體中文介面與字幕\n・售價：US$24.99，台灣價還沒公布\n・11/27～29 免費週末\n・隊上一人買，朋友用免費好友通行證就能玩\n・注意：一定要連網，亞洲伺服器官方還沒講\n\n湊套裝變身的設計很有新意，但付費 PvP 能不能留住人是最大問號。\n\n免費週末試完，你會買還是觀望？",
+      "topic": "大逃殺",
+      "more": [
+        "它怎麼玩：\n・俯視角、自由瞄準，三人一隊，主模式 15 隊 45 人從塔底往上爬\n・每層結束要擠進傳送門房間撐到傳送，同一個門有人搶就打到剩一隊\n・裝備是 12 位永恆者的遺物，同一位湊 2 件有套裝效果，湊滿 4 件變身多一個技能\n\n隊友之間還能互相標記、幫對方把裝備升級，比一般大逃殺更吃團隊分工。",
+        "買之前要知道：\n・標準版 US$24.99，支持者版 US$49.99 只多外觀；官方說正式版前會漲價\n・沒有付費變強、沒有戰利品箱和抽卡\n・媒體試玩提到上手門檻高，建議先打 3v3 的 Spires 練手\n・同類型的《SUPERVIVE》已經宣布停服，付費 PvP 的人數要觀察\n\n電腦需求不高，建議 RTX 2070，容量 25GB 要放 SSD。"
+      ]
+    }
+  },
+  "sources": [
+    {
+      "t": "Steam 商店頁：Arkheron",
+      "u": "https://store.steampowered.com/app/3333850/Arkheron/",
+      "d": "2026-11-21"
+    },
+    {
+      "t": "Steam 商品資料（台灣區）：Arkheron",
+      "u": "https://store.steampowered.com/api/appdetails?appids=3333850&cc=tw&l=tchinese",
+      "d": "2026-11-21"
+    },
+    {
+      "t": "Worthplaying：公布售價、支持者版與好友通行證",
+      "u": "https://worthplaying.com/article/2026/11/9/news/151392-arkheron-reveals-its-pricing-supporter-edition-and-friend-pass/",
+      "d": "2026-11-09"
+    },
+    {
+      "t": "GamerFuzion：11/27 搶先體驗、免費週末與好友通行證",
+      "u": "https://www.gamerfuzion.com/arkheron-early-access-november-27-price-free-weekend-friend-pass-partner-servers/",
+      "d": "2026-11"
+    },
+    {
+      "t": "Gamespress：Arkheron 登上 Steam、PS5、Xbox 搶先體驗",
+      "u": "https://www.gamespress.com/Arkheron-enters-Early-Access-on-Steam-PlayStation-5-and-Xbox-Series-XS",
+      "d": "2026-10-29"
+    },
+    {
+      "t": "Wikipedia：Bonfire Studios",
+      "u": "https://en.wikipedia.org/wiki/Bonfire_Studios",
+      "d": "2026-11-21"
+    },
+    {
+      "t": "PC Gamer：Rob Pardo 談 Arkheron",
+      "u": "https://www.pcgamer.com/games/action/why-blizzard-vet-rob-pardo-is-going-all-in-on-arkheron-the-pvp-dungeon-crawler-thats-like-dark-fantasy-backrooms-its-very-much-been-an-odyssey/",
+      "d": "2026-09-22"
+    },
+    {
+      "t": "PC Gamer：新增 Spires 模式",
+      "u": "https://www.pcgamer.com/games/battle-royale/arkheron-an-isometric-diablo-like-battle-royale-where-you-ascend-a-tower-is-getting-a-more-forgiving-spire-mode-to-prepare-you-for-the-big-leagues/",
+      "d": "2026-06-07"
+    },
+    {
+      "t": "PC Gamer：封閉測試開跑",
+      "u": "https://www.pcgamer.com/games/action/arkheron-a-competitive-pvpve-action-rpg-will-open-its-closed-beta-next-week-and-im-getting-that-battlerite-nostalgia-just-looking-at-this-thing/",
+      "d": "2026-07-08"
+    },
+    {
+      "t": "Game Informer：Arkheron 試玩",
+      "u": "https://gameinformer.com/preview/2026/02/19/a-promising-battle-royale-no-seriously",
+      "d": "2026-02-19"
+    },
+    {
+      "t": "CGMagazine：Arkheron 實際試玩",
+      "u": "https://www.cgmagonline.com/articles/previews/arkheron-hands-on/",
+      "d": "2026-02-19"
+    },
+    {
+      "t": "Destructoid：Alpha 測試心得",
+      "u": "https://www.destructoid.com/arkherons-only-in-its-alpha-stage-but-man-if-it-isnt-incredible/",
+      "d": "2025-09-20"
+    },
+    {
+      "t": "SteamCharts：Arkheron Playtest",
+      "u": "https://steamcharts.com/app/3401450",
+      "d": "2026-11-21"
+    },
+    {
+      "t": "Inven Global：DreamHack 斯德哥爾摩現場開跑",
+      "u": "https://www.invenglobal.com/articles/28785/arkheron-to-launch-into-early-access-live-at-dreamhack-stockholm-on-november-27th",
+      "d": "2026-11-18"
+    },
+    {
+      "t": "Xbox 商店：Arkheron（Game Preview）",
+      "u": "https://www.xbox.com/en-US/games/store/arkheron/9PF4B4MD1QZC",
+      "d": "2026-11-21"
+    },
+    {
+      "t": "PlayStation Store：Arkheron",
+      "u": "https://store.playstation.com/concept/10016490",
+      "d": "2026-11-21"
+    },
+    {
+      "t": "Steam 公告：SUPERVIVE 停止營運",
+      "u": "https://store.steampowered.com/news/app/1283700/view/571524191533139167",
+      "d": "2025-12-16"
+    }
+  ],
+  "pending": [
+    "Steam 台灣區、PS Store 台灣、Xbox 台灣售價",
+    "有沒有亞洲伺服器（只有玩家整理站說測試時有亞太配對）",
+    "Steam 開放的確切時間（PS Store 標示台灣時間 11/27 13:00，Steam 未公布）",
+    "塔總共幾層、一場正式多長",
+    "有沒有 DLSS／FSR"
+  ],
+  "updated": "2026-11-21T06:30:00+08:00"
+}
