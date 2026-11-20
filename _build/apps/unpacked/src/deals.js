@@ -36,12 +36,13 @@ function saleHtml() {
   const st = evState(e); const ms = Date.parse(st === 'on' ? e.end : e.start) - Date.now();
   if (st !== 'on' && ms > 7 * 864e5) {   // 還早：一條就好，不擋住雷達
     const wc0 = warChest();
-    return `<section class="dl-sale mini"><div class="dl-k">NEXT BIG SALE</div><div class="dl-row"><h3>${esc(e.name)}</h3><b id="dlcd" data-to="${esc(e.start)}">${esc(cdTxt(ms))}</b></div><div class="dl-cd"><span>${esc(twWhen(e.start))} 開打（台灣時間），連 ${Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5)} 天${wc0.n ? `・備戰：${wc0.n} 款等特價，照目標價全收約 ${esc(fmtNT(wc0.sum))}` : ''}</span></div></section>`;
+    return `<section class="dl-sale mini"><div class="dl-k">NEXT BIG SALE</div><div class="dl-row"><h3>${esc(e.name)}</h3><b id="dlcd" data-to="${esc(e.start)}">${esc(cdTxt(ms))}</b></div><div class="dl-cd"><span>${esc(twWhen(e.start))} 開打（台灣時間），連 ${Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5)} 天${wc0.n ? `・備戰：${wc0.n} 款等特價，照目標價全收約 ${esc(fmtNT(wc0.sum))}` : ''}</span></div><button class="btn sm k dl-war-go" data-go="sale">${ICON.cart}<span>進作戰室：設預算、排清單</span></button></section>`;
   }
   const wc = warChest(); const nx = evList().filter((x) => x.id !== e.id && evState(x) !== 'past' && (x.big || x.kind === 'sale')).sort((a, b) => (a.start < b.start ? -1 : 1)).slice(0, 3);
   return `<section class="dl-sale ${st}"><div class="dl-k">${st === 'on' ? '● 進行中' : 'NEXT BIG SALE'}</div><h3>${esc(e.name)}</h3>
     <div class="dl-cd"><b id="dlcd" data-to="${esc(st === 'on' ? e.end : e.start)}">${esc(cdTxt(ms))}</b><span>${st === 'on' ? `到 ${esc(twWhen(e.end))} 結束` : `${esc(twWhen(e.start))} 開打（台灣時間）`}${e.end && st !== 'on' ? `，連 ${Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5)} 天` : ''}</span></div>
     ${wc.n ? `<div class="dl-war"><b>${ICON.target}備戰清單</b><span>${wc.n} 款 Claude 判定「等特價／等史低」：照目標價全收約 <em>${esc(fmtNT(wc.sum))}</em></span></div>` : ''}
+    <button class="btn sm y dl-war-go" data-go="sale">${ICON.cart}<span>${st === 'on' ? '進作戰室：今天該下手哪幾款' : '進作戰室：設預算、排清單'}</span></button>
     ${nx.length ? `<div class="dl-next">${nx.map((x) => `<span><b>${esc(mdDay(twDate(Date.parse(x.start))))}</b>${esc(x.name)}</span>`).join('')}</div>` : ''}
     <a class="dl-src" href="${esc((e.src || {}).u || '#')}" target="_blank" rel="noopener noreferrer">日期來源：${esc((e.src || {}).t || '')}</a></section>`;
 }

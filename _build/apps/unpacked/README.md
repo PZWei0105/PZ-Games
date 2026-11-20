@@ -34,6 +34,8 @@
   - `/資訊`：資訊卡（每條可點開看來源；粉紅問號＝待確認）、Steam 即時數據（台灣售價與史低、同上與 7 天曲線、評價與近期好評率、繁中玩家評價、語言；捲到時數字跳上來、曲線畫出來）、課金雷達（0～4 格）、中文與台灣能不能玩、你的 SCAR 18、遊玩時間、接下來盯這些。
   - `/影像`：YouTube 官方預告（點了才載入）＋ Steam 預告（HLS：iPhone、Android、新版 Chrome／Edge 直接播，其他瀏覽器用 `vendor/hls.min.mjs`——**一定要完整版**：Steam 預告的聲音是獨立一條音軌，輕量版 hls.light 播出來會沒有聲音，2026-11-16 實測過）＋「用短影音直式滑著看」、相簿燈箱（可滑）：Steam 截圖＋專題附的官方圖＋每支 YouTube 預告自動截的 3 張畫面（maxres1～3，沒有就退回 hq，再沒有就拿掉），最多 18 張。
   - `/玩法` 循環貼紙＋拆解、你的第一個小時、跟誰像；`/劇情`（有雷的要「撕開」才看）；`/幕後`＋時間軸；`/風向`；`/討論`（每題可寫自己的想法）＋我的標記（想玩／在玩／玩過／沒興趣）＋筆記；`/來源`＋待確認。
+  - **上市戰報**（`launch.js`；2026-11-20）：寫過的遊戲一上市，專題頁最上面長出「上市第 N 小時・戰報」（直播中），滿 72 小時凍結成「上市 72 小時戰報」：同上高峰（第幾小時）、72 小時曲線、Steam 好評率（首日→現在）、繁中玩家好評率、72 小時內的官方修正（最多列 3 則）。上市 14 天內放最上面，之後收進 `/資訊`（推坑頁有的話也在 `/資訊`）；上市 7 天內首頁追蹤牆最前面貼一張戰報便利貼。上市後才開始追蹤的會註明「最前面幾個小時不完整」。
+  - **繁中最新風向**（2026-11-20）：`/風向`（推坑頁在「玩家和媒體怎麼說」後面）多一塊「繁中玩家・最新風向」：每天收一次 Steam 繁中評論，好評、負評各挑最多 3 則短摘（附玩了幾小時、日期），連到 Steam 看全部繁中評論。只存摘要、不存作者，髒話打圈。
   - 語音導讀（speechSynthesis，zh-TW）。
 - **推坑**：Claude 的私房推薦牆，不分新舊、已經上市、查過評價又合痞子葳口味的遊戲，每天加 2～3 款。卡片有年份大字、推坑章（必玩／閉眼入／特價入／冷門神作）、即時價格與特價、繁中、時長、Steam 評價；篩選有繁中、特價中、15 小時內、40 小時以上、我想玩。第一次進來卡片一張張蓋章拍上牆，捲到的那張播動態預告或輪播。分頁上的數字是最新一批還沒打開的推坑。
   - 推坑頁：「挖寶中」轉場、動態主視覺、一眼看懂（上市年份、售價、平台、中文、時長、SCAR 18）、**推坑信**（Claude 第一人稱，捲到時推坑章砸下）、三個推坑理由；分頁：玩法拆解＋跟誰像、評價（Metacritic／OpenCritic＋Steam 與繁中即時評價、適合你／先別買、玩家和媒體怎麼說）、怎麼玩最好玩（跟朋友玩、版本怎麼選、怎麼買最划算）、劇情與世界觀（不劇透）、影像相簿、資訊卡、幕後與時間軸、玩完可以聊與我的標記、來源。跟主頁專題一樣全面。
@@ -57,6 +59,11 @@
   - 專題頁的「買不買」卡：判定大字、目標價、現在價格離目標還差多少、價格血條上的綠色目標線、理由、什麼情況會改判；到價時蓋「到價」章。
   - 還沒連結願望單（`wish.json` 的 `state` 不是 `ok`）時，顯示連結說明：Steam「遊戲詳細資料」設成公開，把個人檔案網址給 Claude。
   - 每天清晨的寫稿排程推播會帶上「願望單特價快報」（新特價、史低、快結束、限免）；推坑排程平常不推願望單上的，大特價時一天最多推 1 款「特價入」。
+- **特賣作戰室**（`#sale`；`sale.js`；2026-11-20，先為 Steam 冬季特賣 12/18 做）：從獵價頁特賣卡的「進作戰室」、全部功能、首頁橫幅（開打前 7 天起、開打中、結束後 14 天內有戰果）進來；哪一場看 `events.json` 的 `kind: sale`（進行中 > 剛結束有戰果的 > 下一場）。三個階段自動切換：
+  - 備戰：倒數、設預算（快選或自己打）、從獵物清單勾「要買」；每款的目標價——Claude 願望單解包的 `buy.target` 優先（「別買」不算），沒有就自己定，追蹤以來最低當參考。
+  - 開打：「今天該下手」照現在的價格挑：到了目標價、追蹤以來最低／接近最低、48 小時內結束、限時送，勾了要買的排前面；按「買了」記下實付，預算條跟著扣。
+  - 戰果：收了幾款、花了多少、比原價省多少，一鍵做成遊戲狂想曲的戰果圖卡（1080×1350，不放痞子葳）。
+  - 資料只存在這台裝置（localStorage `sale`，每一場特賣分開記）；價格是 live.py 每小時抓的 Steam 台灣區價格。
 - **出擊日曆**（`#cal`；獵價頁右上、首頁最下面、週報「下週出擊」旁的按鈕）：解包過的上市日、願望單的上市日和特價截止（願望單與解包過的）、最新週報的下週出擊排在一起。最上面是下一個上市的大倒數（D-N），再來是「訂閱到手機行事曆」（`webcal://…/data/calendar.ics`，live.py 每小時重算；內容沒變不重寫）、近五週的日程格（點有事的日子跳到那天）、照日期排的清單，每一筆右邊可以單獨加進行事曆（iPhone 直接開「加入行事曆」畫面，其他瀏覽器下載 .ics），也能全部加入一次。
 - **每週懶人包**（`#week`；首頁上方「WEEK 47 結算出爐」橫幅〔結算後 3 天內〕、首頁最下面的按鈕、粉專出稿台）：
   - 結算畫面：WEEK 數字砸下＋噴漆＋重低音、結算條跑完「本週結算 COMPLETE」、解包／推坑／大事／下週上市數字跳上來、Claude 的開場、本週 MVP（旋轉光芒、皇冠、MVP 章蓋下）、Tier 表（S～D，方塊一個個拍上去，點了打開那款）和每一款的排名理由、本週大事、下週出擊、特價戰利品（現在正在特價的獵物和解包過的遊戲）、數據王（同上人數、好評率、24 小時暴漲，用現在的 Steam 即時資料）、歷屆週報。
@@ -197,6 +204,7 @@ App 裡出現的每一款遊戲都點得進去看介紹（`src/info.js`）：
 - `data/live/<appid>.json`：同一款的其他欄位 `{img{hero,header,wide,box},micro,shots[],trailers[{hls,mp4,webm,poster,name}],short,dev,pub,plat,url,ws,news[{t,d,u,k(patch/news),x}],base{zh,soon,ea,free,orig,rv,ws},pend,chg[{k(zh/rel/ea/free/orig/rv/ws),a,b,d}]}`，App 點開才載（`liveLoad()`），live.py 有變才重寫、不再追蹤的刪掉（`live_load()`／`live_save()` 負責拆和合）。`ws`：有 Steam 工作坊（true／false；沒拿到分類資料就沒有這個欄位）。
 - `data/live.json` 的 `stale`：`{"f:<id>"／"p:<id>": {ch:[寫稿之後的變化], lp:{t?, d}（7 天內最新的官方更新，3 天內才帶標題）}}`（寫稿之後，列表小標和追蹤牆用）。
 - `data/hist/<appid>.json`：`pl` 同上 `[分鐘時間戳, 人數]`、`pr` 價格（有變才記）、`rv`／`rt` 全球與繁中評價 `[時間, 好評數, 總數]`（一天一筆）。
+- 上市戰報、繁中風向（2026-11-20，存在 `live/<appid>.json`）：`launch`＝`{ts(上市時間，秒), h(上市第幾小時，最多 72), pk(同上高峰), pkt(高峰那一分鐘), pl:[[分鐘, 人數]]（每 3 小時一點、最多 30）, part(1＝上市後才開始追蹤), rv0／rv([好評率, 則數]：第一筆／現在或第 72 小時), rt(繁中), np(72 小時內修正幾次), pt:[{t,u,d}]（最多 3）, fz(1＝滿 72 小時凍結，之後原封不動)}`，上市 30 天內第一次看到才做；上市 7 天內 `live.json` 另帶精簡的 `ln{ts,h,pk,rv,rt,fz}` 給首頁追蹤牆。`tcv`＝`{d(收的日期), n(繁中評論總數), pos／neg:[[摘要, 遊玩小時, 日期]]}`（寫過專題、推坑的才收，一天一次；不存作者）。`rel` 多了 `ts`（Steam 的上市時間戳）。
 - `data/board.json`：`{at, src(concurrent/players), since, t:[時間], s:[走勢時間], idx:{n,d1,up,dn,fl,h,sp}, rows:[{a(appid), n, h(30 小時), sp(7 天), d1, d7, pk, r, rp, lw, f:[標記], ath, nm, tags, rv, free, p, img, zh, adult, cov(f:/p:)}], tags:[{t, n, k, d1}]}`；`data/board-d.json`：`{days, pk:{appid:[每天高峰]}, ath, nm, last, since}`。
 - `data/free.json`：`{at, ok, errs, items:[{id(epic:…/steam:…/gog:…), store, title, img, url, orig 或 orig_t, start, end, up(下週才送), mystery, dlc, appid, rv, zh, tags, desc, dev, adult, seen}], past}`（Epic、GOG 的 `appid` 是照名字對到的 Steam 版）。
 - `data/info/<appid>.json`：情報卡 `{appid, name, url, free, price, rel, langs, tags, dev, pub, short, plat, adult, img, micro, ws, rv{n（兩位有效數字）, pct, label}, shots}`；`data/info/_seen.json`：`{appid: 最後一次出現在 App 裡的日期}`。`data/names.json`：`{at, names:{name_key: [appid（0＝Steam 上找不到）, 查的日期]}}`。`track.json` 多了 `cmp`（「跟誰像」有填 steam 的 appid）、`names`（只有名字的）。
@@ -210,7 +218,7 @@ App 裡出現的每一款遊戲都點得進去看介紹（`src/info.js`）：
 - 專題和週報的 `fanpage.threads`：`{post, topic, more?}`（Threads 版；`post` 第 1 則 150～400 字，`more` 是 1～3 則串文延伸、每則 40～480 字，寫法見 WRITER_GUIDE 第 4 節「Threads 寫法」；內文不放 #、不放 `---`，`topic` 一個主題標籤、不含 #）。2026-11-20 起的專題、每一份週報沒有 Threads 版會警告。
 - 推坑的 `fanpage`（2026-11-19 起，PICKS_GUIDE 第 3b 節）：`{threads:{post, topic, more}, tags[], card?:{kicker, title, sub, tags[], points:[{h, t}]}, credit}`；給粉絲看的，不寫只對痞子葳說的話。publish.py 檢查格式（`check_pick_fanpage`），2026-11-20 起的推坑沒寫會警告。
 - 所有粉專文字不放網址、不出現「痞子葳」（publish.py 擋）。
-- localStorage 前綴 `unpacked.v1.`：`tga`（押注、加倍卡、鎖定時間、偷看過沒）、`ask`（裝置代號、待送、已送、自己的點播、看過的回答）、`freeGot`（領過的免費遊戲）、`freeSeen`、`mkBell`（今天敲過開盤鐘沒）；`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音、`skin` 換裝）、`adds`（自己加進資料庫的 `[{q, at}]`）、`tourDone`（第一次導覽看到第幾版）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
+- localStorage 前綴 `unpacked.v1.`：`tga`（押注、加倍卡、鎖定時間、偷看過沒）、`ask`（裝置代號、待送、已送、自己的點播、看過的回答）、`freeGot`（領過的免費遊戲）、`freeSeen`、`mkBell`（今天敲過開盤鐘沒）；`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音、`skin` 換裝）、`adds`（自己加進資料庫的 `[{q, at}]`）、`sale`（作戰室：`{特賣 id: {b(預算，分), pick(勾的), my(自己定的目標價), got(買了：實付、那天)}}`）、`tourDone`（第一次導覽看到第幾版）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
 - `unpacked.v1.ops`（粉專作戰台）：`{v, since(開始用的那天), cad(發文節奏：th/fb/ig 各 7 格、週日到週六、null＝不發), pin({日期:{平台:{r(內容；'-'＝跳過), at, add}}}), log([{id, ref, pf, d, k(pre/up/talk), at, link, s:{v 觀看, e 互動, f 新粉絲}}]), wk({週 id:{th, ig, fb, yt, ytv, rth, rig, rfb, yth}}), vids([{id, t, at(YYYY-MM-DDTHH:MM), url, note, games, ev(點播 id), made}]), setup(開站任務), prof(個人檔案網址), fbLimit(unknown/yes/no), guide(full/lite), ed({ref|平台: 改過的文字}), vchk(上片清單打勾), mode(th/thig/all：經營到第幾階段), dq({日期:{post, reply, patrol}}：每日三件事；當天有 Threads 發文紀錄，「發一篇」自動算做到；只留 60 天)}`；內容代號 `f:<專題>`、`p:<推坑>`、`w:<週>`、`v:<影片>:<pre|up|talk>`、`x:<free.json 的 id>`（限免快訊）。開站任務 `setup` 2026-11-19 換了一套鍵（name、ig0、th、thprof、thfeed、thintro、cal、first、yt、igpro、igfirst、fb、link、fbfirst），舊的鍵會自動對過來。
 
 ## 組建與測試
@@ -221,7 +229,7 @@ python3 _build/apps/unpacked/build.py --icons            # 重畫圖示
 python3 _build/apps/unpacked/tools/publish.py            # 專題檢查＋重建目錄
 # 本機看畫面（雲端沙盒連不到 Steam、YouTube、github.io：外部圖片用假圖代替）
 python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data --hunt   # --hunt：假願望單＋假週報；再加 --noweek 測「本週進行中」
-# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）、--info（情報卡、名字對照，搭配 --hunt 有假週報）、--db（資料庫＋三筆加進資料庫的狀態）；只寫進 /tmp，絕不 commit
+# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）、--info（情報卡、名字對照，搭配 --hunt 有假週報）、--db（資料庫＋三筆加進資料庫的狀態）、--launch（兩篇專題假裝 2 天前、20 天前上市：直播中與凍結的戰報＋繁中風向）；只寫進 /tmp，絕不 commit
 # 換裝：python3 _build/apps/unpacked/skins.py 印出色票數與各套 CSS 大小；截圖時 localStorage 的 settings 帶 skin:'pixel'／'neon'／'paper'
 # 舊稿回訪的候選（只讀）：--kind f 專題、--kind p 推坑
 python3 _build/apps/unpacked/tools/revisit.py --kind f

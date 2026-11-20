@@ -295,3 +295,31 @@ if '--db' in sys.argv:       # 資料庫：用 live.py 自己的邏輯整理 db.
     }}, open(os.path.join(d, 'adds.json'), 'w'), ensure_ascii=False)
     L.dbuild(d, T0, lv.get('apps') or {})
     print('test db →', d)
+
+if '--launch' in sys.argv:   # 上市戰報＋繁中最新風向：第一篇有 Steam 的專題假裝 2 天前上市、另一篇 20 天前上市（凍結）
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import live as L
+    import datetime as _dt
+    T0 = L.now(); lv = L.live_load(d)
+    idx = json.load(open(os.path.join(d, 'index.json'), encoding='utf-8'))
+    ids = [x for x in idx['items'] if x.get('steam') and str(x['steam']) in lv['apps']][:2]
+    for k, it in enumerate(ids):
+        a = str(it['steam']); x = lv['apps'][a]
+        days = 2 if k == 0 else 20
+        ts = int(T0.timestamp()) - days * 86400 - 3 * 3600
+        x['rel'] = dict(x.get('rel') or {}, date=_dt.datetime.fromtimestamp(ts, _dt.timezone.utc).strftime('%Y-%m-%d'), ts=ts, soon=False)
+        m0 = ts // 60; h = {'pl': [], 'rv': [], 'rt': []}
+        for i in range(0, min(days * 24, 140)):
+            n = int(150000 * (1 - abs(i - 20) / 60) + 30000 * math.sin(i / 3.8)) if i < 80 else int(90000 + 20000 * math.sin(i / 4))
+            h['pl'].append([m0 + i * 60 + 20, max(2000, n)])
+        for dday, (pos, tot) in enumerate([(5200, 6100), (13100, 15000), (19000, 21500), (23800, 26800)]):
+            h['rv'].append([m0 + dday * 1440 + 600, pos, tot]); h['rt'].append([m0 + dday * 1440 + 600, int(pos * 0.01), int(tot * 0.01)])
+        x['news'] = [{'t': '（測試）Patch 1.0.2：修正存檔與閃退', 'd': _dt.datetime.fromtimestamp(ts + 20 * 3600, _dt.timezone.utc).isoformat(), 'u': 'https://store.steampowered.com/news/', 'k': 'patch'},
+                     {'t': '（測試）Hotfix：調整 Boss 難度', 'd': _dt.datetime.fromtimestamp(ts + 50 * 3600, _dt.timezone.utc).isoformat(), 'u': 'https://store.steampowered.com/news/', 'k': 'patch'}]
+        x['launch'] = L.launch_report({}, x, h, T0)
+        x['tcv'] = {'d': T0.astimezone(L.TW).strftime('%Y-%m-%d'), 'n': 268,
+                    'pos': [['（測試資料）劇情節奏很好，第一章就把世界觀講清楚，戰鬥手感紮實，Boss 戰會讓人想一直重打。', 12.5, '2026-11-19'], ['（測試資料）中文翻譯通順，配樂很有記憶點，值得首發。', 6.2, '2026-11-20']],
+                    'neg': [['（測試資料）優化很差，4070 開高畫質還是會掉幀，等修完再買。', 2.1, '2026-11-19']]}
+        json.dump(h, open(os.path.join(d, 'hist', f'{a}.json'), 'w'))
+    L.live_save(d, lv)
+    print('test launch →', d, [x['id'] for x in ids])

@@ -1364,6 +1364,117 @@ span.mk-sp.none{color:#5a63a0}
 .tr-card{background:#ffec27;color:#05061a;border:3px solid #000000;box-shadow:6px 6px 0 #1d6fc2}
 .tr-card b{font:900 20px/1.2 var(--cjkh)}
 .tr-skip{color:#05061a}
+.sw-hero{background:#0b0d24;border:4px solid #ffec27;box-shadow:8px 8px 0 #1d6fc2}
+.sw-hero::before{background:repeating-linear-gradient(-45deg,#ffec270f 0 14px,transparent 14px 28px)}
+.sw-hero.ph-on{border-color:#29adff;box-shadow:8px 8px 0 #ab5236}
+.sw-k{color:#29adff}
+.sw-hero.ph-on .sw-k{color:#ffec27}
+.sw-hero h2{font:900 30px/1.15 var(--cjkh);color:#fff1e8}
+.sw-cd b{color:#ffec27}
+.sw-cd span{color:#c5c6dd}
+.sw-ph i{background:#191f48;color:#6c73ab;border:2px solid #28326b}
+.sw-ph i.done{background:#131839;color:#a3a7cc}
+.sw-ph i.on{background:#ffec27;color:#05061a;border-color:#000000}
+.sw-bud{background:#131839;border:3px solid #28326b}
+.sw-bh b{color:#fff1e8}
+.sw-bh em{color:#00e436}
+.sw-bh em.over{color:#ffc3d9}
+.sw-bin>button:not(.sw-bq){font:900 22px/1 var(--cjkh);background:#ffec27;color:#05061a;border:3px solid #000000;box-shadow:2px 2px 0 #1d6fc2}
+.sw-bin>b{color:#ffec27}
+.sw-bq{background:#191f48;color:#c8c9df;border:2px solid #353f7d}
+.sw-bq.on{background:#ffec27;color:#05061a;border-color:#000000}
+.sw-bar{background:#20285b;border:2px solid #000000}
+.sw-bar i.g{background:#00e436}
+.sw-bar i.p{background:#29adff}
+.sw-bl{color:#c5c6dd}
+.sw-bl i.g{background:#00e436}
+.sw-bl i.p{background:#29adff}
+.sw-tip{background:#ffec27;color:#05061a;border:3px solid #000000;box-shadow:5px 5px 0 #1d6fc2}
+.sw-note{color:#8489ba}
+.sw-card{background:#fff1e8;color:#05061a;border:3px solid #000000;box-shadow:5px 5px 0 #1d6fc2}
+.sw-ci{background:#191f48;border-bottom:3px solid #000000}
+.sw-why{background:#ffec27;color:#05061a;border:2px solid #000000}
+.sw-card>small{color:#5a63a0}
+.sw-row{background:#131839;border:2px solid #28326b}
+.sw-row.pk{border-color:#ffec27;box-shadow:3px 3px 0 #1d6fc2}
+.sw-pick{border:3px solid #465190;background:#0b0d24;color:#05061a}
+.sw-pick.on{background:#ffec27;border-color:#000000}
+.sw-im{background:#20285b;border:2px solid #000000}
+.sw-b>b{color:#fff1e8}
+.sw-p em{color:#dbdae8}
+.sw-p em.sale{color:#ffec27}
+.sw-card .sw-p em{color:#05061a}
+.sw-p s{color:#6c73ab}
+.sw-p i{background:#29adff;color:#fff1e8}
+.sw-p small{color:#8489ba}
+.sw-tg{color:#00e436}
+.sw-tg small{color:#8489ba}
+.sw-tg.me{color:#ffec27}
+.sw-tg.none{color:#8489ba}
+.sw-e{color:#29adff}
+.sw-edit input{background:#fff1e8;color:#05061a;border:2px solid #000000}
+.sw-edit button{background:#ffec27;color:#05061a;border:2px solid #000000}
+.sw-st{border:2px solid #353f7d;color:#a3a7cc}
+.sw-st.hit{background:#00e436;color:#05061a;border-color:#000000}
+.sw-st.low{background:#ffec27;color:#05061a;border-color:#000000}
+.sw-st.sale{background:#29adff;color:#fff1e8;border-color:#000000}
+.sw-st.wait{color:#ffec27;border-color:#ffec27}
+.sw-st.free{color:#00e436;border-color:#00e436}
+.sw-st.soon{color:#c5c6dd}
+.sw-loot{background:#0b0d24;border:3px solid #29adff;box-shadow:6px 6px 0 #ab5236}
+.sw-lt>div{background:#131839;border:2px solid #28326b}
+.sw-lt>div.big{background:#ffec27;border-color:#000000}
+.sw-lt small{color:#c5c6dd}
+.sw-lt b{color:#fff1e8}
+.sw-lt i{color:#8489ba}
+.sw-lt .big small,.sw-lt .big i{color:#05061a}
+.sw-lt .big b{color:#05061a}
+.sw-li{color:#ede6e8}
+.sw-lim{background:#20285b}
+.sw-li em{color:#ffec27}
+.sw-li s{color:#6c73ab}
+.sw-li button{color:#8489ba}
+#swcv{border:3px solid #000000;box-shadow:6px 6px 0 #1d6fc2}
+.sw-ban{background:#29adff;color:#fff1e8;border:3px solid #000000;box-shadow:5px 5px 0 #000000}
+.sw-ban.ph-prep{background:#ffec27;color:#05061a}
+.sw-bk{background:#0b0d24;color:#ffec27}
+.sw-ban>i{font:900 22px/1 var(--cjkh)}
+.lr{background:#0b0d24;border:3px solid #29adff;box-shadow:6px 6px 0 #ab5236}
+.lr.fz{border-color:#ffec27;box-shadow:6px 6px 0 #1d6fc2}
+.lr-k{color:#fff1e8}
+.lr-tag{background:#ffec27;color:#05061a}
+.lr-tag.on{background:#29adff;color:#fff1e8}
+.lr-h small{color:#8489ba}
+.lr-part{color:#8489ba}
+.lr-c{background:#131839;border:2px solid #28326b}
+.lr-c.pk{background:#ffec27;border-color:#000000}
+.lr-c small{color:#c5c6dd}
+.lr-c b{color:#fff1e8}
+.lr-c i{color:#8489ba}
+.lr-c i em{color:#c5c6dd}
+.lr-c i em.up{color:#00e436}
+.lr-c i em.dn{color:#ffc3d9}
+.lr-c.pk small,.lr-c.pk i{color:#05061a}
+.lr-c.pk b{color:#05061a}
+.lr-sp{border-bottom:2px solid #28326b}
+.lr-dot{background:#29adff;border:2px solid #000000}
+.lr-sx{color:#6c73ab}
+.lr-sp polyline{stroke:#ffec27}
+.lr-sp .ar{fill:#ffec2726}
+.lr-s{color:#dbdae8}
+.lr-pt a{color:#ffec27}
+.tcv{background:#131839;border:3px solid #28326b}
+.tcv-h b{color:#fff1e8}
+.tcv-h small{color:#8489ba}
+.tcv-p{color:#ffec27}
+.tcv-p i{color:#8489ba}
+.tcv-c h4{color:#00e436}
+.tcv-c.neg h4{color:#ffc3d9}
+.tq{background:#fff1e8;color:#191f48;border:2px solid #000000;box-shadow:3px 3px 0 #00e436}
+.tq.neg{box-shadow:3px 3px 0 #ffc3d9}
+.tq footer{color:#6c73ab}
+.tcv-n{color:#8489ba}
+.tcv-a{color:#ffec27}
 /* ---- skin-pixel.css ---- */
 /* ==========================================================================
    換裝：像素掌機（PIXEL）— 方塊、硬邊、像素字、浮雕按鈕，像在掌機上翻攻略本

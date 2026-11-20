@@ -1364,6 +1364,117 @@ span.mk-sp.none{color:#544881}
 .tr-card{background:#00f0ff;color:#07030f;border:3px solid #07030f;box-shadow:6px 6px 0 #ff2bd6}
 .tr-card b{font:900 20px/1.2 var(--cjkh)}
 .tr-skip{color:#07030f}
+.sw-hero{background:#08040f;border:4px solid #00f0ff;box-shadow:8px 8px 0 #ff2bd6}
+.sw-hero::before{background:repeating-linear-gradient(-45deg,#00f0ff0f 0 14px,transparent 14px 28px)}
+.sw-hero.ph-on{border-color:#ff2bd6;box-shadow:8px 8px 0 #00f0ff}
+.sw-k{color:#ff2bd6}
+.sw-hero.ph-on .sw-k{color:#00f0ff}
+.sw-hero h2{font:900 30px/1.15 var(--cjkh);color:#f2eeff}
+.sw-cd b{color:#00f0ff}
+.sw-cd span{color:#c3bbe1}
+.sw-ph i{background:#180e2d;color:#675c94;border:2px solid #271b47}
+.sw-ph i.done{background:#120b23;color:#a298c7}
+.sw-ph i.on{background:#00f0ff;color:#07030f;border-color:#07030f}
+.sw-bud{background:#120b23;border:3px solid #271b47}
+.sw-bh b{color:#f2eeff}
+.sw-bh em{color:#3dffa8}
+.sw-bh em.over{color:#ff77e5}
+.sw-bin>button:not(.sw-bq){font:900 22px/1 var(--cjkh);background:#00f0ff;color:#07030f;border:3px solid #07030f;box-shadow:2px 2px 0 #ff2bd6}
+.sw-bin>b{color:#00f0ff}
+.sw-bq{background:#180e2d;color:#c7bfe3;border:2px solid #322659}
+.sw-bq.on{background:#00f0ff;color:#07030f;border-color:#07030f}
+.sw-bar{background:#1f1539;border:2px solid #07030f}
+.sw-bar i.g{background:#3dffa8}
+.sw-bar i.p{background:#ff2bd6}
+.sw-bl{color:#c3bbe1}
+.sw-bl i.g{background:#3dffa8}
+.sw-bl i.p{background:#ff2bd6}
+.sw-tip{background:#00f0ff;color:#07030f;border:3px solid #07030f;box-shadow:5px 5px 0 #ff2bd6}
+.sw-note{color:#8176ac}
+.sw-card{background:#ece6ff;color:#07030f;border:3px solid #07030f;box-shadow:5px 5px 0 #ff2bd6}
+.sw-ci{background:#180e2d;border-bottom:3px solid #07030f}
+.sw-why{background:#00f0ff;color:#07030f;border:2px solid #07030f}
+.sw-card>small{color:#544881}
+.sw-row{background:#120b23;border:2px solid #271b47}
+.sw-row.pk{border-color:#00f0ff;box-shadow:3px 3px 0 #ff2bd6}
+.sw-pick{border:3px solid #43366e;background:#08040f;color:#07030f}
+.sw-pick.on{background:#00f0ff;border-color:#07030f}
+.sw-im{background:#1f1539;border:2px solid #07030f}
+.sw-b>b{color:#f2eeff}
+.sw-p em{color:#d8d1ef}
+.sw-p em.sale{color:#00f0ff}
+.sw-card .sw-p em{color:#07030f}
+.sw-p s{color:#675c94}
+.sw-p i{background:#ff2bd6;color:#f2eeff}
+.sw-p small{color:#8176ac}
+.sw-tg{color:#3dffa8}
+.sw-tg small{color:#8176ac}
+.sw-tg.me{color:#00f0ff}
+.sw-tg.none{color:#8176ac}
+.sw-e{color:#ff2bd6}
+.sw-edit input{background:#ece6ff;color:#07030f;border:2px solid #07030f}
+.sw-edit button{background:#00f0ff;color:#07030f;border:2px solid #07030f}
+.sw-st{border:2px solid #322659;color:#a298c7}
+.sw-st.hit{background:#3dffa8;color:#07030f;border-color:#07030f}
+.sw-st.low{background:#00f0ff;color:#07030f;border-color:#07030f}
+.sw-st.sale{background:#ff2bd6;color:#f2eeff;border-color:#07030f}
+.sw-st.wait{color:#00f0ff;border-color:#00f0ff}
+.sw-st.free{color:#3dffa8;border-color:#3dffa8}
+.sw-st.soon{color:#c3bbe1}
+.sw-loot{background:#08040f;border:3px solid #ff2bd6;box-shadow:6px 6px 0 #00f0ff}
+.sw-lt>div{background:#120b23;border:2px solid #271b47}
+.sw-lt>div.big{background:#00f0ff;border-color:#07030f}
+.sw-lt small{color:#c3bbe1}
+.sw-lt b{color:#f2eeff}
+.sw-lt i{color:#8176ac}
+.sw-lt .big small,.sw-lt .big i{color:#07030f}
+.sw-lt .big b{color:#07030f}
+.sw-li{color:#e5e0f7}
+.sw-lim{background:#1f1539}
+.sw-li em{color:#00f0ff}
+.sw-li s{color:#675c94}
+.sw-li button{color:#8176ac}
+#swcv{border:3px solid #07030f;box-shadow:6px 6px 0 #ff2bd6}
+.sw-ban{background:#ff2bd6;color:#f2eeff;border:3px solid #07030f;box-shadow:5px 5px 0 #000000}
+.sw-ban.ph-prep{background:#00f0ff;color:#07030f}
+.sw-bk{background:#08040f;color:#00f0ff}
+.sw-ban>i{font:900 22px/1 var(--cjkh)}
+.lr{background:#08040f;border:3px solid #ff2bd6;box-shadow:6px 6px 0 #00f0ff}
+.lr.fz{border-color:#00f0ff;box-shadow:6px 6px 0 #ff2bd6}
+.lr-k{color:#f2eeff}
+.lr-tag{background:#00f0ff;color:#07030f}
+.lr-tag.on{background:#ff2bd6;color:#f2eeff}
+.lr-h small{color:#8176ac}
+.lr-part{color:#8176ac}
+.lr-c{background:#120b23;border:2px solid #271b47}
+.lr-c.pk{background:#00f0ff;border-color:#07030f}
+.lr-c small{color:#c3bbe1}
+.lr-c b{color:#f2eeff}
+.lr-c i{color:#8176ac}
+.lr-c i em{color:#c3bbe1}
+.lr-c i em.up{color:#3dffa8}
+.lr-c i em.dn{color:#ff77e5}
+.lr-c.pk small,.lr-c.pk i{color:#07030f}
+.lr-c.pk b{color:#07030f}
+.lr-sp{border-bottom:2px solid #271b47}
+.lr-dot{background:#ff2bd6;border:2px solid #07030f}
+.lr-sx{color:#675c94}
+.lr-sp polyline{stroke:#00f0ff}
+.lr-sp .ar{fill:#00f0ff26}
+.lr-s{color:#d8d1ef}
+.lr-pt a{color:#00f0ff}
+.tcv{background:#120b23;border:3px solid #271b47}
+.tcv-h b{color:#f2eeff}
+.tcv-h small{color:#8176ac}
+.tcv-p{color:#00f0ff}
+.tcv-p i{color:#8176ac}
+.tcv-c h4{color:#3dffa8}
+.tcv-c.neg h4{color:#ff77e5}
+.tq{background:#ece6ff;color:#180e2d;border:2px solid #07030f;box-shadow:3px 3px 0 #3dffa8}
+.tq.neg{box-shadow:3px 3px 0 #ff77e5}
+.tq footer{color:#675c94}
+.tcv-n{color:#8176ac}
+.tcv-a{color:#00f0ff}
 /* ---- skin-neon.css ---- */
 /* ==========================================================================
    換裝：霓虹賽博（NEON）— 紫黑夜城、地平線上的太陽、透視格線、掃描線、霓虹管雙線框

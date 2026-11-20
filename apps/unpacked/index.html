@@ -2400,6 +2400,151 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 .tr-b{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:10px}
 .tr-skip{font:900 13px/1 var(--cjk);color:var(--k);opacity:.7;text-decoration:underline}
 
+/* ---------- 特賣作戰室（2026-11-20） ---------- */
+.sw-hero{position:relative;margin:4px 2px 18px;padding:16px 16px 14px;background:var(--k);border:4px solid var(--y);box-shadow:8px 8px 0 var(--p);overflow:hidden}
+.sw-hero::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-45deg,#ffe6000f 0 14px,transparent 14px 28px);pointer-events:none}
+.sw-hero.ph-on{border-color:var(--p);box-shadow:8px 8px 0 var(--y)}
+.sw-k{position:relative;font:400 17px/1 var(--num);letter-spacing:3px;color:var(--p)}
+.sw-hero.ph-on .sw-k{color:var(--y)}
+.sw-hero h2{position:relative;font:900 30px/1.15 var(--cjk);color:#fff;margin:6px 0 10px;letter-spacing:1px}
+.sw-cd{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.sw-cd b{font:400 46px/1 var(--num);color:var(--y);letter-spacing:2px}
+.sw-cd span{font:700 13px/1.4 var(--cjk);color:var(--t2)}
+.sw-ph{position:relative;display:flex;gap:6px;margin-top:12px}
+.sw-ph i{flex:1;font:900 12.5px/1 var(--cjk);font-style:normal;text-align:center;padding:7px 0;background:#222;color:#777;border:2px solid #333}
+.sw-ph i.done{background:#1b1b1b;color:#aaa}
+.sw-ph i.on{background:var(--y);color:var(--k);border-color:var(--k)}
+.sw-bud{margin:0 2px 18px;padding:12px 14px;background:#1b1b1b;border:3px solid #333}
+.sw-bh{display:flex;align-items:baseline;gap:10px}
+.sw-bh b{font:900 18px/1 var(--cjk);color:#fff}
+.sw-bh em{margin-left:auto;font:900 14px/1 var(--cjk);font-style:normal;color:#7dff9a}
+.sw-bh em.over{color:#ff7a9c}
+.sw-bin{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0}
+.sw-bin>button:not(.sw-bq){width:38px;height:38px;font:900 22px/1 var(--cjk);background:var(--y);color:var(--k);border:3px solid var(--k);box-shadow:2px 2px 0 var(--p)}
+.sw-bin>b{min-width:118px;text-align:center;font:400 30px/1 var(--num);color:var(--y);letter-spacing:1px}
+.sw-bq{font:400 16px/1 var(--num);padding:8px 9px 6px;background:#222;color:#ccc;border:2px solid #444;letter-spacing:1px}
+.sw-bq.on{background:var(--y);color:var(--k);border-color:var(--k)}
+.sw-bar{display:flex;height:14px;background:#2c2c2c;border:2px solid var(--k);overflow:hidden}
+.sw-bar i{height:100%}
+.sw-bar i.g{background:#7dff9a}.sw-bar i.p{background:var(--p)}
+.sw-bl{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font:700 12.5px/1.3 var(--cjk);color:var(--t2)}
+.sw-bl i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px}
+.sw-bl i.g{background:#7dff9a}.sw-bl i.p{background:var(--p)}
+.sw-tip{margin:0 2px 16px;padding:12px 14px;background:var(--y);color:var(--k);border:3px solid var(--k);box-shadow:5px 5px 0 var(--p);transform:rotate(-.6deg)}
+.sw-tip b{display:block;font:900 15px/1.3 var(--cjk)}
+.sw-tip span{display:block;font:700 13px/1.6 var(--cjk);margin-top:4px}
+.sw-note{font:600 12.5px/1.6 var(--cjk);color:var(--t3);margin:-4px 2px 10px}
+.tape-h small{font:700 12px/1 var(--cjk);margin-left:8px;opacity:.8}
+.sw-today{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin:0 2px 20px}
+.sw-card{position:relative;background:#fff;color:var(--k);border:3px solid var(--k);box-shadow:5px 5px 0 var(--p);padding:0 0 10px;animation:dbIn .3s both;animation-delay:calc(var(--i) * 50ms)}
+.sw-ci{position:relative;aspect-ratio:460/215;background:#222;overflow:hidden;border-bottom:3px solid var(--k);cursor:pointer}
+.sw-ci img{width:100%;height:100%;object-fit:cover}
+.sw-why{position:absolute;left:6px;bottom:6px;font:900 11.5px/1 var(--cjk);background:var(--y);color:var(--k);padding:4px 6px;border:2px solid var(--k)}
+.sw-card>b{display:block;font:900 14.5px/1.3 var(--cjk);margin:8px 10px 2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sw-card>small{display:block;font:700 11.5px/1.4 var(--cjk);color:#666;margin:2px 10px 0}
+.sw-card .sw-p{margin:2px 10px 0}
+.sw-cb{display:flex;gap:6px;margin:8px 10px 0}
+.sw-list{display:grid;gap:10px;margin:0 2px 20px}
+.sw-row{display:grid;grid-template-columns:30px 92px minmax(0,1fr) auto;gap:8px;align-items:center;background:#1b1b1b;border:2px solid #333;padding:8px;animation:dbIn .25s both;animation-delay:calc(var(--i) * 15ms)}
+.sw-row.pk{border-color:var(--y);box-shadow:3px 3px 0 var(--p)}
+.sw-pick{width:28px;height:28px;border:3px solid #555;background:#111;color:var(--k);font:900 17px/1 var(--cjk)}
+.sw-pick.on{background:var(--y);border-color:var(--k)}
+.sw-im{width:92px;aspect-ratio:460/215;background:#2c2c2c;overflow:hidden;border:2px solid var(--k);padding:0}
+.sw-im img{width:100%;height:100%;object-fit:cover}
+.sw-b{min-width:0}
+.sw-b>b{display:block;font:900 14.5px/1.25 var(--cjk);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.sw-p{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;margin-top:3px}
+.sw-p em{font:400 18px/1 var(--num);font-style:normal;color:#ddd;letter-spacing:.5px}
+.sw-p em.sale{color:var(--y)}
+.sw-card .sw-p em{color:var(--k)}
+.sw-p s{font:400 13px/1 var(--num);color:#777}
+.sw-p i{font:400 13px/1 var(--num);font-style:normal;background:var(--p);color:#fff;padding:2px 4px 1px}
+.sw-p small{font:700 11px/1 var(--cjk);color:var(--t3)}
+.sw-t{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:5px}
+.sw-tg{display:inline-flex;align-items:baseline;gap:5px;font:400 15px/1 var(--num);color:#7dff9a;letter-spacing:.5px}
+.sw-tg small{font:700 10.5px/1 var(--cjk);color:var(--t3);letter-spacing:0}
+.sw-tg.me{color:var(--y)}.sw-tg.none{font:700 11.5px/1 var(--cjk);color:var(--t3)}
+.sw-e{font:900 11px/1 var(--cjk);color:var(--p);text-decoration:underline;padding:3px 0}
+.sw-edit{display:inline-flex;gap:4px}
+.sw-edit input{width:82px;font:700 14px/1 var(--cjk);padding:5px 6px;background:#fff;color:var(--k);border:2px solid var(--k)}
+.sw-edit button{font:900 12px/1 var(--cjk);padding:6px 8px;background:var(--y);color:var(--k);border:2px solid var(--k)}
+.sw-r{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.sw-st{font:900 11.5px/1 var(--cjk);padding:4px 6px;border:2px solid #444;color:#aaa;white-space:nowrap}
+.sw-st.hit{background:#7dff9a;color:#111;border-color:#111}.sw-st.low{background:var(--y);color:var(--k);border-color:var(--k)}
+.sw-st.sale{background:var(--p);color:#fff;border-color:var(--k)}.sw-st.wait{color:var(--y);border-color:var(--y)}.sw-st.free{color:#7dff9a;border-color:#0a8f3c}.sw-st.soon{color:var(--t2)}
+.sw-loot{margin:0 2px 22px;padding:14px;background:var(--k);border:3px solid var(--p);box-shadow:6px 6px 0 var(--y)}
+.sw-lt{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px}
+.sw-lt>div{background:#1b1b1b;border:2px solid #333;padding:9px 10px}
+.sw-lt>div.big{background:var(--y);border-color:var(--k)}
+.sw-lt small{display:block;font:700 11.5px/1 var(--cjk);color:var(--t2)}
+.sw-lt b{display:block;font:400 34px/1 var(--num);color:#fff;margin-top:6px;letter-spacing:1px}
+.sw-lt i{font:700 11px/1 var(--cjk);font-style:normal;color:var(--t3)}
+.sw-lt .big small,.sw-lt .big i{color:var(--k)}.sw-lt .big b{color:var(--k)}
+.sw-ll{display:grid;gap:6px;margin:12px 0 4px}
+.sw-li{display:grid;grid-template-columns:64px minmax(0,1fr) auto auto 28px;gap:8px;align-items:center;font:700 13px/1.3 var(--cjk);color:#eee}
+.sw-lim{width:64px;aspect-ratio:460/215;background:#2c2c2c;overflow:hidden}
+.sw-lim img{width:100%;height:100%;object-fit:cover}
+.sw-li b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw-li em{font:400 17px/1 var(--num);font-style:normal;color:var(--y)}
+.sw-li s{font:400 13px/1 var(--num);color:#777}
+.sw-li button{font:900 14px/1 var(--cjk);color:var(--t3)}
+#swcv{display:block;width:100%;max-width:520px;margin:14px auto 6px;border:3px solid var(--k);box-shadow:6px 6px 0 var(--p)}
+.sw-ban{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin:0 2px 18px;padding:10px 12px;background:var(--p);color:#fff;border:3px solid var(--k);box-shadow:5px 5px 0 var(--k);cursor:pointer;transform:rotate(-.5deg)}
+.sw-ban.ph-prep{background:var(--y);color:var(--k)}
+.sw-bk{font:400 22px/1 var(--num);letter-spacing:1px;background:var(--k);color:var(--y);padding:6px 8px 4px}
+.sw-ban b{display:block;font:900 15px/1.2 var(--cjk)}
+.sw-ban small{display:block;font:700 12px/1.3 var(--cjk);opacity:.85;margin-top:2px}
+.sw-ban>i{font:900 22px/1 var(--cjk);font-style:normal}
+.dl-war-go{margin-top:10px}
+@media (min-width:700px){.sw-row{grid-template-columns:30px 120px minmax(0,1fr) auto}.sw-im{width:120px}}
+
+/* ---------- 上市戰報、繁中最新風向（2026-11-20） ---------- */
+.lr{position:relative;margin:16px 0 4px;padding:14px 14px 12px;background:var(--k);border:3px solid var(--p);box-shadow:6px 6px 0 var(--y)}
+.lr.top{margin:14px 2px 6px}
+.lr.fz{border-color:var(--y);box-shadow:6px 6px 0 var(--p)}
+.lr-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.lr-k{font:900 18px/1.2 var(--cjk);color:#fff;letter-spacing:1px}
+.lr-tag{font:900 11px/1 var(--cjk);font-style:normal;padding:4px 6px;background:var(--y);color:var(--k)}
+.lr-tag.on{background:var(--p);color:#fff;animation:lrBlink 1.4s steps(1) infinite}
+@keyframes lrBlink{50%{opacity:.45}}
+.lr-h small{margin-left:auto;font:700 12px/1 var(--cjk);color:var(--t3)}
+.lr-part{font:600 12px/1.5 var(--cjk);color:var(--t3);margin-top:6px}
+.lr-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+@media (min-width:620px){.lr-g{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.lr-c{background:#1b1b1b;border:2px solid #333;padding:9px 10px}
+.lr-c.pk{background:var(--y);border-color:var(--k)}
+.lr-c small{display:block;font:700 11.5px/1 var(--cjk);color:var(--t2)}
+.lr-c b{display:block;font:400 32px/1 var(--num);color:#fff;margin-top:6px;letter-spacing:1px}
+.lr-c b span{font-size:17px;margin-left:2px}
+.lr-c i{display:block;font:700 11px/1.35 var(--cjk);font-style:normal;color:var(--t3);margin-top:4px}
+.lr-c i em{font-style:normal;margin-left:4px;color:var(--t2)}
+.lr-c i em.up{color:#7dff9a}.lr-c i em.dn{color:#ff7a9c}
+.lr-c.pk small,.lr-c.pk i{color:var(--k)}.lr-c.pk b{color:var(--k)}
+.lr-spw{position:relative;margin-top:12px}
+.lr-sp{display:block;width:100%;height:64px;overflow:visible;border-bottom:2px solid #333}
+.lr-dot{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--p);border:2px solid var(--k)}
+.lr-sx{display:flex;justify-content:space-between;font:700 10px/1 var(--cjk);color:#777;margin-top:4px}
+.lr-sp polyline{fill:none;stroke:var(--y);stroke-width:2.2;vector-effect:non-scaling-stroke}
+.lr-sp .ar{fill:#ffe60026;stroke:none}
+.lr-s{font:600 13.5px/1.6 var(--cjk);color:#ddd;margin-top:8px}
+.lr-pt{display:grid;gap:4px;margin-top:8px}
+.lr-pt a{font:700 12.5px/1.4 var(--cjk);color:var(--y);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcv{margin-top:16px;padding:12px;background:#1b1b1b;border:3px solid #333}
+.tcv-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.tcv-h b{font:900 16px/1.2 var(--cjk);color:#fff}
+.tcv-h small{font:600 11.5px/1.3 var(--cjk);color:var(--t3)}
+.tcv-p{margin-left:auto;font:400 26px/1 var(--num);color:var(--y)}
+.tcv-p i{font:700 11px/1 var(--cjk);font-style:normal;color:var(--t3);margin-left:4px}
+.tcv-g{display:grid;gap:10px;margin-top:10px}
+@media (min-width:620px){.tcv-g{grid-template-columns:1fr 1fr}}
+.tcv-c h4{font:900 13px/1 var(--cjk);color:#7dff9a;margin-bottom:6px}
+.tcv-c.neg h4{color:#ff7a9c}
+.tq{margin:0 0 8px;padding:9px 10px;background:#fff;color:#222;border:2px solid var(--k);box-shadow:3px 3px 0 #7dff9a;font:600 13.5px/1.6 var(--cjkb)}
+.tq.neg{box-shadow:3px 3px 0 #ff7a9c}
+.tq footer{font:700 11px/1 var(--cjk);color:#777;margin-top:6px}
+.tcv-n{font:600 12.5px/1.5 var(--cjk);color:var(--t3)}
+.tcv-a{display:inline-block;margin-top:4px;font:900 12.5px/1 var(--cjk);color:var(--y)}
+
 /* 換裝選單裡的迷你預覽：每一套各自寫死顏色（不受目前是哪一套影響）。一直生效。 */
 .skp[data-skin="pixel"] .skp-wall{background:#0b0d24;background-image:linear-gradient(#29adff12 1px,transparent 1px),linear-gradient(90deg,#29adff12 1px,transparent 1px);background-size:8px 8px}
 .skp[data-skin="pixel"] .skp-top{border-bottom:2px solid #000;box-shadow:0 2px 0 #29adff}
@@ -2473,7 +2618,7 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 
 :root{--cjkh:var(--cjk);--cjkb:var(--cjk)}
 </style>
-<script>/* 換裝：畫面出來之前就把那一套的 CSS 接上（塗鴉版不用多載任何東西） */try{var s=JSON.parse(localStorage.getItem('unpacked.v1.settings')||'{}'),t={pixel:'#0b0d24',neon:'#08040f',paper:'#f3eee2'}[s.skin];if(t){document.documentElement.setAttribute('data-skin',s.skin);document.querySelector('meta[name="theme-color"]').content=t;if(s.skin==='paper')document.querySelector('meta[name="color-scheme"]').content='light';document.write('<link rel="stylesheet" id="skincss" data-skin="'+s.skin+'" href="skins/'+s.skin+'.css?v=1.0.2611201358">');var j=document.createElement('script');j.async=true;j.src='skins/'+s.skin+'.js?v=1.0.2611201358';document.head.appendChild(j)}}catch(e){}</script>
+<script>/* 換裝：畫面出來之前就把那一套的 CSS 接上（塗鴉版不用多載任何東西） */try{var s=JSON.parse(localStorage.getItem('unpacked.v1.settings')||'{}'),t={pixel:'#0b0d24',neon:'#08040f',paper:'#f3eee2'}[s.skin];if(t){document.documentElement.setAttribute('data-skin',s.skin);document.querySelector('meta[name="theme-color"]').content=t;if(s.skin==='paper')document.querySelector('meta[name="color-scheme"]').content='light';document.write('<link rel="stylesheet" id="skincss" data-skin="'+s.skin+'" href="skins/'+s.skin+'.css?v=1.0.2611201419">');var j=document.createElement('script');j.async=true;j.src='skins/'+s.skin+'.js?v=1.0.2611201419';document.head.appendChild(j)}}catch(e){}</script>
 </head>
 <body>
 <div id="wall"></div>
@@ -2500,7 +2645,7 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611201358';
+const VERSION = '1.0.2611201419';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3550,7 +3695,9 @@ function watchNotes() {
     if (rv && rv.recent && rv.pct != null && Math.abs(rv.recent.pct - rv.pct) >= 5) notes.push({ w: 60, id: it.id, t: it.zh, v: rv.recent.pct, unit: '%', d: `近 ${rv.recent.days} 天好評率（整體 ${rv.pct}%）`, c: 'w' });
   }
   notes.push(...afterNotes());
-  return notes.sort((a, b) => b.w - a.w).slice(0, 8);
+  let ln = []; try { ln = launchNotes(); } catch (e) { /* */ }
+  const lid = new Set(ln.map((n) => n.id));   // 已經有戰報的遊戲，不再貼倒數和同上便利貼
+  return [...ln, ...notes.filter((n) => !(lid.has(n.id) && /上市|同上/.test(n.d))).sort((a, b) => b.w - a.w)].slice(0, 8);
 }
 
 /* ---------- 今日牆 ---------- */
@@ -3566,7 +3713,7 @@ function renderHome() {
   return `<div class="sec-h"><h2 class="spray-h">${lastDate === today ? '今日解包' : '最新解包'}</h2>
       <span class="date-stk">${esc(lastDate.slice(5).replace('-', '.'))} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</span></div>
     ${lastDate !== today ? `<p class="sub-note">今天的專題還在寫，先看 ${mdDay(lastDate)} 這批。</p>` : ''}
-    ${weekBanner()}${tgaBanner()}${huntStrip()}
+    ${weekBanner()}${saleBanner()}${tgaBanner()}${huntStrip()}
     <div class="posters">${todays.slice(0, 2).map(posterHtml).join('')}${vsStrip(todays)}${todays.slice(2).map((it, i) => posterHtml(it, i + 2)).join('')}</div>
     ${picksTeaser()}
     ${marketStrip()}
@@ -3891,7 +4038,7 @@ async function renderFeature(id) {
       <div class="f-en">${esc(f.game.en)}${f.game.zh_note ? `<span class="f-zhnote">（${esc(f.game.zh_note)}）</span>` : ''}</div>
       <p class="f-headline">${esc(f.headline)}</p></div>
     ${glanceHtml(f, it, lv)}
-    ${afterBanner('f', f, lv)}
+    ${afterBanner('f', f, lv)}${launchFresh(launchOf(lv)) ? launchHtml(lv, 'top') : ''}
     <p class="hook">${esc(f.hook)}</p>
     <div class="verdict"><div class="vl">三秒結論 · ${esc(V.label)}</div><div class="vt">${esc(V.stamp === '推薦' ? '值得玩' : V.stamp === '觀望' ? '先觀望' : '先跳過')}</div>
       <p class="vs">${esc(V.summary)}</p>${sealHtml(V.stamp, V.label, 'seal wait')}
@@ -3900,7 +4047,7 @@ async function renderFeature(id) {
     <div class="btnrow"><button class="btn y sm" data-act="speak">${ICON.speak}<span>語音導讀</span></button><button class="btn sm askthis" data-act="askthis" data-k="feature">${ICON.radio}<span>問 Claude</span></button><button class="btn sm vsb" data-act="vspick" data-r="f:${esc(id)}" data-side="r">⚔<span>VS 對決</span></button><button class="btn p sm" data-go="fan/${esc(id)}">${ICON.mega}<span>出成粉專貼文</span></button>${f.game.site ? `<a class="btn sm" href="${esc(f.game.site)}" target="_blank" rel="noopener noreferrer">官方頁面</a>` : ''}${f.game.steam ? `<a class="btn sm" href="https://store.steampowered.com/app/${esc(f.game.steam)}/" target="_blank" rel="noopener noreferrer">Steam 商店</a>` : ''}</div>
     ${askBoxFor('f:' + id)}
     <nav class="ftabs">${tabs.map(([a, l], i) => `<button class="ftab ${i ? '' : 'on'}" data-act="jump" data-to="${a}"><b>/</b>${l}</button>`).join('')}</nav>
-    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源；粉紅色問號是還沒查證的。</p><div class="facts">${facts}</div>${liveHtml(f, lv, h)}${afterHtml('f', f, lv)}${infoCards(f, lv)}`)}
+    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源；粉紅色問號是還沒查證的。</p><div class="facts">${facts}</div>${liveHtml(f, lv, h)}${launchOf(lv) && !launchFresh(launchOf(lv)) ? launchHtml(lv, 'in') : ''}${afterHtml('f', f, lv)}${infoCards(f, lv)}`)}
     ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>${M.vids.length ? `<div class="btnrow"><button class="btn sm k" data-go="shorts/f:${esc(id)}">${ICON.shorts}<span>用短影音直式滑著看</span></button></div>` : ''}
       ${M.shots.length ? `<h3 class="tape-h">相簿 <small class="shot-n">${M.shots.length} 張・點開可以左右滑</small></h3><div class="shots">${M.shots.map((s, i) => `<div class="shot" data-act="lb" data-i="${i}" style="--rot:${rot(id + s, i, 1)}deg"><img src="${esc(s)}" alt="" loading="lazy" decoding="async" onerror="shotFail(this)" onload="if(this.naturalWidth<=120)shotFail(this)"></div>`).join('')}</div>` : ''}`)}
     ${sec('s-play', 'PLAY', '玩法拆解', `<div class="loop">${Sx.gameplay.loop.map((x, i) => `${i ? '<span class="ar">→</span>' : ''}<span class="lp" style="--rot:${rot(id + x, i, 2)}deg">${esc(x)}</span>`).join('')}<span class="back2">↺ 再來一輪</span></div>
@@ -3910,7 +4057,7 @@ async function renderFeature(id) {
     ${story ? sec('s-story', 'STORY', '劇情與世界觀', `${(Sx.story.safe || []).map((p) => `<p class="para">${esc(p)}</p>`).join('')}${(Sx.story.spoiler || []).length ? `<div class="spoil"><div class="inner">${Sx.story.spoiler.map((p) => `<p class="para">${esc(p)}</p>`).join('')}</div><div class="cover" data-act="spoil"><b>⚠ 有雷，撕開才看</b><span>tap to rip!</span></div></div>` : '<p class="sub-note">（這款還沒有可以聊的劇透，上市或玩過後再補。）</p>'}`) : ''}
     ${sec('s-studio', 'STUDIO', '幕後：誰做的', `${Sx.studio.map((p) => `<p class="para">${esc(p)}</p>`).join('')}<h3 class="tape-h">時間軸</h3><div class="tl">${Sx.timeline.map((t) => `<div class="tli ${t.d > today ? 'fut' : ''}"><div class="td">${esc(t.d.replace(/-/g, '.'))}</div><div class="tt">${esc(t.t)}</div></div>`).join('')}</div>`)}
     ${sec('s-voice', 'VOICES', '玩家風向', `<div class="voices"><div class="vc pro"><h4>誇的</h4><ul>${Sx.voices.pros.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="vc con"><h4>罵的</h4><ul>${Sx.voices.cons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
-      ${(Sx.voices.debate || []).length ? `<div class="debate"><h4>吵最兇的</h4>${Sx.voices.debate.map((x) => `<p>${esc(x)}</p>`).join('')}</div>` : ''}`)}
+      ${(Sx.voices.debate || []).length ? `<div class="debate"><h4>吵最兇的</h4>${Sx.voices.debate.map((x) => `<p>${esc(x)}</p>`).join('')}</div>` : ''}${tcvHtml(lv, f.game.steam)}`)}
     ${sec('s-talk', 'TALK', '值得聊的', `<div class="qs">${Sx.discuss.map((q, i) => `<div class="q" style="--rot:${rot(id + q.q, i, 0.9)}deg"><h4>${esc(q.q)}</h4><p>${esc(q.why)}</p><textarea data-act="thought" data-k="${esc(id)}#${i}" placeholder="我的想法（只存在這台裝置）">${esc(S.thoughts[id + '#' + i] || '')}</textarea></div>`).join('')}</div>
       <h3 class="tape-h">我的標記</h3><div class="marks">${[['want', '想玩'], ['playing', '在玩'], ['done', '玩過'], ['no', '沒興趣']].map(([k, l], i) => `<button class="mkb ${mk === k ? 'on' : ''}" data-act="mark" data-k="${k}" style="--rot:${rot(id + k, i, 2)}deg">${l}</button>`).join('')}</div>
       <textarea class="mynote" data-act="note" placeholder="筆記：例如要不要拍影片、想等特價…">${esc(S.notes[id] || '')}</textarea>`)}
@@ -4071,7 +4218,7 @@ async function renderPick(id) {
     ${sec('s-rate', 'RATE', '評價怎麼說', `${scores.length ? `<div class="scores">${scores.map(([k, v, s2, sub], i) => `<div class="sc" style="--rot:${rot(id + k, i, 1.4)}deg"><span class="sk">${esc(k)}</span><b class="sv ${String(v).length > 6 ? 'long' : ''}">${esc(v)}</b>${sub ? `<span class="ss">${esc(sub)}</span>` : s2 ? `<a class="ss" href="${esc(s2.u)}" target="_blank" rel="noopener noreferrer">來源</a>` : ''}</div>`).join('')}</div>` : ''}
       <div class="fa"><div class="st"><h4>適合你，如果…</h4><ul>${f.fit.for.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="st p"><h4>先別買，如果…</h4><ul>${f.fit.against.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
       ${Sx.voices ? `<h3 class="tape-h">玩家和媒體怎麼說</h3><div class="voices"><div class="vc pro"><h4>誇的</h4><ul>${Sx.voices.pros.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div><div class="vc con"><h4>罵的</h4><ul>${Sx.voices.cons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
-      ${(Sx.voices.debate || []).length ? `<div class="debate"><h4>吵最兇的</h4>${Sx.voices.debate.map((x) => `<p>${esc(x)}</p>`).join('')}</div>` : ''}` : ''}`)}
+      ${(Sx.voices.debate || []).length ? `<div class="debate"><h4>吵最兇的</h4>${Sx.voices.debate.map((x) => `<p>${esc(x)}</p>`).join('')}</div>` : ''}` : ''}${tcvHtml(lv, f.game.steam)}`)}
     ${sec('s-how', 'HOW', '怎麼玩最好玩', `<div class="steps">${f.howto.map((p) => `<div class="stp">${esc(p)}</div>`).join('')}</div>
       ${mu ? `<div class="multi m-${mu[1]}"><span class="mk">跟朋友玩？</span><b>${mu[0]}</b><p>${esc(f.multi.text)}</p></div>` : ''}
       ${(f.editions || []).length ? `<h3 class="tape-h y">版本怎麼選</h3><div class="eds">${f.editions.map((e, i) => `<div class="ed ${e.best ? 'best' : ''}" style="--rot:${rot(id + e.name, i, 1.1)}deg">${e.best ? '<span class="ed-b">建議買這個</span>' : ''}<h4>${esc(e.name)}</h4><p>${esc(e.what)}</p>${e.tip ? `<p class="ed-t">${esc(e.tip)}</p>` : ''}</div>`).join('')}</div>` : ''}
@@ -4079,7 +4226,7 @@ async function renderPick(id) {
     ${story ? sec('s-story', 'STORY', '劇情與世界觀', `${(Sx.story.safe || []).map((p) => `<p class="para">${esc(p)}</p>`).join('')}${(Sx.story.spoiler || []).length ? `<div class="spoil"><div class="inner">${Sx.story.spoiler.map((p) => `<p class="para">${esc(p)}</p>`).join('')}</div><div class="cover" data-act="spoil"><b>⚠ 有雷，撕開才看</b><span>tap to rip!</span></div></div>` : ''}`) : ''}
     ${sec('s-media', 'MEDIA', '影像', `<div class="trailer"><div id="tvbox">${trailerBox(M.vids[0], 0)}</div>${M.vids.length > 1 ? `<div class="vtabs">${M.vids.map((v, i) => `<button class="vtab ${i ? '' : 'on'}" data-act="vt" data-i="${i}">${esc(v.title || '預告')}</button>`).join('')}</div>` : ''}</div>${M.vids.length ? `<div class="btnrow"><button class="btn sm k" data-go="shorts/p:${esc(id)}">${ICON.shorts}<span>用短影音直式滑著看</span></button></div>` : ''}
       ${M.shots.length ? `<h3 class="tape-h">相簿 <small class="shot-n">${M.shots.length} 張・點開可以左右滑</small></h3><div class="shots">${M.shots.map((s2, i) => `<div class="shot" data-act="lb" data-i="${i}" style="--rot:${rot(id + s2, i, 1)}deg"><img src="${esc(s2)}" alt="" loading="lazy" decoding="async" onerror="shotFail(this)" onload="if(this.naturalWidth<=120)shotFail(this)"></div>`).join('')}</div>` : ''}`)}
-    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源。</p><div class="facts">${factsHtml(f)}</div>${liveHtml(f, lv, h)}${afterHtml('p', f, lv)}${infoCards(f, lv)}`)}
+    ${sec('s-info', 'INFO', '資訊卡', `<p class="sub-note" style="margin-top:8px">點任何一項看來源。</p><div class="facts">${factsHtml(f)}</div>${liveHtml(f, lv, h)}${launchOf(lv) ? launchHtml(lv, 'in') : ''}${afterHtml('p', f, lv)}${infoCards(f, lv)}`)}
     ${(Sx.studio || []).length ? sec('s-studio', 'STUDIO', '幕後：誰做的', `${Sx.studio.map((p) => `<p class="para">${esc(p)}</p>`).join('')}${(Sx.timeline || []).length ? `<h3 class="tape-h">時間軸</h3><div class="tl">${Sx.timeline.map((t) => `<div class="tli ${t.d > today ? 'fut' : ''}"><div class="td">${esc(t.d.replace(/-/g, '.'))}</div><div class="tt">${esc(t.t)}</div></div>`).join('')}</div>` : ''}`) : ''}
     ${sec('s-talk', 'TALK', '玩完可以聊', `${(f.talk || []).length ? `<div class="qs">${f.talk.map((q, i) => `<div class="q" style="--rot:${rot(id + q.q, i, 0.9)}deg"><h4>${esc(q.q)}</h4><p>${esc(q.why)}</p><textarea data-act="thought" data-k="${esc(id)}#${i}" placeholder="我的想法（只存在這台裝置）">${esc(S.thoughts[id + '#' + i] || '')}</textarea></div>`).join('')}</div>` : ''}
       <h3 class="tape-h">我的標記</h3><div class="marks">${[['want', '想玩'], ['playing', '在玩'], ['done', '玩過'], ['no', '沒興趣']].map(([k, l], i) => `<button class="mkb ${mk === k ? 'on' : ''}" data-act="mark" data-k="${k}" style="--rot:${rot(id + k, i, 2)}deg">${l}</button>`).join('')}</div>
@@ -6046,12 +6193,13 @@ function saleHtml() {
   const st = evState(e); const ms = Date.parse(st === 'on' ? e.end : e.start) - Date.now();
   if (st !== 'on' && ms > 7 * 864e5) {   // 還早：一條就好，不擋住雷達
     const wc0 = warChest();
-    return `<section class="dl-sale mini"><div class="dl-k">NEXT BIG SALE</div><div class="dl-row"><h3>${esc(e.name)}</h3><b id="dlcd" data-to="${esc(e.start)}">${esc(cdTxt(ms))}</b></div><div class="dl-cd"><span>${esc(twWhen(e.start))} 開打（台灣時間），連 ${Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5)} 天${wc0.n ? `・備戰：${wc0.n} 款等特價，照目標價全收約 ${esc(fmtNT(wc0.sum))}` : ''}</span></div></section>`;
+    return `<section class="dl-sale mini"><div class="dl-k">NEXT BIG SALE</div><div class="dl-row"><h3>${esc(e.name)}</h3><b id="dlcd" data-to="${esc(e.start)}">${esc(cdTxt(ms))}</b></div><div class="dl-cd"><span>${esc(twWhen(e.start))} 開打（台灣時間），連 ${Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5)} 天${wc0.n ? `・備戰：${wc0.n} 款等特價，照目標價全收約 ${esc(fmtNT(wc0.sum))}` : ''}</span></div><button class="btn sm k dl-war-go" data-go="sale">${ICON.cart}<span>進作戰室：設預算、排清單</span></button></section>`;
   }
   const wc = warChest(); const nx = evList().filter((x) => x.id !== e.id && evState(x) !== 'past' && (x.big || x.kind === 'sale')).sort((a, b) => (a.start < b.start ? -1 : 1)).slice(0, 3);
   return `<section class="dl-sale ${st}"><div class="dl-k">${st === 'on' ? '● 進行中' : 'NEXT BIG SALE'}</div><h3>${esc(e.name)}</h3>
     <div class="dl-cd"><b id="dlcd" data-to="${esc(st === 'on' ? e.end : e.start)}">${esc(cdTxt(ms))}</b><span>${st === 'on' ? `到 ${esc(twWhen(e.end))} 結束` : `${esc(twWhen(e.start))} 開打（台灣時間）`}${e.end && st !== 'on' ? `，連 ${Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5)} 天` : ''}</span></div>
     ${wc.n ? `<div class="dl-war"><b>${ICON.target}備戰清單</b><span>${wc.n} 款 Claude 判定「等特價／等史低」：照目標價全收約 <em>${esc(fmtNT(wc.sum))}</em></span></div>` : ''}
+    <button class="btn sm y dl-war-go" data-go="sale">${ICON.cart}<span>${st === 'on' ? '進作戰室：今天該下手哪幾款' : '進作戰室：設預算、排清單'}</span></button>
     ${nx.length ? `<div class="dl-next">${nx.map((x) => `<span><b>${esc(mdDay(twDate(Date.parse(x.start))))}</b>${esc(x.name)}</span>`).join('')}</div>` : ''}
     <a class="dl-src" href="${esc((e.src || {}).u || '#')}" target="_blank" rel="noopener noreferrer">日期來源：${esc((e.src || {}).t || '')}</a></section>`;
 }
@@ -6097,6 +6245,262 @@ function dealsFx() {
   DEAL.cd = setInterval(() => { if (!el.isConnected) { clearInterval(DEAL.cd); return; } el.textContent = cdTxt(Date.parse(el.dataset.to) - Date.now()); }, 1000);
 }
 function dealsStop() { clearInterval(DEAL.cd); }
+
+/* ---- sale.js ---- */
+/* 解包 — 大特賣作戰室（2026-11-20，先為 Steam 冬季特賣 12/18 做）
+   備戰（開打前）：設預算、從獵物（Steam 願望單＋App 裡標「想玩」的）勾要買的，每款看目標價——Claude 願望單解包定的優先，
+   沒有就用自己定的；追蹤以來的最低價當參考。
+   開打：「今天該下手」每天照現在的價格挑：到了目標價、追蹤以來最低、快結束、送的，勾了要買的排前面；買了按「買了」記下實付。
+   戰果：花了多少、比原價省多少、收了幾款，一鍵做成遊戲狂想曲的戰果圖卡（1080×1350，不放痞子葳的名字）。
+   資料只在這台裝置（localStorage `sale`，照每一場特賣分開記）。價格是 live.py 每小時抓的 Steam 台灣區價格。 */
+const SALE = { cd: 0, edit: '' };
+S.saleSt = LS.get('sale', {});
+
+/* 現在要看哪一場：進行中的 > 剛結束 14 天內、有戰果的 > 下一場 */
+function saleFocus() {
+  const now = Date.now(); const L = evList().filter((e) => e.kind === 'sale');
+  const on = L.find((e) => evState(e, now) === 'on'); if (on) return on;
+  const past = L.filter((e) => evState(e, now) === 'past' && now - Date.parse(e.end || e.start) < 14 * 864e5 && Object.keys(saleSt(e).got || {}).length)
+    .sort((a, b) => (a.end < b.end ? 1 : -1))[0];
+  return past || nextSale();
+}
+function saleSt(e) { const k = e ? e.id : '_'; if (!S.saleSt[k]) S.saleSt[k] = { b: null, pick: {}, my: {}, got: {} }; return S.saleSt[k]; }
+const saleSave = () => LS.set('sale', S.saleSt);
+function salePhase(e) { const st = evState(e); return st === 'on' ? 'on' : st === 'past' ? 'post' : 'prep'; }
+
+/* 每一款的目標價：Claude 定的 > 自己定的；參考：追蹤以來最低 */
+function saleTarget(t, st) {
+  if (t.buy && t.buy.target != null && t.buy.call !== '別買') return { v: t.buy.target, by: 'claude', call: t.buy.call };
+  if (st.my[t.key] != null) return { v: st.my[t.key], by: 'me' };
+  return null;
+}
+function saleRows(e) {
+  const st = saleSt(e); let L = [];
+  try { L = huntTargets(); } catch (x) { L = []; }
+  return L.map((t) => {
+    const tg = saleTarget(t, st); const got = st.got[t.key];
+    const atTarget = !!(tg && t.final != null && t.final <= tg.v);
+    const r = Object.assign({}, t, { tg, got, pick: !!st.pick[t.key], atTarget });
+    // 今天值不值得下手：送的、到價、史低、快結束（48 小時內）
+    r.why = t.giveaway ? '限時送' : atTarget ? '到了目標價' : t.lowState === 'low' ? '追蹤以來最低' : t.lowState === 'near' ? '接近最低價' : t.onSale && t.endMs != null && t.endMs < 48 * 36e5 ? '特價快結束' : '';
+    r.go = !got && t.onSale && !!r.why;
+    r.rank = (r.pick ? 1000 : 0) + (r.go ? 500 : 0) + (t.score || 0);
+    return r;
+  }).sort((a, b) => b.rank - a.rank);
+}
+/* 預計要花：勾了的、還沒買的，照「現在特價就用現價、不然用目標價、都沒有用原價」估 */
+function saleBudget(e, rows) {
+  const st = saleSt(e); rows = rows || saleRows(e);
+  const spent = Object.values(st.got).reduce((a, g) => a + (g.p || 0), 0);
+  const plan = rows.filter((r) => r.pick && !r.got && !r.free).reduce((a, r) => a + (r.onSale ? r.final : r.tg ? r.tg.v : (r.orig || r.final || 0)), 0);
+  return { b: st.b, spent, plan, left: st.b != null ? st.b - spent - plan : null };
+}
+function saleLoot(e) {
+  const g = Object.values(saleSt(e).got);
+  const paid = g.reduce((a, x) => a + (x.p || 0), 0), orig = g.reduce((a, x) => a + (x.o || x.p || 0), 0);
+  return { n: g.length, paid, orig, saved: Math.max(0, orig - paid), pct: orig ? Math.round((1 - paid / orig) * 100) : 0, list: g.sort((a, b) => (b.o - b.p) - (a.o - a.p)) };
+}
+
+function renderSale() {
+  const e = saleFocus();
+  if (!e) return `<div class="sec-h"><h2 class="spray-h y">特賣作戰室</h2></div><div class="empty">活動表裡還沒有下一場 Steam 大特賣，官方一公布寫稿排程就會補上。</div>`;
+  const ph = salePhase(e); const st = saleSt(e); const rows = saleRows(e); const bud = saleBudget(e, rows); const loot = saleLoot(e);
+  const ms = Date.parse(ph === 'on' ? e.end : e.start) - Date.now();
+  const days = Math.round((Date.parse(e.end) - Date.parse(e.start)) / 864e5);
+  const today = rows.filter((r) => r.go);
+  const hero = `<section class="sw-hero ph-${ph}"><div class="sw-k">${ph === 'on' ? '● 開打中' : ph === 'post' ? 'GAME OVER' : 'NEXT BIG SALE'}・作戰室</div>
+    <h2>${esc(e.name)}</h2>
+    ${ph === 'post' ? `<div class="sw-cd"><b>結束了</b><span>${esc(twWhen(e.start))} ～ ${esc(twWhen(e.end))}</span></div>` : `<div class="sw-cd"><b id="swcd" data-to="${esc(ph === 'on' ? e.end : e.start)}">${esc(cdTxt(ms))}</b><span>${ph === 'on' ? `到 ${esc(twWhen(e.end))} 結束（台灣時間）` : `${esc(twWhen(e.start))} 開打（台灣時間），連 ${days} 天`}</span></div>`}
+    <div class="sw-ph"><i class="${ph === 'prep' ? 'on' : 'done'}">1 備戰</i><i class="${ph === 'on' ? 'on' : ph === 'post' ? 'done' : ''}">2 開打</i><i class="${ph === 'post' ? 'on' : ''}">3 戰果</i></div></section>`;
+  const pct = (v) => bud.b ? Math.max(0, Math.min(100, v / bud.b * 100)) : 0;
+  const budget = `<section class="sw-bud"><div class="sw-bh"><b>預算</b>${bud.b != null ? `<em class="${bud.left < 0 ? 'over' : ''}">${bud.left < 0 ? `超支 ${esc(fmtNT(-bud.left))}` : `還剩 ${esc(fmtNT(bud.left))}`}</em>` : '<em>還沒設</em>'}</div>
+    <div class="sw-bin"><button data-act="swb" data-d="-50000" aria-label="少 500">−</button><b>${bud.b != null ? esc(fmtNT(bud.b)) : '沒設'}</b><button data-act="swb" data-d="50000" aria-label="多 500">＋</button>
+      ${[100000, 200000, 300000, 500000].map((v) => `<button class="sw-bq${bud.b === v ? ' on' : ''}" data-act="swbq" data-v="${v}">${v / 100}</button>`).join('')}<button class="sw-bq" data-act="swbset">自己打</button></div>
+    ${bud.b ? `<div class="sw-bar"><i class="g" style="width:${pct(bud.spent)}%"></i><i class="p" style="width:${pct(bud.plan)}%"></i></div>` : ''}
+    <div class="sw-bl"><span><i class="g"></i>已經買 ${esc(fmtNT(bud.spent))}</span><span><i class="p"></i>勾了還沒買 ${esc(fmtNT(bud.plan))}</span></div></section>`;
+  const todayHtml = ph === 'on'
+    ? `<h3 class="tape-h">今天該下手 <small>${today.length ? `${today.length} 款` : '今天沒有'}</small></h3>${today.length ? `<div class="sw-today">${today.slice(0, 8).map((r, i) => saleCard(r, i)).join('')}</div>` : '<div class="empty">今天清單裡沒有到價、最低價或快結束的。特價每小時更新，晚點再來看。</div>'}`
+    : ph === 'prep' ? `<div class="sw-tip"><b>開打後這裡每天告訴你該下手哪幾款</b><span>到了目標價、追蹤以來最低、48 小時內就結束、限時送的，勾了「要買」的排最前面。現在先設預算、把清單勾好。</span></div>` : '';
+  const list = rows.filter((r) => !r.got);
+  const listHtml = `<h3 class="tape-h">購物清單 <small>${list.length} 款・勾了 ${list.filter((r) => r.pick).length} 款</small></h3>
+    <p class="sw-note">清單＝Steam 願望單＋App 裡標「想玩」的。目標價：有 Claude 願望單解包的用 Claude 定的，沒有的可以自己定；「最低」是這個 App 追蹤以來的最低價。</p>
+    ${list.length ? `<div class="sw-list">${list.map((r, i) => saleRow(r, i, ph)).join('')}</div>` : '<div class="empty">還沒有獵物：到 Steam 願望單加幾款，或在專題、推坑按「想玩」。</div>'}`;
+  const lootHtml = loot.n ? `<h3 class="tape-h p">戰果</h3><section class="sw-loot"><div class="sw-lt"><div><small>收了</small><b>${loot.n}</b><i>款</i></div><div><small>花了</small><b>${esc(fmtNT(loot.paid).replace('NT$', ''))}</b><i>NT$</i></div><div class="big"><small>比原價省</small><b>${esc(fmtNT(loot.saved).replace('NT$', ''))}</b><i>NT$・-${loot.pct}%</i></div></div>
+    <div class="sw-ll">${loot.list.map((g) => `<div class="sw-li"><span class="sw-lim">${g.img ? `<img src="${esc(g.img)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span><b>${esc(g.name)}</b><em>${esc(fmtNT(g.p))}</em>${g.o > g.p ? `<s>${esc(fmtNT(g.o))}</s>` : ''}<button data-act="swgot" data-k="${esc(g.key)}" title="記錯了，取消">↩</button></div>`).join('')}</div>
+    <div class="btnrow"><button class="btn y" data-act="swcard">${ICON.dl}<span>做成戰果圖卡</span></button></div><div id="swcardbox"></div></section>` : '';
+  return `<div class="sec-h"><h2 class="spray-h y">特賣作戰室</h2><span class="date-stk">WAR ROOM</span></div>${hero}${budget}${todayHtml}${ph === 'post' ? lootHtml + listHtml : listHtml + lootHtml}`;
+}
+function saleStatus(r) {
+  if (r.free) return ['free', '免費'];
+  if (r.soon) return ['soon', r.relDays != null ? `${r.relDays} 天後上市` : '未上市'];
+  if (r.giveaway) return ['hit', '限時送'];
+  if (r.atTarget) return ['hit', '到價'];
+  if (r.lowState === 'low') return ['low', '最低價'];
+  if (r.onSale && r.tg) return ['wait', `差 ${fmtNT(r.final - r.tg.v)}`];
+  if (r.onSale) return ['sale', `-${r.disc}%`];
+  return ['idle', '還沒打折'];
+}
+function saleRow(r, i, ph) {
+  const [sc, stx] = saleStatus(r);
+  const tg = r.tg ? `<span class="sw-tg ${r.tg.by}"><small>${r.tg.by === 'claude' ? `Claude・${esc(r.tg.call || '')}` : '我的目標'}</small>${esc(fmtNT(r.tg.v))}</span>` : `<span class="sw-tg none"><small>目標價</small>${r.queue ? `解包排隊 #${r.queue}` : '還沒定'}</span>`;
+  const editing = SALE.edit === r.key;
+  return `<div class="sw-row${r.pick ? ' pk' : ''}" style="--i:${Math.min(i, 14)}">
+    <button class="sw-pick${r.pick ? ' on' : ''}" data-act="swpick" data-k="${esc(r.key)}" aria-label="要買">${r.pick ? '✓' : ''}</button>
+    <button class="sw-im" data-act="hinfo" data-k="${esc(r.key)}">${r.cap ? `<img src="${esc(r.cap)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</button>
+    <div class="sw-b"><b data-act="hinfo" data-k="${esc(r.key)}">${esc(r.name)}</b>
+      <div class="sw-p">${r.free ? '<em>免費</em>' : r.final != null ? `<em class="${r.onSale ? 'sale' : ''}">${esc(fmtNT(r.final))}</em>${r.onSale ? `<s>${esc(fmtNT(r.orig))}</s><i>-${r.disc}%</i>` : ''}` : '<em>—</em>'}${r.low != null && r.trackDays >= 1 ? `<small>最低 ${esc(fmtNT(r.low))}</small>` : ''}</div>
+      <div class="sw-t">${tg}${r.tg && r.tg.by === 'claude' ? '' : editing ? `<span class="sw-edit"><input id="swmy" type="number" inputmode="numeric" placeholder="NT$" value="${r.tg ? Math.round(r.tg.v / 100) : ''}"><button data-act="swmyok" data-k="${esc(r.key)}">好</button></span>` : `<button class="sw-e" data-act="swmy" data-k="${esc(r.key)}">${r.tg ? '改' : '自己定'}</button>`}</div></div>
+    <div class="sw-r"><span class="sw-st ${sc}">${esc(stx)}</span>${ph !== 'prep' && !r.free && r.onSale ? `<button class="btn sm ${r.atTarget || r.giveaway ? 'y' : ''}" data-act="swbuy" data-k="${esc(r.key)}">買了</button>` : ''}</div></div>`;
+}
+function saleCard(r, i) {
+  return `<div class="sw-card" style="--i:${i}"><div class="sw-ci" data-act="hinfo" data-k="${esc(r.key)}">${r.cap ? `<img src="${esc(r.cap)}" alt="" loading="lazy" onerror="this.remove()">` : ''}<span class="sw-why">${esc(r.why)}</span></div>
+    <b>${esc(r.name)}</b><div class="sw-p"><em class="sale">${esc(fmtNT(r.final))}</em><s>${esc(fmtNT(r.orig))}</s><i>-${r.disc}%</i></div>
+    <small>${r.tg ? `目標 ${esc(fmtNT(r.tg.v))}・` : ''}${r.endMs != null ? `特價${esc(leftTxt(r.endMs))}` : ''}</small>
+    <div class="sw-cb"><button class="btn sm y" data-act="swbuy" data-k="${esc(r.key)}">買了</button>${r.appid ? `<a class="btn sm" href="https://store.steampowered.com/app/${r.appid}/" target="_blank" rel="noopener">Steam</a>` : ''}</div></div>`;
+}
+
+function saleFx() {
+  clearInterval(SALE.cd);
+  const el = $('#swcd'); if (!el) return;
+  SALE.cd = setInterval(() => { const b = $('#swcd'); if (!b) { clearInterval(SALE.cd); return; } const ms = Date.parse(b.dataset.to) - Date.now(); b.textContent = ms > 0 ? cdTxt(ms) : '開打了！'; }, 1000);
+  if (fxOn()) { const h = $('.sw-hero'); if (h) setTimeout(() => { burstAt(h, [YEL, PINK], 18, 9); sfx.slap(); }, 260); }
+}
+function saleStop() { clearInterval(SALE.cd); }
+function saleRerender(keep) { const y = scrollY; VIEW().innerHTML = renderSale(); scrollTo(0, y); if (keep) { const i = $('#swmy'); if (i) i.focus(); } }
+function saleAct(a, act) {
+  const e = saleFocus(); if (!e) return false; const st = saleSt(e);
+  if (a === 'swb') { st.b = Math.max(0, (st.b || 0) + (+act.dataset.d)); saleSave(); sfx.tick(); saleRerender(); return true; }
+  if (a === 'swbq') { st.b = +act.dataset.v; saleSave(); sfx.stamp(); saleRerender(); return true; }
+  if (a === 'swbset') { const v = prompt('這次特賣的預算（新台幣）', st.b ? String(st.b / 100) : ''); if (v != null) { const n = Math.round(parseFloat(String(v).replace(/[^\d.]/g, '')) || 0); st.b = n > 0 ? n * 100 : null; saleSave(); sfx.stamp(); saleRerender(); } return true; }
+  if (a === 'swpick') { const k = act.dataset.k; if (st.pick[k]) delete st.pick[k]; else { st.pick[k] = 1; burstAt(act, [YEL, PINK], 10, 6); } saleSave(); sfx.pop(); saleRerender(); return true; }
+  if (a === 'swmy') { SALE.edit = act.dataset.k; sfx.click(); saleRerender(true); return true; }
+  if (a === 'swmyok') { const v = ($('#swmy') || {}).value; const n = Math.round(parseFloat(v) || 0); if (n > 0) st.my[act.dataset.k] = n * 100; else delete st.my[act.dataset.k]; SALE.edit = ''; saleSave(); sfx.stamp(); saleRerender(); return true; }
+  if (a === 'swbuy') {
+    const r = saleRows(e).find((x) => x.key === act.dataset.k); if (!r) return true;
+    st.got[r.key] = { key: r.key, name: r.name, img: r.cap, p: r.final || 0, o: r.orig || r.final || 0, at: todayTW() }; delete st.pick[r.key]; saleSave();
+    sfx.coin(); haptic(20); burstAt(act, [YEL, PINK, BLK], 24, 11); toast(r.orig > r.final ? `收進戰果：比原價省 ${fmtNT(r.orig - r.final)}` : '收進戰果'); saleRerender(); return true;
+  }
+  if (a === 'swgot') { delete st.got[act.dataset.k]; saleSave(); sfx.scratch(); saleRerender(); return true; }
+  if (a === 'swcard') { saleCardRender(e); return true; }
+  return false;
+}
+
+/* ---- 戰果圖卡：遊戲狂想曲的塗鴉樣式（不跟著換裝、不放痞子葳的名字） ---- */
+async function drawLootCard(cv, e) {
+  const L = saleLoot(e); const W = 1080, H = 1350; cv.width = W; cv.height = H; const c = cv.getContext('2d');
+  c.fillStyle = '#FFE600'; c.fillRect(0, 0, W, H); halftone(c, W, H, 'rgba(17,17,17,.10)', 22, 3.4);
+  c.fillStyle = '#111'; c.beginPath(); c.moveTo(0, H * 0.55); c.lineTo(W, H * 0.47); c.lineTo(W, H); c.lineTo(0, H); c.closePath(); c.fill();
+  c.textBaseline = 'top'; c.fillStyle = '#111'; c.font = `900 40px ${CFONT}`; c.fillText(e.name + '・戰果', 64, 64);
+  stepText(c, '省下', 64, 130, 110, '#fff', '#111');
+  const big = fmtNT(L.saved); c.font = `400 230px "Bebas Neue",sans-serif`; c.fillStyle = '#FF2E88'; c.fillText(big, 70, 262); c.fillStyle = '#111'; c.fillText(big, 60, 252);
+  sticker(c, `收了 ${L.n} 款`, 64, 520, '#fff', '#111', -0.04, 46);
+  sticker(c, `花 ${fmtNT(L.paid)}`, 420, 512, '#FF2E88', '#fff', 0.03, 46);
+  if (L.pct) sticker(c, `平均 -${L.pct}%`, 760, 524, '#111', '#FFE600', -0.05, 40);
+  const grid = L.list.slice(0, 6); const gw = 296, gh = Math.round(gw * 215 / 460), gx = 64, gy = 700;
+  for (let i = 0; i < grid.length; i++) {
+    const g = grid[i]; const x = gx + (i % 3) * (gw + 32), y = gy + Math.floor(i / 3) * (gh + 92);
+    c.save(); c.translate(x + gw / 2, y + gh / 2); c.rotate((i % 2 ? 1 : -1) * 0.025); c.translate(-gw / 2, -gh / 2);
+    c.fillStyle = '#FF2E88'; c.fillRect(8, 8, gw, gh); c.fillStyle = '#fff'; c.fillRect(-6, -6, gw + 12, gh + 12);
+    const im = await loadImgCors(g.img); if (im) coverDraw(c, im, 0, 0, gw, gh); else { c.fillStyle = '#333'; c.fillRect(0, 0, gw, gh); }
+    c.restore();
+    c.fillStyle = '#fff'; c.font = `900 26px ${CFONT}`; c.textBaseline = 'top';
+    let nm = g.name; while (c.measureText(nm).width > gw && nm.length > 2) nm = nm.slice(0, -2) + '…';
+    c.fillText(nm, x, y + gh + 14);
+    c.fillStyle = '#FFE600'; c.font = `400 34px "Bebas Neue",sans-serif`; c.fillText(fmtNT(g.p) + (g.o > g.p ? `  -${Math.round((1 - g.p / g.o) * 100)}%` : ''), x, y + gh + 46);
+  }
+  if (L.list.length > 6) { c.fillStyle = '#fff'; c.font = `900 30px ${CFONT}`; c.fillText(`還有 ${L.list.length - 6} 款…`, 64, 1240); }
+  brandSticker(c, W - 230, H - 110, -0.06);
+}
+async function saleCardRender(e) {
+  const box = $('#swcardbox'); if (!box) return;
+  box.innerHTML = '<canvas id="swcv" class="cardcv"></canvas><div class="btnrow" style="justify-content:center"><button class="btn y" data-act="swcdl">' + ICON.dl + '<span>下載</span></button>' + (navigator.share ? '<button class="btn" data-act="swcshare">' + ICON.share + '<span>分享</span></button>' : '') + '</div>';
+  sfx.hiss(0.6); await drawLootCard($('#swcv'), e); sfx.stamp(); box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+async function saleCardOut(share) {
+  const cv = $('#swcv'); if (!cv) return;
+  const b = await new Promise((res) => { try { cv.toBlob(res, 'image/png'); } catch (e) { res(null); } });
+  if (!b) { toast('圖卡裡有圖片不能匯出，換張網路好一點的時候再試', 'warn'); return; }
+  const f = new File([b], 'rhapsody-sale-loot.png', { type: 'image/png' });
+  if (share && navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: '遊戲狂想曲' }); sfx.ding(); } catch (e) { /* 取消 */ } return; }
+  const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f.name; a.click(); setTimeout(() => URL.revokeObjectURL(u), 4000); sfx.ding();
+}
+
+/* 全部功能、首頁、獵價頁用：一句話的狀態 */
+function saleHubLine() {
+  const e = saleFocus(); if (!e) return null;
+  const ph = salePhase(e); const st = saleSt(e);
+  if (ph === 'post') { const L = saleLoot(e); return { e, ph, s: `戰果：省下 ${fmtNT(L.saved)}` }; }
+  if (ph === 'on') { const n = saleRows(e).filter((r) => r.go).length; return { e, ph, s: n ? `開打中・今天 ${n} 款該下手` : '開打中・今天沒有該下手的', hot: n }; }
+  const d = daysTo(e.start); if (d > 45) return null;
+  const np = Object.keys(st.pick).length;
+  return { e, ph, s: `D-${d}・${st.b != null ? `預算 ${fmtNT(st.b)}` : '預算還沒設'}${np ? `・勾了 ${np} 款` : ''}` };
+}
+function saleBanner() {
+  const h = saleHubLine(); if (!h || (h.ph === 'prep' && daysTo(h.e.start) > 7)) return '';
+  return `<div class="sw-ban ph-${h.ph}" data-go="sale"><span class="sw-bk">${h.ph === 'on' ? '● SALE' : h.ph === 'post' ? 'LOOT' : 'D-' + daysTo(h.e.start)}</span><div><b>${esc(h.e.name)}作戰室</b><small>${esc(h.s)}</small></div><i>→</i></div>`;
+}
+
+/* ---- launch.js ---- */
+/* 解包 — 上市戰報＋繁中最新風向（2026-11-20）
+   上市戰報：寫過的遊戲一上市，專題頁最上面自動長出「上市第 N 小時・戰報」（直播中），滿 72 小時凍結成「上市 72 小時戰報」：
+   同上高峰與曲線、Steam 好評率（首日→72 小時）、繁中玩家好評率、72 小時內的官方修正。資料是 live.py 的 launch_report()
+   （live/<appid>.json 的 launch），凍結後永久留著。上市 14 天內放在頁面最上面，之後收進「資訊」。
+   繁中最新風向：live.py 每天收一次 Steam 繁中評論（tcv），好評、負評各挑 3 則短摘，附遊玩時數和日期；不存作者。 */
+function launchOf(lv) { return lv && lv.launch && lv.launch.pk ? lv.launch : null; }
+function launchFresh(L) { return L && Date.now() - L.ts * 1000 < 14 * 864e5; }
+function launchHtml(lv, where) {
+  const L = launchOf(lv); if (!L) return '';
+  const fz = !!L.fz; const ts = L.ts * 1000;
+  const hp = Math.max(0, Math.round((L.pkt * 60e3 - ts) / 36e5));
+  const now = lv.players && lv.players.n;
+  const sp = launchSpark(L);
+  const rv = L.rv, rv0 = L.rv0, rt = L.rt;
+  const trend = rv && rv0 && rv[0] !== rv0[0] ? (rv[0] > rv0[0] ? `<em class="up">▲ 首日 ${rv0[0]}%</em>` : `<em class="dn">▼ 首日 ${rv0[0]}%</em>`) : rv0 ? `<em>首日 ${rv0[0]}%</em>` : '';
+  const line = [`開賣${fz ? ' 72 小時' : `第 ${L.h} 小時`}同上最高 ${fmtN(L.pk)} 人（上市後第 ${hp} 小時）`,
+    rv ? `Steam 好評率 ${rv[0]}%（${fmtN(rv[1])} 則）` : '', rt ? `繁中玩家 ${rt[0]}%（${fmtN(rt[1])} 則）` : '',
+    L.np ? (fz ? `官方 72 小時內出了 ${L.np} 次修正` : `官方已經出了 ${L.np} 次修正`) : fz ? '72 小時內沒有發修正' : ''].filter(Boolean).join('，') + '。';
+  return `<section class="lr ${fz ? 'fz' : 'on'} ${where || ''}" id="launch"><div class="lr-h"><span class="lr-k">${fz ? '上市 72 小時戰報' : `上市第 ${L.h} 小時・戰報`}</span>${fz ? '<i class="lr-tag">凍結</i>' : '<i class="lr-tag on">● 直播中</i>'}<small>${esc(twDate(ts).slice(5).replace('-', '/'))} 上市</small></div>
+    ${L.part ? '<p class="lr-part">這款從上市後才開始追蹤，最前面幾個小時的數字不完整。</p>' : ''}
+    <div class="lr-g"><div class="lr-c pk"><small>同上高峰</small><b>${esc(fmtN(L.pk))}</b><i>第 ${hp} 小時${now && !fz ? `・現在 ${esc(fmtN(now))}` : ''}</i></div>
+      <div class="lr-c"><small>Steam 好評</small><b>${rv ? rv[0] + '<span>%</span>' : '—'}</b><i>${rv ? `${esc(fmtN(rv[1]))} 則` : '還沒有'}${trend}</i></div>
+      <div class="lr-c"><small>繁中玩家</small><b>${rt ? rt[0] + '<span>%</span>' : '—'}</b><i>${rt ? `${esc(fmtN(rt[1]))} 則` : '還沒有'}</i></div>
+      <div class="lr-c"><small>官方修正</small><b>${L.np || 0}<span>次</span></b><i>${fz ? '72 小時內' : '上市到現在'}</i></div></div>
+    ${sp}<p class="lr-s">${esc(line)}</p>
+    ${(L.pt || []).length ? `<div class="lr-pt">${L.pt.map((p) => `<a href="${esc(p.u || '#')}" target="_blank" rel="noopener noreferrer">🔧 ${esc(p.t)}</a>`).join('')}</div>` : ''}</section>`;
+}
+function launchSpark(L) {
+  const P = L.pl || []; if (P.length < 2) return '';
+  const m0 = L.ts / 60, W = 300, H = 64; const mx = Math.max(...P.map((p) => p[1])) || 1;
+  const pts = P.map((p) => [Math.max(0, Math.min(1, (p[0] - m0) / (72 * 60))) * W, H - 3 - (p[1] / mx) * (H - 8)]);
+  const pk = pts[P.findIndex((p) => p[1] === mx)];
+  const f = (p) => p[0].toFixed(1) + ',' + p[1].toFixed(1);
+  return `<div class="lr-spw"><svg class="lr-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path class="ar" d="M${pts[0][0].toFixed(1)},${H} L${pts.map(f).join(' L')} L${pts[pts.length - 1][0].toFixed(1)},${H} Z"/><polyline points="${pts.map(f).join(' ')}"/></svg>${pk ? `<i class="lr-dot" style="left:${(pk[0] / W * 100).toFixed(1)}%;top:${(pk[1] / H * 100).toFixed(1)}%"></i>` : ''}<div class="lr-sx"><span>上市</span><span>24h</span><span>48h</span><span>72 小時</span></div></div>`;
+}
+/* 追蹤牆：最近 7 天上市、寫過專題或推坑的遊戲，貼一張戰報便利貼（live.json 只帶精簡的 ln，完整的在 live/<appid>.json） */
+function launchNotes() {
+  const out = []; const seen = new Set();
+  const all = [...((S.index && S.index.items) || []).map((x) => ['f', x]), ...((S.picks && S.picks.items) || []).map((x) => ['p', x])];
+  for (const [k, x] of all) {
+    const lv = liveOf(x.steam); const L = lv && (launchOf(lv) || (lv.ln && lv.ln.pk ? lv.ln : null));
+    if (!L || seen.has(String(x.steam)) || Date.now() - L.ts * 1000 > 7 * 864e5) continue;
+    seen.add(String(x.steam));
+    out.push({ c: 'p', id: x.id, go: k + '/' + x.id, t: `${x.zh}・${L.fz ? '72 小時戰報' : `上市第 ${L.h} 小時`}`, v: fmtN(L.pk).replace(' 萬', ''), unit: L.pk >= 10000 ? '萬人' : '人',
+      d: `同上高峰${L.rv ? `・Steam 好評 ${L.rv[0]}%${L.rt ? `・繁中 ${L.rt[0]}%` : ''}` : '・評價還在累積'}` });
+    if (out.length >= 2) break;
+  }
+  return out;
+}
+
+/* ---- 繁中最新風向 ---- */
+function tcvHtml(lv, appid) {
+  const V = lv && lv.tcv; if (!V || !((V.pos || []).length || (V.neg || []).length)) return '';
+  const tc = lv.rv_tc;
+  const q = (x, k) => `<blockquote class="tq ${k}"><p>${esc(x[0])}</p><footer>${x[1] ? `玩了 ${esc(String(x[1]))} 小時` : ''}${x[2] ? `・${esc(mdDay(x[2]))}` : ''}</footer></blockquote>`;
+  return `<div class="tcv"><div class="tcv-h"><b>繁中玩家・最新風向</b><small>${V.d ? `${esc(mdDay(V.d))} 更新` : ''}・每天收一次 Steam 繁中評論</small>${tc && tc.pct != null ? `<span class="tcv-p">${tc.pct}%<i>${esc(tc.label || '')}・${esc(fmtN(tc.n))} 則</i></span>` : ''}</div>
+    <div class="tcv-g"><div class="tcv-c pos"><h4>👍 誇的</h4>${(V.pos || []).map((x) => q(x, 'pos')).join('') || '<p class="tcv-n">最近沒有好評。</p>'}</div>
+      <div class="tcv-c neg"><h4>👎 罵的</h4>${(V.neg || []).map((x) => q(x, 'neg')).join('') || '<p class="tcv-n">最近沒有負評。</p>'}</div></div>
+    ${appid ? `<a class="tcv-a" href="https://steamcommunity.com/app/${appid}/reviews/?browsefilter=mostrecent&filterLanguage=tchinese" target="_blank" rel="noopener noreferrer">到 Steam 看全部繁中評論 →</a>` : ''}</div>`;
+}
 
 /* ---- info.js ---- */
 /* 解包 — 遊戲情報卡（2026-11-19）：App 裡出現的每一款遊戲都點得進去看介紹。
@@ -8557,6 +8961,8 @@ function hubTiles() {
     const ix = S.board && S.board.idx;
     T.push({ go: 'board', ic: ICON.chart, t: '行情板', s: ix && ix.d1 != null ? `大盤 ${ix.d1 > 0 ? '▲' : ix.d1 < 0 ? '▼' : ''}${Math.abs(ix.d1).toFixed(1)}%` : 'Steam 線上人數看盤', c: ix && ix.d1 > 0 ? 'up' : ix && ix.d1 < 0 ? 'dn' : 'w' });
   } catch (e) { T.push({ go: 'board', ic: ICON.chart, t: '行情板', s: 'Steam 線上人數看盤', c: 'w' }); }
+  let sl = null; try { sl = saleHubLine(); } catch (e) { /* */ }
+  if (sl) T.push({ go: 'sale', ic: ICON.cart, t: '特賣作戰室', s: sl.s, c: sl.ph === 'on' ? 'p' : 'y', hot: sl.hot });
   T.push({ go: 'cal', ic: ICON.cal, t: '出擊日曆', s: hubNextCal(), c: 'w' });
   const wk = (S.weekly && S.weekly.items || [])[0];
   T.push({ go: 'week', ic: ICON.trophy, t: '每週懶人包', s: wk ? `${wk.id.replace(/^\d{4}-W/, 'WEEK ')} 結算` : '每週日晚上結算', c: 'p' });
@@ -8667,7 +9073,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop(); opsStop(); vsStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop(); opsStop(); vsStop(); saleStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
@@ -8688,6 +9094,7 @@ async function route() {
       afterFeature();
       scrollTo(0, 0);
     } else if (name === 'hunt') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderHunt(); if (S.jump) { const j = $(S.jump); S.jump = ''; if (j) requestAnimationFrame(() => j.scrollIntoView({ block: 'start' })); else restoreScroll(h); } else restoreScroll(h); huntFx(); }
+    else if (name === 'sale') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderSale(); if (prev === h) restoreScroll(h); else scrollTo(0, 0); saleFx(); }
     else if (name === 'board') { setTabs('home'); if (!S.board || Date.now() - Date.parse(S.board.at) > 15 * 6e4) { try { const b = await getJSON('board.json'); if (b && b.rows) S.board = b; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderBoard(); restoreScroll(h); boardFx(); }
     else if (name === 'tga') { setTabs('home'); if (!S.tgaD || tgaPhase() === 'live') { try { const t = await getJSON('tga.json'); if (t && t.cats) S.tgaD = t; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderTga(); if (prev && prev.startsWith('tga') && prev === h) restoreScroll(h); else scrollTo(0, 0); tgaFx(); }
     else if (name === 'vs') { setTabs('home'); await vsPrep(arg); v.innerHTML = renderVS(arg); scrollTo(0, 0); vsFx(); }
@@ -9093,6 +9500,8 @@ document.addEventListener('click', async (ev) => {
     if (a === 'settings') { openSheet(settingsHtml()); return; }
     if (a === 'skinsheet') { audioInit(); openSkinSheet(); return; }   // 換裝選單
     if (a.startsWith('db') && dbAct(a, act)) return;   // 資料庫
+    if (a === 'swcdl' || a === 'swcshare') { saleCardOut(a === 'swcshare'); return; }
+    if (a.startsWith('sw') && saleAct(a, act)) return;   // 特賣作戰室
     if (a === 'search') { DB.mode = 'all'; DB.focus = true; sfx.click(); closeSheet(); if (ROUTE === 'lib') route(); else { NAVN++; location.hash = 'lib'; } return; }
     if (a === 'hub') { audioInit(); openHub(); return; }
     if (a === 'hubfx') { S.settings.fx = S.settings.fx === 'full' ? 'calm' : 'full'; save('settings'); document.body.classList.toggle('calm', S.settings.fx !== 'full'); sfx.click(); hubSync(); return; }

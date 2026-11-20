@@ -395,6 +395,9 @@ def live_split(x):
     mc = {k: v for k, v in (x.get('micro') or {}).items() if k in ('mp4', 'webm') and v}
     if mc:
         s['micro'] = mc          # mp4 給 iPhone、webm 給沒有 H.264 的瀏覽器，兩個都留（首頁海報、推坑牆直接用）
+    ln = x.get('launch')
+    if ln and ln.get('pk') and time.time() - ln.get('ts', 0) < 7 * 86400:   # 上市 7 天內：首頁追蹤牆的戰報便利貼要用（完整戰報在 live/<appid>.json）
+        s['ln'] = {k: ln[k] for k in ('ts', 'h', 'pk', 'rv', 'rt', 'fz') if k in ln}
     return s, {k: v for k, v in x.items() if k not in LIVE_SUM}
 
 
@@ -562,7 +565,7 @@ def norm(it, tagnames):
                   'end': iso(dt.datetime.fromtimestamp(end, UTC)) if end and int(bpo.get('discount_pct') or 0) > 0 else None},
         'rv': {'n': rv.get('review_count') or 0, 'pct': rv.get('percent_positive') if rv.get('review_count') else None,
                'label': rv.get('review_score_label') if rv.get('review_count') else None},
-        'rel': {'date': dt.datetime.fromtimestamp(ts, UTC).strftime('%Y-%m-%d') if ts else None,
+        'rel': {'date': dt.datetime.fromtimestamp(ts, UTC).strftime('%Y-%m-%d') if ts else None, 'ts': int(ts) if ts else None,
                 'soon': bool(rel.get('is_coming_soon') or it.get('is_coming_soon')),
                 'ea': bool(rel.get('is_early_access')),
                 'text': rel.get('custom_release_date_message') or None},
@@ -1391,6 +1394,123 @@ def infos(D, t0, tagn, tracked):
     print(f'info: {len(tgt)} 款要有情報卡（這輪抓 {len(need)} 款、寫了 {nw} 個）；名字對到 appid 的 {len(found)} 個')
 
 
+# ------------------------------------------------------------------ 上市戰報、繁中最新風向（2026-11-20）
+LAUNCH_DAYS = 30        # 上市後幾天內第一次看到才做戰報（更早上市的沒有完整資料）
+TCV_N = 40              # 繁中評論一次拿幾則來挑
+TCV_DIAG = False
+BAD_WORDS = ['幹你娘', '幹你', '操你', '靠北', '靠杯', '雞掰', '機掰', '他媽的', '他媽', '媽的', 'fuck', 'shit', 'FUCK', 'SHIT']
+
+
+def launch_report(prev, x, h, t0):
+    """上市 72 小時戰報：同上高峰（何時）、72 小時內的同上曲線（每 3 小時一點）、Steam 與繁中好評率（第一筆→72 小時那一刻）、
+    72 小時內的官方修正。上市滿 72 小時就凍結（之後原封不動留著，hist 只留 30 天也不怕）；還沒滿就每輪更新。"""
+    old = (prev or {}).get('launch')
+    if old and old.get('fz'):
+        return old
+    rel = x.get('rel') or {}
+    if rel.get('soon') or not rel.get('date') or rel.get('ea') and not rel.get('ts'):
+        return old
+    try:
+        ts = int(rel.get('ts') or dt.datetime.fromisoformat(rel['date']).replace(tzinfo=UTC).timestamp())
+    except (TypeError, ValueError):
+        return old
+    now = t0.timestamp(); age = (now - ts) / 3600
+    if age < 0.5 or (not old and age > 24 * LAUNCH_DAYS):
+        return old
+    m0 = ts // 60; m1 = int(min(now, ts + 72 * 3600) // 60)
+    pl = [p for p in h.get('pl') or [] if m0 <= p[0] <= m1 and p[1] is not None]
+    if not pl:
+        return old
+    pk = max(pl, key=lambda p: p[1])
+    series, last = [], None      # 每 3 小時一點（凍結以後還畫得出曲線）
+    for p in pl:
+        if last is None or p[0] - last >= 175:
+            series.append(p); last = p[0]
+    if series[-1] != pl[-1]:
+        series.append(pl[-1])
+    pct = lambda r: [round(r[1] * 100 / r[2]), r[2]] if r and r[2] else None   # noqa: E731
+    rv = [r for r in h.get('rv') or [] if m0 <= r[0]]
+    rt = [r for r in h.get('rt') or [] if m0 <= r[0]]
+    upto = lambda L: [r for r in L if r[0] <= m1 + 180] or L[:1]   # noqa: E731  72 小時那一刻（或最接近的一筆）
+    patches = []
+    for n in x.get('news') or []:
+        try:
+            nt = dt.datetime.fromisoformat(str(n.get('d')).replace('Z', '+00:00')).timestamp()
+        except (TypeError, ValueError):
+            continue
+        if n.get('k') == 'patch' and ts - 3600 <= nt <= ts + 72 * 3600:
+            patches.append({'t': (n.get('t') or '')[:70], 'u': n.get('u'), 'd': n.get('d')})
+    rep = {'ts': ts, 'h': int(min(age, 72)), 'pk': pk[1], 'pkt': pk[0], 'pl': series[-30:],
+           'part': 1 if pl[0][0] - m0 > 6 * 60 else 0}
+    if rv:
+        rep['rv0'] = pct(rv[0]); rep['rv'] = pct(upto(rv)[-1])
+    if rt:
+        rep['rt'] = pct(upto(rt)[-1])
+    if patches:
+        rep['np'] = len(patches); rep['pt'] = patches[:3]
+    if age >= 72:
+        rep['fz'] = 1
+    return {k: v for k, v in rep.items() if v not in (None, [], 0) or k in ('h', 'part')}
+
+
+def _tcv_clean(s):
+    s = re.sub(r'\[/?[a-z0-9*]+(=[^\]]*)?\]', ' ', s or '', flags=re.I)        # BBCode
+    s = re.sub(r'https?://\S+', ' ', s)
+    s = re.sub(r'\s+', ' ', htmllib.unescape(s)).strip()
+    for w in BAD_WORDS:
+        s = s.replace(w, '○' * len(w))
+    return s
+
+
+def tc_voices(appid):
+    """繁中玩家最新的評論：拿最近的 40 則，好評、負評各挑 3 則短摘（15～200 字、中文為主、沒網址、不是洗版），存摘要和遊玩時數、日期，**不存作者**。"""
+    try:
+        d = get_json(api(REVIEWS, {'appid': appid, 'languages': ['tchinese'], 'filter': 1, 'purchase_type': 1, 'num_per_page': TCV_N, 'display_language': 'tchinese'}), timeout=25, tries=1)
+    except Exception as e:  # noqa: BLE001
+        ERRS.append(f'tcv {appid}: {str(e)[:80]}')
+        return None
+    d = d.get('response', d)
+    revs = d.get('reviews') or []
+    if revs and not isinstance(revs[0], dict):
+        return None
+    if revs and 'review' not in revs[0] and 'text' not in revs[0]:
+        print('tcv keys', appid, sorted(revs[0].keys())[:20], file=sys.stderr)   # Steam 改了欄位名：Actions 紀錄看得到
+    pos, neg = [], []
+    for r in revs:
+        t = _tcv_clean(r.get('review') or r.get('text') or '')
+        cjk = sum(1 for c in t if '一' <= c <= '鿿')
+        if len(t) < 15 or cjk < len(t) * 0.35 or re.search(r'(.)\1{7,}', t):
+            continue
+        up = r.get('voted_up', r.get('recommended'))
+        a = r.get('author') or {}
+        hrs = round(int(a.get('playtime_at_review') or a.get('playtime_forever') or r.get('playtime_at_review') or 0) / 60, 1)
+        when = r.get('timestamp_created') or r.get('time_created')
+        try:
+            day = dt.datetime.fromtimestamp(int(when), TW).strftime('%Y-%m-%d') if when else ''
+        except (TypeError, ValueError, OSError):
+            day = ''
+        item = [t[:200] + ('…' if len(t) > 200 else ''), hrs, day, int(r.get('votes_up') or 0)]
+        (pos if up else neg).append(item)
+    global TCV_DIAG
+    if not TCV_DIAG and revs:   # 每輪印一次：拿到的是哪段時間的評論（確認是「最新」）
+        TCV_DIAG = True
+        ds = sorted(int(r.get('timestamp_created') or 0) for r in revs if r.get('timestamp_created'))
+        print('tcv diag', appid, len(revs), 'pos', len(pos), 'neg', len(neg), 'from', dt.datetime.fromtimestamp(ds[0], TW).date() if ds else '-', 'to', dt.datetime.fromtimestamp(ds[-1], TW).date() if ds else '-')
+    pick = lambda L: [i[:3] for i in sorted(L, key=lambda i: (-i[3], -len(i[0])))[:3]]   # noqa: E731  有用的票多的先、長一點的先
+    q = d.get('query_summary') or {}
+    out = {'d': now().astimezone(TW).strftime('%Y-%m-%d'), 'pos': pick(pos), 'neg': pick(neg)}
+    if q.get('total_reviews'):
+        out['n'] = int(q['total_reviews'])
+    return out if (out['pos'] or out['neg']) else {'d': out['d'], 'pos': [], 'neg': []}
+
+
+def tcv_due(prev, appid, t0):
+    """一天看一次（照 appid 錯開，不記時間）；還沒看過的馬上看"""
+    if not (prev or {}).get('tcv'):
+        return True
+    return (int(t0.timestamp() // 3600) + zlib.crc32(f'tcv{appid}'.encode())) % 24 == 0
+
+
 # ------------------------------------------------------------------ 資料庫（萬用搜尋）＋加進資料庫（2026-11-20）
 ADD_BUDGET = 12          # 每輪最多處理幾個「加進資料庫」
 ADD_KEEP = 300
@@ -1804,7 +1924,7 @@ def main():
     tagn = tagnames()
     items = get_items(apps, media=True) if apps else {}
     out_apps = dict(live_old.get('apps') or {})
-    NSTAT = {'ok': 0, 'cat': 0, 'ws': 0}
+    NSTAT = {'ok': 0, 'cat': 0, 'ws': 0, 'tcv': 0}
     ok = 0
     for appid in apps:
         it = items.get(appid)
@@ -1854,6 +1974,18 @@ def main():
                 x['news_v'] = prev['news_v']
         if nw is not None:
             x['news'] = nw
+        lr = launch_report(prev, x, h, t0)
+        if lr:
+            x['launch'] = lr
+        if appid in covered or appid in picked:     # 寫過專題、推坑的：每天收一次繁中最新評論
+            tv = tc_voices(appid) if tcv_due(prev, appid, t0) else None
+            if tv is not None:
+                time.sleep(0.3)
+                NSTAT['tcv'] += 1
+            else:
+                tv = prev.get('tcv')
+            if tv:
+                x['tcv'] = tv
         x['base'], pend, chg = track_changes(prev, x, t0)
         if pend:
             x['pend'] = pend
@@ -1881,7 +2013,7 @@ def main():
         traceback.print_exc()
         ERRS.append(f'stale: {type(e).__name__}')
     wrote, nx = live_save(D, live)
-    print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}, live/ 更新 {nx} 款；官方公告看了 {NSTAT["ok"]} 款；分類資料 {NSTAT["cat"]} 款（有工作坊 {NSTAT["ws"]}）')
+    print(f'live: asked {len(apps)}, ok {ok}, wrote={wrote}, live/ 更新 {nx} 款；官方公告看了 {NSTAT["ok"]} 款；分類資料 {NSTAT["cat"]} 款（有工作坊 {NSTAT["ws"]}）；繁中評論收了 {NSTAT["tcv"]} 款；上市戰報 {sum(1 for v in out_apps.values() if v.get("launch"))} 款')
 
     if not a.no_candidates:
         c = candidates(covered, tagn, picked, mine)

@@ -19,6 +19,8 @@ function hubTiles() {
     const ix = S.board && S.board.idx;
     T.push({ go: 'board', ic: ICON.chart, t: '行情板', s: ix && ix.d1 != null ? `大盤 ${ix.d1 > 0 ? '▲' : ix.d1 < 0 ? '▼' : ''}${Math.abs(ix.d1).toFixed(1)}%` : 'Steam 線上人數看盤', c: ix && ix.d1 > 0 ? 'up' : ix && ix.d1 < 0 ? 'dn' : 'w' });
   } catch (e) { T.push({ go: 'board', ic: ICON.chart, t: '行情板', s: 'Steam 線上人數看盤', c: 'w' }); }
+  let sl = null; try { sl = saleHubLine(); } catch (e) { /* */ }
+  if (sl) T.push({ go: 'sale', ic: ICON.cart, t: '特賣作戰室', s: sl.s, c: sl.ph === 'on' ? 'p' : 'y', hot: sl.hot });
   T.push({ go: 'cal', ic: ICON.cal, t: '出擊日曆', s: hubNextCal(), c: 'w' });
   const wk = (S.weekly && S.weekly.items || [])[0];
   T.push({ go: 'week', ic: ICON.trophy, t: '每週懶人包', s: wk ? `${wk.id.replace(/^\d{4}-W/, 'WEEK ')} 結算` : '每週日晚上結算', c: 'p' });

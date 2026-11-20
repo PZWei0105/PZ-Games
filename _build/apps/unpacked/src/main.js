@@ -30,7 +30,7 @@ async function route() {
   const [name, arg] = h.split('/');
   const prev = ROUTE; ROUTE = h;
   if (prev && !prev.startsWith('f/')) S.scroll[prev] = scrollY;
-  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop(); opsStop(); vsStop();
+  stopVideo(name === 'shorts'); stopSpeak(); motionStop(); huntStop(); weekStop(); tgaStop(); dealsStop(); askStop(); moreStop(); opsStop(); vsStop(); saleStop();
   if (name !== 'shorts') shExit();
   const v = VIEW();
   try {
@@ -51,6 +51,7 @@ async function route() {
       afterFeature();
       scrollTo(0, 0);
     } else if (name === 'hunt') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderHunt(); if (S.jump) { const j = $(S.jump); S.jump = ''; if (j) requestAnimationFrame(() => j.scrollIntoView({ block: 'start' })); else restoreScroll(h); } else restoreScroll(h); huntFx(); }
+    else if (name === 'sale') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderSale(); if (prev === h) restoreScroll(h); else scrollTo(0, 0); saleFx(); }
     else if (name === 'board') { setTabs('home'); if (!S.board || Date.now() - Date.parse(S.board.at) > 15 * 6e4) { try { const b = await getJSON('board.json'); if (b && b.rows) S.board = b; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderBoard(); restoreScroll(h); boardFx(); }
     else if (name === 'tga') { setTabs('home'); if (!S.tgaD || tgaPhase() === 'live') { try { const t = await getJSON('tga.json'); if (t && t.cats) S.tgaD = t; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderTga(); if (prev && prev.startsWith('tga') && prev === h) restoreScroll(h); else scrollTo(0, 0); tgaFx(); }
     else if (name === 'vs') { setTabs('home'); await vsPrep(arg); v.innerHTML = renderVS(arg); scrollTo(0, 0); vsFx(); }
@@ -456,6 +457,8 @@ document.addEventListener('click', async (ev) => {
     if (a === 'settings') { openSheet(settingsHtml()); return; }
     if (a === 'skinsheet') { audioInit(); openSkinSheet(); return; }   // 換裝選單
     if (a.startsWith('db') && dbAct(a, act)) return;   // 資料庫
+    if (a === 'swcdl' || a === 'swcshare') { saleCardOut(a === 'swcshare'); return; }
+    if (a.startsWith('sw') && saleAct(a, act)) return;   // 特賣作戰室
     if (a === 'search') { DB.mode = 'all'; DB.focus = true; sfx.click(); closeSheet(); if (ROUTE === 'lib') route(); else { NAVN++; location.hash = 'lib'; } return; }
     if (a === 'hub') { audioInit(); openHub(); return; }
     if (a === 'hubfx') { S.settings.fx = S.settings.fx === 'full' ? 'calm' : 'full'; save('settings'); document.body.classList.toggle('calm', S.settings.fx !== 'full'); sfx.click(); hubSync(); return; }

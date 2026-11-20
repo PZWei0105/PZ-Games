@@ -1364,6 +1364,117 @@ span.mk-sp.none{color:#544d42}
 .tr-card{background:#ffd94d;color:#1b1813;border:3px solid #1b1813;box-shadow:6px 6px 0 #1f5fa8}
 .tr-card b{font:900 20px/1.2 var(--cjkh)}
 .tr-skip{color:#1b1813}
+.sw-hero{background:#fffdf8;border:4px solid #1b1813;box-shadow:8px 8px 0 #1f5fa8}
+.sw-hero::before{background:repeating-linear-gradient(-45deg,#ffd94d0f 0 14px,transparent 14px 28px)}
+.sw-hero.ph-on{border-color:#d6262b;box-shadow:8px 8px 0 #d6262b}
+.sw-k{color:#1f5fa8}
+.sw-hero.ph-on .sw-k{color:#c4161c}
+.sw-hero h2{font:900 30px/1.15 var(--cjkh);color:#1b1813}
+.sw-cd b{color:#c4161c}
+.sw-cd span{color:#3d372e}
+.sw-ph i{background:#fefcf6;color:#5d564b;border:2px solid #d6ccb6}
+.sw-ph i.done{background:#f9f6ed;color:#534d42}
+.sw-ph i.on{background:#ffd94d;color:#1b1813;border-color:#1b1813}
+.sw-bud{background:#f9f6ed;border:3px solid #d6ccb6}
+.sw-bh b{color:#1b1813}
+.sw-bh em{color:#0b7a43}
+.sw-bh em.over{color:#cb2329}
+.sw-bin>button:not(.sw-bq){font:900 22px/1 var(--cjkh);background:#ffd94d;color:#1b1813;border:3px solid #1b1813;box-shadow:2px 2px 0 #1f5fa8}
+.sw-bin>b{color:#c4161c}
+.sw-bq{background:#fefcf6;color:#3a342b;border:2px solid #cdc2ab}
+.sw-bq.on{background:#ffd94d;color:#1b1813;border-color:#1b1813}
+.sw-bar{background:#f0eadc;border:2px solid #1b1813}
+.sw-bar i.g{background:#0b7a43}
+.sw-bar i.p{background:#d6262b}
+.sw-bl{color:#3d372e}
+.sw-bl i.g{background:#0b7a43}
+.sw-bl i.p{background:#d6262b}
+.sw-tip{background:#ffd94d;color:#1b1813;border:3px solid #1b1813;box-shadow:5px 5px 0 #1f5fa8}
+.sw-note{color:#665f52}
+.sw-card{background:#fffdf8;color:#1b1813;border:3px solid #1b1813;box-shadow:5px 5px 0 #1f5fa8}
+.sw-ci{background:#fefcf6;border-bottom:3px solid #1b1813}
+.sw-why{background:#ffd94d;color:#1b1813;border:2px solid #1b1813}
+.sw-card>small{color:#544d42}
+.sw-row{background:#f9f6ed;border:2px solid #d6ccb6}
+.sw-row.pk{border-color:#1b1813;box-shadow:3px 3px 0 #1f5fa8}
+.sw-pick{border:3px solid #c3b8a0;background:#fffdf8;color:#1b1813}
+.sw-pick.on{background:#ffd94d;border-color:#1b1813}
+.sw-im{background:#f0eadc;border:2px solid #1b1813}
+.sw-b>b{color:#1b1813}
+.sw-p em{color:#2f2a21}
+.sw-p em.sale{color:#c4161c}
+.sw-card .sw-p em{color:#1b1813}
+.sw-p s{color:#5d564b}
+.sw-p i{background:#d6262b;color:#fffdf8}
+.sw-p small{color:#665f52}
+.sw-tg{color:#0b7a43}
+.sw-tg small{color:#665f52}
+.sw-tg.me{color:#c4161c}
+.sw-tg.none{color:#665f52}
+.sw-e{color:#1f5fa8}
+.sw-edit input{background:#fffdf8;color:#1b1813;border:2px solid #1b1813}
+.sw-edit button{background:#ffd94d;color:#1b1813;border:2px solid #1b1813}
+.sw-st{border:2px solid #cdc2ab;color:#534d42}
+.sw-st.hit{background:#0b7a43;color:#1b1813;border-color:#1b1813}
+.sw-st.low{background:#ffd94d;color:#1b1813;border-color:#1b1813}
+.sw-st.sale{background:#d6262b;color:#fffdf8;border-color:#1b1813}
+.sw-st.wait{color:#c4161c;border-color:#1b1813}
+.sw-st.free{color:#0b7a43;border-color:#0b7a43}
+.sw-st.soon{color:#3d372e}
+.sw-loot{background:#fffdf8;border:3px solid #d6262b;box-shadow:6px 6px 0 #d6262b}
+.sw-lt>div{background:#f9f6ed;border:2px solid #d6ccb6}
+.sw-lt>div.big{background:#ffd94d;border-color:#1b1813}
+.sw-lt small{color:#3d372e}
+.sw-lt b{color:#1b1813}
+.sw-lt i{color:#665f52}
+.sw-lt .big small,.sw-lt .big i{color:#1b1813}
+.sw-lt .big b{color:#1b1813}
+.sw-li{color:#24201a}
+.sw-lim{background:#f0eadc}
+.sw-li em{color:#c4161c}
+.sw-li s{color:#5d564b}
+.sw-li button{color:#665f52}
+#swcv{border:3px solid #1b1813;box-shadow:6px 6px 0 #1f5fa8}
+.sw-ban{background:#d6262b;color:#fffdf8;border:3px solid #1b1813;box-shadow:5px 5px 0 #1b1813}
+.sw-ban.ph-prep{background:#ffd94d;color:#1b1813}
+.sw-bk{background:#fffdf8;color:#c4161c}
+.sw-ban>i{font:900 22px/1 var(--cjkh)}
+.lr{background:#fffdf8;border:3px solid #d6262b;box-shadow:6px 6px 0 #d6262b}
+.lr.fz{border-color:#1b1813;box-shadow:6px 6px 0 #1f5fa8}
+.lr-k{color:#1b1813}
+.lr-tag{background:#ffd94d;color:#1b1813}
+.lr-tag.on{background:#d6262b;color:#fffdf8}
+.lr-h small{color:#665f52}
+.lr-part{color:#665f52}
+.lr-c{background:#f9f6ed;border:2px solid #d6ccb6}
+.lr-c.pk{background:#ffd94d;border-color:#1b1813}
+.lr-c small{color:#3d372e}
+.lr-c b{color:#1b1813}
+.lr-c i{color:#665f52}
+.lr-c i em{color:#3d372e}
+.lr-c i em.up{color:#0b7a43}
+.lr-c i em.dn{color:#cb2329}
+.lr-c.pk small,.lr-c.pk i{color:#1b1813}
+.lr-c.pk b{color:#1b1813}
+.lr-sp{border-bottom:2px solid #d6ccb6}
+.lr-dot{background:#d6262b;border:2px solid #1b1813}
+.lr-sx{color:#5d564b}
+.lr-sp polyline{stroke:#c4161c}
+.lr-sp .ar{fill:#c4161c26}
+.lr-s{color:#2f2a21}
+.lr-pt a{color:#c4161c}
+.tcv{background:#f9f6ed;border:3px solid #d6ccb6}
+.tcv-h b{color:#1b1813}
+.tcv-h small{color:#665f52}
+.tcv-p{color:#c4161c}
+.tcv-p i{color:#665f52}
+.tcv-c h4{color:#0b7a43}
+.tcv-c.neg h4{color:#cb2329}
+.tq{background:#fffdf8;color:#26211c;border:2px solid #1b1813;box-shadow:3px 3px 0 #0b7a43}
+.tq.neg{box-shadow:3px 3px 0 #e46468}
+.tq footer{color:#5d564b}
+.tcv-n{color:#665f52}
+.tcv-a{color:#c4161c}
 /* ---- skin-paper.css ---- */
 /* ==========================================================================
    換裝：紙本雜誌（PAPER）— 米白紙、粗黑襯線大標、雙線欄框、紅色印章、螢光筆、剪貼的紙片
