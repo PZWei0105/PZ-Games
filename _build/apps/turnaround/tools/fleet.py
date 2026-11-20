@@ -23,19 +23,14 @@ OUT = os.path.join(REPO, 'apps', 'turnaround', 'data', 'fleet.json')
 # 不進機庫的 App（理由會顯示在機隊頁）
 APP_SKIP = {
     'coldeye': '冷眼永遠獨立對待，不在機庫範圍',
-    'sandtable': '跟冷眼合用維護排程',
     'forreal': '有自己的每週維護排程',
     'echo-radar': '有自己的每週維護排程',
     'ai-meta': '有自己的每週維護排程',
     'before-checkout': '有自己的每週維護排程',
     'local-dojo': '有自己的維護排程',
     'unpacked': '還在密集開發中（進行中的作品在原對話討論）',
-    'engine-lab': '引擎展示間，跟著《PZ 引擎》一起更新',
-    'pz-host': '舊版總表，已由《PZ 遊戲收藏》取代',
     'ai-game-class': '一次性的查證頁',
     'video-skills': '一次性的查證頁',
-    'chat-rename': '一次性的工具頁',
-    'maintenance': '一次性的工具頁',
     'turnaround': '就是這個 App 本身',
 }
 

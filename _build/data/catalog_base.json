@@ -478,42 +478,6 @@
    "chat": ""
   },
   {
-   "id": "counterspin",
-   "title": "逆旋",
-   "en": "COUNTERSPIN",
-   "genre": "action",
-   "status": "shipped",
-   "featured": true,
-   "created": "2026-11-02",
-   "updated": "2026-11-02",
-   "tagline": "師父留下的左旋陀螺，要在三十天內轉上全城最高的擂台。",
-   "summary": "機械賽璐璐風格的陀螺對戰。鏽港的手工陀螺八年前被趕出正式擂台，只能在夜裡的船艙底下轉。修理行學徒魏子葳戴上焊面，帶著師父留下的左旋陀螺，從底艙聯賽一路打進恆旋盃，對上親手埋葬手工陀螺的人。拉弓瞄準發射，每次定格雙方同時出一手（突擊、迴旋、卸力、必殺）互相剋制；打贏拿走對手的零件，自己改裝。",
-   "highlights": [
-    "九章劇情・九位對手・兩段聯賽",
-    "拉弓發射＋定格指令三角剋制",
-    "17 個零件改裝・試轉預覽",
-    "必殺特寫・終結慢動作重播",
-    "後期對手會假動作、會讀你的習慣"
-   ],
-   "inspired": "Claude Taiwan 社團分享的《我在華山之巔抽陀螺》",
-   "verdict": "",
-   "next": "先打幾場，把手感、難度或看不懂的地方告訴我；線上房號對戰排在第二版。",
-   "palette": [
-    "#3a2618",
-    "#0c0d14",
-    "#ff7a1a"
-   ],
-   "builds": [
-    {
-     "id": "counterspin",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/TxFmJJyBTmGfFM2WqALY1D"
-    }
-   ],
-   "chat": ""
-  },
-  {
    "id": "whalefall-2",
    "title": "鯨落 2",
    "en": "WHALEFALL 2",
@@ -544,41 +508,6 @@
      "label": "單機版",
      "note": "單機、故事、挑戰",
      "artifact": "https://claude.ai/artifact/UoePy1KYEa8HVaVXvBhdo5"
-    }
-   ],
-   "chat": "https://claude.ai/chat/696b49fe-546f-4d3c-89d6-4ea1c4159f06"
-  },
-  {
-   "id": "whalefall",
-   "title": "鯨落",
-   "en": "WHALEFALL",
-   "genre": "party",
-   "status": "shipped",
-   "created": "2026-10-29",
-   "updated": "2026-10-29",
-   "tagline": "在一頭游了三百年的巨鯨背上，買下整座城。",
-   "summary": "大富翁式派對桌遊。魏子葳拿著父親留下的一格地契登上巨鯨長歌，在圈地季裡買地、收過路費、搶鯨歌目的地、甩掉藤壺精；一路追查十五年前斷尾之夜的真相，和父親為什麼再也沒有下來。",
-   "highlights": [
-    "季節旺區＋鯨歌目的地搶灘",
-    "藤壺精：越養越兇的燙手山芋",
-    "區域股票・四種地標・強制收購",
-    "故事 6 章・6 張殘譜・3 種結局",
-    "自由對戰可同機多人・今日鯨歌每日挑戰"
-   ],
-   "inspired": "桃太郎電鐵、大富翁 4／11、Fortune Street、Monopoly GO、瑪利歐派對",
-   "verdict": "",
-   "next": "第二代《鯨落 2》已經做好，這版原封保留。",
-   "palette": [
-    "#8FC3EE",
-    "#213052",
-    "#FFC83D"
-   ],
-   "builds": [
-    {
-     "id": "whalefall",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/HtbhdTH4tNUaa3YPcV7FFA"
     }
    ],
    "chat": "https://claude.ai/chat/696b49fe-546f-4d3c-89d6-4ea1c4159f06"
@@ -720,41 +649,6 @@
    "chat": "https://claude.ai/chat/c9918896-e517-48e3-b826-52ffd91a982c"
   },
   {
-   "id": "last-gambit",
-   "title": "殘局",
-   "en": "LAST GAMBIT",
-   "genre": "tactics",
-   "status": "shipped",
-   "created": "2026-10-28",
-   "updated": "2026-10-28",
-   "tagline": "八個將亡的世界，只有一個能活下來。",
-   "summary": "自走棋（棋子構築）。八個將亡的世界各派一名執棋者，用六個已滅世界的最後英雄對弈，魏子葳代表地球出賽。24 枚棋子各有完整台詞和三章人物故事；18 組宿緣同場會對話，一方倒下另一方會悲憤暴走；10 位對手執棋者會看你的陣容調整站位、還會嗆你。",
-   "highlights": [
-    "24 枚棋子・18 組宿緣",
-    "10 位會看你陣容的對手執棋者",
-    "大招全螢幕特寫・導播鏡頭",
-    "觀眾熱度與打賞",
-    "7 篇主線殘章"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "等你試玩回饋。",
-   "palette": [
-    "#3b1f52",
-    "#07060e",
-    "#f5c542"
-   ],
-   "builds": [
-    {
-     "id": "last-gambit",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/76fCYpQ66e3nbEtRgFSTMD"
-    }
-   ],
-   "chat": "https://claude.ai/chat/46b0a8d5-5e14-4ffa-90ce-72ccd288fb82"
-  },
-  {
    "id": "eleventh-stratagem",
    "title": "第十一策",
    "en": "THE ELEVENTH STRATAGEM",
@@ -823,41 +717,6 @@
     }
    ],
    "chat": "https://claude.ai/chat/194cb2e7-dfaf-4b77-b84f-b18186abb81b"
-  },
-  {
-   "id": "still-beating",
-   "title": "不死心",
-   "en": "STILL BEATING",
-   "genre": "action",
-   "status": "shipped",
-   "created": "2026-10-21",
-   "updated": "2026-10-21",
-   "tagline": "整座城的顏色消失了，他把它一口一口吃回來。",
-   "summary": "仿《愚者不滅》的龐克吞色動作 roguelite。週六晚上十點，整座城的顏色突然消失，以為自己變成殭屍的塗鴉客魏子葳，跟只剩一雙手的修車師傅「黑手」下到地底，吃掉顏色變成的怪物、變成牠們的樣子，要把被凍成灰色雕像的她重新上色。這版是五章故事的第一章・黃。",
-   "highlights": [
-    "吞色變身：本色＋霓虹鞭、購物車、娃娃機夾子、汽水槍",
-    "咬招：抓準時機時間變慢、反咬",
-    "全彩爆發 8 秒",
-    "黑手改裝：四部位 × 兩種零件 × 三級",
-    "中頭目點唱機・Boss 計程車老黃"
-   ],
-   "inspired": "愚者不滅 Stupid Never Dies",
-   "verdict": "",
-   "next": "等你試玩回饋；第二章和筆電版之後再做。",
-   "palette": [
-    "#5a1a3a",
-    "#140611",
-    "#c6ff3a"
-   ],
-   "builds": [
-    {
-     "id": "still-beating",
-     "label": "第一章・黃",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/83ANgHnrG8LG7Wm2yHcVka"
-    }
-   ],
-   "chat": "https://claude.ai/chat/12b66839-bee3-4e86-babc-63ac8c6fac1b"
   },
   {
    "id": "pipers-round",
@@ -1189,76 +1048,6 @@
    "chat": "https://claude.ai/chat/0f9a0860-8025-49a9-accf-32936203a60f"
   },
   {
-   "id": "lianying",
-   "title": "連營",
-   "en": "",
-   "genre": "tactics",
-   "status": "shipped",
-   "created": "2026-10-04",
-   "updated": "2026-10-04",
-   "tagline": "以少勝多，靠計，也靠一刀。",
-   "summary": "亂世軍師的卡牌 × 格子戰棋。落魄軍師魏子葳帶小隊守雁回城，在可轉可縮的 3D 雪地沙盤上，用兵招與計謀以少勝多；打擊感是設計核心。",
-   "highlights": [
-    "頓幀・震屏・斬將特寫",
-    "背刺／破陣／連擊",
-    "火隨風蔓延",
-    "6 位將領絕技",
-    "6 場戰役・分支劇情"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "",
-   "palette": [
-    "#2a3a48",
-    "#090e14",
-    "#ff6a3a"
-   ],
-   "builds": [
-    {
-     "id": "lianying",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/Vt6CQ6qZ4ZcnU7ysc9K1aw"
-    }
-   ],
-   "chat": "https://claude.ai/chat/c6d352ee-2d4b-4113-bf25-c681ad097bf4"
-  },
-  {
-   "id": "night-market",
-   "title": "夜市三十六計",
-   "en": "",
-   "genre": "sim",
-   "status": "shipped",
-   "created": "2026-10-04",
-   "updated": "2026-10-04",
-   "tagline": "阿公的老滷，和八十四萬的債。",
-   "summary": "台灣夜市滷味攤的經營模擬。被裁員的魏子葳接下阿公四十年的老滷和八十四萬債務，要在虛構的月埕夜市一年內還清。",
-   "highlights": [
-    "可暫停的即時營業",
-    "老滷系統：火候、鹹度、底蘊",
-    "三十六計籤詩牌",
-    "對手「滷霸」以事件出現",
-    "101 個事件・8 種結局"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "",
-   "palette": [
-    "#5a2a12",
-    "#1a0c05",
-    "#ffb03a"
-   ],
-   "builds": [
-    {
-     "id": "night-market",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/1sDxsfNaV6EN5EjFxZeoLc"
-    }
-   ],
-   "chat": "https://claude.ai/chat/6df745a0-6023-4add-8209-61a9b290e701"
-  },
-  {
    "id": "shousui",
    "title": "守歲",
    "en": "NEW YEAR'S EVE",
@@ -1394,181 +1183,6 @@
    "chat": "https://claude.ai/chat/96c8c65b-3731-4152-8f1a-f507aa610879"
   },
   {
-   "id": "lanke",
-   "title": "爛柯",
-   "en": "LANKE",
-   "genre": "tactics",
-   "status": "shipped",
-   "created": "2026-10-01",
-   "updated": "2026-10-01",
-   "tagline": "被墨吞掉的人，提掉那顆黑子就能救回來。",
-   "summary": "即時夜巡倖存者加回合制圍棋提子戰術。重陽夜打更人魏子葳敲下一更，時間凝固，街道變成一盤下了一千六百年的棋；他每下一手，就老一歲。",
-   "highlights": [
-    "夜巡／定更雙層玩法",
-    "圍棋的氣與提",
-    "每下一手老一歲",
-    "提回被墨化的鄉親",
-    "4 個 Boss・4 種結局"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "",
-   "palette": [
-    "#3e3122",
-    "#120e09",
-    "#d9a35b"
-   ],
-   "builds": [
-    {
-     "id": "lanke",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/AD4BVN2493fTh2HPiU4SjU"
-    }
-   ],
-   "chat": "https://claude.ai/chat/eb090c20-ce1e-4412-99bc-4b26e0743e36"
-  },
-  {
-   "id": "after-lights-out",
-   "title": "熄燈之後",
-   "en": "AFTER LIGHTS OUT",
-   "genre": "survivor",
-   "status": "shipped",
-   "created": "2026-10-01",
-   "updated": "2026-10-01",
-   "tagline": "光會引來屍群，聲音也會。",
-   "summary": "颱風夜大停電的台灣雙人合作殭屍生存。消防員魏子葳和台電搶修師傅燈伯只靠手電筒，從夜市一路殺到醫院變電所。這一版是單人加 AI 隊友。",
-   "highlights": [
-    "手電筒視野・聲音預兆",
-    "不對稱的雙人分工",
-    "倒地互救與躲藏",
-    "AI 隊友補位",
-    "第一章〈颱風夜〉三關＋Boss"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "第二章「燈塔」還沒做。",
-   "palette": [
-    "#2a251c",
-    "#0a0907",
-    "#f7b847"
-   ],
-   "builds": [
-    {
-     "id": "after-lights-out",
-     "label": "單人＋AI 隊友",
-     "note": "第一章〈颱風夜〉",
-     "artifact": "https://claude.ai/artifact/Jnp1ioyupkQvwu5gfG6mYv"
-    }
-   ],
-   "chat": "https://claude.ai/chat/4aa9ca1d-1153-4d65-9a26-885f6eeb1c52"
-  },
-  {
-   "id": "seven-stupa",
-   "title": "七級浮屠",
-   "en": "",
-   "genre": "card",
-   "status": "shipped",
-   "created": "2026-10-01",
-   "updated": "2026-10-01",
-   "tagline": "救人一命，勝造七級浮屠。",
-   "summary": "東方奇幻轉珠爬塔 Roguelike。代書魏子葳拿著渡筆登上會吞人的七級浮屠救妹妹小滿，以筆運珠、五行相生連鎖；每一層都要決定把燈魂「封」或「渡」。",
-   "highlights": [
-    "以筆運珠・五行相生",
-    "字靈夥伴",
-    "封／渡抉擇",
-    "序章＋6 層＋塔頂",
-    "4 種結局，約 6 萬字"
-   ],
-   "inspired": "神魔之塔",
-   "verdict": "",
-   "next": "",
-   "palette": [
-    "#272b55",
-    "#0a0b1e",
-    "#e04b3f"
-   ],
-   "builds": [
-    {
-     "id": "seven-stupa",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/9AffJETETcq17QXciZEtfb"
-    }
-   ],
-   "chat": "https://claude.ai/chat/47399215-eadf-44f2-98f2-8616f9a99634"
-  },
-  {
-   "id": "moshou",
-   "title": "墨守",
-   "en": "",
-   "genre": "survivor",
-   "status": "shipped",
-   "created": "2026-09-30",
-   "updated": "2026-09-30",
-   "tagline": "墨者說：木頭不會累。",
-   "summary": "戰國墨家守城的 2.5D 倖存者。魏子葳跟隨墨家死守宋城，用連弩、墨斗線、滾木對抗公輸盤「九攻九距」的攻城機關。做成在筆電上玩的高品質版。",
-   "highlights": [
-    "六天戰役・6 個攻城機關 Boss",
-    "10 種墨家器械・9 種進化",
-    "救援城頭見證者",
-    "3 種結局",
-    "鍵盤滑鼠・手把"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "",
-   "palette": [
-    "#2e2925",
-    "#0b0a09",
-    "#d7b47a"
-   ],
-   "builds": [
-    {
-     "id": "moshou",
-     "label": "筆電遊玩版",
-     "note": "建議用電腦玩，支援鍵盤滑鼠與手把",
-     "artifact": "https://claude.ai/artifact/4d1k5jxDyM9sVnYsfWyxdn"
-    }
-   ],
-   "chat": "https://claude.ai/chat/c9dd1fa6-47fe-4e37-8aae-c2ff8b52116b"
-  },
-  {
-   "id": "unnamer",
-   "title": "抹名者",
-   "en": "THE UNNAMER",
-   "genre": "action",
-   "status": "shipped",
-   "created": "2026-09-30",
-   "updated": "2026-09-30",
-   "tagline": "被記得的，才存在。",
-   "summary": "《波斯王子：失落王冠》風格的橫向平台動作。第七抹名者魏子葳第 312 次行刑時，鐘裂了，他墜入自己被抹去的故鄉。",
-   "highlights": [
-    "格擋慢動作・命中停頓",
-    "剪影＋邊緣光美術",
-    "三階段 Boss 懸鐘之母",
-    "24 個名字收集",
-    "手機橫握・鍵盤・手把"
-   ],
-   "inspired": "波斯王子：失落王冠",
-   "verdict": "",
-   "next": "第一章「下鐘城」完成，之後擴充新區域。",
-   "palette": [
-    "#3b4150",
-    "#11131a",
-    "#c9443a"
-   ],
-   "builds": [
-    {
-     "id": "unnamer",
-     "label": "第一章 下鐘城",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/LZ2HdSaF9gbmgTL2h4BWSJ"
-    }
-   ],
-   "chat": "https://claude.ai/chat/bf75b9ab-528f-4cb7-b5a6-affdcb5af2ea"
-  },
-  {
    "id": "market-hunter",
    "title": "主力獵人",
    "en": "",
@@ -1608,41 +1222,6 @@
     }
    ],
    "chat": "https://claude.ai/chat/db86203c-d0e3-47fb-83a7-b4abbc7c371f"
-  },
-  {
-   "id": "migrant-birds",
-   "title": "候鳥不歸",
-   "en": "",
-   "genre": "story",
-   "status": "shipped",
-   "created": "2026-09-26",
-   "updated": "2026-09-30",
-   "tagline": "用自己的記憶，換別人被記住。",
-   "summary": "水墨敘事 RPG。拾憶人魏子葳的家鄉雁回渡七年前被世界遺忘；他走訪即將消失的地方，用自己的記憶換別人被帶出白霧。全三卷，約兩到三小時。",
-   "highlights": [
-    "七根羽：犧牲記憶改變劇情",
-    "夜晚時辰地圖",
-    "地方逐漸褪白的水墨畫面",
-    "完整三卷・3 種結局",
-    "渡簿印記存檔碼"
-   ],
-   "inspired": "",
-   "verdict": "玩了前幾章覺得偏文字，問過「這是不是文字敘述的遊戲」。",
-   "next": "",
-   "palette": [
-    "#ede6da",
-    "#b8ae9f",
-    "#b3352a"
-   ],
-   "builds": [
-    {
-     "id": "migrant-birds",
-     "label": "完整三卷",
-     "note": "加了第二卷《海與燈》與終卷《雁回》",
-     "artifact": "https://claude.ai/artifact/3dbZNa2Ggh6RtJ8EBgQcTy"
-    }
-   ],
-   "chat": "https://claude.ai/chat/a9ebea5f-db43-4eef-b6c2-05007aac63c7"
   },
   {
    "id": "soul-paper",
@@ -1832,76 +1411,6 @@
     "engine": "PZ 引擎",
     "what": "玩法、關卡、劇情不變，換上 PZ 引擎：打擊感（衝擊波、閃光、平滑震動）、手把、設定頁、存檔碼、Claude 版雲端存檔；舊進度自動接上。"
    }
-  },
-  {
-   "id": "justice-clash",
-   "title": "正義對決",
-   "en": "JUSTICE CLASH",
-   "genre": "duel",
-   "status": "shipped",
-   "created": "2026-09-20",
-   "updated": "2026-09-20",
-   "tagline": "拿下兩個戰區就贏。",
-   "summary": "Marvel Snap 式三戰區卡牌對戰，DC 正義聯盟主題。沿用《燼界》的對戰引擎與數值平衡，換成七大陣營、58 張 DC 角色卡。DC 角色有版權，只能自己玩。",
-   "highlights": [
-    "七大陣營・58 張卡",
-    "15 個 DC 戰區",
-    "自由構築＋6 套預設牌組",
-    "三段難度 AI",
-    "加注、撤退與段位"
-   ],
-   "inspired": "Marvel Snap",
-   "verdict": "",
-   "next": "",
-   "palette": [
-    "#1c2742",
-    "#060912",
-    "#f2c744"
-   ],
-   "builds": [
-    {
-     "id": "justice-clash",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/7hnAa6ovcPDU68KWyxJSFg"
-    }
-   ],
-   "chat": ""
-  },
-  {
-   "id": "shengjiao-rush",
-   "title": "聖筊RUSH",
-   "en": "鬧熱滾滾",
-   "genre": "arcade",
-   "status": "shipped",
-   "created": "2026-09-21",
-   "updated": "2026-09-21",
-   "tagline": "擲出聖筊就衝進 RUSH，一路連莊到當上爐主。",
-   "summary": "台灣廟會主題的原創小鋼珠（柏青哥）。鋼珠物理盤面，擲出聖筊就進 RUSH 連莊。",
-   "highlights": [
-    "鋼珠物理盤面",
-    "擲筊・搶頭香・炸寒單演出",
-    "大當・聖筊挑戰・RUSH",
-    "4 種機種規格",
-    "廟會電音合成音效"
-   ],
-   "inspired": "",
-   "verdict": "",
-   "next": "",
-   "palette": [
-    "#b5201c",
-    "#4a0807",
-    "#ffd85a"
-   ],
-   "builds": [
-    {
-     "id": "shengjiao-rush",
-     "label": "完整版",
-     "note": "",
-     "artifact": "https://claude.ai/artifact/CsJMpAQ4j9Cfdk4yZL9yLG"
-    }
-   ],
-   "chat": "https://claude.ai/chat/8d7bd098-a41b-45f4-9e8c-ed2d36d1b588"
   }
  ],
  "archive": [],
@@ -1920,22 +1429,6 @@
     "#7ad7ff"
    ],
    "glyph": "冷",
-   "pin": true
-  },
-  {
-   "id": "omniscient",
-   "title": "全知",
-   "en": "OMNISCIENT",
-   "kind": "web",
-   "url": "https://pzwei0105.github.io/PZ-Games/apps/omniscient/",
-   "tagline": "冷眼的官方一手資料，攤開來演給你看。",
-   "summary": "痞子葳的炫砲戰情看板，本質就是冷眼：一打開是一隻全息的眼睛睜開，接著六欄（蒐集、查證、過濾、判斷、結論、全局）一欄欄閃亮，霓虹光纜照真實的資料流向把卡片接在一起，真的有資料進來時光點才沿著光纜跑。官方來源燈號、交叉核對、新聞蓋章（官方／事實／觀點，標出是哪個字讓它被當成觀點）、K 線與規則六面向、判決儀表、法人買賣超、自選六檔的價格與走勢、最佳五檔與成交明細、全市場熱力圖。配樂與音效是全知自己的（D 小調、100 BPM），音效對齊拍子。盤中即時；收盤後自動回放當天，照真實發生的順序重演，最後出今日戰報。所有數字都來自冷眼，過期會變色、斷線會標出來，動畫不產生數字。為筆電與大電視全螢幕設計（按 F）。",
-   "palette": [
-    "#0f2350",
-    "#02050b",
-    "#46d4ff"
-   ],
-   "glyph": "知",
    "pin": true
   },
   {
@@ -2017,21 +1510,6 @@
    "glyph": "轉",
    "pin": true,
    "claude": "https://claude.ai/artifact/QMXZwgB7viiDsVMFa2prtc"
-  },
-  {
-   "id": "sandtable",
-   "title": "沙盤",
-   "en": "SANDTABLE",
-   "kind": "web",
-   "url": "https://pzwei0105.github.io/sandtable/",
-   "tagline": "真的行情、真的規則、假的錢。",
-   "summary": "台股 ETF 真實模擬操盤：行情、交易時間、漲跌停、手續費、證交稅、T+2 交割全照官方規則；只能封存重開，不能作弊。",
-   "palette": [
-    "#4a5530",
-    "#0f120e",
-    "#f2b544"
-   ],
-   "glyph": "沙"
   },
   {
    "id": "echo-radar",
@@ -2145,37 +1623,6 @@
    "claude": "https://claude.ai/artifact/Dcws22E7CZzxpo9HLH8XUm"
   },
   {
-   "id": "engine-lab",
-   "title": "樣品館",
-   "en": "PZ ENGINE LAB",
-   "kind": "web",
-   "url": "https://pzwei0105.github.io/PZ-Games/apps/engine-lab/",
-   "tagline": "之後每款 2D 遊戲的底子，先在這裡玩給你看。",
-   "summary": "《PZ 引擎》的展示間：之後所有 2D 遊戲共用的引擎，手感、聲音、特效都從這裡來。十二個展間——打擊感實驗室（同一下攻擊，停頓、震屏、火花、閃白、數字一項一項打開比較）、壓力測試（幾千隻怪物同時追過來、子彈亂飛還是順）、操控（觸控搖桿、按鈕、鍵盤、手把同一套）、鏡頭（雙指縮放、旋轉、拖曳慣性）、聲音（四十多種合成音效、三首用文字寫的配樂、緊張度分層、頻譜）、後製特效（泛光、衝擊波扭曲、色差、老電視、調色）、介面與劇情（五套主題、對話框、打字機劇情、選擇、設定頁）、光影（手電筒、火把、柔和陰影、照明彈、怕光的空殼）、天氣與水面（雨夜港口：倒影、雨雪霧雷、路燈光柱、電影調色與黑邊）、角色動畫（骨架騎士走跑跳、三連段、腳踩地形、披風飄動，會呼吸跳躍的史萊姆、甩尾巴的小狐狸）、世界與地圖（一鍵生成地牢、洞窟、島嶼，點哪走哪自動找路，上百隻怪繞牆追人，戰爭迷霧與小地圖）、介面與聲音（海邊懸崖上的營火之夜：血條殘影、數字滾動、技能冷卻、閃卡、背包、標題畫面，十一種音景同時混，配樂對拍子換歌）。",
-   "palette": [
-    "#3a2a10",
-    "#05070c",
-    "#ffb547"
-   ],
-   "glyph": "樣",
-   "claude": "https://claude.ai/artifact/Gc1xRDKdV3zE1jGCqn68SR"
-  },
-  {
-   "id": "pz-host",
-   "title": "PZ 主機",
-   "en": "PZ HOST",
-   "kind": "claude",
-   "url": "https://claude.ai/artifact/AyyD5JzR3QmH2nJjPpUPN5",
-   "tagline": "遊戲之外的作品，也都在這裡。",
-   "summary": "舊版的作品總表：除了遊戲，也收著小說、影片企劃和工具，有雲端同步。",
-   "palette": [
-    "#1b1b26",
-    "#0b0b11",
-    "#ffc94d"
-   ],
-   "glyph": "PZ"
-  },
-  {
    "id": "ai-game-class",
    "title": "AI 遊戲製作教室",
    "en": "2026",
@@ -2204,36 +1651,6 @@
     "#ffb547"
    ],
    "glyph": "查"
-  },
-  {
-   "id": "chat-rename",
-   "title": "對話改名清單",
-   "en": "",
-   "kind": "claude",
-   "url": "https://claude.ai/artifact/AqaSRkpUw8Ab7pnLUSkyKS",
-   "tagline": "把一堆對話改成作品的名字。",
-   "summary": "57 個對話的舊標題對照作品新名稱，一鍵複製、打勾追蹤改名進度。",
-   "palette": [
-    "#2d2a3a",
-    "#0b0a10",
-    "#c9a8ff"
-   ],
-   "glyph": "名"
-  },
-  {
-   "id": "maintenance",
-   "title": "App 維護排程指令",
-   "en": "",
-   "kind": "claude",
-   "url": "https://claude.ai/artifact/TQB9vBmUpXNf8C4LqeP3E9",
-   "tagline": "每個專屬 App，每週都有人巡一遍。",
-   "summary": "替專屬 App 建每週自動維護的通用指令：先巡檢、除錯、打磨，真的加分才加功能。",
-   "palette": [
-    "#24324a",
-    "#0a0d14",
-    "#7ad7ff"
-   ],
-   "glyph": "巡"
   },
   {
    "id": "one-more",

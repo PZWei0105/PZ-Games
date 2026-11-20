@@ -23,10 +23,6 @@
    "tier": "free",
    "text": "盤中資料、新聞、觀點全靠 GitHub 自動更新，停訂照常用；只少了每週一、三、五的巡檢打磨。"
   },
-  "omniscient": {
-   "tier": "free",
-   "text": "只讀冷眼的公開資料，冷眼在更新，它就在更新。"
-  },
   "forreal": {
    "tier": "free",
    "text": "每小時自動抓新聞；外文翻譯是 GitHub 上的開源模型做的，不花 Claude。只少了週二巡檢。"
@@ -46,10 +42,6 @@
   "turnaround": {
    "tier": "max",
    "text": "每天清晨一班排程開題、進廠檢修，全靠 Claude。單獨跑 Pro 勉強撐得住，和解包一起就要 Max。停訂後你的表態還收得到，但不會有新航班。"
-  },
-  "sandtable": {
-   "tier": "free",
-   "text": "吃冷眼的真實行情，停訂照常練；只少了巡檢。"
   },
   "echo-radar": {
    "tier": "free",
@@ -79,14 +71,6 @@
    "tier": "free",
    "text": "播你自己的音樂檔，完全不靠 Claude。"
   },
-  "engine-lab": {
-   "tier": "free",
-   "text": "引擎展示間，內容固定。"
-  },
-  "pz-host": {
-   "tier": "free",
-   "text": "放在 Claude 上的頁面，免費帳號登入也打得開。"
-  },
   "ai-game-class": {
    "tier": "free",
    "text": "放在 Claude 上的頁面，免費帳號登入也打得開。"
@@ -94,14 +78,6 @@
   "video-skills": {
    "tier": "free",
    "text": "放在 Claude 上的頁面，免費帳號登入也打得開。"
-  },
-  "chat-rename": {
-   "tier": "free",
-   "text": "放在 Claude 上的頁面，免費帳號登入也打得開。"
-  },
-  "maintenance": {
-   "tier": "free",
-   "text": "這份指令本身免費打得開；但它說的維護排程要 Pro 以上才會跑。"
   },
   "one-more": {
    "tier": "free",
@@ -129,7 +105,7 @@
    "note": "每天看一次，寫滿 5 回才真的巡"
   },
   {
-   "name": "冷眼與沙盤",
+   "name": "冷眼",
    "min": 60,
    "tier": "pro",
    "note": "週一、三、五"

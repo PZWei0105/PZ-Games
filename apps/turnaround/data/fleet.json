@@ -2,56 +2,6 @@
  "v": 1,
  "works": [
   {
-   "id": "justice-clash",
-   "type": "game",
-   "reg": "B-PZ001",
-   "zh": "正義對決",
-   "en": "JUSTICE CLASH",
-   "genre": "duel",
-   "genre_zh": "卡牌對戰",
-   "genre_en": "CARD BATTLE",
-   "created": "2026-09-20",
-   "updated": "2026-09-20",
-   "tagline": "拿下兩個戰區就贏。",
-   "summary": "Marvel Snap 式三戰區卡牌對戰，DC 正義聯盟主題。沿用《燼界》的對戰引擎與數值平衡，換成七大陣營、58 張 DC 角色卡。DC 角色有版權，只能自己玩。",
-   "palette": [
-    "#1c2742",
-    "#060912",
-    "#f2c744"
-   ],
-   "cover": "../../media/justice-clash/cover.webp",
-   "wide": "../../media/justice-clash/wide.webp",
-   "url": "../../games/justice-clash/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "shengjiao-rush",
-   "type": "game",
-   "reg": "B-PZ002",
-   "zh": "聖筊RUSH",
-   "en": "鬧熱滾滾",
-   "genre": "arcade",
-   "genre_zh": "機台",
-   "genre_en": "ARCADE",
-   "created": "2026-09-21",
-   "updated": "2026-09-21",
-   "tagline": "擲出聖筊就衝進 RUSH，一路連莊到當上爐主。",
-   "summary": "台灣廟會主題的原創小鋼珠（柏青哥）。鋼珠物理盤面，擲出聖筊就進 RUSH 連莊。",
-   "palette": [
-    "#b5201c",
-    "#4a0807",
-    "#ffd85a"
-   ],
-   "cover": "../../media/shengjiao-rush/cover.webp",
-   "wide": "../../media/shengjiao-rush/wide.webp",
-   "url": "../../games/shengjiao-rush/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
    "id": "market-hunter",
    "type": "game",
    "reg": "B-PZ003",
@@ -97,31 +47,6 @@
    "cover": "../../media/lamp/cover.webp",
    "wide": "../../media/lamp/wide.webp",
    "url": "../../games/lamp/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "migrant-birds",
-   "type": "game",
-   "reg": "B-PZ005",
-   "zh": "候鳥不歸",
-   "en": "",
-   "genre": "story",
-   "genre_zh": "敘事解謎",
-   "genre_en": "STORY & PUZZLE",
-   "created": "2026-09-26",
-   "updated": "2026-09-30",
-   "tagline": "用自己的記憶，換別人被記住。",
-   "summary": "水墨敘事 RPG。拾憶人魏子葳的家鄉雁回渡七年前被世界遺忘；他走訪即將消失的地方，用自己的記憶換別人被帶出白霧。全三卷，約兩到三小時。",
-   "palette": [
-    "#ede6da",
-    "#b8ae9f",
-    "#b3352a"
-   ],
-   "cover": "../../media/migrant-birds/cover.webp",
-   "wide": "../../media/migrant-birds/wide.webp",
-   "url": "../../games/migrant-birds/index.html",
    "remake": false,
    "skip": null,
    "inspections": []
@@ -202,31 +127,6 @@
    "inspections": []
   },
   {
-   "id": "moshou",
-   "type": "game",
-   "reg": "B-PZ009",
-   "zh": "墨守",
-   "en": "",
-   "genre": "survivor",
-   "genre_zh": "倖存者割草",
-   "genre_en": "SURVIVORS",
-   "created": "2026-09-30",
-   "updated": "2026-09-30",
-   "tagline": "墨者說：木頭不會累。",
-   "summary": "戰國墨家守城的 2.5D 倖存者。魏子葳跟隨墨家死守宋城，用連弩、墨斗線、滾木對抗公輸盤「九攻九距」的攻城機關。做成在筆電上玩的高品質版。",
-   "palette": [
-    "#2e2925",
-    "#0b0a09",
-    "#d7b47a"
-   ],
-   "cover": "../../media/moshou/cover.webp",
-   "wide": "../../media/moshou/s3.webp",
-   "url": "../../games/moshou/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
    "id": "soul-paper",
    "type": "game",
    "reg": "B-PZ010",
@@ -252,56 +152,6 @@
    "inspections": []
   },
   {
-   "id": "unnamer",
-   "type": "game",
-   "reg": "B-PZ011",
-   "zh": "抹名者",
-   "en": "THE UNNAMER",
-   "genre": "action",
-   "genre_zh": "動作冒險",
-   "genre_en": "ACTION",
-   "created": "2026-09-30",
-   "updated": "2026-09-30",
-   "tagline": "被記得的，才存在。",
-   "summary": "《波斯王子：失落王冠》風格的橫向平台動作。第七抹名者魏子葳第 312 次行刑時，鐘裂了，他墜入自己被抹去的故鄉。",
-   "palette": [
-    "#3b4150",
-    "#11131a",
-    "#c9443a"
-   ],
-   "cover": "../../media/unnamer/cover.webp",
-   "wide": "../../media/unnamer/s3.webp",
-   "url": "../../games/unnamer/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "after-lights-out",
-   "type": "game",
-   "reg": "B-PZ012",
-   "zh": "熄燈之後",
-   "en": "AFTER LIGHTS OUT",
-   "genre": "survivor",
-   "genre_zh": "倖存者割草",
-   "genre_en": "SURVIVORS",
-   "created": "2026-10-01",
-   "updated": "2026-10-01",
-   "tagline": "光會引來屍群，聲音也會。",
-   "summary": "颱風夜大停電的台灣雙人合作殭屍生存。消防員魏子葳和台電搶修師傅燈伯只靠手電筒，從夜市一路殺到醫院變電所。這一版是單人加 AI 隊友。",
-   "palette": [
-    "#2a251c",
-    "#0a0907",
-    "#f7b847"
-   ],
-   "cover": "../../media/after-lights-out/cover.webp",
-   "wide": "../../media/after-lights-out/s3.webp",
-   "url": "../../games/after-lights-out/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
    "id": "duhai",
    "type": "game",
    "reg": "B-PZ013",
@@ -322,56 +172,6 @@
    "cover": "../../media/duhai/cover.webp",
    "wide": "../../media/duhai/wide.webp",
    "url": "../../games/duhai/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "lanke",
-   "type": "game",
-   "reg": "B-PZ014",
-   "zh": "爛柯",
-   "en": "LANKE",
-   "genre": "tactics",
-   "genre_zh": "戰術策略",
-   "genre_en": "TACTICS",
-   "created": "2026-10-01",
-   "updated": "2026-10-01",
-   "tagline": "被墨吞掉的人，提掉那顆黑子就能救回來。",
-   "summary": "即時夜巡倖存者加回合制圍棋提子戰術。重陽夜打更人魏子葳敲下一更，時間凝固，街道變成一盤下了一千六百年的棋；他每下一手，就老一歲。",
-   "palette": [
-    "#3e3122",
-    "#120e09",
-    "#d9a35b"
-   ],
-   "cover": "../../media/lanke/cover.webp",
-   "wide": "../../media/lanke/wide.webp",
-   "url": "../../games/lanke/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "seven-stupa",
-   "type": "game",
-   "reg": "B-PZ015",
-   "zh": "七級浮屠",
-   "en": "",
-   "genre": "card",
-   "genre_zh": "構築 Roguelike",
-   "genre_en": "ROGUELIKE",
-   "created": "2026-10-01",
-   "updated": "2026-10-01",
-   "tagline": "救人一命，勝造七級浮屠。",
-   "summary": "東方奇幻轉珠爬塔 Roguelike。代書魏子葳拿著渡筆登上會吞人的七級浮屠救妹妹小滿，以筆運珠、五行相生連鎖；每一層都要決定把燈魂「封」或「渡」。",
-   "palette": [
-    "#272b55",
-    "#0a0b1e",
-    "#e04b3f"
-   ],
-   "cover": "../../media/seven-stupa/cover.webp",
-   "wide": "../../media/seven-stupa/wide.webp",
-   "url": "../../games/seven-stupa/index.html",
    "remake": false,
    "skip": null,
    "inspections": []
@@ -455,56 +255,6 @@
    "cover": "../../media/timberline/cover.webp",
    "wide": "../../media/timberline/s3.webp",
    "url": "../../games/timberline/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "lianying",
-   "type": "game",
-   "reg": "B-PZ019",
-   "zh": "連營",
-   "en": "",
-   "genre": "tactics",
-   "genre_zh": "戰術策略",
-   "genre_en": "TACTICS",
-   "created": "2026-10-04",
-   "updated": "2026-10-04",
-   "tagline": "以少勝多，靠計，也靠一刀。",
-   "summary": "亂世軍師的卡牌 × 格子戰棋。落魄軍師魏子葳帶小隊守雁回城，在可轉可縮的 3D 雪地沙盤上，用兵招與計謀以少勝多；打擊感是設計核心。",
-   "palette": [
-    "#2a3a48",
-    "#090e14",
-    "#ff6a3a"
-   ],
-   "cover": "../../media/lianying/cover.webp",
-   "wide": "../../media/lianying/wide.webp",
-   "url": "../../games/lianying/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "night-market",
-   "type": "game",
-   "reg": "B-PZ020",
-   "zh": "夜市三十六計",
-   "en": "",
-   "genre": "sim",
-   "genre_zh": "經營模擬",
-   "genre_en": "SIMULATION",
-   "created": "2026-10-04",
-   "updated": "2026-10-04",
-   "tagline": "阿公的老滷，和八十四萬的債。",
-   "summary": "台灣夜市滷味攤的經營模擬。被裁員的魏子葳接下阿公四十年的老滷和八十四萬債務，要在虛構的月埕夜市一年內還清。",
-   "palette": [
-    "#5a2a12",
-    "#1a0c05",
-    "#ffb03a"
-   ],
-   "cover": "../../media/night-market/cover.webp",
-   "wide": "../../media/night-market/wide.webp",
-   "url": "../../games/night-market/index.html",
    "remake": false,
    "skip": null,
    "inspections": []
@@ -760,31 +510,6 @@
    "inspections": []
   },
   {
-   "id": "still-beating",
-   "type": "game",
-   "reg": "B-PZ031",
-   "zh": "不死心",
-   "en": "STILL BEATING",
-   "genre": "action",
-   "genre_zh": "動作冒險",
-   "genre_en": "ACTION",
-   "created": "2026-10-21",
-   "updated": "2026-10-21",
-   "tagline": "整座城的顏色消失了，他把它一口一口吃回來。",
-   "summary": "仿《愚者不滅》的龐克吞色動作 roguelite。週六晚上十點，整座城的顏色突然消失，以為自己變成殭屍的塗鴉客魏子葳，跟只剩一雙手的修車師傅「黑手」下到地底，吃掉顏色變成的怪物、變成牠們的樣子，要把被凍成灰色雕像的她重新上色。這版是五章故事的第一章・黃。",
-   "palette": [
-    "#5a1a3a",
-    "#140611",
-    "#c6ff3a"
-   ],
-   "cover": "../../media/still-beating/cover.webp",
-   "wide": "../../media/still-beating/wide.webp",
-   "url": "../../games/still-beating/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
    "id": "updraft",
    "type": "game",
    "reg": "B-PZ032",
@@ -830,31 +555,6 @@
    "cover": "../../media/eleventh-stratagem/cover.webp",
    "wide": "../../media/eleventh-stratagem/wide.webp",
    "url": "../../games/eleventh-stratagem/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "last-gambit",
-   "type": "game",
-   "reg": "B-PZ034",
-   "zh": "殘局",
-   "en": "LAST GAMBIT",
-   "genre": "tactics",
-   "genre_zh": "戰術策略",
-   "genre_en": "TACTICS",
-   "created": "2026-10-28",
-   "updated": "2026-10-28",
-   "tagline": "八個將亡的世界，只有一個能活下來。",
-   "summary": "自走棋（棋子構築）。八個將亡的世界各派一名執棋者，用六個已滅世界的最後英雄對弈，魏子葳代表地球出賽。24 枚棋子各有完整台詞和三章人物故事；18 組宿緣同場會對話，一方倒下另一方會悲憤暴走；10 位對手執棋者會看你的陣容調整站位、還會嗆你。",
-   "palette": [
-    "#3b1f52",
-    "#07060e",
-    "#f5c542"
-   ],
-   "cover": "../../media/last-gambit/cover.webp",
-   "wide": "../../media/last-gambit/wide.webp",
-   "url": "../../games/last-gambit/index.html",
    "remake": false,
    "skip": null,
    "inspections": []
@@ -935,31 +635,6 @@
    "inspections": []
   },
   {
-   "id": "whalefall",
-   "type": "game",
-   "reg": "B-PZ038",
-   "zh": "鯨落",
-   "en": "WHALEFALL",
-   "genre": "party",
-   "genre_zh": "桌遊派對",
-   "genre_en": "PARTY",
-   "created": "2026-10-29",
-   "updated": "2026-10-29",
-   "tagline": "在一頭游了三百年的巨鯨背上，買下整座城。",
-   "summary": "大富翁式派對桌遊。魏子葳拿著父親留下的一格地契登上巨鯨長歌，在圈地季裡買地、收過路費、搶鯨歌目的地、甩掉藤壺精；一路追查十五年前斷尾之夜的真相，和父親為什麼再也沒有下來。",
-   "palette": [
-    "#8FC3EE",
-    "#213052",
-    "#FFC83D"
-   ],
-   "cover": "../../media/whalefall/cover.webp",
-   "wide": "../../media/whalefall/wide.webp",
-   "url": "../../games/whalefall/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
    "id": "whalefall-2",
    "type": "game",
    "reg": "B-PZ039",
@@ -1005,31 +680,6 @@
    "cover": "../../media/night-for-ages/cover.webp",
    "wide": "../../media/night-for-ages/wide.webp",
    "url": "../../games/night-for-ages/index.html",
-   "remake": false,
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "counterspin",
-   "type": "game",
-   "reg": "B-PZ041",
-   "zh": "逆旋",
-   "en": "COUNTERSPIN",
-   "genre": "action",
-   "genre_zh": "動作冒險",
-   "genre_en": "ACTION",
-   "created": "2026-11-02",
-   "updated": "2026-11-02",
-   "tagline": "師父留下的左旋陀螺，要在三十天內轉上全城最高的擂台。",
-   "summary": "機械賽璐璐風格的陀螺對戰。鏽港的手工陀螺八年前被趕出正式擂台，只能在夜裡的船艙底下轉。修理行學徒魏子葳戴上焊面，帶著師父留下的左旋陀螺，從底艙聯賽一路打進恆旋盃，對上親手埋葬手工陀螺的人。拉弓瞄準發射，每次定格雙方同時出一手（突擊、迴旋、卸力、必殺）互相剋制；打贏拿走對手的零件，自己改裝。",
-   "palette": [
-    "#3a2618",
-    "#0c0d14",
-    "#ff7a1a"
-   ],
-   "cover": "../../media/counterspin/cover.webp",
-   "wide": "../../media/counterspin/wide.webp",
-   "url": "../../games/counterspin/index.html",
    "remake": false,
    "skip": null,
    "inspections": []
@@ -1434,31 +1084,6 @@
    "inspections": []
   },
   {
-   "id": "chat-rename",
-   "type": "app",
-   "reg": "B-PA04",
-   "zh": "對話改名清單",
-   "en": "",
-   "genre": "app",
-   "genre_zh": "專屬 App",
-   "genre_en": "APP",
-   "created": null,
-   "updated": null,
-   "tagline": "把一堆對話改成作品的名字。",
-   "summary": "57 個對話的舊標題對照作品新名稱，一鍵複製、打勾追蹤改名進度。",
-   "palette": [
-    "#2d2a3a",
-    "#0b0a10",
-    "#c9a8ff"
-   ],
-   "glyph": "名",
-   "cover": null,
-   "wide": null,
-   "url": "https://claude.ai/artifact/AqaSRkpUw8Ab7pnLUSkyKS",
-   "skip": "一次性的工具頁",
-   "inspections": []
-  },
-  {
    "id": "coldeye",
    "type": "app",
    "reg": "B-PA05",
@@ -1506,31 +1131,6 @@
    "wide": null,
    "url": "https://pzwei0105.github.io/echo-radar/",
    "skip": "有自己的每週維護排程",
-   "inspections": []
-  },
-  {
-   "id": "engine-lab",
-   "type": "app",
-   "reg": "B-PA07",
-   "zh": "樣品館",
-   "en": "PZ ENGINE LAB",
-   "genre": "app",
-   "genre_zh": "專屬 App",
-   "genre_en": "APP",
-   "created": null,
-   "updated": null,
-   "tagline": "之後每款 2D 遊戲的底子，先在這裡玩給你看。",
-   "summary": "《PZ 引擎》的展示間：之後所有 2D 遊戲共用的引擎，手感、聲音、特效都從這裡來。十二個展間——打擊感實驗室（同一下攻擊，停頓、震屏、火花、閃白、數字一項一項打開比較）、壓力測試（幾千隻怪物同時追過來、子彈亂飛還是順）、操控（觸控搖桿、按鈕、鍵盤、手把同一套）、鏡頭（雙指縮放、旋轉、拖曳慣性）、聲音（四十多種合成音效、三首用文字寫的配樂、緊張度分層、頻譜）、後製特效（泛光、衝擊波扭曲、色差、老電視、調色）、介面與劇情（五套主題、對話框、打字機劇情、選擇、設定頁）、光影（手電筒、火把、柔和陰影、照明彈、怕光的空殼）、天氣與水面（雨夜港口：倒影、雨雪霧雷、路燈光柱、電影調色與黑邊）、角色動畫（骨架騎士走跑跳、三連段、腳踩地形、披風飄動，會呼吸跳躍的史萊姆、甩尾巴的小狐狸）、世界與地圖（一鍵生成地牢、洞窟、島嶼，點哪走哪自動找路，上百隻怪繞牆追人，戰爭迷霧與小地圖）、介面與聲音（海邊懸崖上的營",
-   "palette": [
-    "#3a2a10",
-    "#05070c",
-    "#ffb547"
-   ],
-   "glyph": "樣",
-   "cover": null,
-   "wide": null,
-   "url": "https://pzwei0105.github.io/PZ-Games/apps/engine-lab/",
-   "skip": "引擎展示間，跟著《PZ 引擎》一起更新",
    "inspections": []
   },
   {
@@ -1584,31 +1184,6 @@
    "inspections": []
   },
   {
-   "id": "maintenance",
-   "type": "app",
-   "reg": "B-PA10",
-   "zh": "App 維護排程指令",
-   "en": "",
-   "genre": "app",
-   "genre_zh": "專屬 App",
-   "genre_en": "APP",
-   "created": null,
-   "updated": null,
-   "tagline": "每個專屬 App，每週都有人巡一遍。",
-   "summary": "替專屬 App 建每週自動維護的通用指令：先巡檢、除錯、打磨，真的加分才加功能。",
-   "palette": [
-    "#24324a",
-    "#0a0d14",
-    "#7ad7ff"
-   ],
-   "glyph": "巡",
-   "cover": null,
-   "wide": null,
-   "url": "https://claude.ai/artifact/TQB9vBmUpXNf8C4LqeP3E9",
-   "skip": "一次性的工具頁",
-   "inspections": []
-  },
-  {
    "id": "next-chapter",
    "type": "app",
    "reg": "B-PA11",
@@ -1630,31 +1205,6 @@
    "cover": null,
    "wide": null,
    "url": "https://pzwei0105.github.io/PZ-Games/apps/next-chapter/",
-   "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "omniscient",
-   "type": "app",
-   "reg": "B-PA12",
-   "zh": "全知",
-   "en": "OMNISCIENT",
-   "genre": "app",
-   "genre_zh": "專屬 App",
-   "genre_en": "APP",
-   "created": null,
-   "updated": null,
-   "tagline": "冷眼的官方一手資料，攤開來演給你看。",
-   "summary": "痞子葳的炫砲戰情看板，本質就是冷眼：一打開是一隻全息的眼睛睜開，接著六欄（蒐集、查證、過濾、判斷、結論、全局）一欄欄閃亮，霓虹光纜照真實的資料流向把卡片接在一起，真的有資料進來時光點才沿著光纜跑。官方來源燈號、交叉核對、新聞蓋章（官方／事實／觀點，標出是哪個字讓它被當成觀點）、K 線與規則六面向、判決儀表、法人買賣超、自選六檔的價格與走勢、最佳五檔與成交明細、全市場熱力圖。配樂與音效是全知自己的（D 小調、100 BPM），音效對齊拍子。盤中即時；收盤後自動回放當天，照真實發生的順序重演，最後出今日戰報。所有數字都來自冷眼，過期會變色、斷線會標出來，動畫不產生數字。為筆電與大電視全螢幕設計（按 F）。",
-   "palette": [
-    "#0f2350",
-    "#02050b",
-    "#46d4ff"
-   ],
-   "glyph": "知",
-   "cover": null,
-   "wide": null,
-   "url": "https://pzwei0105.github.io/PZ-Games/apps/omniscient/",
    "skip": null,
    "inspections": []
   },
@@ -1681,31 +1231,6 @@
    "wide": null,
    "url": "https://pzwei0105.github.io/PZ-Games/apps/one-more/",
    "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "pz-host",
-   "type": "app",
-   "reg": "B-PA13",
-   "zh": "PZ 主機",
-   "en": "PZ HOST",
-   "genre": "app",
-   "genre_zh": "專屬 App",
-   "genre_en": "APP",
-   "created": null,
-   "updated": null,
-   "tagline": "遊戲之外的作品，也都在這裡。",
-   "summary": "舊版的作品總表：除了遊戲，也收著小說、影片企劃和工具，有雲端同步。",
-   "palette": [
-    "#1b1b26",
-    "#0b0b11",
-    "#ffc94d"
-   ],
-   "glyph": "PZ",
-   "cover": null,
-   "wide": null,
-   "url": "https://claude.ai/artifact/AyyD5JzR3QmH2nJjPpUPN5",
-   "skip": "舊版總表，已由《PZ 遊戲收藏》取代",
    "inspections": []
   },
   {
@@ -1756,31 +1281,6 @@
    "wide": null,
    "url": "https://pzwei0105.github.io/PZ-Games/apps/reskin/",
    "skip": null,
-   "inspections": []
-  },
-  {
-   "id": "sandtable",
-   "type": "app",
-   "reg": "B-PA16",
-   "zh": "沙盤",
-   "en": "SANDTABLE",
-   "genre": "app",
-   "genre_zh": "專屬 App",
-   "genre_en": "APP",
-   "created": null,
-   "updated": null,
-   "tagline": "真的行情、真的規則、假的錢。",
-   "summary": "台股 ETF 真實模擬操盤：行情、交易時間、漲跌停、手續費、證交稅、T+2 交割全照官方規則；只能封存重開，不能作弊。",
-   "palette": [
-    "#4a5530",
-    "#0f120e",
-    "#f2b544"
-   ],
-   "glyph": "沙",
-   "cover": null,
-   "wide": null,
-   "url": "https://pzwei0105.github.io/sandtable/",
-   "skip": "跟冷眼合用維護排程",
    "inspections": []
   },
   {
