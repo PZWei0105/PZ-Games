@@ -529,12 +529,14 @@ document.addEventListener('click', async (ev) => {
   }
   if (go) {
     ev.preventDefault(); const to = go.dataset.go;
+    if (go.closest('#sheet')) closeSheet();   // 「全部功能」、情報卡這些面板裡點的：先收起面板，不然頁面換在面板後面看不到
     if (to === location.hash.replace('#', '')) return;
     if (to === 'shorts' && ROUTE.startsWith('shorts')) { shGo(0); sfx.whoosh(); return; }   // 已經在短影音：回到最上面
     sfx.slap(); haptic();
     NAVN++; location.hash = to;
   }
 });
+let VOLT = 0;
 document.addEventListener('input', (ev) => {
   const t = ev.target;
   if (t.id === 'dbq') { dbInput(t); return; }
@@ -552,7 +554,14 @@ document.addEventListener('input', (ev) => {
     clearTimeout(OPS.pt); OPS.pt = setTimeout(() => opsPfRefresh(fid.startsWith('w:') ? fid : 'f:' + fid), 700);   // 三平台版本跟著原稿更新
     return;
   }
-  if (a === 'vol') { S.settings[t.dataset.k] = +t.value; save('settings'); audioApply(); if (t.dataset.k === 'vol') sfx.blip(1200); }
+  if (a === 'vol') {
+    const k = t.dataset.k, v = +t.value, sw = k === 'vol' ? 'sfx' : 'bgm';
+    S.settings[k] = v;
+    if (v > 0 && !(S.settings[sw] && !S.muted)) { S.settings[sw] = true; S.muted = false; sndSync(); }   // 關著時往右拉：直接打開
+    save('settings'); audioInit(); audioApply();
+    const p = volPct(k); t.style.setProperty('--vp', p + '%'); $$(`[data-volo="${k}"]`).forEach((o) => { o.textContent = p + '%'; });
+    if (k === 'vol' && performance.now() - VOLT > 90) { VOLT = performance.now(); sfx.blip(1200); }   // 邊拉邊聽（太密會吵，最多 0.09 秒一聲）
+  }
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); if (shKeys(e)) return; if ($('#sheet.on .lb')) { if (e.key === 'ArrowRight') openLightbox(LBI + 1); if (e.key === 'ArrowLeft') openLightbox(LBI - 1); } });
 

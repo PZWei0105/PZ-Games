@@ -59,7 +59,16 @@ function hubSheetHtml() {
       <button class="${on('bgm') ? 'on' : ''}" data-act="bgm">${ICON.boom}<span>配樂</span><em>${on('bgm') ? '開' : '關'}</em></button>
       <button class="${S.settings.fx === 'full' ? 'on' : ''}" data-act="hubfx">${ICON.star}<span>特效</span><em>${S.settings.fx === 'full' ? '全開' : '收斂'}</em></button>
       <button class="on" data-act="skinsheet">${ICON.shirt}<span>換裝</span><em>${esc(SKIN_BY[skinId()].name)}</em></button></div>
+    <div class="hub-vol"><div class="hvl"><span>${ICON.can}<b>音效</b></span>${volCtl('vol')}</div><div class="hvl"><span>${ICON.boom}<b>配樂</b></span>${volCtl('bgmVol')}</div></div>
     ${hubGrid()}</div>`;
+}
+/* 音效、配樂開關的樣子就地更新（全部功能的兩格、設定頁的開／關）——拉音量時不能整個重畫，不然拉桿會斷掉 */
+function sndSync() {
+  const on = (k) => S.settings[k] && !S.muted;
+  const a = $('.hub-q [data-act="sfx"]'), b = $('.hub-q [data-act="bgm"]');
+  if (a) { a.classList.toggle('on', on('sfx')); a.innerHTML = `${on('sfx') ? ICON.can : ICON.canoff}<span>音效</span><em>${on('sfx') ? '開' : '關'}</em>`; }
+  if (b) { b.classList.toggle('on', on('bgm')); b.innerHTML = `${ICON.boom}<span>配樂</span><em>${on('bgm') ? '開' : '關'}</em>`; }
+  $$('[data-act="set"][data-k="sfx"],[data-act="set"][data-k="bgm"]').forEach((x) => x.classList.toggle('on', String(S.settings[x.dataset.k]) === x.dataset.v));
 }
 function openHub() { openSheet(hubSheetHtml()); }
 function hubSync() { const h = $('#sheet.on .hubsh'); if (h) h.parentElement.innerHTML = `<button class="ib sclose" data-act="close" aria-label="關閉">${ICON.x}</button>` + hubSheetHtml(); }

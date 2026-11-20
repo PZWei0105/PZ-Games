@@ -670,6 +670,13 @@ async function compareHtml() {
 }
 
 /* ---------- 設定 ---------- */
+/* 音量拉桿（設定、全部功能共用）：拉的時候馬上變大變小；聲音關著時往右拉會直接打開（跟手機的音量鍵一樣） */
+const VOLMAX = { vol: 1, bgmVol: 0.8 };
+function volPct(k) { return Math.max(0, Math.min(100, Math.round((+S.settings[k] || 0) / VOLMAX[k] * 100))); }
+function volCtl(k) {
+  const p = volPct(k);
+  return `<div class="volc"><input type="range" min="0" max="${VOLMAX[k]}" step="${k === 'vol' ? 0.05 : 0.02}" value="${+S.settings[k] || 0}" data-act="vol" data-k="${k}" aria-label="${k === 'vol' ? '音效音量' : '配樂音量'}" style="--vp:${p}%"><output data-volo="${k}">${p}%</output></div>`;
+}
 function settingsHtml() {
   const st = S.settings;
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${st[k] === v ? 'on' : ''}" data-act="set" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
@@ -677,9 +684,9 @@ function settingsHtml() {
     <div class="setrow"><div class="st"><b>換裝</b><small>現在：${esc(SKIN_BY[skinId()].name)}。畫面、字型、音效、配樂、開場一起換</small></div><button class="btn sm y" data-act="skinsheet">${ICON.shirt}<span>換裝</span></button></div>
     <div class="setrow"><div class="st"><b>上鎖</b><small>打開解包要輸入密語（跟書房同一組），這台裝置記得你${ULock.when() ? `・上次輸入密語 ${esc(ULock.when())}` : ''}</small></div><button class="btn sm" data-act="lockme"><span>現在上鎖</span></button></div>
     <div class="setrow"><div class="st"><b>音效</b><small>${esc(SKIN_BY[skinId()].snd.split('・')[0])}這些聲音（跟著換裝）</small></div>${seg('sfx', [[true, '開'], [false, '關']])}</div>
-    <div class="setrow"><div class="st"><b>音效音量</b></div><input type="range" min="0" max="1" step="0.05" value="${st.vol}" data-act="vol" data-k="vol"></div>
+    <div class="setrow volrow"><div class="st"><b>音效音量</b><small>拉的時候馬上聽得到</small></div>${volCtl('vol')}</div>
     <div class="setrow"><div class="st"><b>背景配樂</b><small>${esc(SKIN_BY[skinId()].snd.split('・').slice(-1)[0])}（跟著換裝）；看預告、滑短影音、語音導讀時會自動停下來</small></div>${seg('bgm', [[true, '開'], [false, '關']])}</div>
-    <div class="setrow"><div class="st"><b>配樂音量</b></div><input type="range" min="0" max="0.8" step="0.02" value="${st.bgmVol}" data-act="vol" data-k="bgmVol"></div>
+    <div class="setrow volrow"><div class="st"><b>配樂音量</b><small>跟音效分開調</small></div>${volCtl('bgmVol')}</div>
     <div class="setrow"><div class="st"><b>開場動畫</b><small>每天第一次完整噴漆，其他時候短版</small></div>${seg('intro', [['daily', '每天一次'], ['always', '每次'], ['short', '短版'], ['off', '關']])}</div>
     <div class="setrow"><div class="st"><b>特效</b><small>收斂：不震動、不閃光、少噴濺</small></div>${seg('fx', [['full', '全開'], ['calm', '收斂']])}</div>
     <div class="setrow"><div class="st"><b>短影音連播</b><small>開：一支播完自動滑到下一款；關：同一支重複播</small></div>${seg('shAuto', [[true, '開'], [false, '關']])}</div>

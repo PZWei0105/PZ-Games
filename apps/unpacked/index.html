@@ -545,6 +545,19 @@ body:not(.calm) .glance .gl-t{animation:glIn .42s cubic-bezier(.3,1.6,.5,1) both
 .seg button{font:900 12.5px/1 var(--cjk);padding:8px 9px;border:2px solid #444;color:#ccc;background:#1d1d1d}
 .seg button.on{background:var(--y);color:var(--k);border-color:var(--k)}
 input[type=range]{width:120px;accent-color:#FF2E88}
+/* 音量拉桿：粗軌道、大把手（手機好拉），左邊填色＝現在的大小 */
+.setrow.volrow{flex-wrap:wrap}
+.setrow.volrow .st{flex:1 1 120px}
+.volc{display:flex;align-items:center;gap:10px;flex:1 1 170px;min-width:0}
+.volc input[type=range]{flex:1;width:auto;min-width:0;height:34px;margin:0;padding:0;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
+.volc input[type=range]:focus{outline:none}
+.volc input[type=range]:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+.volc input[type=range]::-webkit-slider-runnable-track{height:12px;border:2px solid #000;background:linear-gradient(90deg,var(--y) var(--vp,50%),#2a2a2a var(--vp,50%))}
+.volc input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin-top:-9px;border:3px solid #000;background:#FF2E88;box-shadow:3px 3px 0 #000}
+.volc input[type=range]::-moz-range-track{height:8px;border:2px solid #000;background:#2a2a2a}
+.volc input[type=range]::-moz-range-progress{height:8px;border:2px solid #000;background:var(--y)}
+.volc input[type=range]::-moz-range-thumb{width:20px;height:20px;border:3px solid #000;border-radius:0;background:#FF2E88;box-shadow:3px 3px 0 #000}
+.volc output{flex:0 0 46px;text-align:right;font:900 20px/1 var(--num);letter-spacing:.5px;color:var(--y)}
 
 #toast{position:fixed;left:50%;bottom:calc(var(--tabs) + var(--sab) + 22px);z-index:90;transform:translate(-50%,30px) rotate(-2deg);opacity:0;pointer-events:none;transition:transform .25s,opacity .25s;background:var(--y);color:var(--k);font:900 15px/1.3 var(--cjk);padding:10px 16px;border:3px solid var(--k);box-shadow:4px 4px 0 var(--p);max-width:86vw;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0) rotate(-2deg)}
@@ -2425,6 +2438,11 @@ body.calm .vs-stage.go .vs-side,body.calm .vs-stage.go .vs-vs,body.calm .vs-stag
 .hub-q button em{font:700 10.5px/1.1 var(--cjk);font-style:normal;color:var(--t3);max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .hub-q button.on{border-color:var(--y);color:var(--y)}
 .hub-q button.on em{color:var(--y)}
+.hub-vol{display:grid;gap:2px;margin:-4px 0 14px;padding:4px 12px;background:#1b1b1b;border:2px solid #333}
+.hub-vol .hvl{display:flex;align-items:center;gap:10px}
+.hub-vol .hvl>span{display:flex;align-items:center;gap:6px;flex:0 0 auto;color:#888}
+.hub-vol .hvl>span svg{width:18px;height:18px}
+.hub-vol .hvl>span b{font:900 12.5px/1 var(--cjk)}
 
 /* ---------- 第一次導覽 ---------- */
 #tour{position:fixed;inset:0;z-index:110;cursor:pointer}
@@ -2924,7 +2942,7 @@ body.calm .se-ring,body.calm .se-sat{animation:none}
 
 :root{--cjkh:var(--cjk);--cjkb:var(--cjk)}
 </style>
-<script>/* 換裝：畫面出來之前就把那一套的 CSS 接上（塗鴉版不用多載任何東西） */try{var s=JSON.parse(localStorage.getItem('unpacked.v1.settings')||'{}'),t={pixel:'#0b0d24',neon:'#08040f',paper:'#f3eee2'}[s.skin];if(t){document.documentElement.setAttribute('data-skin',s.skin);document.querySelector('meta[name="theme-color"]').content=t;if(s.skin==='paper')document.querySelector('meta[name="color-scheme"]').content='light';document.write('<link rel="stylesheet" id="skincss" data-skin="'+s.skin+'" href="skins/'+s.skin+'.css?v=1.0.2611201845">');var j=document.createElement('script');j.async=true;j.src='skins/'+s.skin+'.js?v=1.0.2611201845';document.head.appendChild(j)}}catch(e){}</script>
+<script>/* 換裝：畫面出來之前就把那一套的 CSS 接上（塗鴉版不用多載任何東西） */try{var s=JSON.parse(localStorage.getItem('unpacked.v1.settings')||'{}'),t={pixel:'#0b0d24',neon:'#08040f',paper:'#f3eee2'}[s.skin];if(t){document.documentElement.setAttribute('data-skin',s.skin);document.querySelector('meta[name="theme-color"]').content=t;if(s.skin==='paper')document.querySelector('meta[name="color-scheme"]').content='light';document.write('<link rel="stylesheet" id="skincss" data-skin="'+s.skin+'" href="skins/'+s.skin+'.css?v=1.0.2611202146">');var j=document.createElement('script');j.async=true;j.src='skins/'+s.skin+'.js?v=1.0.2611202146';document.head.appendChild(j)}}catch(e){}</script>
 </head>
 <body>
 <div id="wall"></div>
@@ -2951,7 +2969,7 @@ body.calm .se-ring,body.calm .se-sat{animation:none}
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611201845';
+const VERSION = '1.0.2611202146';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -4777,6 +4795,13 @@ async function compareHtml() {
 }
 
 /* ---------- 設定 ---------- */
+/* 音量拉桿（設定、全部功能共用）：拉的時候馬上變大變小；聲音關著時往右拉會直接打開（跟手機的音量鍵一樣） */
+const VOLMAX = { vol: 1, bgmVol: 0.8 };
+function volPct(k) { return Math.max(0, Math.min(100, Math.round((+S.settings[k] || 0) / VOLMAX[k] * 100))); }
+function volCtl(k) {
+  const p = volPct(k);
+  return `<div class="volc"><input type="range" min="0" max="${VOLMAX[k]}" step="${k === 'vol' ? 0.05 : 0.02}" value="${+S.settings[k] || 0}" data-act="vol" data-k="${k}" aria-label="${k === 'vol' ? '音效音量' : '配樂音量'}" style="--vp:${p}%"><output data-volo="${k}">${p}%</output></div>`;
+}
 function settingsHtml() {
   const st = S.settings;
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${st[k] === v ? 'on' : ''}" data-act="set" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
@@ -4784,9 +4809,9 @@ function settingsHtml() {
     <div class="setrow"><div class="st"><b>換裝</b><small>現在：${esc(SKIN_BY[skinId()].name)}。畫面、字型、音效、配樂、開場一起換</small></div><button class="btn sm y" data-act="skinsheet">${ICON.shirt}<span>換裝</span></button></div>
     <div class="setrow"><div class="st"><b>上鎖</b><small>打開解包要輸入密語（跟書房同一組），這台裝置記得你${ULock.when() ? `・上次輸入密語 ${esc(ULock.when())}` : ''}</small></div><button class="btn sm" data-act="lockme"><span>現在上鎖</span></button></div>
     <div class="setrow"><div class="st"><b>音效</b><small>${esc(SKIN_BY[skinId()].snd.split('・')[0])}這些聲音（跟著換裝）</small></div>${seg('sfx', [[true, '開'], [false, '關']])}</div>
-    <div class="setrow"><div class="st"><b>音效音量</b></div><input type="range" min="0" max="1" step="0.05" value="${st.vol}" data-act="vol" data-k="vol"></div>
+    <div class="setrow volrow"><div class="st"><b>音效音量</b><small>拉的時候馬上聽得到</small></div>${volCtl('vol')}</div>
     <div class="setrow"><div class="st"><b>背景配樂</b><small>${esc(SKIN_BY[skinId()].snd.split('・').slice(-1)[0])}（跟著換裝）；看預告、滑短影音、語音導讀時會自動停下來</small></div>${seg('bgm', [[true, '開'], [false, '關']])}</div>
-    <div class="setrow"><div class="st"><b>配樂音量</b></div><input type="range" min="0" max="0.8" step="0.02" value="${st.bgmVol}" data-act="vol" data-k="bgmVol"></div>
+    <div class="setrow volrow"><div class="st"><b>配樂音量</b><small>跟音效分開調</small></div>${volCtl('bgmVol')}</div>
     <div class="setrow"><div class="st"><b>開場動畫</b><small>每天第一次完整噴漆，其他時候短版</small></div>${seg('intro', [['daily', '每天一次'], ['always', '每次'], ['short', '短版'], ['off', '關']])}</div>
     <div class="setrow"><div class="st"><b>特效</b><small>收斂：不震動、不閃光、少噴濺</small></div>${seg('fx', [['full', '全開'], ['calm', '收斂']])}</div>
     <div class="setrow"><div class="st"><b>短影音連播</b><small>開：一支播完自動滑到下一款；關：同一支重複播</small></div>${seg('shAuto', [[true, '開'], [false, '關']])}</div>
@@ -10387,7 +10412,16 @@ function hubSheetHtml() {
       <button class="${on('bgm') ? 'on' : ''}" data-act="bgm">${ICON.boom}<span>配樂</span><em>${on('bgm') ? '開' : '關'}</em></button>
       <button class="${S.settings.fx === 'full' ? 'on' : ''}" data-act="hubfx">${ICON.star}<span>特效</span><em>${S.settings.fx === 'full' ? '全開' : '收斂'}</em></button>
       <button class="on" data-act="skinsheet">${ICON.shirt}<span>換裝</span><em>${esc(SKIN_BY[skinId()].name)}</em></button></div>
+    <div class="hub-vol"><div class="hvl"><span>${ICON.can}<b>音效</b></span>${volCtl('vol')}</div><div class="hvl"><span>${ICON.boom}<b>配樂</b></span>${volCtl('bgmVol')}</div></div>
     ${hubGrid()}</div>`;
+}
+/* 音效、配樂開關的樣子就地更新（全部功能的兩格、設定頁的開／關）——拉音量時不能整個重畫，不然拉桿會斷掉 */
+function sndSync() {
+  const on = (k) => S.settings[k] && !S.muted;
+  const a = $('.hub-q [data-act="sfx"]'), b = $('.hub-q [data-act="bgm"]');
+  if (a) { a.classList.toggle('on', on('sfx')); a.innerHTML = `${on('sfx') ? ICON.can : ICON.canoff}<span>音效</span><em>${on('sfx') ? '開' : '關'}</em>`; }
+  if (b) { b.classList.toggle('on', on('bgm')); b.innerHTML = `${ICON.boom}<span>配樂</span><em>${on('bgm') ? '開' : '關'}</em>`; }
+  $$('[data-act="set"][data-k="sfx"],[data-act="set"][data-k="bgm"]').forEach((x) => x.classList.toggle('on', String(S.settings[x.dataset.k]) === x.dataset.v));
 }
 function openHub() { openSheet(hubSheetHtml()); }
 function hubSync() { const h = $('#sheet.on .hubsh'); if (h) h.parentElement.innerHTML = `<button class="ib sclose" data-act="close" aria-label="關閉">${ICON.x}</button>` + hubSheetHtml(); }
@@ -10963,12 +10997,14 @@ document.addEventListener('click', async (ev) => {
   }
   if (go) {
     ev.preventDefault(); const to = go.dataset.go;
+    if (go.closest('#sheet')) closeSheet();   // 「全部功能」、情報卡這些面板裡點的：先收起面板，不然頁面換在面板後面看不到
     if (to === location.hash.replace('#', '')) return;
     if (to === 'shorts' && ROUTE.startsWith('shorts')) { shGo(0); sfx.whoosh(); return; }   // 已經在短影音：回到最上面
     sfx.slap(); haptic();
     NAVN++; location.hash = to;
   }
 });
+let VOLT = 0;
 document.addEventListener('input', (ev) => {
   const t = ev.target;
   if (t.id === 'dbq') { dbInput(t); return; }
@@ -10986,7 +11022,14 @@ document.addEventListener('input', (ev) => {
     clearTimeout(OPS.pt); OPS.pt = setTimeout(() => opsPfRefresh(fid.startsWith('w:') ? fid : 'f:' + fid), 700);   // 三平台版本跟著原稿更新
     return;
   }
-  if (a === 'vol') { S.settings[t.dataset.k] = +t.value; save('settings'); audioApply(); if (t.dataset.k === 'vol') sfx.blip(1200); }
+  if (a === 'vol') {
+    const k = t.dataset.k, v = +t.value, sw = k === 'vol' ? 'sfx' : 'bgm';
+    S.settings[k] = v;
+    if (v > 0 && !(S.settings[sw] && !S.muted)) { S.settings[sw] = true; S.muted = false; sndSync(); }   // 關著時往右拉：直接打開
+    save('settings'); audioInit(); audioApply();
+    const p = volPct(k); t.style.setProperty('--vp', p + '%'); $$(`[data-volo="${k}"]`).forEach((o) => { o.textContent = p + '%'; });
+    if (k === 'vol' && performance.now() - VOLT > 90) { VOLT = performance.now(); sfx.blip(1200); }   // 邊拉邊聽（太密會吵，最多 0.09 秒一聲）
+  }
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); if (shKeys(e)) return; if ($('#sheet.on .lb')) { if (e.key === 'ArrowRight') openLightbox(LBI + 1); if (e.key === 'ArrowLeft') openLightbox(LBI - 1); } });
 

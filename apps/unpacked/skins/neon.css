@@ -271,6 +271,13 @@ a{color:#00f0ff}
 .seg button{border:2px solid #322659;color:#c7bfe3;background:#140c26}
 .seg button.on{background:#00f0ff;color:#07030f;border-color:#07030f}
 input[type=range]{accent-color:#ff2bd6}
+.volc input[type=range]:focus-visible{outline:2px solid #00f0ff}
+.volc input[type=range]::-webkit-slider-runnable-track{border:2px solid #030108;background:linear-gradient(90deg,#00f0ff var(--vp,50%),#1d1336 var(--vp,50%))}
+.volc input[type=range]::-webkit-slider-thumb{border:3px solid #030108;background:#ff2bd6;box-shadow:3px 3px 0 #030108}
+.volc input[type=range]::-moz-range-track{border:2px solid #030108;background:#1d1336}
+.volc input[type=range]::-moz-range-progress{border:2px solid #030108;background:#00f0ff}
+.volc input[type=range]::-moz-range-thumb{border:3px solid #030108;background:#ff2bd6;box-shadow:3px 3px 0 #030108}
+.volc output{color:#00f0ff}
 #toast{background:#00f0ff;color:#07030f;border:3px solid #07030f;box-shadow:4px 4px 0 #ff2bd6}
 #toast.warn{background:#ff2bd6;color:#f2eeff}
 #flash{background:#08040f}
@@ -1373,6 +1380,8 @@ span.mk-sp.none{color:#544881}
 .hub-q button em{color:#8176ac}
 .hub-q button.on{border-color:#00f0ff;color:#00f0ff}
 .hub-q button.on em{color:#00f0ff}
+.hub-vol{background:#120b23;border:2px solid #271b47}
+.hub-vol .hvl>span{color:#7b70a7}
 .tr-hole{border:3px solid #00f0ff;box-shadow:0 0 0 9999px #030108c4}
 .tr-card{background:#00f0ff;color:#07030f;border:3px solid #07030f;box-shadow:6px 6px 0 #ff2bd6}
 .tr-card b{font:900 20px/1.2 var(--cjkh)}
