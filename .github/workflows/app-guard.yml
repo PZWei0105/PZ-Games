@@ -1,0 +1,51 @@
+# 《PZ App 引擎》護欄（_build/appkit/py/guard.py，2026-11-21）
+# 專屬 App 的程式推上來（資料更新不算）→ 用無頭瀏覽器照痞子葳的用法打開一遍；
+# 沒過（重驗一次還是沒過、而且上一個好的版本用同一份資料驗得過）→ 自動把程式換回上一個好的版本並推上去，資料不動。
+# 紀錄在 app-guard 分支的 good.json。冷眼不在這裡（冷眼永遠獨立，它有自己的護欄）。
+# 加新的 App：guard.py 的 APPS 加一筆，這裡的 paths 加上它的資料夾（排除 data）。
+name: app-guard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/unpacked/**'
+      - '!apps/unpacked/data/**'
+  workflow_dispatch:
+    inputs:
+      app:
+        description: '要驗哪一個 App（unpacked）'
+        default: unpacked
+
+permissions:
+  contents: write
+
+concurrency:
+  group: app-guard-${{ github.event.inputs.app || 'unpacked' }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 裝無頭瀏覽器
+        run: |
+          pip install -q playwright==1.49.1
+          python -m playwright install --with-deps chromium
+      - name: 驗收（沒過就換回上一個好的版本）
+        id: guard
+        run: python3 _build/appkit/py/guard.py run "${{ github.event.inputs.app || 'unpacked' }}"
+      - if: always() && hashFiles('guard-shots/**') != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-guard-shots-${{ github.run_id }}
+          path: guard-shots
+          retention-days: 7

@@ -19,6 +19,7 @@
 | `tools/memory.py` | 用 WebKit（iPhone Safari 的引擎）量遊戲或收藏庫吃多少記憶體，查閃退用 |
 | `ROADMAP.md` | 待辦、已知問題、已完成（定期維護時先看、做完記下來） |
 | `engine/` | **《PZ 引擎》**：所有 2D 遊戲共用的引擎、組建工具、測試、樣品館（見下面「PZ 引擎」，說明書 `engine/HANDBOOK.md`） |
+| `appkit/` | **《PZ App 引擎》**：專屬 App 共用的門鎖、資料同步、換新版、聲音、動態、本機儲存＋設計理念手冊＋App 護欄（見下面「PZ App 引擎」，說明書 `appkit/HANDBOOK.md`） |
 
 截圖原檔（`shots/`）太大沒有放進來；網站用的是 `media/` 裡壓縮過的 WebP。重新 build 時，沒有截圖原檔的遊戲會直接沿用上一版 `catalog.json` 裡的圖片設定，不會壞掉。
 
@@ -72,6 +73,21 @@ python3 tools/test_engine.py --perf          # 改引擎後的全套檢查（--w
 6. **檢查**：`python3 tools/smoke.py --only <遊戲 id>` 和 `python3 tools/smoke.py --shell` 都要沒有 BAD（見下面「上線前檢查」）。
 7. **推上 GitHub**：`REPO=.. bash tools/deploy.sh "Add 《遊戲名》"`（會把遊戲、圖片、外殼分批 commit 再 push；commit 訊息結尾要附上當次對話規定的署名行）。一兩分鐘後 https://pzwei0105.github.io/PZ-Games/ 就會更新；使用者重新打開收藏庫會跳出「新遊戲入庫」提示。
 
+## PZ App 引擎（新的專屬 App 一律用它）
+
+2026-11-21 起（痞子葳：「以後不管我怎麼更改、更新、增加新功能，都不會把冷眼跟解包搞壞，而且相關的設計概念……也能夠運用到往後的 App」），新的工具、資訊、閱讀、影音類專屬 App 用 `appkit/` 的《PZ App 引擎》做：門鎖（跟書房同一組密語）、資料同步（只重抓變了的那一份）、換新版（新版本真的送到手機上）、聲音、動態、不互相打架的本機儲存都已經做好。
+**動手前先讀 `appkit/HANDBOOK.md`**，尤其第 2 節「設計理念」（從冷眼和解包整理出來的 16 條，交件時逐條對照）與第 11 節交件檢查清單。App 把 `appkit/releases/pz-appkit-<版本>.js` 整份複製進自己的原始碼（鎖版本）。
+冷眼不在這個範圍：永遠獨立。解包最後才搬（HANDBOOK 第 13 節）。
+
+**App 護欄**（`appkit/py/guard.py`＋`.github/workflows/app-guard.yml`）：有護欄的 App（目前：解包）推上去之後，GitHub Actions 用無頭瀏覽器照痞子葳的用法打開一遍，沒過、而且上一個好的版本用同一份資料驗得過，就自動把 App 的程式換回上一個好的版本並推上去（`data/` 不動）。紀錄在 `app-guard` 分支。
+
+```bash
+python3 _build/appkit/py/guard.py check unpacked       # 推之前（約 40 秒）；BAD 不准推
+python3 _build/appkit/py/guard.py status unpacked      # 好的版本、最近一次沒過的原因
+python3 _build/appkit/py/guard.py rollback unpacked 1  # 一鍵換回上一個好的版本（commit 後自己 push）
+cd _build/appkit && python3 tools/test_appkit.py --guard   # 改引擎後的全套檢查
+```
+
 ## 上線前檢查（每次推之前）
 
 ```bash
@@ -117,7 +133,8 @@ python3 tools/smoke.py --only clear-bay ...  # 只開這幾款
 
 - 原始碼放 `_build/apps/<App>/`，各自有 `build.py`，輸出到 repo 根目錄的 `apps/<App>/`。
 - 收藏庫的「專屬 App」分頁照常在 `data/catalog_base.json` 的 `apps` 加一筆（`kind: "web"`、`url` 指向上面的網址）；`claude` 欄位記 Claude 版網址（收藏庫不讀它，只是備忘）。
-- 同一個網域（pzwei0105.github.io）的 App 共用瀏覽器儲存空間，localStorage 一律加自己的前綴（例如本機道場用 `pzdojo.v1`）。
+- 同一個網域（pzwei0105.github.io）的 App 共用瀏覽器儲存空間，localStorage 一律加自己的前綴（例如本機道場用 `pzdojo.v1`）；新 App 用《PZ App 引擎》的 `PZA.store`，已經有主人的前綴會直接擋下。**永遠不准 `localStorage.clear()`、不准讀冷眼（`coldeye.`、`coldeye-`）或別的 App 的鍵**（全知照它自己 README 的規矩只讀冷眼的公開設定）。
+- 新的專屬 App 用《PZ App 引擎》（上面「PZ App 引擎」）；改了有護欄的 App（目前：解包）推之前跑 `guard.py check`。
 
 目前有：
 

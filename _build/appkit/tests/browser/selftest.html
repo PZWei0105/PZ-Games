@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PZ App 引擎 自我檢查</title></head>
+<body>
+<main id="app"><h1>底下的 App</h1><button id="under">底下的按鈕</button></main>
+<script src="../../build/pz-appkit.js"></script>
+<script>
+// 瀏覽器裡才測得到的：門鎖畫面（上鎖、錯的密語、對的密語、記住、離開蓋住、回來要不要再輸入）、聲音合成（離線量音量）。
+(async () => {
+  const out = [];
+  const ok = (c, m) => { out.push((c ? 'ok ' : 'FAIL ') + m); };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  try {
+    const st = document.createElement('style'); st.textContent = PZA.css; document.head.appendChild(st);
+    const RING = { v: 1, kdf: { alg: 'PBKDF2-SHA256', iter: 600000, salt: 'XLMhdoz-gweJyJGWcyr3zw' }, wraps: [
+      { id: 'pass', n: 'aX5tPFGemPbQJv5m', c: 'ASTO4EYKCJKuo-SNGIAju_b53khUZk44BPdMy0EPbJCPqdJ7byF6_I3fBs6xn82L' },
+      { id: 'code', n: 'wtvvEEVFXFAsqi3q', c: 'E-lwobAsmL-jLudINtwHBAuuC3oy6SWc2EYNXiuZ1w1rmdJ7PI1chhRLJ0iQUXZ3' }] };
+    localStorage.clear();   // 只在這個測試網站（本機 127.0.0.1 的獨立來源）
+    const store = PZA.store('selftest.v1.');
+    let gestures = 0, opened = null;
+    const lock = PZA.lock({ ring: RING, store, key: 'lock', art: () => '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>',
+      gesture: () => { gestures++; }, opened: (h) => { opened = h; } });
+    const p = lock.gate();
+    await sleep(50);
+    const g = document.querySelector('.pza-gate');
+    ok(g && !g.hidden && document.body.hasAttribute('inert') === false, '沒開過：門出現');
+    ok(document.getElementById('app').hasAttribute('inert'), '底下的 App 點不到（inert）');
+    const inp = g.querySelector('input'); const go = g.querySelector('.pza-go');
+    inp.value = '錯的'; go.click(); await sleep(1500);
+    ok(g.querySelector('.pza-msg').classList.contains('bad') && !g.hidden, '錯的密語：說不對、門還在');
+    ok(gestures === 1, '按下的當下先叫 gesture（手機喚醒聲音）');
+    inp.value = '冷眼 測試用的密語'; go.click();
+    const how = await p;
+    ok(how === 'pass' && opened === 'pass', '對的密語：打開');
+    ok(g.hidden && !document.getElementById('app').hasAttribute('inert'), '門拿掉、底下的 App 可以點了');
+    ok(PZA.lockCore.trusted(store.get('lock'), RING), '記住這台裝置');
+    ok((await lock.gate()) === 'skip' && !document.querySelector('.pza-gate:not([hidden])'), '記住了：下次不畫門');
+    lock.setPolicy('away');
+    lock.watch();
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    ok(g.classList.contains('cover') && !g.hidden, 'away：離開時先蓋住畫面');
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    ok(g.hidden, 'away：馬上回來不用輸入、蓋子拿掉');
+    // 聲音：離線量音量
+    const m = await PZA.measureSound((A) => { A.tone(880, 0, 0.2, { gain: 0.1 }); A.noise(0.05, 0.2, { f: 2000 }); A.pluck(440, 0.1, { len: 0.8 }); A.fm(523, 0.2, 0.4); A.bell(660, 0.3, 0.8); }, 1.6);
+    ok(m && m.nan === 0 && m.db > -60 && m.db < 0, `合成器出得了聲、沒有 NaN（${m && m.db.toFixed(1)} dB）`);
+  } catch (e) { out.push('FAIL 例外：' + (e && e.stack || e)); }
+  window.__result = out;
+})();
+</script>
+</body></html>

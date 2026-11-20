@@ -11,7 +11,9 @@
 4. 品質至少要有《潮界》的水準：不能廉價、角色不能太小；手機直拿、橫拿、電腦三種畫面都要截圖親眼看過。
 5. 有 `_build/sources/<id>/` 的遊戲改原始碼再組建，**不要直接改 `games/<id>/index.html`**。
 6. **做任何新遊戲、新 App、新小說之前，先讀《轉機》的飛行手冊 `apps/turnaround/data/manual.json`**（`status: official` 的每一條；`law` 每款都適用、`case` 只在寫著的類型參考），交件時附一段「對照了哪幾條守則、怎麼做到的」。手冊只管**品質**，不管題材：不准拿它或過去的取消紀錄來縮小題材，痞子葳沒接觸過的類型照樣要提（守則 `m-x06`「不扼殺創意」）。
-7. **小說原稿只放在私人倉庫 PZWei0105/pz-novels**：這個 repo 是公開的，章節、前情提要、寫作筆記的純文字一律不准 commit 進來（`apps/next-chapter/books/` 只有加密檔，由 pz-novels 的 `tools/shelf.py push` 產生）。
+7. **新的專屬 App（工具、資訊、閱讀、影音類）一律用《PZ App 引擎》**：先讀 `_build/appkit/HANDBOOK.md`（第 2 節的設計理念是從冷眼、解包整理出來的，每款交件都要逐條對照）。App 把引擎某一版**整份複製**進自己的原始碼（鎖版本）。**解包最後才搬**（條件與做法見 HANDBOOK 第 13 節，搬之前先問痞子葳）；冷眼永遠不用。
+8. **有護欄的 App（目前：解包）改了程式，推之前先跑 `python3 _build/appkit/py/guard.py check <app>`**（BAD 不准推）；推上去之後看 Actions「App 護欄」那一輪——沒過會自動把網站換回上一個好的版本（資料不動），要修好再推。手動回滾：`python3 _build/appkit/py/guard.py rollback <app> [n]`。
+9. **小說原稿只放在私人倉庫 PZWei0105/pz-novels**：這個 repo 是公開的，章節、前情提要、寫作筆記的純文字一律不准 commit 進來（`apps/next-chapter/books/` 只有加密檔，由 pz-novels 的 `tools/shelf.py push` 產生）。
 
 ## 從哪裡開始
 
@@ -19,6 +21,8 @@
 |---|---|
 | 收藏庫怎麼組、怎麼上架、上線前檢查 | `_build/README.md` |
 | 做 2D 遊戲、用引擎、改引擎 | `_build/engine/HANDBOOK.md`（會動的範例：樣品館 `_build/engine/lab/`） |
+| 做專屬 App、用 App 引擎、改 App 引擎、設計理念 | `_build/appkit/HANDBOOK.md` |
+| App 改壞了、護欄沒過、要回滾 | `_build/appkit/HANDBOOK.md` 第 10 節（`guard.py check／rollback／status`） |
 | 某款有原始碼的遊戲 | `_build/sources/<id>/README.md` |
 | 專屬 App | `_build/apps/<App>/README.md` |
 | 《解包》每天的遊戲專題（寫稿、查核、上架） | `_build/apps/unpacked/WRITER_GUIDE.md` |
