@@ -1476,6 +1476,70 @@ span.mk-sp.none{color:#544d42}
 .tq footer{color:#5d564b}
 .tcv-n{color:#665f52}
 .tcv-a{color:#c4161c}
+.st-ttl small{color:#494339}
+.st-exp b{color:#1b1813}
+.st-exp b .num{color:#c4161c}
+.st-exp i{background:#f3ede1}
+.st-exp em{background:#ffd94d}
+.st-exp small{color:#534d42}
+.st-leg{color:#3a342b}
+.st-leg i{border:1.5px solid #1b1813}
+.st-leg .st-lk{color:#5d564b}
+.st-btns .st-b{font:900 20px/1 var(--cjkh)}
+.st-cd{background:#fffdf8;border:3px solid #1b1813;box-shadow:6px 6px 0 #1f5fa8}
+.st-cim{background:#fefcf6}
+.st-stp{background:#fffdf8;color:#1b1813}
+.st-stp.good{background:#ffd94d}
+.st-stp.bad{background:#d6262b;color:#fffdf8}
+.st-ck{color:#534d42}
+.st-ck em{color:#1f5fa8}
+.st-cb b{color:#1b1813}
+.st-cb p{color:#3a342b}
+.st-x{background:#d6262b;color:#fffdf8;border:2px solid #1b1813}
+.rc{background:#fffdf8;color:#1b1813}
+.rc::before{background-image:radial-gradient(#ffd94d17 2px,transparent 2.6px)}
+.rc-bars0 i{background:#1b181338}
+.rc-bars0 em{background:#ffd94d}
+.rc-x{background:#fffdf8;color:#1b1813;border:2px solid #1b1813}
+.rc-k{color:#c4161c}
+.rc-t{font:900 54px/1.08 var(--cjkh);color:#1b1813;text-shadow:4px 4px 0 #1f5fa8}
+.rc-t.sm{text-shadow:3px 3px 0 #1f5fa8}
+.rc-sub{color:#3a342b}
+.rc-note{color:#494339}
+.rc-yr{color:#c4161c;text-shadow:6px 6px 0 #1f5fa8}
+.rc-big .rc-n{color:#c4161c;text-shadow:5px 5px 0 #1f5fa8}
+.rc-big span{font:900 24px/1.2 var(--cjkh);color:#1b1813}
+.rc-big .pre{color:#c4161c}
+.rc-chip{background:#fffdf8;color:#1b1813;border:2px solid #1b1813;box-shadow:3px 3px 0 #1f5fa8}
+.rc-chip b{color:#1b1813}
+.rc-mos i{background:#fefcf6;border:3px solid #1b1813;box-shadow:4px 4px 0 #1f5fa8}
+.rc-bar2 span{color:#1b1813}
+.rc-bar2 i{background:#f3ede1}
+.rc-bar2 em{background:#ffd94d}
+.rc-bar2 b{color:#c4161c}
+.rc-bar2:first-child em{background:#d6262b}
+.rc-stp{color:#c4161c;background:#fffdf8}
+.rc-stp.m{color:#1b1813}
+.rc-stp.b{color:#1f5fa8}
+.rc-cv{background:#fefcf6;border:4px solid #1b1813;box-shadow:7px 7px 0 #1f5fa8}
+.rc-best li{background:#fffdf8;color:#1b1813;border:3px solid #1b1813;box-shadow:4px 4px 0 #d6262b}
+.rc-best em{color:#1f5fa8}
+.rc-best img,.rc-best .ph0{background:#f1ebde}
+.rc-best small{color:#544d42}
+.rc-best strong{color:#1b1813}
+.rc-cell{background:#f9f6ed;border:2px solid #d6ccb6}
+.rc-cell small{color:#534d42}
+.rc-cell b{color:#c4161c}
+.rc-cell i{color:#3a342b}
+.rc-vs div{background:#f9f6ed;border:3px solid #1b1813}
+.rc-vs div:last-child{border-color:#d6262b}
+.rc-vs small{color:#3a342b}
+.rc-vs b{color:#c4161c}
+.rc-vs div:last-child b{color:#1f5fa8}
+.rc-vs i{color:#534d42}
+.rc-vs>span{color:#1b1813}
+.rc-cardbox canvas{border:3px solid #1b1813;box-shadow:6px 6px 0 #1f5fa8;background:#fffdf8}
+.rc-ban{background:#ffd94d;color:#1b1813}
 /* ---- skin-paper.css ---- */
 /* ==========================================================================
    換裝：紙本雜誌（PAPER）— 米白紙、粗黑襯線大標、雙線欄框、紅色印章、螢光筆、剪貼的紙片

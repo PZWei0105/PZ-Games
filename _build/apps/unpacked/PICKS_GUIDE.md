@@ -61,7 +61,7 @@
 | 欄位 | 要求 |
 |---|---|
 | `date`、`rank` | 今天（台灣時間）；`rank` 是今天的排序，今天已有推坑就接著往下編 |
-| `game` | `zh`（台灣官方中文名，沒有就用原名並在 `zh_note` 說明）、`en`、`steam`（appid 或 null）、`dev`、`pub`、`platforms`、`genres`、`release`（YYYY-MM-DD，一定要早於今天）、`year`、`price_text`（Steam 遊戲寫「Steam 台灣區價格看即時數據」，非 Steam 寫台灣商店價格並附來源） |
+| `game` | `zh`（台灣官方中文名，沒有就用原名並在 `zh_note` 說明）、`en`、`steam`（appid 或 null）、`dev`、`pub`、`platforms`、`genres`（第一個寫最主要的玩法，遊戲星圖靠它分星座）、`release`（YYYY-MM-DD，一定要早於今天）、`year`、`price_text`（Steam 遊戲寫「Steam 台灣區價格看即時數據」，非 Steam 寫台灣商店價格並附來源） |
 | `stamp`、`label` | `stamp` 只能是「必玩／閉眼入／特價入／冷門神作」；`label` 是具體的一句（例：燒腦卡牌控閉眼入） |
 | `pitch` | 一句話推坑，15～50 字 |
 | `why` | **推坑信**：Claude 第一人稱對痞子葳說，150～320 字。為什麼推他、扣回他的口味、誠實講會卡他的地方 |

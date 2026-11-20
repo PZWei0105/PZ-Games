@@ -21,6 +21,9 @@ function hubTiles() {
   } catch (e) { T.push({ go: 'board', ic: ICON.chart, t: '行情板', s: 'Steam 線上人數看盤', c: 'w' }); }
   let sl = null; try { sl = saleHubLine(); } catch (e) { /* */ }
   if (sl) T.push({ go: 'sale', ic: ICON.cart, t: '特賣作戰室', s: sl.s, c: sl.ph === 'on' ? 'p' : 'y', hot: sl.hot });
+  let sh = ''; try { sh = starHubLine(); } catch (e) { /* */ }
+  T.push({ go: 'stars', ic: ICON.cons, t: '遊戲星圖', s: sh, c: 'p' });
+  T.push({ go: 'recap', ic: ICON.recap, t: '年度回顧', s: `${recapYear()} 解包年鑑・統計到今天`, c: 'y' });
   T.push({ go: 'cal', ic: ICON.cal, t: '出擊日曆', s: hubNextCal(), c: 'w' });
   const wk = (S.weekly && S.weekly.items || [])[0];
   T.push({ go: 'week', ic: ICON.trophy, t: '每週懶人包', s: wk ? `${wk.id.replace(/^\d{4}-W/, 'WEEK ')} 結算` : '每週日晚上結算', c: 'p' });

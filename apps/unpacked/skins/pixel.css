@@ -1476,6 +1476,70 @@ span.mk-sp.none{color:#5a63a0}
 .tq footer{color:#6c73ab}
 .tcv-n{color:#8489ba}
 .tcv-a{color:#ffec27}
+.st-ttl small{color:#b5b8d6}
+.st-exp b{color:#fff1e8}
+.st-exp b .num{color:#ffec27}
+.st-exp i{background:#1e2657}
+.st-exp em{background:#ffec27}
+.st-exp small{color:#a3a7cc}
+.st-leg{color:#c8c9df}
+.st-leg i{border:1.5px solid #000000}
+.st-leg .st-lk{color:#9196c2}
+.st-btns .st-b{font:900 20px/1 var(--cjkh)}
+.st-cd{background:#0b0d24;border:3px solid #ffec27;box-shadow:6px 6px 0 #1d6fc2}
+.st-cim{background:#191f48}
+.st-stp{background:#fff1e8;color:#05061a}
+.st-stp.good{background:#ffec27}
+.st-stp.bad{background:#29adff;color:#fff1e8}
+.st-ck{color:#a3a7cc}
+.st-ck em{color:#29adff}
+.st-cb b{color:#fff1e8}
+.st-cb p{color:#c8c9df}
+.st-x{background:#29adff;color:#fff1e8;border:2px solid #000000}
+.rc{background:#0b0d24;color:#fff1e8}
+.rc::before{background-image:radial-gradient(#ffec2717 2px,transparent 2.6px)}
+.rc-bars0 i{background:#fff1e838}
+.rc-bars0 em{background:#ffec27}
+.rc-x{background:#0b0d24;color:#fff1e8;border:2px solid #ffec27}
+.rc-k{color:#ffec27}
+.rc-t{font:900 54px/1.08 var(--cjkh);color:#fff1e8;text-shadow:4px 4px 0 #1d6fc2}
+.rc-t.sm{text-shadow:3px 3px 0 #1d6fc2}
+.rc-sub{color:#c8c9df}
+.rc-note{color:#b5b8d6}
+.rc-yr{color:#ffec27;text-shadow:6px 6px 0 #1d6fc2}
+.rc-big .rc-n{color:#ffec27;text-shadow:5px 5px 0 #1d6fc2}
+.rc-big span{font:900 24px/1.2 var(--cjkh);color:#fff1e8}
+.rc-big .pre{color:#ffec27}
+.rc-chip{background:#fff1e8;color:#05061a;border:2px solid #000000;box-shadow:3px 3px 0 #1d6fc2}
+.rc-chip b{color:#05061a}
+.rc-mos i{background:#191f48;border:3px solid #fff1e8;box-shadow:4px 4px 0 #1d6fc2}
+.rc-bar2 span{color:#fff1e8}
+.rc-bar2 i{background:#1e2657}
+.rc-bar2 em{background:#ffec27}
+.rc-bar2 b{color:#ffec27}
+.rc-bar2:first-child em{background:#29adff}
+.rc-stp{color:#ffec27;background:#0b0d24}
+.rc-stp.m{color:#fff1e8}
+.rc-stp.b{color:#29adff}
+.rc-cv{background:#191f48;border:4px solid #fff1e8;box-shadow:7px 7px 0 #1d6fc2}
+.rc-best li{background:#fff1e8;color:#05061a;border:3px solid #000000;box-shadow:4px 4px 0 #ab5236}
+.rc-best em{color:#29adff}
+.rc-best img,.rc-best .ph0{background:#c8c9df}
+.rc-best small{color:#5a63a0}
+.rc-best strong{color:#05061a}
+.rc-cell{background:#131839;border:2px solid #28326b}
+.rc-cell small{color:#a3a7cc}
+.rc-cell b{color:#ffec27}
+.rc-cell i{color:#c8c9df}
+.rc-vs div{background:#131839;border:3px solid #ffec27}
+.rc-vs div:last-child{border-color:#29adff}
+.rc-vs small{color:#c8c9df}
+.rc-vs b{color:#ffec27}
+.rc-vs div:last-child b{color:#29adff}
+.rc-vs i{color:#a3a7cc}
+.rc-vs>span{color:#fff1e8}
+.rc-cardbox canvas{border:3px solid #fff1e8;box-shadow:6px 6px 0 #1d6fc2;background:#0b0d24}
+.rc-ban{background:#ffec27;color:#05061a}
 /* ---- skin-pixel.css ---- */
 /* ==========================================================================
    換裝：像素掌機（PIXEL）— 方塊、硬邊、像素字、浮雕按鈕，像在掌機上翻攻略本

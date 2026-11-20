@@ -77,7 +77,7 @@ function renderHome() {
   return `<div class="sec-h"><h2 class="spray-h">${lastDate === today ? '今日解包' : '最新解包'}</h2>
       <span class="date-stk">${esc(lastDate.slice(5).replace('-', '.'))} ${['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</span></div>
     ${lastDate !== today ? `<p class="sub-note">今天的專題還在寫，先看 ${mdDay(lastDate)} 這批。</p>` : ''}
-    ${weekBanner()}${saleBanner()}${tgaBanner()}${huntStrip()}
+    ${recapBanner()}${weekBanner()}${saleBanner()}${tgaBanner()}${huntStrip()}
     <div class="posters">${todays.slice(0, 2).map(posterHtml).join('')}${vsStrip(todays)}${todays.slice(2).map((it, i) => posterHtml(it, i + 2)).join('')}</div>
     ${picksTeaser()}
     ${marketStrip()}

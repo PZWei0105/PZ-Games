@@ -1476,6 +1476,70 @@ span.mk-sp.none{color:#544881}
 .tq footer{color:#675c94}
 .tcv-n{color:#8176ac}
 .tcv-a{color:#00f0ff}
+.st-ttl small{color:#b5acd7}
+.st-exp b{color:#f2eeff}
+.st-exp b .num{color:#00f0ff}
+.st-exp i{background:#1d1336}
+.st-exp em{background:#00f0ff}
+.st-exp small{color:#a298c7}
+.st-leg{color:#c7bfe3}
+.st-leg i{border:1.5px solid #07030f}
+.st-leg .st-lk{color:#8f85b8}
+.st-btns .st-b{font:900 20px/1 var(--cjkh)}
+.st-cd{background:#08040f;border:3px solid #00f0ff;box-shadow:6px 6px 0 #ff2bd6}
+.st-cim{background:#180e2d}
+.st-stp{background:#ece6ff;color:#07030f}
+.st-stp.good{background:#00f0ff}
+.st-stp.bad{background:#ff2bd6;color:#f2eeff}
+.st-ck{color:#a298c7}
+.st-ck em{color:#ff2bd6}
+.st-cb b{color:#f2eeff}
+.st-cb p{color:#c7bfe3}
+.st-x{background:#ff2bd6;color:#f2eeff;border:2px solid #07030f}
+.rc{background:#08040f;color:#f2eeff}
+.rc::before{background-image:radial-gradient(#00f0ff17 2px,transparent 2.6px)}
+.rc-bars0 i{background:#f2eeff38}
+.rc-bars0 em{background:#00f0ff}
+.rc-x{background:#08040f;color:#f2eeff;border:2px solid #00f0ff}
+.rc-k{color:#00f0ff}
+.rc-t{font:900 54px/1.08 var(--cjkh);color:#f2eeff;text-shadow:4px 4px 0 #ff2bd6}
+.rc-t.sm{text-shadow:3px 3px 0 #ff2bd6}
+.rc-sub{color:#c7bfe3}
+.rc-note{color:#b5acd7}
+.rc-yr{color:#00f0ff;text-shadow:6px 6px 0 #ff2bd6}
+.rc-big .rc-n{color:#00f0ff;text-shadow:5px 5px 0 #ff2bd6}
+.rc-big span{font:900 24px/1.2 var(--cjkh);color:#f2eeff}
+.rc-big .pre{color:#00f0ff}
+.rc-chip{background:#ece6ff;color:#07030f;border:2px solid #07030f;box-shadow:3px 3px 0 #ff2bd6}
+.rc-chip b{color:#07030f}
+.rc-mos i{background:#180e2d;border:3px solid #f2eeff;box-shadow:4px 4px 0 #ff2bd6}
+.rc-bar2 span{color:#f2eeff}
+.rc-bar2 i{background:#1d1336}
+.rc-bar2 em{background:#00f0ff}
+.rc-bar2 b{color:#00f0ff}
+.rc-bar2:first-child em{background:#ff2bd6}
+.rc-stp{color:#00f0ff;background:#08040f}
+.rc-stp.m{color:#f2eeff}
+.rc-stp.b{color:#ff2bd6}
+.rc-cv{background:#180e2d;border:4px solid #f2eeff;box-shadow:7px 7px 0 #ff2bd6}
+.rc-best li{background:#ece6ff;color:#07030f;border:3px solid #07030f;box-shadow:4px 4px 0 #00f0ff}
+.rc-best em{color:#ff2bd6}
+.rc-best img,.rc-best .ph0{background:#c7bfe3}
+.rc-best small{color:#544881}
+.rc-best strong{color:#07030f}
+.rc-cell{background:#120b23;border:2px solid #271b47}
+.rc-cell small{color:#a298c7}
+.rc-cell b{color:#00f0ff}
+.rc-cell i{color:#c7bfe3}
+.rc-vs div{background:#120b23;border:3px solid #00f0ff}
+.rc-vs div:last-child{border-color:#ff2bd6}
+.rc-vs small{color:#c7bfe3}
+.rc-vs b{color:#00f0ff}
+.rc-vs div:last-child b{color:#ff2bd6}
+.rc-vs i{color:#a298c7}
+.rc-vs>span{color:#f2eeff}
+.rc-cardbox canvas{border:3px solid #f2eeff;box-shadow:6px 6px 0 #ff2bd6;background:#08040f}
+.rc-ban{background:#00f0ff;color:#07030f}
 /* ---- skin-neon.css ---- */
 /* ==========================================================================
    換裝：霓虹賽博（NEON）— 紫黑夜城、地平線上的太陽、透視格線、掃描線、霓虹管雙線框
