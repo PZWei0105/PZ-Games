@@ -807,7 +807,15 @@
    "url": "../../games/so-close/index.html",
    "remake": false,
    "skip": null,
-   "inspections": []
+   "inspections": [
+    {
+     "date": "2026-11-21",
+     "id": "2026-11-21-so-close",
+     "verdict": "service",
+     "check": "C 檢",
+     "n": 3
+    }
+   ]
   },
   {
    "id": "landfall",
