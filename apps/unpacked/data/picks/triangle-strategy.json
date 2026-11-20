@@ -1,0 +1,533 @@
+{
+ "id": "triangle-strategy",
+ "date": "2026-11-20",
+ "rank": 1,
+ "game": {
+  "zh": "三角戰略",
+  "en": "TRIANGLE STRATEGY",
+  "steam": 1850510,
+  "dev": "Square Enix、Artdink",
+  "pub": "Square Enix",
+  "platforms": [
+   "PC（Steam）",
+   "Switch",
+   "PS5",
+   "Xbox Series X|S",
+   "Meta Quest"
+  ],
+  "genres": [
+   "戰棋",
+   "策略角色扮演",
+   "HD-2D"
+  ],
+  "release": "2022-03-04",
+  "year": 2022,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "特價入",
+ "label": "HD-2D 戰棋，史低四折正好入",
+ "pitch": "《歧路旅人》團隊的 HD-2D 戰棋：鏡頭能轉、地形會燒，劇情走向由全隊投票決定",
+ "why": "這款是《歧路旅人》製作人淺野智也團隊做的 HD-2D 戰棋，畫面就是你熟悉的那種立體像素，但戰場可以縮放、旋轉，還能切俯視角。打法很吃站位：繞背、搶高處傷害更高，兩個隊友前後夾住敵人會追加攻擊；點火、讓雷順著水導電、用風把人推下懸崖，地形也是武器。更特別的是劇情走向不是你一個人說了算，重大抉擇要全隊投票，你得先去說服搖擺的人。老實講，最會卡你的是節奏：開頭幾小時幾乎都在對話，打完一場常接很長的劇情。現在 Steam 四折是史低，用這個價錢賭它值得。",
+ "reasons": [
+  {
+   "h": "戰場會轉也會燒",
+   "t": "鏡頭可縮放旋轉；火、雷、風都能改變戰局，繞背和搶高處有加成。"
+  },
+  {
+   "h": "劇情由全隊投票",
+   "t": "重大抉擇用「信念天秤」表決，共 4 種結局，二周目保留角色和強化。"
+  },
+  {
+   "h": "史低四折到 12/2",
+   "t": "Steam 正在打四折，跟歷史最低一樣，特價到 2026/12/2。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡《歧路旅人》HD-2D 畫風、又想玩一款站位比數值重要的戰棋的人",
+   "愛政治、陰謀、選邊站的劇情，願意為了不同結局再跑一輪的人",
+   "想要能隨時調難度（從很簡單到困難）的戰棋新手"
+  ],
+  "against": [
+   "受不了長篇對話的人：開頭幾小時很慢，打完一場常接很長的劇情",
+   "想自由配職業、換武器的人：每個角色的職業和升級路線是固定的"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic（PC）",
+   "v": "83",
+   "s": [
+    1
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "83（91% 推薦）",
+   "s": [
+    6
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "Square Enix、Artdink 開發／Square Enix 發行；製作人淺野智也（歧路旅人）",
+   "s": [
+    0,
+    1
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "Switch 2022/3/4；PC（Steam）2022/10/13",
+   "s": [
+    1,
+    2
+   ]
+  },
+  {
+   "k": "後續移植",
+   "v": "Meta Quest 版 2024/10/31；PS5、Xbox 版 2025/8/20",
+   "s": [
+    3,
+    4
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "介面與字幕有繁中、簡中；語音只有英文和日文",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic PC 83；OpenCritic 平均 83、91% 評論推薦",
+   "s": [
+    1,
+    6
+   ]
+  },
+  {
+   "k": "鏡頭",
+   "v": "戰場可以縮放、旋轉，也能切換斜角和俯視",
+   "s": [
+    11
+   ]
+  },
+  {
+   "k": "戰鬥",
+   "v": "繞背或站高處傷害更高；兩名隊友前後夾擊會追加攻擊；技能用會回復的 TP",
+   "s": [
+    1,
+    10,
+    22
+   ]
+  },
+  {
+   "k": "地形",
+   "v": "能點火燒地、讓雷電透過水導電、用風把敵人推下懸崖，房子可以破壞",
+   "s": [
+    1
+   ]
+  },
+  {
+   "k": "抉擇",
+   "v": "重大抉擇由隊伍用「信念天秤」投票，可以先說服；共 4 種結局",
+   "s": [
+    1,
+    12
+   ]
+  },
+  {
+   "k": "角色",
+   "v": "可招募角色 30 名；角色不會永久死亡",
+   "s": [
+    15,
+    1
+   ]
+  },
+  {
+   "k": "難度",
+   "v": "很簡單、簡單、普通、困難四種，隨時可以切換",
+   "s": [
+    16,
+    10
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "第一輪約 50 小時、共 21 章",
+   "s": [
+    8,
+    9
+   ]
+  },
+  {
+   "k": "銷量／獎項",
+   "v": "2022 年 12 月出貨加數位銷量破百萬；入圍 TGA 2022 最佳角色扮演遊戲",
+   "s": [
+    18,
+    1
+   ]
+  },
+  {
+   "k": "特價",
+   "v": "Steam 目前打 -60%（四折），與歷史最低相同，特價到 2026/12/2",
+   "s": [
+    7
+   ]
+  },
+  {
+   "k": "二周目",
+   "v": "保留招到的角色、道具與強化，信念值會顯示出來",
+   "s": [
+    23,
+    14
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文（也有簡中），語音只有英文和日文。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；主機版以各平台台灣商店為準。"
+ },
+ "money": {
+  "level": 0,
+  "model": "買斷制",
+  "notes": [
+   "一次買斷，Steam 頁沒有列遊戲內購。",
+   "Digital Deluxe 版只多一本數位迷你設定集，不影響遊戲內容。"
+  ],
+  "flags": [
+   "買斷",
+   "無內購"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "建議配備只要 GTX 1060、容量 10GB；PC 版最高 4K、上限 60fps，你的 SCAR 18 接 4K 電視開滿都很輕鬆。"
+ },
+ "time": {
+  "text": "第一輪約 50 小時",
+  "note": "第一輪約 50 小時、共 21 章；想看完不同路線和結局要跑第二輪，兩輪大約 80～100 小時。"
+ },
+ "howto": [
+  "第一輪先用普通難度，打不過再隨時調降，不會影響劇情。",
+  "每一場先看地形：搶高處、繞到敵人背後，再安排兩個人前後夾擊吃追加攻擊。",
+  "投票前在城鎮四處跟人聊天收集情報，說服時才有更多選項。",
+  "等級跟不上時，去營地打模擬戰練功；撤退也會保留經驗值。"
+ ],
+ "deals": "Steam 正在打四折，跟歷史最低一樣，特價到 2026/12/2，現在就是好時機；標準版就夠，Digital Deluxe 只多一本數位迷你設定集。",
+ "talk": [
+  {
+   "q": "劇情抉擇交給全隊投票，是更有代入感，還是少了主角的主導權？",
+   "why": "有評論覺得主角缺乏主見，也有人覺得說服隊友才是最有趣的地方。"
+  },
+  {
+   "q": "戰棋要的是自由配職業，還是每個角色定位清楚？",
+   "why": "三角戰略每個角色的職業固定，跟《最終幻想戰略版》走了相反的路。"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "yobyIrxKMPE",
+    "title": "PC 版上市預告"
+   },
+   {
+    "id": "4PqxQXFkN3U",
+    "title": "PS5／Xbox 版預告"
+   }
+  ],
+  "images": []
+ },
+ "fanpage": {
+  "threads": {
+   "post": "《歧路旅人》製作人團隊做的 HD-2D 戰棋，劇情走向要靠全隊投票決定。\n\n《三角戰略》是 Square Enix 和 Artdink 的回合制戰棋，2022 年上市，現在 PC、Switch、PS5、Xbox 都有。\n\n・中文：繁中介面與字幕，語音英日\n・第一輪約 50 小時，共 4 種結局\n・Metacritic PC 83、OpenCritic 83\n・純單人、買斷制\n・Steam 四折中，跟史低一樣，特價到 12/2\n\n戰場能旋轉縮放、地形能點火導電，站位比數值重要；但開頭幾小時幾乎都在對話，要有耐心。\n\n劇情抉擇交給全隊投票，你覺得更有代入感，還是少了主角的主導權？",
+   "topic": "策略遊戲",
+   "more": [
+    "它怎麼打：\n・繞背或站高處傷害更高，兩個隊友前後夾住敵人會追加攻擊\n・火能燒地、雷順著水導電、風能把敵人推下懸崖\n・重大抉擇用「信念天秤」投票，投票前可以先去說服隊友\n\n可招募角色有 30 名，角色不會永久死亡；難度四段隨時能換，戰棋新手也能上手。",
+    "買之前要知道：開頭節奏很慢，打完一場常接很長的劇情；每個角色的職業固定，不能自由轉職。\n\n建議配備只要 GTX 1060、容量 10GB，筆電也能跑。標準版就夠，Digital Deluxe 只多一本數位迷你設定集。"
+   ]
+  },
+  "tags": [
+   "#三角戰略",
+   "#TriangleStrategy",
+   "#戰棋",
+   "#HD2D",
+   "#遊戲推薦",
+   "#遊戲狂想曲"
+  ],
+  "card": {
+   "kicker": "私房推坑｜2022 年作品",
+   "title": "三角戰略\nHD-2D 戰棋",
+   "sub": "劇情走向靠全隊投票",
+   "tags": [
+    "戰棋",
+    "HD-2D",
+    "有繁中"
+   ],
+   "points": [
+    {
+     "h": "地形是武器",
+     "t": "火能燒、雷能導電、風能推落。"
+    },
+    {
+     "h": "全隊投票",
+     "t": "重大抉擇靠表決，共 4 種結局。"
+    },
+    {
+     "h": "四折到 12/2",
+     "t": "Steam 特價，跟史低一樣。"
+    }
+   ]
+  },
+  "credit": "圖片／影片來源：TRIANGLE STRATEGY 官方 Steam 商店頁與預告"
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：TRIANGLE STRATEGY",
+   "u": "https://store.steampowered.com/app/1850510",
+   "d": ""
+  },
+  {
+   "t": "Wikipedia：Triangle Strategy",
+   "u": "https://en.wikipedia.org/wiki/Triangle_Strategy",
+   "d": ""
+  },
+  {
+   "t": "Gematsu：PC 版 2022 年 10 月 13 日上市",
+   "u": "https://gematsu.com/2022/09/triangle-strategy-coming-to-pc-on-october-13",
+   "d": "2022-09"
+  },
+  {
+   "t": "RPG Site：Meta Quest 版 10 月 31 日上市",
+   "u": "https://www.rpgsite.net/news/16362-triangle-strategy-launches-for-meta-quest-on-october-31",
+   "d": "2024-10"
+  },
+  {
+   "t": "Square Enix 歐洲新聞稿：PS、Xbox 版上市",
+   "u": "https://square-enix-eu.westeu-v2.propressroom.com/TRIANGLE-STRATEGY-NOW-AVAILABLE-ON-PLAYSTATION-XBOX-AND-XBOX-ON-PC",
+   "d": "2025-08-20"
+  },
+  {
+   "t": "RPG Site：各平台畫面與效能比較",
+   "u": "https://www.rpgsite.net/feature/18245-triangle-strategy-ps5-vs-nintendo-switch-2-xbox-steam-deck-pc-graphics-performance-differences",
+   "d": "2025"
+  },
+  {
+   "t": "OpenCritic：Triangle Strategy",
+   "u": "https://opencritic.com/game/12840/triangle-strategy",
+   "d": ""
+  },
+  {
+   "t": "SteamDB：TRIANGLE STRATEGY 價格紀錄",
+   "u": "https://steamdb.info/app/1850510",
+   "d": "2026-11"
+  },
+  {
+   "t": "Game Rant：三角戰略要玩多久",
+   "u": "https://gamerant.com/triangle-strategy-how-long-to-beat/",
+   "d": ""
+  },
+  {
+   "t": "Game8：三角戰略章節數與遊玩時間",
+   "u": "https://game8.co/games/Triangle-Strategy/archives/370007",
+   "d": ""
+  },
+  {
+   "t": "RPG Site 評測",
+   "u": "https://rpgsite.net/review/12464-triangle-strategy-review",
+   "d": "2022"
+  },
+  {
+   "t": "IGN 評測（Yahoo 轉載）",
+   "u": "https://tech.yahoo.com/gaming/articles/triangle-strategy-review-202908829.html",
+   "d": "2022"
+  },
+  {
+   "t": "Nintendo Life 評測",
+   "u": "https://nintendolife.com/reviews/nintendo-switch/triangle-strategy",
+   "d": "2022"
+  },
+  {
+   "t": "Square Enix 北美新聞稿：PC 版今日上市",
+   "u": "https://press.na.square-enix.com/en-US/TRIANGLE-STRATEGY-LAUNCHES-TODAY-ON-PC",
+   "d": "2022-10-13"
+  },
+  {
+   "t": "Inverse：黃金路線（真結局）怎麼走",
+   "u": "https://www.inverse.com/gaming/triangle-strategy-golden-route-true-ending-guide-how-to-unlock",
+   "d": ""
+  },
+  {
+   "t": "Inverse：30 名可招募角色排行",
+   "u": "https://inverse.com/gaming/triangle-strategy-character-tier-list-ranked",
+   "d": ""
+  },
+  {
+   "t": "Samurai Gamers：難度模式說明",
+   "u": "https://samurai-gamers.com/triangle-strategy/difficulty-modes-2/",
+   "d": ""
+  },
+  {
+   "t": "GameSpot 評測",
+   "u": "https://www.gamespot.com/reviews/triangle-strategy-review-were-talking-kings-and-successions/1900-6417840/",
+   "d": "2022"
+  },
+  {
+   "t": "Gematsu：出貨加數位銷量破百萬",
+   "u": "https://gematsu.com/2022/12/triangle-strategy-shipments-and-digital-sales-top-one-million",
+   "d": "2022-12"
+  },
+  {
+   "t": "GamesRadar+ 評測",
+   "u": "https://gamesradar.com/triangle-strategy-review",
+   "d": "2022"
+  },
+  {
+   "t": "Inverse：遊玩時間與章節數",
+   "u": "https://inverse.com/gaming/triangle-strategy-playtime-how-long-to-beat-how-many-chapters",
+   "d": ""
+  },
+  {
+   "t": "Windows Central：gamescom 期間突襲登上 Xbox",
+   "u": "https://www.windowscentral.com/gaming/triangle-strategy-shadow-drops-on-xbox-for-gamescom-2025",
+   "d": "2025-08"
+  },
+  {
+   "t": "Nintendo Life：TP、讚賞點數與終結技攻略",
+   "u": "https://nintendolife.com/guides/triangle-strategy-tips-and-battle-tactics-walkthrough-tactical-points-phases-kudos-quietuses-guide",
+   "d": ""
+  },
+  {
+   "t": "Samurai Gamers：二周目繼承內容",
+   "u": "https://samurai-gamers.com/triangle-strategy/new-game-plus-unlockables-2/",
+   "d": ""
+  }
+ ],
+ "pending": [
+  "HowLongToBeat 官方頁的精確時數（目前只有二手轉述的主線約 34 小時）",
+  "二周目是否保留角色等級"
+ ],
+ "updated": "2026-11-20",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "在城鎮探索、跟人聊天收集情報",
+    "遇到重大抉擇時說服隊友、全隊投票",
+    "進戰場：看地形、排站位",
+    "用夾擊、繞背、地形元素打贏",
+    "在營地升級、練功、招募新角色"
+   ],
+   "body": [
+    "戰鬥是格子回合制。技能用 TP，TP 每回合會慢慢回來。站位是勝負關鍵：從背後或高處攻擊傷害更高，兩個隊友前後夾住同一個敵人，另一個人會自動追加一擊。打出好的配合會累積點數，可以換一次性的特殊行動，例如讓隊友馬上行動、補 TP。",
+    "地形本身就是武器：火系技能能把草地點燃，讓敵人每回合扣血；雷擊打在水上會導電，一次電到一群人；風能把站在懸崖邊的敵人推下去，有些房子還能直接打爆。鏡頭可以縮放、旋轉，也能切到俯視角，方便看清楚高低差。",
+    "戰場之外是另一半的遊戲。主角的家族有一座「信念天秤」，遇到重大抉擇時，主要夥伴會投票決定往哪條路走。投票前你可以在城鎮裡收集情報，再去說服搖擺不定的人；不同選擇會走到不同路線，最後有 4 種結局。",
+    "你平常的對話選擇會累積實用、道德、自由三種信念值，影響能招到哪些角色，第一輪看不到數值，二周目才會顯示。二周目會保留招到的角色、道具和強化，最適合去試第一輪沒選的路。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "歧路旅人 II",
+    "same": "同一個製作人淺野智也、同樣的 HD-2D 立體像素畫風",
+    "diff": "歧路旅人是回合制組隊冒險，八個主角各自的故事；三角戰略是戰棋，一條主線但會因投票分岔",
+    "steam": 1971650
+   },
+   {
+    "name": "最終幻想戰略版 獅子戰爭",
+    "same": "格子戰棋、高低差、政治陰謀劇情，老戰棋迷一上手就熟",
+    "diff": "三角戰略沒有永久死亡、職業固定，系統比較簡化；劇情由投票推動"
+   },
+   {
+    "name": "XCOM 2",
+    "same": "回合制戰術、站位和地形決定勝負",
+    "diff": "XCOM 有命中率和永久陣亡，壓力大；三角戰略沒有隨機命中，比較能照計畫打",
+    "steam": 268500
+   }
+  ],
+  "story": {
+   "safe": [
+    "諾傑利亞大陸上有三個國家：北方的 Aesfrost、宗教國家 Hyzante，以及 Glenbrook。三十年前，三國為了鹽和鐵打過一場「鹽鐵大戰」，好不容易才換來和平。",
+    "主角 Serenoa 是 Glenbrook 沃爾福特家族的繼承人，身邊有 Roland 王子、來自 Aesfrost 的未婚妻 Frederica，還有家族的管家 Benedict。三國合作開發的新礦場被發現之後，一起命案讓和平開始崩解。",
+    "這是一個很「大人」的政治故事：沒有魔王，只有各國的利益和每個人的立場。主要三名夥伴大致各自代表一種價值，你要在他們之間取捨。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "《三角戰略》由 Square Enix 的淺野智也團隊製作，他之前做過《勇氣默示錄》和《歧路旅人》；開發協力是長年做戰略遊戲的 Artdink，用虛幻引擎 4 打造。",
+   "2021 年 2 月任天堂直面會以「Project TRIANGLE STRATEGY」的暫定名公開，同時放出免費試玩。團隊根據玩家回饋加了難度選項、改了鏡頭操作、加入對話紀錄並縮短讀取，同年 9 月定名。",
+   "2022 年 3 月先在 Switch 上市，日本首週實體賣了 8 萬多套、登上 Fami 通週榜第一；同年 10 月上 PC，12 月出貨加數位銷量破百萬，並入圍 TGA 2022 最佳角色扮演遊戲。之後陸續移植到 Meta Quest（2024）和 PS5、Xbox（2025）。"
+  ],
+  "timeline": [
+   {
+    "d": "2021-02-17",
+    "t": "任天堂直面會以暫定名公開，同時放出試玩"
+   },
+   {
+    "d": "2021-09",
+    "t": "正式定名《TRIANGLE STRATEGY》"
+   },
+   {
+    "d": "2022-03-04",
+    "t": "Switch 版上市"
+   },
+   {
+    "d": "2022-10-13",
+    "t": "PC（Steam）版上市"
+   },
+   {
+    "d": "2022-12",
+    "t": "出貨加數位銷量破百萬；年底入圍 TGA 最佳角色扮演遊戲"
+   },
+   {
+    "d": "2024-10-31",
+    "t": "Meta Quest VR 版上市"
+   },
+   {
+    "d": "2025-08-20",
+    "t": "PS5、Xbox 版在 gamescom 期間突襲上市"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "戰鬥設計紮實：夾擊、高低差、地形元素讓每張地圖都有解法，評測普遍說戰鬥很耐玩",
+    "投票系統讓選擇有重量，政治劇情偏寫實、有大人味",
+    "HD-2D 畫面比《歧路旅人》更精緻，配樂和英文配音也受好評",
+    "難度隨時能調、撤退保留經驗，對新手友善"
+   ],
+   "cons": [
+    "開頭節奏很慢、說明對話太多，GameSpot、IGN、Nintendo Life 都點名",
+    "職業和升級路線固定，培養自由度比老戰棋低",
+    "等級不夠時要靠模擬戰練功，有點重複"
+   ],
+   "debate": [
+    "劇情對話太多算不算缺點？喜歡政治劇的人覺得這才是精華，只想打仗的人覺得一直被打斷。Steam 英文評論（約 77% 好評）明顯比媒體分數低，吵的多半就是這點。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "標準版",
+   "what": "完整遊戲，沒有故事 DLC。",
+   "tip": "直接買這個就好，趁四折入手。",
+   "best": true
+  },
+  {
+   "name": "Digital Deluxe 版",
+   "what": "標準版加一本數位迷你設定集。",
+   "tip": "只有喜歡收設定集的人才需要。"
+  }
+ ],
+ "multi": {
+  "ok": false,
+  "text": "純單人遊戲，沒有任何連線或合作模式。"
+ }
+}

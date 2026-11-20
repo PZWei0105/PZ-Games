@@ -1,0 +1,563 @@
+{
+ "id": "rimworld",
+ "date": "2026-11-20",
+ "rank": 2,
+ "game": {
+  "zh": "RimWorld",
+  "zh_note": "沒有官方中文名，中文圈常稱《邊緣世界》",
+  "en": "RimWorld",
+  "steam": 294100,
+  "dev": "Ludeon Studios",
+  "pub": "Ludeon Studios",
+  "platforms": [
+   "PC（Steam）",
+   "Mac",
+   "Linux",
+   "PS4",
+   "Xbox One"
+  ],
+  "genres": [
+   "殖民地模擬",
+   "經營",
+   "沙盒"
+  ],
+  "release": "2018-10-17",
+  "year": 2018,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "必玩",
+ "label": "每一局都長出自己故事的殖民地模擬",
+ "pitch": "三個墜機倖存者在邊境星球求生：殖民地模擬的頂點，故事全由你的決策長出來",
+ "why": "如果要挑一款「結果由自己的決策長出來」的代表作，我會選《RimWorld》。三個墜機倖存者、一片荒地，接下來發生的每件事都是系統算出來的：廚師因為吃不好心情崩潰、躲進房間罷工；你救回來的俘虜後來變成最強的醫生；一場寒流把整季作物凍死。你不直接操控小人，而是排工作優先順序、規劃房間、決定研究什麼，再看他們自己活出來。它跟你喜歡的經營遊戲一樣停不下來，但畫面很陽春，介面一開始也不好懂，前幾小時要多查一下。",
+ "reasons": [
+  {
+   "h": "故事產生器",
+   "t": "AI 說書人安排事件，殖民者有個性、心情和人際關係，每局的劇情都不一樣。"
+  },
+  {
+   "h": "評價頂標",
+   "t": "Steam 極度好評 97%，Metacritic PC 87、OpenCritic 86。"
+  },
+  {
+   "h": "難度和存檔隨你選",
+   "t": "從和平模式到極難六種難度；可以隨時讀檔，也能選不能反悔的「鐵人」存檔。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "喜歡模擬經營、看殖民地從一間木屋長成要塞的人",
+   "愛看角色「自己發生故事」、每局都想說給別人聽的人",
+   "願意花時間研究系統、也喜歡玩模組的人"
+  ],
+  "against": [
+   "在意畫面的人：俯視 2D、角色是簡單的小圖示",
+   "不想看教學、查資料的人：系統多、介面舊，新手前幾小時會卡",
+   "想跟朋友正式連線的人：官方沒有多人模式"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic（PC）",
+   "v": "87",
+   "s": [
+    6
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "86（90% 推薦）",
+   "s": [
+    7
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "Ludeon Studios（Tynan Sylvester 創立）自己開發、自己發行",
+   "s": [
+    0,
+    1
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2016/7/15 Steam 搶先體驗；2018/10/17 正式版 1.0",
+   "s": [
+    2,
+    3
+   ]
+  },
+  {
+   "k": "主機版",
+   "v": "2022/7/29 推出 PS4、Xbox One 版，由 Double Eleven 開發",
+   "s": [
+    1
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "介面有繁中、簡中；遊戲沒有語音",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic PC 87；OpenCritic 平均 86、90% 推薦；Steam 英文評論 97% 好評",
+   "s": [
+    6,
+    7,
+    0
+   ]
+  },
+  {
+   "k": "玩法",
+   "v": "不直接操控殖民者，用工作優先順序分派；殖民者有心情、需求、特質和人際關係，壓力大會精神崩潰",
+   "s": [
+    0,
+    1,
+    24
+   ]
+  },
+  {
+   "k": "AI 說書人",
+   "v": "三位說書人：Cassandra 穩定加壓、Phoebe 比較佛系、Randy 完全隨機",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "難度與存檔",
+   "v": "六段難度；開局選「隨時讀檔」或「承諾模式」（只有一個存檔、無法反悔）",
+   "s": [
+    8
+   ]
+  },
+  {
+   "k": "開局劇本",
+   "v": "墜機（3 人）、失落部族（5 人）、富有的探險家（1 人）、赤裸殘酷（1 人、沒有物資）等",
+   "s": [
+    9
+   ]
+  },
+  {
+   "k": "資料片",
+   "v": "Royalty（2020/2）、Ideology（2021/7）、Biotech（2022/10）、Anomaly（2024/4）、Odyssey（2025/7）",
+   "s": [
+    1,
+    4
+   ]
+  },
+  {
+   "k": "模組",
+   "v": "支援 Steam 工作坊",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "多人",
+   "v": "官方沒有多人；社群模組「Multiplayer」可以合作玩，所有人的模組、設定和資料片要完全一致",
+   "s": [
+    16,
+    22
+   ]
+  },
+  {
+   "k": "折扣",
+   "v": "Steam 過去最低只到 8 折（-20%）；Ludeon 2025 年表示之後會更常特價",
+   "s": [
+    13,
+    26
+   ]
+  },
+  {
+   "k": "銷量",
+   "v": "2018 年初賣破 100 萬套；2025 年 Odyssey 上市後 Steam 同時在線接近 10 萬人",
+   "s": [
+    14,
+    13
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "Ludeon 公布玩家平均遊玩 242 小時；GameDiscoverCo 估計中位數超過 65 小時",
+   "s": [
+    13
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": false,
+  "voice": false,
+  "note": "介面有繁體中文（也有簡中）；遊戲沒有語音，所以也沒有字幕的問題。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；主機版以各平台台灣商店為準。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷制＋付費資料片",
+  "notes": [
+   "本體買斷，沒有遊戲內購。",
+   "五個付費資料片各自加一大塊系統，不買也能玩得很完整。"
+  ],
+  "flags": [
+   "買斷",
+   "付費資料片"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "官方最低需求是 Core 2 Duo、Intel HD 4000、4GB 記憶體、1GB 空間；你的 SCAR 18 完全不用擔心，大型殖民地加一堆模組也撐得住。"
+ },
+ "time": {
+  "text": "玩家平均玩 242 小時",
+  "note": "沒有寫死的主線劇情，一局想玩多久都行；Ludeon 公布玩家平均遊玩 242 小時，GameDiscoverCo 估計中位數超過 65 小時。"
+ },
+ "howto": [
+  "第一局用「墜機」劇本配 Cassandra，難度選「冒險故事」，壓力剛好。",
+  "新手建議選「隨時讀檔」，熟了再挑戰不能反悔的承諾模式。",
+  "前幾天先蓋有屋頂的寢室和冷藏室，食物和睡眠顧好，心情才不會崩。",
+  "打開工作分頁，手動排每個人的優先順序，比讓他們亂做有效率得多。"
+ ],
+ "deals": "Steam 過去最多只到 8 折，Ludeon 2025 年表示之後會更常特價，但很少大降；先買本體玩熟，再加資料片，新手第一個最常被推薦的是 Biotech。",
+ "talk": [
+  {
+   "q": "遊戲裡的悲劇是系統隨機算出來的，算不算「劇情」？",
+   "why": "RimWorld 自稱是故事產生器，沒有編劇卻讓很多玩家記得自己的殖民地發生過什麼。"
+  },
+  {
+   "q": "承諾模式（不能讀檔）才是正確玩法嗎？",
+   "why": "有人覺得能讀檔就失去緊張感，也有人覺得好不容易養大的殖民者被一場意外毀掉太痛。"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "59ooT57Lo3g",
+    "title": "Anomaly 資料片預告"
+   },
+   {
+    "id": "lhSLxvHsYmk",
+    "title": "Biotech 資料片預告"
+   }
+  ],
+  "images": []
+ },
+ "fanpage": {
+  "threads": {
+   "post": "你救回來的俘虜，後來變成殖民地最強的醫生；最可靠的廚師，卻因為心情崩潰把自己關在房間。\n\n《RimWorld》是 Ludeon Studios 的殖民地模擬，2018 年推出正式版，三個墜機倖存者在邊境星球從零開始。\n\n・中文：繁中介面，沒有語音\n・Steam 英文評論 97% 好評，Metacritic PC 87\n・Ludeon 公布玩家平均玩 242 小時\n・買斷制，另有 5 個付費資料片\n・官方沒有多人模式\n\n它沒有編劇，故事全是系統依你的決策算出來的；代價是畫面陽春、上手門檻不低。\n\n你玩殖民模擬，會選隨時讀檔，還是不能反悔的承諾模式？",
+   "topic": "模擬經營",
+   "more": [
+    "它怎麼玩：\n・不直接操控小人，而是排工作優先順序、規劃房間、決定研究方向\n・殖民者有心情、特質和人際關係，壓力太大會精神崩潰\n・AI 說書人負責丟事件：Cassandra 穩定加壓、Phoebe 佛系、Randy 完全隨機\n\n六段難度可選，開局也有不同劇本，例如只有一個人、身上什麼都沒有的「赤裸殘酷」。",
+    "買之前要知道：RimWorld 在 Steam 過去最多只到 8 折，很少大降，不用苦等五折。資料片不買也能玩得很完整，新手第一個常被推薦 Biotech。\n\n配備需求很低，筆電就能跑；支援 Steam 工作坊，模組非常多。想跟朋友一起玩只能靠社群模組，所有人的模組和設定要完全一樣。"
+   ]
+  },
+  "tags": [
+   "#RimWorld",
+   "#邊緣世界",
+   "#模擬經營",
+   "#遊戲推薦",
+   "#遊戲狂想曲"
+  ],
+  "card": {
+   "kicker": "私房推坑｜2018 年作品",
+   "title": "RimWorld\n殖民地模擬",
+   "sub": "每一局都長出自己的故事",
+   "tags": [
+    "模擬經營",
+    "沙盒",
+    "有繁中"
+   ],
+   "points": [
+    {
+     "h": "故事產生器",
+     "t": "AI 說書人丟事件，每局都不同。"
+    },
+    {
+     "h": "會崩潰的人",
+     "t": "殖民者有心情、特質和人際關係。"
+    },
+    {
+     "h": "97% 好評",
+     "t": "Steam 英文評論極度好評。"
+    }
+   ]
+  },
+  "credit": "圖片／影片來源：RimWorld 官方 Steam 商店頁與預告"
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：RimWorld",
+   "u": "https://store.steampowered.com/app/294100/",
+   "d": ""
+  },
+  {
+   "t": "Wikiwand（Wikipedia）：RimWorld",
+   "u": "https://www.wikiwand.com/en/articles/RimWorld",
+   "d": ""
+  },
+  {
+   "t": "ModDB：Steam 搶先體驗 7 月 15 日上架",
+   "u": "https://www.moddb.com/games/rimworld/news/steam-release-on-july-15",
+   "d": "2016-07"
+  },
+  {
+   "t": "Ludeon 官方部落格：RimWorld 1.0 推出",
+   "u": "https://ludeon.com/blog/2018/10/rimworld-1-0-released",
+   "d": "2018-10-17"
+  },
+  {
+   "t": "RimWorld Wiki：Odyssey 資料片",
+   "u": "https://www.rimworldwiki.com/wiki/Odyssey_(DLC)",
+   "d": ""
+  },
+  {
+   "t": "GamingOnLinux：Odyssey 資料片與 1.6 更新上線",
+   "u": "https://www.gamingonlinux.com/2025/07/rimworld-odyssey-expansion-is-out-now-along-with-update-1-6",
+   "d": "2025-07"
+  },
+  {
+   "t": "Metacritic：RimWorld（PC）",
+   "u": "https://legacy.prod.metacritic.com/game/pc/rimworld",
+   "d": ""
+  },
+  {
+   "t": "OpenCritic：RimWorld",
+   "u": "https://opencritic.com/game/6905/RimWorld",
+   "d": ""
+  },
+  {
+   "t": "RimWorld Wiki：難度與存檔模式",
+   "u": "https://rimworldwiki.com/wiki/Difficulty",
+   "d": ""
+  },
+  {
+   "t": "RimWorld Wiki：開局劇本",
+   "u": "https://rimworldwiki.com/wiki/Scenario_system",
+   "d": ""
+  },
+  {
+   "t": "RimWorld Wiki：結局",
+   "u": "https://rimworldwiki.com/wiki/Endings",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer 評測",
+   "u": "https://www.pcgamer.com/rimworld-review/",
+   "d": "2018"
+  },
+  {
+   "t": "Gamereactor 評測",
+   "u": "https://msn.gamereactor.eu/rimworld-review/",
+   "d": ""
+  },
+  {
+   "t": "GameDiscoverCo：RimWorld 最新資料片為何大賣",
+   "u": "https://newsletter.gamediscover.co/p/how-rimworlds-latest-dlc-was-its",
+   "d": "2025-08"
+  },
+  {
+   "t": "Ludeon 官方部落格：賣破一百萬套",
+   "u": "https://ludeon.com/blog/2018/01/one-million-copies-sold",
+   "d": "2018-01"
+  },
+  {
+   "t": "O'Reilly：Designing Games（Tynan Sylvester 著）",
+   "u": "https://www.oreilly.com/library/view/designing-games/9781449338015/",
+   "d": "2013-02"
+  },
+  {
+   "t": "GitHub：RimWorld Multiplayer 社群模組",
+   "u": "https://github.com/rwmt/multiplayer",
+   "d": ""
+  },
+  {
+   "t": "TechBloat：RimWorld 各資料片內容與購買順序",
+   "u": "https://www.techbloat.com/rimworld-dlc-explained-what-each-expansion-adds-and-which-to-buy-first.html",
+   "d": ""
+  },
+  {
+   "t": "Game Developer：矮人要塞與 RimWorld 說故事的方式",
+   "u": "https://gamedeveloper.com/design/dwarf-fortress-and-rimworld-tell-very-different-stories",
+   "d": ""
+  },
+  {
+   "t": "Steambase：RimWorld 資料與 Steam Deck 狀態",
+   "u": "https://steambase.io/games/rimworld/info",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer：開發五年半，1.0 上線",
+   "u": "https://pcgamer.com/after-five-and-a-half-years-of-development-rimworld-10-is-now-live",
+   "d": "2018-10"
+  },
+  {
+   "t": "OpenCritic：RimWorld 評論列表",
+   "u": "https://opencritic.com/game/6905/rimworld/reviews",
+   "d": ""
+  },
+  {
+   "t": "RimWorld Multiplayer FAQ",
+   "u": "https://hackmd.io/@rimworldmultiplayer/faq",
+   "d": ""
+  },
+  {
+   "t": "Ludeon 論壇：Tynan 談不打折",
+   "u": "https://ludeon.com/forums/index.php?msg=431134",
+   "d": "2018"
+  },
+  {
+   "t": "RimWorld Wiki：精神崩潰",
+   "u": "https://rimworldwiki.com/wiki/Mental_break",
+   "d": ""
+  },
+  {
+   "t": "RimWorld Wiki：關於 RimWorld（官方介紹，靈感來源）",
+   "u": "https://rimworldwiki.com/wiki/About_RimWorld",
+   "d": ""
+  },
+  {
+   "t": "SteamDB：RimWorld 價格紀錄",
+   "u": "https://steamdb.info/app/294100",
+   "d": "2026-11"
+  }
+ ],
+ "pending": [
+  "HowLongToBeat 的精確時數",
+  "Steam 工作坊的模組數量"
+ ],
+ "updated": "2026-11-20",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "選劇本和 AI 說書人，帶殖民者落地",
+    "排工作優先順序：種田、蓋房、研究",
+    "應付說書人丟來的襲擊、疾病、天災",
+    "招募新人、照顧每個人的心情",
+    "殖民地長大，研究科技、準備離開星球"
+   ],
+   "body": [
+    "開局選一個劇本（最常見的是三個墜機倖存者）、一位 AI 說書人和難度，然後在隨機生成的星球上找塊地落腳。你不會像 RTS 那樣點一個人叫他去做事，而是在工作分頁裡排每個人的優先順序：誰負責煮飯、誰去種田、誰做研究，小人會自己按順序去做。",
+    "殖民者是這款遊戲的核心。每個人有技能、特質、需求和心情：睡在地上、吃生食、看到屍體都會扣心情，累積太多壓力就會精神崩潰，可能大吃大喝、躲進房間，有縱火狂特質的人甚至會放火。人和人之間會交朋友、吵架、談戀愛，戰鬥受傷也可能換上義肢或仿生零件。",
+    "AI 說書人決定事件的節奏：Cassandra 會讓壓力穩定往上加，Phoebe 給你比較長的喘息時間，Randy 什麼都有可能發生。襲擊、寒流、疫病、商隊、求救任務輪番出現，殖民地也會從木屋慢慢長成有砲塔、醫院和研究所的要塞。",
+    "本體的結局是研究科技、造一艘船離開星球；五個資料片各自加了貴族與心靈能力、自訂宗教、基因改造與養小孩、恐怖異象，以及能飛的基地，每一個都把玩法拓寬一大塊。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "Against the Storm",
+    "same": "一樣是經營建造，要顧資源和居民需求",
+    "diff": "Against the Storm 是一局幾小時的 Roguelite 城市建造；RimWorld 一局沒有盡頭，重點是每個殖民者的故事",
+    "steam": 1336490
+   },
+   {
+    "name": "矮人要塞",
+    "same": "RimWorld 的靈感來源，同樣靠系統自動生出故事",
+    "diff": "矮人要塞有上百個矮人和完整的世界歷史模擬；RimWorld 人數少、介面親切，每個人的悲喜更鮮明",
+    "steam": 975370
+   },
+   {
+    "name": "缺氧",
+    "same": "同樣是管理一群會崩潰的小人、在惡劣環境求生",
+    "diff": "缺氧的重點是氣體和液體的工程難題；RimWorld 的重點是人和事件",
+    "steam": 457140
+   }
+  ],
+  "story": {
+   "safe": [
+    "這是一款科幻殖民地模擬。最常見的開局是三個太空船失事的倖存者，搭救生艙墜落在一顆遙遠的邊境星球，身上只有少量物資。",
+    "這裡沒有寫好的主線：AI 說書人會依照你的殖民地狀況安排事件，官方乾脆說它是「故事產生器」，跟你一起寫出悲劇、荒唐或勝利的故事。靈感來自《矮人要塞》、影集《螢火蟲》和小說《沙丘》。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "Ludeon Studios 由加拿大的 Tynan Sylvester 創立。他之前在 Irrational Games 參與《生化奇兵：無限之城》的設計約四年，2012 年離開獨立開發，還寫了一本遊戲設計書《Designing Games》。",
+   "RimWorld 在 2013 年 10 月上 Kickstarter，30 天募到約 26.8 萬美元；2016 年 7 月登上 Steam 搶先體驗，2018 年 10 月推出 1.0，前後開發了五年半。正式版之前就已經在 2018 年初賣破一百萬套。",
+   "之後每隔一兩年推出一個大型資料片，搭配免費的大改版。2025 年 7 月的 Odyssey 是上市兩週收入最好的資料片，Steam 同時在線衝到接近 10 萬人。Ludeon 一向不愛打折，Steam 上過去最低只到 8 折，2025 年才表示之後會更常特價。"
+  ],
+  "timeline": [
+   {
+    "d": "2013-10-02",
+    "t": "Kickstarter 募資開跑，30 天募到約 26.8 萬美元"
+   },
+   {
+    "d": "2016-07-15",
+    "t": "Steam 搶先體驗上架"
+   },
+   {
+    "d": "2018-01",
+    "t": "銷量突破一百萬套"
+   },
+   {
+    "d": "2018-10-17",
+    "t": "正式版 1.0 推出"
+   },
+   {
+    "d": "2020-02-24",
+    "t": "第一個資料片 Royalty 上市"
+   },
+   {
+    "d": "2021-07-20",
+    "t": "資料片 Ideology 上市"
+   },
+   {
+    "d": "2022-07-29",
+    "t": "PS4、Xbox One 主機版推出"
+   },
+   {
+    "d": "2022-10-21",
+    "t": "資料片 Biotech 上市"
+   },
+   {
+    "d": "2024-04-11",
+    "t": "資料片 Anomaly 上市"
+   },
+   {
+    "d": "2025-07-11",
+    "t": "資料片 Odyssey 與免費 1.6 更新上線"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "最會「生故事」的遊戲之一：評測都提到每局都會發生讓人想講給別人聽的事",
+    "系統深、變化多，資料片和模組讓它玩幾百小時都有新東西",
+    "AI 說書人和難度選擇讓每種玩家都能找到自己的節奏"
+   ],
+   "cons": [
+    "畫面陽春，介面笨重，PC Gamer 直說介面一點都不直覺",
+    "新手教學不夠，很多系統要自己查，Gamereactor 說入門很辛苦",
+    "PC Gamer 覺得殖民者有時像工作機器，等待的時間也偏多"
+   ],
+   "debate": [
+    "資料片和本體很少打折，五個資料片加起來比本體貴很多，值不值得？有人覺得每個資料片內容量都夠大，也有人覺得收齊門檻太高。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "本體",
+   "what": "完整的殖民地模擬，加上所有免費更新。",
+   "tip": "先從這裡開始，玩熟了再決定加哪個資料片。",
+   "best": true
+  },
+  {
+   "name": "Deluxe Pack（本體＋Biotech＋Odyssey）",
+   "what": "Steam 上的組合包，收了最常被推薦的兩個資料片。",
+   "tip": "確定會長玩再買，比分開買方便。"
+  },
+  {
+   "name": "單買資料片",
+   "what": "Royalty、Ideology、Biotech、Anomaly、Odyssey 各自加一大塊系統。",
+   "tip": "新手第一個常被推薦 Biotech；喜歡角色扮演選 Ideology。"
+  }
+ ],
+ "multi": {
+  "ok": "partial",
+  "text": "官方只有單人。社群模組「Multiplayer」可以讓朋友一起合作經營同一個殖民地，但所有人的模組、設定和資料片要完全一致，屬於非官方玩法。"
+ }
+}

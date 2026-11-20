@@ -1,0 +1,572 @@
+{
+ "id": "deep-rock-galactic",
+ "date": "2026-11-20",
+ "rank": 3,
+ "game": {
+  "zh": "Deep Rock Galactic",
+  "zh_note": "沒有官方中文名，中文圈常稱《深岩銀河》",
+  "en": "Deep Rock Galactic",
+  "steam": 548430,
+  "dev": "Ghost Ship Games",
+  "pub": "Coffee Stain Publishing",
+  "platforms": [
+   "PC（Steam）",
+   "PC（微軟商店）",
+   "Xbox One",
+   "Xbox Series X|S",
+   "PS4",
+   "PS5"
+  ],
+  "genres": [
+   "合作射擊",
+   "第一人稱",
+   "挖礦"
+  ],
+  "release": "2020-05-13",
+  "year": 2020,
+  "price_text": "Steam 台灣區價格看即時數據"
+ },
+ "stamp": "閉眼入",
+ "label": "揪 2～3 個朋友下礦坑閉眼入",
+ "pitch": "四個太空矮人鑽進可破壞的外星洞穴挖礦打蟲：職業分工最明確的四人合作遊戲",
+ "why": "常跟兩三個朋友連線的話，這款很適合當固定行程。四個太空矮人各帶一套工具下礦坑：偵察兵打照明彈、勾爪飛上岩壁，鑽探手直接鑽出一條路，工程師架平台和砲塔，機槍手拉滑索、扛火力。洞穴每次都不一樣、整片都能挖，任務一場二三十分鐘，打完回太空站喝杯啤酒、升級武器，很適合下班開一兩場。賽季內容全部免費，付費的只有外觀。要老實講：它是第一人稱射擊，還是要瞄準，高難度蟲潮來時也會手忙腳亂；不過難度分五級，從最低開始完全跟得上。",
+ "reasons": [
+  {
+   "h": "四職業分工",
+   "t": "照明、鑽地、架平台、拉滑索，四個人缺一不可，很適合固定揪團。"
+  },
+  {
+   "h": "洞穴每次都不同",
+   "t": "程序生成又能整片破壞，任務種類多，還有每週固定的三連關深潛。"
+  },
+  {
+   "h": "97% 好評",
+   "t": "Steam 英文評論極度好評 97%，OpenCritic 平均 85、97% 推薦。"
+  }
+ ],
+ "fit": {
+  "for": [
+   "有 2～3 個固定連線朋友、想找一款能長期一起玩的合作遊戲",
+   "喜歡收集材料、升級武器和外觀、慢慢變強的人",
+   "時間零碎，想一次打一兩場就下線的人"
+  ],
+  "against": [
+   "完全不碰第一人稱射擊的人：還是要瞄準，高難度時很忙",
+   "只想一個人玩的人：單人有無人機 Bosco 幫忙，但評測都說遠不如組隊",
+   "容易迷路的人：立體洞穴的地圖不好看，常被評測點名"
+  ]
+ },
+ "scores": [
+  {
+   "k": "Metacritic（PC）",
+   "v": "85",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "OpenCritic",
+   "v": "85（97% 推薦）",
+   "s": [
+    6
+   ]
+  }
+ ],
+ "facts": [
+  {
+   "k": "開發／發行",
+   "v": "Ghost Ship Games（丹麥哥本哈根）／Coffee Stain Publishing",
+   "s": [
+    0,
+    1
+   ]
+  },
+  {
+   "k": "上市",
+   "v": "2018/2/28 搶先體驗；2020/5/13 正式版",
+   "s": [
+    2,
+    0
+   ]
+  },
+  {
+   "k": "主機版",
+   "v": "Xbox 搶先體驗起就有；PS4、PS5 版 2022/1/4 上市",
+   "s": [
+    2,
+    3
+   ]
+  },
+  {
+   "k": "中文",
+   "v": "介面與字幕有繁中、簡中；語音只有英文",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "評分",
+   "v": "Metacritic 85；OpenCritic 平均 85、97% 推薦；Steam 英文評論 97% 好評",
+   "s": [
+    0,
+    6
+   ]
+  },
+  {
+   "k": "人數",
+   "v": "1～4 人線上合作，房主開房；單人模式有無人機 Bosco 當隊友",
+   "s": [
+    0,
+    14,
+    11
+   ]
+  },
+  {
+   "k": "職業",
+   "v": "偵察兵、鑽探手、工程師、機槍手四個職業，各有專屬工具",
+   "s": [
+    0,
+    8
+   ]
+  },
+  {
+   "k": "洞穴",
+   "v": "程序生成、完全可破壞，11 種生態區、50 種以上敵人",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "任務",
+   "v": "10 種主要任務，另有每週固定種子、三關連續的深潛",
+   "s": [
+    9
+   ]
+  },
+  {
+   "k": "難度",
+   "v": "危險等級 1～5，另有 5+ 的四種加強選項；誤傷倍率隨難度提高",
+   "s": [
+    10,
+    27
+   ]
+  },
+  {
+   "k": "跨平台",
+   "v": "Steam 版只能跟 Steam 玩家連線；Xbox 和微軟商店 PC 互通；PlayStation 只有 PS4、PS5 互通",
+   "s": [
+    15,
+    14
+   ]
+  },
+  {
+   "k": "賽季",
+   "v": "目前推出到第 6 季（PC 2026/1/29、主機 2026/2/12），賽季通行證免費，舊賽季可以切回去玩",
+   "s": [
+    5,
+    4,
+    16
+   ]
+  },
+  {
+   "k": "付費內容",
+   "v": "買斷制；付費 DLC 全是外觀包和原聲帶",
+   "s": [
+    0
+   ]
+  },
+  {
+   "k": "遊玩時間",
+   "v": "HowLongToBeat：主線 43 小時、含支線 137 小時、全收集 495 小時",
+   "s": [
+    7
+   ]
+  },
+  {
+   "k": "銷量",
+   "v": "2024 年 1 月累計超過 800 萬套",
+   "s": [
+    17
+   ]
+  },
+  {
+   "k": "特價紀錄",
+   "v": "Steam 常見 -67%，2025 年 7 月曾打到 -70%",
+   "s": [
+    21,
+    26
+   ]
+  }
+ ],
+ "zh": {
+  "ui": true,
+  "sub": true,
+  "voice": false,
+  "note": "介面與字幕有繁體中文（也有簡中），語音只有英文。"
+ },
+ "tw": {
+  "ok": true,
+  "note": "Steam 台灣區直接買得到（價格看下方即時數據）；PS、Xbox 版以各平台台灣商店為準。"
+ },
+ "money": {
+  "level": 1,
+  "model": "買斷制＋外觀 DLC",
+  "notes": [
+   "本體買斷，賽季內容和通行證都免費。",
+   "付費 DLC 只有外觀包和原聲帶，不影響強度。"
+  ],
+  "flags": [
+   "買斷",
+   "外觀 DLC",
+   "賽季免費"
+  ]
+ },
+ "rig": {
+  "verdict": "不吃硬體",
+  "note": "建議配備是 GTX 970、容量只要 3GB；你的 SCAR 18 開滿接 4K 電視都很輕鬆。"
+ },
+ "time": {
+  "text": "一場約二三十分鐘，可以玩很久",
+  "note": "沒有一定要打完的主線；HowLongToBeat 統計主線 43 小時、含支線 137 小時、全收集 495 小時。"
+ },
+ "howto": [
+  "四個人各選不同職業最好玩；人少的話優先帶偵察兵（照明）和鑽探手（開路）。",
+  "前幾場用危險等級 1～2 熟悉地形和各職業工具，再往上加難度拿更多獎勵。",
+  "撤離倒數開始就往回跑，礦車 Molly 會帶路，不要邊跑邊挖。",
+  "升到一定等級後去鍛造台做超頻零件，武器的玩法會大不同。"
+ ],
+ "deals": "Steam 常打到 -67%，2025 年 7 月曾到 -70%；沒有免費加入的機制，四個人一起買的話等特賣最划算，外觀 DLC 不用買。",
+ "talk": [
+  {
+   "q": "合作遊戲最重要的是分工，還是每個人都能單打獨鬥？",
+   "why": "DRG 的四職業各有專屬工具，少了一個人就少一種能力；有人覺得這才是合作，有人嫌綁手綁腳。"
+  },
+  {
+   "q": "免費賽季、只賣外觀，是線上遊戲的理想模式嗎？",
+   "why": "它被當成不搞課金的線上合作代表；但開發商要怎麼長期養得起團隊？"
+  }
+ ],
+ "media": {
+  "yt": [
+   {
+    "id": "g4Qen6fdO2A",
+    "title": "第 6 季上市預告"
+   },
+   {
+    "id": "5XEpORLw9A8",
+    "title": "第 6 季內容介紹預告"
+   }
+  ],
+  "images": []
+ },
+ "fanpage": {
+  "threads": {
+   "post": "四個太空矮人鑽進外星洞穴挖礦，挖到一半，整群蟲從牆裡鑽出來。\n\n《Deep Rock Galactic》是丹麥 Ghost Ship Games 的合作射擊，2020 年推出正式版，PC、Xbox、PS 都有。\n\n・中文：繁中介面與字幕，語音英文\n・1～4 人線上合作，單人有無人機陪你\n・Steam 英文評論 97% 好評，OpenCritic 85\n・買斷制，賽季免費，付費只有外觀\n・Steam 版不能跟主機跨平台\n\n四個職業分工超明確，少一個人就少一種能力，最適合固定揪團；但它還是要瞄準，高難度蟲潮很忙。\n\n你揪團玩合作遊戲，會選固定職業，還是每場輪流換？",
+   "topic": "合作遊戲",
+   "more": [
+    "它怎麼玩：\n・偵察兵打照明彈、用勾爪；鑽探手鑽地開路；工程師架平台和砲塔；機槍手拉滑索扛火力\n・洞穴程序生成又能整片挖，11 種生態區、10 種主要任務\n・危險等級 1～5，誤傷會隨難度變重\n\n打完回太空站升級武器、做超頻零件，每週還有固定種子的三連關深潛。",
+    "買之前要知道：沒有免費加入的機制，朋友要各自準備一份；Steam 版只能跟 Steam 玩家一起玩。Steam 常見 -67%，2025 年 7 月曾到 -70%，四個人一起買可以等特賣。\n\n配備需求很低，建議 GTX 970、容量 3GB。單人可以玩，但評測都說組隊才是精華；立體洞穴容易迷路也是常見抱怨。"
+   ]
+  },
+  "tags": [
+   "#DeepRockGalactic",
+   "#深岩銀河",
+   "#合作遊戲",
+   "#遊戲推薦",
+   "#遊戲狂想曲"
+  ],
+  "card": {
+   "kicker": "私房推坑｜2020 年作品",
+   "title": "Deep Rock\nGalactic",
+   "sub": "四個矮人下礦坑打蟲",
+   "tags": [
+    "四人合作",
+    "挖礦",
+    "有繁中"
+   ],
+   "points": [
+    {
+     "h": "四職業分工",
+     "t": "照明、鑽地、架平台、拉滑索。"
+    },
+    {
+     "h": "整片可挖",
+     "t": "洞穴每次都不同，地形能破壞。"
+    },
+    {
+     "h": "97% 好評",
+     "t": "Steam 英文評論極度好評。"
+    }
+   ]
+  },
+  "credit": "圖片／影片來源：Deep Rock Galactic 官方 Steam 商店頁與預告"
+ },
+ "sources": [
+  {
+   "t": "Steam 商店頁：Deep Rock Galactic",
+   "u": "https://store.steampowered.com/app/548430/Deep_Rock_Galactic",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer：五年免費更新，還能關掉更新玩原版",
+   "u": "https://pcgamer.com/deep-rock-galactic-celebrates-five-years-of-free-updates-by-letting-you-play-without-them-says-we-are-not-slowing-down",
+   "d": "2023-02-03"
+  },
+  {
+   "t": "Deep Rock Galactic Wiki：更新歷史",
+   "u": "https://deeprockgalactic.wiki.gg/wiki/Update_History",
+   "d": ""
+  },
+  {
+   "t": "Game Informer：2022 年 1 月 PS Plus 會免遊戲",
+   "u": "https://gameinformer.com/2022/01/03/persona-5-strikers-deep-rock-galactic-and-dirt-5-featured-in-january-2022-playstation",
+   "d": "2022-01-03"
+  },
+  {
+   "t": "PC Gamer：第 1 季上線，免費賽季通行證",
+   "u": "https://www.pcgamer.com/deep-rock-galactic-adds-robo-baddies-and-a-big-data-heist-as-it-launches-a-free-season-pass",
+   "d": "2021-11"
+  },
+  {
+   "t": "Gamewatcher：第 6 季開始日期",
+   "u": "https://www.gamewatcher.com/deep-rock-galactic-season-6-start-end-dates",
+   "d": "2026-01"
+  },
+  {
+   "t": "OpenCritic：Deep Rock Galactic",
+   "u": "https://opencritic.com/game/9436/-",
+   "d": ""
+  },
+  {
+   "t": "Deku Deals：Deep Rock Galactic 的 HowLongToBeat 時數",
+   "u": "https://www.dekudeals.com/items/deep-rock-galactic",
+   "d": ""
+  },
+  {
+   "t": "Game Informer 評測",
+   "u": "https://gameinformer.com/review/deep-rock-galactic/deep-rock-galactic-review-off-to-work-we-go",
+   "d": "2020"
+  },
+  {
+   "t": "Deep Rock Galactic Wiki：任務",
+   "u": "https://deeprockgalactic.wiki.gg/wiki/Missions",
+   "d": ""
+  },
+  {
+   "t": "Deep Rock Galactic Wiki：危險等級",
+   "u": "https://deeprockgalactic.wiki.gg/wiki/Hazard_Level",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer 評測",
+   "u": "https://www.pcgamer.com/deep-rock-galactic-review/",
+   "d": "2020"
+  },
+  {
+   "t": "Deep Rock Galactic Wiki：M.U.L.E.（Molly）",
+   "u": "https://deeprockgalactic.wiki.gg/wiki/M.U.L.E.",
+   "d": ""
+  },
+  {
+   "t": "PC Gamer：遊戲界少數正向的社群",
+   "u": "https://www.pcgamer.com/meet-one-of-the-last-positive-communities-left-in-gaming",
+   "d": ""
+  },
+  {
+   "t": "Deep Rock Galactic Wiki：多人連線",
+   "u": "https://deeprockgalactic.wiki.gg/wiki/Multiplayer",
+   "d": ""
+  },
+  {
+   "t": "Charlie Intel：跨平台說明",
+   "u": "https://charlieintel.com/games/is-deep-rock-galactic-cross-platform-pc-xbox-playstation-crossplay-explained-260683",
+   "d": ""
+  },
+  {
+   "t": "GamingOnLinux：第 5 季可以重玩舊賽季",
+   "u": "https://www.gamingonlinux.com/2024/06/deep-rock-galactic-has-a-huge-new-season-coming-and-you-can-replay-old-seasons",
+   "d": "2024-06"
+  },
+  {
+   "t": "Game World Observer：銷量破 800 萬套",
+   "u": "https://gameworldobserver.com/2024/01/12/deep-rock-galactic-sales-8-million-copies-ghost-ship-games",
+   "d": "2024-01-12"
+  },
+  {
+   "t": "Push Square 評測（PS5）",
+   "u": "https://pushsquare.com/reviews/ps5/deep-rock-galactic",
+   "d": "2022"
+  },
+  {
+   "t": "GamesRadar：Survivor 一年百萬玩家、9 月推出正式版",
+   "u": "https://www.gamesradar.com/games/roguelike/1-year-and-1-million-players-later-deep-rock-galactic-survivor-goes-1-0-in-september-plus-the-roguelike-rogue-cores-alpha-is-starting-soon-in-a-massive-day-for-dwarf-enthusiasts",
+   "d": "2025"
+  },
+  {
+   "t": "新聞稿：Rogue Core 5 月 20 日搶先體驗",
+   "u": "https://www.mynewsdesk.com/uk/swipe-right/pressreleases/deep-rock-galactic-rogue-core-drills-into-early-access-may-20th-3436994",
+   "d": "2026"
+  },
+  {
+   "t": "Slickdeals：Steam -70% 特價",
+   "u": "https://slickdeals.net/f/18487024-deep-rock-galactic-pc-game-8-99",
+   "d": "2025-07"
+  },
+  {
+   "t": "Gamepressure：太空站設施說明",
+   "u": "https://www.gamepressure.com/deep-rock-galactic/space-rig-map/zdd4cb",
+   "d": ""
+  },
+  {
+   "t": "Shacknews：第 2 季 4 月 28 日上線",
+   "u": "https://www.shacknews.com/article/129648/deep-rock-galactic-season-2-rival-escalation-digs-in-april-28",
+   "d": "2022-04"
+  },
+  {
+   "t": "OpenCritic：Deep Rock Galactic 評論列表（IGN 9 分）",
+   "u": "https://opencritic.com/game/9436/deep-rock-galactic/reviews?sort=score",
+   "d": ""
+  },
+  {
+   "t": "The Loadout：Helldivers 2 與 Deep Rock Galactic 的差別",
+   "u": "https://www.theloadout.com/helldivers-2/xbox-deep-rock-galactic",
+   "d": "2024"
+  },
+  {
+   "t": "WePC：Steam -67% 特價",
+   "u": "https://www.wepc.com/news/deep-rock-galactic-receives-a-massive-67-discount-on-steam/",
+   "d": ""
+  },
+  {
+   "t": "Deep Rock Galactic Wiki：第 5 季 Drilling Deeper",
+   "u": "https://deeprockgalactic.wiki.gg/wiki/Season_05:_Drilling_Deeper",
+   "d": ""
+  }
+ ],
+ "pending": [
+  "第 7 季上線時間（社群 wiki 寫 2026 年 12 月，官方未確認）",
+  "Steam Deck 正式相容等級",
+  "多人是否每人都要各買一份、有沒有同螢幕合作（沒有找到官方明文）"
+ ],
+ "updated": "2026-11-20",
+ "sections": {
+  "gameplay": {
+   "loop": [
+    "在太空站選任務、選職業和難度",
+    "空投進洞穴，邊挖邊找目標礦物",
+    "蟲潮來襲，四職業分工守住",
+    "完成目標，趕在倒數內跑回撤離艙",
+    "回太空站升級武器、做超頻、喝啤酒"
+   ],
+   "body": [
+    "你是星際採礦公司 Deep Rock Galactic 派出的矮人礦工，一次 1～4 人空投進外星洞穴。洞穴每次都是程序生成，而且整片岩壁都能挖，想走捷徑就自己鑽一條路。任務有十種主要類型，例如挖礦、搜蛋、護送鑽機、擊殺大型怪物，完成後要在倒數內跑回撤離艙，跑不回去就拿不到全部獎勵。",
+    "四個職業的工具完全不同：偵察兵用照明彈槍照亮漆黑的洞穴、用勾爪飛上高處；鑽探手能直接鑽穿岩壁，也帶火焰槍；工程師用平台槍在空中架踏板、放自動砲塔；機槍手扛重火力，還能拉滑索讓隊友渡過深谷。工具互相補位，四個人站對位置才順。",
+    "難度分危險等級 1～5，越高敵人越多越兇，誤傷也越痛，獎勵加成也越高；第 5 季加入的 5+ 還能自選更變態的修正。每週還有固定種子的「深潛」：三關連續、血量和彈藥會帶到下一關，適合想挑戰的團。",
+    "打完回到太空站，在酒吧點有加成的啤酒、升級武器、在鍛造台做超頻零件改變武器玩法，等級練滿可以「晉升」重來，慢慢解鎖更多東西。單人時會有一架叫 Bosco 的無人機幫你照明和開火。"
+   ]
+  },
+  "compare": [
+   {
+    "name": "惡靈勢力 2",
+    "same": "四人合作、一起殺出重圍、跑向撤離點",
+    "diff": "惡靈勢力是線性關卡打殭屍；DRG 洞穴每次不同、可以挖，而且四個職業分工明確",
+    "steam": 550
+   },
+   {
+    "name": "絕地戰兵 2",
+    "same": "常被拿來比較的四人合作打蟲，都有空投和撤離",
+    "diff": "絕地戰兵 2 靠空中支援和兵員數；DRG 靠職業工具和挖礦資源，節奏也比較好掌握",
+    "steam": 553850
+   },
+   {
+    "name": "Deep Rock Galactic: Survivor",
+    "same": "同一個世界觀的外傳，同樣是矮人挖礦打蟲",
+    "diff": "Survivor 是單人的倖存者類，自動攻擊、一局短；本傳是第一人稱四人合作",
+    "steam": 2321470
+   }
+  ],
+  "story": {
+   "safe": [
+    "你是星際採礦公司 Deep Rock Galactic 的矮人礦工，被派到全宇宙最危險、也最富饒的星球 Hoxxes IV，在充滿外星生物的地底挖寶。",
+    "遊戲沒有傳統的劇情主線，世界觀靠任務簡報、太空站裡的設施和賽季事件慢慢拼出來；後來的賽季加入了跟公司搶礦的敵對勢力等新內容。"
+   ],
+   "spoiler": []
+  },
+  "studio": [
+   "Ghost Ship Games 是丹麥哥本哈根的工作室，由 Coffee Stain Publishing 發行。遊戲 2018 年 2 月開始搶先體驗，同時上 Steam、微軟商店和 Xbox，2020 年 5 月推出正式版；PS4、PS5 版在 2022 年 1 月上市，當月還是 PS Plus 會免遊戲。",
+   "正式版之後改走免費賽季：2021 年 11 月第 1 季加入免費的通行證，之後每季加新任務、新敵人和外觀；第 5 季起可以隨時切回舊賽季拿錯過的東西，也能選不綁通行證的 Vanilla 賽季。到 2026 年 1 月推出第 6 季。",
+   "2024 年 1 月累計賣出超過 800 萬套。工作室也把品牌拓展成外傳：倖存者類的《Deep Rock Galactic: Survivor》2025 年 9 月推出正式版，Roguelite 合作射擊《Rogue Core》2026 年 5 月開始搶先體驗。"
+  ],
+  "timeline": [
+   {
+    "d": "2018-02-28",
+    "t": "Steam、微軟商店、Xbox 同步開始搶先體驗"
+   },
+   {
+    "d": "2020-05-13",
+    "t": "正式版推出"
+   },
+   {
+    "d": "2021-11-04",
+    "t": "第 1 季上線，賽季通行證免費"
+   },
+   {
+    "d": "2022-01-04",
+    "t": "PS4、PS5 版上市，當月是 PS Plus 會免遊戲"
+   },
+   {
+    "d": "2024-01",
+    "t": "累計銷量超過 800 萬套"
+   },
+   {
+    "d": "2024-06-13",
+    "t": "第 5 季上線，加入危險等級 5+，可重玩舊賽季"
+   },
+   {
+    "d": "2025-09-17",
+    "t": "外傳《Deep Rock Galactic: Survivor》推出正式版"
+   },
+   {
+    "d": "2026-01-29",
+    "t": "第 6 季在 PC 上線"
+   },
+   {
+    "d": "2026-05-20",
+    "t": "外傳《Rogue Core》開始搶先體驗"
+   }
+  ],
+  "voices": {
+   "pros": [
+    "四人分工合作的設計被公認是同類最好的之一，IGN 給 9 分",
+    "把挖礦變刺激：洞穴氣氛好、照明彈點亮黑暗的那一下很有感，撤離倒數很緊張",
+    "社群出名友善，「Rock and Stone」喊一聲就能跟陌生人打招呼",
+    "不搞課金：賽季免費，付費只有外觀"
+   ],
+   "cons": [
+    "立體洞穴的地圖不好用、常迷路，PC Gamer 和 Game Informer 都點名",
+    "單人玩遠不如組隊，Bosco 只能算陪練",
+    "後期進度偏向外觀，新手一開始又會被系統淹沒；主機版配對常斷線"
+   ],
+   "debate": [
+    "誤傷要不要開？低難度幾乎沒感覺，最高難度很痛，有人覺得這才是合作的精髓，也有人覺得只會害團隊吵架。"
+   ]
+  }
+ },
+ "editions": [
+  {
+   "name": "本體",
+   "what": "完整遊戲加所有免費賽季內容。",
+   "tip": "買本體就能玩全部內容，外觀包不用買。",
+   "best": true
+  },
+  {
+   "name": "Supporter 包等外觀 DLC",
+   "what": "盔甲、外觀和原聲帶，不影響強度。",
+   "tip": "玩到愛上、想支持開發商再買。"
+  }
+ ],
+ "multi": {
+  "ok": true,
+  "text": "1～4 人線上合作，房主開房，可以設公開、好友限定或密碼，任務中也能中途加入。Steam 版只能跟 Steam 玩家連線，不能跟 Xbox 或 PlayStation 跨平台；沒有找到免費加入的機制，朋友一起玩要各自準備一份。"
+ }
+}
