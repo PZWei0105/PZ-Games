@@ -2763,7 +2763,7 @@ body.rc-on{overflow:hidden}
 
 :root{--cjkh:var(--cjk);--cjkb:var(--cjk)}
 </style>
-<script>/* 換裝：畫面出來之前就把那一套的 CSS 接上（塗鴉版不用多載任何東西） */try{var s=JSON.parse(localStorage.getItem('unpacked.v1.settings')||'{}'),t={pixel:'#0b0d24',neon:'#08040f',paper:'#f3eee2'}[s.skin];if(t){document.documentElement.setAttribute('data-skin',s.skin);document.querySelector('meta[name="theme-color"]').content=t;if(s.skin==='paper')document.querySelector('meta[name="color-scheme"]').content='light';document.write('<link rel="stylesheet" id="skincss" data-skin="'+s.skin+'" href="skins/'+s.skin+'.css?v=1.0.2611201500">');var j=document.createElement('script');j.async=true;j.src='skins/'+s.skin+'.js?v=1.0.2611201500';document.head.appendChild(j)}}catch(e){}</script>
+<script>/* 換裝：畫面出來之前就把那一套的 CSS 接上（塗鴉版不用多載任何東西） */try{var s=JSON.parse(localStorage.getItem('unpacked.v1.settings')||'{}'),t={pixel:'#0b0d24',neon:'#08040f',paper:'#f3eee2'}[s.skin];if(t){document.documentElement.setAttribute('data-skin',s.skin);document.querySelector('meta[name="theme-color"]').content=t;if(s.skin==='paper')document.querySelector('meta[name="color-scheme"]').content='light';document.write('<link rel="stylesheet" id="skincss" data-skin="'+s.skin+'" href="skins/'+s.skin+'.css?v=1.0.2611201503">');var j=document.createElement('script');j.async=true;j.src='skins/'+s.skin+'.js?v=1.0.2611201503';document.head.appendChild(j)}}catch(e){}</script>
 </head>
 <body>
 <div id="wall"></div>
@@ -2790,7 +2790,7 @@ body.rc-on{overflow:hidden}
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611201500';
+const VERSION = '1.0.2611201503';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -6907,7 +6907,7 @@ function starHud() {
   const y = STAR.sty;
   return `<div class="st-top"><div class="st-ttl"><h2 class="spray-h">遊戲星圖</h2><small>GALAXY・${n} 顆星・${STAR.arms.length} 個星座</small></div>
       <div class="seg st-seg">${[['all', '全部'], ['f', '專題'], ['p', '推坑']].map(([k, t]) => `<button class="${STAR.filt === k ? 'on' : ''}" data-act="stfilt" data-v="${k}">${t}</button>`).join('')}</div></div>
-    <div class="st-exp"><b>探索度 <span class="num">${pct}%</span></b><i><em style="transform:scaleX(${(pct / 100).toFixed(3)})"></em></i><small>看過 ${seen}／${n} 篇・沒看過的星會閃，按 🎲 飛過去</small></div>
+    <div class="st-exp"><b>探索度 <span class="num">${pct}%</span></b><i><em style="transform:scaleX(${(pct / 100).toFixed(3)})"></em></i><small>看過 ${seen}／${n} 篇・會閃的是還沒看的</small></div>
     <div class="st-leg"><span><i style="background:${y.good}"></i>推薦／必玩</span><span><i style="background:${y.mid}"></i>觀望／特價入</span><span><i style="background:${y.bad}"></i>不推薦</span><span class="st-lk">✦ 專題　● 推坑・越外圈越新</span></div>
     <div class="st-btns"><button class="btn y st-b st-dice" data-act="stdice" aria-label="${seen < n ? '飛去一顆沒看過的' : '隨便挑一顆'}" title="${seen < n ? '飛去一顆沒看過的' : '隨便挑一顆'}">🎲</button><button class="btn st-b" data-act="stzin" aria-label="放大">＋</button><button class="btn st-b" data-act="stzout" aria-label="縮小">－</button><button class="btn st-b" data-act="stfit" aria-label="看全部">⤢</button></div>
     <div class="st-card" id="stcard"></div>`;

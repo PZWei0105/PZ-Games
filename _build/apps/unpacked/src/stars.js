@@ -250,7 +250,7 @@ function starHud() {
   const y = STAR.sty;
   return `<div class="st-top"><div class="st-ttl"><h2 class="spray-h">遊戲星圖</h2><small>GALAXY・${n} 顆星・${STAR.arms.length} 個星座</small></div>
       <div class="seg st-seg">${[['all', '全部'], ['f', '專題'], ['p', '推坑']].map(([k, t]) => `<button class="${STAR.filt === k ? 'on' : ''}" data-act="stfilt" data-v="${k}">${t}</button>`).join('')}</div></div>
-    <div class="st-exp"><b>探索度 <span class="num">${pct}%</span></b><i><em style="transform:scaleX(${(pct / 100).toFixed(3)})"></em></i><small>看過 ${seen}／${n} 篇・沒看過的星會閃，按 🎲 飛過去</small></div>
+    <div class="st-exp"><b>探索度 <span class="num">${pct}%</span></b><i><em style="transform:scaleX(${(pct / 100).toFixed(3)})"></em></i><small>看過 ${seen}／${n} 篇・會閃的是還沒看的</small></div>
     <div class="st-leg"><span><i style="background:${y.good}"></i>推薦／必玩</span><span><i style="background:${y.mid}"></i>觀望／特價入</span><span><i style="background:${y.bad}"></i>不推薦</span><span class="st-lk">✦ 專題　● 推坑・越外圈越新</span></div>
     <div class="st-btns"><button class="btn y st-b st-dice" data-act="stdice" aria-label="${seen < n ? '飛去一顆沒看過的' : '隨便挑一顆'}" title="${seen < n ? '飛去一顆沒看過的' : '隨便挑一顆'}">🎲</button><button class="btn st-b" data-act="stzin" aria-label="放大">＋</button><button class="btn st-b" data-act="stzout" aria-label="縮小">－</button><button class="btn st-b" data-act="stfit" aria-label="看全部">⤢</button></div>
     <div class="st-card" id="stcard"></div>`;
