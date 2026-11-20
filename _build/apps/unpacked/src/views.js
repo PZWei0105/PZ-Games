@@ -675,6 +675,7 @@ function settingsHtml() {
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${st[k] === v ? 'on' : ''}" data-act="set" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   return `<h3>設定</h3>
     <div class="setrow"><div class="st"><b>換裝</b><small>現在：${esc(SKIN_BY[skinId()].name)}。畫面、字型、音效、配樂、開場一起換</small></div><button class="btn sm y" data-act="skinsheet">${ICON.shirt}<span>換裝</span></button></div>
+    <div class="setrow"><div class="st"><b>上鎖</b><small>打開解包要輸入密語（跟書房同一組），這台裝置記得你${ULock.when() ? `・上次輸入密語 ${esc(ULock.when())}` : ''}</small></div><button class="btn sm" data-act="lockme"><span>現在上鎖</span></button></div>
     <div class="setrow"><div class="st"><b>音效</b><small>${esc(SKIN_BY[skinId()].snd.split('・')[0])}這些聲音（跟著換裝）</small></div>${seg('sfx', [[true, '開'], [false, '關']])}</div>
     <div class="setrow"><div class="st"><b>音效音量</b></div><input type="range" min="0" max="1" step="0.05" value="${st.vol}" data-act="vol" data-k="vol"></div>
     <div class="setrow"><div class="st"><b>背景配樂</b><small>${esc(SKIN_BY[skinId()].snd.split('・').slice(-1)[0])}（跟著換裝）；看預告、滑短影音、語音導讀時會自動停下來</small></div>${seg('bgm', [[true, '開'], [false, '關']])}</div>

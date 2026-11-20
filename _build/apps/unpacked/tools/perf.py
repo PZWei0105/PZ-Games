@@ -109,6 +109,8 @@ def run():
     with sync_playwright() as p:
         b = p.chromium.launch()
         ctx = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=3, is_mobile=True, has_touch=True)
+        import lockrec   # 上鎖（src/lock.js）：當作這台裝置記得，開門畫面才不會停在鎖
+        ctx.add_init_script(lockrec.trust_js())
         ctx.add_init_script(INIT)
         pg = ctx.new_page()
         errs = []

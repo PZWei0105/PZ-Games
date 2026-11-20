@@ -61,6 +61,9 @@ errors = []
 with sync_playwright() as p:
     b = p.chromium.launch(args=['--autoplay-policy=no-user-gesture-required'] if os.environ.get('UNP_AUTOPLAY') else [])
     ctx = b.new_context(viewport={'width': VP[0], 'height': VP[1]}, device_scale_factor=VP[2], has_touch=vp != 'desk', is_mobile=vp != 'desk')
+    if not os.environ.get('UNP_LOCKED'):   # 上鎖（src/lock.js）：當作這台裝置記得；要拍鎖的畫面設 UNP_LOCKED=1
+        import lockrec
+        ctx.add_init_script(lockrec.trust_js())
     pg = ctx.new_page()
     pg.on('console', lambda m: errors.append(f'{m.type}: {m.text}') if m.type in ('error', 'warning') else None)
     pg.on('pageerror', lambda e: errors.append(f'PAGEERROR: {e}'))

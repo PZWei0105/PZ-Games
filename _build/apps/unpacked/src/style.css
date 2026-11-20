@@ -529,6 +529,43 @@ input[type=range]{width:120px;accent-color:#FF2E88}
 #gate .gm{font:900 14px/1 var(--cjk);color:var(--k);text-decoration:underline;padding:10px;opacity:.75}
 #gate .gs{font:400 15px/1 var(--hand);color:var(--k);opacity:.75}
 @keyframes pulse{0%,100%{transform:rotate(-3deg) scale(1)}50%{transform:rotate(-3deg) scale(1.05)}}
+/* 上鎖（lock.js，2026-11-21）：開門畫面上一把掛鎖、一條鐵鍊；開了鐵鍊往兩邊飛、鎖掉下去 */
+#gate.locked{cursor:default;gap:12px;overflow-y:auto;justify-content:safe center}
+#gate.locked .gl{font-size:62px}
+#gate.locked .go{animation:none;border:0;cursor:pointer;margin-top:2px}
+#gate.locked .go:disabled{opacity:.6}
+#gate .ul-art{width:min(300px,82vw);margin:-2px 0 -6px}
+#gate .ul-art svg{display:block;width:100%;height:auto;overflow:visible}
+#gate .ul-link{fill:none;stroke:var(--k);stroke-width:6}
+#gate .ul-shk{fill:none;stroke:var(--k);stroke-width:11;stroke-linecap:round}
+#gate .ul-body{fill:var(--k);stroke:#fff;stroke-width:4}
+#gate .ul-hole{fill:var(--y)}
+#gate .ul-tag{fill:var(--p);font-family:var(--drip);font-size:15px}
+#gate .ul-t{font:900 19px/1.2 var(--cjk);color:var(--k);background:#fff;padding:7px 14px;transform:rotate(2deg);box-shadow:4px 4px 0 var(--k)}
+#gate .ul-f{display:grid;gap:14px;width:min(340px,86vw);justify-items:center;margin-top:6px}
+#gate .ul-field{position:relative;display:block;width:100%}
+#gate .ul-in{display:block;width:100%;box-sizing:border-box;height:54px;border:4px solid var(--k);border-radius:0;background:#fff;color:var(--k);font:900 19px/1 var(--cjk);text-align:center;padding:0 48px;outline:none;box-shadow:5px 5px 0 var(--p);transform:rotate(-1deg);-webkit-appearance:none;appearance:none}
+#gate .ul-in::placeholder{color:#0008;font-weight:700}
+#gate .ul-in:focus{box-shadow:5px 5px 0 var(--p),0 0 0 4px #fff}
+#gate .ul-in.masked{-webkit-text-security:disc}
+#gate .ul-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;padding:0;background:none;color:var(--k);display:grid;place-items:center;cursor:pointer}
+#gate .ul-eye[aria-pressed="true"]{color:var(--p)}
+#gate .ul-m{min-height:1.5em;margin:0;font:900 15px/1.4 var(--cjk);color:var(--k)}
+#gate .ul-m.bad{color:#fff;background:var(--p);padding:3px 10px;transform:rotate(-1deg)}
+#gate .ul-n{margin:0;max-width:340px;text-align:center;font:700 12.5px/1.6 var(--cjk);color:var(--k);opacity:.78}
+#gate .ul-pad,#gate .ul-cl,#gate .ul-cr{transform-box:fill-box;transform-origin:center;transition:transform .55s cubic-bezier(.5,0,.2,1),opacity .55s}
+#gate.busy .ul-pad{animation:ulJiggle .45s ease-in-out infinite}
+@keyframes ulJiggle{25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+#gate.opening .ul-cl{transform:translate(-80px,24px) rotate(-24deg);opacity:0}
+#gate.opening .ul-cr{transform:translate(80px,24px) rotate(24deg);opacity:0}
+#gate.opening .ul-pad{transform:translateY(100px) rotate(40deg);opacity:0;transition-duration:.65s;transition-delay:.12s}
+#gate.opening .ul-shk{transform:translateY(-12px);transition:transform .2s}
+#gate .ul-art{position:relative}
+#gate .ul-open{position:absolute;left:50%;top:48%;font:400 58px/1 var(--drip);color:var(--p);text-shadow:4px 4px 0 var(--k);-webkit-text-stroke:2px #fff;paint-order:stroke fill;transform:translate(-50%,-50%) rotate(-9deg) scale(2.6);opacity:0;pointer-events:none;white-space:nowrap}
+#gate.opening .ul-open{transition:transform .32s cubic-bezier(.2,1.6,.4,1) .18s,opacity .12s .18s;transform:translate(-50%,-50%) rotate(-9deg) scale(1);opacity:1}
+@media (max-height:620px){#gate.locked .gl{font-size:44px}#gate.locked{gap:8px}#gate .ul-art{width:min(220px,60vw)}#gate .ul-n{font-size:11.5px}}
+@media (max-height:450px){#gate.locked{gap:6px;padding:10px}#gate.locked .gl{font-size:34px;-webkit-text-stroke:4px #fff}#gate.locked .ge,#gate .ul-t,#gate .ul-n{display:none}#gate .ul-art{width:170px;margin:2px 0 -10px}#gate .ul-open{font-size:40px}#gate .ul-f{gap:10px;margin-top:2px}#gate .ul-in{height:46px}#gate.locked .go{padding:10px 22px;font-size:20px}}
+@media (prefers-reduced-motion:reduce){#gate.busy .ul-pad{animation:none}}
 
 #intro{position:fixed;inset:0;z-index:99;background:#111;overflow:hidden;cursor:pointer}
 #intro canvas{position:absolute;inset:0;width:100%;height:100%}

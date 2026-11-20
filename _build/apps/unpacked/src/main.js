@@ -461,6 +461,7 @@ document.addEventListener('click', async (ev) => {
     if (a === 'cmpgo') { if (S.cmp.length < 2) return; if (S.cmp.length === 2) { NAVN++; location.hash = 'vs/' + S.cmp.map((id) => 'f:' + id).join(','); return; } openSheet(await compareHtml(), 'wide'); return; }
     if (a === 'cmpclear') { S.cmp = []; save('cmp'); trayUpdate(); $$('.cmpbtn').forEach((b) => { b.classList.remove('on'); b.textContent = '+'; }); sfx.scratch(); return; }
     if (a === 'settings') { openSheet(settingsHtml()); return; }
+    if (a === 'lockme') { if (!act.dataset.sure) { act.dataset.sure = 1; const sp = act.querySelector('span'); if (sp) sp.textContent = '再按一次上鎖'; sfx.click(); return; } ULock.now(); return; }   // 上鎖：重新打開回到開門畫面的鎖
     if (a === 'skinsheet') { audioInit(); openSkinSheet(); return; }   // 換裝選單
     if (a.startsWith('db') && dbAct(a, act)) return;   // 資料庫
     if (a === 'swcdl' || a === 'swcshare') { saleCardOut(a === 'swcshare'); return; }
@@ -563,6 +564,8 @@ function topIcons() {
 
 /* ---- 啟動 ---- */
 async function boot() {
+  // 上鎖（lock.js）：這台裝置記得就跟原本一模一樣；要輸入密語時，開門畫面先換成鎖（資料照樣在背後載入），開了才進場
+  const unlocked = ULock.need() ? ULock.gate($('#gate'), () => audioInit()) : null;
   skinApply(skinId()).then((ok) => { if (!ok) { S.settings.skin = 'graffiti'; save('settings'); } });   // 開頭的小程式已經把 CSS 接上了，這裡只補齊其他設定
   fxInit();
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
@@ -597,7 +600,8 @@ async function boot() {
     setTimeout(() => dbLoad(), 4000);   // 閒下來先把資料庫載好（全部功能的數字、搜尋馬上能用）
     if (!ok) toast('資料讀不到，檢查一下網路', 'warn');
   };
-  gate.addEventListener('click', (e) => { e.stopPropagation(); enter(!!e.target.closest('.gm')); }, { once: true });
+  if (unlocked) unlocked.then(() => enter(false));   // 開鎖＝聲光全開進場（按下開鎖的當下已經喚醒聲音）
+  else gate.addEventListener('click', (e) => { e.stopPropagation(); enter(!!e.target.closest('.gm')); }, { once: true });
   addEventListener('hashchange', route);
   addEventListener('online', () => askFlush());
   document.addEventListener('visibilitychange', () => { if (!document.hidden) askFlush(); });
