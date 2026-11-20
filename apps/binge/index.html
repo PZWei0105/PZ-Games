@@ -875,7 +875,7 @@ html.fx-lite *, html.fx-lite *::before, html.fx-lite *::after { animation-durati
 'use strict';
 /* 補番 BINGE — 核心：設定、片庫資料、追番同步、觀看紀錄、清單 */
 
-const VERSION = '1.2.0';
+const VERSION = '1.2.1';
 const NAME = '痞子葳';
 const RAW = 'https://raw.githubusercontent.com/PZWei0105/PZ-Games';
 const QS = new URLSearchParams(location.search);
@@ -3276,6 +3276,13 @@ function closeSheet() {
   setTimeout(() => { s.hidden = true; s.innerHTML = ''; }, 260);
 }
 
+/* ---- news.js ---- */
+// 更新紀錄：App 打開時用一句提示告訴痞子葳改了什麼（最新的放最前面；只提示一次，記在 localStorage 的 binge.v1.news）。
+// 只寫痞子葳看得到的改變；小修正合併成一筆「修正」。
+const NEWS = [
+  { id: '2026-11-20', t: '片庫大掃除：不是作品的名字清掉了、預告不再混進集數，換上 3 台還在更新的 AI 漫劇和沙雕頻道' },
+];
+
 /* ---- main.js ---- */
 'use strict';
 /* 補番 BINGE — 路由、點擊、天空、開場 */
@@ -3530,13 +3537,13 @@ addEventListener('scroll', () => {
   const on = scrollY > 8;
   if (on !== scrolledOn) { scrolledOn = on; document.documentElement.classList.toggle('scrolled', on); }
 }, { passive: true });
-function toast(msg) {
+function toast(msg, ms) {
   if (typeof Land !== 'undefined' && Land.mode) { Land.say(msg); return; }   // 橫放全螢幕時寫在播放器裡（跟著轉）
   const t = $('#toast');
   t.textContent = msg;
   t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
   clearTimeout(toastT);
-  toastT = setTimeout(() => t.classList.remove('on'), 2600);
+  toastT = setTimeout(() => t.classList.remove('on'), ms || 2600);
 }
 function syncLight() {
   const s = $('#sync');
@@ -3671,11 +3678,19 @@ async function start() {
   }
   await loading;
   if (!Player.isOpen() && !Swipe.isOpen()) softRefresh();
+  showNews(lastVisit, showIntro && !QS.has('skip'));
   sendNow();
   setInterval(() => { if (!document.hidden) refreshData().then((ch) => { if (ch && !Player.isOpen() && !Swipe.isOpen() && ROUTE === 'home' && scrollY < 80) softRefresh(); }); }, 6 * 60e3);
   setInterval(() => { if (SYNC.out.length) sendNow(); }, 10 * 60e3);
   if (window.BG_WEB && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { /* */ });
   void lastVisit;
+}
+function showNews(lastVisit, afterOp) {
+  // 改版提示：每一筆只說一次；第一次打開的人不用看
+  if (typeof NEWS === 'undefined' || !NEWS.length || store.get('news') === NEWS[0].id) return;
+  store.set('news', NEWS[0].id);
+  if (!lastVisit) return;
+  setTimeout(() => { if (!Player.isOpen() && !Swipe.isOpen()) toast('更新：' + NEWS[0].t, 7000); }, afterOp ? 4200 : 1500);
 }
 function welcome(ep) {
   if (!D.cat) return;

@@ -251,13 +251,13 @@ addEventListener('scroll', () => {
   const on = scrollY > 8;
   if (on !== scrolledOn) { scrolledOn = on; document.documentElement.classList.toggle('scrolled', on); }
 }, { passive: true });
-function toast(msg) {
+function toast(msg, ms) {
   if (typeof Land !== 'undefined' && Land.mode) { Land.say(msg); return; }   // 橫放全螢幕時寫在播放器裡（跟著轉）
   const t = $('#toast');
   t.textContent = msg;
   t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
   clearTimeout(toastT);
-  toastT = setTimeout(() => t.classList.remove('on'), 2600);
+  toastT = setTimeout(() => t.classList.remove('on'), ms || 2600);
 }
 function syncLight() {
   const s = $('#sync');
@@ -392,11 +392,19 @@ async function start() {
   }
   await loading;
   if (!Player.isOpen() && !Swipe.isOpen()) softRefresh();
+  showNews(lastVisit, showIntro && !QS.has('skip'));
   sendNow();
   setInterval(() => { if (!document.hidden) refreshData().then((ch) => { if (ch && !Player.isOpen() && !Swipe.isOpen() && ROUTE === 'home' && scrollY < 80) softRefresh(); }); }, 6 * 60e3);
   setInterval(() => { if (SYNC.out.length) sendNow(); }, 10 * 60e3);
   if (window.BG_WEB && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => { /* */ });
   void lastVisit;
+}
+function showNews(lastVisit, afterOp) {
+  // 改版提示：每一筆只說一次；第一次打開的人不用看
+  if (typeof NEWS === 'undefined' || !NEWS.length || store.get('news') === NEWS[0].id) return;
+  store.set('news', NEWS[0].id);
+  if (!lastVisit) return;
+  setTimeout(() => { if (!Player.isOpen() && !Swipe.isOpen()) toast('更新：' + NEWS[0].t, 7000); }, afterOp ? 4200 : 1500);
 }
 function welcome(ep) {
   if (!D.cat) return;

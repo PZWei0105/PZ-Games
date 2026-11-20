@@ -1269,6 +1269,9 @@ def prune(cache, chans):
 _OCC = [None]
 
 
+_KANA = re.compile(r'[\u3040-\u30ff]')
+_XLATIN = re.compile(r'[\u0100-\u024f\u1e00-\u1eff]')          # ğ ş ı、越南文的 ơ ư đ ạ⋯（英文、中文標題不會有）
+_TURK = re.compile(r'Türkçe|Bölüm|BÖLÜM|DERLEME|MÜZIK|DÖNGÜ|\bSezon\b|çizgi film|VIETDUB|Lồng Tiếng|Thuyết Minh', re.I)
 _FIX = str.maketrans({'臺': '台', '産': '產', '壹': '一'})
 _OCC_CH = [None]
 
@@ -1290,6 +1293,9 @@ def nice_ch(n):
     if len(parts) > 1 and re.fullmatch(r'[\u4e00-\u9fff]{1,4}', parts[1]):
         n += parts[1]
     n = re.sub(r'Anime Made By Bilibili|iQIYI Animation|Get the iQIYI APP|歡迎訂閱|APP搶先看|天天看動漫', ' ', n, flags=re.I)
+    if len(re.findall(r'[\u4e00-\u9fff]', n)) >= 2:
+        # 中文名後面的英文副標：「九界動漫 Nine Anime」「雨霖劇場Yulin Theatre」「長安動漫 Chang'an Animation」（單一個黏著的英文字是品牌，留著：抖漫MotionComic）
+        n = re.sub(r"(?<=[\u4e00-\u9fff])\s+[A-Za-z][A-Za-z'’.&\- ]*$|(?<=[\u4e00-\u9fff])[A-Za-z][A-Za-z'’.&\-]*(?:\s+[A-Za-z'’.&\-]+)+$", '', n.strip())
     n = re.sub(r'\s+', ' ', n).strip(' -–—|｜_')
     return n if len(n) >= 2 else n0
 
@@ -1298,6 +1304,7 @@ def s2t(s):
     """簡體 → 台灣繁體（s2twp），再統一異體字（爲→為、裏→裡、壹口氣→一口氣）。對本來就是繁體的字幾乎不動。"""
     if not s:
         return s
+    s0 = s
     if _OCC[0] is None:
         try:
             from opencc import OpenCC
@@ -1309,10 +1316,24 @@ def s2t(s):
             s = _OCC[0][1].convert(_OCC[0][0].convert(s))
         except Exception:  # noqa: BLE001
             pass
-    return s.translate(_FIX)
+    return _tw_undo(s0, s.translate(_FIX))
 
 
-BUDGET = {'ai': 100, 'sd': 100, 'mc': 200, 'cn': 420, 'jp': 700, 'toon': 220}   # 每個頻道收進片庫幾支（含作品裡的集數）
+# s2twp 的「台灣慣用詞」是給電腦用語的，用在小說、動畫標題常常錯（綁定系統→繫結系統、刷新→重新整理、對象→物件）。
+# 原文裡有左邊的詞，才把轉出來的錯詞換回來。
+_TW_UNDO = (('繫結', '綁定', ('绑定', '綁定')), ('重新整理', '刷新', ('刷新',)), ('物件', '對象', ('对象', '對象')), ('迴圈', '循環', ('循环', '循環')),
+            ('永珍', '萬象', ('万象', '萬象')), ('全域性', '全局', ('全局',)), ('支援', '支持', ('支持',)), ('啟用', '激活', ('激活',)),
+            ('釋出', '發布', ('发布', '發佈', '發布')), ('型別', '類型', ('类型', '類型')), ('迴天', '回天', ('回天',)))
+
+
+def _tw_undo(src, s):
+    for bad, good, forms in _TW_UNDO:
+        if bad in s and any(f in src for f in forms):
+            s = s.replace(bad, good)
+    return s
+
+
+BUDGET = {'ai': 90, 'sd': 90, 'mc': 180, 'cn': 380, 'jp': 620, 'toon': 200}    # 每個頻道收進片庫幾支（含作品裡的集數）；2026-11-20 片庫到 1.7 MB 調小，目標 1.5 MB 上下
 KIDS_BUDGET = 90
 EP_CAP = 100              # 一部作品最多收幾集
 TITLE_MAX = 56
@@ -1326,6 +1347,10 @@ def build_catalog(cache, chans, me):
         r = pool.get(v.get('c'))
         if not r or v.get('mem') or v.get('gone') or not v.get('t'):
             continue
+        if r.get('l') != 'ja' and len(_KANA.findall(v['t'])) >= 3:
+            continue            # 日文標題（Ani-One Asia 的日本 YouTuber 企劃、鋼彈大賽頒獎）：不是動畫，也看不懂
+        if _XLATIN.search(v['t']) or _TURK.search(v['t']):
+            continue            # 土耳其文、越南文配音（卡通頻道的清單分頁掛了 Cartoon Network Türkiye 的清單）
         chname = s2t(r.get('n') or r.get('seed') or '')
         raw = s2t(v['t'])
         t = X.clean_title(raw, chname) or raw[:96]
@@ -1351,6 +1376,7 @@ def build_catalog(cache, chans, me):
 
     # ---- 作品候選：播放清單（要找得到各集共同的作品名；AI 頻道的「題材清單」不是作品）
     cands = collections.defaultdict(list)       # 頻道 → [作品]
+    chnorm = {c: X.norm(s2t(r.get('n') or r.get('seed') or '')) for c, r in pool.items()}
     for pid, p in cache['pl'].items():
         cid = p.get('c')
         if not (p.get('keep') and p.get('eps') and cid in pool):
@@ -1378,9 +1404,13 @@ def build_catalog(cache, chans, me):
                 else:
                     keyv[v] = lastk + (1, i)
             eps = sorted(eps, key=keyv.get)
-        name = X.common_name([info[v]['t'] for v in eps[:40]])
+        titles = [info[v]['t'] for v in eps[:40]]
+        if X.mixed_list(titles):
+            continue            # 好幾部作品湊成的清單（「異世界轉生系列」「新年特別放送」）
+        name = X.common_name(titles, ban=chnorm.get(cid))
         if not name:
-            if kind in ('ai', 'sd', 'mc') or len(eps) > 40:
+            only_ch = X.common_name(titles) is not None      # 各集只共有頻道名（【暴走三金_】）：清單名（「神王序列」）就是作品名
+            if (kind in ('ai', 'sd', 'mc') and not only_ch) or len(eps) > 40 and not only_ch:
                 continue        # 題材合集、雜燴清單
             name = s2t(X.clean_playlist(p.get('n') or '', r.get('n') or ''))
             if not X._name_ok(X.nice_show(name)):
@@ -1395,6 +1425,11 @@ def build_catalog(cache, chans, me):
     for vid, x in info.items():
         if vid in in_pl or x['f'] not in ('c', 'e', 'm') or not x['show']:
             continue
+        if (pool[x['v']['c']].get('l') or 'zh') == 'zh' and not x['zh']:
+            continue            # 中文頻道裡的外語影片（日文企劃、越南語配音）不組成作品
+        cn_ = chnorm.get(x['v']['c'])
+        if cn_ and len(cn_) >= 2 and X.norm(x['show']) in (cn_, cn_.rstrip('_')):
+            continue            # 【暴走三金】是頻道名，不是作品名
         grp[(x['v']['c'], X.norm(x['show']))].append(vid)
     dupe_in_group = set()
     for (cid, key), vids in grp.items():
@@ -1470,7 +1505,7 @@ def build_catalog(cache, chans, me):
             age = (NOW - latest) / 86400 if latest else 120
             return max(sc) + sum(sorted(sc)[-5:]) / 10 + (1.4 if age < 14 else 0.7 if age < 60 else 0) + min(1, len(sh['eps']) / 24) * 0.5
         for sh in sorted(cands.get(cid, []), key=sscore, reverse=True):
-            eps = [v for v in sh['eps'] if v not in dups][:EP_CAP]
+            eps = _uniq_eps([v for v in sh['eps'] if v not in dups], info, cache)[:EP_CAP]
             if not eps:
                 continue
             n = len([v for v in eps if v not in chosen])
@@ -1544,6 +1579,20 @@ def build_catalog(cache, chans, me):
     return out
 
 
+def _uniq_eps(eps, info, cache):
+    """作品裡同一集重複上傳（標題、集數一樣，片長差不到 5%）只留第一支。"""
+    out, seen = [], {}
+    for v in eps:
+        k = (info[v]['t'], info[v]['ep'], info[v]['rg'])
+        d = cache['v'][v].get('d') or 0
+        d0 = seen.get(k)
+        if d0 is not None and (not d or not d0 or abs(d - d0) <= max(d, d0) * 0.05):
+            continue
+        seen.setdefault(k, d)
+        out.append(v)
+    return out
+
+
 def build_ext(cache, me):
     """名單外（金鑰）：全天放送、全網熱補。跟片庫分開放，App 只在自己那兩排用。"""
     x = cache.get('ext') or {}
@@ -1595,7 +1644,7 @@ def cut(t, n):
     if len(t) <= n:
         return t
     t = t[:n]
-    t = re.sub(r'\s*[\[【《(（「][^\]】》)）」]{0,16}$', '', t)
+    t = re.sub(r'\s*[\[【《(（「][^\]】》)）」]{0,28}$', '', t)
     return t.rstrip(' ｜|,，、:：-–—')
 
 

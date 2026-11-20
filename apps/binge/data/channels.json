@@ -14,12 +14,6 @@
    "lang": "zh"
   },
   {
-   "id": "UCNIKva6iDURgVxf44pMZlKA",
-   "name": "动漫魔女",
-   "kind": "ai",
-   "lang": "zh"
-  },
-  {
    "id": "UCmvR7zlN-MWcCutPePPwCTA",
    "name": "无敌漫剧",
    "kind": "ai",
@@ -44,20 +38,8 @@
    "lang": "zh"
   },
   {
-   "id": "UCkmHG1BkDCLxjrFP0nHzhnQ",
-   "name": "最新剧场",
-   "kind": "ai",
-   "lang": "zh"
-  },
-  {
    "id": "UC0Mn7N3sXOCf5mI0eni3gjQ",
    "name": "AI漫剧WongXin",
-   "kind": "ai",
-   "lang": "zh"
-  },
-  {
-   "id": "UCGxvRi8Z9CYYQi-XDWw_iDA",
-   "name": "AI动漫频道",
    "kind": "ai",
    "lang": "zh"
   },
@@ -140,14 +122,14 @@
    "lang": "zh"
   },
   {
-   "id": "UC3h4rXGhuxGwBWO6etGxUnQ",
-   "name": "咕叽沙雕动画",
-   "kind": "sd",
+   "id": "UCD8e9NxnZ7DoyDUp6SLVTdQ",
+   "name": "羽烬AI製作所",
+   "kind": "ai",
    "lang": "zh"
   },
   {
-   "id": "UCu5p34I1mBvtw4x7lJZEAIQ",
-   "name": "阿乐沙雕动画",
+   "id": "UC3h4rXGhuxGwBWO6etGxUnQ",
+   "name": "咕叽沙雕动画",
    "kind": "sd",
    "lang": "zh"
   },
@@ -202,6 +184,18 @@
   {
    "id": "UCNWNGmoRMYf6Gqu0QinsCaw",
    "name": "沙雕動畫世界",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UCAcy8iDUR9Pj-fia0aFl58Q",
+   "name": "暴走沙雕漫",
+   "kind": "sd",
+   "lang": "zh"
+  },
+  {
+   "id": "UC0prC8JHcxstCCeLLaQ96Vg",
+   "name": "沙雕動畫愛日更",
    "kind": "sd",
    "lang": "zh"
   },

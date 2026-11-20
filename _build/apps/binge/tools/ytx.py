@@ -111,7 +111,7 @@ COMP_RX = re.compile(r'合集|合輯|合辑|一口氣|一口气|完整版|全集
                      r'總集篇|总集篇|大合集|已完結|已完结|完結篇|完结篇|全季|整季|一次看完|看完全部|marathon|compilation|all episodes|full season', re.I)
 MOVIE_RX = re.compile(r'劇場版|剧场版|大電影|大电影|動畫電影|动画电影|電影版|电影版|\bthe movie\b|\bmovie\b', re.I)
 EP_RX = re.compile(r'(?:\bEP|\bE|第)\s*0*(\d{1,4})\s*(?:[集話话回]|\b)|#\s*0*(\d{1,4})\b|\bEpisode\s*0*(\d{1,4})\b|【\s*0*(\d{1,4})\s*】', re.I)
-RANGE_RX = re.compile(r'(?:第\s*)?0*(\d{1,4})\s*[-~～—–至到]\s*0*(\d{1,4})\s*[集話话回]|(?:EP|E)\s*0*(\d{1,4})\s*[-~～—–]\s*(?:EP|E)?\s*0*(\d{1,4})', re.I)
+RANGE_RX = re.compile(r'(?:第\s*)?0*(\d{1,4})\s*[-~～—–至到]\s*0*(\d{1,4})\s*(?:[集話话回]|合集|合輯|合辑)|(?:EP|E)\s*0*(\d{1,4})\s*[-~～—–]\s*(?:EP|E)?\s*0*(\d{1,4})', re.I)
 PV_RX = re.compile(r'預告|预告|\bPV\d*\b|\bCM\b|Trailer|Teaser|先導|先导|前導|前导|宣傳|宣传|主題曲|主题曲|片頭曲|片头曲|片尾曲|'
                    r'\bOP\b|\bED\b|ノンクレジット|Non-?credit|MV\b|特報|特报|製作|制作花絮|幕後|幕后|配音員|声優|聲優|直播預告', re.I)
 LIVE_RX = re.compile(r'24\s*小時|24\s*小时|24H|24/7|直播|馬拉松|马拉松|LIVE\b|live stream|連播|连播', re.I)
@@ -149,6 +149,9 @@ def fmt_of(title, dur=None, short=False, live=None):
         return 'ep'
     if PV_RX.search(t) and dur < 6 * 60:
         return 'pv'
+    if dur < 25 * 60 and not COMP_RX.search(t) and (re.search(r'預告|预告|Trailer|Teaser|\bPV\d*\b', t, re.I) and dur < 15 * 60
+                                                  or re.search(r'精彩看[點点]|Highlight|高光|精華片段|精华片段|精彩片段', t, re.I)):
+        return 'pv'        # 優酷的「EP05預告Trailer」（7 分鐘）、「精彩看點 Highlight」（10 多分鐘）不是一集
     if dur >= 7 * 60:
         return 'comp' if (COMP_RX.search(t) and dur >= 15 * 60) else 'ep'
     if EP_RX.search(t) and dur >= 60:
@@ -176,7 +179,7 @@ def ep_range(title):
     if not m:
         return None
     a, b = [int(x) for x in m.groups() if x][:2]
-    if 0 <= a < b < 5000:
+    if 0 <= a < b < 5000 and not (1900 <= a and b <= 2100):      # 2024-2025 合集是年份
         return (a, b)
     return None
 
@@ -225,6 +228,8 @@ def show_name(title, strict=False):
         return None
     for rx in (r'《([^《》]{2,40})》', r'「([^「」]{2,40})」', r'『([^『』]{2,40})』'):
         for m in re.finditer(rx, t):
+            if rx[0] != '《' and not _quote_is_name(t, m):
+                continue
             n = tidy(re.sub(r'\s*/\s*[A-Za-z].*$', '', m.group(1)))
             if _name_ok(n):
                 return n
@@ -255,7 +260,7 @@ def norm(s):
     """比對用：去掉空白、符號、大小寫；簡繁混用的常見字統一。"""
     s = (s or '').lower()
     s = re.sub(r'[\s\-–—_:：·・!！?？,，.。、~～「」『』《》【】\[\]()（）"\'“”‘’]+', '', s)
-    return s.translate(_S2T_MIN)
+    return s.translate(_S2T_MIN).replace('鍊', '煉')
 
 
 _S2T_MIN = str.maketrans('这个们来说时会对发进过还没为与么样后间应开关现长问题经从动种实头见点业东车电视话语认让给门军龙马鸟鱼战术游戏剧乐级尽华兴阳阴剑灭场书亿届岁妈爷谁让赵钱孙杨陈刘宫庙凤凰万传达费钱网页频图线视设计论边总单况猎难恶灵击败枪弹队员装备阵营帮赛奖宝钥锁灯币购礼启闭约画帧优质圣复',
@@ -309,7 +314,7 @@ _CHANNELISH = re.compile(r'線上看|免費看|iQIYI|愛奇藝|爱奇艺|YOUKU|�
                         r'Get the|APP\s*搶先看|APP\s*抢先看|訂閱|订阅|官方頻道|官方频道|Official|Animation\s*Club|Chinese Animation|\bChannel\b|動畫頻道|动画频道', re.I)
 _TRAIL_EN = re.compile(r'(?<=[一-鿿》】」』)）])\s*[A-Za-z][A-Za-z0-9 :,\'’!?.&\-]{9,}$')
 _STRONG = re.compile(r'線上看|免費看|Get the\b|APP\s*[搶抢]先看|iQIYI|愛奇藝|爱奇艺|YOUKU|優酷|优酷|騰訊視頻|腾讯视频|WeTV|Made\s*By|Muse\s*木棉花|Ani-?One|Cartoon Network|Adult Swim|官方頻道|官方频道|\bOfficial\b', re.I)
-_GENERIC_SEG = re.compile(r'^(卡通|冒險|冒险|中文正版|正版|中文版|兒童|儿童|益智|動畫片|动画片|超清1080P|\d+\s*min|\d+\s*分鐘|FULL|FULL MOVIE|完整版|合集|合輯|全集|Collection|Collections|Playlist|donghua|anime|動畫|动画|動漫|动漫|漫劇|漫剧|AI漫劇|AI漫剧|\d{4}年\d{1,2}月新番)$', re.I)
+_GENERIC_SEG = re.compile(r'^(卡通|冒險|冒险|中文正版|正版|中文版|兒童|儿童|益智|動畫片|动画片|超清1080P|\d+\s*min|\d+\s*分鐘|FULL|FULL MOVIE|完整版|合集|合輯|全集|Collection|Collections|Playlist|donghua|anime|動畫|动画|動漫|动漫|漫劇|漫剧|AI漫劇|AI漫剧|\d{4}年\d{1,2}月新番|(?:超燃|熱血|热血|古風|古风|玄幻|奇幻|勵志|励志|搞笑|仙俠|仙侠|武俠|武侠|科幻|治癒|治愈|爆笑|甜寵|甜宠|東方|东方|懸疑|悬疑|冒險|冒险|戰鬥|战斗){2,}(?:國漫|国漫|古風漫|古风漫|漫|動漫|动漫)?|(?:超燃|熱血|热血|古風|古风|玄幻|奇幻|勵志|励志|搞笑|仙俠|仙侠|武俠|武侠|科幻|治癒|治愈|爆笑|甜寵|甜宠|東方|东方|懸疑|悬疑|冒險|冒险|戰鬥|战斗)+(?:國漫|国漫|古風漫|古风漫|漫))$', re.I)      # 優酷每集後面的「熱血古風漫」「超燃玄幻國漫」
 _PROMO = re.compile(r'^\s*(?:全集免[費费]|免[費费]看|完[結结]版|大?合集|合輯|AI\s*漫[劇剧]|AI\s*短[劇剧]|AI\s*動畫|AI\s*动画|一口[氣气]看完[！!]?|一口[氣气]看到爽|👉?更新啦👈?|最新合集|新番上[线線]|最新漫[剧劇]|爆火漫[劇剧]|熱門漫[劇剧]|热门漫[剧劇]|新番速[遞递]|強推|强推|精品沙雕動畫|精品沙雕动画|新番爽漫|NEW|最新合集|更新啦|連載中|连载中|人氣更新|人气更新|新漫更新|已完結|已完结|完結|完结)\s*[:：!！]?\s*', re.I)
 _PROMO_TAG = re.compile(r'[【\[(（]\s*(?:高清完[結结]合集|完[結结]合集|高清合集|高清|完整版|已完[結结]|完[結结]|全集|合集|大合集|NEW|新番|更新啦|最新|爆款|強推|强推|必看|獨家|独家|首播|熱播|热播|精品|4K|HD|1080P|全劇終|全剧终|免費|免费|限時免費|限时免费|動畫電影|动画电影|LIMITED\s*FREE|FREE|VIP|會員搶先看|会员抢先看|搶先看|抢先看|會員專享最新集|会员专享最新集|加入會員專享最新集|加入会员专享最新集|加入會員專屬最新集|歡迎訂閱[^】\])）]*|欢迎订阅[^】\])）]*|沙雕動畫|沙雕动画|動態漫畫|动态漫画|AI漫劇|AI漫剧|AI短劇|AI短剧|漫劇|漫剧|爆火漫劇|熱門漫劇|热门漫剧|國漫|国漫|動漫|动漫|精品沙雕動畫|精品沙雕动画)\s*[】\])）]', re.I)
 _LEADTAG = re.compile(r'^\s*(?:[【\[]\s*(?:完結|完结|已完結|已完结|完整版|全集|NEW|高清|強推|强推|新番|最新|爆款|熱門|热门|精選|精选|獨家|独家|首播|FULL|HD|4K|一口氣看完|一口气看完)[^】\]]{0,6}[】\]]|沙雕動畫|沙雕动画|動態漫畫|动态漫画)\s*', re.I)
@@ -330,10 +335,12 @@ def clean_title(t, chname=''):
 
 def _clean_title(t, chname, promo):
     t = t or ''
+    t = re.sub(r'【(?:[^【】｜|丨]{1,6}[｜|丨]){1,5}[^【】｜|丨]{1,6}(?:】|$)', ' ', t)      # 【玄幻｜修仙｜小說改編】這種題材標籤（被截斷沒有】的也算）
     t = re.sub(r'\s*#\S*', ' ', t)
     t = _EMOJI.sub(' ', t)
     t = _SUBTAG.sub(' ', t)
     t = re.sub(r'([\u4e00-\u9fff])\s*[A-Za-z][A-Za-z0-9\'’:,!?.&\-]*(?:\s+[A-Za-z0-9\'’:,!?.&\-]+)*\s*(?=[》】」』])', r'\1', t)
+    t = re.sub(r"(?<=[\u4e00-\u9fff])《[A-Za-z][A-Za-z'’:,!?.&\-]*(?:\s+[A-Za-z0-9'’:,!?.&\-]+)+》", ' ', t)    # 最強仙尊陳北玄《The Best Maestro》
     t = re.sub(r'[(（][^()（）]*(?:字幕|原聲|原声|subtitles?)[^()（）]*[)）]', ' ', t, flags=re.I)
     t = re.sub(r'[【\[(（][^】\])）]{0,12}(?:會員|会员|VIP)[^】\])）]{0,12}[】\])）]', ' ', t)
     t = re.sub(r'(?<=[》】」』])\s*[A-Za-z][A-Za-z\'’:\-]*(?:\s+[A-Za-z0-9\'’:\-]+){2,}\s*(?=EP\s*\d|E\d|第\s*\d|$)', ' ', t)
@@ -374,6 +381,7 @@ def _clean_title(t, chname, promo):
     t = re.sub(r'([（(《【])\s+', r'\1', t)
     t = re.sub(r'([】）)》])\s+(?=[《【（(])', r'\1', t)
     t = re.sub(r'\s+', ' ', t).strip(' -–—:：~～,，.。、|｜')
+    t = re.sub(r'\s*[【《「『（(\[][^】》」』）)\]【《「『（(\[]{0,30}$', '', t) or t      # 原標題被 YouTube 截斷，留下沒收尾的括號
     return t[:96]
 
 
@@ -400,19 +408,47 @@ def ep_prefix(t):
     return tidy(m.group(1)) if m else None
 
 
-def common_name(titles, fallback=None):
-    """一個播放清單裡各集標題共有的名字（作品名）。《》裡的最可信，其次是「第 N 集」前面那段，再來是「」、【】、分隔線之間的段落。"""
+def _quote_is_name(t, m):
+    """「」『』裡的字是不是作品名：在標題開頭（前面只有【標籤】）、後面緊接集數，或整個標題就是它。
+    句子中間的「刺繡」「小龍蝦」「四合院空間」是劇情關鍵字。"""
+    before = re.sub(r'【[^【】]*】|\[[^\]]*\]|[\s\-–—:：|｜丨]', '', t[:m.start()])
+    after = t[m.end():].lstrip()
+    return not before or bool(re.match(r'(?:第\s*\d|EP\s*\d|E\d|#\s*\d|\d+\s*[集話话])', after, re.I)) or len(m.group(1)) >= len(t) * 0.6
+
+
+def mixed_list(titles):
+    """播放清單裡是不是好幾部不同的作品（「異世界轉生系列」「新年特別放送」「精華重溫」）：
+    各集的《》名大多不一樣。這種清單不是一部作品，清單名也不能當作品名。"""
+    names = []
+    for t in titles:
+        m = re.search(r'《([^《》]{2,40})》', t) or re.match(r'\s*【([^【】]{2,40})】', t)
+        if m and _name_ok(tidy(m.group(1))):
+            names.append(norm(de_en(tidy(m.group(1))))[:6])
+    if len(names) < 3 or len(names) < len(titles) * 0.6:
+        return False
+    from collections import Counter
+    top = Counter(names).most_common(1)[0][1]
+    return len(set(names)) >= 3 and top < len(names) * 0.5
+
+
+def common_name(titles, fallback=None, ban=None):
+    """一個播放清單裡各集標題共有的名字（作品名）。《》裡的最可信，其次是「第 N 集」前面那段，再來是「」、【】、分隔線之間的段落。
+    ban：頻道名（norm 過），跟它一樣的不算。"""
     from collections import Counter
     cnt, rank = Counter(), {}
     for t in titles:
         cands = {}
         for rx, rk in ((r'《([^《》]{2,40})》', 3), (r'「([^「」]{2,40})」', 2), (r'『([^『』]{2,40})』', 2), (r'【([^【】]{2,40})】', 1.5)):
             for m in re.finditer(rx, t):
+                if rk == 2 and not _quote_is_name(t, m):
+                    continue
                 c = tidy(m.group(1))
+                if ban and (ban in norm(c) or norm(c) in ban):
+                    continue          # 頻道名（【暴走三金_】）不是作品名
                 if _name_ok(c):
                     cands[c] = max(cands.get(c, 0), rk)
         p = ep_prefix(t)
-        if p and _name_ok(p):
+        if p and _name_ok(p) and not (ban and (ban in norm(p) or norm(p) in ban)):
             cands[p] = max(cands.get(p, 0), 2.5)
         for seg in re.split(r'[|｜丨]', t):
             seg = tidy(re.sub(r'【[^】]*】|《|》', ' ', seg))
@@ -426,6 +462,11 @@ def common_name(titles, fallback=None):
     if not best:
         return fallback
     best.sort(key=lambda c: (-cnt[c], -rank[c], -len(c)))
+    # 每集都有的分類字（「熱血古風漫」）次數最多，但【作品名】只差幾集沒寫時，還是作品名比較可信
+    top = cnt[best[0]]
+    strong = [c for c in best if rank[c] >= 1.5 and cnt[c] >= top * 0.8]
+    if rank[best[0]] < 1.5 and strong:
+        return strong[0]
     return best[0]
 
 
@@ -433,8 +474,19 @@ _BAD_NAME = re.compile(r'^.{0,3}動[畫漫]$|^[A-Z]{2,8}$|看動漫|下飯|下�
                        r'一口[氣气]看完|更新|最新|熱播|热播|爆款|推薦|推荐|精彩|片段|Highlight|CLIP|MULTI|SUB|官方|頻道|频道|APP|^EP|^E\d|^S\d+$|^第.{1,3}季$|^\d', re.I)
 
 
+_GENRE_WORDS = '穿越|系統|修仙|空間|重生|末世|都市|玄幻|甜寵|甜宠|團寵|团宠|恐怖|驚悚|惊悚|懸疑|悬疑|搞笑|熱血|热血|年代|古風|古风|校園|校园|爽文|逆襲|逆袭|靈異|灵异|奇幻|戀愛|恋爱|治癒|治愈|勵志|励志|武俠|武侠|仙俠|仙侠|科幻|宮鬥|宫斗|種田|种田|萌寶|萌宝'
+_GENRE_ONLY = re.compile(r'^(?:' + _GENRE_WORDS + r')+(?:神作|動畫|动画|漫|系列)?$')
+_BAD_NAME2 = re.compile(r'新番|速覽|速览|背景設定|背景设定|特別放送|特别放送|重溫|重温|字幕|1080P|全片|劇集|剧集|不打烊|好戲一條龍|好戏一条龙|首選|首选|補番|补番|補坑|补坑|神作|'
+                        r'國漫$|国漫$|古風漫$|古风漫$|^新系列$|^多國|^多国|(?:大集合|轉生|转生|校園|校园|怪談|怪谈|抽象|搞笑|恐怖|經典|经典)系列$|^(?:新春|春節|春节|新年|聖誕|圣诞)劇場$|'
+                        r'優酷|优酷|騰訊|腾讯|愛奇藝|爱奇艺|嗶哩|哔哩|木棉花|Ani-?One|原創AI|原创AI|^AI小說$|[Ss]eason\s*\d+\s*(?:Supercuts)?$|^The Best Of|Every Episode|Best Bits$|Let\'s Play|Türkçe|çizgi|'
+                        r'Derleme|BÖLÜM|Bölüm|iyileri|\bYeni\b|Videolar|\b[Vv]e\b|New Videos!?$|^Brand New Series|[Pp]laylist|播放清單|播放列表|^職業系列$|^(?:經典版)?(?:中文|國語|国语)版?(?:全集|全片)?$|^經典版$|'
+                        r'[\u3040-\u30ff].*[\u3040-\u30ff]|[\u0100-\u024f\u1e00-\u1eff]')      # 不用 re.I：大小寫不分時 s 會對到 ſ（U+017F）
+
+
 def _name_ok(c):
     if not c or len(c) < 2 or len(c) > 40:
+        return False
+    if _BAD_NAME2.search(c) or _GENRE_ONLY.match(c):
         return False
     for a, b in ('《》', '【】', '「」', '（）', '()'):
         if c.count(a) != c.count(b):
@@ -461,6 +513,7 @@ def de_en(n):
     n = re.sub(r'(?<![A-Za-z])S(\d{1,2})(?![A-Za-z\d])', lambda m: '第' + m.group(1) + '季', n)
     n = re.sub(r"(?<![A-Za-z:：])[A-Za-z][A-Za-z'’\-]*(?:[\s:：,]+[A-Za-z0-9'’\-]+)+(?![A-Za-z])", ' ', n)
     n = re.sub(r'Playlist|動態漫正片|动态漫正片|^新番\s*', ' ', n)
+    n = re.sub(r'(?<=[\u4e00-\u9fff\d])\s+[A-Z][a-z][A-Za-z]*\d*$', '', n.strip())     # 「百鍊成神3 Apotheosis3」「一斬蒼穹 GuAn」
     return tidy(re.sub(r'\s+', ' ', n))
 
 
@@ -468,7 +521,13 @@ def nice_show(n):
     """作品名稱最後整理：英文翻譯拿掉、【國語】放到後面。"""
     if not n:
         return n
-    n = _EMOJI.sub(' ', n).strip()
+    n = _EMOJI.sub(' ', re.sub(r'[\u200b-\u200f\u2060\ufeff]', '', n)).strip()
+    n = re.sub(r'^\[\s*(?:TW|HK|CN|EN|JP|ASIA)?\s*\]\s*', '', n, flags=re.I)
+    n = re.sub(r'\s*[(（]\s*(?:EN|CN|HK|TW|KR|TH|ID|VN|JP|ENG|MULTI)(?:\s*,\s*[A-Z]{2,5})*\s*[)）]\s*$', '', n)
+    n = re.sub(r'(?:\s*[·・]\s*|\s+)(?:動態漫畫?|动态漫画?|動態漫|动态漫)\s*$', '', n)
+    m = re.match(r'^[【\[]\s*(中日雙語|中日双语|雙語|双语)\s*[】\]]\s*(.+)$', n)
+    if m:
+        n = m.group(2)
     m = re.fullmatch(r'[《【「『]([^《》【】「」『』]{2,40})[》】」』]', n)
     if m and not re.fullmatch(r'國語|国语|粵語|粤语|日語|日语|中配|台配', m.group(1)):
         n = m.group(1)
