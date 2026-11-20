@@ -50,14 +50,19 @@ async function route() {
       S.seen['p:' + arg] = 1; save('seen'); setTabs('picks');
       afterFeature();
       scrollTo(0, 0);
-    } else if (name === 'hunt') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderHunt(); restoreScroll(h); huntFx(); }
+    } else if (name === 'hunt') { setTabs('hunt'); await liveLoad(wantSteams(), 1500); v.innerHTML = renderHunt(); if (S.jump) { const j = $(S.jump); S.jump = ''; if (j) requestAnimationFrame(() => j.scrollIntoView({ block: 'start' })); else restoreScroll(h); } else restoreScroll(h); huntFx(); }
     else if (name === 'board') { setTabs('home'); if (!S.board || Date.now() - Date.parse(S.board.at) > 15 * 6e4) { try { const b = await getJSON('board.json'); if (b && b.rows) S.board = b; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderBoard(); restoreScroll(h); boardFx(); }
     else if (name === 'tga') { setTabs('home'); if (!S.tgaD || tgaPhase() === 'live') { try { const t = await getJSON('tga.json'); if (t && t.cats) S.tgaD = t; } catch (e) { /* 用手上的 */ } } v.innerHTML = renderTga(); if (prev && prev.startsWith('tga') && prev === h) restoreScroll(h); else scrollTo(0, 0); tgaFx(); }
     else if (name === 'vs') { setTabs('home'); await vsPrep(arg); v.innerHTML = renderVS(arg); scrollTo(0, 0); vsFx(); }
     else if (name === 'ask') { setTabs('home'); await loadAsk(); v.innerHTML = renderAsk(); scrollTo(0, 0); askFx(); askFlush(); }
     else if (name === 'cal') { setTabs('hunt'); v.innerHTML = await renderCal(); scrollTo(0, 0); calFx(); }
     else if (name === 'week') { setTabs(''); v.innerHTML = await renderWeek(arg); scrollTo(0, 0); weekFx(); }
-    else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); moreFx(); } else if (name === 'lib') { setTabs('lib'); v.innerHTML = renderLib(); trayUpdate(); restoreScroll(h); moreFx(); }
+    else if (name === 'shorts') { setTabs('shorts'); v.innerHTML = ''; renderShorts(arg); } else if (name === 'picks') { setTabs('picks'); v.innerHTML = renderPicks(); restoreScroll(h); homeFx('.pks .pk', 'pk'); moreFx(); } else if (name === 'lib') {
+      setTabs('lib');
+      if (DB.mode === 'all') { v.innerHTML = await renderLibAll(); }
+      if (DB.mode !== 'all') { v.innerHTML = renderLib(); trayUpdate(); moreFx(); }
+      if (DB.focus) { DB.focus = false; scrollTo(0, 0); const i = $('#dbq'); if (i) setTimeout(() => i.focus(), 60); } else restoreScroll(h);
+    }
     else if (name === 'fan' && arg && arg.startsWith('w:')) { setTabs('fan'); v.innerHTML = await renderWeekFan(arg.slice(2)); scrollTo(0, 0); weekCardRender(); }
     else if (name === 'fan' && arg && arg[0] === '~') {   // 粉專作戰台：排程、出稿、成效、教學、上架流程、影片三連發
       const sub = arg.slice(1); const sn = sub.split(':')[0]; setTabs('fan'); v.innerHTML = await renderOps(sub);
@@ -449,6 +454,14 @@ document.addEventListener('click', async (ev) => {
     if (a === 'cmpgo') { if (S.cmp.length < 2) return; if (S.cmp.length === 2) { NAVN++; location.hash = 'vs/' + S.cmp.map((id) => 'f:' + id).join(','); return; } openSheet(await compareHtml(), 'wide'); return; }
     if (a === 'cmpclear') { S.cmp = []; save('cmp'); trayUpdate(); $$('.cmpbtn').forEach((b) => { b.classList.remove('on'); b.textContent = '+'; }); sfx.scratch(); return; }
     if (a === 'settings') { openSheet(settingsHtml()); return; }
+    if (a === 'skinsheet') { audioInit(); openSkinSheet(); return; }   // 換裝選單
+    if (a.startsWith('db') && dbAct(a, act)) return;   // 資料庫
+    if (a === 'search') { DB.mode = 'all'; DB.focus = true; sfx.click(); closeSheet(); if (ROUTE === 'lib') route(); else { NAVN++; location.hash = 'lib'; } return; }
+    if (a === 'hub') { audioInit(); openHub(); return; }
+    if (a === 'hubfx') { S.settings.fx = S.settings.fx === 'full' ? 'calm' : 'full'; save('settings'); document.body.classList.toggle('calm', S.settings.fx !== 'full'); sfx.click(); hubSync(); return; }
+    if (a === 'hubfree') { closeSheet(); S.jump = '.dl-free'; sfx.click(); if (ROUTE === 'hunt') route(); else { NAVN++; location.hash = 'hunt'; } return; }
+    if (a === 'tour') { closeSheet(); setTimeout(() => tourStart(true), 250); return; }
+    if (a === 'skin') { audioInit(); skinSwitch(act.dataset.k); return; }
     if (a === 'set') {
       let v = act.dataset.v; if (v === 'true') v = true; else if (v === 'false') v = false;
       S.settings[act.dataset.k] = v; save('settings');
@@ -463,8 +476,8 @@ document.addEventListener('click', async (ev) => {
       ['marks', 'notes', 'thoughts', 'posted', 'edits', 'cmp'].forEach((k) => { S[k] = Array.isArray(S[k]) ? [] : {}; save(k); });
       toast('已清除'); closeSheet(); route(); return;
     }
-    if (a === 'sfx') { audioInit(); S.settings.sfx = !S.settings.sfx; if (S.settings.sfx) S.muted = false; save('settings'); topIcons(); sfx.stamp(); toast(S.settings.sfx ? '音效：開' : '音效：關'); return; }
-    if (a === 'bgm') { audioInit(); S.settings.bgm = !S.settings.bgm; if (S.settings.bgm) S.muted = false; save('settings'); audioApply(); topIcons(); sfx.scratch(); toast(S.settings.bgm ? '背景鼓組：開' : '背景鼓組：關'); return; }
+    if (a === 'sfx') { audioInit(); S.settings.sfx = !S.settings.sfx; if (S.settings.sfx) S.muted = false; save('settings'); topIcons(); sfx.stamp(); hubSync(); toast(S.settings.sfx ? '音效：開' : '音效：關'); return; }
+    if (a === 'bgm') { audioInit(); S.settings.bgm = !S.settings.bgm; if (S.settings.bgm) S.muted = false; save('settings'); audioApply(); topIcons(); sfx.scratch(); hubSync(); toast(S.settings.bgm ? '配樂：開' : '配樂：關'); return; }
     // 粉專
     const fid = ROUTE.startsWith('fan/') ? ROUTE.split('/')[1] : null;
     if (fid && fid.startsWith('w:') && await weekFanAct(a, act, fid.slice(2))) return;
@@ -510,6 +523,7 @@ document.addEventListener('click', async (ev) => {
 });
 document.addEventListener('input', (ev) => {
   const t = ev.target;
+  if (t.id === 'dbq') { dbInput(t); return; }
   if (t.id === 'libq') {
     LIBF.q = t.value; const g = $('#libgrid'); if (!g) return;
     const old = $('.more-s[data-more="lib"]'); if (old) old.remove();
@@ -536,11 +550,11 @@ function topIcons() {
 
 /* ---- 啟動 ---- */
 async function boot() {
+  skinApply(skinId()).then((ok) => { if (!ok) { S.settings.skin = 'graffiti'; save('settings'); } });   // 開頭的小程式已經把 CSS 接上了，這裡只補齊其他設定
   fxInit();
   document.body.classList.toggle('calm', S.settings.fx !== 'full');
-  $('#top').innerHTML = `<div class="logo" data-go="home"><b>解包</b><i>UNPACKED</i></div><span class="sp"></span>
-    <button class="ib vsb-top" data-go="vs" aria-label="VS 擂台"><b>VS</b></button><button class="ib askb" data-go="ask" aria-label="點播台">${ICON.radio}<i class="dot hide"></i></button><button class="ib" data-act="sfx" aria-label="音效"></button><button class="ib" data-act="bgm" aria-label="背景鼓組"></button><button class="ib" data-act="settings" aria-label="設定">${ICON.gear}</button>`;
-  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>庫存</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
+  $('#top').innerHTML = topBarHtml();
+  $('#tabs').innerHTML = `<button class="tab" data-go="home">${ICON.home}<span>今日</span></button><button class="tab" data-go="picks">${ICON.gem}<span>推坑</span><i class="dot hide"></i></button><button class="tab" data-go="shorts">${ICON.shorts}<span>短影音</span><i class="dot hide"></i></button><button class="tab" data-go="hunt">${ICON.target}<span>獵價</span><i class="dot hide"></i></button><button class="tab" data-go="lib">${ICON.box}<span>資料庫</span></button><button class="tab" data-go="fan">${ICON.mega}<span>粉專</span><i class="dot hide"></i></button>`;
   topIcons();
   let ok = true;
   try { await loadIndex(); } catch (e) { ok = false; console.error(e); }
@@ -563,6 +577,9 @@ async function boot() {
     S.introPending = false; if (ROUTE === 'home' || ROUTE === '') homeDrop();
     bgmStart();
     setTimeout(huntAlert, 500);
+    // 第一次導覽（改版後第一次也會）：等獵物警報、疊層都關了再開始
+    if ((+LS.get('tourDone', 0) || 0) < TOUR_REV) { let n = 0; const tk = setInterval(() => { if (++n > 40) { clearInterval(tk); return; } if (!$('#halert.on') && !$('#sheet.on') && !S.introPending && !$('#intro')) { clearInterval(tk); setTimeout(() => tourStart(), 900); } }, 700); }
+    setTimeout(() => dbLoad(), 4000);   // 閒下來先把資料庫載好（全部功能的數字、搜尋馬上能用）
     if (!ok) toast('資料讀不到，檢查一下網路', 'warn');
   };
   gate.addEventListener('click', (e) => { e.stopPropagation(); enter(!!e.target.closest('.gm')); }, { once: true });
@@ -608,3 +625,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) Fresh
 addEventListener('pageshow', (e) => { if (e.persisted) { Fresh.at = 0; Fresh.check(true); } });
 setTimeout(() => Fresh.check(false), 6000);
 setInterval(() => { if (!document.hidden) Fresh.check(false); }, 10 * 60e3);
+
+/* 換裝：各套的音色、配樂在 skins/<名字>.js（換上那一套才載入）。先載到的排在 __skinQ，這裡一次接上；之後載到的直接接上 */
+(window.__skinQ || []).forEach((f) => { try { f(); } catch (e) { console.error(e); } });
+window.__skinQ = { push: (f) => { try { f(); } catch (e) { console.error(e); } } };

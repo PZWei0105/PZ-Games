@@ -16,7 +16,7 @@ const LS = {
 };
 
 const S = {
-  settings: Object.assign({ sfx: true, bgm: true, vol: 0.8, bgmVol: 0.32, intro: 'daily', fx: 'full', shAuto: true, shSound: true, huntAlert: true }, LS.get('settings', {})),
+  settings: Object.assign({ sfx: true, bgm: true, vol: 0.8, bgmVol: 0.32, intro: 'daily', fx: 'full', shAuto: true, shSound: true, huntAlert: true, skin: 'graffiti' }, LS.get('settings', {})),
   marks: LS.get('marks', {}),        // id → want/playing/done/no
   notes: LS.get('notes', {}),        // id → 我的筆記
   thoughts: LS.get('thoughts', {}),  // id#i → 我對討論題的想法
@@ -99,6 +99,8 @@ const ICON = {
   can: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="7" y="8" width="10" height="14" rx="2"/><path d="M9 8V5h6v3M11 5V3h3"/><path d="M17 4l2-1M17 6h3M17 8l2 1" stroke-linecap="round"/></svg>',
   canoff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="7" y="8" width="10" height="14" rx="2"/><path d="M9 8V5h6v3"/><path d="M4 4l16 16" stroke-linecap="round"/></svg>',
   boom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="8" width="20" height="12" rx="2"/><circle cx="7.5" cy="14" r="3"/><circle cx="16.5" cy="14" r="3"/><path d="M7 8V5h10v3"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>',
+  shirt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M8.2 3.2 3.4 6.1l2.1 4.1 2.4-1v11.6h8.2V9.2l2.4 1 2.1-4.1-4.8-2.9c-.5 1.6-2 2.7-3.8 2.7s-3.3-1.1-3.8-2.7z"/><path d="M9.5 14.5h5" stroke-width="1.6"/></svg>',
   gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>',
   play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21" stroke-linecap="round"/></svg>',

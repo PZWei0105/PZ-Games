@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """解包 UNPACKED — 點播台收件（GitHub Actions 每小時跟 Steam 資料一起跑）
 
-App 裡的「點播台」把痞子葳的點播（指定一款遊戲寫完整解包）、提問（你問我答）、TGA 預測（鎖定時）、
+App 裡的「點播台」把痞子葳的點播（指定一款遊戲寫完整解包）、提問（你問我答）、TGA 預測（鎖定時）、資料庫的「加進資料庫」、
 粉專作戰台的「影片三連發」（新片上架前請 Claude 寫預告／上片／討論三篇）
 送到轉發站（ntfy.sh 的一個主題，訊息保留約 12 小時）。這支程式把它們收進 apps/unpacked/data/inbox.json：
 App 看到自己的事件出現在這裡就知道「收到了」；每天的寫稿、推坑、願望單排程從這裡讀待回答的問題，答案寫進 qa.json。
@@ -48,6 +48,7 @@ FIELDS = {
     'req': {'game': STR(100), 'note': STR(300), 'appid': INT(1, 99999999)},  # 點播解包：指定一款遊戲
     'tga': {'picks': DICT(40, 12, INT(0, 9)), 'x2': LIST(3, 12), 'peek': BOOL, 'lock': STR(32)},   # TGA 預測鎖定
     'vid': {'title': STR(120), 'when': ISO, 'note': STR(400), 'games': LIST(6, 60), 'url': URL},   # 影片三連發：新片的預告／上片／討論文案（粉專作戰台）
+    'add': {'q': STR(80)},                                                    # 資料庫：搜不到的遊戲「加進資料庫」（live.py 去 Steam 找）
     'ping': {'note': STR(40)},
 }
 ID = re.compile(r'^d[a-z0-9]{3,10}-[a-z0-9]{4,12}$')
@@ -70,6 +71,8 @@ def clean(ev, dev):
     if typ == 'req' and not out.get('game'):
         return None
     if typ == 'vid' and not (out.get('title') and out.get('when')):
+        return None
+    if typ == 'add' and not out.get('q'):
         return None
     return out
 

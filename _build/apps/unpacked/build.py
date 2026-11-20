@@ -12,14 +12,17 @@
 
 沒有 Claude 版：artifact 沙盒連不到 pzwei0105.github.io，讀不到每天更新的專題與 Steam 資料（和《全知》《下回分解》一樣）。
 """
-import argparse, base64, datetime, json, os, shutil
+import argparse, base64, datetime, json, os, re, shutil, sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import skins   # 換裝系統：CSS 顏色自動換成角色色票、四套色票與字型
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'src')
 REPO = os.path.abspath(os.path.join(ROOT, '..', '..', '..'))
 OUT = os.path.join(REPO, 'apps', 'unpacked')
 
-JS_ORDER = ['core.js', 'audio.js', 'fx.js', 'data.js', 'views.js', 'card.js', 'shorts.js', 'hunt.js', 'weekly.js', 'cal.js', 'market.js', 'deals.js', 'info.js', 'tga.js', 'ask.js', 'ops.js', 'opsstats.js', 'opslearn.js', 'opsth.js', 'vs.js', 'main.js']
+JS_ORDER = ['core.js', 'skin.js', 'audio.js', 'fx.js', 'data.js', 'views.js', 'card.js', 'shorts.js', 'hunt.js', 'weekly.js', 'cal.js', 'market.js', 'deals.js', 'info.js', 'db.js', 'tga.js', 'ask.js', 'ops.js', 'opsstats.js', 'opslearn.js', 'opsth.js', 'vs.js', 'nav.js', 'main.js']
 FONTS = [
     ('bebas-neue-latin-400-normal.woff2', 'Bebas Neue'),
     ('permanent-marker-latin-400-normal.woff2', 'Permanent Marker'),
@@ -41,15 +44,29 @@ def fonts_css():
     return '\n'.join(out)
 
 
+SKIN_SHEETS = {}   # 換裝：各套的覆寫 CSS（compose 時產生，main 寫到 skins/）
+SKIN_JS = {}       # 換裝：各套的音色、配樂（audio.js 裡 //@skin 標起來的段落）
+
+
 def compose(version):
     html = read('index.html')
     js = '\n'.join('/* ---- %s ---- */\n' % n + read(n) for n in JS_ORDER)
-    css = read('style.css')
+    # 換裝：//@skin <名字> … //@end 之間的程式（那一套的音色、配樂）切出去，換上那一套才載入
+    def cut(m):
+        SKIN_JS.setdefault(m.group(1), []).append(m.group(2))
+        return ''
+    js = re.sub(r'//@skin (\w+)\n(.*?)//@end\n', cut, js, flags=re.S)
+    css, sheets, tk = skins.build_skins(SRC)
+    SKIN_SHEETS.update(sheets)
+    bad = skins.check_js([(n, read(n)) for n in JS_ORDER])
+    if bad:
+        print('⚠ 換裝：這些 style="" 寫死了顏色，換裝時不會跟著變（改用 class，或確定不用換就在那一行加 skin:ok）：', ', '.join(bad))
     for k, v in (('CSS', css), ('JS', js)):
         assert '</script' not in v.lower(), k + ' contains </script>'
         assert '</style' not in v.lower(), k + ' contains </style>'
     assert "const VERSION = '1.0.0';" in js
     js = js.replace("const VERSION = '1.0.0';", "const VERSION = '%s';" % version)
+    html = html.replace('__SKINV__', version)
     return html.replace('/*FONTS*/', fonts_css(), 1).replace('/*CSS*/', css, 1).replace('/*JS*/', js, 1)
 
 
@@ -135,6 +152,18 @@ def main():
     old_light = os.path.join(out, 'vendor', 'hls.light.min.mjs')
     if os.path.exists(old_light):
         os.remove(old_light)
+    # 換裝：各套的 CSS（換上那一套才載入）
+    os.makedirs(os.path.join(out, 'skins'), exist_ok=True)
+    for sid, txt in SKIN_SHEETS.items():
+        with open(os.path.join(out, 'skins', sid + '.css'), 'w', encoding='utf-8') as f:
+            f.write(txt)
+    for sid, parts in SKIN_JS.items():   # 先載到的排隊，App 本體跑起來再接上（main.js 最後）
+        with open(os.path.join(out, 'skins', sid + '.js'), 'w', encoding='utf-8') as f:
+            f.write('/* 解包 換裝：%s 的音色、配樂（build.py 從 audio.js 切出來） */\n(window.__skinQ = window.__skinQ || []).push(function () {\n%s\n});\n' % (sid, '\n'.join(parts)))
+    # 換裝字型（用到那一套才下載）
+    os.makedirs(os.path.join(out, 'fonts'), exist_ok=True)
+    for fn in os.listdir(os.path.join(SRC, 'fonts', 'skins')):
+        shutil.copy(os.path.join(SRC, 'fonts', 'skins', fn), os.path.join(out, 'fonts', fn))
     icons = os.path.join(out, 'icons')
     if a.icons or not os.path.exists(os.path.join(icons, 'icon-512.png')):
         if out != OUT and os.path.exists(os.path.join(OUT, 'icons', 'icon-512.png')) and not a.icons:

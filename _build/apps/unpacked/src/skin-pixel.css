@@ -1,0 +1,80 @@
+/* ==========================================================================
+   換裝：像素掌機（PIXEL）— 方塊、硬邊、像素字、浮雕按鈕，像在掌機上翻攻略本
+   顏色由 skins.py 的色票自動換好；這裡只寫「造型」。只在 <html data-skin="pixel"> 生效。
+   ========================================================================== */
+[data-skin="pixel"]{font-synthesis:none;--px:4px}
+[data-skin="pixel"] body{-webkit-font-smoothing:antialiased}
+/* 牆：深藍夜空、點陣、零星星光（材質圖由 fx.js 產生） */
+[data-skin="pixel"] #wall{background-color:#0b0d24;background-image:var(--noise,none),linear-gradient(#0b0d24,#10143a 70%,#1a1446);background-size:64px 64px,100% 100%;image-rendering:pixelated}
+[data-skin="pixel"] #wall::after{background:repeating-linear-gradient(0deg,transparent 0 3px,#00000022 3px 4px)}
+/* 頂列：一條掌機狀態列 */
+[data-skin="pixel"] #top{border-bottom:4px solid #000;box-shadow:0 4px 0 #29adff}
+[data-skin="pixel"] .logo b{font:400 26px/1 var(--cjkh);-webkit-text-stroke:0;text-shadow:3px 3px 0 #ab5236,3px 3px 0 #000;transform:none;letter-spacing:2px;color:#ffec27}
+[data-skin="pixel"] .logo i{font:400 9px/1 var(--drip);transform:none;color:#29adff;margin-bottom:3px;letter-spacing:1px}
+[data-skin="pixel"] .ib{border-radius:0}
+[data-skin="pixel"] #tape{transform:none;border-bottom:4px solid #000;height:30px}
+[data-skin="pixel"] #tape .in{font:400 15px/30px var(--cjk);letter-spacing:1px}
+[data-skin="pixel"] #tape .in b{-webkit-text-stroke:0}
+/* 分頁列：方塊選取框 */
+[data-skin="pixel"] #tabs{border-top:4px solid #000;box-shadow:0 -4px 0 #29adff}
+[data-skin="pixel"] .tab{font:400 12px/1 var(--cjk)}
+[data-skin="pixel"] .tab.on::before{transform:none;border-radius:0;box-shadow:inset -3px -3px 0 #0005,3px 3px 0 #000;inset:8px 10%}
+[data-skin="pixel"] .tab .dot{border-radius:0;font:400 16px/18px var(--num)}
+/* 標題：像素大字＋硬陰影 */
+[data-skin="pixel"] .spray-h{font:400 32px/1.1 var(--cjkh);-webkit-text-stroke:0;text-shadow:4px 4px 0 #000;transform:none;letter-spacing:2px}
+[data-skin="pixel"] .tape-h,[data-skin="pixel"] .date-stk{transform:none;border-width:3px}
+[data-skin="pixel"] .tape-h{font:400 18px/1 var(--cjk)}
+[data-skin="pixel"] .date-stk{font:400 24px/1 var(--num);padding:5px 8px 3px}
+/* 卡片：直角、4px 黑框、硬投影；不歪 */
+[data-skin="pixel"] .poster,[data-skin="pixel"] .mini,[data-skin="pixel"] .note{transform:none;border-width:4px;border-color:#000}
+[data-skin="pixel"] .poster{box-shadow:6px 6px 0 #000}
+[data-skin="pixel"] .poster:active{transform:translate(3px,3px)}
+[data-skin="pixel"] .mini{box-shadow:5px 5px 0 #000}
+[data-skin="pixel"] .ptitle{font:400 28px/1.15 var(--cjkh);letter-spacing:1px}
+[data-skin="pixel"] .pen{font:400 13px/1.3 var(--hand)}
+[data-skin="pixel"] .kind-stk{transform:none;font:400 14px/1 var(--cjk);border-width:3px}
+[data-skin="pixel"] .tp{display:none}
+[data-skin="pixel"] .seal{border-radius:0;border-width:4px;transform:none;font:400 22px/1 var(--cjk);box-shadow:4px 4px 0 #000}
+[data-skin="pixel"] .mini .mstamp,[data-skin="pixel"] .chip,[data-skin="pixel"] .fl,[data-skin="pixel"] .cmpbtn{border-radius:0}
+[data-skin="pixel"] .note::before{display:none}
+[data-skin="pixel"] .note .nv{font:400 38px/1 var(--num)}
+/* 按鈕：NES 式浮雕 */
+[data-skin="pixel"] .btn{border-width:4px;border-color:#000;box-shadow:inset -4px -4px 0 #0004,4px 4px 0 #000;font:400 15px/1 var(--cjk);border-radius:0}
+[data-skin="pixel"] .btn:active{transform:translate(3px,3px);box-shadow:inset 4px 4px 0 #0004,1px 1px 0 #000}
+[data-skin="pixel"] .fl{font:400 13px/1 var(--cjk)}
+[data-skin="pixel"] .fl.on{box-shadow:inset -3px -3px 0 #0004,3px 3px 0 #000}
+[data-skin="pixel"] .search{transform:none;border-width:4px;border-color:#000;box-shadow:inset 4px 4px 0 #0002,5px 5px 0 #29adff}
+/* 疊層 */
+[data-skin="pixel"] .sbox{border-radius:0!important;border:4px solid #000;box-shadow:0 -4px 0 #29adff}
+/* 開門畫面 */
+[data-skin="pixel"] #gate .gl{font-family:var(--cjkh)!important;-webkit-text-stroke:0!important;text-shadow:6px 6px 0 #000!important}
+[data-skin="pixel"] #gate .go{border-radius:0;box-shadow:inset -4px -4px 0 #0005,5px 5px 0 #000!important;transform:none!important}
+
+/* ---- 開場：掌機開機 ---- */
+#intro.ix-pixel{background:#0b0d24}
+#intro.ix-pixel .ix-grid{position:absolute;inset:0;background-image:linear-gradient(#29adff14 2px,transparent 2px),linear-gradient(90deg,#29adff14 2px,transparent 2px);background-size:24px 24px;opacity:0;transition:opacity .3s steps(3)}
+#intro.ix-pixel.boot .ix-grid{opacity:1}
+#intro.ix-pixel .solid{font:400 min(30vw,210px)/1 "PZ Pixel","Noto Sans TC",sans-serif;color:#ffec27;-webkit-text-stroke:0;text-shadow:.04em .04em 0 #ab5236,.08em .08em 0 #000;letter-spacing:.04em;opacity:0}
+#intro.ix-pixel .solid.go{animation:pxDrop .5s steps(8) forwards}
+@keyframes pxDrop{0%{opacity:1;transform:translateY(-140%)}100%{opacity:1;transform:translateY(-50%)}}
+#intro.ix-pixel .stk{font:400 min(6vw,38px)/1 "PZ Pixel Logo",monospace;color:#fff1e8;background:#29adff;border:5px solid #000;box-shadow:inset -5px -5px 0 #0004,6px 6px 0 #000;transform:translate(-50%,0) scale(0);padding:.35em .5em .25em;letter-spacing:.05em}
+#intro.ix-pixel .stk.go{animation:pxPop .3s steps(4) forwards}
+@keyframes pxPop{to{transform:translate(-50%,0) scale(1)}}
+#intro.ix-pixel .ix-start{position:absolute;left:0;right:0;top:76%;text-align:center;font:400 min(4.4vw,24px)/1 "PZ Pixel Logo",monospace;color:#ffec27;opacity:0}
+#intro.ix-pixel.start .ix-start{animation:pxBlink .8s steps(1) infinite}
+@keyframes pxBlink{0%{opacity:1}50%{opacity:0}}
+#intro.ix-pixel .tline2{transform:translateX(-120%);background:#ffec27;border-top:4px solid #000;border-bottom:4px solid #000;font:400 22px/54px "PZ Pixel","Noto Sans TC",sans-serif;top:88%}
+#intro.ix-pixel .tline2.go{transition:transform .4s steps(6);transform:translateX(0)}
+#intro.ix-pixel.heads .ix-start,#intro.ix-pixel.heads .ix-grid{opacity:0!important;animation:none}
+#intro.ix-pixel .skip{font:400 13px/1 "PZ Pixel",sans-serif;color:#8f86b0}
+
+/* 專題、推坑頁的大標 */
+[data-skin="pixel"] .f-title{font:400 38px/1.1 var(--cjkh);-webkit-text-stroke:0;text-shadow:4px 4px 0 #000,0 4px 0 #000;letter-spacing:2px}
+[data-skin="pixel"] .f-en{transform:none;font:400 16px/1.3 var(--hand)}
+[data-skin="pixel"] .f-headline{border-left-width:8px}
+
+#intro.ix-pixel .stk{width:max-content}
+#intro.ix-pixel.heads .ix-issue,#intro.ix-pixel.heads .ix-rule,#intro.ix-pixel.heads .ix-start{transition:none;opacity:0!important}
+
+/* 塗鴉版的粗黑描邊大字：像素版改成硬邊投影 */
+[data-skin="pixel"] .pk-year,[data-skin="pixel"] .rsn .rn,[data-skin="pixel"] #unpack .nm,[data-skin="pixel"] .sv-title,[data-skin="pixel"] .ha-t,[data-skin="pixel"] .wk-no b,[data-skin="pixel"] .wk-hero .wk-no b,[data-skin="pixel"] .wn-i,[data-skin="pixel"] .tg-t,[data-skin="pixel"] .tg-vs,[data-skin="pixel"] .ask-hero h1,[data-skin="pixel"] .oh-t b,[data-skin="pixel"] #combo .cb,[data-skin="pixel"] .vs-mid .vs-vs{-webkit-text-stroke:0!important;text-shadow:3px 3px 0 #000!important}

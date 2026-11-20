@@ -141,7 +141,7 @@ def run():
             res[kind + '_ms'] = round(pg.evaluate('window.__homeAt'))
             pg.wait_for_timeout(1500)
             res[kind + '_heap_mb'], res[kind + '_nodes'] = metrics(cdp)
-        routes = [('#lib', '#libgrid'), ('#picks', '.pks'), ('#shorts', '#shfeed'), ('#hunt', '.radar'), ('#cal', '.ce-b, .cn-b, .empty'),
+        routes = [('#lib', '#libgrid, #dbres'), ('#picks', '.pks'), ('#shorts', '#shfeed'), ('#hunt', '.radar'), ('#cal', '.ce-b, .cn-b, .empty'),
                   ('#board', '.mk-row, .empty'), ('#tga', '.tg-cats'), ('#ask', '.ask-hero'), ('#fan', '.ops .ops-nav'), ('#fan/~plan', '.pl-grid'), ('#fan/~drafts', '.drafts'), ('#fan/~learn', '.phase'), ('#home', '.posters')]   # #fan 從 11/18 起是粉專作戰台的「今日」
         if fid:
             routes.insert(0, (f'#f/{fid}', '.ftabs'))

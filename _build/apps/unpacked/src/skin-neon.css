@@ -1,0 +1,87 @@
+/* ==========================================================================
+   換裝：霓虹賽博（NEON）— 紫黑夜城、地平線上的太陽、透視格線、掃描線、霓虹管雙線框
+   不用模糊陰影（手機記憶體）：光暈用「實心外擴的半透明框」和漸層做。只在 <html data-skin="neon"> 生效。
+   ========================================================================== */
+[data-skin="neon"] #wall{background-color:#08040f;background-image:linear-gradient(180deg,#08040f 0%,#160a2e 46%,#2a0e3f 62%,#08040f 62.2%);background-size:100% 100%}
+/* 地平線上的條紋太陽＋往遠處延伸的格線（靜態，不動） */
+[data-skin="neon"] #wall::before{content:"";position:absolute;left:50%;top:38%;width:min(64vw,420px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  background:linear-gradient(180deg,#ffd23f 0%,#ff7a3d 35%,#ff2bd6 75%);opacity:.32;
+  -webkit-mask-image:repeating-linear-gradient(180deg,#000 0 12px,transparent 12px 16px,#000 16px 24px,transparent 24px 30px);mask-image:repeating-linear-gradient(180deg,#000 0 12px,transparent 12px 16px,#000 16px 24px,transparent 24px 30px)}
+[data-skin="neon"] #wall::after{top:62%;bottom:-20%;left:-60%;right:-60%;background:linear-gradient(#ff2bd655 2px,transparent 2px) 0 0/100% 34px,linear-gradient(90deg,#00f0ff40 2px,transparent 2px) 0 0/44px 100%;transform:perspective(260px) rotateX(64deg);transform-origin:50% 0;opacity:.75}
+/* 整個畫面一層很淡的掃描線（靜態） */
+[data-skin="neon"] body::after{content:"";position:fixed;inset:0;z-index:40;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 2px,#0000001f 2px 3px)}
+/* 頂列、分頁列：玻璃面板＋霓虹管雙線 */
+[data-skin="neon"] #top{background:#0b0617ee;border-bottom:2px solid #00f0ff;box-shadow:0 2px 0 #00f0ff33,0 5px 0 #ff2bd622}
+[data-skin="neon"] .logo b{font:900 26px/1 var(--cjkh);color:#f2efff;-webkit-text-stroke:0;text-shadow:0 0 0 transparent,1px 1px 0 #ff2bd6,-1px -1px 0 #00f0ff;transform:none;letter-spacing:3px}
+[data-skin="neon"] .logo i{font:400 17px/1 var(--drip);color:#ff2bd6;transform:none}
+[data-skin="neon"] .ib.on{color:#00f0ff}
+[data-skin="neon"] #tape{transform:none;background:linear-gradient(90deg,#ff2bd6,#7a3dff 50%,#00f0ff);color:#07030f;border-bottom:0;height:28px}
+[data-skin="neon"] #tape .in{font:900 14px/28px var(--cjk);letter-spacing:3px}
+[data-skin="neon"] #tape .in b{color:#fff;-webkit-text-stroke:0}
+[data-skin="neon"] #tabs{background:#0b0617f2;border-top:2px solid #ff2bd6;box-shadow:0 -2px 0 #ff2bd633,0 -5px 0 #00f0ff1f}
+[data-skin="neon"] .tab{font:700 12px/1 var(--cjk);letter-spacing:2px}
+[data-skin="neon"] .tab.on{color:#00f0ff}
+[data-skin="neon"] .tab.on::before{background:linear-gradient(180deg,#00f0ff1f,#00f0ff05);transform:none;border:1px solid #00f0ff;box-shadow:0 0 0 3px #00f0ff1a;border-radius:6px;inset:6px 10%}
+[data-skin="neon"] .tab .dot{background:#ff2bd6;color:#fff}
+/* 標題：漸層霓虹字 */
+[data-skin="neon"] .spray-h{-webkit-text-stroke:0;background:linear-gradient(90deg,#00f0ff,#b26bff 50%,#ff2bd6);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;transform:none;letter-spacing:3px}
+[data-skin="neon"] .tape-h{transform:none;border-radius:4px;border-width:1px;box-shadow:0 0 0 3px #00f0ff22,4px 4px 0 #ff2bd655}
+[data-skin="neon"] .date-stk{transform:skewX(-10deg);border-radius:2px;border:0;box-shadow:0 0 0 3px #ff2bd633;font:400 22px/1 var(--num)}
+/* 卡片：深色玻璃、細霓虹框、切角 */
+[data-skin="neon"] .poster{transform:none;background:#140c26;color:#f2efff;border:1px solid #00f0ff;box-shadow:0 0 0 4px #00f0ff14,8px 8px 0 #ff2bd630;border-radius:2px}
+[data-skin="neon"] .poster .ptitle{color:#f2efff}
+[data-skin="neon"] .poster .phead{color:#c9c2ee}
+[data-skin="neon"] .pimg{border-bottom:1px solid #00f0ff}
+[data-skin="neon"] .mini{transform:none;background:#140c26;color:#f2efff;border:1px solid #ff2bd6;box-shadow:0 0 0 3px #ff2bd61f;border-radius:2px}
+[data-skin="neon"] .mini h4{color:#f2efff}
+[data-skin="neon"] .kind-stk{transform:skewX(-10deg);border:0;box-shadow:0 0 0 3px #ff2bd633}
+[data-skin="neon"] .tp{display:none}
+[data-skin="neon"] .seal{background:#07030fcc;transform:rotate(-8deg);box-shadow:0 0 0 4px #ff3d6e22}
+[data-skin="neon"] .note{transform:none;border-width:1px;box-shadow:0 0 0 4px #00f0ff14;border-radius:4px}
+[data-skin="neon"] .note::before{display:none}
+[data-skin="neon"] .chip{border-radius:999px}
+/* 按鈕：霓虹管 */
+[data-skin="neon"] .btn{border-width:1.5px;border-radius:6px;box-shadow:0 0 0 3px #00f0ff1f;letter-spacing:2px}
+[data-skin="neon"] .btn:active{transform:scale(.97);box-shadow:0 0 0 5px #00f0ff33}
+[data-skin="neon"] .btn.p{box-shadow:0 0 0 3px #ff2bd633}
+[data-skin="neon"] .fl{border-width:1px;border-radius:999px}
+[data-skin="neon"] .fl.on{box-shadow:0 0 0 3px #00f0ff26}
+[data-skin="neon"] .search{transform:none;background:#140c26;border:1px solid #00f0ff;box-shadow:0 0 0 4px #00f0ff14;border-radius:8px}
+[data-skin="neon"] .search input{color:#f2efff}
+[data-skin="neon"] .search svg{color:#00f0ff}
+[data-skin="neon"] .sbox{border:1px solid #00f0ff;box-shadow:0 -4px 0 #00f0ff14}
+[data-skin="neon"] #gate .gl{-webkit-text-stroke:0!important;background:linear-gradient(90deg,#00f0ff,#ff2bd6);-webkit-background-clip:text;background-clip:text;color:transparent!important;text-shadow:none!important}
+[data-skin="neon"] #gate .go{border-radius:8px;transform:none!important}
+
+/* ---- 開場：霓虹燈管一根根亮起 ---- */
+#intro.ix-neon{background:#08040f}
+#intro.ix-neon .ix-sun{position:absolute;left:50%;top:44%;width:min(72vw,460px);aspect-ratio:1;transform:translate(-50%,-50%) scale(.6);border-radius:50%;background:linear-gradient(180deg,#ffd23f,#ff7a3d 40%,#ff2bd6 80%);opacity:0;transition:opacity .9s,transform 1.2s cubic-bezier(.2,.8,.3,1);
+  -webkit-mask-image:repeating-linear-gradient(180deg,#000 0 14px,transparent 14px 19px);mask-image:repeating-linear-gradient(180deg,#000 0 14px,transparent 14px 19px)}
+#intro.ix-neon.boot .ix-sun{opacity:.42;transform:translate(-50%,-50%) scale(1)}
+#intro.ix-neon .ix-floor{position:absolute;left:-60%;right:-60%;top:62%;bottom:-30%;overflow:hidden;transform:perspective(260px) rotateX(64deg);transform-origin:50% 0;opacity:0;transition:opacity .6s}
+#intro.ix-neon .ix-floor::before{content:"";position:absolute;left:0;right:0;top:-40px;bottom:0;background:linear-gradient(#ff2bd6aa 2px,transparent 2px) 0 0/100% 40px,linear-gradient(90deg,#00f0ff88 2px,transparent 2px) 0 0/52px 100%}
+#intro.ix-neon.boot .ix-floor{opacity:.8}
+#intro.ix-neon.boot .ix-floor::before{animation:neFloor .9s linear infinite}
+@keyframes neFloor{to{transform:translateY(40px)}}
+#intro.ix-neon .ix-scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 2px,#0000002a 2px 3px);pointer-events:none}
+#intro.ix-neon .solid{color:#f2efff;-webkit-text-stroke:0;font:900 min(32vw,220px)/1 var(--cjkh);text-shadow:.02em .02em 0 #ff2bd6,-.02em -.02em 0 #00f0ff,.05em .05em 0 #ff2bd655;letter-spacing:.08em;opacity:0}
+#intro.ix-neon .solid.go{animation:neFlicker .7s steps(1) forwards}
+@keyframes neFlicker{0%{opacity:.9}10%{opacity:0}18%{opacity:1}26%{opacity:.15}34%{opacity:1}52%{opacity:.4}60%,100%{opacity:1}}
+#intro.ix-neon .stk{font:400 min(9vw,56px)/1 "PZ Neon Logo",sans-serif;color:#00f0ff;background:none;border:0;box-shadow:none;transform:translate(-50%,0);opacity:0;letter-spacing:.06em}
+#intro.ix-neon .stk.go{animation:neFlicker .6s steps(1) forwards}
+#intro.ix-neon .tline2{transform:translateX(-120%);background:linear-gradient(90deg,#ff2bd6,#7a3dff,#00f0ff);color:#07030f;border:0;top:86%}
+#intro.ix-neon .tline2.go{transition:transform .4s cubic-bezier(.2,.9,.3,1.1);transform:translateX(0)}
+#intro.ix-neon.heads .ix-sun{opacity:.18}
+#intro.ix-neon .skip{color:#7f76ad}
+
+/* 專題、推坑頁的大標 */
+[data-skin="neon"] .f-title{-webkit-text-stroke:0;color:#f2efff;text-shadow:2px 2px 0 #ff2bd6,-2px -2px 0 #00f0ff;letter-spacing:2px}
+[data-skin="neon"] .f-en{transform:none}
+[data-skin="neon"] .f-headline{background:#0b0617d9;border-left:3px solid #ff2bd6;box-shadow:inset 0 0 0 1px #ff2bd633}
+[data-skin="neon"] #tabs,[data-skin="neon"] #top{background:#0b0617}
+
+#intro.ix-neon .stk{width:max-content}
+#intro.ix-neon.heads .ix-issue,#intro.ix-neon.heads .ix-rule,#intro.ix-neon.heads .ix-start{transition:none;opacity:0!important}
+
+/* 塗鴉版的粗黑描邊大字：霓虹版改成青、洋紅錯位 */
+[data-skin="neon"] .pk-year,[data-skin="neon"] .rsn .rn,[data-skin="neon"] #unpack .nm,[data-skin="neon"] .sv-title,[data-skin="neon"] .ha-t,[data-skin="neon"] .wk-no b,[data-skin="neon"] .wk-hero .wk-no b,[data-skin="neon"] .wn-i,[data-skin="neon"] .tg-t,[data-skin="neon"] .tg-vs,[data-skin="neon"] .ask-hero h1,[data-skin="neon"] .oh-t b,[data-skin="neon"] #combo .cb,[data-skin="neon"] .vs-mid .vs-vs{-webkit-text-stroke:0!important;text-shadow:2px 2px 0 #ff2bd6,-2px -2px 0 #00f0ff!important}

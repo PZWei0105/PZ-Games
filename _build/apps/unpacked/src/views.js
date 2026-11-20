@@ -83,7 +83,7 @@ function renderHome() {
     ${notes.length ? `<div class="notes">${notes.map((n, i) => `<div class="note ${n.c}" data-go="${esc(n.go || 'f/' + n.id)}" style="--rot:${rot(n.id + n.d, i, 2.4)}deg"><div class="nt">${esc(n.t)}</div><div class="nv">${esc(String(n.v))}<small>${esc(n.unit)}</small></div><div class="nd">${esc(n.d)}</div></div>`).join('')}</div>`
       : '<div class="empty">Steam 即時資料每小時更新一次：同上人數、特價、評價變化和倒數會自動貼在這面牆上。</div>'}
     ${earlier.length ? `<h3 class="tape-h p">之前解包</h3><div class="hscroll">${earlier.map((x, i) => miniHtml(x, i)).join('')}</div>` : ''}
-    <div class="endcta"><button class="btn y" data-go="week">${ICON.trophy}<span>每週懶人包</span></button><button class="btn y" data-go="board">${ICON.chart}<span>行情板</span></button><button class="btn y" data-go="tga">${ICON.star}<span>TGA 預測戰</span></button><button class="btn p" data-go="vs">⚔<span>VS 擂台</span></button><button class="btn p" data-go="ask">${ICON.radio}<span>點播台</span></button><button class="btn y" data-go="cal">${ICON.cal}<span>出擊日曆</span></button><button class="btn k" data-go="lib">${ICON.box}<span>翻全部庫存</span></button><button class="btn p" data-go="fan">${ICON.mega}<span>去粉專作戰台</span></button></div>`;
+    <h3 class="tape-h">全部功能</h3>${hubGrid()}`;
 }
 /* 首頁：願望單有特價就貼一條警示膠帶 */
 function huntStrip() {
@@ -114,7 +114,8 @@ function renderLib() {
   const genres = [...new Set(items.flatMap((x) => x.genres || []))].slice(0, 14);
   const plats = [...new Set(items.flatMap((x) => (x.platforms || []).map(PLAT_SHORT)))];
   const fl = (k, v, label) => `<button class="fl ${LIBF[k] === v ? 'on' : ''}" data-act="lf" data-k="${k}" data-v="${esc(v)}">${esc(label || v)}</button>`;
-  return `<div class="sec-h"><h2 class="spray-h y">庫存</h2><span class="date-stk">${items.length} 款</span></div>
+  return `<div class="sec-h"><h2 class="spray-h y">資料庫</h2><span class="date-stk">${items.length} 篇專題</span></div>
+    <div class="db-seg"><button data-act="dbmode" data-v="all">全部遊戲 <b>${S.db ? S.db.n : ''}</b></button><button class="on" data-act="dbmode" data-v="feat">解包專題 <b>${items.length}</b></button></div>
     <label class="search">${ICON.search}<input id="libq" type="search" placeholder="搜尋遊戲、類型、工作室…" value="${esc(LIBF.q)}" autocomplete="off"></label>
     <div class="fgroup">結論</div><div class="filters">${fl('stamp', '', '全部')}${['推薦', '觀望', '不推薦'].map((s) => fl('stamp', s)).join('')}</div>
     <div class="fgroup">平台</div><div class="filters">${fl('plat', '', '全部')}${plats.map((p) => fl('plat', p)).join('')}</div>
@@ -289,7 +290,7 @@ function moneyHtml(m) {
   return `<div class="ic"><h4>課金雷達 <span class="tagx ${L == null ? 'k' : L <= 1 ? 'g' : L === 2 ? 'y' : ''}">${esc(L == null ? '未確認' : moneyLabel(L))}</span></h4>
     <div class="meter">${[0, 1, 2, 3, 4].map((k) => `<i class="${L != null && k <= L ? 'on l' + L : ''}"></i>`).join('')}</div>
     <div class="mlabels">${labels.map((x) => `<span>${x}</span>`).join('')}</div>
-    <p style="color:#fff;font-weight:900">${esc(m.model)}</p><ul>${(m.notes || []).map((n) => `<li>${esc(n)}</li>`).join('')}</ul>
+    <p class="mdl-n">${esc(m.model)}</p><ul>${(m.notes || []).map((n) => `<li>${esc(n)}</li>`).join('')}</ul>
     ${(m.flags || []).length ? `<div class="flags">${m.flags.map((x) => `<span>${esc(x)}</span>`).join('')}</div>` : ''}</div>`;
 }
 function zhText(f, lv) {
@@ -652,7 +653,7 @@ async function compareHtml() {
   const ok = fs.filter(Boolean);
   const row = (k, fn) => `<tr><td class="k">${k}</td>${ok.map((f) => `<td>${fn(f, liveOf(f.game.steam))}</td>`).join('')}</tr>`;
   return `<h3>三款比一比</h3><div class="ctwrap"><table class="ctable"><tr><th></th>${ok.map((f) => `<th>${esc(f.game.zh)}</th>`).join('')}</tr>
-    ${row('結論', (f) => `<b style="color:${f.verdict.stamp === '推薦' ? '#7dff9a' : f.verdict.stamp === '觀望' ? '#FFE600' : '#ff7a9c'}">${esc(f.verdict.stamp)}</b>｜${esc(f.verdict.label)}`)}
+    ${row('結論', (f) => `<b class="vd-${f.verdict.stamp === '推薦' ? 'ok' : f.verdict.stamp === '觀望' ? 'wait' : 'no'}">${esc(f.verdict.stamp)}</b>｜${esc(f.verdict.label)}`)}
     ${row('價格', (f, lv) => esc(priceLabel({ price_text: f.game.price_text }, lv)))}
     ${row('平台', (f) => esc(f.game.platforms.join('、')))}
     ${row('中文', (f, lv) => { const z = liveZh(lv, f.zh && (f.zh.sub || f.zh.ui) ? 'tc' : f.zh && f.zh.ui === false ? 'none' : '?'); return z === 'tc' ? '有繁中' : z === 'sc' ? '只有簡中' : z === 'none' ? '無中文' : '未知'; })}
@@ -671,10 +672,11 @@ function settingsHtml() {
   const st = S.settings;
   const seg = (k, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${st[k] === v ? 'on' : ''}" data-act="set" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div>`;
   return `<h3>設定</h3>
-    <div class="setrow"><div class="st"><b>音效</b><small>噴漆、蓋章、拍貼紙這些聲音</small></div>${seg('sfx', [[true, '開'], [false, '關']])}</div>
+    <div class="setrow"><div class="st"><b>換裝</b><small>現在：${esc(SKIN_BY[skinId()].name)}。畫面、字型、音效、配樂、開場一起換</small></div><button class="btn sm y" data-act="skinsheet">${ICON.shirt}<span>換裝</span></button></div>
+    <div class="setrow"><div class="st"><b>音效</b><small>${esc(SKIN_BY[skinId()].snd.split('・')[0])}這些聲音（跟著換裝）</small></div>${seg('sfx', [[true, '開'], [false, '關']])}</div>
     <div class="setrow"><div class="st"><b>音效音量</b></div><input type="range" min="0" max="1" step="0.05" value="${st.vol}" data-act="vol" data-k="vol"></div>
-    <div class="setrow"><div class="st"><b>背景鼓組</b><small>boom-bap 嘻哈鼓組；看預告、滑短影音、語音導讀時會自動停下來</small></div>${seg('bgm', [[true, '開'], [false, '關']])}</div>
-    <div class="setrow"><div class="st"><b>鼓組音量</b></div><input type="range" min="0" max="0.8" step="0.02" value="${st.bgmVol}" data-act="vol" data-k="bgmVol"></div>
+    <div class="setrow"><div class="st"><b>背景配樂</b><small>${esc(SKIN_BY[skinId()].snd.split('・').slice(-1)[0])}（跟著換裝）；看預告、滑短影音、語音導讀時會自動停下來</small></div>${seg('bgm', [[true, '開'], [false, '關']])}</div>
+    <div class="setrow"><div class="st"><b>配樂音量</b></div><input type="range" min="0" max="0.8" step="0.02" value="${st.bgmVol}" data-act="vol" data-k="bgmVol"></div>
     <div class="setrow"><div class="st"><b>開場動畫</b><small>每天第一次完整噴漆，其他時候短版</small></div>${seg('intro', [['daily', '每天一次'], ['always', '每次'], ['short', '短版'], ['off', '關']])}</div>
     <div class="setrow"><div class="st"><b>特效</b><small>收斂：不震動、不閃光、少噴濺</small></div>${seg('fx', [['full', '全開'], ['calm', '收斂']])}</div>
     <div class="setrow"><div class="st"><b>短影音連播</b><small>開：一支播完自動滑到下一款；關：同一支重複播</small></div>${seg('shAuto', [[true, '開'], [false, '關']])}</div>

@@ -1337,6 +1337,9 @@ def info_targets(D):
                 tgt.add(int(n['steam']))
             elif n.get('name'):
                 names.append(n['name'])
+    for v in ((load(os.path.join(D, 'adds.json'), {}) or {}).get('items') or {}).values():   # 痞子葳在資料庫按「加進資料庫」的
+        if v.get('st') == 'ok' and v.get('a'):
+            tgt.add(int(v['a']))
     return tgt, names
 
 
@@ -1386,6 +1389,243 @@ def infos(D, t0, tagn, tracked):
             nw += 1
     save_if_changed(sp, dict(sorted(seen.items())))
     print(f'info: {len(tgt)} 款要有情報卡（這輪抓 {len(need)} 款、寫了 {nw} 個）；名字對到 appid 的 {len(found)} 個')
+
+
+# ------------------------------------------------------------------ 資料庫（萬用搜尋）＋加進資料庫（2026-11-20）
+ADD_BUDGET = 12          # 每輪最多處理幾個「加進資料庫」
+ADD_KEEP = 300
+EN_CTX = {'language': 'english', 'country_code': 'TW', 'steam_realm': 1}
+
+
+def adds(D, t0):
+    """點播台收到的「加進資料庫」（{type:'add', q}）：拿去 Steam 商店搜尋。名字完全一樣最好；
+    其次是「開頭一樣或包含整段字（至少 3 個字）」，像打 silksong 找到 Hollow Knight: Silksong。對不到就記「找不到」＋最多 3 個建議。
+    data/adds.json：{at, items:{name_key: {q, st(ok/miss), a, n, sug:[[appid, 名字]], at}}}。收件一律當不可信資料：只用 q 這個字串去搜尋。"""
+    path = os.path.join(D, 'adds.json')
+    st = load(path, {}) or {}
+    items = st.get('items') or {}
+    evs = [e for e in (load(os.path.join(D, 'inbox.json'), {}) or {}).get('events') or [] if e.get('type') == 'add' and isinstance(e.get('q'), str)]
+    todo, seen = [], set(items)
+    for e in evs:
+        k = name_key(e['q'])
+        if len(k) < 2 or k in seen:
+            continue
+        seen.add(k)
+        todo.append((k, e['q'].strip()[:80]))
+    done = 0
+    for k, q in todo[:ADD_BUDGET]:
+        res = []
+        langs = ['english', 'tchinese'] if re.search(r'[A-Za-z]', q) else ['tchinese', 'english']
+        for lang in langs:
+            try:
+                r = get_json(STORESEARCH.format(urllib.parse.quote(q), lang), timeout=20, tries=1)
+            except Exception as e:  # noqa: BLE001
+                ERRS.append(f'adds: {str(e)[:80]}')
+                continue
+            res = [(int(x['id']), (x.get('name') or '').strip()) for x in r.get('items') or [] if x.get('type') == 'app' and x.get('id')]
+            time.sleep(0.35)
+            if res:
+                break
+        pick = next(((a, n) for a, n in res if name_key(n) == k), None)
+        if not pick and len(k.replace(' ', '')) >= 3:
+            pick = next(((a, n) for a, n in res if name_key(n).startswith(k) or f' {k} ' in f' {name_key(n)} ' or (not re.search(r'[a-z]', k) and k in name_key(n))), None)
+        items[k] = {'q': q, 'st': 'ok' if pick else 'miss', 'a': pick[0] if pick else 0, 'n': pick[1] if pick else '',
+                    'sug': [] if pick else [[a, n] for a, n in res[:3]], 'at': iso(t0)}
+        done += 1
+    if len(items) > ADD_KEEP:
+        items = dict(sorted(items.items(), key=lambda kv: kv[1].get('at') or '')[-ADD_KEEP:])
+    save_if_changed(path, {'at': iso(t0), 'items': dict(sorted(items.items()))})
+    if done:
+        print(f'adds: 處理 {done} 個、排隊 {max(0, len(todo) - ADD_BUDGET)} 個；共 {len(items)} 個（找到 {sum(1 for v in items.values() if v.get("st") == "ok")}）')
+
+
+def en_names(appids):
+    """英文名（Steam 給台灣區的名字常是中文：「柏德之門3」；搜尋 Baldur 也要找得到）。"""
+    out = {}
+    ids = sorted(set(int(a) for a in appids if a))
+    for i in range(0, len(ids), 30):
+        part = ids[i:i + 30]
+        url = api(GETITEMS, {'ids': [{'appid': a} for a in part], 'context': EN_CTX, 'data_request': {'include_basic_info': True}})
+        try:
+            d = get_json(url, timeout=40)
+        except Exception as e:  # noqa: BLE001
+            ERRS.append(f'en_names: {str(e)[:80]}')
+            continue
+        for it in (d.get('response') or {}).get('store_items') or []:
+            if it.get('success') == 1 and (it.get('appid') or it.get('id')):
+                out[int(it.get('appid') or it.get('id'))] = (it.get('name') or '').strip()
+        time.sleep(0.4)
+    return out
+
+
+def _db_fill(r, x):
+    """把 live／情報卡的一款（norm 的格式）填進資料庫的一列：有的才填、不蓋掉已經有的。"""
+    if not x:
+        return
+    if x.get('name') and not r.get('n'):
+        r['n'] = x['name']
+    p = x.get('price') or {}
+    if 'p' not in r and (p.get('final') is not None or x.get('free')):
+        r['p'] = 0 if x.get('free') and not p.get('final') else p.get('final')
+        if p.get('orig') and p.get('orig') != p.get('final'):
+            r['o'] = p['orig']
+        if p.get('disc'):
+            r['d'] = int(p['disc'])
+    if x.get('free') and 'fr' not in r:
+        r['fr'] = 1
+    rv = x.get('rv') or {}
+    if 'r' not in r and rv.get('n'):
+        n = int(rv['n'])
+        r['r'] = rv.get('pct'); r['rn'] = int(float(f'{n:.2g}')) if n >= 100 else n
+    lg = x.get('langs') or {}
+    if 'c' not in r and isinstance(lg, dict):
+        r['c'] = 'tc' if 'tc' in lg else 'sc' if 'sc' in lg else ''
+    if not r.get('t') and x.get('tags'):
+        r['t'] = list(x['tags'])[:5]
+    rel = x.get('rel') or {}
+    if 'y' not in r and isinstance(rel, dict) and (rel.get('date') or rel.get('soon')):
+        r['y'] = rel.get('date') or ''
+        if rel.get('soon'):
+            r['soon'] = 1
+    if x.get('ws') and 'm' not in r:
+        r['m'] = 1
+    img = x.get('img') or {}
+    if not r.get('i') and isinstance(img, dict) and (img.get('header') or img.get('wide')):
+        r['i'] = img.get('header') or img.get('wide')
+    pl = x.get('players') or {}
+    if isinstance(pl, dict) and pl.get('n') and 'pl' not in r:
+        r['pl'] = pl['n']
+    if x.get('adult'):
+        r['ad'] = 1
+
+
+def dbuild(D, t0, out_apps):
+    """data/db.json：App 裡出現過的每一款遊戲一列（專題、推坑、願望單、行情板百大、限免、TGA 入圍、週報下週出擊、加進資料庫的），
+    萬用搜尋與篩選用：{a, n, e(英文名), z(中文名), t[標籤], c(tc/sc/''), p, o, d, fr, r, rn, m(工作坊), y, soon, i, pl, ad, s[來源]}。
+    來源：f:<專題> p:<推坑> w 願望單 b 行情板 x:<限免 id> t TGA k 週報下週出擊 q 加進資料庫。"""
+    rows, byname = {}, {}
+
+    def row(appid, name):
+        appid = int(appid) if appid and str(appid).isdigit() else 0
+        k = 'a%d' % appid if appid else 'n' + name_key(name)
+        if not appid and k in byname:
+            k = byname[k]
+        r = rows.get(k)
+        if not r:
+            r = rows[k] = {'a': appid, 's': []}
+            if name:
+                byname.setdefault('n' + name_key(name), k)
+        return r
+
+    def src(r, code):
+        if code not in r['s']:
+            r['s'].append(code)
+    idx = load(os.path.join(D, 'index.json'), {}) or {}
+    pk = load(os.path.join(D, 'picks.json'), {}) or {}
+    for kind, lst in (('f', idx.get('items') or []), ('p', pk.get('items') or [])):
+        for x in lst:
+            r = row(x.get('steam'), x.get('en') or x.get('zh'))
+            src(r, f'{kind}:{x["id"]}')
+            if x.get('zh') and not r.get('z'):
+                r['z'] = x['zh']
+            if x.get('en') and not r.get('e'):
+                r['e'] = x['en']
+            if x.get('genres') and not r.get('t'):
+                r['t'] = list(x['genres'])[:5]
+            if x.get('img') and not r.get('i'):
+                r['i'] = x['img']
+            if x.get('release') and 'y' not in r and re.match(r'\d{4}-\d{2}-\d{2}$', str(x['release'])):
+                r['y'] = x['release']
+    wish = load(os.path.join(D, 'wish.json'), {}) or {}
+    for x in wish.get('items') or []:
+        r = row(x.get('appid'), x.get('name'))
+        src(r, 'w')
+        r.setdefault('n', x.get('name'))
+        pp = x.get('p') or []
+        if pp and 'p' not in r and pp[0] is not None:
+            r['p'] = pp[0]
+            if len(pp) > 1 and pp[1] and pp[1] != pp[0]:
+                r['o'] = pp[1]
+            if len(pp) > 2 and pp[2]:
+                r['d'] = pp[2]
+        if x.get('rv') and 'r' not in r:
+            r['r'], n = x['rv'][0], int(x['rv'][1] or 0)
+            r['rn'] = int(float(f'{n:.2g}')) if n >= 100 else n
+        if x.get('zh') is not None and 'c' not in r:
+            r['c'] = x['zh'] if x['zh'] in ('tc', 'sc') else ''
+        if x.get('tags') and not r.get('t'):
+            r['t'] = list(x['tags'])[:5]
+        if x.get('cap') and not r.get('i'):
+            r['i'] = x['cap']
+    bd = load(os.path.join(D, 'board.json'), {}) or {}
+    for x in bd.get('rows') or []:
+        r = row(x.get('a'), x.get('nm'))
+        src(r, 'b')
+        if x.get('n'):
+            r['pl'] = x['n']
+        r.setdefault('n', x.get('nm'))
+    fr = load(os.path.join(D, 'free.json'), {}) or {}
+    for x in fr.get('items') or []:
+        if x.get('mystery') or x.get('dlc'):
+            continue
+        r = row(x.get('appid'), x.get('title'))
+        src(r, 'x:' + x['id'])
+        r.setdefault('n', x.get('title'))
+        if x.get('img') and not r.get('i'):
+            r['i'] = x['img']
+    found = (load(os.path.join(D, 'names.json'), {}) or {}).get('names') or {}
+    for c in (load(os.path.join(D, 'tga.json'), {}) or {}).get('cats') or []:
+        if c.get('id') in TGA_SKIP:
+            continue
+        for n in c.get('nom') or []:
+            nm = n.get('n') or ''
+            a = n.get('steam') or (found.get(name_key(nm)) or [0])[0]
+            if not a and not nm:
+                continue
+            r = row(a, nm)
+            src(r, 't')
+            r.setdefault('n', nm)
+            if n.get('zh') and not r.get('z'):
+                r['z'] = n['zh']
+    for it in ((load(os.path.join(D, 'weekly.json'), {}) or {}).get('items') or [])[:2]:
+        for n in (load(os.path.join(D, 'weekly', f'{it.get("id")}.json'), {}) or {}).get('next') or []:
+            nm = n.get('name') or n.get('zh') or ''
+            a = n.get('steam') or (found.get(name_key(nm)) or [0])[0]
+            r = row(a, nm)
+            src(r, 'k')
+            r.setdefault('n', nm)
+    for v in ((load(os.path.join(D, 'adds.json'), {}) or {}).get('items') or {}).values():
+        if v.get('st') == 'ok' and v.get('a'):
+            r = row(v['a'], v.get('n'))
+            src(r, 'q')
+            r.setdefault('n', v.get('n'))
+    # 細節：追蹤中的（live＋live/）→ 情報卡
+    for r in rows.values():
+        a = r['a']
+        if not a:
+            continue
+        lx = out_apps.get(str(a))
+        if lx:
+            heavy = load(os.path.join(D, 'live', f'{a}.json'), {}) or {}
+            _db_fill(r, dict(lx, **{k: heavy[k] for k in ('ws', 'img') if k in heavy}))
+        _db_fill(r, load(os.path.join(D, 'info', f'{a}.json'), None))
+    # 英文名：上一版有的沿用，沒有的去問（一輪最多 150 款）
+    old = {x['a']: x.get('e') for x in (load(os.path.join(D, 'db.json'), {}) or {}).get('items') or [] if x.get('a')}
+    need = [r['a'] for r in rows.values() if r['a'] and not r.get('e') and r['a'] not in old][:150]
+    en = en_names(need) if need else {}
+    for r in rows.values():
+        if r['a'] and not r.get('e'):
+            e = old.get(r['a']) or en.get(r['a'])
+            if e:
+                r['e'] = e
+        if r.get('e') and r.get('n') and name_key(r['e']) == name_key(r['n']):
+            r.pop('e')
+        for k in [k for k, v in r.items() if v in (None, '', [])]:
+            if k not in ('a', 's', 'c', 'y'):
+                r.pop(k)
+    out = sorted((r for r in rows.values() if r.get('n') or r.get('z')), key=lambda r: (-len(r['s']), -(r.get('pl') or 0), r.get('n') or r.get('z') or ''))
+    wrote = save_if_changed(os.path.join(D, 'db.json'), {'at': iso(t0), 'n': len(out), 'items': out})
+    print(f'db: {len(out)} 款（英文名這輪問了 {len(need)} 款）wrote={wrote}')
 
 
 # ------------------------------------------------------------------ 出擊日曆（可訂閱的 .ics）
@@ -1657,7 +1897,7 @@ def main():
             cov[int(x['steam'])] = 'f:' + x['id']
     tracked = {int(a) for a in out_apps}
     for name, fn in (('board', lambda: board(D, t0, tagn, cov)), ('free', lambda: freebies(D, t0, tagn)), ('calendar', lambda: calendar(D, t0)),
-                     ('info', lambda: infos(D, t0, tagn, tracked))):
+                     ('adds', lambda: adds(D, t0)), ('info', lambda: infos(D, t0, tagn, tracked)), ('db', lambda: dbuild(D, t0, out_apps))):
         try:
             fn()
         except Exception as e:  # noqa: BLE001

@@ -1,7 +1,7 @@
-/* 解包 UNPACKED service worker — version 1.0.2611191911
+/* 解包 UNPACKED service worker — version 1.0.2611201358
    App 本體：先拿網路上最新的，斷線才用存好的。
    資料（data/）：一律先問網路；斷線時用上次成功拿到的那一份（照網址路徑存，不管 ?t= 參數）。 */
-const V = 'unpacked-1.0.2611191911';
+const V = 'unpacked-1.0.2611201358';
 const DATA_CACHE = 'unpacked-data-v1';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', (e) => {

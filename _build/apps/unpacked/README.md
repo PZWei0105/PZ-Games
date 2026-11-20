@@ -82,7 +82,10 @@
 - **點播台**（右上角收音機圖示；`#ask`）：「你問我答」問任何遊戲問題（可以指定關於哪一款，有快速問題貼紙）、「點播解包」指定一款遊戲請編輯寫完整專題。上方燈號：送出中／已送出等收件／都收到了／送不出去（連上網路自動重送）。每一則顯示狀態（排隊中、下一班是誰幾點、處理中、已回覆），回答有段落、重點、來源、「看那一篇」；有新回答時收音機圖示亮數字、打開 App 會提示。三班的時間表也列在頁面上。
   - 專題頁、推坑頁的「問 Claude」：送到點播台，或「現在就聊」把這款的重點整理好複製、打開 Claude 直接聊；那一款被問過的問答也會出現在專題頁下面。
   - 問答存在公開的 GitHub 上，頁面上有提醒不要寫私人資料。
-- **庫存**：搜尋、結論／平台／類型／中文／課金／我的標記篩選、排序，最多 3 款加入比較（比較表）。
+- **資料庫**（分頁列第五個，原本的「庫存」；頂端 🔍 萬用搜尋也是這裡）：上面兩個分頁——
+  - 「全部遊戲」：App 裡出現過的每一款（專題、推坑、願望單、行情板百大、限免、TGA 入圍、週報下週出擊、自己加的）一起搜，中英文名都行（Steam 台灣區的名字常是中文，`db.json` 另外帶英文名）。篩選：來源、有繁中、特價中、免費、可裝 Mod、好評 90%↑、NT$300 內、即將推出、類型；排序：推薦／最相關、熱玩人數、好評、便宜、折扣、新上市。每一列有橫幅圖、價格與折扣、好評率、在線人數、繁中／MOD、來源貼紙；點了：寫過的去專題／推坑，其他開情報卡。成人向的只有指名搜尋才出現。
+  - 搜不到（或沒有名字完全一樣的）就按「＋加進資料庫」：走點播台的轉發站送 `{type:'add', q}`，下一班（每小時 41 分的 Actions）`live.py` 的 `adds()` 去 Steam 商店搜尋——名字完全一樣、開頭一樣或包含整段字才算，找到就補上情報卡、進資料庫（來源「我加的」）；找不到記「找不到」加最多 3 個建議，App 上可以直接點建議再加一次。自己加過的列在搜尋框下面（排隊中／✓ 已加入／✗ 找不到），找到的放 3 天就收起來。
+  - 「解包專題」：原本的庫存——結論／平台／類型／中文／課金／我的標記篩選、排序，最多 3 款加入比較（比較表）。
 - **粉專**（粉專作戰台，下一節）：今日／排程／出稿／成效／教學五個分頁，分頁上的數字是今天還沒發的。每篇的出稿頁（稿子如果是前幾天寫的、又有「倒數幾天」這類會過期的字，上方會提醒先改）有塗鴉圖卡產生器（版型 A 黃牆撕紙框、B 黑牆大圖；4:5／1:1；重噴換濺漆與截圖；下載 PNG、手機可直接分享）、可編輯的原稿（只存這台裝置）、三個標題、hashtag、口播稿、素材標註，上面是現在經營中的平台各自的版本和「去上架」（第一階段只有 Threads，有串文延伸就逐則列出、各自算字數）。
 
 ## 粉專作戰台（2026-11-18；2026-11-19 改成 Threads 優先）
@@ -136,11 +139,34 @@
 - **舊稿回訪**：寫稿編輯、推坑編輯每天跑 `tools/revisit.py` 挑 1～2 篇變化大的舊稿改成現在的樣子（`WRITER_GUIDE.md` §5b、`PICKS_GUIDE.md` §4b），`updated` 跟著改、`rev` 記一筆，App 顯示「11/30 回訪改寫：…」。`publish.py` 檢查 `rev` 格式、`updated` 有沒有跟著改。
 - **不拖慢 App**：列表和追蹤牆要的（`live.json` 的 `stale`：寫稿之後的變化、7 天內的更新，3 天內的才帶標題）跟著 `live.json` 一起來，不多開一個檔；完整的（每篇幾則公告、分數）只在 `revisit.py` 算，不塞給 App。一年份的量測：`stale` 約 77 KB（gzip 16 KB）。
 
+## 導覽（2026-11-20 整理）
+- **頂端列**：🔍 萬用搜尋（直接打開資料庫、游標放進搜尋框）、VS 擂台、點播台（收音機，有新回覆亮數字）、👕 換裝、⊞ 全部功能。原本頂端的音效、鼓組開關收進「全部功能」最上面一排（音效／配樂／特效／換裝，一按就切）。
+- **全部功能**（`nav.js`；頂端 ⊞ 打開，首頁最下面也有一份，取代原本那排按鈕）：資料庫、行情板（大盤漲跌）、出擊日曆（下一個是幾天後的哪一款）、每週懶人包（最新一期）、TGA 預測戰（倒數）、VS 擂台、點播台（新回覆幾則）、免費補給站（現在幾款限免，點了直接捲到獵價頁的補給站）、短影音、粉專作戰台、換裝、看導覽、設定。每一格的小字都是現在的真實狀態。
+- **第一次導覽**：改版後第一次打開（`tourDone` < `TOUR_REV`），開場播完、獵物警報和疊層都關了才開始，五步框出分頁列、萬用搜尋、全部功能、換裝、點播台，點哪都下一步、可以跳過；「全部功能 → 看導覽」可以重看。
+
+## 換裝（2026-11-20）
+痞子葳要的：「一按，整個 App 就換裝——除了 Skin，音效、配樂全都換，像換了一個 App，但內容不變。」四套：
+| 套 | 畫面 | 字 | 音效 | 配樂 | 開場 |
+|---|---|---|---|---|---|
+| 塗鴉街頭 `graffiti`（原本的） | 黃粉黑噴漆牆、貼紙、印章 | Bebas、Permanent Marker、Rubik Wet Paint | 噴漆、拍貼紙、刷碟 | boom-bap 92 BPM | 搖罐噴字 |
+| 像素掌機 `pixel` | 深藍點陣夜空、直角 4px 黑框、硬邊投影、NES 式浮雕按鈕、不歪 | 俐方體 11 號（繁中像素字）、VT323、Press Start 2P；長段文字用黑體 | 8-bit 方波（12.5%／25% 佔空比） | 晶片音樂 118 BPM（A 段 8 小節＋B 段 4 小節，第二輪換音色） | 掌機開機、PRESS START |
+| 霓虹賽博 `neon` | 紫黑夜城、地平線條紋太陽、透視格線、掃描線、霓虹管雙線框 | Teko、Tilt Neon、Monoton | 合成器、FM 鐘、數位雜訊 | synthwave 100 BPM（琶音回聲、鋪底、第 9～12 小節主旋律） | 燈管閃爍亮起 |
+| 紙本雜誌 `paper` | 米白紙紋、雙線刊頭、白紙剪貼卡、紅色印章、螢光筆底線、照片下的大標 | Noto Serif TC 大標（Google 依字切片）、Oswald、Caveat、Playfair Display | 翻頁、打字機、橡皮章、桌鈴 | lo-fi 爵士 80 BPM（Dm9–G13–Cmaj9–Am9、黑膠爆音） | 蓋章、打字、紅線 |
+- **一按就換**：頂端 👕（或全部功能、設定）打開換裝選單，四張迷你預覽（`skin-preview.css`，各自寫死顏色）、一按就換；換的時候新的一套把舊的「吃掉」（塗鴉＝斜噴漆帶、像素＝方塊亂序填滿、霓虹＝掃描線＋故障色條、紙本＝翻頁），蓋滿那一下正中間亮出新一套的名字，配樂交叉淡入（舊的 1.4 秒淡出、新的 1.6 秒淡入）。記在 `settings.skin`。
+- **怎麼做到「以後新畫面也自動跟著換」**：`style.css` 照常用塗鴉版寫，App 本體就是原封不動的塗鴉版（開 App 不多花時間）。`skins.py`（`build.py` 呼叫）把每一條有顏色的宣告分角色——`t` 字、`b` 底、`ba`／`bt` 濃／淡的半透明底、`l` 框線、`h` 陰影、`o` 色塊上的白字——照 `SKINS` 的規則算出另外三套的顏色（灰階照亮度對到那一套的色階；黃粉紅那一族跟著換成那一套的主色；紙本是淺色系：黑底→紙、白字→墨、黃字→雜誌紅、粉紅字→墨水藍，彩色字自動調到在紙上看得清楚），每套寫成 `skins/<名字>.css`（只有跟塗鴉版不一樣的那幾條＋`skin-<名字>.css` 的特殊造型＋開場），換上那一套才載入。字型也是：`var(--cjk)` 依字重字級分成 `--cjkh`（大標）、`--cjkb`（行高 1.45 以上的長段文字）、`--cjk`。
+  - 不想跟著換的（影片上的白字…）：宣告後面加 `/*fixed*/`（寫在分號前），或整段包在 `/*skin:fixed*/ … /*skin:end*/`。
+  - JS 裡寫在 `style=""` 的顏色換裝不會跟著變：`build.py` 會列出來（改成 class；確定不用換就在那一行加 `skin:ok`）。
+- **音效、配樂**：`audio.js` 裡 `//@skin <名字> … //@end` 標起來的段落（三套的音色組與配樂）由 `build.py` 切成 `skins/<名字>.js`，跟 CSS 一起載入（先載到的排進 `__skinQ`，App 本體跑完再接上）。程式其他地方照樣呼叫 `sfx.stamp()`，會用目前這一套的聲音；四套的音量用 OfflineAudioContext 離線量過 RMS 對齊（`SFX_TRIM`、`BGM.*.vol`）。殘響、8-bit 方波用到才做。
+- **特效、牆面**：`fx.js` 的 `fxSkin()`：粒子（油漆滴／4px 方塊／霓虹光點拖尾／墨點與紙屑）、閃光強度、牆面材質（水泥噪點／點陣星空／純 CSS 夜空／紙紋）。開場 `runIntroSkin()`（三套共用同一組元素，最後一樣接「頭條拍上牆」）。
+- **刻意不換的**：粉專圖卡（遊戲狂想曲的形象要一致）、手機主畫面的圖示和名字（安裝時就固定）、遊戲的封面截圖影片（內容）。
+- 開頭的小程式（`index.html` 的 `<head>`）在畫面出來前就把那一套的 CSS、JS 接上，不會先閃一下塗鴉版；換新版時檔名帶 `?v=版本`。
+- 字型檔在 `src/fonts/skins/`（授權檔放旁邊：俐方體 11 號是自由字型、其他 OFL），組建時複製到 `fonts/`，用到那一套才下載。
+
 ## 聲光
 
 - 開門畫面「點我・聲光全開」（iPhone 的 AudioContext 必須在點擊當下建立；`navigator.audioSession.type='playback'` 讓靜音鍵打開也有聲音）。
 - 開場：每天第一次完整版（搖罐→噴漆罐真的把「解包」噴上牆→實心字砸下＋重低音＋濺漆＋閃光＋放射線→滴漆→UNPACKED 貼紙→膠帶跑馬燈，約 3.6 秒，點一下跳過），其他時候短版；設定可改。
-- 音效全部 Web Audio 即時合成（搖罐、噴漆嘶聲、拍貼紙、蓋章、重低音、刷碟、撕紙、鈴鐺、打字聲）；背景 boom-bap 鼓組（92 BPM，帶搖擺、貝斯、和弦、刷碟、黑膠沙沙聲），看預告、滑短影音、語音導讀時淡出並整個停掉（不在背景空轉），結束再淡入。
+- 音效全部 Web Audio 即時合成（塗鴉版：搖罐、噴漆嘶聲、拍貼紙、蓋章、重低音、刷碟、撕紙、鈴鐺、打字聲；其他三套見上面「換裝」）；背景配樂（塗鴉版 boom-bap 鼓組 92 BPM，帶搖擺、貝斯、和弦、刷碟、黑膠沙沙聲），看預告、滑短影音、語音導讀時淡出並整個停掉（不在背景空轉），結束再淡入。
 - 底線（照頻道的塗鴉規則）：大衝擊（震動＋閃光）一個畫面最多 2～3 次、閃光每秒不超過 3 次、字永遠清楚。設定「特效：收斂」或系統「減少動態效果」時不震動不閃光。
 - 手機記憶體：不用 filter／backdrop-filter／mix-blend-mode／模糊陰影；動畫只動 transform 和 opacity；噴濺粒子畫在一張全螢幕畫布上（裝置像素比上限 2，最多 260 顆，沒有粒子就停）。動態預告整個 App 同時最多兩支（主視覺一支、首頁一支，換頁就收掉），App 切到背景就暫停；「特效：收斂」或「減少動態效果」時不播動態預告、不輪播。
 - 動態預告來源：Steam 的 microtrailer（`live.json` 的 `micro`，mp4 給 iPhone、webm 給沒有 H.264 的瀏覽器）。
@@ -174,6 +200,8 @@ App 裡出現的每一款遊戲都點得進去看介紹（`src/info.js`）：
 - `data/board.json`：`{at, src(concurrent/players), since, t:[時間], s:[走勢時間], idx:{n,d1,up,dn,fl,h,sp}, rows:[{a(appid), n, h(30 小時), sp(7 天), d1, d7, pk, r, rp, lw, f:[標記], ath, nm, tags, rv, free, p, img, zh, adult, cov(f:/p:)}], tags:[{t, n, k, d1}]}`；`data/board-d.json`：`{days, pk:{appid:[每天高峰]}, ath, nm, last, since}`。
 - `data/free.json`：`{at, ok, errs, items:[{id(epic:…/steam:…/gog:…), store, title, img, url, orig 或 orig_t, start, end, up(下週才送), mystery, dlc, appid, rv, zh, tags, desc, dev, adult, seen}], past}`（Epic、GOG 的 `appid` 是照名字對到的 Steam 版）。
 - `data/info/<appid>.json`：情報卡 `{appid, name, url, free, price, rel, langs, tags, dev, pub, short, plat, adult, img, micro, ws, rv{n（兩位有效數字）, pct, label}, shots}`；`data/info/_seen.json`：`{appid: 最後一次出現在 App 裡的日期}`。`data/names.json`：`{at, names:{name_key: [appid（0＝Steam 上找不到）, 查的日期]}}`。`track.json` 多了 `cmp`（「跟誰像」有填 steam 的 appid）、`names`（只有名字的）。
+- `data/db.json`（資料庫，live.py 的 `dbuild()` 每小時整理）：`{at, n, items:[{a(appid，0＝不在 Steam), n(名字), e(英文名，跟 n 不一樣才有), z(中文名), t[標籤], c(tc/sc/''), p, o, d(現價、原價、折扣，分), fr(免費), r, rn(好評率、則數兩位有效數字), m(有工作坊), y(上市日), soon, i(橫幅圖), pl(在線人數), ad(成人向), s[來源：f:<專題> p:<推坑> w 願望單 b 行情板 x:<限免 id> t TGA k 週報 q 加進資料庫]}]}`。英文名上一版有的沿用，沒有的一輪最多問 150 款。
+- `data/adds.json`（加進資料庫，live.py 的 `adds()`）：`{at, items:{name_key: {q, st(ok/miss), a, n, sug:[[appid, 名字]], at}}}`，最多 300 筆；一輪最多處理 12 個。點播台收件的 `add` 事件：`{id, type:'add', t, dev, q(≤80 字)}`（排程的編輯不用管，管線自己處理）。
 - `data/events.json`：`{at, note, items:[{id, kind(sale/fest/show/vote), name, en, start, end, big, note, src:{t,u}}]}`（時間都是 UTC）。
 - `data/tga.json`：`{show, vote_end, venue, vote_url, sealed, result_at, intro, rules, cats:[{id, zh, en, pt, grp, nom:[{n, zh, sub, ref}], claude:{c, conf, why, s}, win}], sources}`。
 - `data/inbox.json`：`{v, at, cursor, events:[{id, type(ask/req/vid/tga/ping), t, dev, …}]}`（inbox.py 產生，欄位見 `QA_GUIDE.md`；`vid` 是 `{title, when, note?, games?, url?}`，`url` 只收 YouTube 網址）；`data/qa.json`：`{at, items:[{id, type(ask/req/vid), t, q, ref, st(done/no/wip), at, by, a, pts, src, link}]}`（排程寫；`link` 可以是 `f:`／`p:`／`v:<影片三連發 id>`）。
@@ -182,7 +210,7 @@ App 裡出現的每一款遊戲都點得進去看介紹（`src/info.js`）：
 - 專題和週報的 `fanpage.threads`：`{post, topic, more?}`（Threads 版；`post` 第 1 則 150～400 字，`more` 是 1～3 則串文延伸、每則 40～480 字，寫法見 WRITER_GUIDE 第 4 節「Threads 寫法」；內文不放 #、不放 `---`，`topic` 一個主題標籤、不含 #）。2026-11-20 起的專題、每一份週報沒有 Threads 版會警告。
 - 推坑的 `fanpage`（2026-11-19 起，PICKS_GUIDE 第 3b 節）：`{threads:{post, topic, more}, tags[], card?:{kicker, title, sub, tags[], points:[{h, t}]}, credit}`；給粉絲看的，不寫只對痞子葳說的話。publish.py 檢查格式（`check_pick_fanpage`），2026-11-20 起的推坑沒寫會警告。
 - 所有粉專文字不放網址、不出現「痞子葳」（publish.py 擋）。
-- localStorage 前綴 `unpacked.v1.`：`tga`（押注、加倍卡、鎖定時間、偷看過沒）、`ask`（裝置代號、待送、已送、自己的點播、看過的回答）、`freeGot`（領過的免費遊戲）、`freeSeen`、`mkBell`（今天敲過開盤鐘沒）；`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
+- localStorage 前綴 `unpacked.v1.`：`tga`（押注、加倍卡、鎖定時間、偷看過沒）、`ask`（裝置代號、待送、已送、自己的點播、看過的回答）、`freeGot`（領過的免費遊戲）、`freeSeen`、`mkBell`（今天敲過開盤鐘沒）；`settings`（含短影音的 `shAuto` 連播、`shSound` 聲音、`skin` 換裝）、`adds`（自己加進資料庫的 `[{q, at}]`）、`tourDone`（第一次導覽看到第幾版）、`marks`、`notes`、`thoughts`、`posted`、`edits`、`cmp`、`seen`（專題 `<id>`、推坑 `p:<id>`、短影音 `v:f:<id>`／`v:p:<id>`）、`introDay`、`shHint`、`shWantTip`、`huntSeen`（看過的特價：`appid:價格`）、`huntAlertDay`（獵物出現警報今天跳過了沒）；設定多了 `huntAlert`。粉專的 `posted`、`edits` 也用 `w:<週 id>` 存週報。
 - `unpacked.v1.ops`（粉專作戰台）：`{v, since(開始用的那天), cad(發文節奏：th/fb/ig 各 7 格、週日到週六、null＝不發), pin({日期:{平台:{r(內容；'-'＝跳過), at, add}}}), log([{id, ref, pf, d, k(pre/up/talk), at, link, s:{v 觀看, e 互動, f 新粉絲}}]), wk({週 id:{th, ig, fb, yt, ytv, rth, rig, rfb, yth}}), vids([{id, t, at(YYYY-MM-DDTHH:MM), url, note, games, ev(點播 id), made}]), setup(開站任務), prof(個人檔案網址), fbLimit(unknown/yes/no), guide(full/lite), ed({ref|平台: 改過的文字}), vchk(上片清單打勾), mode(th/thig/all：經營到第幾階段), dq({日期:{post, reply, patrol}}：每日三件事；當天有 Threads 發文紀錄，「發一篇」自動算做到；只留 60 天)}`；內容代號 `f:<專題>`、`p:<推坑>`、`w:<週>`、`v:<影片>:<pre|up|talk>`、`x:<free.json 的 id>`（限免快訊）。開站任務 `setup` 2026-11-19 換了一套鍵（name、ig0、th、thprof、thfeed、thintro、cal、first、yt、igpro、igfirst、fb、link、fbfirst），舊的鍵會自動對過來。
 
 ## 組建與測試
@@ -193,7 +221,8 @@ python3 _build/apps/unpacked/build.py --icons            # 重畫圖示
 python3 _build/apps/unpacked/tools/publish.py            # 專題檢查＋重建目錄
 # 本機看畫面（雲端沙盒連不到 Steam、YouTube、github.io：外部圖片用假圖代替）
 python3 _build/apps/unpacked/build.py --out /tmp/unp && python3 _build/apps/unpacked/tools/testdata.py /tmp/unp/data --hunt   # --hunt：假願望單＋假週報；再加 --noweek 測「本週進行中」
-# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）、--info（情報卡、名字對照，搭配 --hunt 有假週報）；只寫進 /tmp，絕不 commit
+# 新功能的假資料：--board（行情板）、--free（免費補給站）、--ask（點播台問答）、--tgares（TGA 隨機開獎）、--after（寫稿之後：變化、官方公告、回訪改寫）、--info（情報卡、名字對照，搭配 --hunt 有假週報）、--db（資料庫＋三筆加進資料庫的狀態）；只寫進 /tmp，絕不 commit
+# 換裝：python3 _build/apps/unpacked/skins.py 印出色票數與各套 CSS 大小；截圖時 localStorage 的 settings 帶 skin:'pixel'／'neon'／'paper'
 # 舊稿回訪的候選（只讀）：--kind f 專題、--kind p 推坑
 python3 _build/apps/unpacked/tools/revisit.py --kind f
 # 效能：造一年份的資料再量（--legacy 用舊格式比較）；perf.py 也能量現在的

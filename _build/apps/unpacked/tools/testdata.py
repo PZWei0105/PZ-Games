@@ -281,3 +281,17 @@ if '--info' in sys.argv:       # 遊戲情報卡：假的 Steam 介紹（info/�
             x.update(desc='（測試資料）在被詛咒的海底廢墟裡探險的魂系類銀河城：你是一名被浪打上岸的海盜，要在怪物與陷阱之間找回自己的船。', dev='Mad Mimic')
     json.dump(fr, open(fp, 'w'), ensure_ascii=False)
     print('test info →', d)
+
+if '--db' in sys.argv:       # 資料庫：用 live.py 自己的邏輯整理 db.json（不連網：英文名用假的），加上三筆「加進資料庫」的狀態
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import live as L
+    L.get_json = lambda *a, **k: (_ for _ in ()).throw(Exception('offline'))
+    L.en_names = lambda ids: {a: f'Test English Name {a}' for a in list(ids)[:6]}
+    T0 = L.now(); TT = time.time()
+    lv = L.live_load(d)
+    json.dump({'at': iso(TT), 'items': {
+        L.name_key('Hollow Knight Silksong'): {'q': 'Hollow Knight Silksong', 'st': 'ok', 'a': 1030300, 'n': 'Hollow Knight: Silksong', 'sug': [], 'at': iso(TT)},
+        L.name_key('薩爾達'): {'q': '薩爾達', 'st': 'miss', 'a': 0, 'n': '', 'sug': [[1234560, '（測試）薩爾達風格的冒險'], [1234570, '（測試）Zelda-like Adventure']], 'at': iso(TT)},
+    }}, open(os.path.join(d, 'adds.json'), 'w'), ensure_ascii=False)
+    L.dbuild(d, T0, lv.get('apps') or {})
+    print('test db →', d)

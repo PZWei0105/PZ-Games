@@ -1,0 +1,90 @@
+/* ==========================================================================
+   換裝：紙本雜誌（PAPER）— 米白紙、粗黑襯線大標、雙線欄框、紅色印章、螢光筆、剪貼的紙片
+   顏色由 skins.py 自動換好（黑底→紙、白字→墨、黃字→雜誌紅、粉紅→墨水藍）；這裡只寫「造型」。
+   ========================================================================== */
+[data-skin="paper"]{color-scheme:light}
+[data-skin="paper"] #wall{background-color:#f3eee2;background-image:var(--noise,none),radial-gradient(120% 90% at 50% 20%,#f7f3ea 40%,#e9e2d1 100%);background-size:256px 256px,100% 100%}
+[data-skin="paper"] #wall::after{background:linear-gradient(90deg,transparent calc(50% - 1px),#00000008 50%,transparent calc(50% + 1px))}
+/* 刊頭：雙線、襯線大字 */
+[data-skin="paper"] #top{background:#f3eee2;border-bottom:4px double #1b1813}
+[data-skin="paper"] .logo b{font:900 28px/1 var(--cjkh);color:#1b1813;-webkit-text-stroke:0;text-shadow:none;transform:none;letter-spacing:2px}
+[data-skin="paper"] .logo i{font:900 20px/1 var(--drip);font-style:italic;color:#d6262b;transform:none;letter-spacing:.5px}
+[data-skin="paper"] .ib{color:#1b1813}
+[data-skin="paper"] .ib.off{color:#b3a993}
+[data-skin="paper"] #tape{transform:none;background:#1b1813;color:#f3eee2;border-bottom:0;height:28px}
+[data-skin="paper"] #tape .in{font:700 13.5px/28px var(--cjk);letter-spacing:2px}
+[data-skin="paper"] #tape .in b{color:#ffd94d;-webkit-text-stroke:0}
+[data-skin="paper"] #tabs{background:#f3eee2;border-top:4px double #1b1813}
+[data-skin="paper"] .tab{color:#776f62;font:700 12.5px/1 var(--cjk)}
+[data-skin="paper"] .tab.on{color:#1b1813}
+[data-skin="paper"] .tab.on::before{background:none;transform:none;box-shadow:none;border-bottom:4px solid #d6262b;border-radius:0;inset:auto 22% 9px;height:4px}
+[data-skin="paper"] .tab .dot{background:#d6262b;color:#fffdf8}
+/* 大標：襯線粗黑字＋螢光筆底線 */
+[data-skin="paper"] .spray-h{font:900 34px/1.08 var(--cjkh);color:#1b1813;-webkit-text-stroke:0;text-shadow:none;transform:none;letter-spacing:1px;background:linear-gradient(transparent 62%,#ffd94d 62%,#ffd94d 92%,transparent 92%);padding:0 4px}
+[data-skin="paper"] .spray-h.y{color:#c4161c}
+[data-skin="paper"] .date-stk{transform:rotate(2deg);background:#d6262b;color:#fffdf8;border:0;box-shadow:none;font:600 20px/1 var(--num);letter-spacing:1px}
+[data-skin="paper"] .tape-h{transform:none;background:none;color:#1b1813;border:0;border-top:3px solid #1b1813;border-bottom:1px solid #1b1813;box-shadow:none;padding:8px 2px;font:900 18px/1 var(--cjkh);letter-spacing:3px}
+[data-skin="paper"] .tape-h.p{color:#c4161c;background:none}
+/* 卡片：白紙剪貼，墨線框＋硬陰影；保留一點點歪 */
+[data-skin="paper"] .poster{background:#fffdf8;border:2px solid #1b1813;box-shadow:5px 5px 0 #1b181322}
+[data-skin="paper"] .ptitle{font:900 30px/1.12 var(--cjkh)}
+[data-skin="paper"] .pen{font:700 19px/1.1 var(--hand);color:#1f5fa8}
+[data-skin="paper"] .phead{color:#3a342b}
+[data-skin="paper"] .kind-stk{background:#d6262b;color:#fffdf8;border:0;box-shadow:2px 2px 0 #1b181333}
+[data-skin="paper"] .k-upcoming .kind-stk{background:#ffd94d;color:#1b1813}
+[data-skin="paper"] .k-exclusive .kind-stk{background:#1b1813;color:#ffd94d}
+[data-skin="paper"] .tp{background:#efe6c9c4}
+[data-skin="paper"] .tp2{background:#f6dd8bc4}
+[data-skin="paper"] .seal{background:#fffdf8d8}
+[data-skin="paper"] .mini{background:#fffdf8;border:2px solid #1b1813;box-shadow:4px 4px 0 #1b181322}
+[data-skin="paper"] .mini h4{font:900 16px/1.25 var(--cjkh)}
+[data-skin="paper"] .note{border-width:0;box-shadow:3px 4px 0 #1b18131f}
+[data-skin="paper"] .note.w{background:#fffdf8}
+[data-skin="paper"] .note::before{background:#efe6c9b0}
+[data-skin="paper"] .note .nv{font:600 34px/1 var(--num)}
+[data-skin="paper"] .chip{border-radius:2px}
+/* 按鈕：墨框、底下一條紅 */
+[data-skin="paper"] .btn{background:#fffdf8;border:2px solid #1b1813;box-shadow:3px 3px 0 #d6262b;letter-spacing:1px}
+[data-skin="paper"] .btn.y{background:#ffd94d}
+[data-skin="paper"] .btn.p{background:#d6262b;color:#fffdf8;box-shadow:3px 3px 0 #1b1813}
+[data-skin="paper"] .btn.k{background:#1b1813;color:#ffd94d;border-color:#1b1813;box-shadow:3px 3px 0 #d6262b}
+[data-skin="paper"] .fl{border:1.5px solid #c4b9a1;background:#fffdf8;color:#3a342b}
+[data-skin="paper"] .fl.on{background:#1b1813;color:#fffdf8;border-color:#1b1813;box-shadow:2px 2px 0 #d6262b}
+[data-skin="paper"] .search{transform:none;background:#fffdf8;border:2px solid #1b1813;box-shadow:4px 4px 0 #ffd94d}
+[data-skin="paper"] .sbox{background:#f6f1e6;border-top:4px double #1b1813}
+[data-skin="paper"] #gate .gl{-webkit-text-stroke:0!important;font-family:var(--cjkh)!important;color:#1b1813!important;text-shadow:none!important}
+[data-skin="paper"] #gate .go{transform:none!important;background:#1b1813!important;color:#fffdf8!important}
+
+/* ---- 開場：印刷廠——蓋章、打字、紅線 ---- */
+#intro.ix-paper{background:#f3eee2;background-image:radial-gradient(120% 90% at 50% 30%,#f9f6ef 40%,#e6dece 100%)}
+#intro.ix-paper .ix-rule{position:absolute;left:8%;right:8%;top:24%;height:0;border-top:4px double #1b1813;transform:scaleX(0);transform-origin:0 50%;transition:transform .6s cubic-bezier(.6,0,.2,1)}
+#intro.ix-paper.boot .ix-rule{transform:scaleX(1)}
+#intro.ix-paper .ix-issue{position:absolute;left:8%;top:calc(24% - 26px);font:600 15px/1 "PZ Paper Num",sans-serif;letter-spacing:3px;color:#776f62;opacity:0;transition:opacity .4s .3s}
+#intro.ix-paper.boot .ix-issue{opacity:1}
+#intro.ix-paper .solid{color:#1b1813;-webkit-text-stroke:0;font:900 min(32vw,220px)/1 var(--cjkh);text-shadow:.03em .03em 0 #d6262b33;letter-spacing:.06em;opacity:0}
+#intro.ix-paper .solid.go{animation:paStamp .26s cubic-bezier(.5,0,.75,0) forwards}
+@keyframes paStamp{0%{opacity:0;transform:translateY(-50%) scale(1.8) rotate(-6deg)}100%{opacity:1;transform:translateY(-50%) scale(1) rotate(-2deg)}}
+#intro.ix-paper .stk{font:900 min(10vw,60px)/1 "PZ Paper Logo",serif;font-style:italic;color:#d6262b;background:none;border:0;box-shadow:none;transform:translate(-50%,0);letter-spacing:.04em;white-space:nowrap;
+  clip-path:inset(0 calc(100% - var(--n,0) * 12.5%) 0 0);opacity:0}
+#intro.ix-paper .stk.go{opacity:1}
+#intro.ix-paper .tline2{transform:translateX(-120%);background:#1b1813;color:#f3eee2;border:0;top:86%;font-weight:700}
+#intro.ix-paper .tline2.go{transition:transform .38s cubic-bezier(.2,.9,.3,1.1);transform:translateX(0)}
+#intro.ix-paper.heads .ix-rule,#intro.ix-paper.heads .ix-issue{opacity:0}
+#intro.ix-paper .skip{color:#776f62}
+
+/* 專題、推坑頁的大標：放在照片下面，像雜誌內頁 */
+[data-skin="paper"] .f-hero{border-bottom:3px solid #1b1813}
+[data-skin="paper"] .f-head{margin-top:0;padding-top:16px}
+[data-skin="paper"] .f-title{font:900 38px/1.12 var(--cjkh);color:#1b1813;-webkit-text-stroke:0;text-shadow:none;letter-spacing:1px}
+[data-skin="paper"] .f-en{font:700 22px/1.2 var(--hand);color:#1f5fa8;transform:none}
+[data-skin="paper"] .f-headline{background:#fffdf8;border-left:5px solid #d6262b;color:#2e2921;box-shadow:3px 3px 0 #1b18131a}
+
+#intro.ix-paper .stk{width:max-content}
+#intro.ix-paper.heads .ix-issue,#intro.ix-paper.heads .ix-rule,#intro.ix-paper.heads .ix-start{transition:none;opacity:0!important}
+
+/* 塗鴉版的粗黑描邊大字：雜誌版改成乾淨的印刷字＋一點紅色套印 */
+[data-skin="paper"] .pk-year,[data-skin="paper"] .rsn .rn,[data-skin="paper"] #unpack .nm,[data-skin="paper"] .sv-title,[data-skin="paper"] .ha-t,[data-skin="paper"] .wk-no b,[data-skin="paper"] .wk-hero .wk-no b,[data-skin="paper"] .wn-i,[data-skin="paper"] .tg-t,[data-skin="paper"] .tg-vs,[data-skin="paper"] .ask-hero h1,[data-skin="paper"] .oh-t b,[data-skin="paper"] #combo .cb,[data-skin="paper"] .vs-mid .vs-vs{-webkit-text-stroke:0!important;text-shadow:2px 2px 0 #d6262b40!important}
+[data-skin="paper"] .ask-hero h1,[data-skin="paper"] .tg-t,[data-skin="paper"] .ha-t{font-family:var(--cjkh)!important}
+/* 照片不用再往下暗（標題已經放到照片下面了） */
+[data-skin="paper"] .f-hero::after{background:none}
+[data-skin="paper"] .f-hero .ht{opacity:.5}
