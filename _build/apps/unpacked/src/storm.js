@@ -52,11 +52,11 @@ const seSrc = (dg, ids) => (ids || []).filter((n) => dg.sources && dg.sources[n 
 const seVid = (id) => '../spectate/#watch/' + encodeURIComponent(id);
 
 /* ---------- 主視覺 ---------- */
-function seHero(c, sm, det, yt, past) {
+function seHero(c, sm, det, yt, past, d) {   // 衛星的數字：官方＝日報整理的＋這一輪抓到的
   const img = c.img || (c.yt_id ? ytThumb(c.yt_id) : '');
   const fb = c.yt_id ? ytThumb(c.yt_id, 'hqdefault') : '';
   const s = (sm && sm.s) || {};
-  const n = { off: ((det && det.off) || []).length, med: det ? (det.news.zh.length + det.news.en.length) : 0, ply: det ? det.ptt.length + ((det.reddit && det.reddit.items) || []).length : 0, str: yt ? yt.lc : 0 };
+  const n = { off: ((det && det.off) || []).length + ((d && d.off) || []).length, med: det ? (det.news.zh.length + det.news.en.length) : 0, ply: det ? det.ptt.length + ((det.reddit && det.reddit.items) || []).length : 0, str: yt ? yt.lc : 0 };
   const feat = (sm && sm.feats || [])[0];
   return `<section class="se-hero${past ? ' past' : ''}">
     <div class="se-eye" aria-hidden="true"><i class="se-ring r1"></i><i class="se-ring r2"></i><i class="se-ring r3"></i>
@@ -133,6 +133,8 @@ function seMedia(det, d) {
 }
 
 /* ---------- 玩家風向 ---------- */
+// PTT 標題標了雷（結局雷、劇情雷、有雷、(雷)、劇透）：先貼「有雷」，點之前知道裡面有劇透（「踩雷」「雷作」不算）
+const SE_SPOIL = /有雷|結局雷|劇情雷|全破雷|[（(]雷[)）]|\s雷$|劇透|spoiler/i;
 function sePlayers(det, d) {
   const P = (d && d.players) || {};
   const box = (k, t, L) => (L && L.length ? `<div class="vc ${k}"><h4>${t}</h4><ul>${L.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '');
@@ -141,7 +143,7 @@ function sePlayers(det, d) {
   const rd = det && det.reddit;
   return `${v ? `<div class="voices">${v}</div>` : ''}${(P.debate || []).length ? `<div class="debate"><h4>吵最兇的</h4>${P.debate.map((x) => `<p>${esc(x)}</p>`).join('')}${seSrc(d, P.s)}</div>` : ''}
     <h4 class="se-h4">PTT 熱門（三天內，照推文數）</h4>
-    ${pt.length ? `<ul class="se-list ptt">${pt.map((x) => `<li>${seLink(x.u, `<span class="se-push ${x.n >= 100 ? 'boom' : x.n < 0 ? 'neg' : ''}">${x.n >= 100 ? '爆' : x.n < 0 ? 'X' : x.n}</span>${esc(x.t)}`)}<small>${esc(x.b)}・${esc(ago(new Date(x.ts * 1000).toISOString()))}</small></li>`).join('')}</ul>` : '<p class="sub-note">PTT 這三天還沒有相關的文章。</p>'}
+    ${pt.length ? `<ul class="se-list ptt">${pt.map((x) => `<li>${seLink(x.u, `<span class="se-push ${x.n >= 100 ? 'boom' : x.n < 0 ? 'neg' : ''}">${x.n >= 100 ? '爆' : x.n < 0 ? 'X' : x.n}</span>${SE_SPOIL.test(x.t) ? '<em class="se-spoil">有雷</em>' : ''}${esc(x.t)}`)}<small>${esc(x.b)}・${esc(ago(new Date(x.ts * 1000).toISOString()))}</small></li>`).join('')}</ul>` : '<p class="sub-note">PTT 這三天還沒有相關的文章。</p>'}
     ${rd && rd.ok && rd.items.length ? `<h4 class="se-h4">Reddit r/${esc(rd.sub)} 熱門${rd.stale ? '（上一份）' : ''}</h4><ul class="se-list rd">${rd.items.slice(0, 6).map((x) => `<li>${seLink(x.u, `<span class="se-push">${esc(fmtN(x.n))}</span>${esc(x.t)}`)}<small>${esc(fmtN(x.c))} 則留言${x.f ? `・${esc(x.f)}` : ''}</small></li>`).join('')}</ul>` : ''}`;
 }
 
@@ -178,7 +180,7 @@ async function renderStorm(arg) {
   const yt = past ? (det && det.yt) : seYt();
   if (!past) LS.set('stormSeen', new Date().toISOString());
   return `${past ? `<div class="se-pastbar"><span>這是過去的風暴</span><button class="btn sm" data-go="storm">回到現在的風暴 ›</button></div>` : ''}
-    ${seHero(c, past ? null : sm, det, yt, past)}
+    ${seHero(c, past ? null : sm, det, yt, past, d)}
     ${past ? '' : seGauges(sm, det, yt)}
     ${sec('se-tl', 'TIMELINE', '熱度時間軸', seTimeline(det, dg))}
     ${sec('se-dg', 'DIGEST', '風暴日報', seDigest(dg))}

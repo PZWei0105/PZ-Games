@@ -208,9 +208,22 @@ def news(q, lang):
         if not t or k in seen:
             continue
         seen.add(k)
-        out.append({'t': t[:140], 's': src[:40], 'su': (su or '')[:80], 'u': (it.findtext('link') or '')[:400], 'ts': int(ts)})
+        x = {'t': t[:140], 's': src[:40], 'su': (su or '')[:80], 'u': (it.findtext('link') or '')[:400], 'ts': int(ts)}
+        if news_ok(x):
+            out.append(x)
     out.sort(key=lambda x: -x['ts'])
     return out
+
+
+# 社群平台的貼文（Google News 偶爾會收 FB、YouTube）不算新聞；政論、選舉跟《觀戰》一樣收起來（不分黨派，名單同 pipeline.py 的 OFFTOPIC）
+SOCIAL = re.compile(r'^(facebook|youtube|instagram|threads|x|twitter|tiktok|dcard)$', re.I)
+SOCIAL_U = re.compile(r'(?:^|[/.])(?:facebook|youtube|instagram|threads|tiktok|x|twitter)\.(?:com|net)(?:[/:]|$)', re.I)
+OFFTOPIC = re.compile(r'民眾黨|民众党|國民黨|国民党|民進黨|民进党|時代力量|立委|立法院|總統府|总统府|選舉|选举|罷免|罢免|政論|政论|柯文哲|賴清德|赖清德|侯友宜|鄭麗文|黃國昌|黄国昌')
+OFFICIAL_U = re.compile(r'(?:^|[/.])(?:rockstargames|playstation|xbox|nintendo|steampowered|take2games)\.com(?:[/:]|$)', re.I)
+
+
+def news_ok(x):
+    return not (SOCIAL.search((x.get('s') or '').strip()) or SOCIAL_U.search(x.get('su') or '') or OFFTOPIC.search(x.get('t') or ''))
 
 
 # ---------------------------------------------------------------- PTT
@@ -378,10 +391,9 @@ def main():
     ago = [p for p in tl if p[0] <= NOW / 60 - 23.5 * 60]
     d24 = h - ago[-1][1] if ago else None
 
-    off_rx = re.compile(r'rockstargames\.com|playstation\.com|xbox\.com|nintendo\.com|steampowered\.com', re.I)
     det = {'v': 1, 'at': iso(NOW), 'key': key,
            'news': {'zh': nz[:30], 'en': ne[:30]},
-           'off': [x for x in nz + ne if off_rx.search(x.get('su') or '')][:10],
+           'off': [x for x in nz + ne if OFFICIAL_U.search(x.get('su') or '')][:10],   # 官方網域才算（purexbox.com 這種不算）
            'ptt': pt[:40], 'reddit': rd, 'yt': yt, 'tl': tl}
     wrote = save_if_changed(detail_p, det)
 

@@ -2722,6 +2722,7 @@ body.calm .se-ring,body.calm .se-sat{animation:none}
 .se-pts li{counter-increment:sp;display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:8px;font:600 14px/1.65 var(--cjkb);color:#222}
 .se-pts li::before{content:counter(sp);grid-row:span 2;display:grid;place-items:center;width:26px;height:26px;background:var(--k);color:var(--y);font:400 17px/1 var(--num)}
 .se-pts li b{font:900 15px/1.4 var(--cjk);color:#111}
+.se-spoil{display:inline-block;margin-right:6px;padding:1px 5px;border:1.5px solid var(--r);color:var(--r);font:900 11px/1.3 var(--cjk);font-style:normal;transform:rotate(-2deg)}
 .se-sup{text-decoration:none}.se-sup sup{display:inline-block;min-width:15px;padding:2px 3px 1px;margin-left:3px;border-radius:4px;background:#ffd9ea;color:#c4005f;font:700 9px/1 var(--cjk);text-align:center;vertical-align:4px}
 .se-sup + .se-sup sup{margin-left:2px}
 .se-next{margin-top:12px;padding:10px;background:#f2f2f2;border:2px dashed #999}

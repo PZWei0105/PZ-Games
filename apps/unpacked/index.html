@@ -2755,6 +2755,7 @@ body.calm .se-ring,body.calm .se-sat{animation:none}
 .se-pts li{counter-increment:sp;display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:8px;font:600 14px/1.65 var(--cjkb);color:#222}
 .se-pts li::before{content:counter(sp);grid-row:span 2;display:grid;place-items:center;width:26px;height:26px;background:var(--k);color:var(--y);font:400 17px/1 var(--num)}
 .se-pts li b{font:900 15px/1.4 var(--cjk);color:#111}
+.se-spoil{display:inline-block;margin-right:6px;padding:1px 5px;border:1.5px solid var(--r);color:var(--r);font:900 11px/1.3 var(--cjk);font-style:normal;transform:rotate(-2deg)}
 .se-sup{text-decoration:none}.se-sup sup{display:inline-block;min-width:15px;padding:2px 3px 1px;margin-left:3px;border-radius:4px;background:#ffd9ea;color:#c4005f;font:700 9px/1 var(--cjk);text-align:center;vertical-align:4px}
 .se-sup + .se-sup sup{margin-left:2px}
 .se-next{margin-top:12px;padding:10px;background:#f2f2f2;border:2px dashed #999}
@@ -2886,7 +2887,7 @@ body.calm .se-ring,body.calm .se-sat{animation:none}
 
 :root{--cjkh:var(--cjk);--cjkb:var(--cjk)}
 </style>
-<script>/* 換裝：畫面出來之前就把那一套的 CSS 接上（塗鴉版不用多載任何東西） */try{var s=JSON.parse(localStorage.getItem('unpacked.v1.settings')||'{}'),t={pixel:'#0b0d24',neon:'#08040f',paper:'#f3eee2'}[s.skin];if(t){document.documentElement.setAttribute('data-skin',s.skin);document.querySelector('meta[name="theme-color"]').content=t;if(s.skin==='paper')document.querySelector('meta[name="color-scheme"]').content='light';document.write('<link rel="stylesheet" id="skincss" data-skin="'+s.skin+'" href="skins/'+s.skin+'.css?v=1.0.2611201636">');var j=document.createElement('script');j.async=true;j.src='skins/'+s.skin+'.js?v=1.0.2611201636';document.head.appendChild(j)}}catch(e){}</script>
+<script>/* 換裝：畫面出來之前就把那一套的 CSS 接上（塗鴉版不用多載任何東西） */try{var s=JSON.parse(localStorage.getItem('unpacked.v1.settings')||'{}'),t={pixel:'#0b0d24',neon:'#08040f',paper:'#f3eee2'}[s.skin];if(t){document.documentElement.setAttribute('data-skin',s.skin);document.querySelector('meta[name="theme-color"]').content=t;if(s.skin==='paper')document.querySelector('meta[name="color-scheme"]').content='light';document.write('<link rel="stylesheet" id="skincss" data-skin="'+s.skin+'" href="skins/'+s.skin+'.css?v=1.0.2611201646">');var j=document.createElement('script');j.async=true;j.src='skins/'+s.skin+'.js?v=1.0.2611201646';document.head.appendChild(j)}}catch(e){}</script>
 </head>
 <body>
 <div id="wall"></div>
@@ -2913,7 +2914,7 @@ body.calm .se-ring,body.calm .se-sat{animation:none}
 /* ---- core.js ---- */
 'use strict';
 /* 解包 UNPACKED — 共用工具、設定、儲存 */
-const VERSION = '1.0.2611201636';
+const VERSION = '1.0.2611201646';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -6834,11 +6835,11 @@ const seSrc = (dg, ids) => (ids || []).filter((n) => dg.sources && dg.sources[n 
 const seVid = (id) => '../spectate/#watch/' + encodeURIComponent(id);
 
 /* ---------- 主視覺 ---------- */
-function seHero(c, sm, det, yt, past) {
+function seHero(c, sm, det, yt, past, d) {   // 衛星的數字：官方＝日報整理的＋這一輪抓到的
   const img = c.img || (c.yt_id ? ytThumb(c.yt_id) : '');
   const fb = c.yt_id ? ytThumb(c.yt_id, 'hqdefault') : '';
   const s = (sm && sm.s) || {};
-  const n = { off: ((det && det.off) || []).length, med: det ? (det.news.zh.length + det.news.en.length) : 0, ply: det ? det.ptt.length + ((det.reddit && det.reddit.items) || []).length : 0, str: yt ? yt.lc : 0 };
+  const n = { off: ((det && det.off) || []).length + ((d && d.off) || []).length, med: det ? (det.news.zh.length + det.news.en.length) : 0, ply: det ? det.ptt.length + ((det.reddit && det.reddit.items) || []).length : 0, str: yt ? yt.lc : 0 };
   const feat = (sm && sm.feats || [])[0];
   return `<section class="se-hero${past ? ' past' : ''}">
     <div class="se-eye" aria-hidden="true"><i class="se-ring r1"></i><i class="se-ring r2"></i><i class="se-ring r3"></i>
@@ -6915,6 +6916,8 @@ function seMedia(det, d) {
 }
 
 /* ---------- 玩家風向 ---------- */
+// PTT 標題標了雷（結局雷、劇情雷、有雷、(雷)、劇透）：先貼「有雷」，點之前知道裡面有劇透（「踩雷」「雷作」不算）
+const SE_SPOIL = /有雷|結局雷|劇情雷|全破雷|[（(]雷[)）]|\s雷$|劇透|spoiler/i;
 function sePlayers(det, d) {
   const P = (d && d.players) || {};
   const box = (k, t, L) => (L && L.length ? `<div class="vc ${k}"><h4>${t}</h4><ul>${L.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '');
@@ -6923,7 +6926,7 @@ function sePlayers(det, d) {
   const rd = det && det.reddit;
   return `${v ? `<div class="voices">${v}</div>` : ''}${(P.debate || []).length ? `<div class="debate"><h4>吵最兇的</h4>${P.debate.map((x) => `<p>${esc(x)}</p>`).join('')}${seSrc(d, P.s)}</div>` : ''}
     <h4 class="se-h4">PTT 熱門（三天內，照推文數）</h4>
-    ${pt.length ? `<ul class="se-list ptt">${pt.map((x) => `<li>${seLink(x.u, `<span class="se-push ${x.n >= 100 ? 'boom' : x.n < 0 ? 'neg' : ''}">${x.n >= 100 ? '爆' : x.n < 0 ? 'X' : x.n}</span>${esc(x.t)}`)}<small>${esc(x.b)}・${esc(ago(new Date(x.ts * 1000).toISOString()))}</small></li>`).join('')}</ul>` : '<p class="sub-note">PTT 這三天還沒有相關的文章。</p>'}
+    ${pt.length ? `<ul class="se-list ptt">${pt.map((x) => `<li>${seLink(x.u, `<span class="se-push ${x.n >= 100 ? 'boom' : x.n < 0 ? 'neg' : ''}">${x.n >= 100 ? '爆' : x.n < 0 ? 'X' : x.n}</span>${SE_SPOIL.test(x.t) ? '<em class="se-spoil">有雷</em>' : ''}${esc(x.t)}`)}<small>${esc(x.b)}・${esc(ago(new Date(x.ts * 1000).toISOString()))}</small></li>`).join('')}</ul>` : '<p class="sub-note">PTT 這三天還沒有相關的文章。</p>'}
     ${rd && rd.ok && rd.items.length ? `<h4 class="se-h4">Reddit r/${esc(rd.sub)} 熱門${rd.stale ? '（上一份）' : ''}</h4><ul class="se-list rd">${rd.items.slice(0, 6).map((x) => `<li>${seLink(x.u, `<span class="se-push">${esc(fmtN(x.n))}</span>${esc(x.t)}`)}<small>${esc(fmtN(x.c))} 則留言${x.f ? `・${esc(x.f)}` : ''}</small></li>`).join('')}</ul>` : ''}`;
 }
 
@@ -6960,7 +6963,7 @@ async function renderStorm(arg) {
   const yt = past ? (det && det.yt) : seYt();
   if (!past) LS.set('stormSeen', new Date().toISOString());
   return `${past ? `<div class="se-pastbar"><span>這是過去的風暴</span><button class="btn sm" data-go="storm">回到現在的風暴 ›</button></div>` : ''}
-    ${seHero(c, past ? null : sm, det, yt, past)}
+    ${seHero(c, past ? null : sm, det, yt, past, d)}
     ${past ? '' : seGauges(sm, det, yt)}
     ${sec('se-tl', 'TIMELINE', '熱度時間軸', seTimeline(det, dg))}
     ${sec('se-dg', 'DIGEST', '風暴日報', seDigest(dg))}

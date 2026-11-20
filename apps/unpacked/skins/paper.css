@@ -1582,6 +1582,7 @@ span.mk-sp.none{color:#544d42}
 .se-pts li{color:#26211c}
 .se-pts li::before{background:#fffdf8;color:#c4161c}
 .se-pts li b{color:#1b1813}
+.se-spoil{border:1.5px solid #c4161c;color:#b3121a}
 .se-sup sup{background:#f2b5b7;color:#7d1619}
 .se-next{background:#fbf8f1;border:2px dashed #7d7465}
 .se-next b{color:#1b1813}
