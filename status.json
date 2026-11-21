@@ -1,0 +1,37 @@
+{
+ "key": true,
+ "events": 0,
+ "rss_ok": 97,
+ "rss_fail": [],
+ "quiet": [
+  "People Make Games（58 天沒更新）"
+ ],
+ "unresolved": [],
+ "v": 1,
+ "at": "2026-11-21T21:05:27Z",
+ "run_s": 6.4,
+ "videos": 1472,
+ "channels": 208,
+ "units": 807,
+ "units_day": 3382,
+ "hot": 99,
+ "web_live": 1,
+ "noembed": 12,
+ "steam_left": 44,
+ "storm": {
+  "key": "gta-vi",
+  "videos": 255,
+  "live": 27,
+  "n24": 184
+ },
+ "errors": [],
+ "log": [
+  "上一版資料： 有 ｜金鑰： 有",
+  "轉發站：收到 0 筆、新的 0 筆",
+  "RSS：成功 97／97 個頻道，影片庫 2370 支",
+  "發燒榜：99 支",
+  "Shorts 檢查：2 支，其中 Shorts 0 支",
+  "API 補資料：61 支（不能嵌入 0 支）",
+  "新秀：候選 23 個，選出 5 個"
+ ]
+}
