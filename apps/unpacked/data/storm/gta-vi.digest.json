@@ -2,78 +2,80 @@
  "key": "gta-vi",
  "items": [
   {
-   "at": "2026-11-21T00:27:00+08:00",
+   "at": "2026-11-21T08:48:25+08:00",
    "slot": "am",
-   "title": "GTA 6 上市第 3 天：評分 99、直播破 600 萬人，30 幀和斷線挨罵",
-   "tldr": "評價和熱度都是史上級：Metacritic 99、OpenCritic 98，紐西蘭一解鎖，三大直播平台合計就衝破 600 萬人同時看。抱怨集中在主機鎖 30 幀、上市當天 PSN／Xbox 斷線、盒裝版只附下載碼；線上模式和 PC 版都還沒有日期。",
+   "title": "GTA 6 首日進帳 37.9 億美元破娛樂史紀錄，PC 版仍沒消息",
+   "tldr": "Take-Two 正式公布：GTA 6 上市第一天零售額估計 37.9 億美元，創下所有娛樂產品的新紀錄，上市前就賣出 3250 萬套。美國 Comcast 說上市那天是他們網路史上流量最大的一天。評價、直播紀錄延續前兩天的熱度；抱怨還是 30 幀和上市日斷線。PC 版官方仍未公布，只有「2027 年第一季」的傳聞。",
    "points": [
     {
-     "h": "評價史上級",
-     "t": "Metacritic 99、OpenCritic 98，評論幾乎全數推薦。媒體最常誇的是罪惡市的生活細節，和傑森、露西亞雙主角的劇情。",
+     "h": "首日 37.9 億美元",
+     "t": "Take-Two 和 Rockstar 公布：上市第一天的全球零售額估計約 37.9 億美元，官方說這是所有娛樂產品（電影、音樂、遊戲）的新紀錄。PC Gamer 拿來比：《復仇者聯盟：終局之戰》整個上映期間約 29 億美元。",
      "s": [
       1,
-      2,
-      14
+      2
      ]
     },
     {
-     "h": "直播紀錄全破",
-     "t": "紐西蘭一解鎖，Twitch、YouTube、Kick 合計衝到約 638 萬人同時觀看，之後的統計更超過 700 萬；Twitch 單一遊戲分類也刷新了歷史紀錄。",
+     "h": "上市前就賣 3250 萬套",
+     "t": "官方說上市前（預購）就賣出 3250 萬套，是所有平台的紀錄；官方沒有公布上市後的賣出套數，有些媒體標題寫成「首日賣出」並不精確。",
      "s": [
-      3,
-      4,
-      5
+      1,
+      2
      ]
     },
     {
-     "h": "玩家開玩就買單",
-     "t": "上市當天社群上一面倒好評，不少人直接喊年度最佳；最常被分享的是路人互動和隨機事件做得很真實，連警察都會拉封鎖線叫你離開。",
+     "h": "網路流量破紀錄",
+     "t": "遊戲下載超過 200GB，美國網路業者 Comcast 說 GTA 6 讓上市那天成為他們網路史上流量最大的一天。",
      "s": [
-      19,
-      20
+      3
      ]
     },
     {
-     "h": "30 幀是最大爭議",
-     "t": "Rockstar 在預載預告就證實主機版鎖 30 幀，多位大型實況主直接在台上抱怨；Digital Foundry 則認為以這種畫面密度，鎖 30 幀才合理。",
+     "h": "日本版改了裸露畫面",
+     "t": "日本玩家比對發現：日本版把男性角色的裸露畫面加上遮蔽；這是玩家實測，Rockstar 沒有說明改了哪些地方。",
      "s": [
-      16,
-      21
+      6
      ]
     },
     {
-     "h": "上市日的狀況",
-     "t": "PSN 和 Xbox Live 都有玩家回報斷線；盒裝版沒有光碟、只附下載碼，有人拿到空的或已經被兌換的碼。遊戲本身的 bug 目前多半是路人走路卡牆這類小問題。",
+     "h": "評價、直播依舊史上級",
+     "t": "Metacritic 99、OpenCritic 98；紐西蘭一解鎖，三大直播平台合計約 638 萬人同時觀看，Twitch 也創下 Streams Charts 統計以來遊戲首發的最高觀看（約 250 萬人）。抱怨仍集中在主機鎖 30 幀、上市日 PSN 斷線和盒裝版下載碼出包。",
      "s": [
-      6,
       7,
-      8
-     ]
-    },
-    {
-     "h": "線上模式、PC 版都還沒日期",
-     "t": "上市只有單人劇情，Rockstar 沒公布線上模式的時間；PC 版只說會晚點推出，沒有時間表。",
-     "s": [
+      8,
+      9,
       10,
       11,
-      24
+      15
+     ]
+    },
+    {
+     "h": "TGA 八項提名",
+     "t": "GTA 6 拿下 The Game Awards 2026 八項提名，包含年度遊戲，和《Control Resonant》《惡靈古堡 安魂曲》並列最多；年度遊戲另外 5 款入圍的有《影之刃零》《007 First Light》等。",
+     "s": [
+      4
      ]
     }
    ],
    "off": [
     {
-     "t": "上市前推了兩次更新（11/13、11/16），都沒有公布修正內容；PS5 要先更新系統才能玩",
+     "t": "Take-Two 發新聞稿：首日零售額估計 37.9 億美元、上市前賣出 3250 萬套，Metacritic 99",
+     "d": "2026-11-20",
+     "s": [
+      1
+     ]
+    },
+    {
+     "t": "上市前推了兩次更新（11/13、11/16），都沒有公布修正內容；上市後還沒有正式修正檔的說明",
      "d": "2026-11-16",
      "s": [
-      9,
-      23
+      12
      ]
     },
     {
      "t": "Rockstar 定調本作是單人遊戲，線上模式還沒公布時間",
      "s": [
-      24,
-      10
+      13
      ]
     }
    ],
@@ -83,86 +85,76 @@
       "n": "Metacritic",
       "v": "99",
       "s": [
-       1
+       7
       ]
      },
      {
       "n": "OpenCritic",
       "v": "98",
       "s": [
-       2
+       8
       ]
      }
     ],
     "notes": [
      {
-      "t": "TechPowerUp 統計：PS5 版 147 篇評論裡，滿分有 118 篇。",
+      "t": "PC Gamer：首日零售額比 Take-Two 自己整季的營收預估上限還多將近 4 億美元；GTA 5 在 2013 年上市第一天約賣 1100 萬套。",
       "s": [
-       1
+       2
       ]
      },
      {
-      "t": "少數的缺點：主機鎖 30 幀、戰鬥操作和武器輪盤有點卡。",
+      "t": "MPR News 整理：Newzoo 原本預估首週營收 30～50 億美元，首日就已經進到這個範圍。",
+      "s": [
+       3
+      ]
+     },
+     {
+      "t": "台灣售價：標準版 NT$2,320、終極版 NT$2,900；有繁體中文介面和字幕，語音是英文。",
       "s": [
        14
-      ]
-     },
-     {
-      "t": "台灣售價：標準版 NT$2,320、終極版 NT$2,900；支援繁體中文介面和字幕，語音是英文。",
-      "s": [
-       13
       ]
      }
     ]
    },
    "players": {
     "pos": [
-     "開玩就喊年度最佳的人很多：路人互動很真實、翻牆就能甩掉警察，玩起來很爽。",
-     "隨機事件和小細節最常被截圖分享，連警察都會拉封鎖線叫你離開。"
+     "上市第一天的反應幾乎一面倒好評：路人互動、隨機事件、城市細節最常被拿出來分享。",
+     "官方公布首日 37.9 億美元的破紀錄數字，讓叫好又叫座成了定局。"
     ],
     "neg": [
-     "主機鎖 30 幀，想要 60 幀的玩家很失望；Reddit 上也有人在問動態模糊。",
-     "上市當天 PSN、Xbox 斷線，盒裝版的下載碼出包。"
+     "主機鎖 30 幀，想要 60 幀的玩家很失望。",
+     "上市日 PSN 斷線、盒裝版下載碼出包。"
     ],
     "debate": [
-     "30 幀合不合理？Digital Foundry 說以這種畫面，鎖 30 幀才合理。",
-     "露西亞的模型跟第一支預告比，是升級還是降級？",
-     "PC 版沒有時間表：要先買主機玩，還是等 PC 版？",
-     "沒有光碟、只有下載碼的盒裝版，還算實體版嗎？"
+     "30 幀合不合理？Digital Foundry 說以這種畫面密度，鎖 30 幀才合理。",
+     "日本版的遮蔽處理算不算多此一舉？",
+     "PC 版還沒日期：要先買主機玩，還是等 PC 版？"
     ],
     "s": [
-     19,
-     20,
-     21,
-     2,
-     6,
-     7,
-     22,
+     18,
+     15,
+     10,
      11,
-     12
+     6,
+     5
     ]
    },
    "streamers": [
     {
-     "who": "HoneyMad",
+     "who": "Windah Basudara",
+     "where": "YouTube",
+     "t": "上市首播是個人觀看峰值最高的主播之一，約 26.7 萬人同時在看。",
+     "s": [
+      9
+     ]
+    },
+    {
+     "who": "alanzoka",
      "where": "Twitch",
-     "t": "上市日觀看人數最高的主播，峰值超過 64 萬人同時在看。",
+     "t": "Twitch 上首播觀看峰值最高的主播之一，約 24.5 萬人同時在看。",
      "s": [
-      4
-     ]
-    },
-    {
-     "who": "多位大型實況主",
-     "t": "對主機版鎖 30 幀最有意見，說習慣高幀數之後很難適應。",
-     "s": [
-      16
-     ]
-    },
-    {
-     "who": "xQc、Adin Ross、Lacy",
-     "t": "紐西蘭時區一解鎖就開播，是全世界最早玩到的一批大台。",
-     "s": [
-      18
+      9
      ]
     },
     {
@@ -170,37 +162,68 @@
      "where": "Twitch",
      "t": "上市前就宣布要一路馬拉松直播到 100% 完成。",
      "s": [
-      17
+      16
      ]
     },
     {
      "who": "魯蛋",
      "where": "台灣實況主",
-     "t": "上市前受訪就提醒：互動細節做太多，可能像《碧血狂殺 2》一樣讓節奏變繁瑣，要在真實感和流暢之間取得平衡。",
+     "t": "上市前受訪就提醒：互動細節做太多，可能讓節奏變繁瑣，要在真實感和流暢之間取得平衡。",
      "s": [
-      15
+      17
      ]
     }
    ],
    "pc": {
     "st": "未公布",
-    "t": "Rockstar 只說主機玩家最多、先顧主機，PC 版之後推出，沒有時間表；Take-Two 執行長也說主機玩家才是首發的核心，但承認現在的大作 PC 版可能佔到一半銷量。外界照 GTA 5 晚了約一年半才上 PC 的前例，猜 PC 版可能要等到 2028 年。",
+    "t": "官方仍沒有 PC 版的商店頁、價格或配備需求。GamesBeat 引述四位匿名消息來源說 Rockstar 目標是 2027 年第一季，這只是傳聞，Rockstar 和 Take-Two 都沒證實。前例是 GTA 5 晚了約一年半、《碧血狂殺 2》晚了約一年才上 PC。Take-Two 執行長則說正在加強防盜版的技術和法律手段。",
     "s": [
-     11,
-     12
+     5,
+     19
     ]
    },
    "next": [
-    "Take-Two 什麼時候公布首日銷量",
-    "第一個正式修正檔會修什麼",
+    "上市後第一個正式修正檔會修什麼",
+    "Take-Two 會不會公布上市後的賣出套數",
     "線上模式的消息",
-    "PC 版有沒有時間表"
+    "PC 版的「2027 第一季」傳聞會不會被證實",
+    "12/10 TGA 頒獎，GTA 6 能拿幾座"
    ],
    "fan": {
-    "post": "GTA 6 上市第三天，數字已經瘋掉了。\n・Metacritic 99、OpenCritic 98\n・紐西蘭一解鎖，三大平台合計超過 600 萬人同時看直播\n・Twitch 單一遊戲分類寫下新紀錄\n・台灣售價：標準版 2,320、終極版 2,900，有繁中字幕\n但也不是零缺點：主機鎖 30 幀被不少實況主狠狠吐槽，上市當天 PSN、Xbox 斷線，盒裝版只附下載碼，還有人拿到空碼。線上模式、PC 版都還沒有日期。\n你已經在罪惡市了，還是在等 PC 版？",
+    "post": "GTA 6 上市第一天，進帳 37.9 億美元。\nTake-Two 剛公布的數字，官方說這是電影、音樂、遊戲全部算進來的娛樂史新紀錄。\n・上市前就賣出 3250 萬套\n・《復仇者聯盟：終局之戰》整個上映期間大約 29 億美元，它一天就超過\n・Metacritic 99、OpenCritic 98\n・TGA 拿下 8 項提名，包含年度遊戲，12/10 揭曉\n要注意的是 PC 版到現在還是沒有官方日期，網路上流傳的「2027 年第一季」只是匿名消息。主機鎖 30 幀的爭議也還在。\n叫好又叫座到這種程度，你會先買主機玩，還是繼續等 PC 版？",
     "topic": "GTA6"
    },
    "sources": [
+    {
+     "t": "Grand Theft Auto VI Shatters Entertainment Box Office Records with $3.79 Billion in Day One Retail Sales",
+     "u": "https://www.take2games.com/ir/news/grand-theft-auto-vi-shatters-entertainment-box-office-records",
+     "p": "Take-Two Interactive"
+    },
+    {
+     "t": "Grand Theft Auto 6 earned $3.79 billion on launch day",
+     "u": "https://www.pcgamer.com/games/grand-theft-auto/grand-theft-auto-6-earned-usd3-79-billion-on-launch-day/",
+     "p": "PC Gamer"
+    },
+    {
+     "t": "Why 'Grand Theft Auto VI' is one of the biggest entertainment releases ever",
+     "u": "https://www.mprnews.org/story/2026/11/20/grand-theft-auto-vi-launch-impact-one-of-the-biggest-ever",
+     "p": "MPR News"
+    },
+    {
+     "t": "GTA 6 is the most nominated game at The Game Awards 2026",
+     "u": "https://www.videogameschronicle.com/news/gta-6-is-the-most-nominated-game-at-the-game-awards-2026/",
+     "p": "VGC"
+    },
+    {
+     "t": "Is GTA 6 Coming to PC? What Rockstar Has Confirmed and What Remains Unknown After the Console Launch",
+     "u": "https://www.ibtimes.co.uk/gta-vi-pc-release-early-2027-report-1833680",
+     "p": "IBTimes UK"
+    },
+    {
+     "t": "Versão japonesa de GTA 6 cobre nudez masculina com tanga",
+     "u": "https://criticalhits.com.br/games/versao-japonesa-de-gta-6-cobre-nudez-masculina-com-tanga/",
+     "p": "Critical Hits"
+    },
     {
      "t": "GTA 6 Review Roundup: 99 on Metacritic and 118 Perfect Scores",
      "u": "https://www.techpowerup.com/354998/gta-6-review-roundup-99-on-metacritic-and-118-perfect-scores",
@@ -217,16 +240,6 @@
      "p": "esports.gg"
     },
     {
-     "t": "GTA 6 Sets Game Launch Viewership Record With 7.1 Million Peak Viewers",
-     "u": "https://www.talkesport.com/streaming/gta-6-launch-viewership-record-7-million-peak-viewers/",
-     "p": "TalkEsport"
-    },
-    {
-     "t": "GTA 6 beats Fortnite's Twitch viewership record",
-     "u": "https://dotesports.com/gta/news/gta-6-twitch-viewership-record",
-     "p": "Dot Esports"
-    },
-    {
      "t": "GTA 6 causes PlayStation Network outages",
      "u": "https://www.notebookcheck.net/GTA-6-causes-PlayStation-Network-outages.1453653.0.html",
      "p": "Notebookcheck"
@@ -237,28 +250,13 @@
      "p": "Dexerto"
     },
     {
-     "t": "GTA 6 Bugs Tracker: All Bugs We've Spotted So Far",
-     "u": "https://beebom.com/gta-6-bugs-tracker/",
-     "p": "Beebom"
-    },
-    {
      "t": "GTA 6 Patch Notes and Updates Tracker",
      "u": "https://beebom.com/gta-6-patch-notes-updates-tracker/",
      "p": "Beebom"
     },
     {
-     "t": "GTA 6 online plans remain under wraps ahead of November release",
-     "u": "https://respawn.outlookindia.com/gaming/gaming-news/gta-6-online-plans-remain-under-wraps-ahead-of-november-release",
-     "p": "Outlook Respawn"
-    },
-    {
-     "t": "PS5/Xbox owners get GTA 6 first — will PC finally arrive in 2028?",
-     "u": "https://www.businesstoday.in/latest/trends/story/ps5xbox-owners-get-gta-6-first-will-pc-finally-arrive-in-2028-542785-2026-07-14",
-     "p": "Business Today"
-    },
-    {
-     "t": "GTA 6 skipping PC at launch not due to PlayStation deal, but because Rockstar focuses on the core consumer",
-     "u": "https://www.gamesradar.com/games/grand-theft-auto/gta-6-skipping-pc-at-launch-not-due-to-playstation-deal-but-because-rockstar-focuses-on-the-core-consumer-take-two-ceo-says/",
+     "t": "GTA 6 Online looks unlikely for launch as Rockstar refers to the game as a \"single-player experience\"",
+     "u": "https://www.gamesradar.com/games/grand-theft-auto/gta-6-online-looks-unlikely-for-launch-as-rockstar-refers-to-the-game-as-a-single-player-experience/",
      "p": "GamesRadar+"
     },
     {
@@ -267,19 +265,9 @@
      "p": "TVBS"
     },
     {
-     "t": "《GTA 6》評價解禁封神！破百家媒體狂給99分　花100小時也玩不完",
-     "u": "https://www.nownews.com/news/6893527",
-     "p": "NOWnews"
-    },
-    {
-     "t": "《GTA 6》上市會翻車嗎？台灣實況主點3大隱憂：開放世界恐變負擔",
-     "u": "https://www.nownews.com/news/6892404",
-     "p": "NOWnews"
-    },
-    {
-     "t": "GTA 6 Slammed By Multiple High Profile Streamers For Running At 30FPS",
-     "u": "https://tech4gamers.com/?p=369043",
-     "p": "Tech4Gamers"
+     "t": "GTA 6 running at 30 FPS makes sense, experts say after Rockstar's confirmation",
+     "u": "https://www.dexerto.com/gta/gta-6-running-at-30-fps-makes-sense-experts-say-after-rockstars-confirmation-3428936",
+     "p": "Dexerto"
     },
     {
      "t": "Streamers like Kai Cenat await GTA 6 release: All you need to know",
@@ -287,9 +275,9 @@
      "p": "Sportskeeda"
     },
     {
-     "t": "GTA 6 Smashes Streaming Records With 7.8 Million Concurrent Viewers on Launch Day",
-     "u": "https://win.gg/gta-6-smashes-streaming-records/",
-     "p": "win.gg"
+     "t": "《GTA 6》上市會翻車嗎？台灣實況主點3大隱憂：開放世界恐變負擔",
+     "u": "https://www.nownews.com/news/6892404",
+     "p": "NOWnews"
     },
     {
      "t": "'Grand Theft Auto 6' launches after 13-year wait – here's what players are saying",
@@ -297,29 +285,9 @@
      "p": "NME"
     },
     {
-     "t": "GTA 6 hype reaches fever pitch. See reactions",
-     "u": "https://tech.yahoo.com/gaming/articles/gta-6-hype-reaches-fever-184632692.html",
-     "p": "Yahoo Tech"
-    },
-    {
-     "t": "GTA 6 running at 30 FPS makes sense, experts say after Rockstar's confirmation",
-     "u": "https://www.dexerto.com/gta/gta-6-running-at-30-fps-makes-sense-experts-say-after-rockstars-confirmation-3428936",
-     "p": "Dexerto"
-    },
-    {
-     "t": "GTA 6 reviews are in. Best reactions as the 'Before GTA 6' era ends",
-     "u": "https://tech.yahoo.com/gaming/articles/gta-6-reviews-best-reactions-152103827.html",
-     "p": "Yahoo Tech"
-    },
-    {
-     "t": "GTA 6 Patch Notes and Updates Tracker: Two Patches Land",
-     "u": "https://www.ofzenandcomputing.com/gta-6-patch-notes-and-updates-tracker/",
-     "p": "Of Zen and Computing"
-    },
-    {
-     "t": "GTA 6 Online looks unlikely for launch as Rockstar refers to the game as a \"single-player experience\"",
-     "u": "https://www.gamesradar.com/games/grand-theft-auto/gta-6-online-looks-unlikely-for-launch-as-rockstar-refers-to-the-game-as-a-single-player-experience/",
-     "p": "GamesRadar+"
+     "t": "GTA 6 Could Face AI-Made PC Copies as Take-Two Strengthens Legal Defences Against Growing Piracy Threat",
+     "u": "https://www.ibtimes.co.uk/take-two-anti-piracy-ai-gta-6-pc-ports-1831461",
+     "p": "IBTimes UK"
     }
    ]
   }
